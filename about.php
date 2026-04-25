@@ -134,7 +134,7 @@
               <div class="board-members">
                 <div class="member-card">
                   <div class="member-image">
-                    <img src="images/chairman-boss.jpg" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
+                    <img src="images/byawaka.jpg" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
                   </div>
                   <div class="member-info">
                     <h4>Mr. Baliddawa David Byawaka</h4>
@@ -143,31 +143,31 @@
                 </div>
                 <div class="member-card">
                   <div class="member-image">
-                    <img src="images/dr-banonya.jpg" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
-                  </div>
-                  <div class="member-info">
-                    <h4>Dr. Banonya Stephen</h4>
-                    <p>Member Board of Directors</p>
-                  </div>
-                </div>
-                <div class="member-card">
-                  <div class="member-image">
-                    <img src="images/mrs-mercy.jpg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
+                    <img src="images/staffs-meeting4.jpg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
                   </div>
                   <div class="member-info">
                     <h4>Mrs. Mercy Byawaka</h4>
                     <p>Member Board of Directors</p>
                   </div>
                 </div>
+                <div class="member-card">
+                  <div class="member-image">
+                    <img src="images/stephen.jpg" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
+                  </div>
+                  <div class="member-info">
+                    <h4>Dr. Banonya Stephen</h4>
+                    <p>Member Board of Directors</p>
+                  </div>
+                </div>
               </div>
             </div>
-
+        
             <!-- Board of Governors -->
             <div class="governance-level mb-5">
               <h3>Board of Governors</h3>
               <div class="governance-chair">
                 <div class="chairman-image">
-                  <img src="images/governing-chairman.jpg" alt="Mr. Naluwairo David Kigenyi" class="img-fluid rounded-3">
+                  <img src="images/kigenyi.jpeg" alt="Mr. Naluwairo David Kigenyi" class="img-fluid rounded-3">
                 </div>
                 <div class="chairman-info">
                   <h4>Mr. Naluwairo David Kigenyi</h4>
@@ -278,44 +278,123 @@
         <div class="row">
           <div class="col-lg-12">
             <h2 class="section-title">Campus Life</h2>
-            <div class="campus-gallery">
-              <div class="row">
-                <div class="col-lg-6 mb-4">
-                  <div class="campus-image-card">
-                    <img src="images/library.jpg" alt="School Library" class="img-fluid rounded-3">
-                    <div class="image-caption">
-                      <h4>Modern Library</h4>
-                      <p>Well-stocked with current medical texts and research databases</p>
-                    </div>
+            <div class="campus-slider">
+              <!-- Slider Container -->
+              <div class="slider-wrapper">
+                <div class="slide active">
+                  <img src="images/diploma-2students.jpeg" alt="Student Learning" class="img-fluid rounded-3 slide-img-students">
+                  <div class="slide-caption">
+                    <h4>Student Achievement</h4>
+                    <p>Celebrating academic excellence and graduation milestones</p>
                   </div>
                 </div>
-                <div class="col-lg-6 mb-4">
-                  <div class="campus-image-card">
-                    <img src="images/skills-lab.jpg" alt="Skills Laboratory" class="img-fluid rounded-3">
-                    <div class="image-caption">
-                      <h4>Skills Laboratory</h4>
-                      <p>State-of-the-art simulation equipment for practical training</p>
-                    </div>
+                <div class="slide">
+                  <img src="images/skills-lab-s.jpeg" alt="Skills Laboratory" class="img-fluid rounded-3 slide-img-lab">
+                  <div class="slide-caption">
+                    <h4>Skills Laboratory</h4>
+                    <p>State-of-the-art simulation equipment for practical training</p>
                   </div>
                 </div>
-                <div class="col-lg-6 mb-4">
-                  <div class="campus-image-card">
-                    <img src="images/classroom.jpg" alt="Classroom" class="img-fluid rounded-3">
-                    <div class="image-caption">
-                      <h4>Modern Classrooms</h4>
-                      <p>Well-equipped learning environments with modern teaching aids</p>
-                    </div>
+                <div class="slide">
+                  <img src="images/class.jpg" alt="Modern Classrooms" class="img-fluid rounded-3 slide-img-classroom">
+                  <div class="slide-caption">
+                    <h4>Modern Classrooms</h4>
+                    <p>Well-equipped learning environments with modern teaching aids</p>
                   </div>
                 </div>
-                <div class="col-lg-6 mb-4">
-                  <div class="campus-image-card">
-                    <img src="images/hostel.jpg" alt="Student Hostel" class="img-fluid rounded-3">
-                    <div class="image-caption">
-                      <h4>Student Accommodation</h4>
-                      <p>Safe and comfortable hostel facilities for students</p>
-                    </div>
+                <div class="slide">
+                  <img src="images/school.jpg" alt="Campus Facilities" class="img-fluid rounded-3 slide-img-campus">
+                  <div class="slide-caption">
+                    <h4>Campus Facilities</h4>
+                    <p>Safe and comfortable learning environment for students</p>
                   </div>
                 </div>
+                <div class="slide">
+                  <img src="images/students-in-class.jpg" alt="Learning Environment" class="img-fluid rounded-3 slide-img-learning">
+                  <div class="slide-caption">
+                    <h4>Interactive Learning</h4>
+                    <p>Engaging classroom sessions with modern teaching methods</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/revision-library.jpg" alt="Library Study" class="img-fluid rounded-3 slide-img-library">
+                  <div class="slide-caption">
+                    <h4>Library Resources</h4>
+                    <p>Quiet study spaces with extensive medical literature</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/graduates-hero2.jpg" alt="Graduation Ceremony" class="img-fluid rounded-3 slide-img-graduation">
+                  <div class="slide-caption">
+                    <h4>Graduation Success</h4>
+                    <p>Celebrating the achievements of our nursing graduates</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/staffs-meeting1.JPG" alt="Staff Development" class="img-fluid rounded-3 slide-img-staff">
+                  <div class="slide-caption">
+                    <h4>Professional Staff</h4>
+                    <p>Dedicated faculty committed to student excellence</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/skill-nurses.jpeg" alt="Nursing Students in Skill Lab" class="img-fluid rounded-3 slide-img-hostel">
+                  <div class="slide-caption">
+                    <h4>Nursing Skills Lab</h4>
+                    <p>Hands-on practical training with medical simulation equipment</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/parents-sitted-on-graduation-day.jpg" alt="Parent Support" class="img-fluid rounded-3 slide-img-parents">
+                  <div class="slide-caption">
+                    <h4>Family Support</h4>
+                    <p>Proud parents celebrating their children's achievements</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/hero1.jpg" alt="Campus Life" class="img-fluid rounded-3 slide-img-hero">
+                  <div class="slide-caption">
+                    <h4>Vibrant Campus</h4>
+                    <p>Dynamic learning environment with diverse activities</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/certificate-nurses-and-midwifery-in-graduation.jpg" alt="Nursing Excellence" class="img-fluid rounded-3 slide-img-nursing">
+                  <div class="slide-caption">
+                    <h4>Nursing Excellence</h4>
+                    <p>Professional training for healthcare leaders of tomorrow</p>
+                  </div>
+                </div>
+                <div class="slide">
+                  <img src="images/students-hero.jpg" alt="Student Life" class="img-fluid rounded-3 slide-img-student-life">
+                  <div class="slide-caption">
+                    <h4>Student Community</h4>
+                    <p>Supportive peer environment for holistic development</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Navigation Controls -->
+              <button class="slider-btn prev-btn" onclick="changeSlide(-1)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="slider-btn next-btn" onclick="changeSlide(1)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+              
+              <!-- Slide Indicators -->
+              <div class="slider-indicators">
+                <span class="indicator active" onclick="goToSlide(0)"></span>
+                <span class="indicator" onclick="goToSlide(1)"></span>
+                <span class="indicator" onclick="goToSlide(2)"></span>
+                <span class="indicator" onclick="goToSlide(3)"></span>
+                <span class="indicator" onclick="goToSlide(4)"></span>
+                <span class="indicator" onclick="goToSlide(5)"></span>
+                <span class="indicator" onclick="goToSlide(6)"></span>
+                <span class="indicator" onclick="goToSlide(7)"></span>
+                <span class="indicator" onclick="goToSlide(8)"></span>
+                <span class="indicator" onclick="goToSlide(9)"></span>
+                <span class="indicator" onclick="goToSlide(10)"></span>
               </div>
             </div>
           </div>
@@ -641,17 +720,17 @@
     /* Enhanced Board Members Section */
     .board-members {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2.5rem;
       margin-top: 2rem;
     }
 
     .member-card {
       background: white;
-      padding: 1.5rem;
+      padding: 2rem;
       border-radius: 15px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.12);
       transition: all 0.3s ease;
       animation: memberCardEntrance 0.8s ease-out;
       border-left: 4px solid #1a237e;
@@ -668,14 +747,15 @@
     }
 
     .member-image {
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       margin: 0 auto 1.5rem;
       position: relative;
       overflow: hidden;
       border-radius: 50%;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
       animation: memberImageEntrance 1s ease-out;
+      border: 3px solid rgba(26,35,126,0.1);
     }
 
     @keyframes memberImageEntrance {
@@ -688,6 +768,7 @@
       height: 100%;
       object-fit: cover;
       transition: transform 0.3s ease;
+      filter: brightness(1.05) contrast(1.05);
     }
 
     .member-card:hover .member-image img {
@@ -904,68 +985,223 @@
       margin-top: 2rem;
     }
 
-    /* Enhanced Campus Life Section */
+    /* Enhanced Campus Life Slider Section */
     .campus-life-section {
       background: white;
     }
 
-    .campus-gallery {
-      margin-top: 2rem;
-    }
-
-    .campus-image-card {
+    .campus-slider {
       position: relative;
+      max-width: 100%;
+      margin: 2rem auto;
+      border-radius: 20px;
       overflow: hidden;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      animation: campusImageEntrance 0.8s ease-out;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      animation: sliderEntrance 1s ease-out;
     }
 
-    @keyframes campusImageEntrance {
-      from { opacity: 0; transform: translateY(30px) scale(0.9); }
+    @keyframes sliderEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .campus-image-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    .slider-wrapper {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      overflow: hidden;
     }
 
-    .campus-image-card img {
-      transition: transform 0.3s ease;
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+      transform: scale(0.95);
     }
 
-    .campus-image-card:hover img {
+    .slide.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    /* Individual slide positioning */
+    .slide-img-students {
+      object-position: center 15%;
+    }
+
+    .slide-img-lab {
+      object-position: center 40%;
+    }
+
+    .slide-img-classroom {
+      object-position: center 35%;
+    }
+
+    .slide-img-campus {
+      object-position: center 25%;
+    }
+
+    .slide-img-learning {
+      object-position: center 30%;
+    }
+
+    .slide-img-library {
+      object-position: center 20%;
+    }
+
+    .slide-img-graduation {
+      object-position: center 25%;
+    }
+
+    .slide-img-staff {
+      object-position: center 35%;
+    }
+
+    .slide-img-hostel {
+      object-position: center 30%;
+    }
+
+    .slide-img-parents {
+      object-position: center 40%;
+    }
+
+    .slide-img-hero {
+      object-position: center 35%;
+    }
+
+    .slide-img-nursing {
+      object-position: center 30%;
+    }
+
+    .slide-img-student-life {
+      object-position: center 25%;
+    }
+
+    .slide:hover img {
       transform: scale(1.05);
     }
 
-    .image-caption {
+    .slide-caption {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      background: linear-gradient(135deg, rgba(26,35,126,0.95) 0%, rgba(57,73,171,0.95) 100%);
       color: white;
-      padding: 1rem;
+      padding: 2rem;
       text-align: center;
       transform: translateY(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.5s ease;
+      backdrop-filter: blur(10px);
     }
 
-    .campus-image-card:hover .image-caption {
+    .slide.active .slide-caption {
       transform: translateY(0);
     }
 
-    .image-caption h4 {
+    .slide-caption h4 {
       margin: 0 0 0.5rem;
-      font-size: 1.1rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      animation: captionTitleEntrance 0.8s ease-out 0.3s both;
     }
 
-    .image-caption p {
+    @keyframes captionTitleEntrance {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-caption p {
       margin: 0;
-      font-size: 0.9rem;
-      opacity: 0.9;
+      font-size: 1.1rem;
+      opacity: 0.95;
+      animation: captionTextEntrance 0.8s ease-out 0.5s both;
+    }
+
+    @keyframes captionTextEntrance {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 0.95; transform: translateY(0); }
+    }
+
+    /* Slider Navigation Controls */
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .slider-btn:hover {
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .slider-btn:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .prev-btn {
+      left: 20px;
+    }
+
+    .next-btn {
+      right: 20px;
+    }
+
+    /* Slider Indicators */
+    .slider-indicators {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255,255,255,0.8);
+    }
+
+    .indicator.active {
+      background: white;
+      transform: scale(1.3);
+      box-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+
+    .indicator:hover {
+      background: rgba(255,255,255,0.8);
+      transform: scale(1.1);
     }
 
     /* Enhanced Objectives Section */
@@ -1037,13 +1273,13 @@
       }
       
       .board-members {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
       }
       
       .member-image {
-        width: 100px;
-        height: 100px;
+        width: 140px;
+        height: 140px;
       }
       
       .chairman-image {
@@ -1053,6 +1289,36 @@
       
       .governance-chair {
         padding: 1.5rem;
+      }
+      
+      .slider-wrapper {
+        height: 400px;
+      }
+      
+      .slider-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+      
+      .prev-btn {
+        left: 10px;
+      }
+      
+      .next-btn {
+        right: 10px;
+      }
+      
+      .slide-caption {
+        padding: 1.5rem;
+      }
+      
+      .slide-caption h4 {
+        font-size: 1.5rem;
+      }
+      
+      .slide-caption p {
+        font-size: 1rem;
       }
       
       .program-item {
@@ -1073,10 +1339,6 @@
       .objective-number {
         margin-right: 0;
         margin-bottom: 1rem;
-      }
-      
-      .campus-gallery .col-lg-6 {
-        margin-bottom: 2rem;
       }
     }
 
@@ -1116,16 +1378,16 @@
       
       .board-members {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1.5rem;
       }
       
       .member-card {
-        padding: 1rem;
+        padding: 1.5rem;
       }
       
       .member-image {
-        width: 80px;
-        height: 80px;
+        width: 120px;
+        height: 120px;
       }
       
       .member-info h4 {
@@ -1153,6 +1415,46 @@
         padding: 1rem;
       }
       
+      .slider-wrapper {
+        height: 300px;
+      }
+      
+      .slider-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+      }
+      
+      .prev-btn {
+        left: 8px;
+      }
+      
+      .next-btn {
+        right: 8px;
+      }
+      
+      .slide-caption {
+        padding: 1rem;
+      }
+      
+      .slide-caption h4 {
+        font-size: 1.3rem;
+      }
+      
+      .slide-caption p {
+        font-size: 0.9rem;
+      }
+      
+      .slider-indicators {
+        bottom: 15px;
+        gap: 8px;
+      }
+      
+      .indicator {
+        width: 10px;
+        height: 10px;
+      }
+      
       .program-item {
         padding: 1.5rem;
       }
@@ -1175,12 +1477,130 @@
         height: 40px;
         font-size: 1.2rem;
       }
-      
-      .campus-image-card {
-        margin-bottom: 1.5rem;
-      }
     }
   </style>
-  </style>
+
+  <script>
+    // Campus Life Slider JavaScript
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicators = document.querySelectorAll('.indicator');
+    const totalSlides = slides.length;
+    let autoSlideInterval;
+
+    // Initialize slider
+    function initSlider() {
+      showSlide(0);
+      startAutoSlide();
+    }
+
+    // Show specific slide
+    function showSlide(index) {
+      // Hide all slides
+      slides.forEach(slide => slide.classList.remove('active'));
+      indicators.forEach(indicator => indicator.classList.remove('active'));
+      
+      // Show current slide
+      slides[index].classList.add('active');
+      indicators[index].classList.add('active');
+      
+      currentSlide = index;
+    }
+
+    // Change slide (next/previous)
+    function changeSlide(direction) {
+      currentSlide += direction;
+      
+      if (currentSlide >= totalSlides) {
+        currentSlide = 0;
+      } else if (currentSlide < 0) {
+        currentSlide = totalSlides - 1;
+      }
+      
+      showSlide(currentSlide);
+      resetAutoSlide();
+    }
+
+    // Go to specific slide
+    function goToSlide(index) {
+      showSlide(index);
+      resetAutoSlide();
+    }
+
+    // Start automatic slide transition
+    function startAutoSlide() {
+      autoSlideInterval = setInterval(() => {
+        changeSlide(1);
+      }, 5000); // 5 seconds
+    }
+
+    // Reset automatic slide transition
+    function resetAutoSlide() {
+      clearInterval(autoSlideInterval);
+      startAutoSlide();
+    }
+
+    // Pause auto-slide on hover
+    function pauseAutoSlide() {
+      clearInterval(autoSlideInterval);
+    }
+
+    // Resume auto-slide on mouse leave
+    function resumeAutoSlide() {
+      startAutoSlide();
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      initSlider();
+      
+      // Add hover events to slider
+      const slider = document.querySelector('.campus-slider');
+      if (slider) {
+        slider.addEventListener('mouseenter', pauseAutoSlide);
+        slider.addEventListener('mouseleave', resumeAutoSlide);
+      }
+      
+      // Add keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+          changeSlide(-1);
+        } else if (e.key === 'ArrowRight') {
+          changeSlide(1);
+        }
+      });
+      
+      // Add touch/swipe support for mobile
+      let touchStartX = 0;
+      let touchEndX = 0;
+      
+      const sliderWrapper = document.querySelector('.slider-wrapper');
+      if (sliderWrapper) {
+        sliderWrapper.addEventListener('touchstart', function(e) {
+          touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        sliderWrapper.addEventListener('touchend', function(e) {
+          touchEndX = e.changedTouches[0].screenX;
+          handleSwipe();
+        });
+      }
+      
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // Swipe left - next slide
+            changeSlide(1);
+          } else {
+            // Swipe right - previous slide
+            changeSlide(-1);
+          }
+        }
+      }
+    });
+  </script>
 
   <?php include('shared/_footer.php'); ?>
