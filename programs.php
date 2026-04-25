@@ -376,13 +376,57 @@
   </main>
 
   <style>
+    /* Enhanced Page Header */
     .page-header {
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
       color: white;
-      padding: 3rem 0;
+      padding: 4rem 0;
       margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
     }
 
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" font-size="100" fill="rgba(255,255,255,0.03)">🎓</text></svg>');
+      background-size: 150px 150px;
+      animation: floatPattern 30s linear infinite;
+    }
+
+    @keyframes floatPattern {
+      0% { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(-150px) translateY(-150px); }
+    }
+
+    .page-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      animation: titleEntrance 1s ease-out;
+    }
+
+    @keyframes titleEntrance {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      animation: subtitleEntrance 1.2s ease-out;
+    }
+
+    @keyframes subtitleEntrance {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 0.9; transform: translateY(0); }
+    }
+
+    /* Enhanced Program Cards */
     .program-card {
       background: white;
       border-radius: 20px;
@@ -390,15 +434,21 @@
       overflow: hidden;
       transition: all 0.3s ease;
       height: 100%;
+      animation: cardEntrance 0.6s ease-out;
+    }
+
+    @keyframes cardEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .program-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-8px) scale(1.02);
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .program-header {
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
       color: white;
       padding: 2rem;
       display: flex;
@@ -409,23 +459,35 @@
     .program-icon {
       width: 80px;
       height: 80px;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.15);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     .program-icon i {
       font-size: 2rem;
       color: white;
+      animation: iconRotate 8s linear infinite;
+    }
+
+    @keyframes iconRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .program-title h3 {
       margin: 0;
       font-size: 1.5rem;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .program-duration {
@@ -442,9 +504,10 @@
     }
 
     .program-content h4 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin: 1.5rem 0 1rem;
       font-size: 1.2rem;
+      font-weight: 700;
     }
 
     .program-content h4:first-child {
@@ -452,7 +515,7 @@
     }
 
     .program-content p {
-      color: var(--secondary-color);
+      color: #333;
       line-height: 1.6;
       margin-bottom: 1rem;
     }
@@ -467,15 +530,25 @@
     .requirements-list li,
     .course-content li {
       padding: 0.5rem 0;
-      color: var(--secondary-color);
+      color: #333;
       position: relative;
       padding-left: 1.5rem;
+      margin-bottom: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .requirements-list li:hover,
+    .course-content li:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
     }
 
     .requirements-list li:before,
     .course-content li:before {
       content: "✓";
-      color: var(--success-color);
+      color: #28a745;
       position: absolute;
       left: 0;
       font-weight: bold;
@@ -489,6 +562,44 @@
       border-top: 1px solid #e9ecef;
     }
 
+    .btn {
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
+      color: #1a237e;
+      border: none;
+      box-shadow: 0 3px 10px rgba(255,215,0,0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+    }
+
+    .btn-outline-primary {
+      background: transparent;
+      color: #1a237e;
+      border: 2px solid #1a237e;
+      box-shadow: 0 3px 10px rgba(26,35,126,0.1);
+    }
+
+    .btn-outline-primary:hover {
+      background: #1a237e;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(26,35,126,0.2);
+    }
+
+    /* Clean Hospitals Grid */
     .hospitals-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -508,13 +619,13 @@
 
     .hospital-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
     }
 
     .hospital-icon {
       width: 60px;
       height: 60px;
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -529,15 +640,17 @@
     }
 
     .hospital-info h4 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin: 0 0 0.5rem;
       font-size: 1.1rem;
+      font-weight: 700;
     }
 
     .hospital-info p {
-      color: var(--secondary-color);
+      color: #333;
       margin: 0;
       font-size: 0.9rem;
+      line-height: 1.5;
     }
 
     .practicum-details {
@@ -549,8 +662,10 @@
     }
 
     .practicum-details h3 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
     }
 
     .training-structure {
@@ -561,10 +676,20 @@
 
     .training-structure li {
       padding: 0.75rem 0;
-      color: var(--secondary-color);
+      color: #333;
       position: relative;
       padding-left: 2rem;
-      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      border-left: 3px solid #e9ecef;
+    }
+
+    .training-structure li:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+      border-left-color: #1a237e;
     }
 
     .training-structure li:last-child {
@@ -573,15 +698,28 @@
 
     .training-structure li:before {
       content: "→";
-      color: var(--primary-color);
+      color: #1a237e;
       position: absolute;
-      left: 0;
+      left: 0.5rem;
       font-weight: bold;
     }
 
+    /* Enhanced Timeline */
     .process-timeline {
       max-width: 800px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    .process-timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, #ffd700 0%, #1a237e 50%, #ffd700 100%);
     }
 
     .timeline-item {
@@ -589,91 +727,297 @@
       align-items: flex-start;
       margin-bottom: 3rem;
       position: relative;
+      animation: timelineItemEntrance 0.8s ease-out;
     }
 
-    .timeline-item:not(:last-child):after {
-      content: '';
-      position: absolute;
-      left: 30px;
-      top: 60px;
-      width: 2px;
-      height: calc(100% + 1rem);
-      background: var(--primary-color);
+    @keyframes timelineItemEntrance {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .timeline-item:nth-child(even) {
+      flex-direction: row-reverse;
+      animation: timelineItemEntranceRight 0.8s ease-out;
+    }
+
+    @keyframes timelineItemEntranceRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
     .timeline-marker {
       width: 60px;
       height: 60px;
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      color: #1a237e;
       font-weight: bold;
       font-size: 1.2rem;
       flex-shrink: 0;
       margin-right: 2rem;
+      box-shadow: 0 5px 15px rgba(255,215,0,0.2);
+      animation: markerPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes markerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
 
     .timeline-content {
       background: white;
-      padding: 1.5rem;
+      padding: 2rem;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       flex: 1;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover .timeline-content {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
 
     .timeline-content h4 {
-      color: var(--isnm-blue);
-      margin: 0 0 0.5rem;
+      color: #1a237e;
+      margin: 0 0 0.75rem;
+      font-size: 1.3rem;
+      font-weight: 700;
     }
 
     .timeline-content p {
-      color: var(--secondary-color);
+      color: #333;
       margin: 0;
       line-height: 1.6;
     }
 
+    /* Enhanced Responsive Design */
     @media (max-width: 768px) {
+      .page-header {
+        padding: 3rem 0;
+      }
+      
+      .page-title {
+        font-size: 2.2rem;
+      }
+      
+      .page-subtitle {
+        font-size: 1rem;
+      }
+      
       .program-header {
         flex-direction: column;
         text-align: center;
+        padding: 1.5rem;
       }
       
       .program-icon {
+        width: 60px;
+        height: 60px;
         margin-right: 0;
         margin-bottom: 1rem;
+      }
+      
+      .program-icon i {
+        font-size: 1.5rem;
+      }
+      
+      .program-title h3 {
+        font-size: 1.3rem;
+      }
+      
+      .program-duration {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
+      }
+      
+      .program-content {
+        padding: 1.5rem;
+      }
+      
+      .program-content h4 {
+        font-size: 1.1rem;
+        margin: 1rem 0 0.75rem;
+      }
+      
+      .program-content p {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      .requirements-list li,
+      .course-content li {
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+      }
+      
+      .program-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+      }
+      
+      .btn {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+        width: 100%;
       }
       
       .hospital-card {
         flex-direction: column;
         text-align: center;
+        padding: 1rem;
       }
       
       .hospital-icon {
+        width: 50px;
+        height: 50px;
         margin-right: 0;
         margin-bottom: 1rem;
+      }
+      
+      .hospital-icon i {
+        font-size: 1.2rem;
+      }
+      
+      .hospital-info h4 {
+        font-size: 1rem;
+      }
+      
+      .hospital-info p {
+        font-size: 0.85rem;
+      }
+      
+      .practicum-details {
+        padding: 1.5rem;
+      }
+      
+      .practicum-details h3 {
+        font-size: 1.2rem;
+      }
+      
+      .training-structure li {
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
       }
       
       .timeline-item {
         flex-direction: column;
         align-items: center;
         text-align: center;
+        margin-bottom: 2rem;
+      }
+      
+      .timeline-item:nth-child(even) {
+        flex-direction: column;
       }
       
       .timeline-marker {
+        width: 50px;
+        height: 50px;
         margin-right: 0;
         margin-bottom: 1rem;
+        font-size: 1rem;
+      }
+      
+      .timeline-content {
+        padding: 1.5rem;
+      }
+      
+      .timeline-content h4 {
+        font-size: 1.1rem;
+        margin: 0 0 0.5rem;
+      }
+      
+      .timeline-content p {
+        font-size: 0.9rem;
+      }
+      
+      .process-timeline::before {
+        left: 25px;
       }
       
       .timeline-item:not(:last-child):after {
-        left: 50%;
-        transform: translateX(-50%);
+        left: 25px;
         top: 60px;
-        height: calc(100% + 2rem);
+        height: calc(100% + 1rem);
       }
     }
+
+    @media (max-width: 576px) {
+      .page-title {
+        font-size: 1.8rem;
+      }
+      
+      .program-header {
+        padding: 1rem;
+      }
+      
+      .program-icon {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .program-icon i {
+        font-size: 1.2rem;
+      }
+      
+      .program-title h3 {
+        font-size: 1.1rem;
+      }
+      
+      .program-content {
+        padding: 1rem;
+      }
+      
+      .program-content h4 {
+        font-size: 1rem;
+      }
+      
+      .program-content p {
+        font-size: 0.85rem;
+      }
+      
+      .requirements-list li,
+      .course-content li {
+        font-size: 0.85rem;
+      }
+      
+      .btn {
+        padding: 8px 20px;
+        font-size: 0.8rem;
+      }
+      
+      .hospital-card {
+        padding: 0.75rem;
+      }
+      
+      .hospital-icon {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .hospital-icon i {
+        font-size: 1rem;
+      }
+      
+      .timeline-marker {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+      }
+      
+      .timeline-content {
+        padding: 1rem;
+      }
+    }
+  </style>
   </style>
 
   <?php include('shared/_footer.php'); ?>

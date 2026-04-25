@@ -16,8 +16,8 @@
     <!-- Introduction Section -->
     <section class="intro-section py-5">
       <div class="container">
-        <div class="row">
-          <div class="col-lg-12">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
             <div class="intro-content">
               <h2 class="section-title">Introduction</h2>
               <p class="intro-text">
@@ -28,6 +28,11 @@
               </p>
             </div>
           </div>
+          <div class="col-lg-6">
+            <div class="intro-image">
+              <img src="images/social-day-poster.jpg" alt="ISNM Campus" class="img-fluid rounded-3">
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -35,6 +40,13 @@
     <!-- Vision, Mission & Values Section -->
     <section class="vmv-section py-5 bg-light">
       <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-12 text-center">
+            <div class="vmv-header-image">
+              <img src="images/students.jpg" alt="Students Learning" class="img-fluid rounded-3">
+            </div>
+          </div>
+        </div>
         <div class="row">
           <div class="col-lg-4">
             <div class="vmv-card vision">
@@ -167,14 +179,25 @@
             <!-- School Management -->
             <div class="governance-level">
               <h3>School Management</h3>
-              <div class="management-leader">
-                <div class="leader-info">
-                  <h4>Sr. Joyce C. Zirabamuzale</h4>
-                  <p>Principal of the School</p>
+              <div class="management-section">
+                <div class="row align-items-center">
+                  <div class="col-lg-8">
+                    <div class="management-leader">
+                      <div class="leader-info">
+                        <h4>Sr. Edith Mwebaza</h4>
+                        <p>Principal of School</p>
+                      </div>
+                    </div>
+                    <p>The Principal is responsible for the day to day running of the school assisted by the Deputy and other staff. The staff serves in various committees such as academic, disciplinary, welfare, health and sanitation. Staff meetings are held regularly.</p>
+                    <p>The students have a democratically elected guild council for purposes of addressing student concerns, and liaising between the administration and the students.</p>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="principal-image">
+                      <img src="images/principle.jpeg" alt="Principal Office" class="img-fluid rounded-3">
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p>The Principal is responsible for the day to day running of the school assisted by the Deputy and other staff. The staff serves in various committees such as academic, disciplinary, welfare, health and sanitation. Staff meetings are held regularly.</p>
-              <p>The students have a democratically elected guild council for purposes of addressing student concerns, and liaising between the administration and the students.</p>
             </div>
           </div>
         </div>
@@ -187,7 +210,7 @@
         <div class="row">
           <div class="col-lg-12">
             <h2 class="section-title">Programs Offered</h2>
-            <p>Currently the school offers four (4) programs:</p>
+            <p>Currently, school offers four (4) programs:</p>
             <div class="programs-list">
               <div class="program-item">
                 <div class="program-icon">
@@ -227,6 +250,57 @@
                   <h3>Diploma in Midwifery – Extension</h3>
                   <p>Duration: 1½ years</p>
                   <p>Advanced program for enrolled midwives</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Campus Life Section -->
+    <section class="campus-life-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <h2 class="section-title">Campus Life</h2>
+            <div class="campus-gallery">
+              <div class="row">
+                <div class="col-lg-6 mb-4">
+                  <div class="campus-image-card">
+                    <img src="images/library.jpg" alt="School Library" class="img-fluid rounded-3">
+                    <div class="image-caption">
+                      <h4>Modern Library</h4>
+                      <p>Well-stocked with current medical texts and research databases</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                  <div class="campus-image-card">
+                    <img src="images/skills-lab.jpg" alt="Skills Laboratory" class="img-fluid rounded-3">
+                    <div class="image-caption">
+                      <h4>Skills Laboratory</h4>
+                      <p>State-of-the-art simulation equipment for practical training</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                  <div class="campus-image-card">
+                    <img src="images/classroom.jpg" alt="Classroom" class="img-fluid rounded-3">
+                    <div class="image-caption">
+                      <h4>Modern Classrooms</h4>
+                      <p>Well-equipped learning environments with modern teaching aids</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                  <div class="campus-image-card">
+                    <img src="images/hostel.jpg" alt="Student Hostel" class="img-fluid rounded-3">
+                    <div class="image-caption">
+                      <h4>Student Accommodation</h4>
+                      <p>Safe and comfortable hostel facilities for students</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -279,28 +353,123 @@
   </main>
 
   <style>
+    /* Enhanced Page Header */
     .page-header {
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
       color: white;
-      padding: 3rem 0;
+      padding: 4rem 0;
       margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
     }
 
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" font-size="100" fill="rgba(255,255,255,0.03)">🏥</text></svg>');
+      background-size: 150px 150px;
+      animation: floatPattern 30s linear infinite;
+    }
+
+    @keyframes floatPattern {
+      0% { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(-150px) translateY(-150px); }
+    }
+
+    .page-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      animation: titleEntrance 1s ease-out;
+    }
+
+    @keyframes titleEntrance {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      animation: subtitleEntrance 1.2s ease-out;
+    }
+
+    @keyframes subtitleEntrance {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 0.9; transform: translateY(0); }
+    }
+
+    /* Enhanced Introduction Section */
     .intro-section {
       background: white;
+      position: relative;
     }
 
     .intro-content {
       max-width: 800px;
       margin: 0 auto;
-      text-align: center;
+      text-align: left;
+      animation: contentEntrance 0.8s ease-out;
+    }
+
+    @keyframes contentEntrance {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
     .intro-text {
       font-size: 1.1rem;
       line-height: 1.8;
       margin-bottom: 1.5rem;
-      color: var(--secondary-color);
+      color: #333;
+    }
+
+    .intro-image {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      animation: imageEntrance 1s ease-out;
+    }
+
+    @keyframes imageEntrance {
+      from { opacity: 0; transform: translateX(30px) scale(0.9); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .intro-image img {
+      transition: transform 0.3s ease;
+    }
+
+    .intro-image:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Enhanced VMV Section */
+    .vmv-header-image {
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      animation: headerImageEntrance 1.2s ease-out;
+    }
+
+    @keyframes headerImageEntrance {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .vmv-header-image img {
+      transition: transform 0.3s ease;
+    }
+
+    .vmv-header-image:hover img {
+      transform: scale(1.02);
     }
 
     .vmv-card {
@@ -311,37 +480,55 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       height: 100%;
       transition: all 0.3s ease;
+      animation: cardEntrance 0.8s ease-out;
+    }
+
+    @keyframes cardEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .vmv-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-8px) scale(1.02);
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .vmv-icon {
       width: 80px;
       height: 80px;
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     .vmv-icon i {
       font-size: 2rem;
       color: white;
+      animation: iconRotate 8s linear infinite;
+    }
+
+    @keyframes iconRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .vmv-card h3 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 1rem;
       font-size: 1.5rem;
     }
 
     .vmv-card p {
-      color: var(--secondary-color);
+      color: #333;
       font-style: italic;
       margin: 0;
     }
@@ -353,6 +540,7 @@
       margin-top: 2rem;
     }
 
+    /* Enhanced Values Section */
     .value-item {
       text-align: center;
       padding: 1.5rem;
@@ -360,35 +548,54 @@
       border-radius: 10px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.08);
       transition: all 0.3s ease;
+      animation: valueItemEntrance 0.6s ease-out;
+    }
+
+    @keyframes valueItemEntrance {
+      from { opacity: 0; transform: translateY(20px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .value-item:hover {
-      transform: translateY(-3px);
+      transform: translateY(-5px) scale(1.02);
       box-shadow: 0 15px 25px rgba(0,0,0,0.15);
     }
 
     .value-item i {
       font-size: 2rem;
-      color: var(--primary-color);
+      color: #1a237e;
       margin-bottom: 1rem;
+      animation: valueIconFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes valueIconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
 
     .value-item h4 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       font-size: 1rem;
       margin: 0;
     }
 
+    /* Enhanced Governance Section */
     .governance-level {
       background: white;
       padding: 2rem;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       margin-bottom: 2rem;
+      animation: governanceEntrance 0.8s ease-out;
+    }
+
+    @keyframes governanceEntrance {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .governance-level h3 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 1rem;
       font-size: 1.5rem;
     }
@@ -457,10 +664,40 @@
       margin-bottom: 0.5rem;
     }
 
+    /* Enhanced Management Section */
+    .management-section {
+      margin-top: 2rem;
+    }
+
+    .principal-image {
+      margin-top: 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      animation: principalImageEntrance 1s ease-out;
+    }
+
+    @keyframes principalImageEntrance {
+      from { opacity: 0; transform: translateX(30px) scale(0.9); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .principal-image img {
+      border-radius: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .principal-image:hover img {
+      transform: scale(1.05);
+    }
+
     .programs-list {
       margin-top: 2rem;
     }
 
+    /* Enhanced Programs Section */
     .program-item {
       display: flex;
       align-items: center;
@@ -470,37 +707,55 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       margin-bottom: 1.5rem;
       transition: all 0.3s ease;
+      animation: programItemEntrance 0.8s ease-out;
+    }
+
+    @keyframes programItemEntrance {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
     .program-item:hover {
-      transform: translateY(-3px);
+      transform: translateY(-5px) scale(1.02);
       box-shadow: 0 15px 35px rgba(0,0,0,0.15);
     }
 
     .program-icon {
       width: 80px;
       height: 80px;
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 2rem;
       flex-shrink: 0;
+      animation: programIconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes programIconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     .program-icon i {
       font-size: 2rem;
       color: white;
+      animation: programIconRotate 8s linear infinite;
+    }
+
+    @keyframes programIconRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .program-details h3 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 0.5rem;
     }
 
     .program-details p {
-      color: var(--secondary-color);
+      color: #333;
       margin: 0;
     }
 
@@ -511,6 +766,71 @@
       margin-top: 2rem;
     }
 
+    /* Enhanced Campus Life Section */
+    .campus-life-section {
+      background: white;
+    }
+
+    .campus-gallery {
+      margin-top: 2rem;
+    }
+
+    .campus-image-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      animation: campusImageEntrance 0.8s ease-out;
+    }
+
+    @keyframes campusImageEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .campus-image-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .campus-image-card img {
+      transition: transform 0.3s ease;
+    }
+
+    .campus-image-card:hover img {
+      transform: scale(1.05);
+    }
+
+    .image-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .campus-image-card:hover .image-caption {
+      transform: translateY(0);
+    }
+
+    .image-caption h4 {
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .image-caption p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Enhanced Objectives Section */
     .objective-item {
       display: flex;
       align-items: flex-start;
@@ -519,17 +839,23 @@
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       transition: all 0.3s ease;
+      animation: objectiveEntrance 0.8s ease-out;
+    }
+
+    @keyframes objectiveEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .objective-item:hover {
-      transform: translateY(-3px);
+      transform: translateY(-5px) scale(1.02);
       box-shadow: 0 15px 35px rgba(0,0,0,0.15);
     }
 
     .objective-number {
       width: 50px;
       height: 50px;
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -539,20 +865,39 @@
       font-weight: bold;
       margin-right: 1.5rem;
       flex-shrink: 0;
+      animation: numberPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes numberPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
 
     .objective-content h3 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 0.5rem;
     }
 
     .objective-content p {
-      color: var(--secondary-color);
+      color: #333;
       margin: 0;
       line-height: 1.6;
     }
 
+    /* Enhanced Responsive Design */
     @media (max-width: 768px) {
+      .page-title {
+        font-size: 2.2rem;
+      }
+      
+      .page-subtitle {
+        font-size: 1rem;
+      }
+      
+      .intro-content {
+        text-align: center;
+      }
+      
       .program-item {
         flex-direction: column;
         text-align: center;
@@ -572,7 +917,74 @@
         margin-right: 0;
         margin-bottom: 1rem;
       }
+      
+      .campus-gallery .col-lg-6 {
+        margin-bottom: 2rem;
+      }
     }
+
+    @media (max-width: 576px) {
+      .page-title {
+        font-size: 1.8rem;
+      }
+      
+      .intro-content {
+        padding: 0 1rem;
+      }
+      
+      .vmv-card {
+        padding: 1.5rem;
+      }
+      
+      .vmv-icon {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .vmv-icon i {
+        font-size: 1.5rem;
+      }
+      
+      .value-item {
+        padding: 1rem;
+      }
+      
+      .value-item i {
+        font-size: 1.5rem;
+      }
+      
+      .governance-level {
+        padding: 1.5rem;
+      }
+      
+      .program-item {
+        padding: 1.5rem;
+      }
+      
+      .program-icon {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .program-icon i {
+        font-size: 1.5rem;
+      }
+      
+      .objective-item {
+        padding: 1.5rem;
+      }
+      
+      .objective-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .campus-image-card {
+        margin-bottom: 1.5rem;
+      }
+    }
+  </style>
   </style>
 
   <?php include('shared/_footer.php'); ?>

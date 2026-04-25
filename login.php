@@ -1,5 +1,6 @@
 <?php
-error_reporting(0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
 
 // Database configuration
@@ -8,110 +9,119 @@ $username = 'root';
 $password = '';
 $database = 'isnm_school';
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $database);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Create connection with error handling
+try {
+    $conn = new mysqli($host, $username, $password, $database);
+    
+    // Check connection
+    if ($conn->connect_error) {
+        // If connection fails, continue without database for login display
+        $conn = null;
+    }
+} catch (Exception $e) {
+    // If database connection fails, continue without database for login display
+    $conn = null;
 }
 
-if (isset($_SESSION['user_id'])) {
+if (isset($_SESSION['user_id']) && $conn !== null) {
   $user_id = $_SESSION['user_id'];
   
   $query = "SELECT `role`, `first_name`, `last_name` FROM `users` WHERE `user_id`=?";
   $stmt = mysqli_prepare($conn, $query);
 
-  mysqli_stmt_bind_param($stmt, "s", $user_id);
-  mysqli_stmt_execute($stmt);
+  if ($stmt) {
+    mysqli_stmt_bind_param($stmt, "s", $user_id);
+    mysqli_stmt_execute($stmt);
 
-  $result = mysqli_stmt_get_result($stmt);
-  $row = mysqli_fetch_array($result);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_array($result);
 
-  mysqli_stmt_close($stmt);
+    mysqli_stmt_close($stmt);
 
-  if ($row && isset($row['role'])) {
-    $_SESSION['user_name'] = $row['first_name'] . ' ' . $row['last_name'];
-    $_SESSION['user_role'] = $row['role'];
-    
-    // Redirect based on role to appropriate dashboard
-    switch ($row['role']) {
-      case "Director General":
-      case "Chief Executive Officer":
-        header('Location: dashboards/director-general.php');
-        exit();
-      case "Director Academics":
-        header('Location: dashboards/director-academics.php');
-        exit();
-      case "Director ICT":
-        header('Location: dashboards/director-ict.php');
-        exit();
-      case "Director Finance":
-        header('Location: dashboards/director-finance.php');
-        exit();
-      case "School Principal":
-        header('Location: dashboards/school-principal.php');
-        exit();
-      case "Deputy Principal":
-        header('Location: dashboards/deputy-principal.php');
-        exit();
-      case "School Bursar":
-        header('Location: dashboards/school-bursar.php');
-        exit();
-      case "Academic Registrar":
-        header('Location: dashboards/academic-registrar.php');
-        exit();
-      case "HR Manager":
-        header('Location: dashboards/hr-manager.php');
-        exit();
-      case "School Secretary":
-        header('Location: dashboards/school-secretary.php');
-        exit();
-      case "School Librarian":
-        header('Location: dashboards/school-librarian.php');
-        exit();
-      case "Head of Nursing":
-        header('Location: dashboards/head-nursing.php');
-        exit();
-      case "Head of Midwifery":
-        header('Location: dashboards/head-midwifery.php');
-        exit();
-      case "Senior Lecturers":
-      case "Lecturers":
-        header('Location: dashboards/lecturer.php');
-        exit();
-      case "Matrons":
-        header('Location: dashboards/matron.php');
-        exit();
-      case "Lab Technicians":
-        header('Location: dashboards/lab-technician.php');
-        exit();
-      case "Drivers":
-        header('Location: dashboards/driver.php');
-        exit();
-      case "Security":
-        header('Location: dashboards/security.php');
-        exit();
-      case "Guild President":
-        header('Location: dashboards/guild-president.php');
-        exit();
-      case "Class Representatives":
-        header('Location: dashboards/class-representative.php');
-        exit();
-      case "Students":
-        header('Location: dashboards/student.php');
-        exit();
-      default:
-        // Fallback to admin panel for legacy roles
-        header('Location: admin_panel/dashboard.php');
-        exit();
+    if ($row && isset($row['role'])) {
+      $_SESSION['user_name'] = $row['first_name'] . ' ' . $row['last_name'];
+      $_SESSION['user_role'] = $row['role'];
+      
+      // Redirect based on role to appropriate dashboard
+      switch ($row['role']) {
+        case "Director General":
+        case "Chief Executive Officer":
+          header('Location: dashboards/director-general.php');
+          exit();
+        case "Director Academics":
+          header('Location: dashboards/director-academics.php');
+          exit();
+        case "Director ICT":
+          header('Location: dashboards/director-ict.php');
+          exit();
+        case "Director Finance":
+          header('Location: dashboards/director-finance.php');
+          exit();
+        case "School Principal":
+          header('Location: dashboards/principal.php');
+          exit();
+        case "Deputy Principal":
+          header('Location: dashboards/deputy-principal.php');
+          exit();
+        case "School Bursar":
+          header('Location: dashboards/bursar.php');
+          exit();
+        case "Academic Registrar":
+          header('Location: dashboards/registrar.php');
+          exit();
+        case "HR Manager":
+          header('Location: dashboards/hr-manager.php');
+          exit();
+        case "School Secretary":
+          header('Location: dashboards/secretary.php');
+          exit();
+        case "School Librarian":
+          header('Location: dashboards/librarian.php');
+          exit();
+        case "Head of Nursing":
+          header('Location: dashboards/head-nursing.php');
+          exit();
+        case "Head of Midwifery":
+          header('Location: dashboards/head-midwifery.php');
+          exit();
+        case "Senior Lecturers":
+          header('Location: dashboards/senior-lecturer.php');
+          exit();
+        case "Lecturers":
+          header('Location: dashboards/lecturer.php');
+          exit();
+        case "Matrons":
+          header('Location: dashboards/matron.php');
+          exit();
+        case "Lab Technicians":
+          header('Location: dashboards/lab-technician.php');
+          exit();
+        case "Drivers":
+          header('Location: dashboards/driver.php');
+          exit();
+        case "Security":
+          header('Location: dashboards/security.php');
+          exit();
+        case "Guild President":
+          header('Location: dashboards/guild-president.php');
+          exit();
+        case "Class Representatives":
+          header('Location: dashboards/class-representative.php');
+          exit();
+        case "Students":
+          header('Location: dashboards/student.php');
+          exit();
+        default:
+          // Fallback to admin panel for legacy roles
+          header('Location: admin_panel/dashboard.php');
+          exit();
+      }
     }
   }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-
 <head>
   <meta charset="UTF-8">
   <title>Iganga School of Nursing and Midwifery - Login</title>
@@ -137,7 +147,6 @@ if (isset($_SESSION['user_id'])) {
           <span class="text-2">"Chosen to Serve"</span>
         </div>
       </div>
-
     </div>
     <div class="forms">
       <div class="form-content">
@@ -147,83 +156,57 @@ if (isset($_SESSION['user_id'])) {
             <img src="images/school-logo.png" alt="ISNM Logo" class="login-logo-img">
           </div>
 
-          <div class="title" id='board-title'>Staff Login Portal</div>
-
-          <div class="position-info" id="selectedPositionInfo" style="display: none;">
-            <div class="position-badge">
-              <i class="fas fa-user-tie"></i>
-              <span id="selectedPositionText">Director General</span>
-            </div>
+          <!-- Login Type Selection -->
+          <div class="login-tabs">
+            <a href="student-login.php" class="tab-btn">
+              <i class="fas fa-graduation-cap"></i> Student Login
+            </a>
+            <a href="staff-login.php" class="tab-btn">
+              <i class="fas fa-user-tie"></i> Staff Login
+            </a>
           </div>
 
           <div class="alert-box">
-            <div class="alert alert-danger text-center mt-3" role="alert" id="error-msg">
-
+            <div class="alert alert-info text-center mt-3" role="alert">
+              <?php 
+                if (isset($_SESSION['error'])) {
+                  echo '<div class="error-message">' . $_SESSION['error'] . '</div>';
+                  unset($_SESSION['error']);
+                } else {
+                  echo "Select your login type to continue";
+                }
+              ?>
             </div>
           </div>
 
-          <form action="process-login.php" id="login-form" method="post">
-            <div class="input-boxes">
-              <div class="input-box">
-                <i class="fas fa-user-tie"></i>
-                <select name="position" id="positionSelect" required>
-                  <option value="">Select Your Position</option>
-                  <optgroup label="Executive Leadership">
-                    <option value="Director General">Director General</option>
-                    <option value="Chief Executive Officer">Chief Executive Officer</option>
-                  </optgroup>
-                  <optgroup label="Directors">
-                    <option value="Director Academics">Director Academics</option>
-                    <option value="Director ICT">Director ICT</option>
-                    <option value="Director Finance">Director Finance</option>
-                  </optgroup>
-                  <optgroup label="School Management">
-                    <option value="School Principal">School Principal</option>
-                    <option value="Deputy Principal">Deputy Principal</option>
-                    <option value="School Bursar">School Bursar</option>
-                  </optgroup>
-                  <optgroup label="Administrative Staff">
-                    <option value="Academic Registrar">Academic Registrar</option>
-                    <option value="HR Manager">HR Manager</option>
-                    <option value="School Secretary">School Secretary</option>
-                    <option value="School Librarian">School Librarian</option>
-                  </optgroup>
-                  <optgroup label="Academic Staff">
-                    <option value="Head of Nursing">Head of Nursing</option>
-                    <option value="Head of Midwifery">Head of Midwifery</option>
-                    <option value="Senior Lecturers">Senior Lecturers</option>
-                    <option value="Lecturers">Lecturers</option>
-                  </optgroup>
-                  <optgroup label="Support Staff">
-                    <option value="Matrons">Matrons</option>
-                    <option value="Lab Technicians">Lab Technicians</option>
-                    <option value="Drivers">Drivers</option>
-                    <option value="Security">Security</option>
-                  </optgroup>
-                  <optgroup label="Student Leadership">
-                    <option value="Guild President">Guild President</option>
-                    <option value="Class Representatives">Class Representatives</option>
-                    <option value="Students">Students</option>
-                  </optgroup>
-                </select>
+          <!-- Quick Login Options -->
+          <div class="quick-login-options">
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-graduation-cap"></i>
               </div>
-              <div class="input-box">
-                <i class="fas fa-envelope"></i>
-                <input type="email" name="email" placeholder="Enter your email" id='loginEmail' required>
-              </div>
-              <div class="input-box">
-                <i class="fas fa-lock"></i>
-                <input type="password" name="password" placeholder="Enter your password" id="password" required>
-                <i class="bi bi-eye-fill" style="margin-left:auto;margin-right: 6px;" id="togglePassword"></i>
-              </div>
-              <div class="text"><a id="forgotpassword">Forgot password?</a></div>
-              <div class="button input-box">
-                <button type="submit" class="btn">
-                  <i class="fas fa-sign-in-alt"></i> Login to Dashboard
-                </button>
+              <div class="option-content">
+                <h3>Student Portal</h3>
+                <p>Access your student dashboard, grades, and academic resources</p>
+                <a href="student-login.php" class="option-btn">
+                  <i class="fas fa-arrow-right"></i> Continue to Student Login
+                </a>
               </div>
             </div>
-          </form>
+            
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <div class="option-content">
+                <h3>Staff Portal</h3>
+                <p>Access your staff dashboard, administrative tools, and resources</p>
+                <a href="staff-login.php" class="option-btn">
+                  <i class="fas fa-arrow-right"></i> Continue to Staff Login
+                </a>
+              </div>
+            </div>
+          </div>
 
 
           <!-- forgot password gui -->
@@ -321,6 +304,62 @@ if (isset($_SESSION['user_id'])) {
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="index.js"></script>
+  
+  <script>
+    // Tab switching functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const formContents = document.querySelectorAll('.login-form-content');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const targetTab = this.getAttribute('data-tab');
+          
+          // Remove active class from all buttons and forms
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          formContents.forEach(form => form.classList.remove('active'));
+          
+          // Add active class to clicked button and corresponding form
+          this.classList.add('active');
+          document.getElementById(targetTab + '-login-form').classList.add('active');
+        });
+      });
+      
+      // Password toggle functionality
+      const toggleStudentPassword = document.getElementById('toggleStudentPassword');
+      const studentPassword = document.getElementById('studentPassword');
+      const toggleStaffPassword = document.getElementById('toggleStaffPassword');
+      const staffPassword = document.getElementById('staffPassword');
+      
+      if (toggleStudentPassword && studentPassword) {
+        toggleStudentPassword.addEventListener('click', function() {
+          if (studentPassword.type === 'password') {
+            studentPassword.type = 'text';
+            this.classList.remove('bi-eye-fill');
+            this.classList.add('bi-eye-slash-fill');
+          } else {
+            studentPassword.type = 'password';
+            this.classList.remove('bi-eye-slash-fill');
+            this.classList.add('bi-eye-fill');
+          }
+        });
+      }
+      
+      if (toggleStaffPassword && staffPassword) {
+        toggleStaffPassword.addEventListener('click', function() {
+          if (staffPassword.type === 'password') {
+            staffPassword.type = 'text';
+            this.classList.remove('bi-eye-fill');
+            this.classList.add('bi-eye-slash-fill');
+          } else {
+            staffPassword.type = 'password';
+            this.classList.remove('bi-eye-slash-fill');
+            this.classList.add('bi-eye-fill');
+          }
+        });
+      }
+    });
+  </script>
 
 
 </body>

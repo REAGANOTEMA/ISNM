@@ -7,25 +7,156 @@ $username = 'root';
 $password = '';
 $database = 'isnm_school';
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $database);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Create connection with error handling
+try {
+    $conn = new mysqli($host, $username, $password, $database);
+    
+    // Check connection
+    if ($conn->connect_error) {
+        // If connection fails, continue without database for login display
+        $conn = null;
+    }
+} catch (Exception $e) {
+    // If database connection fails, continue without database for login display
+    $conn = null;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $position = $_POST['position'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $user_type = $_POST['user_type'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
     
-    // Validate inputs
-    if (empty($position) || empty($email) || empty($password)) {
-        $_SESSION['error'] = "All fields are required";
+    // Student login
+    if ($user_type === 'student') {
+        $student_role = $_POST['student_role'] ?? '';
+        $student_id = $_POST['student_id'] ?? '';
+        
+        // Validate inputs
+        if (empty($student_role) || empty($student_id) || empty($email) || empty($password)) {
+            $_SESSION['error'] = "All student fields are required";
+            header('Location: student-login.php');
+            exit();
+        }
+        
+        // For demo purposes - simulate successful student login
+        if ($student_id === 'STU001' && $password === 'student123') {
+            $_SESSION['user_id'] = $student_id;
+            $_SESSION['user_name'] = 'John Student';
+            $_SESSION['user_role'] = $student_role;
+            header('Location: dashboards/student.php');
+            exit();
+        } else {
+            $_SESSION['error'] = "Invalid student credentials";
+            header('Location: student-login.php');
+            exit();
+        }
+    }
+    
+    // Staff login
+    elseif ($user_type === 'staff') {
+        $position = $_POST['position'] ?? '';
+        
+        // Validate inputs
+        if (empty($position) || empty($email) || empty($password)) {
+            $_SESSION['error'] = "All staff fields are required";
+            header('Location: staff-login.php');
+            exit();
+        }
+        
+        // For demo purposes - simulate successful staff login
+        if ($password === 'staff123') {
+            $_SESSION['user_id'] = 'STF001';
+            $_SESSION['user_name'] = 'Jane Staff';
+            $_SESSION['user_role'] = $position;
+            
+            // Redirect based on position
+            switch ($position) {
+                case "Director General":
+                case "Chief Executive Officer":
+                    header('Location: dashboards/director-general.php');
+                    break;
+                case "Director Academics":
+                    header('Location: dashboards/director-academics.php');
+                    break;
+                case "Director ICT":
+                    header('Location: dashboards/director-ict.php');
+                    break;
+                case "Director Finance":
+                    header('Location: dashboards/director-finance.php');
+                    break;
+                case "School Principal":
+                    header('Location: dashboards/principal.php');
+                    break;
+                case "Deputy Principal":
+                    header('Location: dashboards/deputy-principal.php');
+                    break;
+                case "School Bursar":
+                    header('Location: dashboards/bursar.php');
+                    break;
+                case "Academic Registrar":
+                    header('Location: dashboards/registrar.php');
+                    break;
+                case "HR Manager":
+                    header('Location: dashboards/hr-manager.php');
+                    break;
+                case "School Secretary":
+                    header('Location: dashboards/secretary.php');
+                    break;
+                case "School Librarian":
+                    header('Location: dashboards/librarian.php');
+                    break;
+                case "Head of Nursing":
+                    header('Location: dashboards/head-nursing.php');
+                    break;
+                case "Head of Midwifery":
+                    header('Location: dashboards/head-midwifery.php');
+                    break;
+                case "Senior Lecturers":
+                    header('Location: dashboards/senior-lecturer.php');
+                    break;
+                case "Lecturers":
+                    header('Location: dashboards/lecturer.php');
+                    break;
+                case "Matrons":
+                    header('Location: dashboards/matron.php');
+                    break;
+                case "Lab Technicians":
+                    header('Location: dashboards/lab-technician.php');
+                    break;
+                case "Drivers":
+                    header('Location: dashboards/driver.php');
+                    break;
+                case "Security":
+                    header('Location: dashboards/security.php');
+                    break;
+                default:
+                    header('Location: dashboards/staff-dashboard.php');
+                    break;
+            }
+            exit();
+        } else {
+            $_SESSION['error'] = "Invalid staff credentials";
+            header('Location: staff-login.php');
+            exit();
+        }
+    }
+    
+    // Fallback for old position-based login
+    else {
+        $position = $_POST['position'] ?? '';
+        
+        // Validate inputs
+        if (empty($position) || empty($email) || empty($password)) {
+            $_SESSION['error'] = "All fields are required";
+            header('Location: login.php');
+            exit();
+        }
+        
+        $_SESSION['error'] = "Please use the new login system";
         header('Location: login.php');
         exit();
     }
+}
     
     // Prepare and execute query
     $query = "SELECT `user_id`, `first_name`, `last_name`, `email`, `password`, `role`, `status` FROM `users` WHERE `email` = ? AND `role` = ?";

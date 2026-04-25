@@ -146,6 +146,93 @@
             color: white;
         }
 
+        .org-actions {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .org-actions .btn-3d {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 400;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
+            color: var(--isnm-chocolate);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 3px 0 var(--isnm-chocolate),
+                0 4px 8px rgba(0,0,0,0.15);
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            overflow: hidden;
+            font-size: 0.75rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .org-actions .btn-3d::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--isnm-cream), var(--isnm-yellow));
+            border-radius: 50px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .org-actions .btn-3d:hover {
+            transform: translateY(2px);
+            box-shadow: 
+                0 4px 0 var(--isnm-chocolate),
+                0 8px 12px rgba(0,0,0,0.25);
+        }
+
+        .org-actions .btn-3d:hover::before {
+            opacity: 0.3;
+        }
+
+        .org-actions .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 
+                0 2px 0 var(--isnm-chocolate),
+                0 4px 8px rgba(0,0,0,0.25);
+        }
+
+        /* Student Login Buttons - Green Theme */
+        .org-level.student .org-actions .btn-3d {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 
+                0 3px 0 #155724,
+                0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .org-level.student .org-actions .btn-3d::before {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+        }
+
+        .org-level.student .org-actions .btn-3d:hover {
+            transform: translateY(2px);
+            box-shadow: 
+                0 4px 0 #155724,
+                0 8px 12px rgba(0,0,0,0.25);
+        }
+
+        .org-level.student .org-actions .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 
+                0 2px 0 #155724,
+                0 4px 8px rgba(0,0,0,0.25);
+        }
+
         .org-level {
             display: flex;
             justify-content: center;
@@ -300,7 +387,7 @@
     </style>
 </head>
 <body>
-    <?php include 'includes/_header.php'; ?>
+    <?php include 'shared/_header.php'; ?>
     
     <div class="organogram-container">
         <div class="page-header">
@@ -316,9 +403,14 @@
                         <i class="fas fa-crown org-icon"></i>
                         <div class="org-title">Director General</div>
                         <div class="org-subtitle">Overall Institution Leadership</div>
-                        <a href="login.php?role=Director%20General" class="org-link">
+                        <a href="staff-login.php?position=Director%20General" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20General'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -330,9 +422,14 @@
                         <i class="fas fa-user-tie org-icon"></i>
                         <div class="org-title">Chief Executive Officer</div>
                         <div class="org-subtitle">Executive Leadership</div>
-                        <a href="login.php?role=CEO" class="org-link">
+                        <a href="staff-login.php?position=Chief%20Executive%20Officer" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Chief%20Executive%20Officer'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -340,9 +437,14 @@
                         <i class="fas fa-graduation-cap org-icon"></i>
                         <div class="org-title">Director Academics</div>
                         <div class="org-subtitle">Academic Affairs Director</div>
-                        <a href="login.php?role=Director%20Academics" class="org-link">
+                        <a href="staff-login.php?position=Director%20Academics" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Academics'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -350,9 +452,14 @@
                         <i class="fas fa-laptop-code org-icon"></i>
                         <div class="org-title">Director ICT</div>
                         <div class="org-subtitle">Technology Director</div>
-                        <a href="login.php?role=Director%20ICT" class="org-link">
+                        <a href="staff-login.php?position=Director%20ICT" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20ICT'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -360,9 +467,14 @@
                         <i class="fas fa-coins org-icon"></i>
                         <div class="org-title">Director Finance</div>
                         <div class="org-subtitle">Financial Affairs Director</div>
-                        <a href="login.php?role=Director%20Finance" class="org-link">
+                        <a href="staff-login.php?position=Director%20Finance" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Finance'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -374,9 +486,14 @@
                         <i class="fas fa-chalkboard-teacher org-icon"></i>
                         <div class="org-title">School Principal</div>
                         <div class="org-subtitle">Chief Academic Officer</div>
-                        <a href="login.php?role=Principal" class="org-link">
+                        <a href="staff-login.php?position=School%20Principal" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Principal'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -384,9 +501,14 @@
                         <i class="fas fa-user-graduate org-icon"></i>
                         <div class="org-title">Deputy Principal</div>
                         <div class="org-subtitle">Assistant Academic Officer</div>
-                        <a href="login.php?role=Deputy%20Principal" class="org-link">
+                        <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -394,9 +516,14 @@
                         <i class="fas fa-money-check-alt org-icon"></i>
                         <div class="org-title">School Bursar</div>
                         <div class="org-subtitle">Chief Financial Officer</div>
-                        <a href="login.php?role=School%20Bursar" class="org-link">
+                        <a href="staff-login.php?position=School%20Bursar" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -408,9 +535,14 @@
                         <i class="fas fa-file-alt org-icon"></i>
                         <div class="org-title">Academic Registrar</div>
                         <div class="org-subtitle">Student Records</div>
-                        <a href="login.php?role=Academic%20Registrar" class="org-link">
+                        <a href="staff-login.php?position=Academic%20Registrar" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Academic%20Registrar'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -418,9 +550,14 @@
                         <i class="fas fa-users org-icon"></i>
                         <div class="org-title">HR Manager</div>
                         <div class="org-subtitle">Human Resources</div>
-                        <a href="login.php?role=HR%20Manager" class="org-link">
+                        <a href="staff-login.php?position=HR%20Manager" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=HR%20Manager'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -428,9 +565,14 @@
                         <i class="fas fa-envelope org-icon"></i>
                         <div class="org-title">School Secretary</div>
                         <div class="org-subtitle">Administrative Support</div>
-                        <a href="login.php?role=School%20Secretary" class="org-link">
+                        <a href="staff-login.php?position=School%20Secretary" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Secretary'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -438,9 +580,14 @@
                         <i class="fas fa-book org-icon"></i>
                         <div class="org-title">School Librarian</div>
                         <div class="org-subtitle">Library Management</div>
-                        <a href="login.php?role=School%20Librarian" class="org-link">
+                        <a href="staff-login.php?position=School%20Librarian" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Librarian'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -452,9 +599,14 @@
                         <i class="fas fa-heartbeat org-icon"></i>
                         <div class="org-title">Head of Nursing</div>
                         <div class="org-subtitle">Nursing Department</div>
-                        <a href="login.php?role=Head%20of%20Nursing" class="org-link">
+                        <a href="staff-login.php?position=Head%20of%20Nursing" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Head%20of%20Nursing'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -462,9 +614,14 @@
                         <i class="fas fa-baby org-icon"></i>
                         <div class="org-title">Head of Midwifery</div>
                         <div class="org-subtitle">Midwifery Department</div>
-                        <a href="login.php?role=Head%20of%20Midwifery" class="org-link">
+                        <a href="staff-login.php?position=Head%20of%20Midwifery" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Head%20of%20Midwifery'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -472,9 +629,14 @@
                         <i class="fas fa-chalkboard org-icon"></i>
                         <div class="org-title">Senior Lecturers</div>
                         <div class="org-subtitle">Advanced Teaching</div>
-                        <a href="login.php?role=Senior%20Lecturers" class="org-link">
+                        <a href="staff-login.php?position=Senior%20Lecturers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Senior%20Lecturers'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -482,9 +644,14 @@
                         <i class="fas fa-book-reader org-icon"></i>
                         <div class="org-title">Lecturers</div>
                         <div class="org-subtitle">Classroom Teaching</div>
-                        <a href="login.php?role=Lecturers" class="org-link">
+                        <a href="staff-login.php?position=Lecturers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Lecturers'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -496,9 +663,14 @@
                         <i class="fas fa-hands-helping org-icon"></i>
                         <div class="org-title">Matrons</div>
                         <div class="org-subtitle">Student Welfare</div>
-                        <a href="login.php?role=Matrons" class="org-link">
+                        <a href="staff-login.php?position=Matrons" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Matrons'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -506,9 +678,14 @@
                         <i class="fas fa-shield-alt org-icon"></i>
                         <div class="org-title">Wardens</div>
                         <div class="org-subtitle">Student Care & Support</div>
-                        <a href="login.php?role=Wardens" class="org-link">
+                        <a href="staff-login.php?position=Wardens" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Wardens'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -516,9 +693,14 @@
                         <i class="fas fa-flask org-icon"></i>
                         <div class="org-title">Lab Technicians</div>
                         <div class="org-subtitle">Laboratory Services</div>
-                        <a href="login.php?role=Lab%20Technicians" class="org-link">
+                        <a href="staff-login.php?position=Lab%20Technicians" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Lab%20Technicians'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -526,9 +708,14 @@
                         <i class="fas fa-bus org-icon"></i>
                         <div class="org-title">Drivers</div>
                         <div class="org-subtitle">Transport Services</div>
-                        <a href="login.php?role=Drivers" class="org-link">
+                        <a href="staff-login.php?position=Drivers" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Drivers'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -536,9 +723,14 @@
                         <i class="fas fa-user-shield org-icon"></i>
                         <div class="org-title">Security</div>
                         <div class="org-subtitle">Campus Security</div>
-                        <a href="login.php?role=Security" class="org-link">
+                        <a href="staff-login.php?position=Security" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Security'">
+                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -550,9 +742,14 @@
                         <i class="fas fa-users org-icon"></i>
                         <div class="org-title">Students</div>
                         <div class="org-subtitle">All Student Access</div>
-                        <a href="login.php?role=Student" class="org-link">
+                        <a href="student-login.php?student_role=Students" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Students'">
+                                <i class="fas fa-graduation-cap me-2"></i>Student Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -560,9 +757,14 @@
                         <i class="fas fa-crown org-icon"></i>
                         <div class="org-title">Guild President</div>
                         <div class="org-subtitle">Student Leadership</div>
-                        <a href="login.php?role=Guild%20President" class="org-link">
+                        <a href="student-login.php?student_role=Guild%20President" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Guild%20President'">
+                                <i class="fas fa-graduation-cap me-2"></i>Student Login
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -570,16 +772,21 @@
                         <i class="fas fa-user-tie org-icon"></i>
                         <div class="org-title">Class Representatives</div>
                         <div class="org-subtitle">Class Leadership</div>
-                        <a href="login.php?role=Class%20Representatives" class="org-link">
+                        <a href="student-login.php?student_role=Class%20Representatives" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
+                        <div class="org-actions">
+                            <button class="btn-3d" onclick="window.location.href='student-login.php?student_role=Class%20Representatives'">
+                                <i class="fas fa-graduation-cap me-2"></i>Student Login
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <?php include 'includes/_footer.php'; ?>
+    <?php include 'shared/_footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>

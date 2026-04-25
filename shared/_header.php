@@ -274,21 +274,26 @@
     .cinematic-title-track {
       display: flex;
       white-space: nowrap;
-      animation: cinematicTitleScroll 15s linear infinite;
+      animation: cinematicTitleScroll 25s linear infinite;
       will-change: transform;
     }
     
     .cinematic-title {
       font-family: 'Playfair Display', serif;
       font-weight: 900;
-      font-size: 4rem;
+      font-size: 4.2rem;
       line-height: 1.1;
       color: #ffffff;
-      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+      text-shadow: 
+        2px 2px 8px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(0, 0, 0, 0.5);
       display: inline-block;
-      padding-right: 100px;
-      letter-spacing: 3px;
+      padding-right: 120px;
+      letter-spacing: 4px;
       text-transform: uppercase;
+      opacity: 1;
+      filter: contrast(1.1) brightness(1.1);
     }
     
     @keyframes cinematicTitleScroll {
@@ -323,16 +328,26 @@
     .stat-item {
       text-align: center;
       position: relative;
-      padding: 20px;
-      background: linear-gradient(135deg, #1A237E 0%, #3949AB 100%);
+      padding: 25px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
       border-radius: 15px;
       overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 
+        0 5px 15px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 3px rgba(255, 255, 255, 0.8),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.1);
     }
     
     .stat-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        inset 0 1px 3px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.15);
     }
     
     .stat-item::before {
@@ -341,14 +356,15 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 4px;
-      background: repeating-linear-gradient(
-        90deg,
-        var(--isnm-yellow) 0px,
-        var(--isnm-yellow) 8px,
-        transparent 8px,
-        transparent 16px
-      );
+      height: 3px;
+      background: linear-gradient(90deg, var(--isnm-yellow), var(--isnm-gold));
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+    }
+    
+    @keyframes floatButton {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
     }
     
     .stat-number {
@@ -356,22 +372,22 @@
       font-family: 'Playfair Display', serif;
       font-size: 3rem;
       font-weight: 900;
-      color: var(--isnm-yellow);
+      color: #000000;
       line-height: 1;
-      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
       position: relative;
-      z-index: 2;
+      z-index: 3;
     }
     
     .stat-label {
       font-family: 'Poppins', sans-serif;
       font-size: 1rem;
-      color: #ffffff;
-      opacity: 1;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+      color: #000000;
       position: relative;
-      z-index: 2;
+      z-index: 3;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 5px;
     }
     
     .cta-buttons {
@@ -446,8 +462,9 @@
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .cinematic-title {
-        font-size: 2.5rem;
-        padding-right: 80px;
+        font-size: 2.8rem;
+        padding-right: 100px;
+        letter-spacing: 3px;
       }
       
       .hero-subtitle p {
@@ -485,7 +502,7 @@
       }
       
       .stat-item {
-        padding: 15px;
+        padding: 20px 15px;
       }
       
       .stat-number {
@@ -494,6 +511,7 @@
       
       .stat-label {
         font-size: 0.9rem;
+        letter-spacing: 0.3px;
       }
     }
     
@@ -922,8 +940,9 @@
     
     .nav-links {
       display: flex;
-      gap: 25px;
+      gap: 30px;
       align-items: center;
+      margin-right: 40px;
     }
     
     .position-relative {
@@ -1284,16 +1303,13 @@
           <i class="fas fa-home me-2"></i>Home
         </a>
         <a class="nav-link" href="about.php">
-          <i class="fas fa-info-circle me-2"></i>About ISNM
+          <i class="fas fa-info-circle me-2"></i>About
         </a>
         <a class="nav-link" href="history.php">
-          <i class="fas fa-history me-2"></i>School History
+          <i class="fas fa-history me-2"></i>History
         </a>
         <a class="nav-link" href="programs.php">
           <i class="fas fa-graduation-cap me-2"></i>Programs
-        </a>
-        <a class="nav-link" href="application.php">
-          <i class="fas fa-user-plus me-2"></i>Apply Now
         </a>
         <a class="nav-link" href="donation.php">
           <i class="fas fa-hand-holding-heart me-2"></i>Donate
@@ -1304,21 +1320,14 @@
         <a class="nav-link" href="contact.php">
           <i class="fas fa-envelope me-2"></i>Contact
         </a>
-        <a class="nav-link" href="organogram.php">
-          <i class="fas fa-sitemap me-2"></i>Organogram
-        </a>
-        <a class="nav-link" href="login.php">
-          <i class="fas fa-sign-in-alt me-2"></i>Staff Login
-        </a>
       </div>
-      
       <!-- 3D Action Buttons -->
       <div class="d-flex gap-3">
         <button class="btn-3d" onclick="window.location.href='application.php'">
           <i class="fas fa-rocket me-2"></i>Apply Now
         </button>
-        <button class="btn-3d" onclick="window.location.href='login.php'">
-          <i class="fas fa-user-shield me-2"></i>Staff Portal
+        <button class="btn-3d" onclick="window.location.href='organogram.php'">
+          <i class="fas fa-user-shield me-2"></i>Staff Login
         </button>
       </div>
     </div>

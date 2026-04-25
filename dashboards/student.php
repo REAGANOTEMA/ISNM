@@ -705,7 +705,6 @@ $payment_history = $conn->query("SELECT fp.* FROM fee_payments fp JOIN student_f
                                         <p class="amount">UGX <?php echo number_format($fee_account[0]['total_fees'] ?? 0); ?></p>
                                     </div>
                                 </div>
-                            <?php if (!empty($fee_account)): ?>
                             </div>
                             </div>
                         </div>
