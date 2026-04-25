@@ -1,0 +1,118 @@
+{
+  "name": "Iganga School of Nursing and Midwifery",
+  "short_name": "ISNM",
+  "description": "Digital Management System for Iganga School of Nursing and Midwifery",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "health", "nursing", "midwifery"],
+  "icons": [
+    {
+      "src": "images/school-logo.png",
+      "sizes": "36x36",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "splash_pages": null,
+  "shortcuts": [
+    {
+      "name": "Student Portal",
+      "short_name": "Students",
+      "description": "Access student dashboard and services",
+      "url": "/login.php?role=Student",
+      "icons": [
+        {
+          "src": "images/school-logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Staff Portal",
+      "short_name": "Staff",
+      "description": "Access staff dashboard and management tools",
+      "url": "/login.php",
+      "icons": [
+        {
+          "src": "images/school-logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "short_name": "Apply",
+      "description": "Apply for admission to ISNM",
+      "url": "/application.php",
+      "icons": [
+        {
+          "src": "images/school-logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "images/school-logo.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "ISNM Dashboard Overview"
+    },
+    {
+      "src": "images/school-logo.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "ISNM Mobile View"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
