@@ -133,18 +133,27 @@
               
               <div class="board-members">
                 <div class="member-card">
+                  <div class="member-image">
+                    <img src="images/chairman-boss.jpg" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
+                  </div>
                   <div class="member-info">
                     <h4>Mr. Baliddawa David Byawaka</h4>
                     <p>Chairman Board of Directors</p>
                   </div>
                 </div>
                 <div class="member-card">
+                  <div class="member-image">
+                    <img src="images/dr-banonya.jpg" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
+                  </div>
                   <div class="member-info">
                     <h4>Dr. Banonya Stephen</h4>
                     <p>Member Board of Directors</p>
                   </div>
                 </div>
                 <div class="member-card">
+                  <div class="member-image">
+                    <img src="images/mrs-mercy.jpg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
+                  </div>
                   <div class="member-info">
                     <h4>Mrs. Mercy Byawaka</h4>
                     <p>Member Board of Directors</p>
@@ -157,8 +166,13 @@
             <div class="governance-level mb-5">
               <h3>Board of Governors</h3>
               <div class="governance-chair">
-                <h4>Mr. Naluwairo David Kigenyi</h4>
-                <p>Chairman Governing Council</p>
+                <div class="chairman-image">
+                  <img src="images/governing-chairman.jpg" alt="Mr. Naluwairo David Kigenyi" class="img-fluid rounded-3">
+                </div>
+                <div class="chairman-info">
+                  <h4>Mr. Naluwairo David Kigenyi</h4>
+                  <p>Chairman Governing Council</p>
+                </div>
               </div>
               <p>The school has an advisory (Board of Governors) with members representing several constituents. They include:</p>
               <ul class="governance-members">
@@ -624,34 +638,158 @@
       font-weight: bold;
     }
 
+    /* Enhanced Board Members Section */
     .board-members {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
       margin-top: 2rem;
     }
 
     .member-card {
-      background: var(--light-color);
+      background: white;
       padding: 1.5rem;
-      border-radius: 10px;
+      border-radius: 15px;
       text-align: center;
-      border-left: 4px solid var(--primary-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      animation: memberCardEntrance 0.8s ease-out;
+      border-left: 4px solid #1a237e;
+    }
+
+    @keyframes memberCardEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .member-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .member-image {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 50%;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      animation: memberImageEntrance 1s ease-out;
+    }
+
+    @keyframes memberImageEntrance {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .member-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .member-card:hover .member-image img {
+      transform: scale(1.1);
     }
 
     .member-info h4 {
-      color: var(--isnm-blue);
+      color: #1a237e;
       margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
     }
 
     .member-info p {
-      color: var(--secondary-color);
+      color: #333;
       margin: 0;
+      font-size: 0.9rem;
+      font-weight: 500;
     }
 
-    .governance-chair,
+    /* Enhanced Chairman Section */
+    .governance-chair {
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      animation: chairmanEntrance 1s ease-out;
+    }
+
+    @keyframes chairmanEntrance {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .governance-chair::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" font-size="100" fill="rgba(255,255,255,0.05)">👔</text></svg>');
+      background-size: 100px 100px;
+      animation: chairmanPattern 20s linear infinite;
+    }
+
+    @keyframes chairmanPattern {
+      0% { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(-100px) translateY(-100px); }
+    }
+
+    .chairman-image {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 50%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: chairmanImageEntrance 1.2s ease-out;
+      border: 4px solid rgba(255,255,255,0.2);
+    }
+
+    @keyframes chairmanImageEntrance {
+      from { opacity: 0; transform: scale(0.8) rotate(-180deg); }
+      to { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    .chairman-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .governance-chair:hover .chairman-image img {
+      transform: scale(1.1);
+    }
+
+    .chairman-info {
+      position: relative;
+      z-index: 1;
+    }
+
+    .chairman-info h4 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .chairman-info p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
     .management-leader {
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
       color: white;
       padding: 1.5rem;
       border-radius: 10px;
@@ -898,6 +1036,25 @@
         text-align: center;
       }
       
+      .board-members {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+      }
+      
+      .member-image {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .chairman-image {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .governance-chair {
+        padding: 1.5rem;
+      }
+      
       .program-item {
         flex-direction: column;
         text-align: center;
@@ -955,6 +1112,45 @@
       
       .governance-level {
         padding: 1.5rem;
+      }
+      
+      .board-members {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .member-card {
+        padding: 1rem;
+      }
+      
+      .member-image {
+        width: 80px;
+        height: 80px;
+      }
+      
+      .member-info h4 {
+        font-size: 1.1rem;
+      }
+      
+      .member-info p {
+        font-size: 0.85rem;
+      }
+      
+      .chairman-image {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .chairman-info h4 {
+        font-size: 1.2rem;
+      }
+      
+      .chairman-info p {
+        font-size: 0.9rem;
+      }
+      
+      .governance-chair {
+        padding: 1rem;
       }
       
       .program-item {
