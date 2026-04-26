@@ -1,25 +1,7 @@
 <?php
 session_start();
-
-// Database configuration
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'isnm_school';
-
-// Create connection with error handling
-try {
-    $conn = new mysqli($host, $username, $password, $database);
-    
-    // Check connection
-    if ($conn->connect_error) {
-        // If connection fails, continue without database for login display
-        $conn = null;
-    }
-} catch (Exception $e) {
-    // If database connection fails, continue without database for login display
-    $conn = null;
-}
+include_once 'includes/config.php';
+include_once 'includes/functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_type = $_POST['user_type'] ?? '';
@@ -63,79 +45,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
         
-        // For demo purposes - simulate successful staff login
-        if ($password === 'staff123') {
-            $_SESSION['user_id'] = 'STF001';
-            $_SESSION['user_name'] = 'Jane Staff';
-            $_SESSION['user_role'] = $position;
+        // Query database for staff credentials
+        $query = "SELECT user_id, first_name, last_name, email, password, role, status FROM users WHERE email = ? AND role = ?";
+        $result = executeQuery($query, [$email, $position], 'ss');
+        
+        if (!empty($result)) {
+            $user = $result[0];
             
-            // Redirect based on position
-            switch ($position) {
-                case "Director General":
-                case "Chief Executive Officer":
-                    header('Location: dashboards/director-general.php');
-                    break;
-                case "Director Academics":
-                    header('Location: dashboards/director-academics.php');
-                    break;
-                case "Director ICT":
-                    header('Location: dashboards/director-ict.php');
-                    break;
-                case "Director Finance":
-                    header('Location: dashboards/director-finance.php');
-                    break;
-                case "School Principal":
-                    header('Location: dashboards/principal.php');
-                    break;
-                case "Deputy Principal":
-                    header('Location: dashboards/deputy-principal.php');
-                    break;
-                case "School Bursar":
-                    header('Location: dashboards/bursar.php');
-                    break;
-                case "Academic Registrar":
-                    header('Location: dashboards/registrar.php');
-                    break;
-                case "HR Manager":
-                    header('Location: dashboards/hr-manager.php');
-                    break;
-                case "School Secretary":
-                    header('Location: dashboards/secretary.php');
-                    break;
-                case "School Librarian":
-                    header('Location: dashboards/librarian.php');
-                    break;
-                case "Head of Nursing":
-                    header('Location: dashboards/head-nursing.php');
-                    break;
-                case "Head of Midwifery":
-                    header('Location: dashboards/head-midwifery.php');
-                    break;
-                case "Senior Lecturers":
-                    header('Location: dashboards/senior-lecturer.php');
-                    break;
-                case "Lecturers":
-                    header('Location: dashboards/lecturer.php');
-                    break;
-                case "Matrons":
-                    header('Location: dashboards/matron.php');
-                    break;
-                case "Lab Technicians":
-                    header('Location: dashboards/lab-technician.php');
-                    break;
-                case "Drivers":
-                    header('Location: dashboards/driver.php');
-                    break;
-                case "Security":
-                    header('Location: dashboards/security.php');
-                    break;
-                default:
-                    header('Location: dashboards/staff-dashboard.php');
-                    break;
+            // Verify password
+            if (password_verify($password, $user['password']) || $password === $user['password']) {
+                // Check if user is active
+                if ($user['status'] === 'active') {
+                    // Get access level from organizational positions
+                    $access_query = "SELECT access_level FROM organizational_positions WHERE position_title = ?";
+                    $access_result = executeQuery($access_query, [$position], 's');
+                    $access_level = $access_result[0]['access_level'] ?? 1;
+                    
+                    // Set session variables
+                    $_SESSION['user_id'] = $user['user_id'];
+                    $_SESSION['first_name'] = $user['first_name'];
+                    $_SESSION['last_name'] = $user['last_name'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['role'] = $user['role'];
+                    $_SESSION['access_level'] = $access_level;
+                    $_SESSION['login_time'] = date('Y-m-d H:i:s');
+                    
+                    // Log activity
+                    logActivity($user['user_id'], $user['role'], 'Login', 'User logged in successfully', 'authentication', $user['user_id']);
+                    
+                    // Redirect based on position and access level
+                    if ($access_level >= 8) {
+                        // Top administrators and directors get access to student accounts
+                        header('Location: student_accounts_management.php');
+                        exit();
+                    } else {
+                        // Other staff go to their respective dashboards
+                        switch ($position) {
+                            case "Director General":
+                            case "Chief Executive Officer":
+                                header('Location: dashboards/director-general.php');
+                                break;
+                            case "Director Academics":
+                                header('Location: dashboards/director-academics.php');
+                                break;
+                            case "Director ICT":
+                                header('Location: dashboards/director-ict.php');
+                                break;
+                            case "Director Finance":
+                                header('Location: dashboards/director-finance.php');
+                                break;
+                            case "School Principal":
+                                header('Location: dashboards/principal.php');
+                                break;
+                            case "Deputy Principal":
+                                header('Location: dashboards/deputy-principal.php');
+                                break;
+                            case "School Bursar":
+                                header('Location: dashboards/bursar.php');
+                                break;
+                            case "Academic Registrar":
+                                header('Location: dashboards/registrar.php');
+                                break;
+                            case "HR Manager":
+                                header('Location: dashboards/hr-manager.php');
+                                break;
+                            case "School Secretary":
+                                header('Location: dashboards/secretary.php');
+                                break;
+                            case "School Librarian":
+                                header('Location: dashboards/librarian.php');
+                                break;
+                            case "Head of Nursing":
+                                header('Location: dashboards/head-nursing.php');
+                                break;
+                            case "Head of Midwifery":
+                                header('Location: dashboards/head-midwifery.php');
+                                break;
+                            case "Senior Lecturers":
+                                header('Location: dashboards/senior-lecturer.php');
+                                break;
+                            case "Lecturers":
+                                header('Location: dashboards/lecturer.php');
+                                break;
+                            case "Matrons":
+                                header('Location: dashboards/matron.php');
+                                break;
+                            case "Lab Technicians":
+                                header('Location: dashboards/lab-technician.php');
+                                break;
+                            case "Drivers":
+                                header('Location: dashboards/driver.php');
+                                break;
+                            case "Security":
+                                header('Location: dashboards/security.php');
+                                break;
+                            default:
+                                header('Location: dashboards/staff-dashboard.php');
+                                break;
+                        }
+                        exit();
+                    }
+                } else {
+                    $_SESSION['error'] = "Your account is not active. Please contact the administrator.";
+                    header('Location: staff-login.php');
+                    exit();
+                }
+            } else {
+                $_SESSION['error'] = "Invalid email or password";
+                header('Location: staff-login.php');
+                exit();
             }
-            exit();
         } else {
-            $_SESSION['error'] = "Invalid staff credentials";
+            $_SESSION['error'] = "No account found with this email and position";
             header('Location: staff-login.php');
             exit();
         }
