@@ -1,30 +1,45 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Director General') {
+include_once '../includes/config.php';
+include_once '../includes/functions.php';
+include_once '../includes/photo_upload.php';
+include_once '../includes/student_profile_component.php';
+
+// Check if user is logged in and has Director General role
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Director General') {
     header('Location: ../login.php');
     exit();
 }
 
-// Database connection
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'isnm_school';
-$conn = new mysqli($host, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
 // Get system statistics
-$total_students = $conn->query("SELECT COUNT(*) as count FROM students WHERE status = 'active'")->fetch_assoc()['count'];
-$total_staff = $conn->query("SELECT COUNT(*) as count FROM users WHERE role != 'Students' AND status = 'active'")->fetch_assoc()['count'];
-$total_applications = $conn->query("SELECT COUNT(*) as count FROM applications")->fetch_assoc()['count'];
-$pending_applications = $conn->query("SELECT COUNT(*) as count FROM applications WHERE status = 'pending'")->fetch_assoc()['count'];
+$total_students_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'active'";
+$total_students_result = executeQuery($total_students_sql);
+$total_students = $total_students_result[0]['count'];
+
+$total_staff_sql = "SELECT COUNT(*) as count FROM users WHERE role != 'Students' AND status = 'active'";
+$total_staff_result = executeQuery($total_staff_sql);
+$total_staff = $total_staff_result[0]['count'];
+
+$total_applications_sql = "SELECT COUNT(*) as count FROM applications";
+$total_applications_result = executeQuery($total_applications_sql);
+$total_applications = $total_applications_result[0]['count'];
+
+$pending_applications_sql = "SELECT COUNT(*) as count FROM applications WHERE status = 'pending'";
+$pending_applications_result = executeQuery($pending_applications_sql);
+$pending_applications = $pending_applications_result[0]['count'];
 
 // Get financial overview
-$total_collections = $conn->query("SELECT SUM(amount_paid) as total FROM fee_payments WHERE status = 'verified'")->fetch_assoc()['total'] ?? 0;
-$outstanding_fees = $conn->query("SELECT SUM(balance) as total FROM student_fee_accounts WHERE balance > 0")->fetch_assoc()['total'] ?? 0;
+$total_collections_sql = "SELECT SUM(amount_paid) as total FROM fee_payments WHERE status = 'verified'";
+$total_collections_result = executeQuery($total_collections_sql);
+$total_collections = $total_collections_result[0]['total'] ?? 0;
+
+$outstanding_fees_sql = "SELECT SUM(balance) as total FROM student_fee_accounts WHERE balance > 0";
+$outstanding_fees_result = executeQuery($outstanding_fees_sql);
+$outstanding_fees = $outstanding_fees_result[0]['total'] ?? 0;
+
+// Get recent students for profile display
+$recent_students_sql = "SELECT * FROM students ORDER BY created_at DESC LIMIT 12";
+$recent_students = executeQuery($recent_students_sql);
 
 // Get recent activities from all system modules
 $recent_activities = $conn->query("
@@ -221,6 +236,36 @@ $department_performance = $conn->query("
                                 </span>
                             </div>
                         </div>
+                    </div>
+                </section>
+                
+                <!-- Student Profiles Overview -->
+                <section id="student-profiles" class="content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Student Profiles Overview</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="window.location.href='../student_accounts_management.php'">
+                                <i class="fas fa-users"></i> Manage All Students
+                            </button>
+                            <button class="btn btn-success" onclick="window.location.href='../bulk_photo_upload.php'">
+                                <i class="fas fa-camera"></i> Photo Upload
+                            </button>
+                            <button class="btn btn-info" onclick="window.location.href='../import_student_data.php'">
+                                <i class="fas fa-upload"></i> Import Students
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Search -->
+                    <?php echo displayStudentSearchBox('Search students by name, ID, or phone...', 'directorSearchResults'); ?>
+                    
+                    <!-- Student Profile Cards -->
+                    <div class="row mt-4">
+                        <?php foreach ($recent_students as $student): ?>
+                            <div class="col-md-6 col-lg-3 mb-4">
+                                <?php echo displayStudentProfileCard($student['student_id'], 'compact'); ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </section>
                 
@@ -803,6 +848,40 @@ $department_performance = $conn->query("
             // Refresh statistics
             console.log('Refreshing dashboard data...');
         }, 60000); // Every minute
+    </script>
+    
+    <!-- Student Profile Modal -->
+    <?php echo displayStudentProfileModal(''); ?>
+    
+    <!-- Student Profile Styles -->
+    <?php echo getStudentProfileStyles(); ?>
+    
+    <script>
+    // Override modal functions for director dashboard
+    function viewFullProfile(studentId) {
+        showStudentProfileModal(studentId);
+    }
+    
+    function editStudent(studentId) {
+        window.location.href = '../student_accounts_management.php?action=edit&student_id=' + studentId;
+    }
+    
+    function viewAcademic(studentId) {
+        window.location.href = '../academic_records.php?student_id=' + studentId;
+    }
+    
+    function viewFees(studentId) {
+        window.location.href = '../fee_management.php?student_id=' + studentId;
+    }
+    
+    function sendMessage(studentId) {
+        // Implement messaging functionality
+        alert('Messaging functionality would be implemented here for student: ' + studentId);
+    }
+    
+    function printProfile(studentId) {
+        window.print();
+    }
     </script>
 </body>
 </html>

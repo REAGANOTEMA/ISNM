@@ -2,6 +2,7 @@
 session_start();
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
+include_once 'includes/photo_upload.php';
 
 // Check if user is logged in and has appropriate access level
 if (!isset($_SESSION['user_id']) || $_SESSION['access_level'] < 8) {
@@ -28,8 +29,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'export_students':
                 handleExportStudents();
                 break;
+            case 'upload_photo':
+                handlePhotoUpload();
+                break;
         }
     }
+}
+
+// Handle photo upload
+function handlePhotoUpload() {
+    $student_id = $_POST['student_id'] ?? '';
+    
+    if (empty($student_id)) {
+        $_SESSION['error'] = "Student ID is required";
+        header("Location: student_accounts_management.php");
+        exit();
+    }
+    
+    if (isset($_FILES['passport_photo']) && $_FILES['passport_photo']['error'] === UPLOAD_ERR_OK) {
+        $upload_result = uploadPassportPhoto($_FILES['passport_photo'], $student_id);
+        
+        if ($upload_result['success']) {
+            if (updateStudentPhoto($student_id, $upload_result['filename'])) {
+                $_SESSION['success'] = "Passport photo uploaded successfully!";
+            } else {
+                $_SESSION['error'] = "Photo uploaded but database update failed";
+            }
+        } else {
+            $_SESSION['error'] = $upload_result['message'];
+        }
+    } else {
+        $_SESSION['error'] = "Please select a photo to upload";
+    }
+    
+    header("Location: student_accounts_management.php");
+    exit();
 }
 
 // Get filter parameters
@@ -558,6 +592,33 @@ function generateStudentId() {
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid #ddd;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .student-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        .photo-upload-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-upload-btn:hover {
+            background-color: #5a6268 !important;
+        }
+
+        #photo_preview img {
+            border: 3px solid #007bff;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+
+        .photo-requirements {
+            font-size: 0.875rem;
+            line-height: 1.4;
         }
 
         .status-badge {
@@ -830,7 +891,7 @@ function generateStudentId() {
                             <?php foreach ($students as $student): ?>
                                 <tr>
                                     <td>
-                                        <img src="images/students/<?php echo htmlspecialchars($student['profile_image']); ?>" alt="Student" class="student-avatar" onerror="this.src='images/default-avatar.png'">
+                                        <img src="<?php echo getPassportPhotoUrl($student['profile_image']); ?>" alt="Student" class="student-avatar" onerror="this.src='images/default-avatar.png'">
                                     </td>
                                     <td>
                                         <strong><?php echo htmlspecialchars($student['student_id']); ?></strong>
@@ -891,6 +952,9 @@ function generateStudentId() {
                                             </button>
                                             <button type="button" class="btn btn-sm btn-warning" onclick="editStudent('<?php echo $student['student_id']; ?>')">
                                                 <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-secondary" onclick="uploadPhoto('<?php echo $student['student_id']; ?>', '<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?>')">
+                                                <i class="fas fa-camera"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-info" onclick="viewAcademicRecord('<?php echo $student['student_id']; ?>')">
                                                 <i class="fas fa-graduation-cap"></i>
@@ -1116,6 +1180,60 @@ function generateStudentId() {
         </div>
     </div>
 
+    <!-- Photo Upload Modal -->
+    <div class="modal fade" id="photoUploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-camera"></i> Upload Passport Photo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="student_accounts_management.php" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="upload_photo">
+                    <input type="hidden" id="photo_student_id" name="student_id">
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            <h6 id="student_name_display" class="text-muted"></h6>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Passport Photo *</label>
+                            <input type="file" class="form-control" name="passport_photo" id="passport_photo" accept="image/*" required>
+                            <div class="form-text">
+                                <strong>Requirements:</strong><br>
+                                • Format: JPG, PNG, or GIF<br>
+                                • Size: Maximum 5MB<br>
+                                • Dimensions: Portrait orientation (height > width)<br>
+                                • Recommended: 350x450 pixels (passport size)
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div id="photo_preview" class="text-center" style="display: none;">
+                                <h6>Photo Preview:</h6>
+                                <img id="preview_image" src="" alt="Preview" class="img-fluid" style="max-width: 200px; border: 2px solid #ddd; border-radius: 8px;">
+                                <div id="photo_requirements" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> The photo will be automatically resized to passport dimensions (350x450 pixels) while maintaining aspect ratio.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload Photo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1147,6 +1265,15 @@ function generateStudentId() {
         // View fees
         function viewFees(studentId) {
             window.location.href = 'fee_management.php?student_id=' + studentId;
+        }
+
+        // Upload photo
+        function uploadPhoto(studentId, studentName) {
+            $('#photo_student_id').val(studentId);
+            $('#student_name_display').text(studentName);
+            $('#passport_photo').val('');
+            $('#photo_preview').hide();
+            $('#photoUploadModal').modal('show');
         }
 
         // Confirm delete
@@ -1183,6 +1310,50 @@ function generateStudentId() {
             // Add loading animation when filtering
             $('form').submit(function() {
                 $('.student-table').html('<div class="loading"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading students...</div>');
+            });
+        });
+
+        // Photo preview functionality
+        $(document).ready(function() {
+            $('#passport_photo').change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        $('#preview_image').attr('src', e.target.result);
+                        $('#photo_preview').show();
+                        
+                        // Check photo requirements
+                        const img = new Image();
+                        img.onload = function() {
+                            const requirements = [];
+                            
+                            if (img.width > img.height) {
+                                requirements.push('❌ Photo should be in portrait orientation');
+                            } else {
+                                requirements.push('✅ Portrait orientation OK');
+                            }
+                            
+                            if (img.width < 200 || img.height < 250) {
+                                requirements.push('❌ Photo too small (min 200x250)');
+                            } else {
+                                requirements.push('✅ Size OK');
+                            }
+                            
+                            if (img.width > 800 || img.height > 1000) {
+                                requirements.push('⚠️ Large file (will be resized)');
+                            } else {
+                                requirements.push('✅ File size OK');
+                            }
+                            
+                            $('#photo_requirements').html(requirements.join('<br>'));
+                        };
+                        img.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
             });
         });
 

@@ -1,31 +1,52 @@
 <?php
 session_start();
+include_once '../includes/config.php';
+include_once '../includes/functions.php';
+include_once '../includes/photo_upload.php';
+include_once '../includes/student_profile_component.php';
+
 // Check if user is logged in and has HR Manager role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'HR Manager') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR Manager') {
     header('Location: ../login.php');
     exit();
 }
 
-// Database connection
-$conn = new mysqli('localhost', 'root', '', 'isnm_school');
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
 // Get user information
-$user_id = $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE id = $user_id";
-$user_result = $conn->query($user_query);
-$user = $user_result->fetch_assoc();
+$user = getUserInfo($_SESSION['user_id']);
 
 // Get HR statistics
-$total_staff = $conn->query("SELECT COUNT(*) as count FROM users WHERE role != 'Student'")->fetch_assoc()['count'];
-$active_staff = $conn->query("SELECT COUNT(*) as count FROM users WHERE role != 'Student' AND status = 'active'")->fetch_assoc()['count'];
-$pending_applications = $conn->query("SELECT COUNT(*) as count FROM staff_applications WHERE status = 'pending'")->fetch_assoc()['count'];
-$on_leave = $conn->query("SELECT COUNT(*) as count FROM leave_requests WHERE status = 'approved'")->fetch_assoc()['count'];
+$total_staff_sql = "SELECT COUNT(*) as count FROM users WHERE role != 'Student'";
+$total_staff_result = executeQuery($total_staff_sql);
+$total_staff = $total_staff_result[0]['count'];
+
+$active_staff_sql = "SELECT COUNT(*) as count FROM users WHERE role != 'Student' AND status = 'active'";
+$active_staff_result = executeQuery($active_staff_sql);
+$active_staff = $active_staff_result[0]['count'];
+
+$pending_applications_sql = "SELECT COUNT(*) as count FROM staff_applications WHERE status = 'pending'";
+$pending_applications_result = executeQuery($pending_applications_sql);
+$pending_applications = $pending_applications_result[0]['count'];
+
+$on_leave_sql = "SELECT COUNT(*) as count FROM leave_requests WHERE status = 'approved'";
+$on_leave_result = executeQuery($on_leave_sql);
+$on_leave = $on_leave_result[0]['count'];
+
+// Get student statistics for HR overview
+$total_students_sql = "SELECT COUNT(*) as count FROM students";
+$total_students_result = executeQuery($total_students_sql);
+$total_students = $total_students_result[0]['count'];
+
+$active_students_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'active'";
+$active_students_result = executeQuery($active_students_sql);
+$active_students = $active_students_result[0]['count'];
+
+// Get recent students for HR overview
+$recent_students_sql = "SELECT * FROM students ORDER BY created_at DESC LIMIT 8";
+$recent_students = executeQuery($recent_students_sql);
 
 // Get recent HR activities
-$recent_activities = $conn->query("SELECT * FROM hr_logs ORDER BY created_at DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
+$recent_activities_sql = "SELECT * FROM activity_logs WHERE module_affected IN ('users', 'hr', 'students') ORDER BY activity_date DESC LIMIT 10";
+$recent_activities = executeQuery($recent_activities_sql);
 ?>
 
 <!DOCTYPE html>
@@ -168,6 +189,56 @@ $recent_activities = $conn->query("SELECT * FROM hr_logs ORDER BY created_at DES
                                 <p>Staff on Leave</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Student Overview -->
+                <section id="students" class="content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Student Overview</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="window.location.href='../student_accounts_management.php'">
+                                <i class="fas fa-users"></i> Manage Students
+                            </button>
+                            <button class="btn btn-success" onclick="window.location.href='../academic_records_management.php'">
+                                <i class="fas fa-graduation-cap"></i> Academic Records
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Statistics -->
+                    <div class="stats-grid mb-4">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $total_students; ?></h3>
+                                <p>Total Students</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $active_students; ?></h3>
+                                <p>Active Students</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Search -->
+                    <?php echo displayStudentSearchBox('Search students by name, ID, or phone...', 'hrSearchResults'); ?>
+                    
+                    <!-- Student Profile Cards -->
+                    <div class="row mt-4">
+                        <?php foreach ($recent_students as $student): ?>
+                            <div class="col-md-6 col-lg-3 mb-4">
+                                <?php echo displayStudentProfileCard($student['student_id'], 'compact'); ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </section>
 
@@ -727,6 +798,39 @@ $recent_activities = $conn->query("SELECT * FROM hr_logs ORDER BY created_at DES
             
             modal.show();
         }
+    </script>
+    
+    <!-- Student Profile Modal -->
+    <?php echo displayStudentProfileModal(''); ?>
+    
+    <!-- Student Profile Styles -->
+    <?php echo getStudentProfileStyles(); ?>
+    
+    <script>
+    // Student profile functions
+    function viewFullProfile(studentId) {
+        showStudentProfileModal(studentId);
+    }
+    
+    function editStudent(studentId) {
+        window.location.href = '../student_accounts_management.php?action=edit&student_id=' + studentId;
+    }
+    
+    function viewAcademic(studentId) {
+        window.location.href = '../academic_records_management.php?student_id=' + studentId;
+    }
+    
+    function viewFees(studentId) {
+        window.location.href = '../fee_management.php?student_id=' + studentId;
+    }
+    
+    function sendMessage(studentId) {
+        alert('Messaging functionality would be implemented here for student: ' + studentId);
+    }
+    
+    function printProfile(studentId) {
+        window.print();
+    }
     </script>
 </body>
 </html>

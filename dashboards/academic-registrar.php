@@ -1,31 +1,39 @@
 <?php
 session_start();
+include_once '../includes/config.php';
+include_once '../includes/functions.php';
+include_once '../includes/photo_upload.php';
+include_once '../includes/student_profile_component.php';
+
 // Check if user is logged in and has Academic Registrar role
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Academic Registrar') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Academic Registrar') {
     header('Location: ../login.php');
     exit();
 }
 
-// Database connection
-$conn = new mysqli('localhost', 'root', '', 'isnm_school');
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
 // Get user information
-$user_id = $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE id = $user_id";
-$user_result = $conn->query($user_query);
-$user = $user_result->fetch_assoc();
+$user = getUserInfo($_SESSION['user_id']);
 
 // Get registrar statistics
-$total_applications = $conn->query("SELECT COUNT(*) as count FROM applications WHERE status = 'pending'")->fetch_assoc()['count'];
-$registered_students = $conn->query("SELECT COUNT(*) as count FROM students")->fetch_assoc()['count'];
-$pending_registrations = $conn->query("SELECT COUNT(*) as count FROM applications WHERE status = 'approved'")->fetch_assoc()['count'];
-$transcripts_issued = $conn->query("SELECT COUNT(*) as count FROM transcript_logs WHERE MONTH(created_at) = MONTH(CURRENT_DATE)")->fetch_assoc()['count'];
+$total_applications_sql = "SELECT COUNT(*) as count FROM applications WHERE status = 'pending'";
+$total_applications_result = executeQuery($total_applications_sql);
+$total_applications = $total_applications_result[0]['count'];
 
-// Get recent registrar activities
-$recent_activities = $conn->query("SELECT * FROM registrar_logs ORDER BY created_at DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
+$registered_students_sql = "SELECT COUNT(*) as count FROM students";
+$registered_students_result = executeQuery($registered_students_sql);
+$registered_students = $registered_students_result[0]['count'];
+
+$pending_registrations_sql = "SELECT COUNT(*) as count FROM applications WHERE status = 'approved'";
+$pending_registrations_result = executeQuery($pending_registrations_sql);
+$pending_registrations = $pending_registrations_result[0]['count'];
+
+// Get recent students for profile display
+$recent_students_sql = "SELECT * FROM students ORDER BY created_at DESC LIMIT 6";
+$recent_students = executeQuery($recent_students_sql);
+
+// Get activity logs
+$recent_activities_sql = "SELECT * FROM activity_logs WHERE module_affected = 'students' ORDER BY activity_date DESC LIMIT 10";
+$recent_activities = executeQuery($recent_activities_sql);
 ?>
 
 <!DOCTYPE html>
@@ -163,6 +171,33 @@ $recent_activities = $conn->query("SELECT * FROM registrar_logs ORDER BY created
                                 <p>Transcripts Issued (This Month)</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Recent Student Profiles -->
+                <section id="student-profiles" class="content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Recent Student Profiles</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="openModal('viewAllStudents')">
+                                <i class="fas fa-users"></i> View All Students
+                            </button>
+                            <button class="btn btn-success" onclick="openModal('addStudent')">
+                                <i class="fas fa-user-plus"></i> Add New Student
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Search -->
+                    <?php echo displayStudentSearchBox('Search students by name, ID, or phone...', 'registrarSearchResults'); ?>
+                    
+                    <!-- Student Profile Cards -->
+                    <div class="row mt-4">
+                        <?php foreach ($recent_students as $student): ?>
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <?php echo displayStudentProfileCard($student['student_id'], 'compact'); ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </section>
 
@@ -634,6 +669,40 @@ $recent_activities = $conn->query("SELECT * FROM registrar_logs ORDER BY created
             
             modal.show();
         }
+    </script>
+    
+    <!-- Student Profile Modal -->
+    <?php echo displayStudentProfileModal(''); ?>
+    
+    <!-- Student Profile Styles -->
+    <?php echo getStudentProfileStyles(); ?>
+    
+    <script>
+    // Override modal functions for registrar dashboard
+    function viewFullProfile(studentId) {
+        showStudentProfileModal(studentId);
+    }
+    
+    function editStudent(studentId) {
+        window.location.href = '../student_accounts_management.php?action=edit&student_id=' + studentId;
+    }
+    
+    function viewAcademic(studentId) {
+        window.location.href = '../academic_records.php?student_id=' + studentId;
+    }
+    
+    function viewFees(studentId) {
+        window.location.href = '../fee_management.php?student_id=' + studentId;
+    }
+    
+    function sendMessage(studentId) {
+        // Implement messaging functionality
+        alert('Messaging functionality would be implemented here for student: ' + studentId);
+    }
+    
+    function printProfile(studentId) {
+        window.print();
+    }
     </script>
 </body>
 </html>
