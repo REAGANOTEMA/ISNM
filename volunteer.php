@@ -75,7 +75,7 @@
           
           <div class="col-lg-6">
             <div class="volunteer-image">
-              <img src="images/volunteers-teaching.jpg" alt="Volunteers Teaching" class="img-fluid rounded-3">
+              <img src="images/students.jpg" alt="Volunteers Teaching" class="img-fluid rounded-3">
             </div>
           </div>
         </div>
