@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISNM Organizational Structure</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/school-logo.png">
     <style>
         :root {
@@ -317,45 +317,130 @@
             justify-content: space-around;
         }
 
+        @media (max-width: 1200px) {
+            .org-level.management,
+            .org-level.administrative,
+            .org-level.academic,
+            .org-level.support {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .org-branch {
+                flex: 0 0 45%;
+                margin: 10px;
+            }
+        }
+
         @media (max-width: 768px) {
             .organogram-container {
                 padding: 20px 10px;
             }
 
             .page-header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
-
-            .org-node {
-                min-width: 150px;
-                padding: 15px;
-                margin: 10px 5px;
-            }
-
-            .org-icon {
-                font-size: 2rem;
-            }
-
-            .org-title {
+            
+            .page-header p {
                 font-size: 1rem;
             }
 
+            .org-node {
+                min-width: 140px;
+                padding: 12px;
+                margin: 8px 4px;
+                max-width: 160px;
+            }
+
+            .org-icon {
+                font-size: 1.8rem;
+            }
+
+            .org-title {
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+
             .org-subtitle {
+                font-size: 0.75rem;
+                margin-bottom: 10px;
+            }
+            
+            .org-link {
+                padding: 6px 15px;
                 font-size: 0.8rem;
+            }
+            
+            .org-actions .btn-3d {
+                padding: 6px 12px;
+                font-size: 0.7rem;
             }
 
             .org-level {
                 flex-direction: column;
                 align-items: center;
+                margin: 20px 0;
             }
 
             .org-branch {
                 width: 100%;
+                max-width: 180px;
+                margin: 5px 0;
             }
 
             .org-branch::before,
             .org-horizontal {
                 display: none;
+            }
+            
+            .org-level.management,
+            .org-level.administrative,
+            .org-level.academic,
+            .org-level.support,
+            .org-level.student {
+                padding: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .organogram-container {
+                padding: 15px 5px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .org-node {
+                min-width: 120px;
+                padding: 10px;
+                margin: 6px 2px;
+                max-width: 140px;
+            }
+            
+            .org-icon {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .org-title {
+                font-size: 0.85rem;
+                line-height: 1.2;
+            }
+            
+            .org-subtitle {
+                font-size: 0.7rem;
+                margin-bottom: 8px;
+            }
+            
+            .org-link {
+                padding: 5px 12px;
+                font-size: 0.75rem;
+            }
+            
+            .org-actions .btn-3d {
+                padding: 5px 10px;
+                font-size: 0.65rem;
             }
         }
 

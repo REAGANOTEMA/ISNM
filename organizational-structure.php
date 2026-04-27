@@ -273,7 +273,7 @@
       sessionStorage.setItem('selectedPosition', position);
       
       // Redirect to login page
-      window.location.href = 'login.php?position=' + encodeURIComponent(position);
+      window.location.href = 'staff-login.php?position=' + encodeURIComponent(position);
     }
 
     // Add hover effects and animations

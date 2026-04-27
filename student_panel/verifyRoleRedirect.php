@@ -16,7 +16,7 @@
 
         }else{
             include('../assets/logout.php');
-            header("Location: ../login.php");
+            header("Location: ../student-login.php");
             exit();
         }
 

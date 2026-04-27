@@ -3,6 +3,20 @@ include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/auth_functions.php';
 
+// Store position from organogram if provided
+$requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
+if ($requested_position) {
+    $_SESSION['requested_position'] = $requested_position;
+}
+
+// Handle student role redirection
+$student_role = isset($_GET['student_role']) ? urldecode($_GET['student_role']) : '';
+if ($student_role) {
+    $_SESSION['student_role'] = $student_role;
+    header("Location: student-login.php");
+    exit();
+}
+
 // Handle staff login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitizeInput($_POST['username']);
@@ -24,8 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $_SESSION['success'] = "Login successful! Welcome, " . $auth_result['user']['first_name'];
         
+        // Use requested position from organogram if available, otherwise use user's role
+        $target_role = isset($_SESSION['requested_position']) ? $_SESSION['requested_position'] : $auth_result['user']['role'];
+        
+        // Clear the requested position after use
+        unset($_SESSION['requested_position']);
+        
         // Redirect based on role
-        $dashboard = getUserDashboard($auth_result['user']['role']);
+        $dashboard = getUserDashboard($target_role);
         header("Location: $dashboard");
         exit();
     } else {

@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <!-- <link rel="stylesheet" type="text/css" href="css/style.css"> -->
     <title>Fee Recipt</title>
-    <link rel="shortcut icon" href="./images/logo.png">
+    <link rel="shortcut icon" href="./images/school-logo.png">
     <link rel="stylesheet" href="../css/oranbyte-google-translator.css">
     <script src="../js/oranbyte-google-translator.js"></script>
     <style type="text/css">

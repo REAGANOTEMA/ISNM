@@ -1,5 +1,11 @@
 
-<?php include('partials/_header.php') ?>
+<?php 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+include('partials/_header.php'); 
+?>
 
 <div class="modal fade" id="edit-confirmation-modal" tabindex="-1" aria-labelledby="exampleModalLabel"
     aria-hidden="true">

@@ -34,16 +34,23 @@
 </head>
 <?php 
  
-    
+    // Handle theme selection with database fallback
     $theme = "light";
    
-    $uid = $_SESSION['uid'];
-    $query = "SELECT theme FROM users WHERE id='$uid'";
-    $result = mysqli_query($conn, $query);
-    if(mysqli_num_rows($result) > 0){
-      $row = mysqli_fetch_array($result);
-   
-      $theme = $row['theme'];
+    // Try to get theme from database if connection is available
+    if (isset($_SESSION['uid']) && isset($conn) && $conn) {
+        try {
+            $uid = $_SESSION['uid'];
+            $query = "SELECT theme FROM users WHERE id='$uid'";
+            $result = mysqli_query($conn, $query);
+            if($result && mysqli_num_rows($result) > 0){
+                $row = mysqli_fetch_array($result);
+                $theme = $row['theme'];
+            }
+        } catch (Exception $e) {
+            // Database error - use default theme
+            $theme = "light";
+        }
     }
 ?>
 <body class='<?php echo $theme; ?>'>

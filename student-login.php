@@ -3,6 +3,12 @@ include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/auth_functions.php';
 
+// Store student role from organogram if provided
+$student_role = isset($_GET['student_role']) ? urldecode($_GET['student_role']) : '';
+if ($student_role) {
+    $_SESSION['student_role'] = $student_role;
+}
+
 // Handle student login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = sanitizeInput($_POST['student_id']);

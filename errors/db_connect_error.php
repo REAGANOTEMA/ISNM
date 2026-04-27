@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internal Server Error</title>
-    <link rel="icon" type="image/x-icon" href="../images/1.png">
+    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
     <style>
         body {
             background-color: #f8f9fa;

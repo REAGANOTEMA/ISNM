@@ -11,7 +11,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <title>School Management</title>
-    <link rel="icon" type="image/x-icon" href="../images/1.png">
+    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
     <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"> -->
 
 
@@ -34,16 +34,23 @@
    
 </head>
 <?php 
-   
+    // Handle theme selection with database fallback
     $theme = "light";
    
-    $uid = $_SESSION['uid'];
-    $query = "SELECT theme FROM users WHERE id='$uid'";
-    $result = mysqli_query($conn, $query);
-    if(mysqli_num_rows($result) > 0){
-      $row = mysqli_fetch_array($result);
-   
-      $theme = $row['theme'];
+    // Try to get theme from database if connection is available
+    if (isset($_SESSION['uid']) && isset($conn) && $conn) {
+        try {
+            $uid = $_SESSION['uid'];
+            $query = "SELECT theme FROM users WHERE id='$uid'";
+            $result = mysqli_query($conn, $query);
+            if($result && mysqli_num_rows($result) > 0){
+                $row = mysqli_fetch_array($result);
+                $theme = $row['theme'];
+            }
+        } catch (Exception $e) {
+            // Database error - use default theme
+            $theme = "light";
+        }
     }
 ?>
 <body class='<?php echo $theme; ?>'>

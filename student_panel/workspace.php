@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
-    <link rel="shortcut icon" href="./images/logo.png">
+    <link rel="shortcut icon" href="./images/school-logo.png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="../css/oranbyte-google-translator.css">
     <script src="../js/oranbyte-google-translator.js"></script>
@@ -133,7 +133,7 @@ body::-webkit-scrollbar {
 <body style="overflow-y: scroll;">
     <header>
         <div class="logo">
-            <img src="./images/logo.png" alt="">
+            <img src="./images/school-logo.png" alt="">
             <h2>E<span class="danger">R</span>P</h2>
         </div>
         <div class="navbar">

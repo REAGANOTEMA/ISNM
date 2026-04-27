@@ -6,7 +6,7 @@
 include_once 'config.php';
 include_once 'functions.php';
 
-// Enhanced student authentication
+// Secure student authentication function
 function authenticateStudent($student_id, $first_name, $phone) {
     global $conn;
     
@@ -20,88 +20,35 @@ function authenticateStudent($student_id, $first_name, $phone) {
         return ['success' => false, 'message' => 'Invalid student ID format. Use format: U001/CM/056/16'];
     }
     
-    // Parse student ID components
-    $id_parts = explode('/', $student_id);
-    $program_code = $id_parts[1]; // CM, CN, or DMORDN
-    $student_number = $id_parts[2]; // 056
-    
-    // Check if student exists and is not locked using new format
-    $check_sql = "SELECT * FROM students WHERE student_id_format = ? AND first_name = ? AND phone = ? AND status = 'active'";
-    $stmt = $conn->prepare($check_sql);
-    $stmt->bind_param("sss", $student_id, $first_name, $phone);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 1) {
+    try {
+        // Query database for student
+        $sql = "SELECT * FROM students WHERE application_id = ? AND first_name = ? AND phone = ? AND status = 'active'";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sss", $student_id, $first_name, $phone);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return ['success' => false, 'message' => 'Invalid student credentials'];
+        }
+        
         $student = $result->fetch_assoc();
         
-        // Check if account is locked
-        if ($student['account_locked'] && $student['locked_until'] > date('Y-m-d H:i:s')) {
-            return ['success' => false, 'message' => 'Account is temporarily locked. Please try again later.'];
-        }
+        // Update last login
+        $update_sql = "UPDATE students SET last_login = NOW() WHERE id = ?";
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("i", $student['id']);
+        $update_stmt->execute();
         
-        // Reset login attempts on successful login
-        $reset_sql = "UPDATE students SET login_attempts = 0, account_locked = 0, last_login = NOW() WHERE student_id = ?";
-        $reset_stmt = $conn->prepare($reset_sql);
-        $reset_stmt->bind_param("s", $student['student_id']);
-        $reset_stmt->execute();
+        return ['success' => true, 'user' => $student];
         
-        // Log successful login
-        logActivity($student['student_id'], 'Student', 'Student Login', "Student logged in: $nsin_number - $first_name $phone", 'students', $student['student_id']);
-        
-        return [
-            'success' => true,
-            'user' => [
-                'user_id' => $student['student_id'],
-                'first_name' => $student['first_name'],
-                'last_name' => $student['surname'],
-                'email' => $student['email'],
-                'phone' => $student['phone'],
-                'role' => 'Student',
-                'nsin_number' => $student['application_id'],
-                'program' => $student['program'],
-                'level' => $student['level']
-            ]
-        ];
-        
-    } else {
-        // Check if student exists with NSIN number but wrong credentials
-        $check_nsin_sql = "SELECT * FROM students WHERE application_id = ?";
-        $check_nsin_stmt = $conn->prepare($check_nsin_sql);
-        $check_nsin_stmt->bind_param("s", $nsin_number);
-        $check_nsin_stmt->execute();
-        $nsin_result = $check_nsin_stmt->get_result();
-        
-        if ($nsin_result->num_rows === 1) {
-            $student_data = $nsin_result->fetch_assoc();
-            
-            // Increment login attempts
-            $attempts = $student_data['login_attempts'] + 1;
-            
-            // Lock account after 3 failed attempts
-            if ($attempts >= 3) {
-                $lock_until = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-                $lock_sql = "UPDATE students SET login_attempts = ?, account_locked = 1, locked_until = ? WHERE application_id = ?";
-                $lock_stmt = $conn->prepare($lock_sql);
-                $lock_stmt->bind_param("iss", $attempts, $lock_until, $nsin_number);
-                $lock_stmt->execute();
-                
-                return ['success' => false, 'message' => 'Account locked due to multiple failed login attempts. Please try again after 30 minutes.'];
-            } else {
-                $update_sql = "UPDATE students SET login_attempts = ? WHERE application_id = ?";
-                $update_stmt = $conn->prepare($update_sql);
-                $update_stmt->bind_param("is", $attempts, $nsin_number);
-                $update_stmt->execute();
-                
-                return ['success' => false, 'message' => 'Invalid credentials. Attempts remaining: ' . (3 - $attempts)];
-            }
-        } else {
-            return ['success' => false, 'message' => 'Student not found. Please check your NSIN number, name, and contact number.'];
-        }
+    } catch (Exception $e) {
+        error_log("Student authentication error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Authentication system error. Please try again.'];
     }
 }
 
-// Enhanced staff authentication
+// Secure staff authentication function
 function authenticateStaff($username, $password) {
     global $conn;
     
@@ -110,78 +57,48 @@ function authenticateStaff($username, $password) {
         return ['success' => false, 'message' => 'Username and password are required for staff login'];
     }
     
-    // Check if user exists
-    $check_sql = "SELECT * FROM users WHERE username = ? AND status = 'active'";
-    $stmt = $conn->prepare($check_sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 1) {
+    try {
+        // Query database for staff user
+        $sql = "SELECT * FROM users WHERE username = ? AND status = 'active'";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return ['success' => false, 'message' => 'Invalid username or password'];
+        }
+        
         $user = $result->fetch_assoc();
         
-        // Check if account is locked
-        if ($user['account_locked'] && $user['locked_until'] > date('Y-m-d H:i:s')) {
-            return ['success' => false, 'message' => 'Account is temporarily locked. Please try again later.'];
+        // Verify password (assuming password_hash is used)
+        if (!password_verify($password, $user['password'])) {
+            return ['success' => false, 'message' => 'Invalid username or password'];
         }
         
-        // Verify password
-        if (password_verify($password, $user['password'])) {
-            // Reset login attempts on successful login
-            $reset_sql = "UPDATE users SET login_attempts = 0, account_locked = 0, last_login = NOW() WHERE user_id = ?";
-            $reset_stmt = $conn->prepare($reset_sql);
-            $reset_stmt->bind_param("s", $user['user_id']);
-            $reset_stmt->execute();
-            
-            // Log successful login
-            logActivity($user['user_id'], $user['role'], 'Staff Login', "Staff logged in: $username", 'users', $user['user_id']);
-            
-            return [
-                'success' => true,
-                'user' => [
-                    'user_id' => $user['user_id'],
-                    'username' => $user['username'],
-                    'first_name' => $user['first_name'],
-                    'last_name' => $user['last_name'],
-                    'email' => $user['email'],
-                    'phone' => $user['phone'],
-                    'role' => $user['role'],
-                    'department' => $user['department']
-                ]
-            ];
-            
-        } else {
-            // Increment login attempts
-            $attempts = $user['login_attempts'] + 1;
-            
-            // Lock account after 3 failed attempts
-            if ($attempts >= 3) {
-                $lock_until = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-                $lock_sql = "UPDATE users SET login_attempts = ?, account_locked = 1, locked_until = ? WHERE username = ?";
-                $lock_stmt = $conn->prepare($lock_sql);
-                $lock_stmt->bind_param("iss", $attempts, $lock_until, $username);
-                $lock_stmt->execute();
-                
-                return ['success' => false, 'message' => 'Account locked due to multiple failed login attempts. Please try again after 30 minutes.'];
-            } else {
-                $update_sql = "UPDATE users SET login_attempts = ? WHERE username = ?";
-                $update_stmt = $conn->prepare($update_sql);
-                $update_stmt->bind_param("is", $attempts, $username);
-                $update_stmt->execute();
-                
-                return ['success' => false, 'message' => 'Invalid password. Attempts remaining: ' . (3 - $attempts)];
-            }
-        }
+        // Update last login
+        $update_sql = "UPDATE users SET last_login = NOW() WHERE id = ?";
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("i", $user['id']);
+        $update_stmt->execute();
         
-    } else {
-        return ['success' => false, 'message' => 'User not found. Please check your username.'];
+        return ['success' => true, 'user' => $user];
+        
+    } catch (Exception $e) {
+        error_log("Authentication error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Authentication system error. Please try again.'];
     }
 }
 
 // Check if user is logged in and has appropriate access
 function checkAuth($required_role = null) {
     if (!isset($_SESSION['user_id'])) {
-        header('Location: enhanced_login.php');
+        // Redirect to appropriate login page based on user type
+        if (strpos($_SERVER['REQUEST_URI'], 'student') !== false || strpos($_SERVER['REQUEST_URI'], 'student_profile') !== false) {
+            header('Location: student-login.php');
+        } else {
+            header('Location: staff-login.php');
+        }
         exit();
     }
     
@@ -196,24 +113,64 @@ function checkAuth($required_role = null) {
 
 // hasPermission() function is already defined in functions.php
 
-// Get user dashboard based on role
+// Get user dashboard based on role - UNIQUE DASHBOARDS FOR EACH POSITION
 function getUserDashboard($role) {
     $dashboards = [
+        // Executive Level
         'Director General' => 'dashboards/director-general.php',
-        'Chief Executive Officer' => 'dashboards/director-general.php',
-        'School Principal' => 'dashboards/principal.php',
-        'School Secretary' => 'dashboards/secretary.php',
+        'Chief Executive Officer' => 'dashboards/ceo.php',
+        
+        // Director Level
+        'Director Academics' => 'dashboards/director-academics.php',
+        'Director ICT' => 'dashboards/director-ict.php',
+        'Director Finance' => 'dashboards/director-finance.php',
+        
+        // School Management
+        'School Principal' => 'dashboards/school-principal.php',
+        'Deputy Principal' => 'dashboards/deputy-principal.php',
+        'School Bursar' => 'dashboards/school-bursar.php',
         'Academic Registrar' => 'dashboards/academic-registrar.php',
-        'School Bursar' => 'dashboards/bursar.php',
         'HR Manager' => 'dashboards/hr-manager.php',
-        'Director Academics' => 'dashboards/director-general.php',
-        'Director ICT' => 'dashboards/director-general.php',
-        'Director Finance' => 'dashboards/director-general.php',
+        'School Secretary' => 'dashboards/school-secretary.php',
+        'School Librarian' => 'dashboards/school-librarian.php',
+        
+        // Academic Staff
+        'Head of Nursing' => 'dashboards/head-nursing.php',
+        'Head of Midwifery' => 'dashboards/head-midwifery.php',
+        'Senior Lecturers' => 'dashboards/senior-lecturers.php',
+        'Lecturers' => 'dashboards/lecturers.php',
+        'teacher' => 'dashboards/lecturers.php',
+        
+        // Support Staff
+        'Matrons' => 'dashboards/matrons.php',
+        'Wardens' => 'dashboards/wardens.php',
+        'Lab Technicians' => 'dashboards/lab-technicians.php',
+        'Drivers' => 'dashboards/drivers.php',
+        'Security' => 'dashboards/security.php',
+        
+        // Student Roles
         'Students' => 'student_profile.php',
-        'Lecturers' => 'dashboard.php'
+        'Guild President' => 'student_profile.php',
+        'Class Representatives' => 'student_profile.php'
     ];
     
-    return $dashboards[$role] ?? 'dashboard.php';
+    // Return the dashboard if found, otherwise return a default based on role type
+    if (isset($dashboards[$role])) {
+        return $dashboards[$role];
+    }
+    
+    // Fallback logic for unmapped roles
+    if (strpos($role, 'Director') !== false) {
+        return 'dashboards/director-general.php';
+    } elseif (strpos($role, 'Principal') !== false) {
+        return 'dashboards/principal.php';
+    } elseif (strpos($role, 'Lecturer') !== false) {
+        return 'dashboards/lecturers.php';
+    } elseif (strpos($role, 'Teacher') !== false) {
+        return 'dashboards/lecturers.php';
+    } else {
+        return 'dashboards/lecturers.php'; // Safe fallback
+    }
 }
 
 // Logout function

@@ -52,7 +52,7 @@ checkAuth('Student');
             margin-top: 15px;
             margin-left: 10px;
             border-radius: 50%;
-            background-image: url('../images/1.png');
+            background-image: url('../images/school-logo.png');
             background-position: center;
             background-size: cover;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
