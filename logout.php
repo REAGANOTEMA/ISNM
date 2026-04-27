@@ -7,7 +7,11 @@ $_SESSION = array();
 // Destroy the session
 session_destroy();
 
-// Redirect to login page
-header('Location: login.php');
+// Redirect to appropriate login page based on session role
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'Student') {
+    header('Location: student-login.php');
+} else {
+    header('Location: staff-login.php');
+}
 exit();
 ?>

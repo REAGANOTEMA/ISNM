@@ -2,5 +2,5 @@
 session_start();
 
 session_unset();
-header('Location: ../login.php');
+header('Location: ../staff-login.php');
 ?>

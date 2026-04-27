@@ -1,5 +1,4 @@
 <?php
-session_start();
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
@@ -7,7 +6,7 @@ include_once 'includes/student_profile_component.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: student-login.php');
     exit();
 }
 

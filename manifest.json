@@ -61,7 +61,7 @@
       "name": "Student Portal",
       "short_name": "Students",
       "description": "Access student dashboard and services",
-      "url": "/login.php?role=Student",
+      "url": "/student-login.php",
       "icons": [
         {
           "src": "images/school-logo.png",

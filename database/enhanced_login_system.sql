@@ -3,8 +3,8 @@
 -- Staff login with names and passwords
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS isnm_school CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE isnm_school;
+CREATE DATABASE IF NOT EXISTS isnm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE isnm_db;
 
 -- Drop existing tables to start fresh
 DROP TABLE IF EXISTS activity_logs;

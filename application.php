@@ -1,12 +1,15 @@
 <?php include('shared/_header.php');?>
 
   <main>
-      <!-- Page Header -->
-      <section class="page-header">
+      <!-- Hero Page Header -->
+      <section class="hero-header">
+        <div class="hero-overlay"></div>
         <div class="container">
-          <div class="row">
-             <h1 class="page-title">APPLICATION FORM</h1>
-              <p class="page-subtitle">IGANGA SCHOOL OF NURSING AND MIDWIFERY</p>
+          <div class="hero-content">
+            <div class="hero-text">
+              <h1 class="hero-title animate-fade-in">APPLICATION FORM</h1>
+              <p class="hero-subtitle animate-slide-up">IGANGA SCHOOL OF NURSING AND MIDWIFERY</p>
+              <div class="hero-decoration animate-scale-in"></div>
             </div>
           </div>
         </div>
@@ -17,13 +20,15 @@
         <div class="container">
           <div class="row">
             <div class="col-lg-12">
-              <div class="application-header">
+              <div class="school-banner animate-fade-in">
                 <div class="school-info">
-                  <h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
-                  <p>P.O. Box 418, Iganga</p>
-                  <p>Tel: 0782 990 403 | 0782 633 253 | 0753 393 340 | 0703 999 796</p>
-                  <p>Email: iganganursingschool@gmail.com</p>
-                  <p>Website: www.isnm.ac.ug</p>
+                  <h2 class="school-title">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
+                  <div class="school-details">
+                    <p><i class="fas fa-map-marker-alt"></i> P.O. Box 418, Iganga</p>
+                    <p><i class="fas fa-phone"></i> 0782 990 403 | 0782 633 253 | 0753 393 340 | 0703 999 796</p>
+                    <p><i class="fas fa-envelope"></i> iganganursingschool@gmail.com</p>
+                    <p><i class="fas fa-globe"></i> www.isnm.ac.ug</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -31,19 +36,30 @@
           
           <div class="row">
             <div class="col-lg-12 text-center mb-5">
-              <h3 class="section-title">SPECIAL ANNOUNCEMENT</h3>
-              <p class="section-subtitle">The Principal of Iganga School of Nursing & Midwifery, Iganga Campus cordially invites suitable applicants for Certificate Courses in Nursing & Midwifery and Diploma Extension programs in Nursing and Midwifery for JUNE/JULY, 2026 INTAKE (PICKING OF APPLICATIONS IS IN PROGRESS)</p>
+              <div class="announcement-card animate-slide-up">
+                <div class="announcement-icon">
+                  <i class="fas fa-bullhorn"></i>
+                </div>
+                <h3 class="announcement-title">SPECIAL ANNOUNCEMENT</h3>
+                <p class="announcement-text">The Principal of Iganga School of Nursing & Midwifery, Iganga Campus cordially invites suitable applicants for Certificate Courses in Nursing & Midwifery and Diploma Extension programs in Nursing and Midwifery for JUNE/JULY, 2026 INTAKE (PICKING OF APPLICATIONS IS IN PROGRESS)</p>
+              </div>
             </div>
           </div>
           
           <div class="row">
             <div class="col-lg-6">
-              <div class="requirements-card">
-                <h4>ENTRY REQUIREMENTS</h4>
+              <div class="requirements-card animate-fade-in">
+                <div class="card-header">
+                  <i class="fas fa-graduation-cap"></i>
+                  <h4>ENTRY REQUIREMENTS</h4>
+                </div>
                 
                 <div class="requirement-section">
-                  <h5>CERTIFICATE LEVEL</h5>
-                  <ol>
+                  <div class="section-header">
+                    <i class="fas fa-certificate"></i>
+                    <h5>CERTIFICATE LEVEL</h5>
+                  </div>
+                  <ol class="requirements-list">
                     <li>You must have passed "O" Level in English, Mathematics, Biology, Chemistry and Physics at least with a pass or D for candidates of the New Lower Secondary curriculum</li>
                     <li>This MUST be obtained at the same sitting</li>
                     <li>Filled application form (picked from school with attachment of all relevant documents)</li>
@@ -52,8 +68,11 @@
                 </div>
                 
                 <div class="requirement-section">
-                  <h5>DIPLOMA EXTENSION PROGRAM</h5>
-                  <ol>
+                  <div class="section-header">
+                    <i class="fas fa-medal"></i>
+                    <h5>DIPLOMA EXTENSION PROGRAM</h5>
+                  </div>
+                  <ol class="requirements-list">
                     <li>Must have qualified as an Enrolled Nurse, Enrolled Midwife and or Enrolled Comprehensive Nurse from a recognized Institution</li>
                     <li>Must have a pass slip/Transcript and a Certificate of completion from the Uganda Nurses and Midwives Examinations Board (UNMEB)</li>
                     <li>Must have a Certificate of Enrolment and a Valid practicing license from the Uganda Nurses and Midwives Council (UNMC)</li>
@@ -64,45 +83,92 @@
             </div>
             
             <div class="col-lg-6">
-              <div class="interview-info">
-                <h4>INTERVIEWS & ADMISSIONS IN PROGRESS FOR JUNE/JULY, 2026 INTAKE</h4>
+              <div class="interview-card animate-slide-up">
+                <div class="card-header">
+                  <i class="fas fa-calendar-check"></i>
+                  <h4>INTERVIEWS & ADMISSIONS IN PROGRESS</h4>
+                  <span class="intake-badge">JUNE/JULY, 2026 INTAKE</span>
+                </div>
+                
                 <div class="interview-details">
                   <div class="detail-item">
-                    <span class="label">VENUE:</span>
-                    <span class="value">IGANGA CAMPUS</span>
+                    <div class="detail-icon">
+                      <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="detail-content">
+                      <span class="label">VENUE:</span>
+                      <span class="value">IGANGA CAMPUS</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">TIME:</span>
-                    <span class="value">9:00AM-4:00PM (MONDAY-FRIDAY)</span>
+                    <div class="detail-icon">
+                      <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="detail-content">
+                      <span class="label">TIME:</span>
+                      <span class="value">9:00AM-4:00PM (MONDAY-FRIDAY)</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">FEE:</span>
-                    <span class="value">UGX 95,000 (Ninety Five Thousand Shillings Only) NON REFUNDABLE APPLICATION FEE</span>
+                    <div class="detail-icon">
+                      <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="detail-content">
+                      <span class="label">FEE:</span>
+                      <span class="value">UGX 95,000 (NON-REFUNDABLE)</span>
+                    </div>
                   </div>
                 </div>
                 
                 <div class="location-info">
-                  <p><strong>The School is located before C.M.S Trading Centre along Jinja-Iganga Highway after Nekoli Guest House</strong></p>
+                  <div class="location-header">
+                    <i class="fas fa-location-arrow"></i>
+                    <h5>LOCATION</h5>
+                  </div>
+                  <p>The School is located before C.M.S Trading Centre along Jinja-Iganga Highway after Nekoli Guest House</p>
                 </div>
                 
                 <div class="contact-details">
-                  <h4>FOR MORE INFORMATION PLEASE CONTACT:</h4>
-                  <div class="contact-list">
+                  <div class="contact-header">
+                    <i class="fas fa-phone-alt"></i>
+                    <h5>CONTACT INFORMATION</h5>
+                  </div>
+                  <div class="contact-grid">
                     <div class="contact-item">
-                      <span class="role">PRINCIPAL:</span>
-                      <span class="number">0782 990 403</span>
+                      <div class="contact-avatar">
+                        <i class="fas fa-user-tie"></i>
+                      </div>
+                      <div class="contact-info">
+                        <span class="role">PRINCIPAL</span>
+                        <span class="number">0782 990 403</span>
+                      </div>
                     </div>
                     <div class="contact-item">
-                      <span class="role">DEPUTY PRINCIPAL:</span>
-                      <span class="number">0782 633 253</span>
+                      <div class="contact-avatar">
+                        <i class="fas fa-user-shield"></i>
+                      </div>
+                      <div class="contact-info">
+                        <span class="role">DEPUTY PRINCIPAL</span>
+                        <span class="number">0782 633 253</span>
+                      </div>
                     </div>
                     <div class="contact-item">
-                      <span class="role">DIRECTOR:</span>
-                      <span class="number">0753 393 340</span>
+                      <div class="contact-avatar">
+                        <i class="fas fa-user-cog"></i>
+                      </div>
+                      <div class="contact-info">
+                        <span class="role">DIRECTOR</span>
+                        <span class="number">0753 393 340</span>
+                      </div>
                     </div>
                     <div class="contact-item">
-                      <span class="role">HRM:</span>
-                      <span class="number">0703 999 796</span>
+                      <div class="contact-avatar">
+                        <i class="fas fa-users"></i>
+                      </div>
+                      <div class="contact-info">
+                        <span class="role">HRM</span>
+                        <span class="number">0703 999 796</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -113,20 +179,23 @@
       </section>
 
       <!-- Application Form -->
-      <section class="application-form py-5">
+      <section class="application-form-section py-5">
         <div class="container">
           <div class="row">
             <div class="col-lg-12">
-              <div class="form-container">
-                <!-- ISNM Header -->
-                <div class="isnm-header text-center mb-4">
-                  <h2 class="isnm-title">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
-                  <p class="isnm-subtitle">P.O. Box 418, Iganga | Tel: 0782 990 403 | Email: iganganursingschool@gmail.com</p>
-                  <p class="isnm-website">Website: www.isnm.ac.ug</p>
+              <div class="form-container animate-fade-in">
+                <!-- Form Header -->
+                <div class="form-header">
+                  <div class="form-logo">
+                    <i class="fas fa-hospital"></i>
+                  </div>
+                  <h2 class="form-title">APPLICATION FORM</h2>
+                  <p class="form-subtitle">IGANGA SCHOOL OF NURSING AND MIDWIFERY</p>
+                  <div class="form-instructions">
+                    <i class="fas fa-info-circle"></i>
+                    <span>PLEASE FILL THIS FORM IN CAPITAL LETTERS</span>
+                  </div>
                 </div>
-                
-                <h3 class="text-center mb-4">APPLICATION FORM</h3>
-                <p class="text-center mb-4">PLEASE FILL THIS FORM IN CAPITAL LETTERS</p>
                 
                 <form id="applicationForm" method="POST" action="process-application.php" enctype="multipart/form-data">
                   <!-- Personal Information -->
@@ -839,104 +908,658 @@
   </script>
 
   <style>
-    .application-header {
-      background: var(--gradient-primary);
+    /* Hero Header Styles */
+    .hero-header {
+      position: relative;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
       color: white;
-      padding: 3rem 0;
+      padding: 6rem 0 4rem;
+      overflow: hidden;
+    }
+
+    .hero-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(30, 60, 114, 0.8), rgba(126, 34, 206, 0.6));
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      letter-spacing: 2px;
+    }
+
+    .hero-subtitle {
+      font-size: 1.5rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .hero-decoration {
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, #ffd700, #ffed4e);
+      margin: 0 auto;
+      border-radius: 2px;
+    }
+
+    /* School Banner Styles */
+    .school-banner {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 20px;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+      border: 1px solid #dee2e6;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .school-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(126, 34, 206, 0.05) 0%, transparent 70%);
+      animation: rotate 30s linear infinite;
+    }
+
+    .school-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e3c72;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .school-details {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .school-details p {
+      margin: 0.8rem 0;
+      font-size: 1.1rem;
+      color: #495057;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .school-details i {
+      color: #7e22ce;
+      font-size: 1rem;
+    }
+
+    /* Announcement Card */
+    .announcement-card {
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(255, 193, 7, 0.15);
+      border: 2px solid #ffc107;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .announcement-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ffc107, #ff6b6b, #4ecdc4, #ffc107);
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    .announcement-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #ffc107, #ff6b6b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+    }
+
+    .announcement-icon i {
+      font-size: 2rem;
+      color: white;
+    }
+
+    .announcement-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #856404;
+      margin-bottom: 1rem;
+    }
+
+    .announcement-text {
+      font-size: 1.1rem;
+      color: #856404;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Requirements Card */
+    .requirements-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+      border: 1px solid #e9ecef;
+      height: 100%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .requirements-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f8f9fa;
+    }
+
+    .card-header i {
+      font-size: 2rem;
+      color: #7e22ce;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-header h4 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e3c72;
+      margin: 0;
+    }
+
+    .requirement-section {
       margin-bottom: 2rem;
     }
 
-    .application-form-container {
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-header i {
+      font-size: 1.2rem;
+      color: #7e22ce;
+    }
+
+    .section-header h5 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #495057;
+      margin: 0;
+    }
+
+    .requirements-list {
+      padding-left: 1.5rem;
+      margin: 0;
+    }
+
+    .requirements-list li {
+      margin-bottom: 0.8rem;
+      color: #495057;
+      line-height: 1.6;
+      position: relative;
+      padding-left: 0.5rem;
+    }
+
+    .requirements-list li::before {
+      content: '▸';
+      position: absolute;
+      left: -1rem;
+      color: #7e22ce;
+      font-weight: bold;
+    }
+
+    /* Interview Card */
+    .interview-card {
       background: white;
       border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+      border: 1px solid #e9ecef;
+      height: 100%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .interview-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+    }
+
+    .intake-badge {
+      background: linear-gradient(135deg, #4ecdc4, #44a3aa);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    .interview-details {
+      margin-bottom: 2rem;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 15px;
+      transition: background 0.3s ease;
+    }
+
+    .detail-item:hover {
+      background: #e9ecef;
+    }
+
+    .detail-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .detail-icon i {
+      font-size: 1.2rem;
+      color: white;
+    }
+
+    .detail-content {
+      flex: 1;
+    }
+
+    .detail-content .label {
+      display: block;
+      font-size: 0.9rem;
+      color: #6c757d;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .detail-content .value {
+      font-size: 1.1rem;
+      color: #1e3c72;
+      font-weight: 600;
+    }
+
+    .location-info {
+      background: linear-gradient(135deg, #e8f5e8, #d4edda);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid #c3e6cb;
+    }
+
+    .location-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .location-header i {
+      font-size: 1.2rem;
+      color: #28a745;
+    }
+
+    .location-header h5 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #155724;
+      margin: 0;
+    }
+
+    .location-info p {
+      color: #155724;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .contact-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-header i {
+      font-size: 1.2rem;
+      color: #007bff;
+    }
+
+    .contact-header h5 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #004085;
+      margin: 0;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .contact-item:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+
+    .contact-avatar {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-avatar i {
+      font-size: 1rem;
+      color: white;
+    }
+
+    .contact-info {
+      flex: 1;
+    }
+
+    .contact-info .role {
+      display: block;
+      font-size: 0.9rem;
+      color: #6c757d;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .contact-info .number {
+      font-size: 1rem;
+      color: #1e3c72;
+      font-weight: 600;
+    }
+
+    /* Form Container */
+    .form-container {
+      background: white;
+      border-radius: 25px;
       padding: 3rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      border: 1px solid #e9ecef;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
     }
 
     .form-header {
       text-align: center;
       margin-bottom: 3rem;
+      position: relative;
     }
 
-    .form-header h2 {
-      color: var(--isnm-blue);
-      font-size: 2rem;
-      margin-bottom: 1rem;
+    .form-logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      position: relative;
     }
 
-    .form-section {
-      margin-bottom: 3rem;
-      padding: 2rem;
-      background: var(--light-color);
-      border-radius: 15px;
-      border-left: 4px solid var(--primary-color);
+    .form-logo::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      border-radius: 25px;
+      z-index: -1;
+      opacity: 0.3;
+      animation: pulse 2s ease-in-out infinite;
     }
 
-    .form-section h3 {
-      color: var(--isnm-blue);
-      margin-bottom: 1.5rem;
-      font-size: 1.3rem;
+    .form-logo i {
+      font-size: 2.5rem;
+      color: white;
     }
 
-    .form-section h3 i {
-      margin-right: 0.5rem;
-    }
-
-    .declaration-box {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 10px;
-      padding: 1.5rem;
-    }
-
-    .declaration-box h4 {
-      color: #856404;
-      margin-bottom: 1rem;
-    }
-
-    .declaration-text {
-      color: #856404;
-      font-style: italic;
-      margin-bottom: 1rem;
-    }
-
-    .contact-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    .contact-item {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      transition: all 0.3s ease;
-    }
-
-    .contact-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    }
-
-    .contact-item i {
-      font-size: 2rem;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-    }
-
-    .contact-item h4 {
-      color: var(--isnm-blue);
+    .form-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e3c72;
       margin-bottom: 0.5rem;
     }
 
-    .is-invalid {
-      border-color: var(--danger-color) !important;
+    .form-subtitle {
+      font-size: 1.2rem;
+      color: #6c757d;
+      margin-bottom: 1.5rem;
     }
 
+    .form-instructions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      color: #856404;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid #ffc107;
+    }
+
+    .form-instructions i {
+      font-size: 1rem;
+      color: #f39c12;
+    }
+
+    /* Form Sections */
+    .form-section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 20px;
+      border: 1px solid #dee2e6;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .form-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .form-section h4 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e3c72;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .form-section h4 i {
+      font-size: 1.2rem;
+      color: #7e22ce;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-control:focus {
+      border-color: #7e22ce;
+      box-shadow: 0 0 0 0.2rem rgba(126, 34, 206, 0.15);
+      outline: none;
+    }
+
+    .form-control:hover {
+      border-color: #dee2e6;
+    }
+
+    /* Animations */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.05); opacity: 0.5; }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.8s ease-out 0.2s both;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.8s ease-out 0.4s both;
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-      .application-form-container {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+      
+      .school-title {
+        font-size: 2rem;
+      }
+      
+      .form-container {
         padding: 2rem;
       }
       
@@ -947,6 +1570,29 @@
       .contact-grid {
         grid-template-columns: 1fr;
       }
+      
+      .detail-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+      
+      .card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+    }
+
+    /* Invalid Form Styles */
+    .is-invalid {
+      border-color: #dc3545 !important;
+      background-color: #fff5f5;
+    }
+
+    .is-invalid:focus {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
     }
   </style>
 

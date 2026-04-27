@@ -195,8 +195,8 @@ ISNM/
 ├── donation.php                 # Donation page
 ├── volunteer.php                # Volunteer page
 ├── organizational-structure.php  # Staff login portal
-├── login.php                    # Login page
-├── process-login.php            # Login processing
+├── staff-login.php              # Staff login page
+├── student-login.php            # Student login page
 ├── process-application.php       # Application processing
 ├── logout.php                   # Logout script
 ├── css/

@@ -1,12 +1,11 @@
 <?php
-session_start();
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 
 // Check if user is logged in and has appropriate access level
 if (!isset($_SESSION['user_id']) || $_SESSION['access_level'] < 8) {
-    header("Location: login.php");
+    header("Location: staff-login.php");
     exit();
 }
 

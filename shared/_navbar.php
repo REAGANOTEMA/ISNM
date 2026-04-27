@@ -22,7 +22,8 @@
           <li><a href="./volunteer.php">Volunteer</a></li>
           <li><a href="./contact.php">Contact</a></li>
           <li><a href="./organogram.php">Organogram</a></li>
-          <li><a href="./login.php" class="btn">Login</a></li>
+          <li><a href="./staff-login.php" class="btn">Staff Login</a></li>
+          <li><a href="./student-login.php" class="btn">Student Login</a></li>
         </ul>
       </div>
       <div class="bottom-area">

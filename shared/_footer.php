@@ -37,7 +37,8 @@
             <li><a href="volunteer.php"><i class="fas fa-hands-helping me-2"></i>Volunteer</a></li>
             <li><a href="contact.php"><i class="fas fa-envelope me-2"></i>Contact</a></li>
             <li><a href="organogram.php"><i class="fas fa-sitemap me-2"></i>Organogram</a></li>
-            <li><a href="login.php"><i class="fas fa-sign-in-alt me-2"></i>Staff Login</a></li>
+            <li><a href="staff-login.php"><i class="fas fa-sign-in-alt me-2"></i>Staff Login</a></li>
+          <li><a href="student-login.php"><i class="fas fa-graduation-cap me-2"></i>Student Login</a></li>
           </ul>
         </div>
       </div>

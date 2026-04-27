@@ -1,24 +1,23 @@
 <?php
-session_start();
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/auth_functions.php';
 
 // Handle student login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nsin_number = sanitizeInput($_POST['nsin_number']);
+    $student_id = sanitizeInput($_POST['student_id']);
     $first_name = sanitizeInput($_POST['first_name']);
     $phone = sanitizeInput($_POST['phone']);
     
     // Validate input
-    if (empty($nsin_number) || empty($first_name) || empty($phone)) {
+    if (empty($student_id) || empty($first_name) || empty($phone)) {
         $_SESSION['error'] = "All fields are required for student login";
         header("Location: student-login.php");
         exit();
     }
     
     // Authenticate student
-    $auth_result = authenticateStudent($nsin_number, $first_name, $phone);
+    $auth_result = authenticateStudent($student_id, $first_name, $phone);
     
     if ($auth_result['success']) {
         // Create session for authenticated student
@@ -332,17 +331,18 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Student') {
 
             <div class="security-notice">
                 <i class="fas fa-info-circle"></i>
-                Students login with their NSIN number, first name, and contact number
+                Students login with their Student ID (U001/CM/056/16), first name, and contact number
             </div>
             
             <form method="POST" action="student-login.php">
                 <div class="form-group">
-                    <label class="form-label" for="nsin_number">NSIN Number *</label>
+                    <label class="form-label" for="student_id">Student ID *</label>
                     <div class="input-icon">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" class="form-control" id="nsin_number" name="nsin_number" 
-                               placeholder="Enter your NSIN number (CM1234567890123)" required>
+                        <i class="fas fa-id-badge"></i>
+                        <input type="text" class="form-control" id="student_id" name="student_id" 
+                               placeholder="Enter your Student ID (U001/CM/056/16)" required>
                     </div>
+                    <small class="form-text text-muted">Format: U001/CM/056/16 (CM=Midwifery, CN=Nursing, DMORDN=Diploma)</small>
                 </div>
 
                 <div class="form-group">
@@ -429,9 +429,17 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Student') {
             }
         });
 
-        // NSIN number validation
-        document.querySelector('#nsin_number').addEventListener('input', function(e) {
-            const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        // Student ID validation
+        document.querySelector('#student_id').addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase();
+            // Auto-format as U001/CM/056/16
+            if (value.length === 4 && !value.includes('/')) {
+                value = value + '/';
+            } else if (value.length === 7 && value.match(/^U\d{3}\/\w{2}$/)) {
+                value = value + '/';
+            } else if (value.length === 11 && value.match(/^U\d{3}\/\w{2}\/\d{3}$/)) {
+                value = value + '/';
+            }
             e.target.value = value;
         });
 
@@ -455,7 +463,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Student') {
 
         // Auto-focus first input
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('#nsin_number').focus();
+            document.querySelector('#student_id').focus();
         });
     </script>
 </body>

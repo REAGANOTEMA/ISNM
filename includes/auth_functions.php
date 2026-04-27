@@ -7,18 +7,28 @@ include_once 'config.php';
 include_once 'functions.php';
 
 // Enhanced student authentication
-function authenticateStudent($nsin_number, $first_name, $phone) {
+function authenticateStudent($student_id, $first_name, $phone) {
     global $conn;
     
     // Validate input
-    if (empty($nsin_number) || empty($first_name) || empty($phone)) {
+    if (empty($student_id) || empty($first_name) || empty($phone)) {
         return ['success' => false, 'message' => 'All fields are required for student login'];
     }
     
-    // Check if student exists and is not locked
-    $check_sql = "SELECT * FROM students WHERE nsin_number = ? AND first_name = ? AND phone = ? AND status = 'active'";
+    // Validate student ID format (U001/CM/056/16)
+    if (!preg_match('/^U\d{3}\/(CM|CN|DMORDN)\/\d{3}\/\d{2}$/', $student_id)) {
+        return ['success' => false, 'message' => 'Invalid student ID format. Use format: U001/CM/056/16'];
+    }
+    
+    // Parse student ID components
+    $id_parts = explode('/', $student_id);
+    $program_code = $id_parts[1]; // CM, CN, or DMORDN
+    $student_number = $id_parts[2]; // 056
+    
+    // Check if student exists and is not locked using new format
+    $check_sql = "SELECT * FROM students WHERE student_id_format = ? AND first_name = ? AND phone = ? AND status = 'active'";
     $stmt = $conn->prepare($check_sql);
-    $stmt->bind_param("sss", $nsin_number, $first_name, $phone);
+    $stmt->bind_param("sss", $student_id, $first_name, $phone);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -48,7 +58,7 @@ function authenticateStudent($nsin_number, $first_name, $phone) {
                 'email' => $student['email'],
                 'phone' => $student['phone'],
                 'role' => 'Student',
-                'nsin_number' => $student['nsin_number'],
+                'nsin_number' => $student['application_id'],
                 'program' => $student['program'],
                 'level' => $student['level']
             ]
@@ -56,7 +66,7 @@ function authenticateStudent($nsin_number, $first_name, $phone) {
         
     } else {
         // Check if student exists with NSIN number but wrong credentials
-        $check_nsin_sql = "SELECT * FROM students WHERE nsin_number = ?";
+        $check_nsin_sql = "SELECT * FROM students WHERE application_id = ?";
         $check_nsin_stmt = $conn->prepare($check_nsin_sql);
         $check_nsin_stmt->bind_param("s", $nsin_number);
         $check_nsin_stmt->execute();
@@ -71,14 +81,14 @@ function authenticateStudent($nsin_number, $first_name, $phone) {
             // Lock account after 3 failed attempts
             if ($attempts >= 3) {
                 $lock_until = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-                $lock_sql = "UPDATE students SET login_attempts = ?, account_locked = 1, locked_until = ? WHERE nsin_number = ?";
+                $lock_sql = "UPDATE students SET login_attempts = ?, account_locked = 1, locked_until = ? WHERE application_id = ?";
                 $lock_stmt = $conn->prepare($lock_sql);
                 $lock_stmt->bind_param("iss", $attempts, $lock_until, $nsin_number);
                 $lock_stmt->execute();
                 
                 return ['success' => false, 'message' => 'Account locked due to multiple failed login attempts. Please try again after 30 minutes.'];
             } else {
-                $update_sql = "UPDATE students SET login_attempts = ? WHERE nsin_number = ?";
+                $update_sql = "UPDATE students SET login_attempts = ? WHERE application_id = ?";
                 $update_stmt = $conn->prepare($update_sql);
                 $update_stmt->bind_param("is", $attempts, $nsin_number);
                 $update_stmt->execute();
@@ -184,29 +194,7 @@ function checkAuth($required_role = null) {
     return true;
 }
 
-// Check if user has permission for specific action
-function hasPermission($permission) {
-    $role = $_SESSION['role'] ?? '';
-    
-    $permissions = [
-        'Director General' => ['all'],
-        'Chief Executive Officer' => ['all'],
-        'Director Academics' => ['students', 'academics', 'reports'],
-        'Director ICT' => ['system', 'users', 'reports'],
-        'Director Finance' => ['fees', 'finance', 'reports'],
-        'School Principal' => ['students', 'academics', 'fees', 'reports'],
-        'Deputy Principal' => ['students', 'academics'],
-        'School Bursar' => ['fees', 'finance'],
-        'Academic Registrar' => ['students', 'academics'],
-        'HR Manager' => ['users', 'hr'],
-        'School Secretary' => ['students', 'administrative'],
-        'Lecturers' => ['academics', 'students_view'],
-        'Students' => ['profile', 'fees_view', 'academics_view']
-    ];
-    
-    return in_array('all', $permissions[$role] ?? []) || 
-           in_array($permission, $permissions[$role] ?? []);
-}
+// hasPermission() function is already defined in functions.php
 
 // Get user dashboard based on role
 function getUserDashboard($role) {
@@ -238,8 +226,8 @@ function logout() {
     // Destroy session
     session_destroy();
     
-    // Redirect to login
-    header('Location: enhanced_login.php');
+    // Redirect to appropriate login page
+    header('Location: staff-login.php');
     exit();
 }
 

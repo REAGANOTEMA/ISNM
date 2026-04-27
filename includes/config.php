@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 $host = 'localhost';
-$dbname = 'isnm_school';
+$dbname = 'isnm_db';
 $username = 'root';
-$password = '';
+$password = 'ReagaN23#';
 
 // Create connection
 $conn = new mysqli($host, $username, $password, $dbname);
@@ -16,8 +16,10 @@ if ($conn->connect_error) {
 // Set charset
 $conn->set_charset("utf8mb4");
 
-// Session configuration
-session_start();
+// Session configuration - ensure session is started only once
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Global functions
 function executeQuery($sql, $params = [], $types = '') {
@@ -72,7 +74,12 @@ function isLoggedIn() {
 // Check user access level
 function checkAccessLevel($required_level) {
     if (!isset($_SESSION['access_level']) || $_SESSION['access_level'] < $required_level) {
-        header("Location: login.php");
+        // Redirect to appropriate login page based on session role
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'Student') {
+            header("Location: ../student-login.php");
+        } else {
+            header("Location: ../staff-login.php");
+        }
         exit();
     }
 }

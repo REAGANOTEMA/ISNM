@@ -1,12 +1,11 @@
 <?php
-session_start();
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: student-login.php");
     exit();
 }
 
@@ -41,7 +40,7 @@ $student = $student_result[0] ?? null;
 
 if (!$student) {
     $_SESSION['error'] = "Student profile not found";
-    header("Location: login.php");
+    header("Location: student-login.php");
     exit();
 }
 

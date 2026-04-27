@@ -1,15 +1,15 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Students') {
-    header('Location: ../login.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
+    header('Location: ../student-login.php');
     exit();
 }
 
 // Database connection
 $host = 'localhost';
 $username = 'root';
-$password = '';
-$database = 'isnm_school';
+$password = 'ReagaN23#';
+$database = 'isnm_db';
 $conn = new mysqli($host, $username, $password, $database);
 
 if ($conn->connect_error) {

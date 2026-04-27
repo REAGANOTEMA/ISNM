@@ -76,7 +76,7 @@
             <i class="fas fa-graduation-cap"></i>
             <span>Apply Now</span>
           </a>
-          <a href="dashboards/student.php" class="btn-cinematic btn-secondary">
+          <a href="student-login.php" class="btn-cinematic btn-secondary">
             <i class="fas fa-user-graduate"></i>
             <span>Student Portal</span>
           </a>

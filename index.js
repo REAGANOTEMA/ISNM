@@ -1,484 +1,376 @@
+// ISNM School Management System - Enhanced JavaScript
+// This file handles UI interactions for the new login system
+// No more login.php references - uses staff-login.php and student-login.php
 
-let usersEmail = '';
-
-
-const togglePassword = document.querySelector("#togglePassword");
-const password = document.querySelector("#password");
-
-togglePassword.addEventListener("click", function () {
-    // toggle the type attribute
-    const type = password.getAttribute("type") === "password" ? "text" : "password";
-    password.setAttribute("type", type);
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
     
-    // toggle the icon
-    this.classList.toggle("bi-eye-slash-fill");
-});
-
-document.getElementById('login-form').addEventListener('submit', submitForm);
-
-var errorbox = document.querySelector('.alert-box');
-var error_msg = document.getElementById("error-msg");
-var weakPswrd = document.getElementById('weakPasswordFeedback');
-var notMatch = document.getElementById('passwordNotSame');
-
-
-document.getElementById('loginEmail').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-});
-document.getElementById('password').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-});
-document.getElementById('forgotEmail').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-});
-document.getElementById('otpCode').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-});
-document.getElementById('newpassword').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-    weakPswrd.style.display = 'none';
-    notMatch.style.display = 'none';
-});
-document.getElementById('confirmpassword').addEventListener('keyup', ()=>{
-    errorbox.style.display = 'none';
-    error_msg.innerHTML = '';
-    weakPswrd.style.display = 'none';
-    notMatch.style.display = 'none';
-});
-
-
-function submitForm(event) {
-    event.preventDefault();
-
-    var formData = new FormData(event.target);
-
-    fetch('login-backend.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response =>{
-        if (!response.ok) {
-            if (response.status === 500) {                
-                window.location.href = './errors/internal_server_error.html';
-            } 
-            throw new Error('HTTP error');
-        }    
-        return response.json();
-    })
-    .then(data => {
-        if(data.status === 'NO_CONNECTION'){
-            window.location.href = '../errors/error.html';
-            return;
-        }
+    // Handle password toggle functionality for login forms
+    initializePasswordToggles();
     
-        error_msg.classList.remove('alert-danger', 'alert-success');
-        error_msg.classList.add(data.status === "success" ? 'alert-success' : 'alert-danger');
-        error_msg.innerHTML = data.status === "success" ? 'success' : '' + data.message;
+    // Handle form validations
+    initializeFormValidations();
     
-        errorbox.style.display = 'block';
+    // Handle navigation enhancements
+    initializeNavigationEnhancements();
     
-        if (data.role === "admin") {
-            window.location.href = 'admin_panel/dashboard.php';
-        } else if (data.role === "owner") {
-            window.location.href = 'owner_panel/index.php';
-        } else if (data.role === "teacher") {
-            window.location.href = 'teacher_panel/dashboard.php';
-        } else if (data.role === "student") {
-            window.location.href = 'student_panel/index.php';
-        }
+    // Initialize animations
+    initializeAnimations();
     
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        error_msg.classList.remove('alert-success');
-        error_msg.classList.add('alert-danger');
-        error_msg.innerHTML = '<strong>Error</strong> ' + error.message;
-        errorbox.style.display = 'block';
+    // Initialize phone number formatting
+    initializePhoneFormatting();
+    
+    // Initialize NSIN validation
+    initializeNSINValidation();
+});
+
+// Password toggle functionality
+function initializePasswordToggles() {
+    // Staff login password toggle
+    const staffTogglePassword = document.querySelector("#staff-togglePassword");
+    const staffPassword = document.querySelector("#staff-password");
+    
+    if (staffTogglePassword && staffPassword) {
+        staffTogglePassword.addEventListener("click", function () {
+            const type = staffPassword.getAttribute("type") === "password" ? "text" : "password";
+            staffPassword.setAttribute("type", type);
+            this.classList.toggle("bi-eye-slash-fill");
+        });
+    }
+    
+    // Student login password toggle (if exists)
+    const studentTogglePassword = document.querySelector("#student-togglePassword");
+    const studentPassword = document.querySelector("#student-password");
+    
+    if (studentTogglePassword && studentPassword) {
+        studentTogglePassword.addEventListener("click", function () {
+            const type = studentPassword.getAttribute("type") === "password" ? "text" : "password";
+            studentPassword.setAttribute("type", type);
+            this.classList.toggle("bi-eye-slash-fill");
+        });
+    }
+}
+
+// Form validation enhancements
+function initializeFormValidations() {
+    // Staff login form validation
+    const staffLoginForm = document.querySelector('#staff-login-form');
+    if (staffLoginForm) {
+        staffLoginForm.addEventListener('submit', function(e) {
+            const username = document.querySelector('#staff-username');
+            const password = document.querySelector('#staff-password');
+            
+            if (!username.value.trim() || !password.value.trim()) {
+                e.preventDefault();
+                showNotification('Please fill in all required fields', 'warning');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = staffLoginForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+            }
+        });
+    }
+    
+    // Student login form validation
+    const studentLoginForm = document.querySelector('#student-login-form');
+    if (studentLoginForm) {
+        studentLoginForm.addEventListener('submit', function(e) {
+            const nsinNumber = document.querySelector('#nsin_number');
+            const firstName = document.querySelector('#first_name');
+            const phone = document.querySelector('#phone');
+            
+            if (!nsinNumber.value.trim() || !firstName.value.trim() || !phone.value.trim()) {
+                e.preventDefault();
+                showNotification('Please fill in all required fields', 'warning');
+                return false;
+            }
+            
+            // Validate NSIN format
+            if (!validateNSIN(nsinNumber.value)) {
+                e.preventDefault();
+                showNotification('Invalid NSIN number format. Use CM followed by 13 digits', 'warning');
+                return false;
+            }
+            
+            // Validate phone number
+            if (!validatePhone(phone.value)) {
+                e.preventDefault();
+                showNotification('Invalid phone number format. Use Uganda format (256...)', 'warning');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = studentLoginForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+            }
+        });
+    }
+}
+
+// NSIN number validation
+function validateNSIN(nsin) {
+    return /^CM\d{13}$/.test(nsin);
+}
+
+// Phone number validation
+function validatePhone(phone) {
+    // Remove all non-digit characters
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // Validate Uganda phone numbers (256 followed by 9 digits)
+    return /^256\d{9}$/.test(cleaned);
+}
+
+// Phone number formatting
+function formatPhoneNumber(input) {
+    // Remove all non-digit characters
+    let cleaned = input.replace(/\D/g, '');
+    
+    // Add 256 prefix if not present and number starts with 7
+    if (cleaned.length === 10 && cleaned.startsWith('7')) {
+        cleaned = '256' + cleaned.substring(1);
+    }
+    
+    return cleaned;
+}
+
+// NSIN number formatting
+function formatNSIN(input) {
+    // Remove all non-alphanumeric characters
+    let cleaned = input.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    
+    // Ensure it starts with CM
+    if (!cleaned.startsWith('CM')) {
+        cleaned = 'CM' + cleaned;
+    }
+    
+    // Limit to 15 characters (CM + 13 digits)
+    return cleaned.substring(0, 15);
+}
+
+// Initialize phone number formatting
+function initializePhoneFormatting() {
+    const phoneInputs = document.querySelectorAll('input[name="phone"], input[id*="phone"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            e.target.value = formatPhoneNumber(e.target.value);
+        });
+        
+        input.addEventListener('blur', function(e) {
+            if (!validatePhone(e.target.value)) {
+                e.target.classList.add('is-invalid');
+            } else {
+                e.target.classList.remove('is-invalid');
+                e.target.classList.add('is-valid');
+            }
+        });
     });
-    
 }
 
-
-document.getElementById('forgotpassword').addEventListener('click', function(){
-    hideLoginForm(true);
-    hideVerifyOtpForm(true);
-    hideforgotPasswordForm(false);
-});
-
-
-document.getElementById('backToLogin').addEventListener('click', function(){
-    hideforgotPasswordForm(true);
-    hideVerifyOtpForm(true);
-    hideLoginForm(false);
-});
-
-document.getElementById('backToforgotPasswordForm').addEventListener('click', ()=>{
-    hideLoginForm(true);
-    hideVerifyOtpForm(true);
-    hideforgotPasswordForm(false);
-});
-
-
-
-function hideLoginForm(hide){
-    document.querySelector('.alert-box').style.display = 'none';
-
-    document.getElementById('login-form').reset();
-    document.getElementById('forgotPassword-form').reset();
-    document.getElementById('otpVarification-form').reset();
-    document.getElementById('createNewPassword-form').reset();
-    if(hide){
-        document.getElementById('login-form').style.display = 'none';
-    }else{
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('board-title').innerHTML = 'Login';
-    }
-}
-function hideforgotPasswordForm(hide){
-
-    document.getElementById('login-form').reset();
-    document.getElementById('otpVarification-form').reset();
-    document.getElementById('createNewPassword-form').reset();
-
-    document.querySelector('.alert-box').style.display = 'none';
-    if(hide){
-        document.getElementById('forgotPassword-form').style.display = 'none';
-    }else{
-        document.getElementById('forgotPassword-form').style.display = 'block';
-        document.getElementById('board-title').innerHTML = 'Forgot Password';
-    }
-}
-function hideVerifyOtpForm(hide){
-
-    document.getElementById('login-form').reset();
-    document.getElementById('otpVarification-form').reset();
-    document.getElementById('createNewPassword-form').reset();
-
-    document.querySelector('.alert-box').style.display = 'none';
-    if(hide){
-        document.getElementById('otpVarification-form').style.display = 'none';
-    }else{
-        document.getElementById('otpVarification-form').style.display = 'block';
-        document.getElementById('board-title').innerHTML = 'OTP Verfication';
-    }
-}
-
-function hideCreateNewPasswordForm(hide){
-    document.getElementById('login-form').reset();
-    document.getElementById('otpVarification-form').reset();
-    document.getElementById('forgotPassword-form').reset();
-
-    document.querySelector('.alert-box').style.display = 'none';
-    if(hide){
-        document.getElementById('createNewPassword-form').style.display = 'none';
-    }else{
-        document.getElementById('createNewPassword-form').style.display = 'block';
-        document.getElementById('board-title').innerHTML = 'Create New Password';
-    }
-}
-
-document.getElementById('forgotPassword-form').addEventListener('submit', (event)=>{
-    event.preventDefault();
-    
-    let email = document.getElementById('forgotEmail').value;
-
-    document.querySelector('.alert-box').style.display = 'none';
-    document.getElementById('forgotEmail').disabled = true;
-    document.getElementById('backToLogin').style.display = 'none';
-    document.getElementById('sendCodeBtn').disabled = true;
-    document.getElementById('sendCodeBtn').innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">&nbsp;Processing...</span>';
-    
-    let sendData = new FormData();
-    sendData.append('email', email);
-    
-    fetch("forgotPassword.php", {
-        method: 'POST',
-        body: sendData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        
-        document.getElementById('backToLogin').style.display = 'block';
-        document.getElementById('forgotEmail').disabled = false;
-        document.getElementById('sendCodeBtn').disabled = false;
-        document.getElementById('sendCodeBtn').innerHTML = 'Send Code';
-
-        
-
-        if(data['status'] === 'success'){
-            hideLoginForm(true);
-            hideCreateNewPasswordForm(true);
-            hideforgotPasswordForm(true);
-            
-            hideVerifyOtpForm(false);
-            document.getElementById('otpDisabledEmail').value = data['email'] + '';
-            document.getElementById('otpDisabledEmail').disabled = true;
-            usersEmail = data['email'];
-        }else{
-            document.getElementById("error-msg").innerHTML = data['message'];
-            document.querySelector('.alert-box').style.display = 'block';
-        }
-
-        })
-        .catch(error => {
-            console.error("Error:", error);
+// Initialize NSIN validation
+function initializeNSINValidation() {
+    const nsinInputs = document.querySelectorAll('input[name="nsin_number"], input[id*="nsin"]');
+    nsinInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            e.target.value = formatNSIN(e.target.value);
         });
-
-    
-});
-
-document.getElementById("otpVarification-form").addEventListener('submit', (event)=>{
-    event.preventDefault();
-
-    document.querySelector('.alert-box').style.display = 'none';
-    document.getElementById('verifyCodeBtn').innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">&nbsp;Processing...</span>';
-
-    document.getElementById('backToforgotPasswordForm').style.display = 'none';
-    document.getElementById('resendOTP').style.display = 'none';
-    document.getElementById('otpCode').disabled = true;
-    document.getElementById('verifyCodeBtn').disabled = true;
-
-    let email = document.getElementById('otpDisabledEmail').value;
-    let otp = document.getElementById('otpCode').value;
-
-
-
-    let sendData = new FormData();
-    sendData.append('email', email);
-    sendData.append('otp', otp);
-
-    fetch("forgotPassword.php", {
-        method: 'POST',
-        body: sendData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('verifyCodeBtn').innerHTML = "Verify Code";
         
-        document.getElementById('backToforgotPasswordForm').style.display = 'block';
-        document.getElementById('resendOTP').style.display = 'block';
-        document.getElementById('otpCode').disabled = false;
-        document.getElementById('verifyCodeBtn').disabled = false;
-
-        if(data['status'] === 'success'){
-           hideLoginForm(true);
-           hideVerifyOtpForm(true);
-           hideforgotPasswordForm(true);
-
-
-           hideCreateNewPasswordForm(false);
-        }else{
-            document.getElementById("error-msg").innerHTML = data['message'];
-            document.querySelector('.alert-box').style.display = 'block';
-        }
-
-        })
-        .catch(error => {
-            console.error("Error:", error);
+        input.addEventListener('blur', function(e) {
+            if (!validateNSIN(e.target.value)) {
+                e.target.classList.add('is-invalid');
+            } else {
+                e.target.classList.remove('is-invalid');
+                e.target.classList.add('is-valid');
+            }
         });
+    });
+}
 
-});
-
-document.getElementById('resendOTP').addEventListener('click', function(){
-    document.querySelector('.alert-box').style.display = 'none';
-    document.getElementById('verifyCodeBtn').innerHTML = '<div class="spinner-border  spinner-border-sm" role="status"><span class="visually-hidden"></span></div>&nbsp;Sending...';
-
-    document.getElementById('backToforgotPasswordForm').style.display = 'none';
-    document.getElementById('resendOTP').style.display = 'none';
-    document.getElementById('otpCode').disabled = true;
-    document.getElementById('verifyCodeBtn').disabled = true;
-
-    let email = document.getElementById('otpDisabledEmail').value;
+// Show notification function
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    existingNotifications.forEach(notif => notif.remove());
     
-    let sendData = new FormData();
-    sendData.append('email', email);
-
-    fetch("forgotPassword.php", {
-        method: 'POST',
-        body: sendData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('verifyCodeBtn').innerHTML = 'Verify Code';
-
-        document.getElementById('resendOTP').innerHTML = 'OTP sended';
-        setTimeout(()=>{
-            document.getElementById('resendOTP').innerHTML = 'resend OTP?';
-        }, 2000);
-        
-        document.getElementById('backToforgotPasswordForm').style.display = 'block';
-        document.getElementById('resendOTP').style.display = 'block';
-        document.getElementById('otpCode').disabled = false;
-        document.getElementById('verifyCodeBtn').disabled = false;
-
-
-        if(data['status'] === 'success'){
-            hideLoginForm(true);
-            hideCreateNewPasswordForm(true);
-            hideforgotPasswordForm(true);
-            
-            hideVerifyOtpForm(false);
-            document.getElementById('otpDisabledEmail').value = data['email'] + '';
-            document.getElementById('otpDisabledEmail').disabled = true;
-            usersEmail = data['email'];
-        }else{
-            document.getElementById("error-msg").innerHTML = data['message'];
-            document.querySelector('.alert-box').style.display = 'block';
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = `notification-toast alert alert-${type} alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+    `;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
         }
+    }, 5000);
+}
 
-        })
-        .catch(error => {
-            console.error("Error:", error);
-        });
-});
-
-document.getElementById('createNewPassword-form').addEventListener('submit', (event)=>{
-    event.preventDefault();
-
-
-    var errorBox = document.querySelector('.alert-box');
-    var error_message = document.getElementById("error-msg");
-
-    if(isStrongPassword()){
-        let newPassword = document.getElementById('newpassword').value;
-        let confirmPassword = document.getElementById('confirmpassword').value;
-
-        if(newPassword === confirmPassword){
-            document.getElementById('weakPasswordFeedback').style.display = 'none';
-            document.getElementById('passwordNotSame').style.display = 'none';
-
-            document.getElementById('newpassword').disabled = true;
-            document.getElementById('confirmpassword').disabled = true;
-            document.getElementById('changePasswordBtn').disabled = true;
-            
-            let sendData = new FormData();
-            sendData.append('email', usersEmail);
-            sendData.append('password', newPassword);
-        
-            fetch("forgotPassword.php", {
-                method: 'POST',
-                body: sendData,
-            })
-            .then(response => response.json())
-            .then(data => {
-              
-                
-        
-                if(data['status'] === 'update_success'){
-                    error_message.classList.remove('alert-danger', 'alert-success');
-                    error_message.classList.add('alert-success');
-                    error_message.innerHTML = data['message'];
-                    errorBox.style.display = 'block';
-                   
-                   
-                   setTimeout(() => {
-                    error_message.classList.remove('alert-danger', 'alert-success');
-                    error_message.classList.add('alert-danger');
-                    error_message.innerHTML = '';
-                    errorBox.style.display = 'none';
-
-                    window.location.href = './';
-                   }, 1000);
-                  
-                   
-                }else{
-
-                    document.getElementById('newpassword').disabled = false;
-                    document.getElementById('confirmpassword').disabled = false;
-                    document.getElementById('changePasswordBtn').disabled = false;
-
-                    error_message.classList.remove('alert-danger', 'alert-success');
-                    error_message.classList.add('alert-danger');
-                    document.getElementById("error-msg").innerHTML = data['message'];
-                    errorBox.style.display = 'block';
-                }
-        
-                })
-                .catch(error => {
-                    console.error("Error:", error);
+// Navigation enhancements
+function initializeNavigationEnhancements() {
+    // Add smooth scrolling to anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
-            
-
-        }else{
-            document.getElementById('weakPasswordFeedback').style.display = 'none';
-            document.getElementById('passwordNotSame').style.display = 'block';
-        }
-    }
-
-    let newPassword = document.getElementById('newpassword').value;
-    let confirmPassword = document.getElementById('confirmpassword').value;
-
-    let sendData = new FormData();
-    sendData.append("newpassword", newPassword);
-    sendData.append("confirmpassword", confirmPassword);
-
-
-});
-
-
-
-function isStrongPassword() {
-    document.getElementById('passwordNotSame').style.display = 'none';
-
-      var password = document.getElementById('newpassword').value;
-      var weakBadge = document.getElementById('weakPasswordFeedback');
-
-      var minLength = 8;
-
-      // Check password length
-      if (!(password.length >= minLength)) {
-          weakBadge.innerHTML = "Password must contain minimum 8 characters!";
-          weakBadge.style.display = 'block';
-          return false;
-      }
-      else if (!(password.match(/([A-Z])/))) {
-        weakBadge.innerHTML = "Password must contain atleast one uppercase letter.";
-        weakBadge.style.display = 'block';
-        return false;
-      }
-      else if (!(password.match(/([a-z])/))) {
-        weakBadge.innerHTML = "Password must contain atleast one lowercase letter.";
-        weakBadge.style.display = 'block';
-        return false;
-      }
-      else if (!(password.match(/([0-9])/))) {
-        weakBadge.innerHTML = "Password must contain atleast one number.";
-        weakBadge.style.display = 'block';
-        return false;
-      }
-      else if (!(password.match(/([!,%,&,@,#,$,^,*,?,_,~])/))) {
-        weakBadge.innerHTML = "Password must contain atleast one special character.";
-        weakBadge.style.display = 'block';
-        return false;
-      }
-      else{
-        weakBadge.innerHTML = "";
-        weakBadge.style.display = 'none';
-        return true;
-      }
-
-     
-    }
-
-
-    document.getElementById('showPasswords').addEventListener('click', function(){
-
-        let newPassword = document.getElementById('newpassword');
-        let confirmPassword = document.getElementById('confirmpassword');
-        let label = document.getElementById('showPasswordLabel');
-
-        if(this.checked){
-            newPassword.setAttribute('type', 'text');
-            confirmPassword.setAttribute('type', 'text');
-            label.innerHTML = 'Hide password';
-        }else{
-            newPassword.setAttribute('type', 'password');
-            confirmPassword.setAttribute('type', 'password');
-            label.innerHTML = 'Show password';
-        }
+            }
+        });
     });
+    
+    // Add loading states to buttons
+    document.querySelectorAll('button[type="submit"]').forEach(button => {
+        button.addEventListener('click', function() {
+            if (!this.disabled) {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                this.disabled = true;
+                
+                // Reset after 5 seconds if form hasn't submitted
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }, 5000);
+            }
+        });
+    });
+    
+    // Handle login page redirects
+    const loginButtons = document.querySelectorAll('.login-redirect-btn');
+    loginButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const userType = this.getAttribute('data-user-type');
+            if (userType === 'staff') {
+                window.location.href = 'staff-login.php';
+            } else if (userType === 'student') {
+                window.location.href = 'student-login.php';
+            } else {
+                showNotification('Please select Staff Login or Student Login', 'info');
+            }
+        });
+    });
+}
+
+// Initialize animations
+function initializeAnimations() {
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe elements that should animate
+    document.querySelectorAll('.card, .dashboard-card, .student-card, .bus-card').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // Add fade-in animation to login containers
+    const loginContainers = document.querySelectorAll('.login-container, .student-header');
+    loginContainers.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        
+        setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+// Utility functions for form handling
+function clearFormErrors(formId) {
+    const form = document.querySelector(formId);
+    if (form) {
+        form.querySelectorAll('.is-invalid').forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.is-valid').forEach(input => {
+            input.classList.remove('is-valid');
+        });
+        form.querySelectorAll('.invalid-feedback').forEach(feedback => {
+            feedback.style.display = 'none';
+        });
+    }
+}
+
+// Handle form field validation feedback
+function handleFieldValidation(fieldId, isValid, message = '') {
+    const field = document.querySelector(fieldId);
+    const feedback = field.parentElement.querySelector('.invalid-feedback');
+    
+    if (isValid) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        if (feedback) feedback.style.display = 'none';
+    } else {
+        field.classList.remove('is-valid');
+        field.classList.add('is-invalid');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.style.display = 'block';
+        }
+    }
+}
+
+// Auto-hide alerts
+function autoHideAlerts() {
+    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert.style.display !== 'none') {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 5000);
+    });
+}
+
+// Initialize auto-hide alerts
+document.addEventListener('DOMContentLoaded', autoHideAlerts);
+
+// Export functions for use in other files
+window.ISNM = {
+    showNotification,
+    validateNSIN,
+    validatePhone,
+    formatPhoneNumber,
+    formatNSIN,
+    clearFormErrors,
+    handleFieldValidation
+};
+
+// Console log for debugging
+console.log('ISNM School Management System - JavaScript loaded successfully');
+console.log('Using staff-login.php and student-login.php - no more login.php references');
