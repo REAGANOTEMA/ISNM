@@ -15,15 +15,15 @@ class AuthenticationService {
     private $lockoutDuration = 900; // 15 minutes in seconds
     
     /**
-     * Check if account is locked due to failed login attempts
-     * @param string $identifier
+     * Check if student account is locked due to failed login attempts
+     * @param string $indexNumber
      * @return bool
      */
-    private function isAccountLocked($identifier) {
+    private function isStudentAccountLocked($indexNumber) {
         $conn = getDatabaseConnection();
         
-        $stmt = $conn->prepare("SELECT locked_until FROM users WHERE (email = ? OR index_number = ?) AND locked_until > NOW()");
-        $stmt->bind_param("ss", $identifier, $identifier);
+        $stmt = $conn->prepare("SELECT locked_until FROM users WHERE index_number = ? AND role = 'student' AND locked_until > NOW()");
+        $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -31,20 +31,36 @@ class AuthenticationService {
     }
     
     /**
-     * Record failed login attempt
-     * @param string $identifier
+     * Check if staff account is locked due to failed login attempts
+     * @param string $email
+     * @return bool
      */
-    private function recordFailedAttempt($identifier) {
+    private function isStaffAccountLocked($email) {
+        $conn = getDatabaseConnection();
+        
+        $stmt = $conn->prepare("SELECT locked_until FROM users WHERE email = ? AND role != 'student' AND locked_until > NOW()");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->num_rows > 0;
+    }
+    
+    /**
+     * Record failed student login attempt
+     * @param string $indexNumber
+     */
+    private function recordStudentFailedAttempt($indexNumber) {
         $conn = getDatabaseConnection();
         
         // Increment login attempts
-        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE (email = ? OR index_number = ?)");
-        $stmt->bind_param("ss", $identifier, $identifier);
+        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE index_number = ? AND role = 'student'");
+        $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         
         // Check if we should lock the account
-        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE (email = ? OR index_number = ?)");
-        $stmt->bind_param("ss", $identifier, $identifier);
+        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE index_number = ? AND role = 'student'");
+        $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         $result = $stmt->get_result();
         $user = $result->fetch_assoc();
@@ -52,8 +68,36 @@ class AuthenticationService {
         if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
             // Lock the account
             $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
-            $stmt = $conn->prepare("UPDATE users SET locked_until = ? WHERE (email = ? OR index_number = ?)");
-            $stmt->bind_param("sss", $lockUntil, $identifier, $identifier);
+            $stmt = $conn->prepare("UPDATE users SET locked_until = ? WHERE index_number = ? AND role = 'student'");
+            $stmt->bind_param("ss", $lockUntil, $indexNumber);
+            $stmt->execute();
+        }
+    }
+    
+    /**
+     * Record failed staff login attempt
+     * @param string $email
+     */
+    private function recordStaffFailedAttempt($email) {
+        $conn = getDatabaseConnection();
+        
+        // Increment login attempts
+        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE email = ? AND role != 'student'");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        
+        // Check if we should lock the account
+        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE email = ? AND role != 'student'");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        
+        if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
+            // Lock the account
+            $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
+            $stmt = $conn->prepare("UPDATE users SET locked_until = ? WHERE email = ? AND role != 'student'");
+            $stmt->bind_param("ss", $lockUntil, $email);
             $stmt->execute();
         }
     }
@@ -96,7 +140,7 @@ class AuthenticationService {
         }
         
         // Check if account is locked
-        if ($this->isAccountLocked($indexNumber)) {
+        if ($this->isStudentAccountLocked($indexNumber)) {
             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
         }
         
@@ -112,7 +156,7 @@ class AuthenticationService {
                 index_number = ? AND 
                 full_name = ? AND 
                 phone = ? AND 
-                type = 'student' AND 
+                role = 'student' AND 
                 status = 'active'";
         
         $stmt = $conn->prepare($sql);
@@ -121,7 +165,7 @@ class AuthenticationService {
         $result = $stmt->get_result();
         
         if ($result->num_rows === 0) {
-            $this->recordFailedAttempt($indexNumber);
+            $this->recordStudentFailedAttempt($indexNumber);
             return ['success' => false, 'message' => 'Invalid student credentials. All fields must match exactly.'];
         }
         
@@ -138,7 +182,7 @@ class AuthenticationService {
                 'full_name' => $student['full_name'],
                 'phone' => $student['phone'],
                 'role' => $student['role'],
-                'type' => $student['type']
+                'type' => 'student'
             ]
         ];
     }
@@ -154,16 +198,22 @@ class AuthenticationService {
         $email = sanitizeInput($email);
         $password = sanitizeInput($password);
         
+        // Debug: Log inputs
+        error_log("DEBUG: Staff login attempt - Email: $email, Password length: " . strlen($password));
+        
         if (empty($email) || empty($password)) {
+            error_log("DEBUG: Empty email or password");
             return ['success' => false, 'message' => 'Email and password are required'];
         }
         
         if (!validateEmail($email)) {
+            error_log("DEBUG: Invalid email format");
             return ['success' => false, 'message' => 'Invalid email format'];
         }
         
         // Check if account is locked
-        if ($this->isAccountLocked($email)) {
+        if ($this->isStaffAccountLocked($email)) {
+            error_log("DEBUG: Account is locked");
             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
         }
         
@@ -172,26 +222,36 @@ class AuthenticationService {
         // Query database for staff user
         $sql = "SELECT * FROM users WHERE 
                 email = ? AND 
-                type = 'staff' AND 
+                role != 'student' AND 
                 status = 'active'";
+        
+        error_log("DEBUG: Executing query: $sql with email: $email");
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
         
+        error_log("DEBUG: Found " . $result->num_rows . " users");
+        
         if ($result->num_rows === 0) {
-            $this->recordFailedAttempt($email);
+            error_log("DEBUG: No user found, recording failed attempt");
+            $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
         
         $staff = $result->fetch_assoc();
+        error_log("DEBUG: User found - ID: " . $staff['id'] . ", Role: " . $staff['role'] . ", Status: " . $staff['status']);
+        error_log("DEBUG: Password hash in DB: " . substr($staff['password'], 0, 20) . "...");
         
         // Verify password using password_verify
         if (!password_verify($password, $staff['password'])) {
-            $this->recordFailedAttempt($email);
+            error_log("DEBUG: Password verification failed");
+            $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
+        
+        error_log("DEBUG: Authentication successful");
         
         // Reset failed attempts on successful login
         $this->resetFailedAttempts($staff['id']);
@@ -204,7 +264,7 @@ class AuthenticationService {
                 'full_name' => $staff['full_name'],
                 'phone' => $staff['phone'],
                 'role' => $staff['role'],
-                'type' => $staff['type']
+                'type' => 'staff'
             ]
         ];
     }

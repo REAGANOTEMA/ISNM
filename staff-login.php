@@ -457,7 +457,10 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
 
         // Auto-focus first input
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('#username').focus();
+            const emailInput = document.querySelector('#email');
+            if (emailInput) {
+                emailInput.focus();
+            }
         });
     </script>
 </body>
