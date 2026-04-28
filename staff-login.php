@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include modern authentication handler
+// Include unified authentication system
 require_once 'auth-handler.php';
 
 // Store position from organogram if provided
@@ -21,30 +21,10 @@ if ($student_role) {
     exit();
 }
 
-// Handle staff login using modern auth handler
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = sanitizeInput($_POST['email']);
-    $password = sanitizeInput($_POST['password']);
-    
-    // Use modern authentication service
-    $auth_result = $auth_service->authenticateStaff($email, $password);
-    
-    if ($auth_result['success']) {
-        // Use requested position from organogram if available, otherwise use user's role
-        $target_role = isset($_SESSION['requested_position']) ? $_SESSION['requested_position'] : $auth_result['user']['role'];
-        
-        // Clear the requested position after use
-        unset($_SESSION['requested_position']);
-        
-        // Get smart dashboard route
-        $dashboard = $auth_service->getDashboardRoute($target_role);
-        header("Location: $dashboard");
-        exit();
-    } else {
-        $_SESSION['error'] = $auth_result['message'];
-        header("Location: staff-login.php");
-        exit();
-    }
+// Handle staff login
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'staff_login') {
+    // The auth-handler.php will process this automatically
+    // No need to handle here - it's already handled in auth-handler.php
 }
 
 // Check if user is already logged in and session is valid
@@ -358,6 +338,7 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             </div>
             
             <form method="POST" action="staff-login.php">
+                <input type="hidden" name="action" value="staff_login">
                 <div class="form-group">
                     <label class="form-label" for="email">Email *</label>
                     <div class="input-icon">

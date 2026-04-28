@@ -4,39 +4,24 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include modern authentication handler
+// Include unified authentication system
 require_once 'auth-handler.php';
 
-// Store student role from organogram if provided
-$student_role = isset($_GET['student_role']) ? urldecode($_GET['student_role']) : '';
-if ($student_role) {
-    $_SESSION['student_role'] = $student_role;
-}
-
-// Handle student login using modern auth handler
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $index_number = sanitizeInput($_POST['index_number']);
-    $full_name = sanitizeInput($_POST['full_name']);
-    $phone_number = sanitizeInput($_POST['phone_number']);
-    
-    // Use modern authentication service
-    $auth_result = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
-    
-    if ($auth_result['success']) {
-        $_SESSION['success'] = "Login successful! Welcome, " . $auth_result['user']['first_name'];
-        header("Location: dashboards/student.php");
-        exit();
-    } else {
-        $_SESSION['error'] = $auth_result['message'];
-        header("Location: student-login.php");
-        exit();
-    }
+// Handle student login
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'student_login') {
+    // The auth-handler.php will process this automatically
+    // No need to handle here - it's already handled in auth-handler.php
 }
 
 // Check if user is already logged in and session is valid
-if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
+if (isset($_SESSION['user_id']) && $auth_service->isAuthenticated()) {
     if ($_SESSION['type'] === 'student') {
         header("Location: dashboards/student.php");
+        exit();
+    } else {
+        // User is logged in but not a student - redirect to appropriate dashboard
+        $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
+        header("Location: $dashboard");
         exit();
     }
 }
@@ -337,6 +322,7 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             </div>
             
             <form method="POST" action="student-login.php">
+                <input type="hidden" name="action" value="student_login">
                 <div class="form-group">
                     <label class="form-label" for="index_number">Index Number *</label>
                     <div class="input-icon">
