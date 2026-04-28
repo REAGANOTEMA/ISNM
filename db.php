@@ -6,9 +6,9 @@
 
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'isnm_school'); // Adjust to your actual database name
+define('DB_NAME', 'isnm_db'); // Updated to correct database name
 define('DB_USER', 'root'); // Adjust to your actual database user
-define('DB_PASS', ''); // Adjust to your actual database password
+define('DB_PASS', 'ReagaN23#'); // Updated database password
 
 /**
  * Get database connection
