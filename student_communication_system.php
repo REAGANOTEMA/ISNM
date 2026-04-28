@@ -3,12 +3,10 @@ include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
+include_once 'security-middleware.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: student-login.php');
-    exit();
-}
+requireAuth();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle sending individual message
+// Handle sending individual message - WITH PERMISSION CHECKS
 function handleSendMessage() {
     global $conn;
     
@@ -45,13 +43,36 @@ function handleSendMessage() {
     $sender_id = $_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
+    // Get recipient information
+    $recipient_sql = "SELECT role FROM students WHERE student_id = ? UNION SELECT role FROM users WHERE user_id = ?";
+    $recipient_stmt = $conn->prepare($recipient_sql);
+    $recipient_stmt->bind_param("ss", $student_id, $student_id);
+    $recipient_stmt->execute();
+    $recipient_result = $recipient_stmt->get_result();
+    
+    if ($recipient_result->num_rows === 0) {
+        $_SESSION['error'] = "Recipient not found.";
+        header("Location: student_communication_system.php");
+        exit();
+    }
+    
+    $recipient = $recipient_result->fetch_assoc();
+    $recipient_role = $recipient['role'];
+    
+    // Check if sender has permission to message this recipient
+    if (!canSendMessageTo($recipient_role, $sender_role)) {
+        $_SESSION['error'] = "You do not have permission to send messages to this recipient.";
+        header("Location: student_communication_system.php");
+        exit();
+    }
+    
     $sql = "INSERT INTO messages (student_id, sender_id, sender_role, subject, message_content, message_type, priority, sent_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 'sent')";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssssss", $student_id, $sender_id, $sender_role, $subject, $message, $message_type, $priority);
     
     if ($stmt->execute()) {
-        // Create notification for student
+        // Create notification for recipient
         $notification_sql = "INSERT INTO notifications (user_id, notification_type, title, message, created_at, is_read) VALUES (?, 'message', ?, ?, CURDATE(), 0)";
         $notification_stmt = $conn->prepare($notification_sql);
         $notification_title = "New Message from $sender_role";

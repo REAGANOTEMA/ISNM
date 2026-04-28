@@ -1,7 +1,11 @@
 <?php
-include_once 'includes/config.php';
-include_once 'includes/functions.php';
-include_once 'includes/auth_functions.php';
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Include modern authentication handler
+require_once 'auth-handler.php';
 
 // Store student role from organogram if provided
 $student_role = isset($_GET['student_role']) ? urldecode($_GET['student_role']) : '';
@@ -9,28 +13,18 @@ if ($student_role) {
     $_SESSION['student_role'] = $student_role;
 }
 
-// Handle student login
+// Handle student login using modern auth handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $student_id = sanitizeInput($_POST['student_id']);
-    $first_name = sanitizeInput($_POST['first_name']);
-    $phone = sanitizeInput($_POST['phone']);
+    $index_number = sanitizeInput($_POST['index_number']);
+    $full_name = sanitizeInput($_POST['full_name']);
+    $phone_number = sanitizeInput($_POST['phone_number']);
     
-    // Validate input
-    if (empty($student_id) || empty($first_name) || empty($phone)) {
-        $_SESSION['error'] = "All fields are required for student login";
-        header("Location: student-login.php");
-        exit();
-    }
-    
-    // Authenticate student
-    $auth_result = authenticateStudent($student_id, $first_name, $phone);
+    // Use modern authentication service
+    $auth_result = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
     
     if ($auth_result['success']) {
-        // Create session for authenticated student
-        createSession($auth_result['user']);
-        
         $_SESSION['success'] = "Login successful! Welcome, " . $auth_result['user']['first_name'];
-        header("Location: student_profile.php");
+        header("Location: dashboards/student.php");
         exit();
     } else {
         $_SESSION['error'] = $auth_result['message'];
@@ -39,10 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Check if user is already logged in
-if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Student') {
-    header("Location: student_profile.php");
-    exit();
+// Check if user is already logged in and session is valid
+if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
+    if ($_SESSION['type'] === 'student') {
+        header("Location: dashboards/student.php");
+        exit();
+    }
 }
 ?>
 
@@ -342,30 +338,30 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Student') {
             
             <form method="POST" action="student-login.php">
                 <div class="form-group">
-                    <label class="form-label" for="student_id">Student ID *</label>
+                    <label class="form-label" for="index_number">Index Number *</label>
                     <div class="input-icon">
                         <i class="fas fa-id-badge"></i>
-                        <input type="text" class="form-control" id="student_id" name="student_id" 
-                               placeholder="Enter your Student ID (U001/CM/056/16)" required>
+                        <input type="text" class="form-control" id="index_number" name="index_number" 
+                               placeholder="Enter your Index Number (U001/CM/056/16)" required>
                     </div>
                     <small class="form-text text-muted">Format: U001/CM/056/16 (CM=Midwifery, CN=Nursing, DMORDN=Diploma)</small>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="first_name">First Name *</label>
+                    <label class="form-label" for="full_name">Full Name *</label>
                     <div class="input-icon">
                         <i class="fas fa-user"></i>
-                        <input type="text" class="form-control" id="first_name" name="first_name" 
-                               placeholder="Enter your first name" required>
+                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                               placeholder="Enter your full name" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="phone">Contact Number *</label>
+                    <label class="form-label" for="phone_number">Phone Number *</label>
                     <div class="input-icon">
                         <i class="fas fa-phone"></i>
-                        <input type="tel" class="form-control" id="phone" name="phone" 
-                               placeholder="Enter your contact number" required>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                               placeholder="Enter your phone number" required>
                     </div>
                 </div>
 

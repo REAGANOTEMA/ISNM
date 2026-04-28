@@ -1,10 +1,10 @@
 <?php
 include_once '../includes/config.php';
-// Check if user is logged in and has Director Finance role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Director Finance') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only director finance allowed
+requireRole('Director Finance');
 
 // Database connection is already established in config.php
 global $conn;

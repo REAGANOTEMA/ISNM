@@ -2,32 +2,54 @@
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
+include_once 'security-middleware.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: student-login.php");
-    exit();
-}
+requireAuth();
 
 // Get current user's student information
 $student_id = $_SESSION['user_id'] ?? '';
 $role = $_SESSION['role'] ?? '';
 
-// Handle form submissions
+// Get profile edit permissions
+$profile_permissions = requireProfileEditPermission($student_id);
+
+// Handle form submissions - STUDENTS CAN ONLY EDIT PROFILE IMAGE
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'update_profile':
+                // Check if user can edit profile data
+                if (!$profile_permissions['can_edit_data']) {
+                    $_SESSION['error'] = "You do not have permission to update profile information. Please contact administration.";
+                    header("Location: student_profile.php");
+                    exit();
+                }
                 handleProfileUpdate();
                 break;
             case 'upload_photo':
+                // Check if user can edit profile image
+                if (!$profile_permissions['can_edit_image']) {
+                    $_SESSION['error'] = "You do not have permission to upload profile images.";
+                    header("Location: student_profile.php");
+                    exit();
+                }
                 handlePhotoUpload();
                 break;
             case 'delete_photo':
+                // Check if user can edit profile image
+                if (!$profile_permissions['can_edit_image']) {
+                    $_SESSION['error'] = "You do not have permission to delete profile images.";
+                    header("Location: student_profile.php");
+                    exit();
+                }
                 handlePhotoDelete();
                 break;
             case 'change_password':
-                handlePasswordChange();
+                // STUDENTS CANNOT CHANGE PASSWORD - NO PASSWORD REQUIRED FOR STUDENTS
+                $_SESSION['error'] = "Password change is not available for student accounts.";
+                header("Location: student_profile.php");
+                exit();
                 break;
         }
     }

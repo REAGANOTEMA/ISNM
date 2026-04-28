@@ -1,7 +1,11 @@
 <?php
-include_once 'includes/config.php';
-include_once 'includes/functions.php';
-include_once 'includes/auth_functions.php';
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Include modern authentication handler
+require_once 'auth-handler.php';
 
 // Store position from organogram if provided
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
@@ -17,35 +21,23 @@ if ($student_role) {
     exit();
 }
 
-// Handle staff login
+// Handle staff login using modern auth handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = sanitizeInput($_POST['username']);
+    $email = sanitizeInput($_POST['email']);
     $password = sanitizeInput($_POST['password']);
     
-    // Validate input
-    if (empty($username) || empty($password)) {
-        $_SESSION['error'] = "Username and password are required for staff login";
-        header("Location: staff-login.php");
-        exit();
-    }
-    
-    // Authenticate staff
-    $auth_result = authenticateStaff($username, $password);
+    // Use modern authentication service
+    $auth_result = $auth_service->authenticateStaff($email, $password);
     
     if ($auth_result['success']) {
-        // Create session for authenticated staff
-        createSession($auth_result['user']);
-        
-        $_SESSION['success'] = "Login successful! Welcome, " . $auth_result['user']['first_name'];
-        
         // Use requested position from organogram if available, otherwise use user's role
         $target_role = isset($_SESSION['requested_position']) ? $_SESSION['requested_position'] : $auth_result['user']['role'];
         
         // Clear the requested position after use
         unset($_SESSION['requested_position']);
         
-        // Redirect based on role
-        $dashboard = getUserDashboard($target_role);
+        // Get smart dashboard route
+        $dashboard = $auth_service->getDashboardRoute($target_role);
         header("Location: $dashboard");
         exit();
     } else {
@@ -55,11 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Check if user is already logged in
-if (isset($_SESSION['user_id']) && $_SESSION['role'] !== 'Student') {
-    $dashboard = getUserDashboard($_SESSION['role']);
-    header("Location: $dashboard");
-    exit();
+// Check if user is already logged in and session is valid
+if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
+    if ($_SESSION['type'] === 'staff') {
+        $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
+        header("Location: $dashboard");
+        exit();
+    }
 }
 ?>
 
@@ -365,11 +359,11 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] !== 'Student') {
             
             <form method="POST" action="staff-login.php">
                 <div class="form-group">
-                    <label class="form-label" for="username">Username *</label>
+                    <label class="form-label" for="email">Email *</label>
                     <div class="input-icon">
-                        <i class="fas fa-user"></i>
-                        <input type="text" class="form-control" id="username" name="username" 
-                               placeholder="Enter your username" required>
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="Enter your email" required>
                     </div>
                 </div>
 

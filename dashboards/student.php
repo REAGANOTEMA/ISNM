@@ -1,20 +1,10 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Student') {
-    header('Location: ../student-login.php');
-    exit();
-}
+include_once '../includes/config.php';
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
 
-// Database connection
-$host = 'localhost';
-$username = 'root';
-$password = 'ReagaN23#';
-$database = 'isnm_db';
-$conn = new mysqli($host, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// Strict dashboard protection - only students allowed
+requireRole('Student');
 
 // Get student information
 $student_id = $_SESSION['user_id'];
@@ -251,60 +241,43 @@ $payment_history = $conn->query("SELECT fp.* FROM fee_payments fp JOIN student_f
             font-size: 1.8rem;
             font-weight: 700;
         }
+
+        /* Responsive Dashboard Container */
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .dashboard-main {
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin-left: 0 !important;
+            }
+            
+            .dashboard-main {
+                padding: 15px;
+                padding-top: 80px; /* Space for mobile menu */
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .dashboard-container.sidebar-collapsed {
+                margin-left: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Include Responsive Navigation -->
+    <?php include_once '../includes/sidebar.php'; ?>
+    
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Student Portal</h4>
-                <small><?php echo $student_info['first_name'] . ' ' . $student_info['surname']; ?></small>
-                <span class="badge bg-info"><?php echo $student_info['program']; ?></span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                <a href="#profile" class="nav-link">
-                    <i class="fas fa-user"></i> My Profile
-                </a>
-                <a href="#academics" class="nav-link">
-                    <i class="fas fa-graduation-cap"></i> Academics
-                </a>
-                <a href="#finances" class="nav-link">
-                    <i class="fas fa-coins"></i> Finances
-                </a>
-                <a href="#documents" class="nav-link">
-                    <i class="fas fa-file-alt"></i> Documents
-                </a>
-                <a href="#messages" class="nav-link">
-                    <i class="fas fa-envelope"></i> Messages
-                    <?php if (count($messages) > 0): ?>
-                    <span class="badge bg-danger"><?php echo count($messages); ?></span>
-                    <?php endif; ?>
-                </a>
-                <a href="#communication" class="nav-link">
-                    <i class="fas fa-comments"></i> Communication
-                </a>
-                <a href="#resources" class="nav-link">
-                    <i class="fas fa-book"></i> Resources
-                </a>
-                <a href="#settings" class="nav-link">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <div class="dashboard-main">
             <!-- Header -->
             <div class="dashboard-header">

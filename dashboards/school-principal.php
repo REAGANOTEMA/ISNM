@@ -1,9 +1,10 @@
 <?php
 include_once '../includes/config.php';
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Principal') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only principals allowed
+requireRole('School Principal');
 
 // Database connection is already established in config.php
 global $conn;
@@ -50,57 +51,45 @@ $recent_activities = [
     <link rel="stylesheet" href="../css/isnm-style.css">
     <link rel="stylesheet" href="dashboard-style.css">
     <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
+    
+    <!-- Responsive Dashboard CSS -->
+    <style>
+        /* Responsive Dashboard Container */
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .dashboard-main {
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin-left: 0 !important;
+            }
+            
+            .dashboard-main {
+                padding: 15px;
+                padding-top: 80px; /* Space for mobile menu */
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .dashboard-container.sidebar-collapsed {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Include Responsive Navigation -->
+    <?php include_once '../includes/sidebar.php'; ?>
+    
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></small>
-                <span class="badge bg-warning">School Principal</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
-                </a>
-                <a href="#academic" class="nav-link">
-                    <i class="fas fa-graduation-cap"></i> Academic Management
-                </a>
-                <a href="#students" class="nav-link">
-                    <i class="fas fa-user-graduate"></i> Student Affairs
-                </a>
-                <a href="#staff" class="nav-link">
-                    <i class="fas fa-users"></i> Staff Management
-                </a>
-                <a href="#programs" class="nav-link">
-                    <i class="fas fa-book"></i> Program Oversight
-                </a>
-                <a href="#discipline" class="nav-link">
-                    <i class="fas fa-gavel"></i> Discipline & Welfare
-                </a>
-                <a href="#examinations" class="nav-link">
-                    <i class="fas fa-clipboard-list"></i> Examinations
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Reports & Analytics
-                </a>
-                <a href="#communications" class="nav-link">
-                    <i class="fas fa-bullhorn"></i> Announcements
-                </a>
-                <a href="#meetings" class="nav-link">
-                    <i class="fas fa-users-cog"></i> Meetings & Committees
-                </a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <!-- Main Content Area -->
         
         <!-- Main Content -->
         <div class="dashboard-main">

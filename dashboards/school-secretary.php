@@ -1,10 +1,10 @@
 <?php
 include_once '../includes/config.php';
-// Check if user is logged in and has School Secretary role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Secretary') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only secretaries allowed
+requireRole('School Secretary');
 
 // Database connection is already established in config.php
 global $conn;

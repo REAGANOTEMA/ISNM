@@ -1,10 +1,10 @@
 <?php
 include_once '../includes/config.php';
-// Check if user is logged in and has Lecturer role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Lecturers') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only lecturers allowed
+requireRole('Lecturers');
 
 // Database connection is already established in config.php
 global $conn;
@@ -46,71 +46,46 @@ $recent_activities = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="dashboard-style.css" rel="stylesheet">
+    
+    <!-- Responsive Dashboard CSS -->
+    <style>
+        /* Responsive Dashboard Container */
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .dashboard-main {
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin-left: 0 !important;
+            }
+            
+            .dashboard-main {
+                padding: 15px;
+                padding-top: 80px; /* Space for mobile menu */
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .dashboard-container.sidebar-collapsed {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Include Responsive Navigation -->
+    <?php include_once '../includes/sidebar.php'; ?>
+    
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Lecturer Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Teaching Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#courses">
-                            <i class="fas fa-book"></i> My Courses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#schedule">
-                            <i class="fas fa-calendar"></i> Teaching Schedule
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#students">
-                            <i class="fas fa-user-graduate"></i> Student Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#assessments">
-                            <i class="fas fa-clipboard-check"></i> Assessments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#grades">
-                            <i class="fas fa-chart-bar"></i> Grade Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#resources">
-                            <i class="fas fa-folder"></i> Teaching Resources
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#communications">
-                            <i class="fas fa-envelope"></i> Communications
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
+        <!-- Main Content Area -->
+        <div class="dashboard-main">
             <!-- Header -->
             <header class="dashboard-header">
                 <div class="header-left">

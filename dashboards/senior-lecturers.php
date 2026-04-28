@@ -1,10 +1,10 @@
 <?php
 include_once '../includes/config.php';
-// Check if user is logged in and has Senior Lecturer role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Senior Lecturers') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only senior lecturers allowed
+requireRole('Senior Lecturers');
 
 // Database connection is already established in config.php
 global $conn;

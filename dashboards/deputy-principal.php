@@ -2,12 +2,10 @@
 include_once '../includes/config.php';
 include_once '../includes/functions.php';
 include_once '../includes/photo_upload.php';
+include_once '../security-middleware.php';
 
-// Check if user is logged in and has Deputy Principal role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Deputy Principal') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+// Strict dashboard protection - only deputy principals allowed
+requireRole('Deputy Principal');
 
 // Database connection is already established in config.php
 global $conn;

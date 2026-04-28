@@ -2,12 +2,10 @@
 include_once 'includes/config.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
+include_once 'security-middleware.php';
 
-// Check if user is logged in and has appropriate access level
-if (!isset($_SESSION['user_id']) || $_SESSION['access_level'] < 8) {
-    header("Location: staff-login.php");
-    exit();
-}
+// Check if user is logged in and has permission to create students
+requireStudentCreationPermission();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -128,6 +126,17 @@ $intakes = executeQuery("SELECT DISTINCT intake_year FROM students ORDER BY inta
 function handleAddStudent() {
     global $conn;
     
+    // Validate required fields
+    $required_fields = ['first_name', 'surname', 'phone'];
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            $_SESSION['error'] = "Required field '$field' is missing.";
+            header("Location: student_accounts_management.php");
+            exit();
+        }
+    }
+    
+    // Generate unique student ID
     $student_id = generateStudentId();
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
@@ -148,10 +157,37 @@ function handleAddStudent() {
     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
     $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
     
-    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?)";
+    // Check for duplicate student ID
+    $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("s", $student_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    
+    if ($check_result->fetch_assoc()['count'] > 0) {
+        $_SESSION['error'] = "Student ID already exists. Please try again.";
+        header("Location: student_accounts_management.php");
+        exit();
+    }
+    
+    // Check for duplicate phone number
+    $check_phone_sql = "SELECT COUNT(*) as count FROM students WHERE phone = ?";
+    $check_phone_stmt = $conn->prepare($check_phone_sql);
+    $check_phone_stmt->bind_param("s", $phone);
+    $check_phone_stmt->execute();
+    $check_phone_result = $check_phone_stmt->get_result();
+    
+    if ($check_phone_result->fetch_assoc()['count'] > 0) {
+        $_SESSION['error'] = "A student with this phone number already exists.";
+        header("Location: student_accounts_management.php");
+        exit();
+    }
+    
+    // Insert new student into existing students table
+    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, 'active', NOW())";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
+    $stmt->bind_param("sssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
     
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);

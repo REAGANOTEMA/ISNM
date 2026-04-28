@@ -1,9 +1,10 @@
 <?php
 include_once '../includes/config.php';
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Bursar') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+include_once '../includes/functions.php';
+include_once '../security-middleware.php';
+
+// Strict dashboard protection - only bursars allowed
+requireRole('School Bursar');
 
 // Database connection is already established in config.php
 global $conn;
