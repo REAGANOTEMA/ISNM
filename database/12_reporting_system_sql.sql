@@ -1,7 +1,7 @@
 -- ISNM School Management System - Reporting System SQL
 -- Comprehensive SQL for all reporting, analytics, and dashboard statistics
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- REPORTING SYSTEM TABLES

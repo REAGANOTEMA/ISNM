@@ -1,7 +1,7 @@
 -- ISNM School Management System - Dashboard Integration API
 -- Complete SQL for API endpoints, web services, and dashboard integration
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- API ENDPOINTS TABLES

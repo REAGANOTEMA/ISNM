@@ -6,7 +6,7 @@
 -- SYSTEM INITIALIZATION
 -- ========================================
 
-USE isnm_school;
+USE isnm_db;
 
 -- Disable foreign key checks for initial setup
 SET FOREIGN_KEY_CHECKS = 0;

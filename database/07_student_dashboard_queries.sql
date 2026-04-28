@@ -1,7 +1,7 @@
 -- ISNM School Management System - Student Dashboard Queries
 -- Comprehensive SQL queries for student dashboard operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- STUDENT PROFILE AND ACADEMIC INFORMATION

@@ -2,12 +2,12 @@
 -- Create database and set character set
 
 -- Create database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS isnm_school 
+CREATE DATABASE IF NOT EXISTS isnm_db 
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
 
 -- Use the database
-USE isnm_school;
+USE isnm_db;
 
 -- Set timezone for proper timestamp handling
 SET time_zone = '+03:00'; -- Uganda timezone

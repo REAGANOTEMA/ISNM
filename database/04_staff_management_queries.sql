@@ -1,7 +1,7 @@
 -- ISNM School Management System - Staff Management Queries
 -- SQL queries for managing staff accounts and login operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- STAFF LOGIN VERIFICATION QUERIES

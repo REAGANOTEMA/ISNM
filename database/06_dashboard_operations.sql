@@ -1,7 +1,7 @@
 -- ISNM School Management System - Dashboard Operations
 -- Core SQL queries for all dashboard functionalities
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- ACADEMIC MANAGEMENT TABLES

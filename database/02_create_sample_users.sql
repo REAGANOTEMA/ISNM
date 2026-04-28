@@ -1,7 +1,7 @@
 -- ISNM School Management System Sample Users
 -- Create sample students and staff for testing
 
-USE isnm_school;
+USE isnm_db;
 
 -- Insert sample students (3-field login: index_number, full_name, phone)
 INSERT INTO users (index_number, full_name, phone, role, type, status) VALUES

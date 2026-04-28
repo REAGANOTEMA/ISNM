@@ -1,7 +1,7 @@
 -- ISNM School Management System - Academic Management SQL
 -- Comprehensive SQL for academic programs, courses, examinations, and student records
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- PROGRAM MANAGEMENT

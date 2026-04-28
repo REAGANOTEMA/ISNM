@@ -1,7 +1,7 @@
 -- ISNM School Management System - Communication System SQL
 -- Comprehensive SQL for messaging, notifications, announcements, and communication management
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- COMMUNICATION SYSTEM TABLES

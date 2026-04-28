@@ -1,7 +1,7 @@
 -- ISNM School Management System - Staff Dashboard Queries
 -- Comprehensive SQL queries for all staff dashboard operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- STAFF PROFILE AND USER MANAGEMENT

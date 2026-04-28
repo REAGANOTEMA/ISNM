@@ -1,7 +1,7 @@
 -- ISNM School Management System - Student Management Queries
 -- SQL queries for managing student accounts and login operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- STUDENT LOGIN VERIFICATION QUERIES

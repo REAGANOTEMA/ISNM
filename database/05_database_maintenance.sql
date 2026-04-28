@@ -1,7 +1,7 @@
 -- ISNM School Management System - Database Maintenance
 -- SQL queries for database maintenance, cleanup, and optimization
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- DATABASE CLEANUP QUERIES

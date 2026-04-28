@@ -2,7 +2,7 @@
 -- Master SQL file to set up the entire database system with all dashboard operations
 -- This file includes all tables, procedures, and functionality for complete dashboard operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- SYSTEM INITIALIZATION AND SETUP

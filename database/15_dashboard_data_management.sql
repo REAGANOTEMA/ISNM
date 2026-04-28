@@ -1,7 +1,7 @@
 -- ISNM School Management System - Dashboard Data Management
 -- Complete SQL for data import, export, validation, and bulk operations
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- DATA IMPORT/EXPORT OPERATIONS

@@ -1,7 +1,7 @@
 -- ISNM School Management System - Dashboard CRUD Operations
 -- Complete SQL for all dashboard operations: Create, Read, Update, Delete, Print, Send, Comment
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- DASHBOARD CRUD OPERATIONS TABLES

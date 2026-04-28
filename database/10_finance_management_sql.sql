@@ -1,7 +1,7 @@
 -- ISNM School Management System - Finance Management SQL
 -- Comprehensive SQL for fee management, payments, financial reporting, and budget tracking
 
-USE isnm_school;
+USE isnm_db;
 
 -- ========================================
 -- FINANCIAL MANAGEMENT TABLES
