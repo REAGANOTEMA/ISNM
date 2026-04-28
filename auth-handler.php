@@ -1,95 +1,240 @@
 <?php
 /**
- * Modern Authentication Handler for ISNM School Management System
- * Centralized authentication logic with enhanced security
+ * Unified Authentication Handler for ISNM School Management System
+ * Centralized authentication processing for both students and staff
  */
 
-// Include required files
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once 'auth-service.php';
 
 // Start secure session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Global authentication service
+$auth_service = new AuthenticationService();
+
 /**
- * Modern Authentication Service Class
+ * Process authentication requests
  */
-class ModernAuthService {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
     
-    private $conn;
-    private $max_login_attempts = 5;
-    private $lockout_duration = 900; // 15 minutes
-    
-    public function __construct() {
-        global $conn;
-        $this->conn = $conn;
-    }
-    
-    /**
-     * Standardized session creation
-     */
-    private function createSecureSession($user, $user_type) {
-        // Regenerate session ID for security
-        session_regenerate_id(true);
-        
-        // Standard session variables ONLY
-        $_SESSION['user_id'] = $user['id'] ?? $user['user_id'] ?? $user['student_id'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['type'] = $user_type;
-        
-        // Additional data for convenience
-        $_SESSION['first_name'] = $user['first_name'] ?? '';
-        $_SESSION['last_name'] = $user['surname'] ?? $user['last_name'] ?? '';
-        $_SESSION['email'] = $user['email'] ?? '';
-        $_SESSION['phone'] = $user['phone'] ?? '';
-        
-        // Session security
-        $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
-        $_SESSION['last_activity'] = time();
-        $_SESSION['created_at'] = time();
-        
-        // Role-specific data
-        if ($user_type === 'student') {
-            $_SESSION['index_number'] = $user['student_id'] ?? $user['application_id'] ?? '';
-            $_SESSION['full_name'] = $user['first_name'] . ' ' . ($user['surname'] ?? $user['last_name'] ?? '');
-            $_SESSION['phone_number'] = $user['phone'] ?? '';
-            $_SESSION['program'] = $user['program'] ?? '';
-            $_SESSION['level'] = $user['level'] ?? '';
-        } else {
-            $_SESSION['username'] = $user['username'] ?? '';
-            $_SESSION['department'] = $user['department'] ?? '';
-        }
-        
-        // Clear login attempts
-        $this->clearLoginAttempts($user_type, $user['email'] ?? $user['student_id'] ?? '');
-    }
-    
-    /**
-     * Check if account is locked due to failed attempts
-     */
-    private function isAccountLocked($identifier, $user_type) {
-        $lockout_key = $user_type . '_' . md5($identifier);
-        
-        if (isset($_SESSION[$lockout_key . '_attempts']) && 
-            $_SESSION[$lockout_key . '_attempts'] >= $this->max_login_attempts) {
+    switch ($action) {
+        case 'student_login':
+            handleStudentLogin();
+            break;
             
-            $lockout_time = $_SESSION[$lockout_key . '_lockout_time'] ?? 0;
-            if (time() - $lockout_time < $this->lockout_duration) {
-                return true;
-            } else {
-                // Lockout expired, clear attempts
-                unset($_SESSION[$lockout_key . '_attempts']);
-                unset($_SESSION[$lockout_key . '_lockout_time']);
-            }
-        }
+        case 'staff_login':
+            handleStaffLogin();
+            break;
+            
+        case 'create_student':
+            handleCreateStudent();
+            break;
+            
+        case 'create_staff':
+            handleCreateStaff();
+            break;
+            
+        case 'logout':
+            handleLogout();
+            break;
+            
+        default:
+            $_SESSION['error'] = 'Invalid action';
+            header('Location: index.php');
+            exit();
+    }
+}
+
+/**
+ * Handle student login
+ */
+function handleStudentLogin() {
+    global $auth_service;
+    
+    $index_number = sanitizeInput($_POST['index_number'] ?? '');
+    $full_name = sanitizeInput($_POST['full_name'] ?? '');
+    $phone_number = sanitizeInput($_POST['phone_number'] ?? '');
+    
+    $result = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
+    
+    if ($result['success']) {
+        $auth_service->createSecureSession($result['user']);
+        $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
+        header('Location: dashboards/student.php');
+        exit();
+    } else {
+        $_SESSION['error'] = $result['message'];
+        header('Location: student-login.php');
+        exit();
+    }
+}
+
+/**
+ * Handle staff login
+ */
+function handleStaffLogin() {
+    global $auth_service;
+    
+    $email = sanitizeInput($_POST['email'] ?? '');
+    $password = sanitizeInput($_POST['password'] ?? '');
+    
+    $result = $auth_service->authenticateStaff($email, $password);
+    
+    if ($result['success']) {
+        $auth_service->createSecureSession($result['user']);
+        $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
         
-        return false;
+        // Get dashboard route based on role
+        $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
+        header("Location: $dashboard");
+        exit();
+    } else {
+        $_SESSION['error'] = $result['message'];
+        header('Location: staff-login.php');
+        exit();
+    }
+}
+
+/**
+ * Handle student account creation
+ */
+function handleCreateStudent() {
+    global $auth_service;
+    
+    // Check if user is authenticated and has permission
+    if (!$auth_service->isAuthenticated()) {
+        $_SESSION['error'] = 'Authentication required';
+        header('Location: staff-login.php');
+        exit();
     }
     
-    /**
-     * Record failed login attempt
+    if (!$auth_service->canCreateStudents($_SESSION['role'])) {
+        $_SESSION['error'] = 'You do not have permission to create student accounts';
+        header('Location: dashboards/' . basename($_SERVER['HTTP_REFERER']));
+        exit();
+    }
+    
+    $studentData = [
+        'index_number' => $_POST['index_number'] ?? '',
+        'full_name' => $_POST['full_name'] ?? '',
+        'phone' => $_POST['phone'] ?? ''
+    ];
+    
+    $result = $auth_service->createStudentAccount($studentData);
+    
+    if ($result['success']) {
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
+    exit();
+}
+
+/**
+ * Handle staff account creation
+ */
+function handleCreateStaff() {
+    global $auth_service;
+    
+    // Check if user is authenticated and has permission
+    if (!$auth_service->isAuthenticated()) {
+        $_SESSION['error'] = 'Authentication required';
+        header('Location: staff-login.php');
+        exit();
+    }
+    
+    // Only admin or director roles can create staff accounts
+    $userRole = strtolower($_SESSION['role']);
+    if (!($auth_service->canCreateStudents($userRole) || strpos($userRole, 'admin') !== false)) {
+        $_SESSION['error'] = 'You do not have permission to create staff accounts';
+        header('Location: dashboards/' . basename($_SERVER['HTTP_REFERER']));
+        exit();
+    }
+    
+    $staffData = [
+        'full_name' => $_POST['full_name'] ?? '',
+        'email' => $_POST['email'] ?? '',
+        'phone' => $_POST['phone'] ?? '',
+        'password' => $_POST['password'] ?? '',
+        'role' => $_POST['role'] ?? ''
+    ];
+    
+    $result = $auth_service->createStaffAccount($staffData);
+    
+    if ($result['success']) {
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
+    exit();
+}
+
+/**
+ * Handle logout
+ */
+function handleLogout() {
+    global $auth_service;
+    $auth_service->destroySession();
+    $_SESSION['success'] = 'You have been logged out successfully';
+    header('Location: index.php');
+    exit();
+}
+
+/**
+ * Check if user is authenticated (for use in other files)
+ */
+function requireAuth() {
+    global $auth_service;
+    
+    if (!$auth_service->isAuthenticated()) {
+        $_SESSION['error'] = 'Authentication required';
+        header('Location: staff-login.php');
+        exit();
+    }
+}
+
+/**
+ * Check if user has specific role
+ */
+function requireRole($requiredRole) {
+    global $auth_service;
+    
+    requireAuth();
+    
+    if (strtolower($_SESSION['role']) !== strtolower($requiredRole)) {
+        $_SESSION['error'] = 'Access denied';
+        header('Location: dashboards/student.php');
+        exit();
+    }
+}
+
+/**
+ * Get current user information
+ */
+function getCurrentUser() {
+    if (isset($_SESSION['user_id'])) {
+        return [
+            'id' => $_SESSION['user_id'],
+            'role' => $_SESSION['role'],
+            'type' => $_SESSION['type'],
+            'full_name' => $_SESSION['full_name'] ?? '',
+            'email' => $_SESSION['email'] ?? '',
+            'phone' => $_SESSION['phone'] ?? '',
+            'index_number' => $_SESSION['index_number'] ?? ''
+        ];
+    }
+    
+    return null;
+}
+
+?>
      */
     private function recordFailedAttempt($identifier, $user_type) {
         $lockout_key = $user_type . '_' . md5($identifier);
