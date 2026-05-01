@@ -47,9 +47,9 @@
       <div class="hero-content">
         <div class="cinematic-title-wrapper">
           <div class="cinematic-title-track">
-            <h1 class="cinematic-title">EXCEPTIONAL HEALTHCARE EDUCATION • TRANSFORMING LIVES SINCE 2009 • WORLD-CLASS NURSING & MIDWIFERY TRAINING • YOUR FUTURE IN HEALTHCARE STARTS HERE •</h1>
-            <h1 class="cinematic-title">EXCEPTIONAL HEALTHCARE EDUCATION • TRANSFORMING LIVES SINCE 2009 • WORLD-CLASS NURSING & MIDWIFERY TRAINING • YOUR FUTURE IN HEALTHCARE STARTS HERE •</h1>
-          </div>
+           <h1 class="cinematic-title">Training Healers. Transforming Lives.</h1>
+           <h1 class="cinematic-title">Training Healers. Transforming Lives.</h1>
+       </div>
         </div>
         
         <div class="hero-subtitle">

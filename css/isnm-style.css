@@ -14,14 +14,29 @@
   --isnm-light-blue: #3b82f6;
   --isnm-green: #059669;
   --isnm-gold: #d97706;
+  --isnm-dark-green: #0f4c3a;
+  --isnm-cream-yellow: #fff8dc;
   --gradient-primary: linear-gradient(135deg, var(--isnm-blue) 0%, var(--isnm-light-blue) 100%);
   --gradient-secondary: linear-gradient(135deg, var(--isnm-green) 0%, #10b981 100%);
+  --section-bg: linear-gradient(135deg, #ffffff 50%, var(--isnm-cream-yellow) 50%);
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Bodoni MT Poster Compressed', serif;
   line-height: 1.6;
-  color: var(--dark-color);
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
+}
+
+body, p, .about-text, .intro-text {
+  font-family: 'Bodoni MT Poster Compressed', serif;
+  line-height: 1.6;
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 }
 
 /* Hero Section */
@@ -102,46 +117,73 @@ body {
 }
 
 .stat-card h3 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: #0d6efd;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
   margin: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .stat-card p {
-  color: var(--secondary-color);
+  color: #2d2d2d;
   font-weight: 500;
   margin: 0;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 }
 
-/* Programs Section */
-.section-title {
+/* Global Typography System - Applied to ALL pages */
+.section-title,
+.page-title,
+.cta-section h2,
+h1, h2, h3 {
+  font-family: 'Elephant', serif;
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--isnm-blue);
-  margin-bottom: 1rem;
-}
-
-.section-subtitle {
-  font-size: 1.1rem;
-  color: var(--secondary-color);
+  color: #0a3d2e;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
   margin-bottom: 3rem;
+  position: relative;
+  text-align: center;
+  z-index: 10;
 }
 
-.program-card {
-  background: white;
+.section-subtitle,
+.cta-section .lead,
+.lead, .page-subtitle {
+  font-size: 1.1rem;
+  color: #2d2d2d;
+  margin-bottom: 3rem;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
+}
+
+.program-card,
+.intro-content,
+.contact-grid,
+.section-header {
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   height: 100%;
-  border: 2px solid transparent;
+  border: 2px solid rgba(15, 76, 58, 0.2);
+  position: relative;
+  z-index: 5;
 }
 
-.program-card:hover {
-  transform: translateY(-10px);
-  border-color: var(--primary-color);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+.program-card:hover,
+.intro-content:hover,
+.contact-grid:hover,
+.section-header:hover {
+  transform: translateY(-3px);
+  border-color: var(--isnm-dark-green);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
 
 .program-icon {
@@ -160,10 +202,15 @@ body {
   color: white;
 }
 
-.program-card h3 {
-  color: var(--isnm-blue);
+.program-card h3,
+.program-title h3,
+h3 {
+  font-family: 'Elephant', serif;
+  color: #0a3d2e;
   font-weight: 600;
   margin-bottom: 1rem;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 10;
 }
 
 .program-features {
@@ -172,77 +219,140 @@ body {
   margin: 1rem 0;
 }
 
-.program-features li {
+.program-features li,
+.requirements-list li,
+.course-content li {
   padding: 0.5rem 0;
-  color: var(--secondary-color);
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 }
 
 .program-features li:before {
   content: "✓";
-  color: var(--success-color);
+  color: #059669;
   font-weight: bold;
   margin-right: 0.5rem;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
-/* About Section */
-.about-section {
-  background: var(--light-color);
+/* Universal Background - Applied to ALL pages */
+main,
+section,
+.about-section,
+.programs-section,
+.facilities-section,
+.cta-section,
+.page-header,
+.programs-overview,
+.intro-section,
+.vmv-section,
+.hero-header,
+.contact-info-section,
+.py-5,
+.py-4,
+.py-3 {
+  background: var(--section-bg) !important;
 }
 
-.about-text {
+.about-text,
+.intro-text,
+.program-content p,
+.facility-card p,
+.vm-item p {
   font-size: 1.1rem;
   line-height: 1.8;
   margin-bottom: 2rem;
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 }
 
 .vision-mission {
   margin-bottom: 2rem;
 }
 
-.vm-item {
+.vm-item,
+.vmv-section {
   margin-bottom: 1.5rem;
   padding: 1.5rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 2px solid rgba(15, 76, 58, 0.2);
+  position: relative;
+  z-index: 5;
 }
 
-.vm-item h4 {
-  color: var(--isnm-blue);
+.vm-item h4,
+.facility-card h4,
+.program-content h4,
+h4 {
+  font-family: 'Cooper Black', serif;
+  color: #0a3d2e;
   margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 10;
 }
 
-.vm-item p {
+.vm-item p, .facility-card p, .program-content p {
   margin: 0;
   font-style: italic;
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 }
 
 /* Facilities Section */
-.facility-card {
+.facility-card,
+.program-header,
+.program-content {
   text-align: center;
   padding: 2rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   height: 100%;
+  border: 2px solid rgba(15, 76, 58, 0.2);
+  position: relative;
+  z-index: 5;
 }
 
-.facility-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+.facility-card:hover,
+.program-header:hover,
+.program-content:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
 
-.facility-card h4 {
-  color: var(--isnm-blue);
+.facility-card h4,
+.hero-title {
+  font-family: 'Cooper Black', serif;
+  color: #0a3d2e;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 10;
 }
 
 /* CTA Section */
 .cta-section {
-  background: var(--gradient-primary);
-  color: white;
+  background: var(--section-bg);
+  color: #0a3d2e;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.cta-section h2,
+.cta-section p,
+.cta-section .lead {
+  color: #0a3d2e;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 10;
 }
 
 .cta-buttons .btn {
@@ -251,11 +361,19 @@ body {
   margin: 5px;
   border-radius: 50px;
   transition: all 0.3s ease;
+  background: #1e3a8a !important;
+  color: #1a1a1a;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
+  border: 2px solid #1e3a8a;
 }
 
 .cta-buttons .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  background: #2563eb !important;
+  border-color: #2563eb;
 }
 
 /* Map Section */
