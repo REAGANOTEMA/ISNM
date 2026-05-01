@@ -927,7 +927,6 @@
     /* Navigation Menu */
     .isnm-navigation {
       background: var(--isnm-cream);
-      backdrop-filter: blur(10px);
       border-top: 3px solid var(--isnm-yellow);
       border-bottom: 3px solid var(--isnm-chocolate);
       position: sticky;
@@ -971,24 +970,24 @@
     
     .navbar-nav .nav-link {
       font-family: 'Poppins', sans-serif;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--isnm-chocolate) !important;
-      padding: 12px 20px !important;
+      padding: 12px 24px !important;
       margin: 0;
       border-radius: 25px;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
-      text-shadow: none;
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
       border: 2px solid var(--isnm-chocolate);
       box-shadow: 
-        0 4px 15px rgba(0,0,0,0.15),
-        0 2px 8px rgba(0,0,0,0.1),
-        inset 0 2px 4px rgba(255, 255, 255, 0.8);
-      transform-style: preserve-3d;
-      transform: perspective(600px) rotateX(0deg) rotateY(0deg);
-      font-size: 16px;
+        0 4px 0 var(--isnm-chocolate),
+        0 6px 12px rgba(0,0,0,0.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -996,13 +995,11 @@
     .navbar-nav .nav-link:hover {
       background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
       color: var(--isnm-chocolate) !important;
-      transform: perspective(1000px) rotateX(-3deg) rotateY(3deg) translateY(-5px);
+      transform: translateY(-3px);
       box-shadow: 
-        0 12px 30px rgba(255, 215, 0, 0.4),
-        0 6px 18px rgba(0,0,0,0.25),
-        0 3px 8px rgba(255, 255, 255, 0.3),
-        inset 0 3px 6px rgba(255, 255, 255, 0.9);
-      text-shadow: none;
+        0 7px 0 var(--isnm-chocolate),
+        0 8px 16px rgba(0,0,0,0.25);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
       border: 2px solid var(--isnm-chocolate);
     }
     
@@ -1035,11 +1032,11 @@
     }
     
     .navbar-nav .nav-link:active {
-      transform: perspective(1000px) rotateX(-1deg) rotateY(1deg) translateY(-1px);
+      transform: translateY(2px);
       box-shadow: 
-        0 4px 12px rgba(255, 215, 0, 0.25),
-        0 2px 6px rgba(0,0,0,0.15),
-        inset 0 2px 4px rgba(255, 255, 255, 0.7);
+        0 2px 0 var(--isnm-chocolate),
+        0 4px 8px rgba(0,0,0,0.2);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
     /* 4D Depth Effect */
