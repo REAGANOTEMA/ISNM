@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Rockwell:wght@700;800;900&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="shared/style.css" />
@@ -43,10 +43,14 @@
     
     /* Header Stripes Design */
     .isnm-header {
-      background: linear-gradient(135deg, var(--isnm-dark-blue) 0%, var(--isnm-light-blue) 100%);
+      background: var(--isnm-chocolate);
       position: relative;
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
     }
     
     .isnm-header::before {
@@ -124,8 +128,8 @@
     }
     
     .school-title {
-      font-family: 'Playfair Display', serif;
-      font-weight: 900;
+      font-family: 'Rockwell Extra Bold', 'Rockwell', serif;
+      font-weight: 800;
       font-size: 2rem;
       background: linear-gradient(45deg, var(--isnm-yellow), var(--isnm-cream), var(--isnm-gold));
       -webkit-background-clip: text;
@@ -922,7 +926,7 @@
     
     /* Navigation Menu */
     .isnm-navigation {
-      background: linear-gradient(135deg, rgba(26, 35, 126, 0.95) 0%, rgba(57, 73, 171, 0.95) 100%);
+      background: var(--isnm-cream);
       backdrop-filter: blur(10px);
       border-top: 3px solid var(--isnm-yellow);
       border-bottom: 3px solid var(--isnm-chocolate);
@@ -967,35 +971,39 @@
     
     .navbar-nav .nav-link {
       font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-      color: var(--isnm-cream) !important;
-      padding: 8px 16px !important;
+      font-weight: 600;
+      color: var(--isnm-chocolate) !important;
+      padding: 12px 20px !important;
       margin: 0;
-      border-radius: 12px;
+      border-radius: 25px;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
-      text-shadow: 0 0 1px rgba(0,0,0,0.1);
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-      border: 1px solid rgba(255, 215, 0, 0.1);
+      text-shadow: none;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+      border: 2px solid var(--isnm-chocolate);
       box-shadow: 
-        0 2px 8px rgba(0,0,0,0.05),
-        0 1px 4px rgba(255, 215, 0, 0.02);
+        0 4px 15px rgba(0,0,0,0.15),
+        0 2px 8px rgba(0,0,0,0.1),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8);
       transform-style: preserve-3d;
       transform: perspective(600px) rotateX(0deg) rotateY(0deg);
-      font-size: 17px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .navbar-nav .nav-link:hover {
       background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
       color: var(--isnm-chocolate) !important;
-      transform: perspective(1000px) rotateX(-2deg) rotateY(2deg) translateY(-3px);
+      transform: perspective(1000px) rotateX(-3deg) rotateY(3deg) translateY(-5px);
       box-shadow: 
-        0 8px 20px rgba(255, 215, 0, 0.3),
-        0 4px 12px rgba(0,0,0,0.2),
-        0 2px 6px rgba(255, 255, 255, 0.2);
+        0 12px 30px rgba(255, 215, 0, 0.4),
+        0 6px 18px rgba(0,0,0,0.25),
+        0 3px 8px rgba(255, 255, 255, 0.3),
+        inset 0 3px 6px rgba(255, 255, 255, 0.9);
       text-shadow: none;
-      border: 1px solid var(--isnm-chocolate);
+      border: 2px solid var(--isnm-chocolate);
     }
     
     .navbar-nav .nav-link::before {
@@ -1027,11 +1035,11 @@
     }
     
     .navbar-nav .nav-link:active {
-      transform: perspective(1000px) rotateX(-2deg) rotateY(2deg) translateY(-2px);
+      transform: perspective(1000px) rotateX(-1deg) rotateY(1deg) translateY(-1px);
       box-shadow: 
-        0 8px 20px rgba(255, 215, 0, 0.3),
-        0 4px 12px rgba(0,0,0,0.2),
-        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        0 4px 12px rgba(255, 215, 0, 0.25),
+        0 2px 6px rgba(0,0,0,0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.7);
     }
     
     /* 4D Depth Effect */
@@ -1150,45 +1158,61 @@
     
     /* Standalone Logo at Far Right */
     .school-logo-header-standalone {
-      width: 70px;
-      height: 70px;
+      width: 74.2px;
+      height: 74.2px;
       border-radius: 50%;
       border: 4px solid var(--isnm-yellow);
       box-shadow: 0 8px 30px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
-      position: absolute;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
+      position: relative;
       z-index: 15;
-      background: rgba(26, 35, 126, 0.1);
+      background: rgba(255, 255, 255, 0.1);
       padding: 5px;
+      image-rendering: auto;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      flex-shrink: 0;
     }
     
     .school-logo-header-standalone:hover {
       border-color: var(--isnm-gold);
       box-shadow: 0 12px 40px rgba(255, 215, 0, 0.4);
-      transform: translateY(-50%) scale(1.1);
+      transform: scale(1.05);
     }
     
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      .school-title {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
-        padding-right: 80px;
-      }
-      
-      .school-motto {
-        font-size: 0.9rem;
+      /* Enhanced Mobile Header */
+      .isnm-header {
+        flex-direction: column;
+        padding: 15px 20px;
+        gap: 15px;
       }
       
       .school-title-container {
         padding: 10px 0;
+        text-align: center;
+        width: 100%;
+      }
+      
+      .school-title {
+        font-family: 'Rockwell Extra Bold', 'Rockwell', serif;
+        font-weight: 800;
+        font-size: 1.3rem;
+        letter-spacing: 0.5px;
+        padding-right: 60px;
+        line-height: 1.2;
+      }
+      
+      .school-motto {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        text-align: center;
+        padding: 0 10px;
       }
       
       .ticker-track {
-        animation: tickerScrollMobile 12s linear infinite;
+        animation: tickerScrollMobile 10s linear infinite;
       }
       
       @keyframes tickerScrollMobile {
@@ -1200,65 +1224,181 @@
         }
       }
       
-      .school-logo-header {
-        width: 40px;
-        height: 40px;
-        border: 2px solid var(--isnm-yellow);
-      }
-      
+      /* Enhanced Mobile Logo */
       .school-logo-header-standalone {
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
         border: 3px solid var(--isnm-yellow);
-        right: 15px;
+        margin: 0 auto;
+        display: block;
+        image-rendering: auto;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
       
-      .school-logo-header-before-home {
-        max-height: 50px;
-        width: auto;
-        margin-right: 20px;
+      .school-logo-header-standalone:hover {
+        transform: scale(1.08);
       }
       
-      .school-logo-header-before-home img {
-        max-height: 50px;
-        width: auto;
-      }
-      
+      /* Enhanced Mobile Navigation */
       .isnm-navigation {
-        height: 70px;
-        padding: 0 20px;
+        height: auto;
+        min-height: 60px;
+        padding: 10px 15px;
+        position: sticky;
+        top: 0;
+      }
+      
+      .navbar-toggler {
+        border-color: var(--isnm-chocolate);
+        background: var(--isnm-cream);
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      
+      .navbar-toggler:hover {
+        background: var(--isnm-yellow);
+        transform: scale(1.05);
+      }
+      
+      .navbar-toggler-icon {
+        filter: invert(0.3);
       }
       
       .navbar-collapse {
         flex-direction: column;
         height: auto;
+        background: var(--isnm-cream);
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        border: 2px solid var(--isnm-chocolate);
       }
       
       .nav-links {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
+        width: 100%;
       }
       
-      .nav-links .nav-link {
-        padding: 10px 14px !important;
-        margin: 2px;
-        font-size: 15px;
-        border-radius: 18px;
-        transform: perspective(800px) rotateX(0deg) rotateY(0deg);
+      .navbar-nav .nav-link {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--isnm-chocolate) !important;
+        padding: 10px 16px !important;
+        margin: 2px 0;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+        border: 2px solid var(--isnm-chocolate);
+        box-shadow: 
+          0 3px 12px rgba(0,0,0,0.1),
+          0 1px 4px rgba(0,0,0,0.05),
+          inset 0 2px 4px rgba(255, 255, 255, 0.8);
+        transform-style: preserve-3d;
+        transform: perspective(600px) rotateX(0deg) rotateY(0deg);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        width: 100%;
+        text-align: center;
+        transition: all 0.3s ease;
       }
       
-      .nav-links .nav-link:hover {
-        transform: perspective(800px) rotateX(-2deg) rotateY(2deg) translateY(-2px);
+      .navbar-nav .nav-link:hover {
+        background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
+        color: var(--isnm-chocolate) !important;
+        transform: perspective(800px) rotateX(-2deg) rotateY(2deg) translateY(-3px);
+        box-shadow: 
+          0 8px 20px rgba(255, 215, 0, 0.3),
+          0 4px 12px rgba(0,0,0,0.15),
+          0 2px 6px rgba(255, 255, 255, 0.3),
+          inset 0 3px 6px rgba(255, 255, 255, 0.9);
+        border: 2px solid var(--isnm-chocolate);
       }
       
-      .nav-links .nav-link::after {
-        display: none;
+      .navbar-nav .nav-link:active {
+        transform: perspective(800px) rotateX(-1deg) rotateY(1deg) translateY(-1px);
+        box-shadow: 
+          0 3px 8px rgba(255, 215, 0, 0.2),
+          0 2px 4px rgba(0,0,0,0.1),
+          inset 0 2px 4px rgba(255, 255, 255, 0.7);
+      }
+      
+      /* Enhanced Mobile 3D Buttons */
+      .btn-3d {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        padding: 10px 18px;
+        font-size: 13px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
+        color: var(--isnm-chocolate);
+        border: 2px solid var(--isnm-chocolate);
+        box-shadow: 
+          0 4px 0 var(--isnm-chocolate),
+          0 6px 12px rgba(0,0,0,0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin: 5px 0;
+        width: 100%;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-3d:hover {
+        transform: translateY(2px);
+        box-shadow: 
+          0 6px 0 var(--isnm-chocolate),
+          0 8px 16px rgba(0,0,0,0.25);
+      }
+      
+      .btn-3d:active {
+        transform: translateY(4px);
+        box-shadow: 
+          0 2px 0 var(--isnm-chocolate),
+          0 4px 8px rgba(0,0,0,0.2);
+      }
+      
+      /* Mobile Action Buttons Container */
+      .d-flex.gap-3 {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px !important;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid var(--isnm-chocolate);
+      }
+    }
+    
+    /* Extra Small Mobile */
+    @media (max-width: 480px) {
+      .school-title {
+        font-size: 1.1rem;
+        letter-spacing: 0.3px;
+        padding-right: 40px;
+      }
+      
+      .school-motto {
+        font-size: 0.7rem;
+        padding: 0 5px;
+      }
+      
+      .school-logo-header-standalone {
+        width: 42px;
+        height: 42px;
+        border: 2px solid var(--isnm-yellow);
+      }
+      
+      .navbar-nav .nav-link {
+        font-size: 13px;
+        padding: 8px 12px !important;
       }
       
       .btn-3d {
-        padding: 8px 16px;
-        font-size: 14px;
+        font-size: 12px;
+        padding: 8px 14px;
       }
     }
   </style>
@@ -1268,30 +1408,21 @@
 
 <!-- Enhanced ISNM Header with Animated Title -->
 <header class="isnm-header">
-  <div class="container-fluid">
-    <div class="row align-items-center">
-      <div class="col-md-3 text-center text-md-start">
-        </div>
-      <div class="col-md-9">
-        <div class="school-title-container">
-          <div class="ticker-wrapper">
-            <div class="ticker-track">
-              <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-              <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-            </div>
-          </div>
-          <p class="school-motto">"Chosen to Serve - Based on a disciplined mind for health action"</p>
-        </div>
+  <div class="school-title-container">
+    <div class="ticker-wrapper">
+      <div class="ticker-track">
+        <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
+        <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
       </div>
     </div>
+    <p class="school-motto">"Chosen to Serve - Based on a disciplined mind for health action"</p>
   </div>
+  <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo-header-standalone">
 </header>
 
 <!-- Enhanced Navigation Menu -->
 <nav class="navbar navbar-expand-lg isnm-navigation">
   <div class="container position-relative">
-    <!-- Logo Before Homepage Link -->
-    <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo-header-before-home">
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
