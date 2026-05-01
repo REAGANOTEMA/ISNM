@@ -47,8 +47,8 @@
       <div class="hero-content">
         <div class="cinematic-title-wrapper">
           <div class="cinematic-title-track">
-           <h1 class="cinematic-title">Training Healers. Transforming Lives.</h1>
-           <h1 class="cinematic-title">Training Healers. Transforming Lives.</h1>
+           <h1 class="cinematic-title">Training Healers. Saving Lives.</h1>
+           <h1 class="cinematic-title">Training Healers. Saving Lives.</h1>
        </div>
         </div>
         
