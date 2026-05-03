@@ -301,7 +301,6 @@ section,
 .facilities-section,
 .cta-section,
 .page-header,
-.programs-overview,
 .intro-section,
 .vmv-section,
 .hero-header,
@@ -310,6 +309,30 @@ section,
 .py-4,
 .py-3 {
   background: var(--section-bg) !important;
+}
+
+/* Fix programs overview visibility */
+.programs-overview {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%) !important;
+  padding: 3rem 0 !important;
+}
+
+/* Ensure section titles and subtitles are visible in programs overview */
+.programs-overview .section-title,
+.programs-overview .section-subtitle {
+  color: #1a1a1a !important;
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8) !important;
+  position: relative;
+  z-index: 20;
+}
+
+/* Ensure all text in programs overview is visible */
+.programs-overview h2,
+.programs-overview p {
+  color: #1a1a1a !important;
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8) !important;
+  position: relative;
+  z-index: 15;
 }
 
 .about-text,

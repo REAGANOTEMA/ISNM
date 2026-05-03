@@ -4,7 +4,7 @@
     <!-- Page Header -->
     <section class="page-header">
       <div class="container">
-        <div class="row">
+        <div class="row align-items-center">
           <div class="col-lg-12 text-center">
             <h1 class="page-title">Academic Programs</h1>
             <p class="page-subtitle">Quality Healthcare Education for Tomorrow's Professionals</p>
@@ -14,16 +14,16 @@
     </section>
 
     <!-- Programs Overview -->
-    <section class="programs-overview py-5">
+    <section class="programs-overview py-4">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
+          <div class="col-lg-12 text-center mb-4">
             <h2 class="section-title">Our Academic Programs</h2>
             <p class="section-subtitle">ISNM offers comprehensive nursing and midwifery programs designed to produce competent healthcare professionals</p>
           </div>
         </div>
         
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center">
           <!-- Certificate in Nursing -->
           <div class="col-lg-6">
             <div class="program-card">
@@ -212,10 +212,10 @@
     </section>
 
     <!-- Practicum Sites Section -->
-    <section class="practicum-section py-5 bg-light">
+    <section class="practicum-section py-4">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
+          <div class="col-lg-12 text-center mb-4">
             <h2 class="section-title">Clinical Practicum Sites</h2>
             <p class="section-subtitle">Our students gain practical experience at leading healthcare facilities</p>
           </div>
@@ -306,10 +306,10 @@
     </section>
 
     <!-- Admission Process Section -->
-    <section class="admission-process py-5">
+    <section class="admission-process py-4">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center mb-5">
+          <div class="col-lg-12 text-center mb-4">
             <h2 class="section-title">Admission Process</h2>
             <p class="section-subtitle">Your pathway to joining ISNM</p>
           </div>
@@ -380,10 +380,13 @@
     .page-header {
       background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
       color: white;
-      padding: 4rem 0;
-      margin-bottom: 2rem;
+      padding: 3rem 0;
+      margin-bottom: 1rem;
       position: relative;
       overflow: hidden;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
     }
 
     .page-header::before {
@@ -404,10 +407,13 @@
     }
 
     .page-title {
-      font-size: 3rem;
+      font-size: 2.8rem;
       font-weight: 700;
       margin-bottom: 1rem;
       animation: titleEntrance 1s ease-out;
+      font-family: 'Elephant', serif;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     @keyframes titleEntrance {
@@ -416,9 +422,12 @@
     }
 
     .page-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       opacity: 0.9;
       animation: subtitleEntrance 1.2s ease-out;
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     @keyframes subtitleEntrance {
@@ -428,13 +437,17 @@
 
     /* Enhanced Program Cards */
     .program-card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      overflow: hidden;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      overflow: visible;
       transition: all 0.3s ease;
-      height: 100%;
+      height: auto;
       animation: cardEntrance 0.6s ease-out;
+      border: 2px solid rgba(144, 238, 144, 0.5);
+      margin-bottom: 1.5rem;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     @keyframes cardEntrance {
@@ -448,17 +461,18 @@
     }
 
     .program-header {
-      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       color: white;
-      padding: 2rem;
+      padding: 1rem;
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
     }
 
     .program-icon {
-      width: 80px;
-      height: 80px;
+      width: 45px;
+      height: 45px;
       background: rgba(255,255,255,0.15);
       border-radius: 50%;
       display: flex;
@@ -466,6 +480,7 @@
       justify-content: center;
       flex-shrink: 0;
       animation: iconFloat 3s ease-in-out infinite;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     @keyframes iconFloat {
@@ -474,7 +489,7 @@
     }
 
     .program-icon i {
-      font-size: 2rem;
+      font-size: 1.2rem;
       color: white;
       animation: iconRotate 8s linear infinite;
     }
@@ -486,28 +501,42 @@
 
     .program-title h3 {
       margin: 0;
-      font-size: 1.5rem;
-      font-weight: 700;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: 'Haettenschweiler', sans-serif;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      line-height: 1.2;
     }
 
     .program-duration {
       display: inline-block;
       background: rgba(255,255,255,0.2);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
     }
 
     .program-content {
-      padding: 2rem;
+      padding: 1.5rem;
+      position: relative;
+      z-index: 15;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .program-content h4 {
-      color: #1a237e;
-      margin: 1.5rem 0 1rem;
-      font-size: 1.2rem;
-      font-weight: 700;
+      color: #1e3a8a !important;
+      margin: 0.8rem 0 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Cooper Black', sans-serif;
+      position: relative;
+      z-index: 20;
+      visibility: visible !important;
+      opacity: 1 !important;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     .program-content h4:first-child {
@@ -515,9 +544,17 @@
     }
 
     .program-content p {
-      color: #333;
-      line-height: 1.6;
+      color: #000000 !important;
+      line-height: 1.5;
       margin-bottom: 1rem;
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-size: 1.01rem;
+      font-weight: 600;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.9);
+      position: relative;
+      z-index: 15;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .requirements-list,
@@ -529,92 +566,227 @@
 
     .requirements-list li,
     .course-content li {
-      padding: 0.5rem 0;
-      color: #333;
+      padding: 0.5rem 0.75rem;
+      color: #000000 !important;
       position: relative;
       padding-left: 1.5rem;
       margin-bottom: 0.5rem;
-      background: #f8f9fa;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
       border-radius: 8px;
       transition: all 0.3s ease;
+      border: 2px solid rgba(144, 238, 144, 0.6);
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-size: 1.01rem;
+      font-weight: 600;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.9);
+      z-index: 10;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .requirements-list li:hover,
     .course-content li:hover {
-      background: #e9ecef;
+      background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
       transform: translateX(5px);
+      border-color: rgba(144, 238, 144, 0.6);
     }
 
     .requirements-list li:before,
     .course-content li:before {
       content: "✓";
-      color: #28a745;
+      color: #1e3a8a !important;
       position: absolute;
       left: 0;
       font-weight: bold;
+      font-size: 1.1rem;
+      z-index: 25;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .program-actions {
       display: flex;
       gap: 1rem;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #e9ecef;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 2px solid rgba(144, 238, 144, 0.3);
+      position: relative;
+      z-index: 20;
     }
 
     .btn {
-      padding: 12px 30px;
-      border-radius: 50px;
+      padding: 12px 28px;
+      border-radius: 25px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       text-decoration: none;
       display: inline-block;
+      font-family: 'Cooper Black', sans-serif;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 25;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      z-index: -1;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      border-radius: inherit;
+      z-index: -1;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
-      color: #1a237e;
-      border: none;
-      box-shadow: 0 3px 10px rgba(255,215,0,0.2);
+      color: #ffffff;
+      background: linear-gradient(145deg, #4a2c2a 0%, #6b4423 25%, #8b5a3c 50%, #6b4423 75%, #4a2c2a 100%);
+      box-shadow: 
+        0 8px 15px rgba(74, 44, 42, 0.4),
+        0 4px 8px rgba(107, 68, 35, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+      border: 2px solid #3d2422;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-primary::before {
+      background: linear-gradient(145deg, #3d2422 0%, #5c3a28 25%, #7a4e35 50%, #5c3a28 75%, #3d2422 100%);
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary::after {
+      background: linear-gradient(145deg, #6b4423 0%, #8b5a3c 50%, #6b4423 100%);
+      opacity: 0.3;
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+      transform: translateY(-3px) rotateX(5deg) scale(1.02);
+      box-shadow: 
+        0 12px 20px rgba(74, 44, 42, 0.5),
+        0 6px 12px rgba(107, 68, 35, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+      background: linear-gradient(145deg, #5c3a28 0%, #7a4e35 25%, #9b6a4a 50%, #7a4e35 75%, #5c3a28 100%);
+    }
+
+    .btn-primary:hover::before {
+      transform: translateZ(-2px);
+      background: linear-gradient(145deg, #4a2c2a 0%, #6b4423 25%, #8b5a3c 50%, #6b4423 75%, #4a2c2a 100%);
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary:hover::after {
+      transform: translateZ(-1px);
+      opacity: 0.4;
+    }
+
+    .btn-primary:active {
+      transform: translateY(-1px) rotateX(2deg) scale(0.98);
+      box-shadow: 
+        0 4px 8px rgba(74, 44, 42, 0.4),
+        0 2px 4px rgba(107, 68, 35, 0.3),
+        inset 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .btn-outline-primary {
-      background: transparent;
-      color: #1a237e;
-      border: 2px solid #1a237e;
-      box-shadow: 0 3px 10px rgba(26,35,126,0.1);
+      color: #1e3a8a;
+      background: linear-gradient(145deg, #f8f4f1 0%, #e8dfd8 50%, #f8f4f1 100%);
+      box-shadow: 
+        0 8px 15px rgba(74, 44, 42, 0.3),
+        0 4px 8px rgba(107, 68, 35, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      border: 2px solid #6b4423;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+    }
+
+    .btn-outline-primary::before {
+      background: linear-gradient(145deg, #e8dfd8 0%, #d8cfc6 50%, #e8dfd8 100%);
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-outline-primary::after {
+      background: linear-gradient(145deg, #6b4423 0%, #8b5a3c 50%, #6b4423 100%);
+      opacity: 0.1;
     }
 
     .btn-outline-primary:hover {
-      background: #1a237e;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(26,35,126,0.2);
+      transform: translateY(-3px) rotateX(5deg) scale(1.02);
+      color: #1e3a8a;
+      background: linear-gradient(145deg, #fff8f0 0%, #f5e6d8 50%, #fff8f0 100%);
+      box-shadow: 
+        0 12px 20px rgba(74, 44, 42, 0.4),
+        0 6px 12px rgba(107, 68, 35, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+      border-color: #8b5a3c;
+    }
+
+    .btn-outline-primary:hover::before {
+      transform: translateZ(-2px);
+      background: linear-gradient(145deg, #f5e6d8 0%, #ead4c2 50%, #f5e6d8 100%);
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .btn-outline-primary:hover::after {
+      transform: translateZ(-1px);
+      opacity: 0.2;
+    }
+
+    .btn-outline-primary:active {
+      transform: translateY(-1px) rotateX(2deg) scale(0.98);
+      box-shadow: 
+        0 4px 8px rgba(74, 44, 42, 0.3),
+        0 2px 4px rgba(107, 68, 35, 0.2),
+        inset 0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     /* Clean Hospitals Grid */
     .hospitals-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0;
     }
 
     .hospital-card {
       display: flex;
       align-items: center;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      padding: 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
       transition: all 0.3s ease;
+      border: 1px solid rgba(144, 238, 144, 0.4);
     }
 
     .hospital-card:hover {
@@ -623,15 +795,16 @@
     }
 
     .hospital-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 1rem;
       flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(30, 58, 138, 0.2);
     }
 
     .hospital-icon i {
@@ -640,32 +813,48 @@
     }
 
     .hospital-info h4 {
-      color: #1a237e;
-      margin: 0 0 0.5rem;
-      font-size: 1.1rem;
+      color: #1e3a8a;
+      margin: 0 0 0.4rem;
+      font-size: 1rem;
       font-weight: 700;
+      font-family: 'Cooper Black', sans-serif;
     }
 
     .hospital-info p {
-      color: #333;
+      color: #1a1a1a;
       margin: 0;
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-weight: 500;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     .practicum-details {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      margin-top: 2rem;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+      margin-top: 1.5rem;
+      border: 1px solid rgba(144, 238, 144, 0.4);
     }
 
     .practicum-details h3 {
-      color: #1a237e;
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
+      color: #1e3a8a;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
       font-weight: 700;
+      font-family: 'Haettenschweiler', sans-serif;
+    }
+
+    .practicum-info p {
+      color: #1a1a1a;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-size: 1rem;
+      font-weight: 500;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     .training-structure {
@@ -675,21 +864,25 @@
     }
 
     .training-structure li {
-      padding: 0.75rem 0;
-      color: #333;
+      padding: 0.6rem 0.75rem;
+      color: #1a1a1a;
       position: relative;
       padding-left: 2rem;
-      margin-bottom: 0.75rem;
-      background: #f8f9fa;
+      margin-bottom: 0.6rem;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
       border-radius: 8px;
       transition: all 0.3s ease;
-      border-left: 3px solid #e9ecef;
+      border-left: 3px solid rgba(144, 238, 144, 0.5);
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     .training-structure li:hover {
-      background: #e9ecef;
+      background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
       transform: translateX(5px);
-      border-left-color: #1a237e;
+      border-left-color: #1e3a8a;
     }
 
     .training-structure li:last-child {
@@ -698,10 +891,11 @@
 
     .training-structure li:before {
       content: "→";
-      color: #1a237e;
+      color: #1e3a8a;
       position: absolute;
       left: 0.5rem;
       font-weight: bold;
+      font-size: 1rem;
     }
 
     /* Enhanced Timeline */
@@ -725,7 +919,7 @@
     .timeline-item {
       display: flex;
       align-items: flex-start;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
       position: relative;
       animation: timelineItemEntrance 0.8s ease-out;
     }
@@ -746,20 +940,21 @@
     }
 
     .timeline-marker {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #1a237e;
+      color: #ffffff;
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       flex-shrink: 0;
-      margin-right: 2rem;
-      box-shadow: 0 5px 15px rgba(255,215,0,0.2);
+      margin-right: 1.5rem;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
       animation: markerPulse 2s ease-in-out infinite;
+      font-family: 'Cooper Black', sans-serif;
     }
 
     @keyframes markerPulse {
@@ -768,12 +963,13 @@
     }
 
     .timeline-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
       flex: 1;
       transition: all 0.3s ease;
+      border: 1px solid rgba(144, 238, 144, 0.4);
     }
 
     .timeline-item:hover .timeline-content {
@@ -782,16 +978,21 @@
     }
 
     .timeline-content h4 {
-      color: #1a237e;
-      margin: 0 0 0.75rem;
-      font-size: 1.3rem;
+      color: #1e3a8a;
+      margin: 0 0 0.6rem;
+      font-size: 1.1rem;
       font-weight: 700;
+      font-family: 'Cooper Black', sans-serif;
     }
 
     .timeline-content p {
-      color: #333;
+      color: #1a1a1a;
       margin: 0;
-      line-height: 1.6;
+      line-height: 1.5;
+      font-family: 'Bodoni MT Poster Compressed', serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     /* Enhanced Responsive Design */
@@ -1017,7 +1218,6 @@
         padding: 1rem;
       }
     }
-  </style>
   </style>
 
   <?php include('shared/_footer.php'); ?>
