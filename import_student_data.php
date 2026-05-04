@@ -1,21 +1,74 @@
 <?php
-session_start();
-include_once 'includes/config.php';
-include_once 'includes/functions.php';
+/**
+ * Import Student Data from Excel Files
+ * Updated to work with current ISNM database structure
+ */
 
-// Check if user is logged in and has appropriate access level
-if (!isset($_SESSION['user_id']) || $_SESSION['access_level'] < 8) {
-    header("Location: login.php");
+require_once 'config/database.php';
+require_once 'auth-service.php';
+
+// Check if user is logged in and has admin access
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'academic' && $_SESSION['role'] !== 'registrar')) {
+    header("Location: student-login.php");
     exit();
+}
+
+// Function to create students table
+function createStudentsTable($conn) {
+    $sql = "CREATE TABLE IF NOT EXISTS students (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id VARCHAR(50) UNIQUE,
+        index_number VARCHAR(50) UNIQUE,
+        surname VARCHAR(100) NOT NULL,
+        first_name VARCHAR(100) NOT NULL,
+        other_name VARCHAR(100),
+        full_name VARCHAR(255) GENERATED ALWAYS AS (CONCAT(first_name, ' ', IFNULL(other_name, ''), ' ', surname)) STORED,
+        gender ENUM('Male', 'Female') NOT NULL,
+        date_of_birth DATE,
+        nationality VARCHAR(100) DEFAULT 'Uganda',
+        district VARCHAR(100),
+        address TEXT,
+        phone VARCHAR(20),
+        email VARCHAR(255) UNIQUE,
+        program VARCHAR(200),
+        level ENUM('Certificate', 'Diploma', 'Degree') NOT NULL,
+        intake_year INT,
+        intake_period VARCHAR(20),
+        enrollment_date DATE,
+        graduation_date DATE,
+        status ENUM('active', 'inactive', 'graduated', 'suspended', 'withdrawn') DEFAULT 'active',
+        gpa DECIMAL(3,2) DEFAULT 0.00,
+        academic_status ENUM('good', 'probation', 'warning') DEFAULT 'good',
+        fees_balance DECIMAL(10,2) DEFAULT 0.00,
+        last_login TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (student_id),
+        INDEX (index_number),
+        INDEX (email),
+        INDEX (surname),
+        INDEX (first_name),
+        INDEX (program),
+        INDEX (level),
+        INDEX (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+    
+    if (!$conn->query($sql)) {
+        throw new Exception("Error creating students table: " . $conn->error);
+    }
 }
 
 // Function to import all student data sets
 function importAllStudentData() {
-    global $conn;
+    $conn = getConnection();
     
     $imported_count = 0;
     $error_count = 0;
     $errors = [];
+    
+    // First, create students table if it doesn't exist
+    createStudentsTable($conn);
     
     // SET 25 MIDWIVES Data
     $set25_midwives = [
@@ -90,7 +143,7 @@ function importAllStudentData() {
             $first_name = $student_data[1];
             $other_name = $student_data[2];
             $gender = $student_data[3];
-            $nsin = $student_data[4];
+            $index_number = $student_data[4];
             $date_of_birth = $student_data[5];
             $district = $student_data[6];
             $nationality = $student_data[7];
@@ -102,23 +155,43 @@ function importAllStudentData() {
             $intake_period = $student_data[13];
             
             // Check if student already exists
-            $check_sql = "SELECT COUNT(*) as count FROM students WHERE surname = ? AND first_name = ? AND date_of_birth = ?";
-            $check_result = executeQuery($check_sql, [$surname, $first_name, $date_of_birth], 'sss');
+            $check_sql = "SELECT COUNT(*) as count FROM students WHERE index_number = ? OR email = ?";
+            $check_stmt = $conn->prepare($check_sql);
+            $check_stmt->bind_param("ss", $index_number, $email);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
             
-            if ($check_result[0]['count'] > 0) {
+            if ($check_result->fetch_assoc()['count'] > 0) {
                 continue; // Skip existing student
             }
             
-            $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'active')";
+            // Also add to users table for login access
+            $username = strtolower(str_replace(['/', ' '], '', $index_number));
+            $password = password_hash('password123', PASSWORD_DEFAULT); // Default password
+            
+            $user_sql = "INSERT INTO users (user_id, username, first_name, last_name, full_name, index_number, phone, email, password, role, type, status) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'student', 'active')";
+            $user_stmt = $conn->prepare($user_sql);
+            $full_name = trim("$first_name $other_name $surname");
+            $user_stmt->bind_param("sssssssss", $index_number, $username, $first_name, $surname, $full_name, $index_number, $phone, $email, $password);
+            
+            if (!$user_stmt->execute()) {
+                $error_count++;
+                $errors[] = "Error creating user account: $first_name $surname - " . $user_stmt->error;
+                continue;
+            }
+            
+            $sql = "INSERT INTO students (student_id, index_number, surname, first_name, other_name, gender, date_of_birth, nationality, district, phone, email, program, level, intake_year, intake_period, enrollment_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'active')";
             
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $district, $phone, $email, $program, $level, $intake_year, $intake_period);
+            $stmt->bind_param("sssssssssssssss", $student_id, $index_number, $surname, $first_name, $other_name, $gender, $date_of_birth, $nationality, $district, $phone, $email, $program, $level, $intake_year, $intake_period);
             
             if ($stmt->execute()) {
                 $imported_count++;
             } else {
                 $error_count++;
-                $errors[] = "Error importing: $first_name $surname - " . $conn->error;
+                $errors[] = "Error importing student record: $first_name $surname - " . $stmt->error;
             }
         } catch (Exception $e) {
             $error_count++;
@@ -135,7 +208,7 @@ function importAllStudentData() {
 
 // Function to generate unique student ID
 function generateStudentId() {
-    global $conn;
+    $conn = getConnection();
     
     do {
         $year = date('Y');
@@ -143,33 +216,160 @@ function generateStudentId() {
         $student_id = "ISNM/$year/$random";
         
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
-        $check_result = executeQuery($check_sql, [$student_id], 's');
-    } while ($check_result[0]['count'] > 0);
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("s", $student_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+    } while ($check_result->fetch_assoc()['count'] > 0);
     
     return $student_id;
 }
 
-// Handle import request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_all'])) {
-    $result = importAllStudentData();
+// Function to create staff roles and accounts
+function createStaffRoles($conn) {
+    $staff_accounts = [
+        // Academic Office
+        ['academic.registrar@isnm.ac.ug', 'Academic Registrar', 'academic', 'registrar', '256774123456'],
+        
+        // Finance/Accounting Office
+        ['accountant@isnm.ac.ug', 'Chief Accountant', 'accountant', 'finance', '256775123456'],
+        ['finance.officer@isnm.ac.ug', 'Finance Officer', 'finance', 'finance', '256776123456'],
+        
+        // Directors
+        ['director.academic@isnm.ac.ug', 'Director of Academics', 'director', 'academic', '256777123456'],
+        ['director.admin@isnm.ac.ug', 'Director of Administration', 'director', 'admin', '256778123456'],
+        ['director.medical@isnm.ac.ug', 'Director of Medical Services', 'director', 'medical', '256779123456'],
+        
+        // Human Resources
+        ['hr.manager@isnm.ac.ug', 'HR Manager', 'hr', 'admin', '256770123456'],
+        ['hr.officer@isnm.ac.ug', 'HR Officer', 'hr', 'admin', '256771123456'],
+        
+        // Principal Office
+        ['principal@isnm.ac.ug', 'Principal', 'principal', 'admin', '256772123456'],
+        ['deputy.principal@isnm.ac.ug', 'Deputy Principal', 'deputy_principal', 'admin', '256773123456'],
+        
+        // Secretary
+        ['secretary@isnm.ac.ug', 'Secretary', 'secretary', 'admin', '256780123456'],
+        ['receptionist@isnm.ac.ug', 'Receptionist', 'receptionist', 'admin', '256781123456'],
+        
+        // Other Offices
+        ['librarian@isnm.ac.ug', 'Librarian', 'librarian', 'academic', '256782123456'],
+        ['bursar@isnm.ac.ug', 'Bursar', 'bursar', 'finance', '256783123456'],
+        ['counselor@isnm.ac.ug', 'Student Counselor', 'counselor', 'student_affairs', '256784123456'],
+        ['nurse.tutor@isnm.ac.ug', 'Nurse Tutor', 'tutor', 'academic', '256785123456'],
+        ['midwife.tutor@isnm.ac.ug', 'Midwife Tutor', 'tutor', 'academic', '256786123456']
+    ];
     
-    logActivity($_SESSION['user_id'], $_SESSION['role'], 'Bulk Student Import', "Imported {$result['imported']} students with {$result['errors']} errors", 'students', null);
+    foreach ($staff_accounts as $staff) {
+        $email = $staff[0];
+        $full_name = $staff[1];
+        $role = $staff[2];
+        $department = $staff[3];
+        $phone = $staff[4];
+        
+        // Check if staff already exists
+        $check_sql = "SELECT COUNT(*) as count FROM users WHERE email = ?";
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("s", $email);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        if ($check_result->fetch_assoc()['count'] > 0) {
+            continue; // Skip existing staff
+        }
+        
+        // Create staff account
+        $username = explode('@', $email)[0];
+        $password = password_hash('password123', PASSWORD_DEFAULT);
+        $user_id = strtoupper(substr($role, 0, 3)) . date('Y') . rand(100, 999);
+        
+        $sql = "INSERT INTO users (user_id, username, first_name, last_name, full_name, email, phone, password, role, type, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'staff', 'active')";
+        
+        $name_parts = explode(' ', $full_name);
+        $first_name = $name_parts[0];
+        $last_name = isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : '';
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssssss", $user_id, $username, $first_name, $last_name, $full_name, $email, $phone, $password, $role);
+        
+        if (!$stmt->execute()) {
+            error_log("Error creating staff account: $email - " . $stmt->error);
+        }
+    }
+}
+
+// Function to log activity
+function logActivity($user_id, $user_role, $action, $details, $module, $record_id) {
+    $conn = getConnection();
+    
+    $sql = "INSERT INTO activity_log (user_id, user_role, action, details, module, record_id, ip_address, user_agent, timestamp) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    
+    $stmt = $conn->prepare($sql);
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    
+    $stmt->bind_param("ssssssss", $user_id, $user_role, $action, $details, $module, $record_id, $ip_address, $user_agent);
+    $stmt->execute();
+}
+
+// Function to create activity log table
+function createActivityLogTable($conn) {
+    $sql = "CREATE TABLE IF NOT EXISTS activity_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(50),
+        user_role VARCHAR(50),
+        action VARCHAR(100),
+        details TEXT,
+        module VARCHAR(50),
+        record_id VARCHAR(50),
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        INDEX (user_role),
+        INDEX (action),
+        INDEX (module),
+        INDEX (timestamp)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+    
+    if (!$conn->query($sql)) {
+        throw new Exception("Error creating activity_log table: " . $conn->error);
+    }
+}
+
+// Handle import request
+if (isset($_POST['import_all']) || (php_sapi_name() === 'cli' && isset($argv[1]) && $argv[1] === 'import')) {
+    $result = importAllStudentData();
+    createStaffRoles(getConnection());
+    createActivityLogTable(getConnection());
+    
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    logActivity($_SESSION['user_id'] ?? 'system', $_SESSION['role'] ?? 'system', 'Bulk Student Import', "Imported {$result['imported']} students with {$result['errors']} errors", 'students', null);
     
     $_SESSION['import_result'] = $result;
-    header("Location: import_student_data.php");
-    exit();
+    
+    if (php_sapi_name() !== 'cli') {
+        header("Location: import_student_data.php");
+        exit();
+    }
 }
 
 // Get current statistics
+$conn = getConnection();
 $total_students_sql = "SELECT COUNT(*) as total FROM students";
-$total_result = executeQuery($total_students_sql);
-$total_students = $total_result[0]['total'];
+$total_result = $conn->query($total_students_sql);
+$total_students = $total_result->fetch_assoc()['total'];
 
 $by_program_sql = "SELECT program, COUNT(*) as count FROM students GROUP BY program ORDER BY count DESC";
-$programs_stats = executeQuery($by_program_sql);
+$programs_stats = $conn->query($by_program_sql);
 
 $by_year_sql = "SELECT intake_year, COUNT(*) as count FROM students GROUP BY intake_year ORDER BY intake_year DESC";
-$year_stats = executeQuery($by_year_sql);
+$year_stats = $conn->query($by_year_sql);
 ?>
 
 <!DOCTYPE html>

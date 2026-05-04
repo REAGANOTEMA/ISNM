@@ -4,7 +4,7 @@
  * Handles both student and staff authentication with security measures
  */
 
-require_once 'db.php';
+require_once 'config/database.php';
 
 /**
  * Authentication Service Class
@@ -20,7 +20,7 @@ class AuthenticationService {
      * @return bool
      */
     private function isStudentAccountLocked($indexNumber) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         $stmt = $conn->prepare("SELECT locked_until FROM users WHERE index_number = ? AND role = 'student' AND locked_until > NOW()");
         $stmt->bind_param("s", $indexNumber);
@@ -36,7 +36,7 @@ class AuthenticationService {
      * @return bool
      */
     private function isStaffAccountLocked($email) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         $stmt = $conn->prepare("SELECT locked_until FROM users WHERE email = ? AND role != 'student' AND locked_until > NOW()");
         $stmt->bind_param("s", $email);
@@ -51,7 +51,7 @@ class AuthenticationService {
      * @param string $indexNumber
      */
     private function recordStudentFailedAttempt($indexNumber) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Increment login attempts
         $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE index_number = ? AND role = 'student'");
@@ -79,7 +79,7 @@ class AuthenticationService {
      * @param string $email
      */
     private function recordStaffFailedAttempt($email) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Increment login attempts
         $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE email = ? AND role != 'student'");
@@ -107,7 +107,7 @@ class AuthenticationService {
      * @param int $userId
      */
     private function resetFailedAttempts($userId) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         $stmt = $conn->prepare("UPDATE users SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
         $stmt->bind_param("i", $userId);
@@ -144,7 +144,7 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
         }
         
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Split full name into first and last name
         $nameParts = explode(' ', trim($fullName));
@@ -217,7 +217,7 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
         }
         
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Query database for staff user
         $sql = "SELECT * FROM users WHERE 
@@ -425,7 +425,7 @@ class AuthenticationService {
      * @return array
      */
     public function createStudentAccount($studentData) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Validate required fields
         $requiredFields = ['index_number', 'full_name', 'phone'];
@@ -478,7 +478,7 @@ class AuthenticationService {
      * @return array
      */
     public function createStaffAccount($staffData) {
-        $conn = getDatabaseConnection();
+        $conn = getConnection();
         
         // Validate required fields
         $requiredFields = ['full_name', 'email', 'phone', 'password', 'role'];

@@ -93,24 +93,24 @@
         </div>
         
         <div class="row">
-          <div class="col-lg-8 mx-auto">
+          <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
             <div class="contact-form-container animate-fade-in">
               <form id="contactForm" method="POST" action="process-contact.php">
                 <div class="form-section">
                   <div class="section-title">
-                    <i class="fas fa-user"></i>
+                    <i class="fas fa-user me-2"></i>
                     <h4>Personal Information</h4>
                   </div>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="firstName" class="form-label">
-                        <i class="fas fa-user"></i> First Name *
+                        <i class="fas fa-user me-1"></i> First Name *
                       </label>
                       <input type="text" class="form-control" id="firstName" name="firstName" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="lastName" class="form-label">
-                        <i class="fas fa-user"></i> Last Name *
+                        <i class="fas fa-user me-1"></i> Last Name *
                       </label>
                       <input type="text" class="form-control" id="lastName" name="lastName" required>
                     </div>
@@ -119,19 +119,19 @@
 
                 <div class="form-section">
                   <div class="section-title">
-                    <i class="fas fa-address-card"></i>
+                    <i class="fas fa-address-card me-2"></i>
                     <h4>Contact Details</h4>
                   </div>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="email" class="form-label">
-                        <i class="fas fa-envelope"></i> Email Address *
+                        <i class="fas fa-envelope me-1"></i> Email Address *
                       </label>
                       <input type="email" class="form-control" id="email" name="email" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="phone" class="form-label">
-                        <i class="fas fa-phone"></i> Phone Number *
+                        <i class="fas fa-phone me-1"></i> Phone Number *
                       </label>
                       <input type="tel" class="form-control" id="phone" name="phone" required>
                     </div>
@@ -140,13 +140,13 @@
 
                 <div class="form-section">
                   <div class="section-title">
-                    <i class="fas fa-tag"></i>
+                    <i class="fas fa-tag me-2"></i>
                     <h4>Message Details</h4>
                   </div>
                   <div class="row g-3">
-                    <div class="col-md-12">
+                    <div class="col-12">
                       <label for="subject" class="form-label">
-                        <i class="fas fa-list"></i> Subject *
+                        <i class="fas fa-list me-1"></i> Subject *
                       </label>
                       <select class="form-control" id="subject" name="subject" required>
                         <option value="">Select Subject</option>
@@ -161,7 +161,7 @@
                     </div>
                     <div class="col-12">
                       <label for="message" class="form-label">
-                        <i class="fas fa-comment-alt"></i> Message *
+                        <i class="fas fa-comment-alt me-1"></i> Message *
                       </label>
                       <textarea class="form-control" id="message" name="message" rows="5" required placeholder="Type your message here..."></textarea>
                     </div>
@@ -170,7 +170,7 @@
 
                 <div class="form-footer text-center">
                   <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
+                    <i class="fas fa-paper-plane me-2"></i>
                     <span>Send Message</span>
                   </button>
                 </div>
@@ -181,7 +181,7 @@
       </div>
     </section>
 
-    <!-- Office Hours Section -->
+    <!-- Mobile-Friendly Office Hours Section -->
     <section class="office-hours-section py-5">
       <div class="container">
         <div class="section-header text-center">
@@ -192,56 +192,59 @@
           <p class="section-subtitle">When you can visit us or call</p>
         </div>
         
-        <div class="hours-grid">
-          <div class="hours-card animate-slide-up" style="animation-delay: 0.1s;">
-            <div class="card-header">
-              <div class="office-icon">
-                <i class="fas fa-building"></i>
-              </div>
-              <h3>Administrative Office</h3>
-            </div>
-            <div class="hours-list">
-              <div class="hour-item">
-                <div class="day-info">
-                  <i class="fas fa-calendar-day"></i>
-                  <span class="day">Monday - Friday</span>
+        <div class="row">
+          <div class="col-lg-6 col-md-12 mb-4">
+            <div class="hours-card animate-slide-up" style="animation-delay: 0.1s;">
+              <div class="card-header">
+                <div class="office-icon">
+                  <i class="fas fa-building"></i>
                 </div>
-                <span class="time">8:00 AM - 5:00 PM</span>
+                <h3>Administrative Office</h3>
               </div>
-              <div class="hour-item">
-                <div class="day-info">
-                  <i class="fas fa-calendar-week"></i>
-                  <span class="day">Saturday</span>
+              <div class="hours-list">
+                <div class="hour-item">
+                  <div class="day-info">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span class="day">Monday - Friday</span>
+                  </div>
+                  <span class="time">8:00 AM - 5:00 PM</span>
                 </div>
-                <span class="time">9:00 AM - 1:00 PM</span>
-              </div>
-              <div class="hour-item closed">
-                <div class="day-info">
-                  <i class="fas fa-calendar-times"></i>
-                  <span class="day">Sunday</span>
+                <div class="hour-item">
+                  <div class="day-info">
+                    <i class="fas fa-calendar-week me-2"></i>
+                    <span class="day">Saturday</span>
+                  </div>
+                  <span class="time">9:00 AM - 1:00 PM</span>
                 </div>
-                <span class="time">Closed</span>
+                <div class="hour-item closed">
+                  <div class="day-info">
+                    <i class="fas fa-calendar-times me-2"></i>
+                    <span class="day">Sunday</span>
+                  </div>
+                  <span class="time">Closed</span>
+                </div>
               </div>
             </div>
           </div>
           
-          <div class="hours-card animate-slide-up" style="animation-delay: 0.2s;">
-            <div class="card-header">
-              <div class="office-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <h3>Admissions Office</h3>
-            </div>
-            <div class="hours-list">
-              <div class="hour-item">
-                <div class="day-info">
-                  <i class="fas fa-calendar-day"></i>
-                  <span class="day">Monday - Friday</span>
+          <div class="col-lg-6 col-md-12 mb-4">
+            <div class="hours-card animate-slide-up" style="animation-delay: 0.2s;">
+              <div class="card-header">
+                <div class="office-icon">
+                  <i class="fas fa-graduation-cap"></i>
                 </div>
-                <span class="time">9:00 AM - 4:00 PM</span>
+                <h3>Admissions Office</h3>
               </div>
-              <div class="hour-item">
-                <div class="day-info">
+              <div class="hours-list">
+                <div class="hour-item">
+                  <div class="day-info">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span class="day">Monday - Friday</span>
+                  </div>
+                  <span class="time">9:00 AM - 4:00 PM</span>
+                </div>
+                <div class="hour-item">
+                  <div class="day-info">
                   <i class="fas fa-calendar-week"></i>
                   <span class="day">Saturday</span>
                 </div>
@@ -260,7 +263,7 @@
       </div>
     </section>
 
-    <!-- Map Section -->
+    <!-- Mobile-Friendly Map Section -->
     <section class="map-section py-5">
       <div class="container">
         <div class="section-header text-center">
@@ -271,48 +274,52 @@
           <p class="section-subtitle">Located in the heart of Iganga Town, Eastern Uganda</p>
         </div>
         
-        <div class="map-content">
-          <div class="map-container animate-fade-in">
-            <div class="map-wrapper">
-              <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7654321098765!2d33.4516861!3d0.5918431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!2sIganga+School+of+Nursing+%26+Midwifery!5e0!3m2!1sen!2sug!4v1234567890"
-                  width="100%" 
-                  height="450" 
-                  allowfullscreen="" 
-                  loading="lazy" 
-                  referrerpolicy="no-referrer-when-downgrade"
-                  title="Iganga School of Nursing and Midwifery Location">
-              </iframe>
+        <div class="row">
+          <div class="col-lg-8 col-md-12 mb-4">
+            <div class="map-container animate-fade-in">
+              <div class="map-wrapper">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7654321098765!2d33.4516861!3d0.5918431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!2sIganga+School+of+Nursing+%26+Midwifery!5e0!3m2!1sen!2sug!4v1234567890"
+                    width="100%" 
+                    height="350" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="Iganga School of Nursing and Midwifery Location">
+                </iframe>
+              </div>
             </div>
           </div>
           
-          <div class="map-info animate-slide-up" style="animation-delay: 0.3s;">
-            <div class="info-header">
-              <div class="info-icon">
-                <i class="fas fa-location-arrow"></i>
+          <div class="col-lg-4 col-md-12">
+            <div class="map-info animate-slide-up" style="animation-delay: 0.3s;">
+              <div class="info-header">
+                <div class="info-icon">
+                  <i class="fas fa-location-arrow"></i>
+                </div>
+                <h3>Visit ISNM</h3>
               </div>
-              <h3>Visit Iganga School of Nursing and Midwifery</h3>
-            </div>
-            <p class="info-description">Located in the heart of Iganga Town, Eastern Uganda, our campus provides easy access to quality healthcare education. Use the map above to find directions to our institution.</p>
-            <div class="directions-section">
-              <div class="direction-item">
-                <i class="fas fa-car"></i>
-                <span>By Car: 2 hours from Kampala</span>
+              <p class="info-description">Located in the heart of Iganga Town, Eastern Uganda, our campus provides easy access to quality healthcare education.</p>
+              <div class="directions-section">
+                <div class="direction-item">
+                  <i class="fas fa-car me-2"></i>
+                  <span>By Car: 2 hours from Kampala</span>
+                </div>
+                <div class="direction-item">
+                  <i class="fas fa-bus me-2"></i>
+                  <span>By Bus: Regular services from major towns</span>
+                </div>
+                <div class="direction-item">
+                  <i class="fas fa-walking me-2"></i>
+                  <span>Walking: 10 minutes from Iganga town center</span>
+                </div>
               </div>
-              <div class="direction-item">
-                <i class="fas fa-bus"></i>
-                <span>By Bus: Regular services from major towns</span>
+              <div class="directions-btn">
+                <a href="https://www.google.com/maps/place/Iganga+School+of+Nursing+%26+Midwifery/@0.5918431,33.4516861,17z/data=!3m1!4b1!4m6!3m5!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!8m2!3d0.5918377!4d33.454261!16s%2Fg%2F11b5ys19t0?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-directions">
+                  <i class="fas fa-directions me-2"></i>
+                  <span>Get Directions</span>
+                </a>
               </div>
-              <div class="direction-item">
-                <i class="fas fa-walking"></i>
-                <span>Walking: 10 minutes from Iganga town center</span>
-              </div>
-            </div>
-            <div class="directions-btn">
-              <a href="https://www.google.com/maps/place/Iganga+School+of+Nursing+%26+Midwifery/@0.5918431,33.4516861,17z/data=!3m1!4b1!4m6!3m5!1s0x177ef324132c5553:0x86feaa6ce21fc3a1!8m2!3d0.5918377!4d33.454261!16s%2Fg%2F11b5ys19t0?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-directions">
-                <i class="fas fa-directions"></i>
-                <span>Get Directions</span>
-              </a>
             </div>
           </div>
         </div>
@@ -386,12 +393,37 @@
   </script>
 
 <style>
-    /* Hero Header Styles */
+    :root {
+        --primary-color: #3E2723;
+        --secondary-color: #1A237E;
+        --accent-color: #FFD700;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --light-bg: #f8f9fa;
+    }
+
+    * {
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Mobile-Friendly Hero Header Styles */
     .hero-header {
       position: relative;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: white;
-      padding: 6rem 0 4rem;
+      padding: 80px 0 60px;
       overflow: hidden;
     }
 
@@ -412,7 +444,65 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(45deg, rgba(30, 60, 114, 0.8), rgba(126, 34, 206, 0.6));
+      background: linear-gradient(45deg, rgba(62, 39, 35, 0.8), rgba(26, 35, 126, 0.6));
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .hero-header {
+            padding: 60px 0 40px;
+        }
+
+        .hero-title {
+            font-size: 2rem !important;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem !important;
+        }
+
+        .contact-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+
+        .hours-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .map-container iframe {
+            height: 250px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-header {
+            padding: 40px 0 30px;
+        }
+
+        .hero-title {
+            font-size: 1.5rem !important;
+        }
+
+        .hero-subtitle {
+            font-size: 0.9rem !important;
+        }
+
+        .section-title {
+            font-size: 1.5rem !important;
+        }
+
+        .contact-card {
+            padding: 1.5rem !important;
+        }
+
+        .hours-card {
+            padding: 1.5rem !important;
+        }
+
+        .map-container iframe {
+            height: 200px !important;
+        }
     }
 
     .hero-particles {

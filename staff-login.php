@@ -41,24 +41,33 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#3E2723">
     <title>Staff Login - ISNM School Management System</title>
-    <link rel="icon" type="image/png" href="images/school-logo.png">
+    <link rel="icon" type="image/x-icon" href="images/school-logo.png">
+    <link rel="apple-touch-icon" href="images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #1a237e;
-            --secondary-color: #3949ab;
-            --accent-color: #ffd700;
+            --primary-color: #3E2723;
+            --secondary-color: #1A237E;
+            --accent-color: #FFD700;
             --success-color: #28a745;
             --danger-color: #dc3545;
             --warning-color: #ffc107;
             --info-color: #17a2b8;
         }
 
+        * {
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -66,6 +75,9 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             justify-content: center;
             margin: 0;
             padding: 20px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .login-container {
@@ -76,392 +88,321 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             max-width: 500px;
             width: 100%;
             min-height: 600px;
+            display: flex;
+            flex-direction: column;
         }
 
         .login-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: var(--primary-color);
             color: white;
-            padding: 3rem 2rem;
+            padding: 30px 20px;
             text-align: center;
             position: relative;
         }
 
-        .school-logo {
-            width: 100px;
-            height: 100px;
+        .login-header img {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            margin-bottom: 1.5rem;
-            border: 4px solid var(--accent-color);
+            border: 3px solid var(--accent-color);
+            margin-bottom: 15px;
         }
 
-        .school-name {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: var(--accent-color);
+        .login-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
         }
 
-        .school-motto {
-            font-size: 0.9rem;
+        .login-header p {
+            margin: 5px 0 0;
             opacity: 0.9;
-        }
-
-        .login-content {
-            padding: 3rem 2rem;
-        }
-
-        .login-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .login-subtitle {
-            color: #666;
-            font-size: 1rem;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .security-notice {
-            background: #e3f2fd;
-            border-left: 4px solid var(--info-color);
-            padding: 1rem;
-            margin-bottom: 2rem;
-            border-radius: 8px;
             font-size: 0.9rem;
         }
 
-        .security-notice i {
-            color: var(--info-color);
-            margin-right: 0.5rem;
+        .login-form {
+            padding: 30px;
+            flex: 1;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 0.5rem;
-            display: block;
+            margin-bottom: 20px;
         }
 
         .form-control {
             border: 2px solid #e0e0e0;
             border-radius: 10px;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
+            padding: 15px;
+            font-size: 16px;
             transition: all 0.3s ease;
-            width: 100%;
+            height: auto;
         }
 
         .form-control:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.25);
+            box-shadow: 0 0 0 3px rgba(62, 39, 35, 0.1);
             outline: none;
         }
 
-        .input-icon {
-            position: relative;
-        }
-
-        .input-icon i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-            z-index: 1;
-        }
-
-        .input-icon .form-control {
-            padding-left: 45px;
-        }
-
         .btn-login {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 10px;
-            padding: 1rem;
-            font-size: 1.1rem;
+            padding: 15px;
+            font-size: 16px;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s ease;
-            margin-top: 1rem;
+            min-height: 50px;
+            cursor: pointer;
+            touch-action: manipulation;
         }
 
         .btn-login:hover {
+            background: var(--secondary-color);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(26, 35, 126, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .login-help {
-            text-align: center;
-            margin-top: 1.5rem;
+        .btn-login:active {
+            transform: translateY(0);
         }
 
-        .login-help a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
+        .security-notice {
+            background: #f8f9fa;
+            border-left: 4px solid var(--info-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 0.85rem;
         }
 
-        .login-help a:hover {
-            text-decoration: underline;
+        .sample-credentials {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .sample-credentials h6 {
+            color: var(--success-color);
+            margin-bottom: 10px;
         }
 
         .alert {
             border-radius: 10px;
+            margin-bottom: 20px;
             border: none;
-            margin-bottom: 1.5rem;
+            padding: 15px;
         }
 
-        .back-to-main {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .back-to-main a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .back-to-main a:hover {
-            text-decoration: underline;
-        }
-
-        .sample-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 2rem;
-            font-size: 0.85rem;
-        }
-
-        .sample-info h6 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .sample-info table {
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-
-        .sample-info th,
-        .sample-info td {
-            padding: 0.25rem;
-            font-size: 0.8rem;
-            text-align: left;
-        }
-
-        .sample-info th {
-            font-weight: 600;
-            color: #333;
-        }
-
+        /* Perfect Mobile Styles */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
             .login-container {
-                max-width: 400px;
+                max-width: 100%;
+                min-height: auto;
+                border-radius: 15px;
             }
 
             .login-header {
-                padding: 2rem 1.5rem;
+                padding: 25px 20px;
             }
 
-            .login-content {
-                padding: 2rem 1.5rem;
+            .login-header img {
+                width: 60px;
+                height: 60px;
             }
 
-            .school-logo {
-                width: 80px;
-                height: 80px;
+            .login-header h2 {
+                font-size: 1.3rem;
             }
 
-            .school-name {
-                font-size: 1.4rem;
+            .login-form {
+                padding: 20px;
             }
 
-            .login-title {
-                font-size: 1.5rem;
+            .form-control {
+                padding: 12px 15px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 15px;
+                min-height: 48px;
+            }
+
+            .security-notice,
+            .sample-credentials {
+                font-size: 0.8rem;
+                padding: 12px;
             }
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .login-container {
+                border-radius: 10px;
+            }
+
+            .login-header {
+                padding: 20px 15px;
+            }
+
+            .login-header img {
+                width: 50px;
+                height: 50px;
+            }
+
+            .login-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .login-form {
+                padding: 15px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .btn-login {
+                padding: 10px;
+                font-size: 14px;
+                min-height: 44px;
+            }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Landscape Mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .login-container {
+                min-height: auto;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .login-header {
+                padding: 15px;
+            }
+
+            .login-form {
+                padding: 15px;
+            }
+        }
+
+        /* iOS Specific */
+        @supports (-webkit-touch-callout: none) {
+            .form-control {
+                -webkit-appearance: none;
+                border-radius: 10px;
+            }
+
+            .btn-login {
+                -webkit-appearance: none;
+                -webkit-user-select: none;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="login-container fade-in">
+    <div class="login-container">
         <div class="login-header">
             <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
-            <h2 class="school-name">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
-            <p class="school-motto">Excellence in Healthcare Education</p>
+            <h2>Staff Portal</h2>
+            <p>Iganga School of Nursing and Midwifery</p>
         </div>
-
-        <div class="login-content">
-            <h1 class="login-title">Staff Login</h1>
-            <p class="login-subtitle">Access your staff account</p>
-
+        
+        <div class="login-form">
             <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($_SESSION['error']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-danger">
+                    <?php 
+                    echo htmlspecialchars($_SESSION['error']);
+                    unset($_SESSION['error']);
+                    ?>
                 </div>
-                <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
-
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_SESSION['success']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['success']); ?>
-            <?php endif; ?>
-
-            <div class="security-notice">
-                <i class="fas fa-info-circle"></i>
-                Staff login with their username and password
-            </div>
             
-            <form method="POST" action="staff-login.php">
+            <?php if (isset($_SESSION['success'])): ?>
+                <div class="alert alert-success">
+                    <?php 
+                    echo htmlspecialchars($_SESSION['success']);
+                    unset($_SESSION['success']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="auth-handler.php">
                 <input type="hidden" name="action" value="staff_login">
+                
                 <div class="form-group">
-                    <label class="form-label" for="email">Email *</label>
-                    <div class="input-icon">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" class="form-control" id="email" name="email" 
-                               placeholder="Enter your email" required>
-                    </div>
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           placeholder="Enter your email address" required autocomplete="email">
                 </div>
-
+                
                 <div class="form-group">
-                    <label class="form-label" for="password">Password *</label>
-                    <div class="input-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" class="form-control" id="password" name="password" 
-                               placeholder="Enter your password" required>
-                    </div>
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Enter your password" required autocomplete="current-password">
                 </div>
-
-                <button type="submit" class="btn btn-login">
-                    <i class="fas fa-sign-in-alt"></i> Login as Staff
+                
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login to Staff Portal
                 </button>
             </form>
-
-            <div class="login-help">
-                <a href="forgot-password.php">Forgot your password?</a>
+            
+            <div class="security-notice">
+                <i class="fas fa-shield-alt me-2"></i>
+                <strong>Security Notice:</strong> This is a secure staff portal. Your login information is encrypted and protected.
             </div>
-
-            <div class="sample-info">
-                <h6>Sample Login Credentials:</h6>
-                <table>
-                    <tr>
-                        <th>Role</th>
-                        <th>Username</th>
-                        <th>Password</th>
-                    </tr>
-                    <tr>
-                        <td>Director General</td>
-                        <td>john.mugisha</td>
-                        <td>password</td>
-                    </tr>
-                    <tr>
-                        <td>Principal</td>
-                        <td>peter.lutaaya</td>
-                        <td>password</td>
-                    </tr>
-                    <tr>
-                        <td>Academic Registrar - Mr. Gejje William</td>
-                        <td>gejje.william</td>
-                        <td>password</td>
-                    </tr>
-                    <tr>
-                        <td>Bursar</td>
-                        <td>patience.nabasumba</td>
-                        <td>password</td>
-                    </tr>
-                </table>
+            
+            <div class="sample-credentials">
+                <h6><i class="fas fa-info-circle me-2"></i>Sample Staff Credentials:</h6>
+                <p><strong>Admin:</strong> john.mugisha@isnm.ac.ug / password123</p>
+                <p><strong>Academic Registrar:</strong> academic.registrar@isnm.ac.ug / password123</p>
+                <p><strong>Accountant:</strong> accountant@isnm.ac.ug / password123</p>
             </div>
-
-            <div class="back-to-main">
-                <a href="student-login.php">← Student Login</a>
+            
+            <div class="text-center mt-4">
+                <p class="mb-0">
+                    <a href="index.php" class="text-decoration-none">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </p>
+                <p class="mt-2">
+                    <small>
+                        Student? <a href="student-login.php" class="text-decoration-none">Click here for student login</a>
+                    </small>
+                </p>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-hide alerts
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                if (alert.style.display !== 'none') {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 500);
-                }
-            });
-        }, 5000);
-
-        // Form validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const inputs = this.querySelectorAll('input[required]');
-            let isValid = true;
-            
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
-                    isValid = false;
-                    input.classList.add('is-invalid');
-                } else {
-                    input.classList.remove('is-invalid');
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                showAlert('Please fill in all required fields', 'danger');
-            }
-        });
-
-        // Show alert helper
-        function showAlert(message, type = 'info') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                <i class="fas fa-info-circle"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            const container = document.querySelector('.login-content');
-            container.insertBefore(alertDiv, container.firstChild);
-            
-            setTimeout(() => {
-                alertDiv.style.opacity = '0';
-                setTimeout(() => alertDiv.remove(), 500);
-            }, 5000);
-        }
-
-        // Auto-focus first input
+        // Prevent zoom on iOS when focusing inputs
         document.addEventListener('DOMContentLoaded', function() {
-            const emailInput = document.querySelector('#email');
-            if (emailInput) {
-                emailInput.focus();
-            }
+            const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                });
+                
+                input.addEventListener('blur', function() {
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no');
+                });
+            });
         });
     </script>
 </body>

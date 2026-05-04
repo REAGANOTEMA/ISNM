@@ -5,11 +5,11 @@
  */
 
 // Include database connection
-require_once 'db.php';
+require_once 'config/database.php';
 
 // Test connection
 try {
-    $conn = getDatabaseConnection();
+    $conn = getConnection();
 
     // Test basic query
     $result = $conn->query("SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'isnm_db'");

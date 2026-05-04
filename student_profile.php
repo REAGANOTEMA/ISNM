@@ -1,82 +1,241 @@
 <?php
-include_once 'includes/config.php';
-include_once 'includes/functions.php';
-include_once 'includes/photo_upload.php';
-include_once 'security-middleware.php';
+/**
+ * Comprehensive Student Profile System
+ * Updated to work with current ISNM database structure and role-based access control
+ */
 
-// Check if user is logged in
-requireAuth();
+require_once 'config/database.php';
+require_once 'auth-service.php';
 
-// Get current user's student information
-$student_id = $_SESSION['user_id'] ?? '';
-$role = $_SESSION['role'] ?? '';
-
-// Get profile edit permissions
-$profile_permissions = requireProfileEditPermission($student_id);
-
-// Handle form submissions - STUDENTS CAN ONLY EDIT PROFILE IMAGE
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'update_profile':
-                // Check if user can edit profile data
-                if (!$profile_permissions['can_edit_data']) {
-                    $_SESSION['error'] = "You do not have permission to update profile information. Please contact administration.";
-                    header("Location: student_profile.php");
-                    exit();
-                }
-                handleProfileUpdate();
-                break;
-            case 'upload_photo':
-                // Check if user can edit profile image
-                if (!$profile_permissions['can_edit_image']) {
-                    $_SESSION['error'] = "You do not have permission to upload profile images.";
-                    header("Location: student_profile.php");
-                    exit();
-                }
-                handlePhotoUpload();
-                break;
-            case 'delete_photo':
-                // Check if user can edit profile image
-                if (!$profile_permissions['can_edit_image']) {
-                    $_SESSION['error'] = "You do not have permission to delete profile images.";
-                    header("Location: student_profile.php");
-                    exit();
-                }
-                handlePhotoDelete();
-                break;
-            case 'change_password':
-                // STUDENTS CANNOT CHANGE PASSWORD - NO PASSWORD REQUIRED FOR STUDENTS
-                $_SESSION['error'] = "Password change is not available for student accounts.";
-                header("Location: student_profile.php");
-                exit();
-                break;
-        }
-    }
-}
-
-// Get student data
-$student_sql = "SELECT * FROM students WHERE student_id = ?";
-$student_result = executeQuery($student_sql, [$student_id], 's');
-$student = $student_result[0] ?? null;
-
-if (!$student) {
-    $_SESSION['error'] = "Student profile not found";
+// Start session and check authentication
+session_start();
+if (!isset($_SESSION['user_id'])) {
     header("Location: student-login.php");
     exit();
 }
 
-// Get academic records
-$academic_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
-$academic_records = executeQuery($academic_sql, [$student_id], 's');
+// Get current user information
+$current_user_id = $_SESSION['user_id'];
+$current_role = $_SESSION['role'];
+$current_type = $_SESSION['type'] ?? '';
 
-// Get fee information
-$fee_sql = "SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
-$fee_accounts = executeQuery($fee_sql, [$student_id], 's');
+// Initialize database connection
+$conn = getConnection();
 
-// Get payment history
-$payment_sql = "SELECT * FROM fee_payments WHERE student_id = ? ORDER BY payment_date DESC LIMIT 10";
-$payment_history = executeQuery($payment_sql, [$student_id], 's');
+// Function to check if user has permission to view student profile
+function canViewStudentProfile($viewer_role, $viewer_type, $target_student_id = null) {
+    // All students can view their own profile
+    if ($viewer_type === 'student' && $target_student_id === $_SESSION['user_id']) {
+        return true;
+    }
+    
+    // Staff roles that can view any student profile
+    $allowed_roles = ['admin', 'principal', 'deputy_principal', 'academic', 'registrar', 
+                      'accountant', 'hr', 'director', 'secretary', 'librarian', 'counselor', 'tutor'];
+    
+    return in_array($viewer_role, $allowed_roles) && $viewer_type === 'staff';
+}
+
+// Function to check if user can edit student profile
+function canEditStudentProfile($viewer_role, $viewer_type, $target_student_id = null) {
+    // Only admin, principal, academic registrar, and academic staff can edit
+    $editor_roles = ['admin', 'principal', 'deputy_principal', 'academic', 'registrar'];
+    
+    return in_array($viewer_role, $editor_roles) && $viewer_type === 'staff';
+}
+
+// Get student ID from URL or use current user
+$student_id = $_GET['id'] ?? $current_user_id;
+
+// Verify permissions
+if (!canViewStudentProfile($current_role, $current_type, $student_id)) {
+    $_SESSION['error'] = "You do not have permission to view this student profile.";
+    header("Location: " . ($current_type === 'student' ? 'student-dashboard.php' : 'dashboard.php'));
+    exit();
+}
+
+// Get student information
+$student_sql = "SELECT s.*, u.full_name, u.email, u.phone, u.last_login 
+                FROM students s 
+                JOIN users u ON s.student_id = u.user_id 
+                WHERE s.student_id = ?";
+$stmt = $conn->prepare($student_sql);
+$stmt->bind_param("s", $student_id);
+$stmt->execute();
+$student_result = $stmt->get_result();
+
+if ($student_result->num_rows === 0) {
+    $_SESSION['error'] = "Student not found.";
+    header("Location: " . ($current_type === 'student' ? 'student-dashboard.php' : 'dashboard.php'));
+    exit();
+}
+
+$student = $student_result->fetch_assoc();
+
+// Check edit permissions
+$can_edit = canEditStudentProfile($current_role, $current_type, $student_id);
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'update_profile':
+                if (!$can_edit) {
+                    $_SESSION['error'] = "You do not have permission to update profile information.";
+                    header("Location: student_profile.php?id=$student_id");
+                    exit();
+                }
+                
+                // Update student information
+                $update_sql = "UPDATE students SET 
+                              first_name = ?, surname = ?, other_name = ?, 
+                              date_of_birth = ?, gender = ?, nationality = ?, 
+                              address = ?, phone = ?, email = ?, 
+                              program = ?, level = ?, intake_year = ?, 
+                              intake_period = ?, guardian_name = ?, 
+                              guardian_phone = ?, guardian_email = ?, 
+                              medical_conditions = ?, emergency_contact_name = ?, 
+                              emergency_contact_phone = ? 
+                              WHERE student_id = ?";
+                
+                $stmt = $conn->prepare($update_sql);
+                $stmt->bind_param("sssssssssssssssssss", 
+                    $_POST['first_name'], $_POST['surname'], $_POST['other_name'],
+                    $_POST['date_of_birth'], $_POST['gender'], $_POST['nationality'],
+                    $_POST['address'], $_POST['phone'], $_POST['email'],
+                    $_POST['program'], $_POST['level'], $_POST['intake_year'],
+                    $_POST['intake_period'], $_POST['guardian_name'],
+                    $_POST['guardian_phone'], $_POST['guardian_email'],
+                    $_POST['medical_conditions'], $_POST['emergency_contact_name'],
+                    $_POST['emergency_contact_phone'], $student_id);
+                
+                if ($stmt->execute()) {
+                    $_SESSION['success'] = "Profile updated successfully!";
+                } else {
+                    $_SESSION['error'] = "Error updating profile: " . $conn->error;
+                }
+                
+                header("Location: student_profile.php?id=$student_id");
+                exit();
+                
+            case 'update_status':
+                if (!$can_edit) {
+                    $_SESSION['error'] = "You do not have permission to update student status.";
+                    header("Location: student_profile.php?id=$student_id");
+                    exit();
+                }
+                
+                $new_status = $_POST['status'];
+                $update_status_sql = "UPDATE students SET status = ? WHERE student_id = ?";
+                $stmt = $conn->prepare($update_status_sql);
+                $stmt->bind_param("ss", $new_status, $student_id);
+                
+                if ($stmt->execute()) {
+                    $_SESSION['success'] = "Student status updated successfully!";
+                } else {
+                    $_SESSION['error'] = "Error updating status: " . $conn->error;
+                }
+                
+                header("Location: student_profile.php?id=$student_id");
+                exit();
+                
+            case 'upload_photo':
+                // Handle photo upload
+                if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) {
+                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+                    $max_size = 5 * 1024 * 1024; // 5MB
+                    
+                    if (!in_array($_FILES['profile_image']['type'], $allowed_types)) {
+                        $_SESSION['error'] = "Invalid file type. Please upload JPG, PNG, or GIF.";
+                    } elseif ($_FILES['profile_image']['size'] > $max_size) {
+                        $_SESSION['error'] = "File too large. Maximum size is 5MB.";
+                    } else {
+                        $upload_dir = 'studentUploads/profile_images/';
+                        if (!is_dir($upload_dir)) {
+                            mkdir($upload_dir, 0755, true);
+                        }
+                        
+                        $filename = $student_id . '_' . time() . '.' . pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
+                        $filepath = $upload_dir . $filename;
+                        
+                        if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $filepath)) {
+                            $update_photo_sql = "UPDATE students SET profile_image = ? WHERE student_id = ?";
+                            $stmt = $conn->prepare($update_photo_sql);
+                            $stmt->bind_param("ss", $filename, $student_id);
+                            
+                            if ($stmt->execute()) {
+                                $_SESSION['success'] = "Profile image updated successfully!";
+                            } else {
+                                $_SESSION['error'] = "Error updating profile image.";
+                            }
+                        } else {
+                            $_SESSION['error'] = "Error uploading file.";
+                        }
+                    }
+                } else {
+                    $_SESSION['error'] = "Please select a file to upload.";
+                }
+                
+                header("Location: student_profile.php?id=$student_id");
+                exit();
+        }
+    }
+}
+
+// Display messages
+if (isset($_SESSION['success'])) {
+    $success_message = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+if (isset($_SESSION['error'])) {
+    $error_message = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+
+// Get academic records (if table exists)
+$academic_records = [];
+try {
+    $academic_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
+    $stmt = $conn->prepare($academic_sql);
+    $stmt->bind_param("s", $student_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $academic_records[] = $row;
+    }
+} catch (Exception $e) {
+    // Academic records table might not exist yet
+}
+
+// Get fee information (if table exists)
+$fee_accounts = [];
+try {
+    $fee_sql = "SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC, semester DESC";
+    $stmt = $conn->prepare($fee_sql);
+    $stmt->bind_param("s", $student_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $fee_accounts[] = $row;
+    }
+} catch (Exception $e) {
+    // Fee accounts table might not exist yet
+}
+
+// Get payment history (if table exists)
+$payment_history = [];
+try {
+    $payment_sql = "SELECT * FROM fee_payments WHERE student_id = ? ORDER BY payment_date DESC LIMIT 10";
+    $stmt = $conn->prepare($payment_sql);
+    $stmt->bind_param("s", $student_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $payment_history[] = $row;
+    }
+} catch (Exception $e) {
+    // Fee payments table might not exist yet
+}
 
 // Calculate total balance
 $total_balance = 0;
@@ -241,15 +400,20 @@ function handlePasswordChange() {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#3E2723">
     <title>My Profile - ISNM</title>
+    <link rel="icon" type="image/x-icon" href="images/school-logo.png">
+    <link rel="apple-touch-icon" href="images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #1a237e;
-            --secondary-color: #3949ab;
-            --accent-color: #ffd700;
+            --primary-color: #3E2723;
+            --secondary-color: #1A237E;
+            --accent-color: #FFD700;
             --success-color: #28a745;
             --danger-color: #dc3545;
             --warning-color: #ffc107;
@@ -257,10 +421,20 @@ function handlePasswordChange() {
             --light-bg: #f8f9fa;
         }
 
+        * {
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .navbar {
@@ -269,12 +443,20 @@ function handlePasswordChange() {
         }
 
         .navbar-brand {
-            font-weight: bold;
+            font-weight: 600;
             color: var(--accent-color) !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand img {
+            height: 30px;
+            width: auto;
+            margin-right: 10px;
         }
 
         .main-container {
-            padding: 2rem;
+            padding: 20px;
             max-width: 1200px;
             margin: 0 auto;
         }
@@ -283,8 +465,8 @@ function handlePasswordChange() {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border-radius: 20px;
-            padding: 3rem;
-            margin-bottom: 2rem;
+            padding: 40px 20px;
+            margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             position: relative;
             overflow: hidden;
@@ -305,13 +487,14 @@ function handlePasswordChange() {
             text-align: center;
             position: relative;
             z-index: 1;
+            margin-bottom: 20px;
         }
 
         .profile-photo {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            border: 5px solid white;
+            border: 4px solid white;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
             object-fit: cover;
             transition: transform 0.3s ease;
@@ -329,8 +512,8 @@ function handlePasswordChange() {
         }
 
         .profile-name {
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
@@ -434,6 +617,141 @@ function handlePasswordChange() {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
+        /* Perfect Mobile Styles */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+
+            .profile-header {
+                padding: 30px 15px;
+                margin-bottom: 20px;
+            }
+
+            .profile-photo {
+                width: 100px;
+                height: 100px;
+            }
+
+            .profile-name {
+                font-size: 1.5rem;
+            }
+
+            .profile-id {
+                font-size: 1rem;
+            }
+
+            .profile-section {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .info-item {
+                padding: 0.75rem;
+            }
+
+            .info-label {
+                font-size: 0.85rem;
+            }
+
+            .info-value {
+                font-size: 1rem;
+            }
+
+            .btn-primary {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+
+            .photo-upload-area {
+                padding: 1.5rem;
+            }
+
+            .photo-preview {
+                max-width: 150px;
+                max-height: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .profile-header {
+                padding: 20px 10px;
+                margin-bottom: 15px;
+            }
+
+            .profile-photo {
+                width: 80px;
+                height: 80px;
+            }
+
+            .profile-name {
+                font-size: 1.3rem;
+            }
+
+            .profile-id {
+                font-size: 0.9rem;
+            }
+
+            .profile-section {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+
+            .info-item {
+                padding: 0.5rem;
+            }
+
+            .info-label {
+                font-size: 0.8rem;
+            }
+
+            .info-value {
+                font-size: 0.9rem;
+            }
+
+            .btn-primary {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .photo-upload-area {
+                padding: 1rem;
+            }
+
+            .photo-preview {
+                max-width: 120px;
+                max-height: 120px;
+            }
+        }
+
+        /* Landscape Mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .profile-header {
+                padding: 20px 15px;
+            }
+
+            .profile-photo-container {
+                margin-bottom: 15px;
+            }
+        }
+
         .tab-content {
             padding: 2rem 0;
         }
@@ -530,53 +848,59 @@ function handlePasswordChange() {
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">
-                <i class="fas fa-graduation-cap"></i> ISNM Student Portal
+    <!-- Perfect Mobile Responsive Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <!-- Brand Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="student_dashboard.php">
+                <img src="images/school-logo.png" alt="ISNM Logo" class="me-2" style="height: 30px; width: auto;">
+                <span class="d-none d-md-inline">Student Portal</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            
+            <!-- Mobile Toggle Button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#profileNavbar" aria-controls="profileNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            
+            <!-- Navigation Menu -->
+            <div class="collapse navbar-collapse" id="profileNavbar">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="student_dashboard.php">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="student_profile.php">
-                            <i class="fas fa-user"></i> My Profile
+                            <i class="fas fa-user me-1"></i>My Profile
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="academic_records.php">
-                            <i class="fas fa-graduation-cap"></i> Academics
+                            <i class="fas fa-graduation-cap me-1"></i>Academics
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="fee_management.php">
-                            <i class="fas fa-money-bill"></i> Fees
+                            <i class="fas fa-money-bill me-1"></i>Fees
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?>
+                            <i class="fas fa-user-circle me-1"></i> <?php echo htmlspecialchars($student['first_name']); ?>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="student_profile.php">
-                                <i class="fas fa-user"></i> Profile
+                                <i class="fas fa-user me-2"></i>Profile
                             </a></li>
                             <li><a class="dropdown-item" href="settings.php">
-                                <i class="fas fa-cog"></i> Settings
+                                <i class="fas fa-cog me-2"></i>Settings
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="logout.php">
-                                <i class="fas fa-sign-out-alt"></i> Logout
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
                             </a></li>
                         </ul>
                     </li>
@@ -609,26 +933,26 @@ function handlePasswordChange() {
             </div>
         </div>
 
-        <!-- Profile Tabs -->
+        <!-- Mobile-Friendly Profile Tabs -->
         <ul class="nav nav-tabs" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
-                    <i class="fas fa-user"></i> Personal Information
+                    <i class="fas fa-user me-1"></i> Personal
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button">
-                    <i class="fas fa-graduation-cap"></i> Academic Records
+                    <i class="fas fa-graduation-cap me-1"></i> Academics
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="fees-tab" data-bs-toggle="tab" data-bs-target="#fees" type="button">
-                    <i class="fas fa-money-bill"></i> Fee Information
+                    <i class="fas fa-money-bill me-1"></i> Fees
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button">
-                    <i class="fas fa-lock"></i> Security
+                    <i class="fas fa-lock me-1"></i> Security
                 </button>
             </li>
         </ul>
@@ -638,68 +962,95 @@ function handlePasswordChange() {
             <div class="tab-pane fade show active" id="personal" role="tabpanel">
                 <div class="profile-section fade-in">
                     <h3 class="section-title">
-                        <i class="fas fa-user"></i> Personal Information
+                        <i class="fas fa-user me-2"></i> Personal Information
                     </h3>
                     
                     <form method="POST" action="student_profile.php">
                         <input type="hidden" name="action" value="update_profile">
                         
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-label">First Name</div>
-                                <input type="text" class="form-control" name="first_name" value="<?php echo htmlspecialchars($student['first_name']); ?>" required>
+                        <div class="row g-3">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">First Name</div>
+                                    <input type="text" class="form-control" name="first_name" value="<?php echo htmlspecialchars($student['first_name']); ?>" required>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Surname</div>
-                                <input type="text" class="form-control" name="surname" value="<?php echo htmlspecialchars($student['surname']); ?>" required>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Surname</div>
+                                    <input type="text" class="form-control" name="surname" value="<?php echo htmlspecialchars($student['surname']); ?>" required>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Other Name</div>
-                                <input type="text" class="form-control" name="other_name" value="<?php echo htmlspecialchars($student['other_name'] ?? ''); ?>">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Other Name</div>
+                                    <input type="text" class="form-control" name="other_name" value="<?php echo htmlspecialchars($student['other_name'] ?? ''); ?>">
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Date of Birth</div>
-                                <div class="info-value"><?php echo formatDate($student['date_of_birth']); ?></div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Date of Birth</div>
+                                    <div class="info-value"><?php echo formatDate($student['date_of_birth']); ?></div>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Gender</div>
-                                <div class="info-value"><?php echo htmlspecialchars($student['gender']); ?></div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Gender</div>
+                                    <div class="info-value"><?php echo htmlspecialchars($student['gender']); ?></div>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Nationality</div>
-                                <div class="info-value"><?php echo htmlspecialchars($student['nationality']); ?></div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Nationality</div>
+                                    <div class="info-value"><?php echo htmlspecialchars($student['nationality']); ?></div>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Phone Number</div>
-                                <input type="tel" class="form-control" name="phone" value="<?php echo htmlspecialchars($student['phone']); ?>" required>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Phone Number</div>
+                                    <input type="tel" class="form-control" name="phone" value="<?php echo htmlspecialchars($student['phone']); ?>" required>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Email Address</div>
-                                <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($student['email']); ?>" required>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Email Address</div>
+                                    <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($student['email']); ?>" required>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Address</div>
-                                <textarea class="form-control" name="address" rows="2"><?php echo htmlspecialchars($student['address'] ?? ''); ?></textarea>
+                            <div class="col-12">
+                                <div class="info-item">
+                                    <div class="info-label">Address</div>
+                                    <textarea class="form-control" name="address" rows="2"><?php echo htmlspecialchars($student['address'] ?? ''); ?></textarea>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Program</div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Program</div>
                                 <div class="info-value"><?php echo htmlspecialchars($student['program']); ?></div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Level</div>
-                                <div class="info-value"><?php echo htmlspecialchars($student['level']); ?></div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Level</div>
+                                    <div class="info-value"><?php echo htmlspecialchars($student['level']); ?></div>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Intake Year</div>
-                                <div class="info-value"><?php echo htmlspecialchars($student['intake_year']); ?></div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Intake Year</div>
+                                    <div class="info-value"><?php echo htmlspecialchars($student['intake_year']); ?></div>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Emergency Contact Name</div>
-                                <input type="text" class="form-control" name="emergency_contact_name" value="<?php echo htmlspecialchars($student['emergency_contact_name'] ?? ''); ?>">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Emergency Contact Name</div>
+                                    <input type="text" class="form-control" name="emergency_contact_name" value="<?php echo htmlspecialchars($student['emergency_contact_name'] ?? ''); ?>">
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Emergency Contact Phone</div>
-                                <input type="tel" class="form-control" name="emergency_contact_phone" value="<?php echo htmlspecialchars($student['emergency_contact_phone'] ?? ''); ?>">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="info-item">
+                                    <div class="info-label">Emergency Contact Phone</div>
+                                    <input type="tel" class="form-control" name="emergency_contact_phone" value="<?php echo htmlspecialchars($student['emergency_contact_phone'] ?? ''); ?>">
+                                </div>
                             </div>
                         </div>
                         

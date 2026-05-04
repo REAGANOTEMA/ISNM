@@ -1,7 +1,7 @@
 <?php include('shared/_header.php');?>
 
   <main>
-      <!-- Hero Page Header -->
+      <!-- Perfect Mobile Hero Header -->
       <section class="hero-header">
         <div class="hero-overlay"></div>
         <div class="container">
@@ -15,11 +15,11 @@
         </div>
       </section>
 
-      <!-- Application Introduction -->
+      <!-- Perfect Mobile Application Introduction -->
       <section class="application-intro py-5">
         <div class="container">
           <div class="row">
-            <div class="col-lg-12">
+            <div class="col-12">
               <div class="school-banner animate-fade-in">
                 <div class="school-info">
                   <h2 class="school-title">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
@@ -35,7 +35,7 @@
           </div>
           
           <div class="row">
-            <div class="col-lg-12 text-center mb-5">
+            <div class="col-12 text-center mb-5">
               <div class="announcement-card animate-slide-up">
                 <div class="announcement-icon">
                   <i class="fas fa-bullhorn"></i>
@@ -47,7 +47,7 @@
           </div>
           
           <div class="row">
-            <div class="col-lg-6">
+            <div class="col-lg-6 col-md-12 mb-4">
               <div class="requirements-card animate-fade-in">
                 <div class="card-header">
                   <i class="fas fa-graduation-cap"></i>
@@ -82,7 +82,7 @@
               </div>
             </div>
             
-            <div class="col-lg-6">
+            <div class="col-lg-6 col-md-12 mb-4">
               <div class="interview-card animate-slide-up">
                 <div class="card-header">
                   <i class="fas fa-calendar-check"></i>
@@ -178,16 +178,16 @@
         </div>
       </section>
 
-      <!-- Application Form -->
+      <!-- Perfect Mobile Application Form -->
       <section class="application-form-section py-5">
         <div class="container">
           <div class="row">
-            <div class="col-lg-12">
+            <div class="col-12">
               <div class="form-container animate-fade-in">
-                <!-- Form Header -->
+                <!-- Mobile-Friendly Form Header -->
                 <div class="form-header">
                   <div class="form-logo">
-                    <i class="fas fa-hospital"></i>
+                    <img src="images/school-logo.png" alt="ISNM Logo" style="height: 60px; width: auto; border-radius: 50%; border: 3px solid var(--accent-color);">
                   </div>
                   <h2 class="form-title">APPLICATION FORM</h2>
                   <p class="form-subtitle">IGANGA SCHOOL OF NURSING AND MIDWIFERY</p>
@@ -200,21 +200,21 @@
                 <form id="applicationForm" method="POST" action="process-application.php" enctype="multipart/form-data">
                   <!-- Personal Information -->
                   <div class="form-section">
-                    <h4><i class="fas fa-user"></i> APPLICANT'S PERSONAL DETAILS</h4>
+                    <h4><i class="fas fa-user me-2"></i> APPLICANT'S PERSONAL DETAILS</h4>
                     <div class="row g-3">
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="surname" class="form-label">SURNAME *</label>
                         <input type="text" class="form-control" id="surname" name="surname" required>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="firstName" class="form-label">FIRST NAME *</label>
                         <input type="text" class="form-control" id="firstName" name="firstName" required>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="otherName" class="form-label">OTHER NAME</label>
                         <input type="text" class="form-control" id="otherName" name="otherName">
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-lg-3 col-md-6 col-sm-12">
                         <label for="gender" class="form-label">GENDER *</label>
                         <select class="form-control" id="gender" name="gender" required>
                           <option value="">Select Gender</option>
@@ -222,39 +222,39 @@
                           <option value="Female">FEMALE</option>
                         </select>
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-lg-3 col-md-6 col-sm-12">
                         <label for="dateOfBirth" class="form-label">DATE OF BIRTH *</label>
                         <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth" required>
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-lg-3 col-md-6 col-sm-12">
                         <label for="nationality" class="form-label">NATIONALITY *</label>
                         <input type="text" class="form-control" id="nationality" name="nationality" value="UGANDAN" required>
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-lg-3 col-md-6 col-sm-12">
                         <label for="countryOfResidence" class="form-label">COUNTRY OF RESIDENCE *</label>
                         <input type="text" class="form-control" id="countryOfResidence" name="countryOfResidence" value="UGANDA" required>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="homeDistrict" class="form-label">HOME DISTRICT</label>
                         <input type="text" class="form-control" id="homeDistrict" name="homeDistrict">
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="village" class="form-label">VILLAGE</label>
                         <input type="text" class="form-control" id="village" name="village">
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="religion" class="form-label">RELIGIOUS AFFILIATION</label>
                         <input type="text" class="form-control" id="religion" name="religion" placeholder="Specify denomination">
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="email" class="form-label">EMAIL ADDRESS *</label>
                         <input type="email" class="form-control" id="email" name="email" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="contactNumber" class="form-label">TELEPHONE CONTACT *</label>
                         <input type="tel" class="form-control" id="contactNumber" name="contactNumber" placeholder="+256..." required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="maritalStatus" class="form-label">MARITAL STATUS *</label>
                         <select class="form-control" id="maritalStatus" name="maritalStatus" required>
                           <option value="">Select Status</option>
@@ -263,22 +263,22 @@
                           <option value="Other">Other (Specify)</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="spouseName" class="form-label">NAME OF SPOUSE</label>
                         <input type="text" class="form-control" id="spouseName" name="spouseName">
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="numberOfChildren" class="form-label">NUMBER OF CHILDREN</label>
                         <input type="number" class="form-control" id="numberOfChildren" name="numberOfChildren" min="0">
                       </div>
                     </div>
                   </div>
 
-                  <!-- Disability Information -->
+                  <!-- Mobile-Friendly Disability Information -->
                   <div class="form-section">
-                    <h4><i class="fas fa-accessibility"></i> DISABILITY</h4>
+                    <h4><i class="fas fa-accessibility me-2"></i> DISABILITY</h4>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="disability" class="form-label">Do you have any disability? *</label>
                         <select class="form-control" id="disability" name="disability" required>
                           <option value="">Select Option</option>
@@ -286,7 +286,7 @@
                           <option value="Yes">Yes</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="disabilityType" class="form-label">If yes, state the type of disability</label>
                         <select class="form-control" id="disabilityType" name="disabilityType">
                           <option value="">Select Type</option>
@@ -305,11 +305,11 @@
                     </div>
                   </div>
 
-                  <!-- Fee Information -->
+                  <!-- Mobile-Friendly Fee Information -->
                   <div class="form-section">
-                    <h4><i class="fas fa-money-bill"></i> FEES INFORMATION</h4>
+                    <h4><i class="fas fa-money-bill me-2"></i> FEES INFORMATION</h4>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="feePayer" class="form-label">Who is expected to pay your fees/tuition? *</label>
                         <select class="form-control" id="feePayer" name="feePayer" required>
                           <option value="">Select Option</option>
@@ -319,53 +319,53 @@
                           <option value="Other">Other</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="parentName" class="form-label">Details of the person responsible for fees payment - Name *</label>
                         <input type="text" class="form-control" id="parentName" name="parentName" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="parentNationality" class="form-label">Nationality *</label>
                         <input type="text" class="form-control" id="parentNationality" name="parentNationality" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="parentAddress" class="form-label">Address *</label>
                         <input type="text" class="form-control" id="parentAddress" name="parentAddress" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="parentPhone" class="form-label">Telephone contact *</label>
                         <input type="tel" class="form-control" id="parentPhone" name="parentPhone" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="parentEmail" class="form-label">Email *</label>
                         <input type="email" class="form-control" id="parentEmail" name="parentEmail" required>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Emergency Contact -->
+                  <!-- Mobile-Friendly Emergency Contact -->
                   <div class="form-section">
-                    <h4><i class="fas fa-phone-alt"></i> DETAILS OF EMERGENCY CONTACT INFORMATION</h4>
+                    <h4><i class="fas fa-phone-alt me-2"></i> DETAILS OF EMERGENCY CONTACT INFORMATION</h4>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="emergencyContactName" class="form-label">Name *</label>
                         <input type="text" class="form-control" id="emergencyContactName" name="emergencyContactName" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="emergencyContactPhone" class="form-label">Telephone contact *</label>
                         <input type="tel" class="form-control" id="emergencyContactPhone" name="emergencyContactPhone" required>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="emergencyContactEmail" class="form-label">Email *</label>
                         <input type="email" class="form-control" id="emergencyContactEmail" name="emergencyContactEmail" required>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Academic Information -->
+                  <!-- Mobile-Friendly Academic Information -->
                   <div class="form-section">
-                    <h4><i class="fas fa-graduation-cap"></i> ACADEMIC INFORMATION</h4>
+                    <h4><i class="fas fa-graduation-cap me-2"></i> ACADEMIC INFORMATION</h4>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="levelApplying" class="form-label">CHOICE OF PROGRAMME (Tick one (1) program of your choice) *</label>
                         <select class="form-control" id="levelApplying" name="levelApplying" required onchange="updateProgramOptions()">
                           <option value="">Select Level</option>
@@ -373,7 +373,7 @@
                           <option value="Diploma Extension">Diploma Extension Program</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="course" class="form-label">Course *</label>
                         <select class="form-control" id="course" name="course" required>
                           <option value="">Select Course</option>
@@ -381,7 +381,7 @@
                           <option value="Midwifery">Midwifery</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-lg-4 col-md-6 col-sm-12">
                         <label for="intakePeriod" class="form-label">CHOICE OF INTAKE (Indicate January/July) *</label>
                         <select class="form-control" id="intakePeriod" name="intakePeriod" required>
                           <option value="">Select Intake</option>
@@ -392,22 +392,22 @@
                     </div>
                   </div>
 
-                <!-- UCE Results (For Certificate Applicants) -->
+                <!-- Mobile-Friendly UCE Results (For Certificate Applicants) -->
                 <div class="form-section" id="uceSection" style="display: none;">
-                  <h4><i class="fas fa-book"></i> UGANDA CERTIFICATE OF EDUCATION (UCE)</h4>
+                  <h4><i class="fas fa-book me-2"></i> UGANDA CERTIFICATE OF EDUCATION (UCE)</h4>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="uceIndexNumber" class="form-label">INDEX NUMBER</label>
                       <input type="text" class="form-control" id="uceIndexNumber" name="uceIndexNumber" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="uceYear" class="form-label">YEAR OF COMPLETION</label>
                       <input type="number" class="form-control" id="uceYear" name="uceYear" min="2010" max="2026" required>
                     </div>
                   </div>
                   
                   <div class="row g-3">
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="uceEnglish" class="form-label">ENG</label>
                       <select class="form-control" id="uceEnglish" name="uceEnglish" required>
                         <option value="">Grade</option>
@@ -422,7 +422,7 @@
                         <option value="F9">F9</option>
                       </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="uceMath" class="form-label">MATH</label>
                       <select class="form-control" id="uceMath" name="uceMath" required>
                         <option value="">Grade</option>
@@ -437,7 +437,7 @@
                         <option value="F9">F9</option>
                       </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="uceBiology" class="form-label">CHEM</label>
                       <select class="form-control" id="uceBiology" name="uceBiology" required>
                         <option value="">Grade</option>
@@ -452,7 +452,7 @@
                         <option value="F9">F9</option>
                       </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="uceChemistry" class="form-label">PHY</label>
                       <select class="form-control" id="uceChemistry" name="uceChemistry" required>
                         <option value="">Grade</option>
@@ -467,7 +467,7 @@
                         <option value="F9">F9</option>
                       </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="ucePhysics" class="form-label">BEST</label>
                       <select class="form-control" id="ucePhysics" name="ucePhysics">
                         <option value="">Grade</option>
@@ -482,7 +482,7 @@
                         <option value="F9">F9</option>
                       </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                       <label for="uceOther" class="form-label">OTHER</label>
                       <select class="form-control" id="uceOther" name="uceOther">
                         <option value="">Grade</option>
@@ -504,15 +504,15 @@
                   </div>
                 </div>
 
-                <!-- UACE Results (Optional) -->
+                <!-- Mobile-Friendly UACE Results (Optional) -->
                 <div class="form-section">
-                  <h4><i class="fas fa-book"></i> UGANDA ADVANCED CERTIFICATE OF EDUCATION (UACE) - OPTIONAL</h4>
+                  <h4><i class="fas fa-book me-2"></i> UGANDA ADVANCED CERTIFICATE OF EDUCATION (UACE) - OPTIONAL</h4>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="uaceIndexNumber" class="form-label">INDEX NUMBER</label>
                       <input type="text" class="form-control" id="uaceIndexNumber" name="uaceIndexNumber">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="uaceYear" class="form-label">YEAR OF COMPLETION</label>
                       <input type="number" class="form-control" id="uaceYear" name="uaceYear" min="2010" max="2026">
                     </div>
@@ -544,56 +544,56 @@
                   </div>
                 </div>
 
-                <!-- Diploma Extension Information -->
+                <!-- Mobile-Friendly Diploma Extension Information -->
                 <div class="form-section" id="diplomaSection" style="display: none;">
-                  <h3><i class="fas fa-certificate"></i> Diploma Extension Information</h3>
+                  <h4><i class="fas fa-certificate me-2"></i> Diploma Extension Information</h4>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaExamNumber" class="form-label">Diploma Exam Number</label>
                       <input type="text" class="form-control" id="diplomaExamNumber" name="diplomaExamNumber">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaYearCompletion" class="form-label">Year of Completion</label>
                       <input type="number" class="form-control" id="diplomaYearCompletion" name="diplomaYearCompletion" min="2000" max="2026">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaYearEntry" class="form-label">Year of Entry</label>
                       <input type="number" class="form-control" id="diplomaYearEntry" name="diplomaYearEntry" min="2000" max="2026">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="practicingLicense" class="form-label">Practicing License Number</label>
                       <input type="text" class="form-control" id="practicingLicense" name="practicingLicense">
                     </div>
                   </div>
                 </div>
 
-                <!-- Diploma Extension Results (For Diploma Applicants) -->
+                <!-- Mobile-Friendly Diploma Extension Results (For Diploma Applicants) -->
                 <div class="form-section" id="diplomaSection" style="display: none;">
-                  <h4><i class="fas fa-graduation-cap"></i> DIPLOMA EXTENSION QUALIFICATIONS</h4>
+                  <h4><i class="fas fa-graduation-cap me-2"></i> DIPLOMA EXTENSION QUALIFICATIONS</h4>
                   <div class="alert alert-warning">
                     <strong>FOR ONLY STUDENTS APPLYING FOR DIPLOMA EXTENSION PROGRAM</strong>
                   </div>
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaExamNumber" class="form-label">EXAM NUMBER (NSIN)</label>
                       <input type="text" class="form-control" id="diplomaExamNumber" name="diplomaExamNumber" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaYearCompletion" class="form-label">YEAR OF COMPLETION</label>
                       <input type="number" class="form-control" id="diplomaYearCompletion" name="diplomaYearCompletion" min="2000" max="2026" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="diplomaYearEntry" class="form-label">YEAR OF ENTRY</label>
                       <input type="number" class="form-control" id="diplomaYearEntry" name="diplomaYearEntry" min="2000" max="2026" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                       <label for="practicingLicense" class="form-label">PRACTICING LICENSE NUMBER</label>
                       <input type="text" class="form-control" id="practicingLicense" name="practicingLicense" required>
                     </div>
                   </div>
                   
                   <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-6">
                       <label for="diplomaPaper1" class="form-label">PAPER I</label>
                       <select class="form-control" id="diplomaPaper1" name="diplomaPaper1" required>
                         <option value="">Grade</option>
@@ -605,7 +605,7 @@
                         <option value="F">F</option>
                       </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-6">
                       <label for="diplomaPaper2" class="form-label">PAPER II</label>
                       <select class="form-control" id="diplomaPaper2" name="diplomaPaper2" required>
                         <option value="">Grade</option>
