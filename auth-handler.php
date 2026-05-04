@@ -63,11 +63,11 @@ function handleStudentLogin() {
     if ($result['success']) {
         $auth_service->createSecureSession($result['user']);
         $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
-        header('Location: dashboards/student.php');
+        header('Location: views/students_dashboards.php');
         exit();
     } else {
         $_SESSION['error'] = $result['message'];
-        header('Location: student-login.php');
+        header('Location: students_login.php');
         exit();
     }
 }
