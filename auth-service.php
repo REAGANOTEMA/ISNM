@@ -369,7 +369,7 @@ class AuthenticationService {
     public function getDashboardRoute($role) {
         // Students always go to student dashboard
         if (strtolower($role) === 'student') {
-            return 'dashboards/student.php';
+            return 'views/students_dashboards.php';
         }
         
         // Staff routing based on role
