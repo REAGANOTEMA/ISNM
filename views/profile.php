@@ -29,6 +29,7 @@ $flashMessages = getFlashMessages();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - ISNM</title>
+    <link rel="icon" type="image/png" href="../images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -88,6 +89,38 @@ $flashMessages = getFlashMessages();
         .info-value {
             color: #333;
         }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+                position: relative;
+            }
+            .main-content {
+                padding: 15px;
+            }
+            .profile-avatar {
+                width: 100px;
+                height: 100px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidebar .nav-link {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+            }
+            .info-item {
+                padding: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -99,7 +132,7 @@ $flashMessages = getFlashMessages();
                     <h5 class="text-white mb-4">ISNM System</h5>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link" href="dashboard.php">
+                            <a class="nav-link" href="students_dashboards.php">
                                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                             </a>
                         </li>

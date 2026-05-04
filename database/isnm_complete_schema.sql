@@ -72,7 +72,115 @@ CREATE TABLE courses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 5. Audit Logs Table
+-- 5. Student Finance Table
+CREATE TABLE student_finance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    tuition_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    amount_paid DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    balance DECIMAL(10,2) GENERATED ALWAYS AS (tuition_fee - amount_paid) STORED,
+    payment_method VARCHAR(50),
+    payment_date DATE,
+    payment_status ENUM('pending', 'partial', 'paid', 'overdue') DEFAULT 'pending',
+    semester VARCHAR(50),
+    academic_year VARCHAR(20),
+    receipt_number VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    INDEX idx_student_finance (student_id),
+    INDEX idx_payment_status (payment_status),
+    INDEX idx_academic_year (academic_year)
+);
+
+-- 6. Student Documents Table
+CREATE TABLE student_documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    document_type VARCHAR(100) NOT NULL,
+    document_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT,
+    file_type VARCHAR(50),
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by INT,
+    status ENUM('active', 'inactive', 'expired') DEFAULT 'active',
+    expiry_date DATE,
+    description TEXT,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_student_docs (student_id),
+    INDEX idx_document_type (document_type),
+    INDEX idx_status (status)
+);
+
+-- 7. Announcements Table
+CREATE TABLE announcements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    announcement_type ENUM('general', 'academic', 'finance', 'emergency', 'events') DEFAULT 'general',
+    target_audience ENUM('all', 'students', 'staff', 'specific') DEFAULT 'all',
+    priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+    posted_by INT NOT NULL,
+    posted_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expiry_date DATE,
+    status ENUM('draft', 'published', 'expired') DEFAULT 'draft',
+    attachment_path VARCHAR(500),
+    view_count INT DEFAULT 0,
+    FOREIGN KEY (posted_by) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_announcement_type (announcement_type),
+    INDEX idx_target_audience (target_audience),
+    INDEX idx_priority (priority),
+    INDEX idx_status (status),
+    INDEX idx_posted_date (posted_date)
+);
+
+-- 8. Messages Table
+CREATE TABLE messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    message_type ENUM('text', 'document', 'announcement') DEFAULT 'text',
+    attachment_path VARCHAR(500),
+    sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_date TIMESTAMP NULL,
+    status ENUM('sent', 'read', 'deleted') DEFAULT 'sent',
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    parent_message_id INT NULL,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_message_id) REFERENCES messages(id) ON DELETE SET NULL,
+    INDEX idx_sender_receiver (sender_id, receiver_id),
+    INDEX idx_status (status),
+    INDEX idx_sent_date (sent_date),
+    INDEX idx_priority (priority)
+);
+
+-- 9. Academic Records Table (for transcripts)
+CREATE TABLE academic_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    course_code VARCHAR(20) NOT NULL,
+    course_title VARCHAR(200) NOT NULL,
+    credits INT NOT NULL,
+    grade VARCHAR(10) NOT NULL,
+    grade_points DECIMAL(3,2),
+    semester VARCHAR(50) NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    lecturer VARCHAR(100),
+    status ENUM('ongoing', 'completed', 'failed', 'withdrawn') DEFAULT 'ongoing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    INDEX idx_student_academic (student_id),
+    INDEX idx_semester_year (semester, academic_year),
+    INDEX idx_course_code (course_code)
+);
+
+-- 10. Audit Logs Table
 CREATE TABLE audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
