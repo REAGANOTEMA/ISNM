@@ -1,0 +1,19 @@
+{
+    "name": "reagan/isnm",
+    "description": "iganga-school-of-nursing-and-midwifery-school-management-system",
+    "type": "students-data",
+    "autoload": {
+        "psr-4": {
+            "Reagan\\Isnm\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "reaganotema",
+            "email": "reaganotema2022@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^5.7"
+    }
+}
