@@ -619,7 +619,8 @@
                     <div class="org-node administrative">
                         <i class="fas fa-file-alt org-icon"></i>
                         <div class="org-title">Academic Registrar</div>
-                        <div class="org-subtitle">Student Records</div>
+                        <div class="org-subtitle">Mr. Gejje William</div>
+                        <div class="org-description">Student Records</div>
                         <a href="staff-login.php?position=Academic%20Registrar" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>

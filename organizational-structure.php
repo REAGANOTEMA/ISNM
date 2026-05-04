@@ -103,7 +103,8 @@
                     <div class="org-position academic" onclick="redirectToLogin('Academic Registrar')">
                       <i class="fas fa-book fa-2x mb-2"></i>
                       <h4>Academic Registrar</h4>
-                      <p>Student Records</p>
+                      <p>Mr. Gejje William</p>
+                      <small>Student Records</small><br>
                       <small><i class="fas fa-sign-in-alt"></i> Login</small>
                     </div>
                   </div>

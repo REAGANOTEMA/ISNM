@@ -1410,7 +1410,7 @@
       <div class="ticker-track">
         <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
         <h1 class="school-title">Iganga School of Nursing and Midwifery</h1>
-      </div>
+</div>
     </div>
     <p class="school-motto">"Chosen to Serve - Based on a disciplined mind for health action"</p>
   </div>

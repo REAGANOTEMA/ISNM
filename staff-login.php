@@ -385,8 +385,8 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
                         <td>password</td>
                     </tr>
                     <tr>
-                        <td>Academic Registrar</td>
-                        <td>henry.mugisha</td>
+                        <td>Academic Registrar - Mr. Gejje William</td>
+                        <td>gejje.william</td>
                         <td>password</td>
                     </tr>
                     <tr>

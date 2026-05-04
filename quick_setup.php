@@ -96,7 +96,7 @@ try {
     $users = [
         ['DG001', 'john.mugisha', 'John', 'Mugisha', 'john.mugisha@isnm.ac.ug', 'password', 'Director General'],
         ['BUR001', 'patience.nabasumba', 'Patience', 'Nabasumba', 'patience.nabasumba@isnm.ac.ug', 'password', 'School Bursar'],
-        ['AR001', 'henry.mugisha', 'Henry', 'Mugisha', 'henry.mugisha@isnm.ac.ug', 'password', 'Academic Registrar']
+        ['AR001', 'gejje.william', 'Gejje', 'William', 'gejje.william@isnm.ac.ug', 'password', 'Academic Registrar']
     ];
     
     foreach ($users as $user) {

@@ -143,7 +143,7 @@
                 </div>
                 <div class="member-card">
                   <div class="member-image">
-                    <img src="images/staffs-meeting4.jpg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
+                    <img src="images/mami.jpeg" alt="Mrs. Mercy Byawaka" class="img-fluid rounded-3">
                   </div>
                   <div class="member-info">
                     <h4>Mrs. Mercy Byawaka</h4>
