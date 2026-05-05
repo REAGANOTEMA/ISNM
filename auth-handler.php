@@ -56,18 +56,18 @@ function handleStudentLogin() {
     
     $index_number = sanitizeInput($_POST['index_number'] ?? '');
     $full_name = sanitizeInput($_POST['full_name'] ?? '');
-    $phone_number = sanitizeInput($_POST['phone_number'] ?? '');
+    $phone_number = sanitizeInput($_POST['phone'] ?? '');
     
     $result = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
     
     if ($result['success']) {
         $auth_service->createSecureSession($result['user']);
         $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
-        header('Location: views/students_dashboards.php');
+        header('Location: dashboards/student.php');
         exit();
     } else {
         $_SESSION['error'] = $result['message'];
-        header('Location: students_login.php');
+        header('Location: student-login.php');
         exit();
     }
 }

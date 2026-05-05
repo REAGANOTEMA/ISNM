@@ -369,7 +369,7 @@ class AuthenticationService {
     public function getDashboardRoute($role) {
         // Students always go to student dashboard
         if (strtolower($role) === 'student') {
-            return 'views/students_dashboards.php';
+            return 'dashboards/student.php';
         }
         
         // Staff routing based on role
@@ -536,6 +536,6 @@ class AuthenticationService {
 }
 
 // Create global authentication service instance
-$authService = new AuthenticationService();
+$auth_service = new AuthenticationService();
 
 ?>

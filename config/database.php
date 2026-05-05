@@ -107,4 +107,36 @@ function validateIndexNumber($index_number) {
     // Format: U001/CM/056/16
     return preg_match('/^U\d{3}\/(CM|CN|DMORDN)\/\d{3}\/\d{2}$/', $index_number);
 }
+
+/**
+ * Check if student exists by index number
+ * @param string $indexNumber
+ * @return bool
+ */
+function studentExistsByIndexNumber($indexNumber) {
+    $conn = getConnection();
+    
+    $stmt = $conn->prepare("SELECT id FROM users WHERE index_number = ? AND role = 'student'");
+    $stmt->bind_param("s", $indexNumber);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->num_rows > 0;
+}
+
+/**
+ * Check if user exists by email
+ * @param string $email
+ * @return bool
+ */
+function userExistsByEmail($email) {
+    $conn = getConnection();
+    
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->num_rows > 0;
+}
 ?>
