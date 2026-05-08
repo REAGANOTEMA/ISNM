@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISNM Organizational Structure</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="icon" type="image/png" href="images/school-logo.png">
+<?php 
+$pageTitle = 'ISNM Organizational Structure';
+include('shared/_header.php');
+?>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -471,9 +466,8 @@
         }
     </style>
 </head>
+
 <body>
-    <?php include 'shared/_header.php'; ?>
-    
     <div class="organogram-container">
         <div class="page-header">
             <h1><i class="fas fa-sitemap"></i> ISNM Organizational Structure</h1>
@@ -492,8 +486,8 @@
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
                         <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20General'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
+                            <button class="btn-3d" onclick="showStaffLoginForm('Director General')">
+                                <i class="fas fa-user-shield me-2"></i>Director General Login
                             </button>
                         </div>
                     </div>
@@ -773,12 +767,76 @@
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="org-branch">
                     <div class="org-node support">
                         <i class="fas fa-flask org-icon"></i>
                         <div class="org-title">Lab Technicians</div>
-                        <div class="org-subtitle">Laboratory Services</div>
+                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                        <script>
+                            // Add smooth scrolling and hover effects
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const nodes = document.querySelectorAll('.org-node');
+                                
+                                nodes.forEach(node => {
+                                    node.addEventListener('mouseenter', function() {
+                                        this.style.transform = 'translateY(-5px) scale(1.02)';
+                                    });
+                                    
+                                    node.addEventListener('mouseleave', function() {
+                                        this.style.transform = 'translateY(0) scale(1)';
+                                    });
+                                });
+
+                                // Add click tracking for login buttons
+                                const loginButtons = document.querySelectorAll('.btn-3d');
+                                loginButtons.forEach(button => {
+                                    button.addEventListener('click', function() {
+                                        const role = this.closest('.org-node').querySelector('.org-title').textContent;
+                                        showLoginForm(role);
+                                    });
+                                });
+
+                                // Handle login links
+                                const loginLinks = document.querySelectorAll('.org-link');
+                                loginLinks.forEach(link => {
+                                    link.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        const role = this.closest('.org-node').querySelector('.org-title').textContent;
+                                        showLoginForm(role);
+                                    });
+                                });
+                            });
+
+                            // Show login form modal
+                            function showLoginForm(role) {
+                                document.getElementById('loginModalTitle').innerHTML = 
+                                    '<i class="fas fa-user-shield me-2"></i>' + role + ' Login';
+                                
+                                // Pre-fill email based on role if needed
+                                const emailInput = document.getElementById('email');
+                                const roleEmailMap = {
+                                    'Director General': 'director@isnm.ug',
+                                    'School Principal': 'principal@isnm.ug',
+                                    'Deputy Principal': 'deputy_principal@isnm.ug',
+                                    'School Bursar': 'bursar@isnm.ug',
+                                    'Academic Registrar': 'academic_registrar@isnm.ug',
+                                    'HR Manager': 'hr_manager@isnm.ug',
+                                    'School Secretary': 'school_secretary@isnm.ug',
+                                    'School Librarian': 'school_librarian@isnm.ug',
+                                    'Head of Nursing': 'head_of_nursing@isnm.ug',
+                                    'Head of Midwifery': 'head_of_midwifery@isnm.ug',
+                                    'Senior Lecturers': 'senior_lecturers@isnm.ug',
+                                    'Lecturers': 'lecturers@isnm.ug',
+                                    'Matrons': 'matrons@isnm.ug',
+                                    'Wardens': 'wardens@isnm.ug',
+                                    'Lab Technicians': 'lab_technicians@isnm.ug',
+                                    'Drivers': 'drivers@isnm.ug',
+                                    'Security': 'security@isnm.ug'
+                                };
+                                if (roleEmailMap[role]) {
+                                    emailInput.value = roleEmailMap[role];
+                                }
+                            }
+                        </script>
                         <a href="staff-login.php?position=Lab%20Technicians" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
@@ -872,9 +930,69 @@
         </div>
     </div>
 
-    <?php include 'shared/_footer.php'; ?>
+    <!-- Staff Login Modal -->
+    <div class="modal fade" id="staffLoginModal" tabindex="-1" aria-labelledby="staffLoginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staffLoginModalLabel">
+                        <i class="fas fa-user-shield me-2"></i>
+                        <span id="loginModalTitle">Staff Login</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="staffLoginForm" method="POST" action="auth-handler.php">
+                        <input type="hidden" name="action" value="staff_login">
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@isnm.ug</span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="Enter your staff email" required autocomplete="email">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Enter password" required minlength="8" value="12345678">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small>
+                                <a href="staff-password-reset.php" class="text-decoration-none">
+                                    <i class="fas fa-key me-1"></i>Forgot Password?
+                                </a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Add smooth scrolling and hover effects
         document.addEventListener('DOMContentLoaded', function() {
@@ -890,15 +1008,67 @@
                 });
             });
 
-            // Add click tracking
+            // Add click tracking for login buttons
+            const loginButtons = document.querySelectorAll('.btn-3d');
+            loginButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const role = this.closest('.org-node').querySelector('.org-title').textContent;
+                    showLoginForm(role);
+                });
+            });
+
+            // Handle login links
             const loginLinks = document.querySelectorAll('.org-link');
             loginLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const role = this.closest('.org-node').querySelector('.org-title').textContent;
-                    console.log('User clicked on:', role);
+                    showLoginForm(role);
                 });
             });
         });
+
+        // Show staff login form modal
+        function showStaffLoginForm(role) {
+            document.getElementById('loginModalTitle').innerHTML = 
+                '<i class="fas fa-user-shield me-2"></i>' + role + ' Login';
+            
+            // Pre-fill email based on role if needed
+            const emailInput = document.getElementById('email');
+            const roleEmailMap = {
+                'Director General': 'director@isnm.ug',
+                'School Principal': 'principal@isnm.ug',
+                'Director Academics': 'academics@isnm.ug',
+                'Chief Executive Officer': 'ceo@isnm.ug',
+                'School Secretary': 'secretary@isnm.ug',
+                'School Bursar': 'bursar@isnm.ug',
+                'HR Manager': 'hr@isnm.ug',
+                'Lecturers': 'lecturers@isnm.ug',
+                'Head Nursing': 'nursing@isnm.ug',
+                'Head Midwifery': 'midwifery@isnm.ug',
+                'Matrons': 'matrons@isnm.ug',
+                'Wardens': 'wardens@isnm.ug',
+                'Security': 'security@isnm.ug',
+                'Lab Technicians': 'lab@isnm.ug',
+                'Drivers': 'drivers@isnm.ug',
+                'Non-Teaching Staff': 'admin@isnm.ug'
+            };
+            
+            if (roleEmailMap[role]) {
+                emailInput.value = roleEmailMap[role];
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('staffLoginModal'));
+            modal.show();
+        }
+
+        // Show student login form (separate from staff)
+        function showStudentLoginForm(role) {
+            // Redirect to student login page with role parameter
+            window.location.href = 'student-login.php?student_role=' + encodeURIComponent(role);
+        }
     </script>
+</main>
 </body>
 </html>

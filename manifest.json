@@ -1,7 +1,7 @@
 {
-  "name": "Iganga School of Nursing and Midwifery",
+  "name": "ISNM School Management System",
   "short_name": "ISNM",
-  "description": "Digital Management System for Iganga School of Nursing and Midwifery",
+  "description": "Iganga School of Nursing and Midwifery Management System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#3E2723",
@@ -55,7 +55,6 @@
       "purpose": "any maskable"
     }
   ],
-  "splash_pages": null,
   "shortcuts": [
     {
       "name": "Student Portal",
@@ -73,7 +72,7 @@
       "name": "Staff Portal",
       "short_name": "Staff",
       "description": "Access staff dashboard and management tools",
-      "url": "/login.php",
+      "url": "/staff-login.php",
       "icons": [
         {
           "src": "images/school-logo.png",
@@ -93,26 +92,5 @@
         }
       ]
     }
-  ],
-  "screenshots": [
-    {
-      "src": "images/school-logo.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "ISNM Dashboard Overview"
-    },
-    {
-      "src": "images/school-logo.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "ISNM Mobile View"
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  ]
 }

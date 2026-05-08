@@ -368,13 +368,17 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             </div>
             
             <div class="sample-credentials">
-                <h6><i class="fas fa-info-circle me-2"></i>Sample Staff Credentials:</h6>
-                <p><strong>Admin:</strong> john.mugisha@isnm.ac.ug / password123</p>
-                <p><strong>Academic Registrar:</strong> academic.registrar@isnm.ac.ug / password123</p>
-                <p><strong>Accountant:</strong> accountant@isnm.ac.ug / password123</p>
+                <h6><i class="fas fa-info-circle me-2"></i>Default Staff Login:</h6>
+                <p><strong>Username:</strong> Your staff email (e.g., director@isnm.ug)</p>
+                <p><strong>Password:</strong> 12345678 (default for all staff)</p>
             </div>
             
             <div class="text-center mt-4">
+                <p class="mb-0">
+                    <a href="staff-password-reset.php" class="text-decoration-none">
+                        <i class="fas fa-key me-2"></i>Forgot Password?
+                    </a>
+                </p>
                 <p class="mb-0">
                     <a href="index.php" class="text-decoration-none">
                         <i class="fas fa-arrow-left me-2"></i>Back to Home

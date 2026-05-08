@@ -1,10 +1,27 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../security-middleware.php';
+// Include unified authentication system
+require_once '../auth-service.php';
+
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Global authentication service
+$auth_service = new AuthenticationService();
 
 // Strict dashboard protection - only students allowed
-requireRole('Student');
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../student-login.php');
+    exit();
+}
+
+// Check if user has the correct role
+$userRole = $_SESSION['role'] ?? '';
+if (strtolower($userRole) !== 'student') {
+    header('Location: ../staff-login.php?error=unauthorized');
+    exit();
+}
 
 // Get student information
 $student_id = $_SESSION['user_id'];

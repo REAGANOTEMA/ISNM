@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ISNM">
   <meta name="application-name" content="ISNM">
@@ -381,6 +381,23 @@
     
     .logo-img-right:hover {
       transform: scale(1.08) rotate(-2deg);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+      border-color: var(--isnm-gold);
+    }
+    
+    .logo-link {
+      display: block;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .logo-link:hover {
+      transform: scale(1.05);
+    }
+    
+    .logo-link:hover .logo-img,
+    .logo-link:hover .logo-img-right {
+      transform: scale(1.08) rotate(2deg);
       box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
       border-color: var(--isnm-gold);
     }
@@ -1943,7 +1960,9 @@
   <div class="header-container">
     <!-- Left: Logo -->
     <div class="header-logo">
-      <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
+      <a href="index.php" class="logo-link">
+        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img">
+      </a>
     </div>
     
     <!-- Center: Animated School Title and Motto -->
@@ -1961,7 +1980,9 @@
     
     <!-- Right: Logo -->
     <div class="header-logo-right">
-      <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img-right">
+      <a href="index.php" class="logo-link">
+        <img src="images/school-logo.png" alt="ISNM Logo" class="logo-img-right">
+      </a>
     </div>
   </div>
 </header>
@@ -1989,7 +2010,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="about.php">
+          <a class="nav-link" href="about-us.php">
             <i class="fas fa-info-circle"></i> About
           </a>
         </li>
@@ -2019,12 +2040,19 @@
           </a>
         </li>
         
-        <!-- Login/Portal Dropdown -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="portalDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-sign-in-alt"></i> Portal
+        <!-- Portal Link -->
+        <li class="nav-item">
+          <a class="nav-link" href="organogram.php">
+            <i class="fas fa-sitemap"></i> Portal
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="portalDropdown">
+        </li>
+        
+        <!-- Login Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
             <li><a class="dropdown-item" href="student-login.php">
               <i class="fas fa-user-graduate"></i> Student Login
             </a></li>

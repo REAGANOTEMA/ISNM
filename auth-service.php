@@ -198,16 +198,16 @@ class AuthenticationService {
         $email = sanitizeInput($email);
         $password = sanitizeInput($password);
         
-        // Debug: Log inputs
-        error_log("DEBUG: Staff login attempt - Email: $email, Password length: " . strlen($password));
+        // Convert to standard format if using isnm@2026 format
+        if (strpos($email, '@') === false) {
+            $email = $email . '@isnm.ug';
+        }
         
         if (empty($email) || empty($password)) {
-            error_log("DEBUG: Empty email or password");
             return ['success' => false, 'message' => 'Email and password are required'];
         }
         
         if (!validateEmail($email)) {
-            error_log("DEBUG: Invalid email format");
             return ['success' => false, 'message' => 'Invalid email format'];
         }
         
@@ -244,8 +244,19 @@ class AuthenticationService {
         error_log("DEBUG: User found - ID: " . $staff['id'] . ", Role: " . $staff['role'] . ", Status: " . $staff['status']);
         error_log("DEBUG: Password hash in DB: " . substr($staff['password'], 0, 20) . "...");
         
-        // Verify password using password_verify
-        if (!password_verify($password, $staff['password'])) {
+        // Verify password - allow both default password and hashed passwords
+        $defaultPassword = '12345678';
+        $passwordValid = false;
+        
+        // Check if password matches default password
+        if ($password === $defaultPassword) {
+            $passwordValid = true;
+        } else {
+            // Check against hashed password
+            $passwordValid = password_verify($password, $staff['password']);
+        }
+        
+        if (!$passwordValid) {
             error_log("DEBUG: Password verification failed");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
@@ -372,28 +383,55 @@ class AuthenticationService {
             return 'dashboards/student.php';
         }
         
-        // Staff routing based on role
+        // Enhanced staff routing based on role with exact department mapping
+        $roleLower = strtolower($role);
+        
+        // Exact department mappings
+        $departmentDashboards = [
+            'director general' => 'dashboards/director-general.php',
+            'school principal' => 'dashboards/school-principal.php',
+            'principal' => 'dashboards/school-principal.php',
+            'lecturer' => 'dashboards/lecturers.php',
+            'lecturers' => 'dashboards/lecturers.php',
+            'school secretary' => 'dashboards/school-secretary.php',
+            'secretary' => 'dashboards/school-secretary.php',
+            'school bursar' => 'dashboards/school-bursar.php',
+            'accountant' => 'dashboards/school-bursar.php',
+            'bursar' => 'dashboards/school-bursar.php',
+            'administrator' => 'dashboards/admin-dashboard.php',
+            'admin' => 'dashboards/admin-dashboard.php',
+            'hr' => 'dashboards/hr-dashboard.php',
+            'human resources' => 'dashboards/hr-dashboard.php',
+            'librarian' => 'dashboards/librarian-dashboard.php',
+            'library' => 'dashboards/librarian-dashboard.php',
+            'it support' => 'dashboards/it-dashboard.php',
+            'it' => 'dashboards/it-dashboard.php',
+            'nursing department' => 'dashboards/nursing-department.php',
+            'midwifery department' => 'dashboards/midwifery-department.php',
+            'clinical instructor' => 'dashboards/clinical-instructor.php',
+            'academic registrar' => 'dashboards/academic-registrar.php',
+            'student affairs' => 'dashboards/student-affairs.php'
+        ];
+        
+        // Check for exact match first
+        if (isset($departmentDashboards[$roleLower])) {
+            return $departmentDashboards[$roleLower];
+        }
+        
+        // Check for partial matches
+        foreach ($departmentDashboards as $keyword => $dashboard) {
+            if (strpos($roleLower, $keyword) !== false && file_exists($dashboard)) {
+                return $dashboard;
+            }
+        }
+        
+        // Clean role for file-based routing
         $roleClean = strtolower(str_replace([' ', '-'], '', $role));
         $dashboardFile = "dashboards/{$roleClean}.php";
         
         // Check if exact dashboard exists
         if (file_exists($dashboardFile)) {
             return $dashboardFile;
-        }
-        
-        // Fallback logic
-        $fallbacks = [
-            'director' => 'dashboards/director-general.php',
-            'principal' => 'dashboards/school-principal.php',
-            'lecturer' => 'dashboards/lecturers.php',
-            'secretary' => 'dashboards/school-secretary.php',
-            'accountant' => 'dashboards/school-bursar.php'
-        ];
-        
-        foreach ($fallbacks as $keyword => $fallback) {
-            if (strpos($roleClean, $keyword) !== false && file_exists($fallback)) {
-                return $fallback;
-            }
         }
         
         // Final fallback to admin dashboard

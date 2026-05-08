@@ -1,23 +1,44 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../security-middleware.php';
+// Include unified authentication system
+require_once '../auth-service.php';
+
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Global authentication service
+$auth_service = new AuthenticationService();
 
 // Strict dashboard protection - only secretaries allowed
-requireRole('School Secretary');
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../staff-login.php');
+    exit();
+}
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user has the correct role
+$userRole = $_SESSION['role'] ?? '';
+if (stripos($userRole, 'secretary') === false && stripos($userRole, 'school') === false) {
+    header('Location: ../staff-login.php?error=unauthorized');
+    exit();
+}
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
+// Database connection
+$conn = getConnection();
+
+// Get user information from session
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_role = $_SESSION['role'] ?? '';
+$user_email = $_SESSION['email'] ?? '';
+$user_name = $_SESSION['full_name'] ?? '';
+
+// Get additional user details if needed
+$user_query = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
+$stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user_result = $stmt->get_result();
 $user = $user_result->fetch_assoc();
-$user_id = $user['id'] ?? 0;
 
 // Get secretary statistics (using fallback data only)
 $total_students = 150; // Fallback value
