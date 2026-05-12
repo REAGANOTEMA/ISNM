@@ -1,4 +1,7 @@
-<?php include('shared/_header.php');?>
+<?php
+// Use enhanced configuration with multi-database support
+require_once 'includes/config_enhanced.php';
+include_once 'includes/functions.php'; ?>
 
   <main>
     <!-- Hero Page Header -->

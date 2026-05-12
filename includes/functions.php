@@ -319,6 +319,7 @@ function auditTrail($user_id, $action, $details, $ip_address = null) {
 }
 
 // Validate user permissions for specific actions
+if (!function_exists('hasPermission')) {
 function hasPermission($user_role, $permission) {
     $permissions = [
         'Director General' => ['all'],
@@ -338,31 +339,34 @@ function hasPermission($user_role, $permission) {
     return in_array('all', $permissions[$user_role] ?? []) || 
            in_array($permission, $permissions[$user_role] ?? []);
 }
+}
 
 // Get system statistics
+if (!function_exists('getSystemStatistics')) {
 function getSystemStatistics() {
     $stats = [];
     
     // Student statistics
     $stats['students'] = [
-        'total' => executeQuery("SELECT COUNT(*) as count FROM students")[0]['count'],
-        'active' => executeQuery("SELECT COUNT(*) as count FROM students WHERE status = 'active'")[0]['count'],
-        'graduated' => executeQuery("SELECT COUNT(*) as count FROM students WHERE status = 'graduated'")[0]['count']
+        'total' => executeQuery('students', "SELECT COUNT(*) as count FROM students")[0]['count'],
+        'active' => executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'active'")[0]['count'],
+        'graduated' => executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'graduated'")[0]['count']
     ];
     
     // User statistics
     $stats['users'] = [
-        'total' => executeQuery("SELECT COUNT(*) as count FROM users")[0]['count'],
-        'active' => executeQuery("SELECT COUNT(*) as count FROM users WHERE status = 'active'")[0]['count']
+        'total' => executeQuery('staffs', "SELECT COUNT(*) as count FROM staff")[0]['count'],
+        'active' => executeQuery('staffs', "SELECT COUNT(*) as count FROM staff WHERE status = 'active'")[0]['count']
     ];
     
     // Financial statistics
     $stats['finance'] = [
-        'total_fees' => executeQuery("SELECT SUM(total_fees) as total FROM student_fee_accounts")[0]['total'] ?? 0,
-        'total_paid' => executeQuery("SELECT SUM(amount_paid) as total FROM fee_payments")[0]['total'] ?? 0,
-        'total_balance' => executeQuery("SELECT SUM(balance) as total FROM student_fee_accounts")[0]['total'] ?? 0
+        'total_fees' => executeQuery('students', "SELECT SUM(total_fees) as total FROM student_fee_accounts")[0]['total'] ?? 0,
+        'total_paid' => executeQuery('students', "SELECT SUM(amount_paid) as total FROM fee_payments")[0]['total'] ?? 0,
+        'total_balance' => executeQuery('students', "SELECT SUM(balance) as total FROM student_fee_accounts")[0]['total'] ?? 0
     ];
     
     return $stats;
+}
 }
 ?>

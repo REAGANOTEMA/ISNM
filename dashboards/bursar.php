@@ -1,49 +1,112 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../includes/photo_upload.php';
-include_once '../includes/student_profile_component.php';
+// Include unified authentication system
+require_once '../auth-service.php';
 
-// Check if user is logged in and has Bursar role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Bursar') {
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Global authentication service
+$auth_service = new AuthenticationService();
+
+// Strict dashboard protection - only Bursar allowed
+if (!$auth_service->isAuthenticated()) {
     header('Location: ../staff-login.php');
     exit();
 }
 
+// Check if user has the correct role
+$userRole = $_SESSION['role'] ?? '';
+if (stripos($userRole, 'bursar') === false && stripos($userRole, 'finance') === false) {
+    header('Location: ../staff-login.php?error=unauthorized');
+    exit();
+}
+
+// Enhanced database connections
+$students_conn = new mysqli('localhost', 'root', '', 'students_db');
+$finance_conn = new mysqli('localhost', 'root', '', 'finance_db');
+
+if ($students_conn->connect_error) {
+    die("Students DB connection failed: " . $students_conn->connect_error);
+}
+
+if ($finance_conn->connect_error) {
+    die("Finance DB connection failed: " . $finance_conn->connect_error);
+}
+
+// Set charset
+$students_conn->set_charset("utf8mb4");
+$finance_conn->set_charset("utf8mb4");
+
+// Get user information from session
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_email = $_SESSION['email'] ?? '';
+$user_name = $_SESSION['full_name'] ?? '';
+
+// Handle search and filter functionality
+$search_term = $_GET['search'] ?? '';
+$filter_program = $_GET['program'] ?? '';
+$filter_year = $_GET['year'] ?? '';
+$filter_payment_status = $_GET['payment_status'] ?? '';
+
 // Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'add_student':
-                handleAddStudent();
-                break;
-            case 'update_student':
-                handleUpdateStudent();
-                break;
-            case 'delete_student':
-                handleDeleteStudent();
-                break;
-            case 'add_fee_account':
-                handleAddFeeAccount();
-                break;
-            case 'update_fee_account':
-                handleUpdateFeeAccount();
-                break;
-            case 'record_payment':
-                handleRecordPayment();
-                break;
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'add_student':
+            handleAddStudent();
+            break;
+        case 'update_student':
+            handleUpdateStudent();
+            break;
+        case 'delete_student':
+            handleDeleteStudent();
+            break;
+        case 'add_fee_account':
+            handleAddFeeAccount();
+            break;
+        case 'update_fee_account':
+            handleUpdateFeeAccount();
+            break;
+        case 'record_payment':
+            handleRecordPayment();
+            break;
+        case 'generate_invoice':
+            handleGenerateInvoice();
+            break;
+        case 'generate_receipt':
+            handleGenerateReceipt();
+            break;
+        case 'bulk_payment':
+            handleBulkPayment();
+            break;
+        case 'generate_financial_report':
+            handleGenerateFinancialReport();
+            break;
     }
 }
 
-// Handle student addition
+// Get real bursar statistics from database
+$stats_sql = "SELECT 
+    COUNT(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as total_students,
+    COUNT(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending_registrations,
+    SUM(CASE WHEN fee_status = 'Unpaid' THEN 1 ELSE 0 END) as unpaid_fees,
+    SUM(CASE WHEN fee_status = 'Paid' THEN 1 ELSE 0 END) as paid_fees,
+    COUNT(DISTINCT program) as total_programs,
+    SUM(amount) as total_revenue
+FROM students 
+WHERE YEAR(enrollment_date) = YEAR(CURRENT_DATE())";
+$stats_result = $students_conn->query($stats_sql);
+$stats = $stats_result->fetch_assoc();
+
+// Enhanced functionality functions
 function handleAddStudent() {
-    global $conn;
+    global $students_conn, $finance_conn;
     
     $student_id = generateStudentId();
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
-    $other_name = sanitizeInput($_POST['other_name']);
+    $other_name = sanitizeInput($_POST['other_name'] ?? '');
     $date_of_birth = sanitizeInput($_POST['date_of_birth']);
     $gender = sanitizeInput($_POST['gender']);
     $nationality = sanitizeInput($_POST['nationality']);
@@ -54,6 +117,34 @@ function handleAddStudent() {
     $level = sanitizeInput($_POST['level']);
     $intake_year = sanitizeInput($_POST['intake_year']);
     $intake_period = sanitizeInput($_POST['intake_period']);
+    $registration_date = date('Y-m-d');
+    
+    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, registration_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $students_conn->prepare($sql);
+    $stmt->bind_param("ssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $registration_date, 'Active', $_SESSION['user_id']);
+    
+    if ($stmt->execute()) {
+        $_SESSION['success'] = "Student added successfully!";
+        
+        // Create fee account
+        $fee_sql = "INSERT INTO fee_accounts (student_id, program, total_fees, paid_amount, balance, fee_status, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)";
+        $fee_stmt = $finance_conn->prepare($fee_sql);
+        $program_fees = getProgramFees($program);
+        $fee_stmt->bind_param("ssdddds", $student_id, $program, $program_fees, 0, $program_fees, 'Unpaid', $_SESSION['user_id']);
+        $fee_stmt->execute();
+        
+        // Log activity
+        $log_sql = "INSERT INTO bursar_activity_log (activity, created_at, created_by) VALUES (?, NOW(), ?)";
+        $log_stmt = $finance_conn->prepare($log_sql);
+        $log_stmt->bind_param("sis", "New student registered: $first_name $surname", $_SESSION['user_id']);
+        $log_stmt->execute();
+    } else {
+        $_SESSION['error'] = "Failed to add student.";
+    }
+    
+    header("Location: bursar.php");
+    exit();
     $guardian_name = sanitizeInput($_POST['guardian_name']);
     $guardian_phone = sanitizeInput($_POST['guardian_phone']);
     $guardian_email = sanitizeInput($_POST['guardian_email']);

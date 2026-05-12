@@ -1,32 +1,113 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../includes/photo_upload.php';
-include_once '../includes/student_profile_component.php';
+// Include unified authentication system
+require_once '../auth-service.php';
 
-// Check if user is logged in and has Principal role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Principal') {
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Global authentication service
+$auth_service = new AuthenticationService();
+
+// Strict dashboard protection - only Principal allowed
+if (!$auth_service->isAuthenticated()) {
     header('Location: ../staff-login.php');
     exit();
 }
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user has the correct role
+$userRole = $_SESSION['role'] ?? '';
+if (stripos($userRole, 'principal') === false && stripos($userRole, 'school') === false) {
+    header('Location: ../staff-login.php?error=unauthorized');
+    exit();
+}
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
-$user_id = $user['id'] ?? 0;
+// Enhanced database connections
+$students_conn = new mysqli('localhost', 'root', '', 'students_db');
+$staff_conn = new mysqli('localhost', 'root', '', 'staffs_db');
+$exams_conn = new mysqli('localhost', 'root', '', 'exams_db');
 
-// Get principal statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$active_students = 145; // Fallback value
-$programs_count = 2; // Fallback value
+if ($students_conn->connect_error) {
+    die("Students DB connection failed: " . $students_conn->connect_error);
+}
+
+if ($staff_conn->connect_error) {
+    die("Staff DB connection failed: " . $staff_conn->connect_error);
+}
+
+if ($exams_conn->connect_error) {
+    die("Exams DB connection failed: " . $exams_conn->connect_error);
+}
+
+// Set charset
+$students_conn->set_charset("utf8mb4");
+$staff_conn->set_charset("utf8mb4");
+$exams_conn->set_charset("utf8mb4");
+
+// Get user information from session
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_email = $_SESSION['email'] ?? '';
+$user_name = $_SESSION['full_name'] ?? '';
+
+// Handle search and filter functionality
+$search_term = $_GET['search'] ?? '';
+$filter_program = $_GET['program'] ?? '';
+$filter_year = $_GET['year'] ?? '';
+$filter_semester = $_GET['semester'] ?? '';
+$filter_status = $_GET['status'] ?? '';
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'add_student':
+            handleAddStudent();
+            break;
+        case 'update_student':
+            handleUpdateStudent();
+            break;
+        case 'delete_student':
+            handleDeleteStudent();
+            break;
+        case 'approve_application':
+            handleApproveApplication();
+            break;
+        case 'generate_report':
+            handleGenerateReport();
+            break;
+        case 'create_exam':
+            handleCreateExam();
+            break;
+        case 'schedule_exam':
+            handleScheduleExam();
+            break;
+        case 'manage_timetable':
+            handleManageTimetable();
+            break;
+        case 'generate_certificates':
+            handleGenerateCertificates();
+            break;
+        case 'bulk_operations':
+            handleBulkOperations();
+            break;
+    }
+}
+
+// Get real principal statistics from database
+$stats_sql = "SELECT 
+    COUNT(CASE WHEN s.status = 'Active' THEN 1 ELSE 0 END) as total_students,
+    COUNT(CASE WHEN s.status = 'Active' THEN 1 ELSE 0 END) as active_students,
+    COUNT(DISTINCT s.program) as total_programs,
+    COUNT(CASE WHEN s.status = 'Graduated' THEN 1 ELSE 0 END) as graduates_this_year,
+    AVG(s.gpa) as avg_gpa,
+    COUNT(CASE WHEN st.status = 'Pending' THEN 1 ELSE 0 END) as pending_applications,
+    COUNT(CASE WHEN e.exam_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_exams
+FROM students s 
+LEFT JOIN student_applications st ON s.student_id = st.student_id 
+LEFT JOIN exams e ON s.student_id = e.student_id 
+WHERE YEAR(s.enrollment_date) = YEAR(CURRENT_DATE())";
+$stats_result = $students_conn->query($stats_sql);
+$stats = $stats_result->fetch_assoc();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

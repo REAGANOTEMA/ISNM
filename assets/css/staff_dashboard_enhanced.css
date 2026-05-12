@@ -1,0 +1,440 @@
+/* ISNM Enhanced Staff Dashboard CSS */
+/* Professional 3D Graphics and Modern Design */
+
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #764ba2;
+    --accent-color: #f39c12;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-success: linear-gradient(135deg, #28a745 0%, #20bf6b 100%);
+    --gradient-warning: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    --gradient-danger: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    --gradient-info: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+    --border-radius-full: 24px;
+    
+    --transition-fast: all 0.2s ease;
+    --transition-normal: all 0.3s ease;
+    --transition-slow: all 0.5s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--dark-color);
+    line-height: 1.6;
+}
+
+/* 3D Card Styles */
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: perspective(1000px);
+    transition: var(--transition-normal);
+    overflow: hidden;
+    position: relative;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px) rotateX(2deg) scale(1.02);
+    box-shadow: var(--shadow-xl);
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    border-radius: var(--border-radius-lg);
+    z-index: -1;
+}
+
+/* 3D Button Styles */
+.btn-3d {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    transform-style: preserve-3d;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.btn-3d::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-md);
+    transform: translateZ(-20px);
+    transition: var(--transition-fast);
+}
+
+.btn-3d:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: var(--gradient-secondary);
+}
+
+.btn-3d:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 3D Panel Styles */
+.panel-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: translateZ(50px);
+    transition: var(--transition-normal);
+}
+
+.panel-3d:hover {
+    transform: translateZ(60px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+/* 3D Statistics Cards */
+.stat-card-3d {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: var(--transition-normal);
+}
+
+.stat-card-3d::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translateZ(-50px);
+    animation: float 6s ease-in-out infinite;
+}
+
+.stat-number-3d {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 3D Navigation */
+.nav-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    transform-style: preserve-3d;
+    transition: var(--transition-normal);
+}
+
+.nav-3d:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+/* 3D Progress Bars */
+.progress-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-3d::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--success-color));
+    border-radius: var(--border-radius-md);
+    transform: translateZ(-10px);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+.progress-bar-3d {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius-md);
+    position: relative;
+    z-index: 1;
+    transition: var(--transition-fast);
+}
+
+/* 3D Tables */
+.table-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+.table-3d:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--shadow-lg);
+}
+
+.table-3d th,
+.table-3d td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.table-3d th {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 3D Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+    50% { box-shadow: 0 0 30px rgba(102, 126, 234, 1); }
+}
+
+/* 3D Container Styles */
+.container-3d {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+}
+
+.grid-3d {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    transform-style: preserve-3d;
+}
+
+/* Glass Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-lg);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-card {
+        transform: none;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .btn-3d {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .panel-3d {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .table-3d {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+}
+
+/* Loading Animation */
+.loading-3d {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--primary-color);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    border-right-color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    border-left-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+.loading-3d::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    border-right-color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    border-left-color: transparent;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* School Branding */
+.school-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 20px;
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.school-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-fast);
+}
+
+.school-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Professional Typography */
+.text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Micro-interactions */
+.hover-lift {
+    transition: var(--transition-fast);
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Professional Forms */
+.form-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 30px;
+    backdrop-filter: blur(5px);
+}
+
+.form-control-3d {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-md);
+    padding: 12px 16px;
+    color: var(--dark-color);
+    transition: var(--transition-fast);
+}
+
+.form-control-3d:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color);
+    transform: translateY(-2px);
+}

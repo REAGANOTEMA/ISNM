@@ -4,8 +4,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include unified authentication system
-require_once 'auth-service.php';
+// Use enhanced configuration with multi-database support
+require_once 'includes/config_enhanced.php';
+include_once 'includes/functions.php';
+include_once 'includes/photo_upload.php';
 
 // Global authentication service
 $auth_service = new AuthenticationService();

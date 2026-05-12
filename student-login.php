@@ -5,7 +5,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Include unified authentication system
-require_once 'auth-handler.php';
+// Use enhanced configuration with multi-database support
+require_once 'includes/config_enhanced.php';
+include_once 'includes/functions.php';
 
 // Handle student login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'student_login') {
