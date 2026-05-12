@@ -1013,7 +1013,7 @@ include('shared/_header.php');
             loginButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const role = this.closest('.org-node').querySelector('.org-title').textContent;
-                    showLoginForm(role);
+                    showStaffLoginForm(role);
                 });
             });
 
@@ -1023,7 +1023,7 @@ include('shared/_header.php');
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const role = this.closest('.org-node').querySelector('.org-title').textContent;
-                    showLoginForm(role);
+                    showStaffLoginForm(role);
                 });
             });
         });

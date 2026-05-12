@@ -5,7 +5,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Include unified authentication system
-require_once 'auth-handler.php';
+require_once 'auth-service.php';
+
+// Global authentication service
+$auth_service = new AuthenticationService();
 
 // Store position from organogram if provided
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
@@ -42,7 +45,7 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#3E2723">
     <title>Staff Login - ISNM School Management System</title>
