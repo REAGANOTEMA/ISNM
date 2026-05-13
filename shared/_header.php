@@ -25,8 +25,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/school-logo.png">
   <link rel="icon" type="image/png" sizes="32x32" href="images/school-logo.png">
   <link rel="icon" type="image/png" sizes="16x16" href="images/school-logo.png">
-  <link rel="manifest" href="/manifest.json">
-  
+    
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   
@@ -2015,7 +2014,7 @@ include_once 'includes/functions.php'; ?>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="about-us.php">
+          <a class="nav-link" href="about.php">
             <i class="fas fa-info-circle"></i> About
           </a>
         </li>

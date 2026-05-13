@@ -1,19 +1,6 @@
 <?php include('shared/_header.php');?>
 
   <main>
-      <!-- Perfect Mobile Hero Header -->
-      <section class="hero-header">
-        <div class="hero-overlay"></div>
-        <div class="container">
-          <div class="hero-content">
-            <div class="hero-text">
-              <h1 class="hero-title animate-fade-in">APPLICATION FORM</h1>
-              <p class="hero-subtitle animate-slide-up">IGANGA SCHOOL OF NURSING AND MIDWIFERY</p>
-              <div class="hero-decoration animate-scale-in"></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- Perfect Mobile Application Introduction -->
       <section class="application-intro py-5">
@@ -777,39 +764,6 @@
                   </div>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contact Information -->
-    <section class="contact-info-section py-5 bg-light">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-12 text-center">
-            <h2 class="section-title">Contact Application Office</h2>
-            <div class="contact-grid">
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <h4>Principal</h4>
-                <p>0782 990 403</p>
-              </div>
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <h4>Deputy Principal</h4>
-                <p>0782 633 253</p>
-              </div>
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <h4>Director</h4>
-                <p>0753 393 340</p>
-              </div>
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <h4>HRM</h4>
-                <p>0703 999 796</p>
-              </div>
             </div>
           </div>
         </div>
