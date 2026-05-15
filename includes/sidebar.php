@@ -88,6 +88,57 @@ if ($user_type === 'staff') {
         ];
     }
     
+    // Grading management for Academic Registrar and Principal
+    if (strpos(strtolower($user_role), 'academic registrar') !== false || strpos(strtolower($user_role), 'principal') !== false) {
+        $menu_items[] = [
+            'icon' => 'fas fa-graduation-cap',
+            'title' => 'Grading Management',
+            'link' => '#grading',
+            'active' => false
+        ];
+        
+        $menu_items[] = [
+            'icon' => 'fas fa-check-double',
+            'title' => 'Grade Approval',
+            'link' => '#grade-approval',
+            'active' => false
+        ];
+    }
+    
+    // Principal-specific grading features
+    if (strpos(strtolower($user_role), 'principal') !== false) {
+        $menu_items[] = [
+            'icon' => 'fas fa-user-graduate',
+            'title' => 'Student Academic',
+            'link' => '#student-academic',
+            'active' => false
+        ];
+        
+        $menu_items[] = [
+            'icon' => 'fas fa-award',
+            'title' => 'Graduation',
+            'link' => '#graduation',
+            'active' => false
+        ];
+    }
+    
+    // Academic calendar for Academic Registrar
+    if (strpos(strtolower($user_role), 'academic registrar') !== false) {
+        $menu_items[] = [
+            'icon' => 'fas fa-calendar-alt',
+            'title' => 'Academic Calendar',
+            'link' => '#academic-calendar',
+            'active' => false
+        ];
+        
+        $menu_items[] = [
+            'icon' => 'fas fa-bullhorn',
+            'title' => 'Result Publication',
+            'link' => '#result-publication',
+            'active' => false
+        ];
+    }
+    
     // Staff tools based on role
     $menu_items[] = [
         'icon' => 'fas fa-tools',

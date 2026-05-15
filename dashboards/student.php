@@ -23,21 +23,43 @@ if (strtolower($userRole) !== 'student') {
     exit();
 }
 
+// Database connections
+$students_conn = new mysqli('localhost', 'root', '', 'students_db');
+$staff_conn = new mysqli('localhost', 'root', '', 'staffs_db');
+
+if ($students_conn->connect_error) {
+    die("Students DB connection failed: " . $students_conn->connect_error);
+}
+
+if ($staff_conn->connect_error) {
+    die("Staff DB connection failed: " . $staff_conn->connect_error);
+}
+
+$students_conn->set_charset("utf8mb4");
+$staff_conn->set_charset("utf8mb4");
+
 // Get student information
 $student_id = $_SESSION['user_id'];
-$student_info = $conn->query("SELECT * FROM students WHERE student_id = '$student_id'")->fetch_assoc();
+$student_info = $students_conn->query("SELECT * FROM students WHERE student_number = '$student_id'")->fetch_assoc();
+
+// Get student academic profile
+$academic_profile = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_assoc();
+
+// Get examination records (grades)
+$examination_records = $students_conn->query("SELECT er.*, gaw.current_stage, gaw.registrar_status, gaw.principal_status 
+                                              FROM examination_records er 
+                                              LEFT JOIN grading_approval_workflow gaw ON er.id = gaw.examination_record_id 
+                                              WHERE er.student_id = " . ($student_info['id'] ?? 0) . " 
+                                              ORDER BY er.exam_date DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
 
 // Get fee account information
-$fee_account = $conn->query("SELECT * FROM student_fee_accounts WHERE student_id = '$student_id' ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
-
-// Get academic records
-$academic_records = $conn->query("SELECT * FROM academic_records WHERE student_id = '$student_id' ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
+$fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
 
 // Get recent messages
-$messages = $conn->query("SELECT * FROM messages WHERE recipient_id = '$student_id' AND recipient_role = 'Students' ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+$messages = $students_conn->query("SELECT * FROM messages WHERE recipient_id = " . ($student_info['id'] ?? 0) . " AND recipient_role = 'Students' ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
 
 // Get payment history
-$payment_history = $conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = '$student_id' ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+$payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -287,6 +309,114 @@ $payment_history = $conn->query("SELECT fp.* FROM fee_payments fp JOIN student_f
                 margin-left: 0 !important;
             }
         }
+        
+        /* Grading System Styles for Student Portal */
+        .grade-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .summary-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .summary-content h4 {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .summary-content h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+        
+        .summary-content p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .grade-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .grade-badge.a {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .grade-badge.b {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .grade-badge.c {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .grade-badge.d {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+        
+        .grade-badge.f {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.published {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        @media (max-width: 768px) {
+            .grade-summary-cards {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -505,33 +635,74 @@ $payment_history = $conn->query("SELECT fp.* FROM fee_payments fp JOIN student_f
                         <div class="tab-content" id="academicTabContent">
                             <div class="tab-pane fade show active" id="results" role="tabpanel">
                                 <div class="results-table">
-                                    <h3>Semester Results</h3>
+                                    <h3>Course Grades & Results</h3>
+                                    <div class="grade-summary-cards">
+                                        <div class="summary-card">
+                                            <div class="summary-icon">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <h4>Current GPA</h4>
+                                                <h3><?php echo number_format($academic_profile['gpa'] ?? 0, 2); ?></h3>
+                                                <p><?php echo $academic_profile['academic_status'] ?? 'Good Standing'; ?></p>
+                                            </div>
+                                        </div>
+                                        <div class="summary-card">
+                                            <div class="summary-icon">
+                                                <i class="fas fa-book"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <h4>Total Courses</h4>
+                                                <h3><?php echo count($examination_records); ?></h3>
+                                                <p>Completed</p>
+                                            </div>
+                                        </div>
+                                        <div class="summary-card">
+                                            <div class="summary-icon">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <h4>Passed Courses</h4>
+                                                <h3>
+                                                    <?php
+                                                    $passed = count(array_filter($examination_records, fn($r) => in_array($r['grade'] ?? '', ['A', 'B', 'C', 'D'])));
+                                                    echo $passed;
+                                                    ?>
+                                                </h3>
+                                                <p>Out of <?php echo count($examination_records); ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr>
-                                                    <th>Academic Year</th>
-                                                    <th>Semester</th>
-                                                    <th>Year</th>
-                                                    <th>GPA</th>
-                                                    <th>Class Position</th>
-                                                    <th>Total Students</th>
-                                                    <th>Attendance</th>
-                                                    <th>Actions</th>
+                                                    <th>Course Code</th>
+                                                    <th>Course Name</th>
+                                                    <th>CA Marks</th>
+                                                    <th>Exam Marks</th>
+                                                    <th>Total</th>
+                                                    <th>Grade</th>
+                                                    <th>Publication Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($academic_records as $record): ?>
+                                                <?php foreach ($examination_records as $record): ?>
                                                 <tr>
-                                                    <td><?php echo $record['academic_year']; ?></td>
-                                                    <td><?php echo $record['semester']; ?></td>
-                                                    <td><?php echo $record['year']; ?></td>
-                                                    <td><?php echo $record['gpa'] ?? 'N/A'; ?></td>
-                                                    <td><?php echo $record['class_position'] ?? 'N/A'; ?></td>
-                                                    <td><?php echo $record['total_students'] ?? 'N/A'; ?></td>
-                                                    <td><?php echo $record['attendance_percentage'] ?? 'N/A'; ?>%</td>
+                                                    <td><?php echo $record['course_code']; ?></td>
+                                                    <td><?php echo $record['course_name']; ?></td>
+                                                    <td><?php echo $record['continuous_assessment_marks'] ?? 0; ?></td>
+                                                    <td><?php echo $record['final_exam_marks'] ?? 0; ?></td>
+                                                    <td><?php echo $record['total_marks_calculated'] ?? 0; ?></td>
+                                                    <td><span class="grade-badge <?php echo strtolower($record['grade'] ?? ''); ?>"><?php echo $record['grade'] ?? 'N/A'; ?></span></td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                                                        <?php if ($record['current_stage'] == 'Published'): ?>
+                                                            <span class="status-badge published">Published</span>
+                                                        <?php elseif ($record['current_stage'] == 'Rejected'): ?>
+                                                            <span class="status-badge rejected">Rejected</span>
+                                                        <?php else: ?>
+                                                            <span class="status-badge pending">Pending Approval</span>
+                                                        <?php endif; ?>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>

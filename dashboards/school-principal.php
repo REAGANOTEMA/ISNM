@@ -24,7 +24,20 @@ if (stripos($userRole, 'principal') === false && stripos($userRole, 'school') ==
 }
 
 // Database connection
-$conn = getConnection();
+$students_conn = new mysqli('localhost', 'root', '', 'students_db');
+$staff_conn = new mysqli('localhost', 'root', '', 'staffs_db');
+
+if ($students_conn->connect_error) {
+    die("Students DB connection failed: " . $students_conn->connect_error);
+}
+
+if ($staff_conn->connect_error) {
+    die("Staff DB connection failed: " . $staff_conn->connect_error);
+}
+
+// Set charset
+$students_conn->set_charset("utf8mb4");
+$staff_conn->set_charset("utf8mb4");
 
 // Get user information from session
 $user_id = $_SESSION['user_id'] ?? 0;
@@ -32,33 +45,177 @@ $user_role = $_SESSION['role'] ?? '';
 $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 
-// Get additional user details if needed
-$user_query = "SELECT * FROM users WHERE id = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'approve_grade':
+            handlePrincipalApproveGrade();
+            break;
+        case 'reject_grade':
+            handlePrincipalRejectGrade();
+            break;
+        case 'approve_graduation':
+            handleApproveGraduation();
+            break;
+    }
+}
 
-// Get school statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_staff = 25; // Fallback value
-$total_applications = 12; // Fallback value
-$active_programs = 2; // Fallback value
+// Get school statistics from database
+$total_students_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'Active'";
+$total_students_result = $students_conn->query($total_students_sql);
+$total_students = $total_students_result ? $total_students_result->fetch_assoc()['count'] : 0;
 
-// Get academic performance (using fallback data)
-$avg_gpa = 3.4; // Fallback value
-$pass_rate = 135; // Fallback value
-$total_examined = 150; // Fallback value
-$pass_percentage = ($pass_rate / $total_examined) * 100; // 90%
+$total_staff_sql = "SELECT COUNT(*) as count FROM staff WHERE status = 'Active'";
+$total_staff_result = $staff_conn->query($total_staff_sql);
+$total_staff = $total_staff_result ? $total_staff_result->fetch_assoc()['count'] : 0;
 
-// Get recent activities (using fallback data)
-$recent_activities = [
-    ['activity' => 'Staff meeting conducted', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 hour'))],
-    ['activity' => 'Student assembly held', 'created_at' => date('Y-m-d H:i:s', strtotime('-3 hours'))],
-    ['activity' => 'Academic review completed', 'created_at' => date('Y-m-d H:i:s', strtotime('-5 hours'))],
-    ['activity' => 'Facility inspection done', 'created_at' => date('Y-m-d H:i:s', strtotime('-7 hours'))]
-];
+$total_applications_sql = "SELECT COUNT(*) as count FROM student_admissions WHERE admission_status = 'Pending'";
+$total_applications_result = $students_conn->query($total_applications_sql);
+$total_applications = $total_applications_result ? $total_applications_result->fetch_assoc()['count'] : 0;
+
+$active_programs_sql = "SELECT COUNT(DISTINCT program) as count FROM students WHERE status = 'Active'";
+$active_programs_result = $students_conn->query($active_programs_sql);
+$active_programs = $active_programs_result ? $active_programs_result->fetch_assoc()['count'] : 0;
+
+// Get academic performance
+$avg_gpa_sql = "SELECT AVG(gpa) as avg_gpa FROM student_academic_profiles WHERE academic_status = 'Good Standing'";
+$avg_gpa_result = $students_conn->query($avg_gpa_sql);
+$avg_gpa = $avg_gpa_result ? $avg_gpa_result->fetch_assoc()['avg_gpa'] : 0;
+
+// Get pending principal approvals
+$pending_approvals_sql = "SELECT COUNT(*) as count FROM grading_approval_workflow WHERE current_stage = 'Principal Final Approval'";
+$pending_approvals_result = $staff_conn->query($pending_approvals_sql);
+$pending_approvals = $pending_approvals_result ? $pending_approvals_result->fetch_assoc()['count'] : 0;
+
+// Get graduation candidates
+$graduation_candidates_sql = "SELECT COUNT(*) as count FROM students WHERE graduation_status = 'Pending'";
+$graduation_candidates_result = $students_conn->query($graduation_candidates_sql);
+$graduation_candidates = $graduation_candidates_result ? $graduation_candidates_result->fetch_assoc()['count'] : 0;
+
+// Get recent activities from database
+$activity_sql = "SELECT activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 10";
+$activity_result = $staff_conn->query($activity_sql);
+$recent_activities = $activity_result ? $activity_result->fetch_all(MYSQLI_ASSOC) : [];
+
+// Principal approval handler functions
+function handlePrincipalApproveGrade() {
+    global $staff_conn;
+    
+    $workflow_number = sanitizeInput($_POST['workflow_number']);
+    $comments = sanitizeInput($_POST['comments'] ?? '');
+    
+    // Get workflow details
+    $workflow_sql = "SELECT * FROM grading_approval_workflow WHERE workflow_number = ?";
+    $stmt = $staff_conn->prepare($workflow_sql);
+    $stmt->bind_param("s", $workflow_number);
+    $stmt->execute();
+    $workflow = $stmt->get_result()->fetch_assoc();
+    
+    // Update workflow to published
+    $update_sql = "UPDATE grading_approval_workflow SET current_stage = 'Published', principal_status = 'Approved', principal_approved_by = ?, principal_approved_at = NOW(), principal_comments = ?, updated_at = NOW() WHERE workflow_number = ?";
+    $stmt = $staff_conn->prepare($update_sql);
+    $stmt->bind_param("iss", $_SESSION['user_id'], $comments, $workflow_number);
+    
+    if ($stmt->execute()) {
+        // Log grade change
+        if ($workflow) {
+            logGradeChange($workflow_number, $workflow['examination_record_id'], $_SESSION['user_id'], null, null, null, null, null, null, "Principal approved and published grade");
+            
+            // Send notification
+            sendGradingNotification($workflow_number, $_SESSION['user_id'], $_SESSION['user_id'], 'Grade Published', 'Grade has been published by Principal');
+        }
+        
+        $_SESSION['success'] = "Grade approved and published!";
+    } else {
+        $_SESSION['error'] = "Failed to approve grade.";
+    }
+    
+    header("Location: school-principal.php#grading-approval");
+    exit();
+}
+
+function handlePrincipalRejectGrade() {
+    global $staff_conn;
+    
+    $workflow_number = sanitizeInput($_POST['workflow_number']);
+    $rejection_reason = sanitizeInput($_POST['rejection_reason']);
+    
+    // Get workflow details
+    $workflow_sql = "SELECT * FROM grading_approval_workflow WHERE workflow_number = ?";
+    $stmt = $staff_conn->prepare($workflow_sql);
+    $stmt->bind_param("s", $workflow_number);
+    $stmt->execute();
+    $workflow = $stmt->get_result()->fetch_assoc();
+    
+    // Update workflow to rejected
+    $update_sql = "UPDATE grading_approval_workflow SET current_stage = 'Rejected', principal_status = 'Rejected', rejection_reason = ?, updated_at = NOW() WHERE workflow_number = ?";
+    $stmt = $staff_conn->prepare($update_sql);
+    $stmt->bind_param("ss", $rejection_reason, $workflow_number);
+    
+    if ($stmt->execute()) {
+        // Log grade change
+        if ($workflow) {
+            logGradeChange($workflow_number, $workflow['examination_record_id'], $_SESSION['user_id'], null, null, null, null, null, null, "Principal rejected grade: " . $rejection_reason);
+            
+            // Send notification
+            sendGradingNotification($workflow_number, $_SESSION['user_id'], $_SESSION['user_id'], 'Grade Rejected', 'Grade has been rejected by Principal: ' . $rejection_reason);
+        }
+        
+        $_SESSION['success'] = "Grade rejected successfully.";
+    } else {
+        $_SESSION['error'] = "Failed to reject grade.";
+    }
+    
+    header("Location: school-principal.php#grading-approval");
+    exit();
+}
+
+function handleApproveGraduation() {
+    global $students_conn;
+    
+    $student_ids = $_POST['student_ids'] ?? [];
+    
+    foreach ($student_ids as $student_id) {
+        $update_sql = "UPDATE students SET graduation_status = 'Graduated', graduation_date = CURDATE() WHERE id = ?";
+        $stmt = $students_conn->prepare($update_sql);
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+    }
+    
+    $_SESSION['success'] = "Graduation approved for " . count($student_ids) . " students.";
+    header("Location: school-principal.php#graduation");
+    exit();
+}
+
+function sanitizeInput($input) {
+    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+function logGradeChange($workflow_number, $examination_record_id, $changed_by, $previous_grade, $new_grade, $previous_ca, $new_ca, $previous_exam, $new_exam, $reason) {
+    global $staff_conn;
+    
+    $sql = "INSERT INTO grade_change_history (workflow_number, examination_record_id, changed_by, previous_grade, new_grade, previous_ca_marks, new_ca_marks, previous_exam_marks, new_exam_marks, change_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $staff_conn->prepare($sql);
+    $stmt->bind_param("sisssdddss", $workflow_number, $examination_record_id, $changed_by, $previous_grade, $new_grade, $previous_ca, $new_ca, $previous_exam, $new_exam, $reason);
+    return $stmt->execute();
+}
+
+function sendGradingNotification($workflow_number, $recipient_id, $sender_id, $notification_type, $message) {
+    global $staff_conn;
+    
+    $notification_id = 'NOT-' . date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+    
+    $sql = "INSERT INTO grading_notifications (notification_id, workflow_number, recipient_id, sender_id, notification_type, message) VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $staff_conn->prepare($sql);
+    $stmt->bind_param("ssisss", $notification_id, $workflow_number, $recipient_id, $sender_id, $notification_type, $message);
+    return $stmt->execute();
+}
+
+// Calculate pass percentage
+$pass_rate_sql = "SELECT COUNT(CASE WHEN grade IN ('A', 'B', 'C', 'D') THEN 1 ELSE 0 END) as pass_count, COUNT(*) as total_count FROM examination_records WHERE grade IS NOT NULL";
+$pass_rate_result = $students_conn->query($pass_rate_sql);
+$pass_rate_data = $pass_rate_result ? $pass_rate_result->fetch_assoc() : ['pass_count' => 0, 'total_count' => 1];
+$pass_percentage = $pass_rate_data['total_count'] > 0 ? ($pass_rate_data['pass_count'] / $pass_rate_data['total_count']) * 100 : 0;
 ?>
 
 <!DOCTYPE html>
@@ -101,6 +258,100 @@ $recent_activities = [
         @media (min-width: 769px) {
             .dashboard-container.sidebar-collapsed {
                 margin-left: 0 !important;
+            }
+        }
+        
+        /* Grading System Styles for Principal Dashboard */
+        .grading-approval-stats, .graduation-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .academic-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .filter-group select {
+            min-width: 150px;
+        }
+        
+        .student-academic-table, .graduation-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .graduation-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.good-standing {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.probation {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.suspension {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        @media (max-width: 768px) {
+            .academic-filters {
+                flex-direction: column;
+            }
+            
+            .filter-group select {
+                width: 100%;
+            }
+            
+            .graduation-actions {
+                flex-direction: column;
+            }
+            
+            .graduation-actions button {
+                width: 100%;
             }
         }
     </style>
@@ -586,6 +837,268 @@ $recent_activities = [
                         </div>
                     </div>
                 </section>
+
+                <!-- Grading Approval (Principal) -->
+                <section id="grading-approval" class="content-section">
+                    <h2>Principal Grade Approval</h2>
+                    <div class="grading-approval-stats">
+                        <div class="stat-card warning">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $pending_approvals; ?></h3>
+                                <p>Pending Final Approvals</p>
+                                <small>Requires your attention</small>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>
+                                    <?php
+                                    $published_sql = "SELECT COUNT(*) as count FROM grading_approval_workflow WHERE current_stage = 'Published'";
+                                    $published_result = $staff_conn->query($published_sql);
+                                    $published_count = $published_result ? $published_result->fetch_assoc()['count'] : 0;
+                                    echo $published_count;
+                                    ?>
+                                </h3>
+                                <p>Published Results</p>
+                                <small>This semester</small>
+                            </div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo number_format($pass_percentage, 1); ?>%</h3>
+                                <p>Overall Pass Rate</p>
+                                <small>All courses</small>
+                            </div>
+                        </div>
+                        <div class="stat-card primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo number_format($avg_gpa, 2); ?></h3>
+                                <p>Average GPA</p>
+                                <small>School-wide</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pending-approvals">
+                        <h3>Pending Grade Approvals</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Workflow #</th>
+                                        <th>Course</th>
+                                        <th>Student</th>
+                                        <th>Total Marks</th>
+                                        <th>Grade</th>
+                                        <th>Registrar Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $pending_grades_sql = "SELECT gaw.*, er.course_code, er.course_name, s.student_number, s.first_name, s.last_name 
+                                                          FROM grading_approval_workflow gaw
+                                                          JOIN examination_records er ON gaw.examination_record_id = er.id
+                                                          JOIN students s ON er.student_id = s.id
+                                                          WHERE gaw.current_stage = 'Principal Final Approval'
+                                                          ORDER BY gaw.submitted_at DESC LIMIT 10";
+                                    $pending_grades_result = $staff_conn->query($pending_grades_sql);
+                                    $pending_grades = $pending_grades_result ? $pending_grades_result->fetch_all(MYSQLI_ASSOC) : [];
+                                    
+                                    foreach ($pending_grades as $grade):
+                                    ?>
+                                    <tr>
+                                        <td><?php echo $grade['workflow_number']; ?></td>
+                                        <td><?php echo $grade['course_code'] . ' - ' . $grade['course_name']; ?></td>
+                                        <td><?php echo $grade['student_number'] . ' - ' . $grade['first_name'] . ' ' . $grade['last_name']; ?></td>
+                                        <td><?php echo $grade['total_marks_calculated'] ?? 0; ?></td>
+                                        <td><?php echo $grade['grade'] ?? 'N/A'; ?></td>
+                                        <td><span class="status-badge <?php echo strtolower($grade['registrar_status']); ?>"><?php echo $grade['registrar_status']; ?></span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-success" onclick="principalApproveGrade('<?php echo $grade['workflow_number']; ?>')">Approve</button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="principalRejectGrade('<?php echo $grade['workflow_number']; ?>')">Reject</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Student Academic Overview -->
+                <section id="student-academic" class="content-section">
+                    <h2>Student Academic Overview</h2>
+                    <div class="academic-filters">
+                        <div class="filter-group">
+                            <label>Program:</label>
+                            <select class="form-control" id="filterProgram">
+                                <option value="">All Programs</option>
+                                <option value="Nursing">Nursing</option>
+                                <option value="Midwifery">Midwifery</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Year:</label>
+                            <select class="form-control" id="filterYear">
+                                <option value="">All Years</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Academic Standing:</label>
+                            <select class="form-control" id="filterStanding">
+                                <option value="">All</option>
+                                <option value="Good Standing">Good Standing</option>
+                                <option value="Probation">Probation</option>
+                                <option value="Suspension">Suspension</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="filterStudents()">Filter</button>
+                    </div>
+                    
+                    <div class="student-academic-table">
+                        <h3>Student Academic Performance</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Program</th>
+                                        <th>Year</th>
+                                        <th>GPA</th>
+                                        <th>Academic Standing</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $students_sql = "SELECT s.*, sap.gpa, sap.academic_status 
+                                                   FROM students s 
+                                                   LEFT JOIN student_academic_profiles sap ON s.id = sap.student_id 
+                                                   WHERE s.status = 'Active' 
+                                                   ORDER BY sap.gpa DESC LIMIT 10";
+                                    $students_result = $students_conn->query($students_sql);
+                                    $students = $students_result ? $students_result->fetch_all(MYSQLI_ASSOC) : [];
+                                    
+                                    foreach ($students as $student):
+                                    ?>
+                                    <tr>
+                                        <td><?php echo $student['student_number']; ?></td>
+                                        <td><?php echo $student['first_name'] . ' ' . $student['last_name']; ?></td>
+                                        <td><?php echo $student['program']; ?></td>
+                                        <td><?php echo $student['year_of_study']; ?></td>
+                                        <td><?php echo number_format($student['gpa'] ?? 0, 2); ?></td>
+                                        <td><span class="status-badge <?php echo strtolower(str_replace(' ', '-', $student['academic_status'] ?? 'good-standing')); ?>"><?php echo $student['academic_status'] ?? 'Good Standing'; ?></span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">View Profile</button>
+                                            <button class="btn btn-sm btn-outline-info">View Grades</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Graduation Management -->
+                <section id="graduation" class="content-section">
+                    <h2>Graduation Management</h2>
+                    <div class="graduation-stats">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $graduation_candidates; ?></h3>
+                                <p>Graduation Candidates</p>
+                                <small>Pending approval</small>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>
+                                    <?php
+                                    $graduated_sql = "SELECT COUNT(*) as count FROM students WHERE graduation_status = 'Graduated'";
+                                    $graduated_result = $students_conn->query($graduated_sql);
+                                    $graduated_count = $graduated_result ? $graduated_result->fetch_assoc()['count'] : 0;
+                                    echo $graduated_count;
+                                    ?>
+                                </h3>
+                                <p>Graduated This Year</p>
+                                <small>Successful completions</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="graduation-list">
+                        <h3>Graduation Candidates</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAllGraduates" onchange="toggleAllGraduates()"></th>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Program</th>
+                                        <th>Cumulative GPA</th>
+                                        <th>Completion Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $candidates_sql = "SELECT s.*, sap.gpa as cumulative_gpa 
+                                                      FROM students s 
+                                                      LEFT JOIN student_academic_profiles sap ON s.id = sap.student_id 
+                                                      WHERE s.graduation_status = 'Pending' AND s.year_of_study >= 2
+                                                      ORDER BY sap.gpa DESC LIMIT 10";
+                                    $candidates_result = $students_conn->query($candidates_sql);
+                                    $candidates = $candidates_result ? $candidates_result->fetch_all(MYSQLI_ASSOC) : [];
+                                    
+                                    foreach ($candidates as $candidate):
+                                    ?>
+                                    <tr>
+                                        <td><input type="checkbox" class="graduate-checkbox" value="<?php echo $candidate['id']; ?>"></td>
+                                        <td><?php echo $candidate['student_number']; ?></td>
+                                        <td><?php echo $candidate['first_name'] . ' ' . $candidate['last_name']; ?></td>
+                                        <td><?php echo $candidate['program']; ?></td>
+                                        <td><?php echo number_format($candidate['cumulative_gpa'] ?? 0, 2); ?></td>
+                                        <td><span class="status-badge pending">Pending Review</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="printTranscript('<?php echo $candidate['student_number']; ?>')">Print Transcript</button>
+                                            <button class="btn btn-sm btn-outline-info">View Academic Record</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="graduation-actions">
+                            <button class="btn btn-success" onclick="approveSelectedGraduation()">Approve Selected for Graduation</button>
+                            <button class="btn btn-info" onclick="openModal('graduationReport')">Graduation Report</button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -633,7 +1146,7 @@ $recent_activities = [
             const modalBody = document.getElementById('modalBody');
             
             switch(action) {
-                case 'approveResults':
+                case 'reviewApplication':
                     modalTitle.textContent = 'Approve Academic Results';
                     modalBody.innerHTML = `
                         <form>
@@ -741,9 +1254,72 @@ $recent_activities = [
         
         // Auto-refresh dashboard data
         setInterval(() => {
-            // Refresh statistics
             console.log('Refreshing principal dashboard data...');
-        }, 60000); // Every minute
+        }, 60000);
+        
+        function principalApproveGrade(workflowNumber) {
+            if (confirm('Approve this grade for final publication?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'school-principal.php';
+                form.innerHTML = '<input type="hidden" name="action" value="approve_grade"><input type="hidden" name="workflow_number" value="' + workflowNumber + '"><input type="hidden" name="comments" value="Approved by Principal">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function principalRejectGrade(workflowNumber) {
+            const reason = prompt('Enter rejection reason:');
+            if (reason) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'school-principal.php';
+                form.innerHTML = '<input type="hidden" name="action" value="reject_grade"><input type="hidden" name="workflow_number" value="' + workflowNumber + '"><input type="hidden" name="rejection_reason" value="' + reason + '">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function toggleAllGraduates() {
+            const checkboxes = document.querySelectorAll('.graduate-checkbox');
+            const selectAll = document.getElementById('selectAllGraduates');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+        
+        function approveSelectedGraduation() {
+            const checkboxes = document.querySelectorAll('.graduate-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select students to approve for graduation.');
+                return;
+            }
+            if (confirm('Approve ' + checkboxes.length + ' students for graduation?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'school-principal.php';
+                form.innerHTML = '<input type="hidden" name="action" value="approve_graduation">';
+                checkboxes.forEach(cb => {
+                    form.innerHTML += '<input type="hidden" name="student_ids[]" value="' + cb.value + '">';
+                });
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function filterStudents() {
+            alert('Filter functionality would be implemented here.');
+        }
+        
+        function printTranscript(studentNumber) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Transcript - ' + studentNumber + '</title>');
+            printWindow.document.write('<style>@media print { body { font-family: Arial, sans-serif; } .header { text-align: center; margin-bottom: 20px; } .logo { max-width: 100px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<div class="header"><img src="../images/school-logo.png" class="logo" alt="ISNM Logo"><h2>Iganga School of Nursing and Midwifery</h2><h3>Official Academic Transcript</h3><p>Student #: ' + studentNumber + '</p></div>');
+            printWindow.document.write('<p>This is an official academic transcript. For verification, contact the School Principal.</p>');
+            printWindow.document.write('<button onclick="window.print()">Print</button>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+        }
     </script>
 </body>
 </html>

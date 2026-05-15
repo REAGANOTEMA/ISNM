@@ -7,6 +7,32 @@ CREATE DATABASE IF NOT EXISTS staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 USE staffs_db;
 
 -- Drop existing tables if they exist (for fresh installation)
+DROP TABLE IF EXISTS hostel_allocations;
+DROP TABLE IF EXISTS hostel_management;
+DROP TABLE IF EXISTS student_discipline;
+DROP TABLE IF EXISTS clinical_placements;
+DROP TABLE IF EXISTS student_attendance;
+DROP TABLE IF EXISTS examination_records;
+DROP TABLE IF EXISTS course_registrations;
+DROP TABLE IF EXISTS student_academic_profiles;
+DROP TABLE IF EXISTS student_admissions;
+DROP TABLE IF EXISTS staff_resignations;
+DROP TABLE IF EXISTS staff_promotions;
+DROP TABLE IF EXISTS compliance_records;
+DROP TABLE IF EXISTS disciplinary_records;
+DROP TABLE IF EXISTS staff_contracts;
+DROP TABLE IF EXISTS recruitment_applications;
+DROP TABLE IF EXISTS recruitment_jobs;
+DROP TABLE IF EXISTS fee_adjustments;
+DROP TABLE IF EXISTS sponsorships;
+DROP TABLE IF EXISTS inventory_transactions;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS general_ledger;
+DROP TABLE IF EXISTS expenditure_records;
+DROP TABLE IF EXISTS budget_records;
+DROP TABLE IF EXISTS payment_records;
+DROP TABLE IF EXISTS invoice_records;
+DROP TABLE IF EXISTS fee_structures;
 DROP TABLE IF EXISTS staff_activity_log;
 DROP TABLE IF EXISTS staff_dashboard_access;
 DROP TABLE IF EXISTS staff_password_resets;
@@ -19,6 +45,7 @@ DROP TABLE IF EXISTS staff_departments;
 DROP TABLE IF EXISTS staff_profiles;
 DROP TABLE IF EXISTS staff;
 DROP TABLE IF EXISTS staff_roles;
+DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS financial_records;
 DROP TABLE IF EXISTS fee_accounts;
 DROP TABLE IF EXISTS course_assignments;
@@ -45,7 +72,36 @@ CREATE TABLE staff_roles (
     INDEX idx_role_level (role_level)
 );
 
--- 2. Staff Table (Enhanced with authentication)
+-- 2. Students Table
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_number VARCHAR(50) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    date_of_birth DATE,
+    gender ENUM('Male', 'Female', 'Other'),
+    address TEXT,
+    program VARCHAR(100) NOT NULL,
+    year_of_study INT DEFAULT 1,
+    semester VARCHAR(50) DEFAULT 'Semester 1',
+    admission_date DATE,
+    status ENUM('Active', 'Inactive', 'Graduated', 'Suspended', 'Withdrawn') DEFAULT 'Active',
+    guardian_name VARCHAR(200),
+    guardian_phone VARCHAR(20),
+    guardian_email VARCHAR(100),
+    emergency_contact_name VARCHAR(100),
+    emergency_contact_phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_number (student_number),
+    INDEX idx_email (email),
+    INDEX idx_program (program),
+    INDEX idx_status (status)
+);
+
+-- 3. Staff Table (Enhanced with authentication)
 CREATE TABLE staff (
     id INT AUTO_INCREMENT PRIMARY KEY,
     staff_id VARCHAR(50) NOT NULL UNIQUE,
@@ -268,6 +324,8 @@ CREATE TABLE financial_records (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (recorded_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_record_type (record_type),
     INDEX idx_amount (amount),
     INDEX idx_transaction_date (transaction_date),
@@ -289,6 +347,7 @@ CREATE TABLE fee_accounts (
     recorded_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (recorded_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_student_id (student_id),
     INDEX idx_fee_type (fee_type),
@@ -338,6 +397,7 @@ CREATE TABLE academic_records (
     grading_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (lecturer_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (graded_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_student_id (student_id),
@@ -570,6 +630,8 @@ CREATE TABLE generated_documents (
     download_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (generated_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_document_type (document_type),
     INDEX idx_student_id (student_id),
@@ -1024,12 +1086,12 @@ CREATE TABLE api_keys (
 
 -- Insert default staff roles with proper permissions
 INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions) VALUES
-('Director General', 'Overall school administration and management', 'Executive', 'dashboards/director-general.php', '{"all": true, "can_access_all_dashboards": true, "can_manage_all_staff": true}'),
-('School Principal', 'School academic and administrative leadership', 'Executive', 'dashboards/school-principal.php', '{"academic": true, "administrative": true, "staff": true, "students": true, "can_view_all_departments": true}'),
-('CEO', 'Chief Executive Officer for strategic management', 'Executive', 'dashboards/ceo.php', '{"strategic": true, "financial": true, "operational": true, "can_view_reports": true}'),
-('Director Academics', 'Academic programs and curriculum oversight', 'Management', 'dashboards/director-academics.php', '{"academic": true, "curriculum": true, "faculty": true, "can_manage_courses": true}'),
-('Director Finance', 'Financial management and oversight', 'Management', 'dashboards/director-finance.php', '{"financial": true, "budgeting": true, "reporting": true, "can_manage_finances": true}'),
-('Director ICT', 'Information Technology management', 'Management', 'dashboards/director-ict.php', '{"ict": true, "systems": true, "infrastructure": true, "can_manage_system": true}'),
+('Director General', 'Overall school administration and management with full access to all modules and departments', 'Executive', 'dashboards/director-general.php', '{"all": true, "can_access_all_dashboards": true, "can_manage_all_staff": true, "can_view_all_departments": true, "can_edit_all_data": true, "can_delete_all_data": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "super_admin": true}'),
+('School Principal', 'School academic and administrative leadership with cross-departmental viewing access', 'Executive', 'dashboards/school-principal.php', '{"academic": true, "administrative": true, "staff": true, "students": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
+('CEO', 'Chief Executive Officer for strategic management with cross-departmental viewing access', 'Executive', 'dashboards/ceo.php', '{"strategic": true, "financial": true, "operational": true, "can_view_reports": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_view_other_departments": true}'),
+('Director Academics', 'Academic programs and curriculum oversight with cross-departmental viewing access', 'Management', 'dashboards/director-academics.php', '{"academic": true, "curriculum": true, "faculty": true, "can_manage_courses": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
+('Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{"financial": true, "budgeting": true, "reporting": true, "can_manage_finances": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
+('Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{"ict": true, "systems": true, "infrastructure": true, "can_manage_system": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
 ('HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{"hr": true, "staff": true, "recruitment": true, "training": true, "can_manage_staff": true}'),
     ('Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{"academic": true, "students": true, "registration": true, "transcripts": true, "certificates": true}'),
     ('School Bursar', 'Financial operations and fee management', 'Administrative', 'dashboards/school-bursar.php', '{"financial": true, "fees": true, "collections": true, "can_manage_fees": true}'),
@@ -1295,5 +1357,711 @@ BEGIN
     VALUES (NEW.staff_id, 'Login', 'Staff member logged into the system', NEW.ip_address, NEW.user_agent);
 END //
 DELIMITER ;
+
+-- COMPREHENSIVE FINANCIAL/BURSAR MODULE TABLES
+
+CREATE TABLE fee_structures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fee_code VARCHAR(50) NOT NULL UNIQUE,
+    fee_name VARCHAR(200) NOT NULL,
+    fee_category ENUM('Tuition', 'Registration', 'Library', 'Laboratory', 'Clinical', 'Hostel', 'Examination', 'Identity Card', 'Medical', 'Sports', 'Other') NOT NULL,
+    program VARCHAR(100),
+    year_of_study INT,
+    semester VARCHAR(50),
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    due_date DATE,
+    is_mandatory BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    description TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_fee_code (fee_code),
+    INDEX idx_fee_category (fee_category)
+);
+
+CREATE TABLE invoice_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    invoice_date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    subtotal DECIMAL(15,2) NOT NULL,
+    tax_amount DECIMAL(15,2) DEFAULT 0,
+    discount_amount DECIMAL(15,2) DEFAULT 0,
+    total_amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    status ENUM('Draft', 'Sent', 'Partial', 'Paid', 'Overdue', 'Cancelled') DEFAULT 'Draft',
+    payment_terms TEXT,
+    notes TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_invoice_number (invoice_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE payment_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    payment_number VARCHAR(50) NOT NULL UNIQUE,
+    invoice_id INT,
+    student_id INT NOT NULL,
+    payment_date DATE NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    payment_method ENUM('Cash', 'Bank Transfer', 'Mobile Money', 'Credit Card', 'Cheque', 'Direct Debit', 'Other') NOT NULL,
+    payment_reference VARCHAR(100),
+    receipt_number VARCHAR(50),
+    status ENUM('Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled') DEFAULT 'Pending',
+    proof_of_payment_file VARCHAR(500),
+    notes TEXT,
+    processed_by INT,
+    approved_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (invoice_id) REFERENCES invoice_records(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_payment_number (payment_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE budget_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    budget_code VARCHAR(50) NOT NULL UNIQUE,
+    budget_name VARCHAR(200) NOT NULL,
+    budget_category ENUM('Academic', 'Administrative', 'Operations', 'Capital Projects', 'Research', 'Student Services', 'Staff Development', 'Maintenance', 'Other') NOT NULL,
+    department VARCHAR(100),
+    fiscal_year VARCHAR(10) NOT NULL,
+    allocated_amount DECIMAL(15,2) NOT NULL,
+    spent_amount DECIMAL(15,2) DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    status ENUM('Draft', 'Approved', 'Active', 'Closed', 'Cancelled') DEFAULT 'Draft',
+    description TEXT,
+    created_by INT,
+    approved_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_budget_code (budget_code),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE expenditure_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    expenditure_number VARCHAR(50) NOT NULL UNIQUE,
+    budget_id INT,
+    expenditure_date DATE NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    category ENUM('Salaries', 'Utilities', 'Supplies', 'Maintenance', 'Equipment', 'Travel', 'Training', 'Capital Expenditure', 'Other') NOT NULL,
+    description TEXT NOT NULL,
+    vendor_name VARCHAR(200),
+    payment_method ENUM('Cash', 'Bank Transfer', 'Cheque', 'Credit Card', 'Other') NOT NULL,
+    status ENUM('Pending', 'Approved', 'Paid', 'Rejected') DEFAULT 'Pending',
+    requested_by INT,
+    approved_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (budget_id) REFERENCES budget_records(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (requested_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_expenditure_number (expenditure_number),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE general_ledger (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    entry_number VARCHAR(50) NOT NULL UNIQUE,
+    entry_date DATE NOT NULL,
+    account_code VARCHAR(50) NOT NULL,
+    account_name VARCHAR(200) NOT NULL,
+    account_type ENUM('Asset', 'Liability', 'Equity', 'Revenue', 'Expense') NOT NULL,
+    debit_amount DECIMAL(15,2) DEFAULT 0,
+    credit_amount DECIMAL(15,2) DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    description TEXT NOT NULL,
+    reference_number VARCHAR(100),
+    fiscal_year VARCHAR(10) NOT NULL,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_entry_number (entry_number),
+    INDEX idx_account_code (account_code)
+);
+
+CREATE TABLE inventory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    item_code VARCHAR(50) NOT NULL UNIQUE,
+    item_name VARCHAR(200) NOT NULL,
+    item_category ENUM('Office Supplies', 'Laboratory Equipment', 'Medical Supplies', 'Furniture', 'Computers', 'Books', 'Uniforms', 'Food', 'Cleaning Supplies', 'Other') NOT NULL,
+    description TEXT,
+    unit_of_measure VARCHAR(50) NOT NULL,
+    quantity_on_hand INT DEFAULT 0,
+    reorder_level INT DEFAULT 10,
+    unit_cost DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    location VARCHAR(100),
+    supplier VARCHAR(200),
+    status ENUM('In Stock', 'Low Stock', 'Out of Stock', 'Discontinued') DEFAULT 'In Stock',
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_item_code (item_code)
+);
+
+CREATE TABLE inventory_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_number VARCHAR(50) NOT NULL UNIQUE,
+    inventory_id INT NOT NULL,
+    transaction_type ENUM('Purchase', 'Sale', 'Issue', 'Return', 'Adjustment', 'Transfer', 'Damage', 'Loss') NOT NULL,
+    transaction_date DATE NOT NULL,
+    quantity INT NOT NULL,
+    unit_cost DECIMAL(15,2),
+    total_cost DECIMAL(15,2),
+    currency VARCHAR(10) DEFAULT 'UGX',
+    reason TEXT,
+    performed_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_transaction_number (transaction_number)
+);
+
+CREATE TABLE sponsorships (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sponsorship_code VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    sponsor_name VARCHAR(200) NOT NULL,
+    sponsor_type ENUM('Government', 'NGO', 'Private', 'Corporate', 'Individual', 'Scholarship', 'Other') NOT NULL,
+    sponsorship_type ENUM('Full Tuition', 'Partial Tuition', 'Full Fees', 'Partial Fees', 'Living Expenses', 'Books', 'Other') NOT NULL,
+    coverage_percentage DECIMAL(5,2),
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    start_date DATE NOT NULL,
+    end_date DATE,
+    status ENUM('Active', 'Inactive', 'Expired', 'Terminated') DEFAULT 'Active',
+    terms_and_conditions TEXT,
+    contact_person VARCHAR(100),
+    contact_phone VARCHAR(20),
+    contact_email VARCHAR(100),
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_sponsorship_code (sponsorship_code)
+);
+
+CREATE TABLE fee_adjustments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adjustment_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    invoice_id INT,
+    adjustment_type ENUM('Discount', 'Waiver', 'Penalty', 'Refund', 'Correction') NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    reason TEXT NOT NULL,
+    effective_date DATE NOT NULL,
+    status ENUM('Pending', 'Approved', 'Rejected', 'Applied') DEFAULT 'Pending',
+    approved_by INT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (invoice_id) REFERENCES invoice_records(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_adjustment_number (adjustment_number)
+);
+
+-- COMPREHENSIVE HR MANAGEMENT MODULE TABLES
+
+CREATE TABLE recruitment_jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_code VARCHAR(50) NOT NULL UNIQUE,
+    job_title VARCHAR(200) NOT NULL,
+    job_category ENUM('Academic', 'Administrative', 'Support', 'Management', 'Technical') NOT NULL,
+    department VARCHAR(100),
+    job_type ENUM('Full Time', 'Part Time', 'Contract', 'Temporary', 'Internship') NOT NULL,
+    description TEXT NOT NULL,
+    requirements TEXT,
+    qualifications TEXT,
+    responsibilities TEXT,
+    salary_range VARCHAR(100),
+    vacancies INT DEFAULT 1,
+    application_deadline DATE,
+    status ENUM('Draft', 'Open', 'Closed', 'On Hold') DEFAULT 'Draft',
+    posted_by INT,
+    posted_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (posted_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_job_code (job_code),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE recruitment_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    application_number VARCHAR(50) NOT NULL UNIQUE,
+    job_id INT NOT NULL,
+    applicant_name VARCHAR(200) NOT NULL,
+    applicant_email VARCHAR(100) NOT NULL,
+    applicant_phone VARCHAR(20),
+    applicant_address TEXT,
+    cv_file VARCHAR(500),
+    cover_letter_file VARCHAR(500),
+    other_documents TEXT,
+    application_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('Received', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Interviewed', 'Offer Extended', 'Accepted', 'Rejected', 'Withdrawn') DEFAULT 'Received',
+    interview_date DATE,
+    interview_score DECIMAL(5,2),
+    interview_notes TEXT,
+    reviewed_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES recruitment_jobs(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_application_number (application_number),
+    INDEX idx_job_id (job_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE staff_contracts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    contract_number VARCHAR(50) NOT NULL UNIQUE,
+    staff_id INT NOT NULL,
+    contract_type ENUM('Permanent', 'Probation', 'Fixed Term', 'Contract', 'Consultancy', 'Internship') NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    job_title VARCHAR(200) NOT NULL,
+    department VARCHAR(100),
+    salary DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    contract_terms TEXT,
+    benefits TEXT,
+    probation_period INT DEFAULT 6,
+    notice_period INT DEFAULT 30,
+    status ENUM('Active', 'Expired', 'Terminated', 'Suspended', 'Renewed') DEFAULT 'Active',
+    signed_date DATE,
+    signed_by INT,
+    contract_file VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (signed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_contract_number (contract_number),
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE disciplinary_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_number VARCHAR(50) NOT NULL UNIQUE,
+    staff_id INT NOT NULL,
+    incident_date DATE NOT NULL,
+    reported_date DATE NOT NULL,
+    incident_type ENUM('Absence', 'Lateness', 'Misconduct', 'Insubordination', 'Negligence', 'Harassment', 'Theft', 'Fraud', 'Other') NOT NULL,
+    description TEXT NOT NULL,
+    severity ENUM('Minor', 'Moderate', 'Major', 'Critical') NOT NULL,
+    witnesses TEXT,
+    evidence_files TEXT,
+    action_taken ENUM('Verbal Warning', 'Written Warning', 'Suspension', 'Demotion', 'Termination', 'Other') NOT NULL,
+    action_details TEXT,
+    reporter_id INT,
+    status ENUM('Pending', 'Under Investigation', 'Resolved', 'Appealed', 'Closed') DEFAULT 'Pending',
+    resolution_date DATE,
+    resolution_notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (reporter_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_case_number (case_number),
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE compliance_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    compliance_type ENUM('Background Check', 'Medical Examination', 'Police Clearance', 'License Renewal', 'Certification', 'Training', 'Other') NOT NULL,
+    document_name VARCHAR(200) NOT NULL,
+    document_number VARCHAR(100),
+    issue_date DATE,
+    expiry_date DATE,
+    status ENUM('Valid', 'Expiring Soon', 'Expired', 'Pending') DEFAULT 'Valid',
+    document_file VARCHAR(500),
+    notes TEXT,
+    reminder_sent BOOLEAN DEFAULT FALSE,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_compliance_type (compliance_type),
+    INDEX idx_expiry_date (expiry_date),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE staff_promotions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_number VARCHAR(50) NOT NULL UNIQUE,
+    staff_id INT NOT NULL,
+    previous_position VARCHAR(200) NOT NULL,
+    new_position VARCHAR(200) NOT NULL,
+    previous_salary DECIMAL(10,2) NOT NULL,
+    new_salary DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    effective_date DATE NOT NULL,
+    promotion_reason TEXT,
+    approved_by INT,
+    approval_date TIMESTAMP NULL,
+    status ENUM('Pending', 'Approved', 'Rejected', 'Implemented') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_promotion_number (promotion_number),
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE staff_resignations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    resignation_number VARCHAR(50) NOT NULL UNIQUE,
+    staff_id INT NOT NULL,
+    resignation_date DATE NOT NULL,
+    effective_date DATE NOT NULL,
+    reason TEXT NOT NULL,
+    notice_period_days INT DEFAULT 30,
+    handover_notes TEXT,
+    exit_interview_date DATE,
+    exit_interview_notes TEXT,
+    status ENUM('Submitted', 'Accepted', 'In Progress', 'Completed', 'Rejected') DEFAULT 'Submitted',
+    approved_by INT,
+    approval_date TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_resignation_number (resignation_number),
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_status (status)
+);
+
+-- STUDENT MANAGEMENT TABLES
+
+CREATE TABLE student_admissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admission_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    program VARCHAR(100) NOT NULL,
+    admission_date DATE NOT NULL,
+    admission_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_admission_number (admission_number)
+);
+
+CREATE TABLE student_academic_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    program VARCHAR(100) NOT NULL,
+    year_of_study INT NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    gpa DECIMAL(3,2) DEFAULT 0,
+    academic_status ENUM('Good Standing', 'Probation', 'Suspension') DEFAULT 'Good Standing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_student_id (student_id)
+);
+
+CREATE TABLE course_registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    registration_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    course_code VARCHAR(20) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    status ENUM('Registered', 'Dropped', 'Completed') DEFAULT 'Registered',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_registration_number (registration_number)
+);
+
+CREATE TABLE examination_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    course_code VARCHAR(20) NOT NULL,
+    exam_type ENUM('Mid-Semester', 'Final', 'Supplementary') NOT NULL,
+    marks_obtained DECIMAL(5,2) NOT NULL,
+    total_marks DECIMAL(5,2) NOT NULL,
+    grade VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_exam_number (exam_number)
+);
+
+CREATE TABLE student_attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    date DATE NOT NULL,
+    status ENUM('Present', 'Absent', 'Late', 'Excused') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_student_id (student_id),
+    INDEX idx_date (date)
+);
+
+CREATE TABLE clinical_placements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    placement_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    placement_site VARCHAR(200) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status ENUM('Scheduled', 'In Progress', 'Completed') DEFAULT 'Scheduled',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_placement_number (placement_number)
+);
+
+CREATE TABLE student_discipline (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    incident_date DATE NOT NULL,
+    incident_type ENUM('Absence', 'Misconduct', 'Academic Dishonesty', 'Other') NOT NULL,
+    action_taken ENUM('Warning', 'Probation', 'Suspension', 'Expulsion') NOT NULL,
+    status ENUM('Pending', 'Resolved', 'Closed') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_case_number (case_number)
+);
+
+CREATE TABLE hostel_management (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    room_number VARCHAR(20) NOT NULL UNIQUE,
+    hostel_name VARCHAR(100) NOT NULL,
+    capacity INT NOT NULL,
+    occupied INT DEFAULT 0,
+    room_type ENUM('Single', 'Double', 'Dormitory') NOT NULL,
+    gender ENUM('Male', 'Female', 'Mixed') NOT NULL,
+    status ENUM('Available', 'Occupied', 'Under Maintenance') DEFAULT 'Available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_room_number (room_number)
+);
+
+CREATE TABLE hostel_allocations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    allocation_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    room_id INT NOT NULL,
+    allocation_date DATE NOT NULL,
+    end_date DATE,
+    status ENUM('Active', 'Ended', 'Transferred') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES hostel_management(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_allocation_number (allocation_number)
+);
+
+-- GRADING SYSTEM ENHANCEMENT TABLES
+
+-- Grade Scales Table
+CREATE TABLE grade_scales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    grade_letter VARCHAR(5) NOT NULL UNIQUE,
+    grade_point DECIMAL(3,2) NOT NULL,
+    min_percentage DECIMAL(5,2) NOT NULL,
+    max_percentage DECIMAL(5,2) NOT NULL,
+    grade_description VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_grade_letter (grade_letter),
+    INDEX idx_is_active (is_active)
+);
+
+-- Grading Approval Workflow Table
+CREATE TABLE grading_approval_workflow (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workflow_number VARCHAR(50) NOT NULL UNIQUE,
+    examination_record_id INT NOT NULL,
+    current_stage ENUM('Lecturer Entry', 'HOD Review', 'Registrar Approval', 'Principal Final Approval', 'Published', 'Rejected') DEFAULT 'Lecturer Entry',
+    submitted_by INT NOT NULL,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    hod_reviewed_by INT NULL,
+    hod_reviewed_at TIMESTAMP NULL,
+    hod_comments TEXT,
+    hod_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    registrar_approved_by INT NULL,
+    registrar_approved_at TIMESTAMP NULL,
+    registrar_comments TEXT,
+    registrar_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    principal_approved_by INT NULL,
+    principal_approved_at TIMESTAMP NULL,
+    principal_comments TEXT,
+    principal_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    published_at TIMESTAMP NULL,
+    rejection_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (examination_record_id) REFERENCES examination_records(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (submitted_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (hod_reviewed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (registrar_approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (principal_approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_workflow_number (workflow_number),
+    INDEX idx_current_stage (current_stage),
+    INDEX idx_examination_record_id (examination_record_id)
+);
+
+-- Transcript Generation Log Table
+CREATE TABLE transcript_generation_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transcript_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    requested_by INT NOT NULL,
+    approved_by INT NULL,
+    generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    purpose VARCHAR(200),
+    copies INT DEFAULT 1,
+    status ENUM('Pending', 'Approved', 'Generated', 'Rejected', 'Collected') DEFAULT 'Pending',
+    approval_comments TEXT,
+    file_path VARCHAR(500),
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (requested_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_transcript_number (transcript_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_status (status)
+);
+
+-- Result Publication Table
+CREATE TABLE result_publication (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    publication_id VARCHAR(50) NOT NULL UNIQUE,
+    academic_year VARCHAR(20) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    program VARCHAR(100),
+    course_code VARCHAR(20),
+    publication_date TIMESTAMP NULL,
+    status ENUM('Draft', 'Scheduled', 'Published', 'Withdrawn') DEFAULT 'Draft',
+    published_by INT NULL,
+    scheduled_date TIMESTAMP NULL,
+    notification_sent BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (published_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_publication_id (publication_id),
+    INDEX idx_academic_year (academic_year),
+    INDEX idx_semester (semester),
+    INDEX idx_status (status)
+);
+
+-- Academic Calendar Table
+CREATE TABLE academic_calendar (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    calendar_id VARCHAR(50) NOT NULL UNIQUE,
+    academic_year VARCHAR(20) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    semester_start_date DATE NOT NULL,
+    semester_end_date DATE NOT NULL,
+    exam_start_date DATE NOT NULL,
+    exam_end_date DATE NOT NULL,
+    result_publication_date DATE,
+    registration_deadline DATE,
+    add_drop_deadline DATE,
+    withdrawal_deadline DATE,
+    status ENUM('Upcoming', 'Current', 'Completed', 'Cancelled') DEFAULT 'Upcoming',
+    notes TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_calendar_id (calendar_id),
+    INDEX idx_academic_year (academic_year),
+    INDEX idx_semester (semester),
+    INDEX idx_status (status)
+);
+
+-- Enhanced Examination Records Table (Add workflow fields)
+ALTER TABLE examination_records 
+ADD COLUMN workflow_id INT NULL AFTER grade,
+ADD COLUMN continuous_assessment_marks DECIMAL(5,2) DEFAULT 0 AFTER workflow_id,
+ADD COLUMN final_exam_marks DECIMAL(5,2) DEFAULT 0 AFTER continuous_assessment_marks,
+ADD COLUMN total_marks_calculated DECIMAL(5,2) GENERATED ALWAYS AS (continuous_assessment_marks + final_exam_marks) STORED AFTER final_exam_marks,
+ADD COLUMN lecturer_id INT NULL AFTER total_marks_calculated,
+ADD COLUMN hod_id INT NULL AFTER lecturer_id,
+ADD COLUMN grade_status ENUM('Draft', 'Submitted', 'Under Review', 'Approved', 'Published', 'Rejected') DEFAULT 'Draft' AFTER hod_id,
+ADD FOREIGN KEY (workflow_id) REFERENCES grading_approval_workflow(id) ON DELETE SET NULL ON UPDATE CASCADE,
+ADD FOREIGN KEY (lecturer_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+ADD FOREIGN KEY (hod_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Insert default grade scales
+INSERT INTO grade_scales (grade_letter, grade_point, min_percentage, max_percentage, grade_description) VALUES
+('A', 4.0, 80.00, 100.00, 'Excellent'),
+('B', 3.0, 70.00, 79.99, 'Very Good'),
+('C', 2.0, 60.00, 69.99, 'Good'),
+('D', 1.0, 50.00, 59.99, 'Satisfactory'),
+('F', 0.0, 0.00, 49.99, 'Fail');
+
+-- Grade Change History Table
+CREATE TABLE grade_change_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workflow_number VARCHAR(50) NOT NULL,
+    examination_record_id INT NOT NULL,
+    changed_by INT NOT NULL,
+    previous_grade VARCHAR(5),
+    new_grade VARCHAR(5),
+    previous_ca_marks DECIMAL(5,2),
+    new_ca_marks DECIMAL(5,2),
+    previous_exam_marks DECIMAL(5,2),
+    new_exam_marks DECIMAL(5,2),
+    change_reason TEXT,
+    change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (examination_record_id) REFERENCES examination_records(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_workflow_number (workflow_number),
+    INDEX idx_examination_record_id (examination_record_id),
+    INDEX idx_change_timestamp (change_timestamp)
+);
+
+-- Grading Notifications Table
+CREATE TABLE grading_notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    notification_id VARCHAR(50) NOT NULL UNIQUE,
+    workflow_number VARCHAR(50) NOT NULL,
+    recipient_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    notification_type ENUM('Grade Submitted', 'HOD Review Required', 'Registrar Approval Required', 'Principal Approval Required', 'Grade Published', 'Grade Rejected', 'Grade Modified') NOT NULL,
+    message TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (workflow_number) REFERENCES grading_approval_workflow(workflow_number) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_notification_id (notification_id),
+    INDEX idx_recipient_id (recipient_id),
+    INDEX idx_is_read (is_read),
+    INDEX idx_notification_type (notification_type)
+);
+
+-- Insert default academic calendar for current year
+INSERT INTO academic_calendar (calendar_id, academic_year, semester, semester_start_date, semester_end_date, exam_start_date, exam_end_date, result_publication_date, registration_deadline, add_drop_deadline, withdrawal_deadline, status, created_by) VALUES
+('CAL-2024-2025-S1', '2024-2025', 'Semester 1', '2024-09-01', '2024-12-15', '2024-12-01', '2024-12-15', '2025-01-15', '2024-09-15', '2024-09-30', '2024-10-31', 'Current', 1),
+('CAL-2024-2025-S2', '2024-2025', 'Semester 2', '2025-02-01', '2025-05-31', '2025-05-15', '2025-05-31', '2025-06-15', '2025-02-15', '2025-02-28', '2025-03-31', 'Upcoming', 1);
 
 -- End of Final Complete Staffs Database Schema
