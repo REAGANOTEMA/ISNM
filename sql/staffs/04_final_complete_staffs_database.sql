@@ -770,28 +770,7 @@ CREATE TABLE api_keys (
     INDEX idx_expires_at (expires_at)
 );
 
--- 34. System Settings Table (Enhanced)
-CREATE TABLE system_settings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    setting_key VARCHAR(100) NOT NULL UNIQUE,
-    setting_value LONGTEXT,
-    setting_type ENUM('text', 'number', 'boolean', 'file', 'json', 'array', 'email', 'url', 'color', 'date') DEFAULT 'text',
-    description TEXT,
-    category VARCHAR(50),
-    is_public BOOLEAN DEFAULT FALSE,
-    is_editable BOOLEAN DEFAULT TRUE,
-    validation_rules JSON,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by INT,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_setting_key (setting_key),
-    INDEX idx_setting_type (setting_type),
-    INDEX idx_is_public (is_public),
-    INDEX idx_is_editable (is_editable)
-);
-
--- 35. Real-time Updates Table
+-- 34. Real-time Updates Table
 CREATE TABLE real_time_updates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     update_type ENUM('new_student', 'staff_change', 'system_alert', 'data_sync', 'feature_update') NOT NULL,
@@ -1093,38 +1072,25 @@ INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path
 ('Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{"financial": true, "budgeting": true, "reporting": true, "can_manage_finances": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
 ('Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{"ict": true, "systems": true, "infrastructure": true, "can_manage_system": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
 ('HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{"hr": true, "staff": true, "recruitment": true, "training": true, "can_manage_staff": true}'),
-    ('Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{"academic": true, "students": true, "registration": true, "transcripts": true, "certificates": true}'),
-    ('School Bursar', 'Financial operations and fee management', 'Administrative', 'dashboards/school-bursar.php', '{"financial": true, "fees": true, "collections": true, "can_manage_fees": true}'),
-    ('School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{"library": true, "resources": true, "catalog": true}'),
-    ('Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{"nursing": true, "department": true, "faculty": true}'),
-    ('Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{"midwifery": true, "department": true, "faculty": true}'),
-    ('Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{"teaching": true, "lecturers": true, "courses": true}'),
-    ('Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{"teaching": true, "lecturers": true, "senior": true}'),
-    ('Non-Teaching Staff', 'Administrative and support staff', 'Administrative', 'dashboards/non-teaching-staff.php', '{"administrative": true, "support": true}'),
-    ('Lab Technicians', 'Laboratory and technical staff management', 'Support', 'dashboards/lab-technicians.php', '{"laboratory": true, "equipment": true}'),
-    ('Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{"student_welfare": true, "residential": true}'),
-    ('Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{"security": true, "safety": true, "emergency": true}'),
-    ('Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{"transportation": true, "vehicles": true}'),
-    ('Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{"student_welfare": true, "discipline": true, "residential": true}'),
+('Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{"academic": true, "students": true, "registration": true, "transcripts": true, "certificates": true}'),
 ('School Bursar', 'Financial operations and fee management', 'Administrative', 'dashboards/school-bursar.php', '{"financial": true, "fees": true, "collections": true, "can_manage_fees": true}'),
+('School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{"library": true, "resources": true, "catalog": true}'),
+('Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{"nursing": true, "department": true, "faculty": true}'),
+('Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{"midwifery": true, "department": true, "faculty": true}'),
+('Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{"teaching": true, "lecturers": true, "courses": true}'),
+('Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{"teaching": true, "lecturers": true, "senior": true}'),
+('Non-Teaching Staff', 'Administrative and support staff', 'Administrative', 'dashboards/non-teaching-staff.php', '{"administrative": true, "support": true}'),
+('Lab Technicians', 'Laboratory and technical staff management', 'Support', 'dashboards/lab-technicians.php', '{"laboratory": true, "equipment": true}'),
+('Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{"student_welfare": true, "residential": true}'),
+('Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{"security": true, "safety": true, "emergency": true}'),
+('Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{"transportation": true, "vehicles": true}'),
+('Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{"student_welfare": true, "discipline": true, "residential": true}'),
 ('School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{"administrative": true, "documentation": true, "can_manage_documents": true}'),
-('School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{"library": true, "resources": true, "can_manage_library": true}'),
-('Lecturers', 'Teaching and academic instruction', 'Academic', 'dashboards/lecturers.php', '{"teaching": true, "grading": true, "attendance": true, "can_manage_grades": true}'),
-('Senior Lecturers', 'Senior teaching and curriculum development', 'Academic', 'dashboards/senior-lecturers.php', '{"teaching": true, "grading": true, "curriculum": true, "can_develop_curriculum": true}'),
-('Head Nursing', 'Nursing program leadership', 'Academic', 'dashboards/head-nursing.php', '{"nursing": true, "teaching": true, "clinical": true, "can_manage_nursing": true}'),
-('Head Midwifery', 'Midwifery program leadership', 'Academic', 'dashboards/head-midwifery.php', '{"midwifery": true, "teaching": true, "clinical": true, "can_manage_midwifery": true}'),
-('Academic Registrar', 'Academic records and registration', 'Administrative', 'dashboards/academic-registrar.php', '{"academic": true, "registration": true, "records": true, "can_manage_registration": true, "can_generate_transcripts": true, "can_generate_results": true}'),
 ('Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{"academic": true, "administrative": true, "can_assist_principal": true}'),
 ('Bursar', 'Financial assistant', 'Administrative', 'dashboards/bursar.php', '{"financial": true, "fees": true, "can_assist_bursar": true}'),
-('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}'),
-('Matrons', 'Student welfare and accommodation', 'Support', 'dashboards/matrons.php', '{"student_welfare": true, "accommodation": true, "can_manage_welfare": true}'),
-('Wardens', 'Student supervision and discipline', 'Support', 'dashboards/wardens.php', '{"student_supervision": true, "discipline": true, "can_manage_discipline": true}'),
-('Lab Technicians', 'Laboratory management and support', 'Support', 'dashboards/lab-technicians.php', '{"laboratory": true, "equipment": true, "can_manage_lab": true}'),
-('Drivers', 'Transportation services', 'Support', 'dashboards/drivers.php', '{"transport": true, "logistics": true, "can_manage_transport": true}'),
-('Security', 'Campus security and safety', 'Support', 'dashboards/security.php', '{"security": true, "safety": true, "can_manage_security": true}'),
-('Non-Teaching Staff', 'General support staff', 'Support', 'dashboards/non-teaching-staff.php', '{"general": true, "can_assist_general": true}');
+('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}');
 
--- Insert developer/administrator account for system setup and testing
+-- Insert main administrator account
 INSERT INTO staff (
     staff_id, 
     full_name, 
@@ -1141,8 +1107,8 @@ INSERT INTO staff (
 ) VALUES (
     'ADMIN001',
     'System Administrator',
-    'isnm@administration.ac',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- Password: 12345678 (hashed)
+    'administrations@isnm.ac',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     'System Administrator',
     'Executive Office',
     (SELECT id FROM staff_roles WHERE role_name = 'Director General' LIMIT 1),
@@ -1152,19 +1118,8 @@ INSERT INTO staff (
     FALSE,
     NOW()
 ) ON DUPLICATE KEY UPDATE 
-    email = VALUES(email),
-    password = VALUES(password),
-    updated_at = NOW();
-
--- Insert sample staff accounts for testing (all with same password: 12345678)
-INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, created_by, created_at) VALUES
-('PRINC001', 'Dr. Sarah Johnson', 'principal@isnm.edu.ug', '$2y$10$abcdefghijklmnopqrstuvwx', 'School Principal', 'Academic Affairs', 2, 'Active', DATE_SUB(CURDATE(), INTERVAL 2 YEAR), 1, NOW()),
-('HR001', 'Mr. Michael Brown', 'hr@isnm.edu.ug', '$2y$10$abcdefghijklmnopqrstuvwx', 'HR Manager', 'Human Resources', 3, 'Active', DATE_SUB(CURDATE(), INTERVAL 1 YEAR), 1, NOW()),
-('BUR001', 'Ms. Grace Nakato', 'bursar@isnm.edu.ug', '$2y$10$abcdefghijklmnopqrstuvwx', 'School Bursar', 'Finance', 4, 'Active', DATE_SUB(CURDATE(), INTERVAL 6 MONTH), 1, NOW()),
-('ACAD001', 'Prof. David Mugisha', 'academic@isnm.edu.ug', '$2y$10$abcdefghijklmnopqrstuvwx', 'Academic Registrar', 'Academic Affairs', 2, 'Active', DATE_SUB(CURDATE(), INTERVAL 3 YEAR), 1, NOW());
-('LIB001', 'Librarian', 'librarian@isnm.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'School Librarian', 'Library Services', (SELECT id FROM staff_roles WHERE role_name = 'School Librarian' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE 
-    email = VALUES(email),
+    email = 'administrations@isnm.ac',
+    password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     updated_at = NOW();
 
 -- Insert dashboard access permissions for all staff roles

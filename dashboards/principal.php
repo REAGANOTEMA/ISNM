@@ -551,6 +551,9 @@ $pending_applications = executeQuery($pending_applications_sql);
                 </div>
             </div>
 
+            <!-- Student Search Section -->
+            <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
+
             <!-- Overview Section -->
             <section id="overview" class="content-section">
                 <div class="section-header">

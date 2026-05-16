@@ -6,13 +6,15 @@
 require_once __DIR__ . '/../controllers/StudentController.php';
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/student_data_loader.php';
 
 // Check authentication
 $authController = new AuthController();
 $authController->checkAuth();
 
-// Initialize controller
+// Initialize controller and data loader
 $studentController = new StudentController();
+$dataLoader = new StudentDataLoader();
 
 // Handle actions
 $action = $_GET['action'] ?? 'index';
@@ -38,14 +40,19 @@ switch ($action) {
         break;
         
     default:
-        $data = $studentController->index();
-        $students = $data['students'];
-        $pagination = $data['pagination'];
-        $courses = $data['courses'];
-        $years = $data['years'];
-        $sets = $data['sets'];
-        $statistics = $data['statistics'];
-        $filters = $data['filters'];
+        // Load students from Excel data
+        $searchTerm = $_GET['search'] ?? '';
+        $filters = [
+            'program' => $_GET['program'] ?? '',
+            'level' => $_GET['level'] ?? '',
+            'set' => $_GET['set'] ?? '',
+            'gender' => $_GET['gender'] ?? '',
+            'year' => $_GET['year'] ?? ''
+        ];
+        
+        $students = $dataLoader->searchStudents($searchTerm, $filters);
+        $filterOptions = $dataLoader->getFilterOptions();
+        $statistics = $dataLoader->getStatistics();
         $pageTitle = 'Students Management';
         break;
 }
@@ -244,16 +251,8 @@ $flashMessages = getFlashMessages();
                         <div class="col-md-3">
                             <div class="card stats-card">
                                 <div class="card-body">
-                                    <h5 class="card-title">Active Students</h5>
-                                    <h3><?php echo $statistics['active_students'] ?? 0; ?></h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card stats-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Courses</h5>
-                                    <h3><?php echo $statistics['total_courses'] ?? 0; ?></h3>
+                                    <h5 class="card-title">Programs</h5>
+                                    <h3><?php echo $statistics['total_programs'] ?? 0; ?></h3>
                                 </div>
                             </div>
                         </div>
@@ -265,35 +264,43 @@ $flashMessages = getFlashMessages();
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="card stats-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Intake Years</h5>
+                                    <h3><?php echo $statistics['total_years'] ?? 0; ?></h3>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Filters -->
                     <div class="card mb-4">
                         <div class="card-body">
                             <form method="GET" class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <input type="text" name="search" class="form-control" 
-                                           placeholder="Search by name, reg number..." 
-                                           value="<?php echo htmlspecialchars($filters['search']); ?>">
+                                           placeholder="Search by name, index number..." 
+                                           value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="course" class="form-select">
-                                        <option value="">All Courses</option>
-                                        <?php foreach ($courses as $course): ?>
-                                            <option value="<?php echo $course; ?>" 
-                                                    <?php echo $filters['course'] === $course ? 'selected' : ''; ?>>
-                                                <?php echo $course; ?>
+                                    <select name="program" class="form-select">
+                                        <option value="">All Programs</option>
+                                        <?php foreach ($filterOptions['programs'] as $program): ?>
+                                            <option value="<?php echo $program; ?>" 
+                                                    <?php echo $filters['program'] === $program ? 'selected' : ''; ?>>
+                                                <?php echo $program; ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="year" class="form-select">
-                                        <option value="">All Years</option>
-                                        <?php foreach ($years as $year): ?>
-                                            <option value="<?php echo $year; ?>" 
-                                                    <?php echo $filters['year'] == $year ? 'selected' : ''; ?>>
-                                                Year <?php echo $year; ?>
+                                    <select name="level" class="form-select">
+                                        <option value="">All Levels</option>
+                                        <?php foreach ($filterOptions['levels'] as $level): ?>
+                                            <option value="<?php echo $level; ?>" 
+                                                    <?php echo $filters['level'] === $level ? 'selected' : ''; ?>>
+                                                <?php echo $level; ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -301,7 +308,7 @@ $flashMessages = getFlashMessages();
                                 <div class="col-md-2">
                                     <select name="set" class="form-select">
                                         <option value="">All Sets</option>
-                                        <?php foreach ($sets as $set): ?>
+                                        <?php foreach ($filterOptions['sets'] as $set): ?>
                                             <option value="<?php echo $set; ?>" 
                                                     <?php echo $filters['set'] === $set ? 'selected' : ''; ?>>
                                                 <?php echo $set; ?>
@@ -310,8 +317,19 @@ $flashMessages = getFlashMessages();
                                     </select>
                                 </div>
                                 <div class="col-md-2">
+                                    <select name="gender" class="form-select">
+                                        <option value="">All Genders</option>
+                                        <?php foreach ($filterOptions['genders'] as $gender): ?>
+                                            <option value="<?php echo $gender; ?>" 
+                                                    <?php echo $filters['gender'] === $gender ? 'selected' : ''; ?>>
+                                                <?php echo $gender; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
                                     <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-search me-2"></i> Search
+                                        <i class="fas fa-search"></i>
                                     </button>
                                 </div>
                             </form>
@@ -333,81 +351,50 @@ $flashMessages = getFlashMessages();
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Photo</th>
                                             <th>Name</th>
-                                            <th>Reg Number</th>
-                                            <th>Course</th>
-                                            <th>Year</th>
+                                            <th>Index Number</th>
+                                            <th>Program</th>
+                                            <th>Level</th>
                                             <th>Set</th>
                                             <th>Gender</th>
-                                            <th>Mobile</th>
-                                            <th>Actions</th>
+                                            <th>Phone</th>
+                                            <th>Source</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($students as $student): ?>
                                             <tr>
                                                 <td>
-                                                    <?php if (!empty($student['passport_photo'])): ?>
-                                                        <img src="uploads/students/<?php echo $student['passport_photo']; ?>" 
-                                                             alt="Photo" class="student-photo">
-                                                    <?php else: ?>
-                                                        <div class="student-photo bg-secondary d-flex align-items-center justify-content-center">
-                                                            <i class="fas fa-user text-white"></i>
-                                                        </div>
-                                                    <?php endif; ?>
+                                                    <strong><?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name'] . ' ' . $student['other_name']); ?></strong>
                                                 </td>
-                                                <td><?php echo htmlspecialchars($student['full_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($student['registration_number']); ?></td>
-                                                <td><?php echo htmlspecialchars($student['course']); ?></td>
-                                                <td>Year <?php echo $student['year']; ?></td>
-                                                <td><?php echo htmlspecialchars($student['set_name']); ?></td>
+                                                <td><code><?php echo htmlspecialchars($student['index_number']); ?></code></td>
+                                                <td><?php echo htmlspecialchars($student['program']); ?></td>
+                                                <td><?php echo htmlspecialchars($student['level']); ?></td>
+                                                <td><?php echo htmlspecialchars($student['set']); ?></td>
                                                 <td>
-                                                    <span class="badge bg-<?php echo $student['gender'] === 'Male' ? 'primary' : 'pink'; ?>">
-                                                        <?php echo $student['gender']; ?>
+                                                    <span class="badge bg-<?php echo strtolower($student['gender']) === 'male' ? 'primary' : 'danger'; ?>">
+                                                        <?php echo htmlspecialchars($student['gender']); ?>
                                                     </span>
                                                 </td>
-                                                <td><?php echo htmlspecialchars($student['mobile_number']); ?></td>
-                                                <td>
-                                                    <?php if (hasPermission('update')): ?>
-                                                        <a href="students.php?action=edit&id=<?php echo $student['id']; ?>" 
-                                                           class="btn btn-sm btn-warning btn-action">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                    <?php if (hasPermission('delete')): ?>
-                                                        <a href="students.php?action=delete&id=<?php echo $student['id']; ?>" 
-                                                           class="btn btn-sm btn-danger btn-action"
-                                                           onclick="return confirm('Are you sure you want to delete this student?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </td>
+                                                <td><?php echo htmlspecialchars($student['phone']); ?></td>
+                                                <td><small class="text-muted"><?php echo htmlspecialchars($student['source_file']); ?></small></td>
                                             </tr>
                                         <?php endforeach; ?>
                                         <?php if (empty($students)): ?>
                                             <tr>
-                                                <td colspan="9" class="text-center text-muted">No students found</td>
+                                                <td colspan="8" class="text-center text-muted">No students found</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <!-- Pagination -->
-                            <?php if ($pagination['total_pages'] > 1): ?>
-                                <nav>
-                                    <ul class="pagination justify-content-center">
-                                        <?php for ($i = 1; $i <= $pagination['total_pages']; $i++): ?>
-                                            <li class="page-item <?php echo $pagination['current_page'] === $i ? 'active' : ''; ?>">
-                                                <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($filters['search']); ?>&course=<?php echo urlencode($filters['course']); ?>&year=<?php echo urlencode($filters['year']); ?>&set=<?php echo urlencode($filters['set']); ?>">
-                                                    <?php echo $i; ?>
-                                                </a>
-                                            </li>
-                                        <?php endfor; ?>
-                                    </ul>
-                                </nav>
-                            <?php endif; ?>
+                            <!-- Data Source Info -->
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Data Source:</strong> Loaded from Excel files in students_data folder
+                                (<?php echo count($students); ?> students displayed)
+                            </div>
                         </div>
                     </div>
 

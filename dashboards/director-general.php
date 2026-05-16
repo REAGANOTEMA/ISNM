@@ -1,6 +1,7 @@
 <?php
 // Include unified authentication system
 require_once '../auth-service.php';
+require_once __DIR__ . '/../views/student_data_loader.php';
 
 // Start secure session
 if (session_status() === PHP_SESSION_NONE) {
@@ -85,9 +86,6 @@ $department_performance = [
     ['department' => 'Finance', 'performance_score' => 94, 'efficiency_rate' => 91, 'satisfaction_rate' => 89],
     ['department' => 'Support', 'performance_score' => 88, 'efficiency_rate' => 85, 'satisfaction_rate' => 86]
 ];
-    FROM department_performance 
-    ORDER BY performance_score DESC
-")->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -164,6 +162,9 @@ $department_performance = [
             
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <!-- Student Search Section -->
+                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
+
                 <!-- Key Statistics -->
                 <section id="overview" class="content-section">
                     <h2>System Overview</h2>
