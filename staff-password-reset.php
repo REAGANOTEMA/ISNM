@@ -99,38 +99,18 @@ function handlePasswordReset() {
         exit();
     }
     
-    if (strlen($new_password) < 8) {
-        $_SESSION['error'] = 'Password must be at least 8 characters long';
+    // Use auth service to reset password
+    $result = $auth_service->resetPasswordWithToken($token, $new_password);
+    
+    if ($result['success']) {
+        $_SESSION['success'] = 'Password has been reset successfully. You can now login with your new password.';
+        header('Location: staff-login.php');
+        exit();
+    } else {
+        $_SESSION['error'] = $result['message'];
         header('Location: staff-password-reset.php');
         exit();
     }
-    
-    // Verify token
-    $conn = getConnection();
-    $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_expiry > NOW() AND role != 'student'");
-    $stmt->bind_param("s", $token);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 0) {
-        $_SESSION['error'] = 'Invalid or expired reset token';
-        header('Location: staff-password-reset.php');
-        exit();
-    }
-    
-    $user = $result->fetch_assoc();
-    
-    // Hash new password
-    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    
-    // Update password and clear reset token
-    $update_stmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expiry = NULL WHERE id = ?");
-    $update_stmt->bind_param("si", $hashed_password, $user['id']);
-    $update_stmt->execute();
-    
-    $_SESSION['success'] = 'Password has been reset successfully. You can now login with your new password.';
-    header('Location: staff-login.php');
-    exit();
 }
 ?>
 

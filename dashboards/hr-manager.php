@@ -43,6 +43,29 @@ $students_conn->set_charset("utf8mb4");
 $staff_id = $_SESSION['user_id'] ?? 0;
 $staff_email = $_SESSION['email'] ?? '';
 $staff_name = $_SESSION['full_name'] ?? '';
+$staff_role = $_SESSION['role'] ?? '';
+
+// Get HR dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $staff_conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $staff_id, $staff_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+// Set statistics from database or fallback values
+$total_staff = $stats['total_staff'] ?? 25;
+$pending_applications = $stats['pending_applications'] ?? 8;
+$pending_leaves = $stats['pending_leaves'] ?? 5;
+$upcoming_trainings = $stats['upcoming_trainings'] ?? 3;
+
+// Get staff performance summary for current user
+$performance_query = "CALL get_staff_performance_summary(?)";
+$performance_stmt = $staff_conn->prepare($performance_query);
+$performance_stmt->bind_param("i", $staff_id);
+$performance_stmt->execute();
+$performance_result = $performance_stmt->get_result();
+$performance = $performance_result->fetch_assoc();
 
 // Handle search functionality
 $search_term = $_GET['search'] ?? '';
@@ -85,14 +108,22 @@ function handleAddStaff() {
     $address = sanitizeInput($_POST['address'] ?? '');
     $emergency_contact = sanitizeInput($_POST['emergency_contact'] ?? '');
     
-    $sql = "INSERT INTO staff (staff_id, full_name, email, password, phone, position, department, role_id, address, emergency_contact, status, hire_date, created_by) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO staff (staff_id, full_name, email, password, phone, position, department, role_id, address, emergency_contact, status, hire_date) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $hashed_password = password_hash('12345678', PASSWORD_DEFAULT);
     $stmt = $staff_conn->prepare($sql);
-    $stmt->bind_param("ssssssiss", $staff_id, $full_name, $email, $hashed_password, $phone, $position, $department, $role_id, $address, $emergency_contact, 'Active', date('Y-m-d'), $_SESSION['user_id']);
+    $stmt->bind_param("ssssssissss", $staff_id, $full_name, $email, $hashed_password, $phone, $position, $department, $role_id, $address, $emergency_contact, 'Active', date('Y-m-d'));
     
     if ($stmt->execute()) {
+        // Log the activity
+        $log_query = "CALL log_staff_activity(?, 'Data Edit', 'Added new staff member: $full_name', 'staff_management', LAST_INSERT_ID(), ?, ?)";
+        $log_stmt = $staff_conn->prepare($log_query);
+        $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $log_stmt->bind_param("isss", $_SESSION['user_id'], $ip_address, $user_agent);
+        $log_stmt->execute();
+        
         $_SESSION['success'] = "Staff member added successfully!";
     } else {
         $_SESSION['error'] = "Failed to add staff member.";

@@ -9,24 +9,30 @@ requireRole('Director ICT');
 // Database connection is already established in config.php
 global $conn;
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
-$user_id = $user['id'] ?? 0;
+// Get user information from session
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_role = $_SESSION['role'] ?? '';
+$user_email = $_SESSION['email'] ?? '';
+$user_name = $_SESSION['full_name'] ?? '';
 
-// Get IT statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_staff = 2; // Fallback value
-$recent_applications = 8; // Fallback value
-$active_programs = 2; // Fallback value
+// Get Director ICT dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $user_id, $user_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
 
-// Get recent activities (using a simple approach)
-$recent_activities = [
+// Set statistics from database or fallback values
+$total_students = $stats['total_students'] ?? 150;
+$total_staff = $stats['total_staff'] ?? 2;
+$recent_applications = $stats['pending_applications'] ?? 8;
+$active_programs = $stats['active_programs'] ?? 2;
+
+// Get recent activities from database
+$recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
+$recent_activities_result = $conn->query($recent_activities_sql);
+$recent_activities = $recent_activities_result ? $recent_activities_result->fetch_all(MYSQLI_ASSOC) : [
     ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
     ['activity' => 'IT system maintenance completed', 'created_at' => date('Y-m-d H:i:s', strtotime('-3 hours'))]
 ];

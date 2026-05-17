@@ -43,6 +43,21 @@ $staff_conn->set_charset("utf8mb4");
 $user_id = $_SESSION['user_id'] ?? 0;
 $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
+$user_role = $_SESSION['role'] ?? '';
+
+// Get Academic Registrar dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $students_conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $user_id, $user_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+// Set statistics from database or fallback values
+$total_students = $stats['total_students'] ?? 150;
+$total_lecturers = $stats['total_lecturers'] ?? 25;
+$active_courses = $stats['active_courses'] ?? 20;
+$avg_gpa = $stats['avg_gpa'] ?? 3.5;
 
 // Handle search and filter functionality
 $search_term = $_GET['search'] ?? '';
@@ -90,25 +105,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Get real academic registrar statistics from database
-$stats_sql = "SELECT 
-    COUNT(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as total_students,
-    COUNT(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending_registrations,
-    COUNT(DISTINCT course) as total_courses,
-    COUNT(CASE WHEN graduation_status = 'Graduated' THEN 1 ELSE 0 END) as graduates_this_year,
-    AVG(gpa) as avg_gpa
-FROM students 
-WHERE YEAR(enrollment_date) = YEAR(CURRENT_DATE())";
-$stats_result = $students_conn->query($stats_sql);
-$stats = $stats_result->fetch_assoc();
 
-// Get recent students for profile display (using fallback data)
-$recent_students = [
-    ['first_name' => 'Alice', 'surname' => 'Student', 'program' => 'Nursing', 'status' => 'active'],
-    ['first_name' => 'Bob', 'surname' => 'Student', 'program' => 'Midwifery', 'status' => 'active'],
-    ['first_name' => 'Carol', 'surname' => 'Student', 'program' => 'Nursing', 'status' => 'active'],
-    ['first_name' => 'David', 'surname' => 'Student', 'program' => 'Midwifery', 'status' => 'active']
-];
+// Get recent students for profile display from database
+$recent_students_query = "SELECT first_name, last_name as surname, program, status 
+                         FROM students 
+                         WHERE status = 'Active' 
+                         ORDER BY created_at DESC 
+                         LIMIT 4";
+$recent_students_result = $students_conn->query($recent_students_query);
+$recent_students = [];
+while ($row = $recent_students_result->fetch_assoc()) {
+    $recent_students[] = $row;
+}
 
 // Get real activity logs from database
 $activity_sql = "SELECT activity, created_at FROM academic_registrar_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 10";
@@ -326,20 +334,20 @@ function handleBulkImport() {
                         }
                     }
                 }
-                
-                $_SESSION['success'] = "Bulk import completed: $imported_count students imported, $error_count errors.";
-                
-                // Log activity
-                $log_sql = "INSERT INTO academic_registrar_activity_log (activity, created_at, created_by) VALUES (?, NOW(), ?)";
-                $log_stmt = $students_conn->prepare($log_sql);
-                $log_stmt->bind_param("sis", "Bulk import: $imported_count students", $_SESSION['user_id']);
-                $log_stmt->execute();
-            } else {
-                $_SESSION['error'] = "Invalid file type. Please upload Excel file.";
             }
+            
+            $_SESSION['success'] = "Bulk import completed: $imported_count students imported, $error_count errors.";
+            
+            // Log activity
+            $log_sql = "INSERT INTO academic_registrar_activity_log (activity, created_at, created_by) VALUES (?, NOW(), ?)";
+            $log_stmt = $students_conn->prepare($log_sql);
+            $log_stmt->bind_param("sis", "Bulk import: $imported_count students", $_SESSION['user_id']);
+            $log_stmt->execute();
         } else {
-            $_SESSION['error'] = "File upload error. Please try again.";
+            $_SESSION['error'] = "Invalid file type. Please upload Excel file.";
         }
+    } else {
+        $_SESSION['error'] = "File upload error. Please try again.";
     }
     
     header("Location: academic-registrar.php");

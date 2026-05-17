@@ -511,6 +511,100 @@ class AuthenticationService {
     }
     
     /**
+     * Change password for a user
+     * @param int $userId
+     * @param string $currentPassword
+     * @param string $newPassword
+     * @return array
+     */
+    public function changePassword($userId, $currentPassword, $newPassword) {
+        $conn = getConnection();
+        
+        // Validate inputs
+        if (empty($currentPassword) || empty($newPassword)) {
+            return ['success' => false, 'message' => 'Current and new passwords are required'];
+        }
+        
+        if (strlen($newPassword) < 8) {
+            return ['success' => false, 'message' => 'New password must be at least 8 characters long'];
+        }
+        
+        // Get current password hash
+        $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return ['success' => false, 'message' => 'User not found'];
+        }
+        
+        $user = $result->fetch_assoc();
+        
+        // Verify current password
+        if (!password_verify($currentPassword, $user['password'])) {
+            return ['success' => false, 'message' => 'Current password is incorrect'];
+        }
+        
+        // Hash new password
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        
+        // Update password
+        $update_stmt = $conn->prepare("UPDATE users SET password = ?, password_changed = TRUE, is_first_login = FALSE WHERE id = ?");
+        $update_stmt->bind_param("si", $hashedPassword, $userId);
+        
+        if ($update_stmt->execute()) {
+            return ['success' => true, 'message' => 'Password changed successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Error changing password'];
+        }
+    }
+    
+    /**
+     * Reset password using token
+     * @param string $token
+     * @param string $newPassword
+     * @return array
+     */
+    public function resetPasswordWithToken($token, $newPassword) {
+        $conn = getConnection();
+        
+        // Validate inputs
+        if (empty($token) || empty($newPassword)) {
+            return ['success' => false, 'message' => 'Token and new password are required'];
+        }
+        
+        if (strlen($newPassword) < 8) {
+            return ['success' => false, 'message' => 'New password must be at least 8 characters long'];
+        }
+        
+        // Check if token is valid and not expired
+        $stmt = $conn->prepare("SELECT id, email FROM users WHERE reset_token = ? AND reset_expiry > NOW()");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return ['success' => false, 'message' => 'Invalid or expired reset token'];
+        }
+        
+        $user = $result->fetch_assoc();
+        
+        // Hash new password
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        
+        // Update password and clear reset token
+        $update_stmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expiry = NULL, password_changed = TRUE, is_first_login = FALSE WHERE id = ?");
+        $update_stmt->bind_param("si", $hashedPassword, $user['id']);
+        
+        if ($update_stmt->execute()) {
+            return ['success' => true, 'message' => 'Password reset successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Error resetting password'];
+        }
+    }
+    
+    /**
      * Create staff account
      * @param array $staffData
      * @return array

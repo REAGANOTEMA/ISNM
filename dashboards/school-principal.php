@@ -45,6 +45,20 @@ $user_role = $_SESSION['role'] ?? '';
 $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 
+// Get School Principal dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $staff_conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $user_id, $user_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+// Set statistics from database or fallback values
+$total_students = $stats['total_students'] ?? 150;
+$total_staff = $stats['total_staff'] ?? 25;
+$pending_applications = $stats['pending_applications'] ?? 8;
+$active_programs = $stats['active_programs'] ?? 2;
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     switch ($_POST['action']) {
@@ -60,23 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Get school statistics from database
-$total_students_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'Active'";
-$total_students_result = $students_conn->query($total_students_sql);
-$total_students = $total_students_result ? $total_students_result->fetch_assoc()['count'] : 0;
-
-$total_staff_sql = "SELECT COUNT(*) as count FROM staff WHERE status = 'Active'";
-$total_staff_result = $staff_conn->query($total_staff_sql);
-$total_staff = $total_staff_result ? $total_staff_result->fetch_assoc()['count'] : 0;
-
-$total_applications_sql = "SELECT COUNT(*) as count FROM student_admissions WHERE admission_status = 'Pending'";
-$total_applications_result = $students_conn->query($total_applications_sql);
-$total_applications = $total_applications_result ? $total_applications_result->fetch_assoc()['count'] : 0;
-
-$active_programs_sql = "SELECT COUNT(DISTINCT program) as count FROM students WHERE status = 'Active'";
-$active_programs_result = $students_conn->query($active_programs_sql);
-$active_programs = $active_programs_result ? $active_programs_result->fetch_assoc()['count'] : 0;
-
 // Get academic performance
 $avg_gpa_sql = "SELECT AVG(gpa) as avg_gpa FROM student_academic_profiles WHERE academic_status = 'Good Standing'";
 $avg_gpa_result = $students_conn->query($avg_gpa_sql);
@@ -88,12 +85,12 @@ $pending_approvals_result = $staff_conn->query($pending_approvals_sql);
 $pending_approvals = $pending_approvals_result ? $pending_approvals_result->fetch_assoc()['count'] : 0;
 
 // Get graduation candidates
-$graduation_candidates_sql = "SELECT COUNT(*) as count FROM students WHERE graduation_status = 'Pending'";
+$graduation_candidates_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'Graduated' OR graduation_status = 'Pending'";
 $graduation_candidates_result = $students_conn->query($graduation_candidates_sql);
 $graduation_candidates = $graduation_candidates_result ? $graduation_candidates_result->fetch_assoc()['count'] : 0;
 
 // Get recent activities from database
-$activity_sql = "SELECT activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 10";
+$activity_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 10";
 $activity_result = $staff_conn->query($activity_sql);
 $recent_activities = $activity_result ? $activity_result->fetch_all(MYSQLI_ASSOC) : [];
 

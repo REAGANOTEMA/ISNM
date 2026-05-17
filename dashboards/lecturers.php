@@ -40,14 +40,22 @@ $stmt->execute();
 $user_result = $stmt->get_result();
 $user = $user_result->fetch_assoc();
 
-// Get lecturer statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_staff = 12; // Fallback value
-$total_applications = 8; // Fallback value
-$active_programs = 2; // Fallback value
-$assigned_courses = 5; // Fallback value for courses
-$lectures_this_week = 8; // Fallback value
-$pending_grades = 3; // Fallback value
+// Get Lecturer dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $user_id, $user_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+// Set statistics from database or fallback values
+$total_students = $stats['total_students'] ?? 150;
+$total_staff = $stats['total_staff'] ?? 12;
+$total_applications = $stats['pending_applications'] ?? 8;
+$active_programs = $stats['active_programs'] ?? 2;
+$assigned_courses = $stats['active_courses'] ?? 5;
+$lectures_this_week = 8; // Need to add to stored procedure
+$pending_grades = 3; // Need to add to stored procedure
 $total_students_taught = 45; // Fallback value
 $average_grade = 82; // Fallback value
 

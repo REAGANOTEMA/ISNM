@@ -60,8 +60,10 @@ function executeUpdate($database, $sql, $params = [], $types = '') {
     return DatabaseConnection::executeUpdate($database, $sql, $params, $types);
 }
 
-function sanitizeInput($input) {
-    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+if (!function_exists('sanitizeInput')) {
+    function sanitizeInput($input) {
+        return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
 }
 
 function escapeString($database, $string) {

@@ -7,6 +7,16 @@ CREATE DATABASE IF NOT EXISTS staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 USE staffs_db;
 
 -- Drop existing tables if they exist (for fresh installation)
+DROP TABLE IF EXISTS skills_lab_sessions;
+DROP TABLE IF EXISTS skills_laboratory;
+DROP TABLE IF EXISTS it_infrastructure;
+DROP TABLE IF EXISTS ura_reporting;
+DROP TABLE IF EXISTS partnerships;
+DROP TABLE IF EXISTS accreditation_management;
+DROP TABLE IF EXISTS quality_assurance;
+DROP TABLE IF EXISTS research_projects;
+DROP TABLE IF EXISTS library_transactions;
+DROP TABLE IF EXISTS library_management;
 DROP TABLE IF EXISTS hostel_allocations;
 DROP TABLE IF EXISTS hostel_management;
 DROP TABLE IF EXISTS student_discipline;
@@ -522,11 +532,13 @@ CREATE TABLE system_settings (
     setting_value LONGTEXT,
     setting_type ENUM('text', 'number', 'boolean', 'file', 'json') DEFAULT 'text',
     description TEXT,
+    category VARCHAR(50) DEFAULT 'general',
     is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_setting_key (setting_key),
     INDEX idx_setting_type (setting_type),
+    INDEX idx_category (category),
     INDEX idx_is_public (is_public)
 );
 
@@ -536,7 +548,7 @@ CREATE TABLE staff_access_control (
     staff_id INT NOT NULL,
     module_name VARCHAR(100) NOT NULL,
     access_level ENUM('None', 'Read', 'Write', 'Delete', 'Admin') DEFAULT 'Read',
-    granted_by INT NOT NULL,
+    granted_by INT NULL,
     granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NULL,
     is_active BOOLEAN DEFAULT TRUE,
@@ -1037,31 +1049,10 @@ INSERT INTO document_templates (template_name, template_type, template_content, 
 ('Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border="1"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', TRUE, 1),
 ('Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', TRUE, 1),
 ('Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border="1"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', TRUE, 1),
-('Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr></table></body></html>', TRUE, 1),
+('Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', TRUE, 1),
 ('Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style="border: 2px solid #000; padding: 20px; width: 300px;"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', TRUE, 1),
-('Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border="1"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr></table></body></html>', TRUE, 1),
-('Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr></table></body></html>', TRUE, 1);
-
--- 33. API Keys Table
-CREATE TABLE api_keys (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    key_name VARCHAR(100) NOT NULL UNIQUE,
-    api_key VARCHAR(255) NOT NULL UNIQUE,
-    permissions JSON,
-    allowed_origins TEXT,
-    rate_limit INT DEFAULT 1000,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_by INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NULL,
-    last_used TIMESTAMP NULL,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_key_name (key_name),
-    INDEX idx_api_key (api_key),
-    INDEX idx_is_active (is_active),
-    INDEX idx_expires_at (expires_at)
-);
+('Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border="1"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', TRUE, 1),
+('Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', TRUE, 1);
 
 -- Insert default staff roles with proper permissions
 INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions) VALUES
@@ -1115,11 +1106,12 @@ INSERT INTO staff (
     'Active',
     CURDATE(),
     FALSE,
-    FALSE,
+    TRUE,
     NOW()
 ) ON DUPLICATE KEY UPDATE 
     email = 'administrations@isnm.ac',
     password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    is_first_login = TRUE,
     updated_at = NOW();
 
 -- Insert dashboard access permissions for all staff roles
@@ -1230,6 +1222,33 @@ SELECT
         WHEN s.login_attempts >= 5 THEN 'Warning'
         ELSE 'Active'
     END as account_status
+FROM staff s
+JOIN staff_roles sr ON s.role_id = sr.id;
+
+-- Create view for users (alias for staff table for compatibility with some dashboards)
+CREATE OR REPLACE VIEW users AS
+SELECT 
+    s.id,
+    s.staff_id as username,
+    s.full_name as user_name,
+    s.email,
+    s.password,
+    s.position,
+    s.department,
+    s.role_id,
+    sr.role_name,
+    sr.role_level,
+    sr.dashboard_path,
+    s.status,
+    s.phone,
+    s.address,
+    s.hire_date,
+    s.last_login,
+    s.login_attempts,
+    s.locked_until,
+    s.is_first_login,
+    s.created_at,
+    s.updated_at
 FROM staff s
 JOIN staff_roles sr ON s.role_id = sr.id;
 
@@ -2018,5 +2037,454 @@ CREATE TABLE grading_notifications (
 INSERT INTO academic_calendar (calendar_id, academic_year, semester, semester_start_date, semester_end_date, exam_start_date, exam_end_date, result_publication_date, registration_deadline, add_drop_deadline, withdrawal_deadline, status, created_by) VALUES
 ('CAL-2024-2025-S1', '2024-2025', 'Semester 1', '2024-09-01', '2024-12-15', '2024-12-01', '2024-12-15', '2025-01-15', '2024-09-15', '2024-09-30', '2024-10-31', 'Current', 1),
 ('CAL-2024-2025-S2', '2024-2025', 'Semester 2', '2025-02-01', '2025-05-31', '2025-05-15', '2025-05-31', '2025-06-15', '2025-02-15', '2025-02-28', '2025-03-31', 'Upcoming', 1);
+
+-- ADDITIONAL TABLES FOR DASHBOARD FUNCTIONALITIES
+
+-- Library Management Table
+CREATE TABLE library_management (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id VARCHAR(50) NOT NULL UNIQUE,
+    book_title VARCHAR(200) NOT NULL,
+    author VARCHAR(200),
+    isbn VARCHAR(20),
+    category VARCHAR(100),
+    publisher VARCHAR(200),
+    publication_year INT,
+    total_copies INT DEFAULT 1,
+    available_copies INT DEFAULT 1,
+    shelf_location VARCHAR(50),
+    status ENUM('Available', 'Borrowed', 'Reserved', 'Lost', 'Under Repair') DEFAULT 'Available',
+    added_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (added_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_book_id (book_id),
+    INDEX idx_category (category),
+    INDEX idx_status (status)
+);
+
+-- Library Transactions Table
+CREATE TABLE library_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_number VARCHAR(50) NOT NULL UNIQUE,
+    book_id INT NOT NULL,
+    student_id INT,
+    staff_id INT,
+    transaction_type ENUM('Borrow', 'Return', 'Reserve', 'Renew') NOT NULL,
+    borrow_date DATE,
+    due_date DATE,
+    return_date DATE,
+    status ENUM('Active', 'Returned', 'Overdue', 'Lost') DEFAULT 'Active',
+    fine_amount DECIMAL(10,2) DEFAULT 0,
+    processed_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_id) REFERENCES library_management(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_transaction_number (transaction_number),
+    INDEX idx_status (status)
+);
+
+-- Research & Innovation Table
+CREATE TABLE research_projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_code VARCHAR(50) NOT NULL UNIQUE,
+    project_title VARCHAR(200) NOT NULL,
+    project_description TEXT,
+    lead_researcher INT NOT NULL,
+    research_team TEXT,
+    start_date DATE,
+    end_date DATE,
+    funding_source VARCHAR(200),
+    budget DECIMAL(15,2),
+    status ENUM('Proposal', 'Ongoing', 'Completed', 'On Hold', 'Cancelled') DEFAULT 'Proposal',
+    publication_details TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (lead_researcher) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_project_code (project_code),
+    INDEX idx_status (status)
+);
+
+-- Quality Assurance Table
+CREATE TABLE quality_assurance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    qa_code VARCHAR(50) NOT NULL UNIQUE,
+    assessment_type ENUM('Course Review', 'Program Review', 'Department Review', 'Institutional Review', 'Student Feedback', 'Staff Evaluation') NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    assessment_period VARCHAR(50),
+    department VARCHAR(100),
+    assessed_by INT,
+    findings TEXT,
+    recommendations TEXT,
+    action_plan TEXT,
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Follow-up Required') DEFAULT 'Scheduled',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (assessed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_qa_code (qa_code),
+    INDEX idx_status (status)
+);
+
+-- Accreditation Management Table
+CREATE TABLE accreditation_management (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    accreditation_code VARCHAR(50) NOT NULL UNIQUE,
+    program_name VARCHAR(200) NOT NULL,
+    accrediting_body VARCHAR(200) NOT NULL,
+    accreditation_type ENUM('Initial', 'Renewal', 'Re-accreditation', 'Special') NOT NULL,
+    application_date DATE,
+    site_visit_date DATE,
+    accreditation_status ENUM('Pending', 'Under Review', 'Approved', 'Conditional', 'Denied', 'Expired') DEFAULT 'Pending',
+    expiry_date DATE,
+    report_file VARCHAR(500),
+    compliance_notes TEXT,
+    responsible_person INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (responsible_person) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_accreditation_code (accreditation_code),
+    INDEX idx_status (accreditation_status)
+);
+
+-- Partnerships Table
+CREATE TABLE partnerships (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    partnership_code VARCHAR(50) NOT NULL UNIQUE,
+    partner_name VARCHAR(200) NOT NULL,
+    partner_type ENUM('Hospital', 'University', 'NGO', 'Government', 'Industry', 'International') NOT NULL,
+    partnership_type ENUM('Clinical Training', 'Research', 'Funding', 'Exchange Program', 'Consultancy', 'Other') NOT NULL,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    status ENUM('Active', 'Inactive', 'Pending', 'Terminated') DEFAULT 'Pending',
+    mou_file VARCHAR(500),
+    contact_person VARCHAR(100),
+    contact_email VARCHAR(100),
+    contact_phone VARCHAR(20),
+    responsible_person INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (responsible_person) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_partnership_code (partnership_code),
+    INDEX idx_status (status)
+);
+
+-- URA Reporting Table
+CREATE TABLE ura_reporting (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_code VARCHAR(50) NOT NULL UNIQUE,
+    report_type ENUM('VAT Return', 'Income Tax', 'Paye Tax', 'Withholding Tax', 'Customs', 'Other') NOT NULL,
+    reporting_period VARCHAR(50) NOT NULL,
+    tax_year VARCHAR(10) NOT NULL,
+    total_amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'UGX',
+    submission_date DATE,
+    status ENUM('Draft', 'Submitted', 'Accepted', 'Rejected', 'Amended') DEFAULT 'Draft',
+    receipt_number VARCHAR(50),
+    prepared_by INT,
+    approved_by INT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (prepared_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_report_code (report_code),
+    INDEX idx_status (status)
+);
+
+-- IT Infrastructure Table
+CREATE TABLE it_infrastructure (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_code VARCHAR(50) NOT NULL UNIQUE,
+    asset_name VARCHAR(200) NOT NULL,
+    asset_type ENUM('Computer', 'Server', 'Network Device', 'Printer', 'Projector', 'Software License', 'Other') NOT NULL,
+    serial_number VARCHAR(100),
+    specification TEXT,
+    location VARCHAR(100),
+    purchase_date DATE,
+    warranty_expiry DATE,
+    status ENUM('Operational', 'Under Maintenance', 'Out of Service', 'Retired') DEFAULT 'Operational',
+    assigned_to INT,
+    maintained_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (assigned_to) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (maintained_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_asset_code (asset_code),
+    INDEX idx_status (status)
+);
+
+-- Skills Laboratory Table
+CREATE TABLE skills_laboratory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lab_code VARCHAR(50) NOT NULL UNIQUE,
+    lab_name VARCHAR(200) NOT NULL,
+    lab_type ENUM('Nursing Skills Lab', 'Midwifery Skills Lab', 'Anatomy Lab', 'Physiology Lab', 'Other') NOT NULL,
+    location VARCHAR(100),
+    capacity INT,
+    equipment_list TEXT,
+    in_charge INT,
+    status ENUM('Active', 'Under Maintenance', 'Inactive') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (in_charge) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_lab_code (lab_code),
+    INDEX idx_status (status)
+);
+
+-- Skills Lab Sessions Table
+CREATE TABLE skills_lab_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_code VARCHAR(50) NOT NULL UNIQUE,
+    lab_id INT NOT NULL,
+    course_code VARCHAR(20),
+    lecturer_id INT,
+    session_topic VARCHAR(200),
+    session_date DATE,
+    start_time TIME,
+    end_time TIME,
+    student_group VARCHAR(100),
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (lab_id) REFERENCES skills_laboratory(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (lecturer_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_session_code (session_code),
+    INDEX idx_status (status)
+);
+
+-- ADDITIONAL STORED PROCEDURES FOR DASHBOARD FUNCTIONALITIES
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_dashboard_statistics(
+    IN p_user_id INT,
+    IN p_role VARCHAR(100)
+)
+BEGIN
+    -- Return statistics based on user role
+    IF p_role = 'Director General' OR p_role = 'School Principal' OR p_role = 'CEO' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM student_admissions WHERE admission_status = 'Pending') as pending_applications,
+            (SELECT COUNT(DISTINCT program) FROM students WHERE status = 'Active') as active_programs,
+            (SELECT SUM(amount) FROM financial_records WHERE record_type = 'Collection' AND transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_collections;
+    ELSEIF p_role = 'HR Manager' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM recruitment_applications WHERE status = 'Received') as pending_applications,
+            (SELECT COUNT(*) FROM staff_leave_requests WHERE status = 'Pending') as pending_leaves,
+            (SELECT COUNT(*) FROM staff_training WHERE status = 'Scheduled') as upcoming_trainings;
+    ELSEIF p_role = 'School Bursar' OR p_role = 'Bursar' OR p_role = 'Director Finance' THEN
+        SELECT 
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date = CURDATE()) as today_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as week_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as month_collections,
+            (SELECT SUM(balance) FROM fee_accounts WHERE status != 'Paid') as outstanding_fees,
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students;
+    ELSEIF p_role = 'Academic Registrar' OR p_role = 'Director Academics' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE position LIKE '%Lecturer%' AND status = 'Active') as total_lecturers,
+            (SELECT COUNT(DISTINCT course_code) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT AVG(gpa) FROM student_academic_profiles WHERE academic_status = 'Good Standing') as avg_gpa;
+    ELSEIF p_role = 'Head of Nursing' OR p_role = 'Head of Midwifery' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE program LIKE CONCAT('%', p_role, '%') AND status = 'Active') as department_students,
+            (SELECT COUNT(*) FROM staff WHERE department = p_role AND status = 'Active') as department_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT COUNT(*) FROM clinical_placements WHERE status = 'In Progress') as active_placements;
+    ELSE
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE lecturer_id = p_user_id AND status = 'Active') as assigned_courses,
+            (SELECT COUNT(*) FROM examination_records WHERE lecturer_id = p_user_id AND grade_status = 'Draft') as pending_grades;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS log_staff_activity(
+    IN p_staff_id INT,
+    IN p_activity_type VARCHAR(100),
+    IN p_activity_description TEXT,
+    IN p_module_accessed VARCHAR(100),
+    IN p_record_id INT,
+    IN p_ip_address VARCHAR(45),
+    IN p_user_agent TEXT
+)
+BEGIN
+    INSERT INTO staff_activity_log (
+        staff_id, 
+        activity_type, 
+        activity_description, 
+        module_accessed, 
+        record_id, 
+        ip_address, 
+        user_agent
+    ) VALUES (
+        p_staff_id, 
+        p_activity_type, 
+        p_activity_description, 
+        p_module_accessed, 
+        p_record_id, 
+        p_ip_address, 
+        p_user_agent
+    );
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_student_fee_status(
+    IN p_student_id INT
+)
+BEGIN
+    SELECT 
+        s.student_number,
+        s.first_name,
+        s.last_name,
+        s.program,
+        COALESCE(SUM(fa.amount), 0) as total_fees,
+        COALESCE(SUM(fa.paid_amount), 0) as total_paid,
+        COALESCE(SUM(fa.balance), 0) as outstanding_balance,
+        CASE 
+            WHEN COALESCE(SUM(fa.balance), 0) = 0 THEN 'Cleared'
+            WHEN COALESCE(SUM(fa.balance), 0) > 0 THEN 'Not Cleared'
+        END as fee_status
+    FROM students s
+    LEFT JOIN fee_accounts fa ON s.id = fa.student_id
+    WHERE s.id = p_student_id
+    GROUP BY s.id;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_student_academic_summary(
+    IN p_student_id INT
+)
+BEGIN
+    SELECT 
+        s.student_number,
+        s.first_name,
+        s.last_name,
+        s.program,
+        s.year_of_study,
+        s.semester,
+        sap.gpa,
+        sap.academic_status,
+        (SELECT COUNT(*) FROM examination_records WHERE student_id = p_student_id) as total_exams,
+        (SELECT COUNT(*) FROM course_registrations WHERE student_id = p_student_id AND status = 'Registered') as registered_courses
+    FROM students s
+    LEFT JOIN student_academic_profiles sap ON s.id = sap.student_id
+    WHERE s.id = p_student_id;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_staff_performance_summary(
+    IN p_staff_id INT
+)
+BEGIN
+    SELECT 
+        s.staff_id,
+        s.full_name,
+        s.position,
+        s.department,
+        sr.role_name,
+        (SELECT AVG(performance_score) FROM staff_performance WHERE staff_id = p_staff_id) as avg_performance,
+        (SELECT COUNT(*) FROM staff_training WHERE staff_id = p_staff_id AND status = 'Completed') as completed_trainings,
+        (SELECT COUNT(*) FROM course_assignments WHERE lecturer_id = p_staff_id AND status = 'Active') as active_courses,
+        (SELECT COUNT(*) FROM staff_leave_requests WHERE staff_id = p_staff_id AND status = 'Approved' AND YEAR(start_date) = YEAR(CURDATE())) as approved_leaves
+    FROM staff s
+    JOIN staff_roles sr ON s.role_id = sr.id
+    WHERE s.id = p_staff_id;
+END //
+DELIMITER ;
+
+-- ADDITIONAL TRIGGERS FOR DASHBOARD FUNCTIONALITIES
+
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS log_grade_change_trigger
+AFTER UPDATE ON examination_records
+FOR EACH ROW
+BEGIN
+    IF OLD.grade != NEW.grade OR OLD.continuous_assessment_marks != NEW.continuous_assessment_marks OR OLD.final_exam_marks != NEW.final_exam_marks THEN
+        INSERT INTO grade_change_history (
+            workflow_number,
+            examination_record_id,
+            changed_by,
+            previous_grade,
+            new_grade,
+            previous_ca_marks,
+            new_ca_marks,
+            previous_exam_marks,
+            new_exam_marks,
+            change_reason
+        ) VALUES (
+            (SELECT workflow_number FROM grading_approval_workflow WHERE examination_record_id = NEW.id LIMIT 1),
+            NEW.id,
+            NEW.lecturer_id,
+            OLD.grade,
+            NEW.grade,
+            OLD.continuous_assessment_marks,
+            NEW.continuous_assessment_marks,
+            OLD.final_exam_marks,
+            NEW.final_exam_marks,
+            'Grade updated via dashboard'
+        );
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS log_financial_transaction
+AFTER INSERT ON payment_records
+FOR EACH ROW
+BEGIN
+    INSERT INTO financial_records (
+        record_type,
+        amount,
+        currency,
+        description,
+        reference_number,
+        payment_method,
+        recorded_by,
+        student_id,
+        transaction_date
+    ) VALUES (
+        'Collection',
+        NEW.amount,
+        NEW.currency,
+        CONCAT('Payment - ', NEW.payment_reference),
+        NEW.payment_number,
+        NEW.payment_method,
+        NEW.processed_by,
+        NEW.student_id,
+        NEW.payment_date
+    );
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS update_fee_account_balance
+AFTER INSERT ON payment_records
+FOR EACH ROW
+BEGIN
+    UPDATE fee_accounts 
+    SET paid_amount = paid_amount + NEW.amount,
+        status = CASE 
+            WHEN amount - (paid_amount + NEW.amount) <= 0 THEN 'Paid'
+            WHEN paid_amount + NEW.amount > 0 THEN 'Partially Paid'
+            ELSE 'Unpaid'
+        END
+    WHERE student_id = NEW.student_id;
+END //
+DELIMITER ;
 
 -- End of Final Complete Staffs Database Schema

@@ -8,6 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once 'includes/config_enhanced.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
+require_once 'auth-service.php';
 
 // Global authentication service
 $auth_service = new AuthenticationService();
@@ -49,31 +50,38 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#3E2723">
+    <meta name="theme-color" content="#1a237e">
     <title>Staff Login - ISNM School Management System</title>
     <link rel="icon" type="image/x-icon" href="images/school-logo.png">
     <link rel="apple-touch-icon" href="images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #3E2723;
-            --secondary-color: #1A237E;
-            --accent-color: #FFD700;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #17a2b8;
+            --primary-color: #1a237e;
+            --primary-dark: #0d47a1;
+            --primary-light: #534bae;
+            --secondary-color: #ff6f00;
+            --accent-color: #ffd600;
+            --success-color: #2e7d32;
+            --danger-color: #c62828;
+            --warning-color: #f57f17;
+            --info-color: #0277bd;
+            --text-dark: #212121;
+            --text-light: #757575;
+            --bg-light: #f5f5f5;
         }
 
         * {
             box-sizing: border-box;
-            -webkit-box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 50%, var(--primary-dark) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -85,223 +93,377 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
             -moz-osx-font-smoothing: grayscale;
         }
 
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            max-width: 500px;
+        .login-wrapper {
             width: 100%;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .login-header {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 40px 30px;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
 
-        .login-header img {
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .login-header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 4px solid var(--accent-color);
+        }
+
+        .logo-container img {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            border: 3px solid var(--accent-color);
-            margin-bottom: 15px;
+            object-fit: cover;
         }
 
-        .login-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
+        .login-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+            letter-spacing: -0.5px;
         }
 
         .login-header p {
-            margin: 5px 0 0;
-            opacity: 0.9;
-            font-size: 0.9rem;
+            margin: 0;
+            opacity: 0.95;
+            font-size: 0.95rem;
+            font-weight: 300;
         }
 
-        .login-form {
-            padding: 30px;
-            flex: 1;
+        .login-body {
+            padding: 40px 30px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: block;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.1rem;
+            z-index: 2;
         }
 
         .form-control {
             border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            font-size: 16px;
+            border-radius: 12px;
+            padding: 14px 16px 14px 48px;
+            font-size: 15px;
             transition: all 0.3s ease;
             height: auto;
+            background: var(--bg-light);
         }
 
         .form-control:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(62, 39, 35, 0.1);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(26, 35, 126, 0.1);
             outline: none;
         }
 
+        .form-control::placeholder {
+            color: #bdbdbd;
+        }
+
         .btn-login {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 16px;
             font-size: 16px;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s ease;
-            min-height: 50px;
             cursor: pointer;
             touch-action: manipulation;
+            box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
         }
 
         .btn-login:hover {
-            background: var(--secondary-color);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4);
         }
 
         .btn-login:active {
             transform: translateY(0);
         }
 
-        .security-notice {
-            background: #f8f9fa;
-            border-left: 4px solid var(--info-color);
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            font-size: 0.85rem;
-        }
-
-        .sample-credentials {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            font-size: 0.85rem;
-        }
-
-        .sample-credentials h6 {
-            color: var(--success-color);
-            margin-bottom: 10px;
-        }
-
         .alert {
-            border-radius: 10px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
             border: none;
-            padding: 15px;
+            padding: 16px;
+            font-size: 0.9rem;
         }
 
-        /* Perfect Mobile Styles */
+        .alert-danger {
+            background: #ffebee;
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .info-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            border-left: 4px solid var(--info-color);
+        }
+
+        .info-section h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .info-section p {
+            margin: 8px 0;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        .info-section strong {
+            color: var(--primary-dark);
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        .help-links {
+            text-align: center;
+        }
+
+        .help-links a {
+            display: block;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin: 8px 0;
+            transition: color 0.3s ease;
+        }
+
+        .help-links a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .help-links i {
+            margin-right: 8px;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .footer-text a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Styles */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
             }
 
-            .login-container {
-                max-width: 100%;
-                min-height: auto;
-                border-radius: 15px;
+            .login-card {
+                border-radius: 20px;
             }
 
             .login-header {
-                padding: 25px 20px;
+                padding: 35px 25px;
             }
 
-            .login-header img {
-                width: 60px;
-                height: 60px;
+            .logo-container {
+                width: 90px;
+                height: 90px;
             }
 
-            .login-header h2 {
-                font-size: 1.3rem;
+            .logo-container img {
+                width: 70px;
+                height: 70px;
             }
 
-            .login-form {
-                padding: 20px;
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .login-body {
+                padding: 30px 25px;
             }
 
             .form-control {
-                padding: 12px 15px;
-                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px 14px 12px 44px;
+                font-size: 16px;
             }
 
             .btn-login {
-                padding: 12px;
+                padding: 14px;
                 font-size: 15px;
-                min-height: 48px;
             }
 
-            .security-notice,
-            .sample-credentials {
-                font-size: 0.8rem;
-                padding: 12px;
+            .info-section {
+                padding: 16px;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-
-            .login-container {
-                border-radius: 10px;
+            .login-card {
+                border-radius: 16px;
             }
 
             .login-header {
-                padding: 20px 15px;
+                padding: 30px 20px;
             }
 
-            .login-header img {
-                width: 50px;
-                height: 50px;
+            .logo-container {
+                width: 80px;
+                height: 80px;
             }
 
-            .login-header h2 {
-                font-size: 1.2rem;
+            .logo-container img {
+                width: 60px;
+                height: 60px;
             }
 
-            .login-form {
-                padding: 15px;
+            .login-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .login-body {
+                padding: 25px 20px;
             }
 
             .form-group {
-                margin-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            .form-control {
+                padding: 12px 14px 12px 42px;
             }
 
             .btn-login {
-                padding: 10px;
+                padding: 12px;
                 font-size: 14px;
-                min-height: 44px;
             }
         }
 
-        /* Landscape Mobile */
         @media (max-height: 600px) and (orientation: landscape) {
-            .login-container {
-                min-height: auto;
+            .login-card {
                 max-height: 90vh;
                 overflow-y: auto;
             }
 
             .login-header {
-                padding: 15px;
+                padding: 20px;
             }
 
-            .login-form {
-                padding: 15px;
+            .login-body {
+                padding: 20px;
             }
         }
 
@@ -309,7 +471,7 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
         @supports (-webkit-touch-callout: none) {
             .form-control {
                 -webkit-appearance: none;
-                border-radius: 10px;
+                border-radius: 12px;
             }
 
             .btn-login {
@@ -321,79 +483,89 @@ if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
-            <h2>Staff Portal</h2>
-            <p>Iganga School of Nursing and Midwifery</p>
-        </div>
-        
-        <div class="login-form">
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?php 
-                    echo htmlspecialchars($_SESSION['error']);
-                    unset($_SESSION['error']);
-                    ?>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-header-content">
+                    <div class="logo-container">
+                        <img src="images/school-logo.png" alt="ISNM Logo">
+                    </div>
+                    <h1>Staff Portal</h1>
+                    <p>Iganga School of Nursing and Midwifery</p>
                 </div>
-            <?php endif; ?>
+            </div>
             
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success">
-                    <?php 
-                    echo htmlspecialchars($_SESSION['success']);
-                    unset($_SESSION['success']);
-                    ?>
-                </div>
-            <?php endif; ?>
+            <div class="login-body">
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <?php 
+                        echo htmlspecialchars($_SESSION['error']);
+                        unset($_SESSION['error']);
+                        ?>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (isset($_SESSION['success'])): ?>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?php 
+                        echo htmlspecialchars($_SESSION['success']);
+                        unset($_SESSION['success']);
+                        ?>
+                    </div>
+                <?php endif; ?>
 
-            <form method="POST" action="auth-handler.php">
-                <input type="hidden" name="action" value="staff_login">
+                <form method="POST" action="auth-handler.php">
+                    <input type="hidden" name="action" value="staff_login">
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="Enter your staff email" required autocomplete="email">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Enter your password" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Staff Portal
+                    </button>
+                </form>
                 
-                <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email" name="email" 
-                           placeholder="Enter your email address" required autocomplete="email">
+                <div class="info-section">
+                    <h6><i class="fas fa-info-circle me-2"></i>Default Staff Login</h6>
+                    <p><strong>Email:</strong> Your staff email address</p>
+                    <p><strong>Password:</strong> 12345678 (default for all staff)</p>
+                    <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-light);">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Please change your password after first login for security
+                    </p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" 
-                           placeholder="Enter your password" required autocomplete="current-password">
+                <div class="divider"></div>
+                
+                <div class="help-links">
+                    <a href="staff-password-reset.php">
+                        <i class="fas fa-key"></i>Forgot Password?
+                    </a>
+                    <a href="index.php">
+                        <i class="fas fa-arrow-left"></i>Back to Home
+                    </a>
                 </div>
                 
-                <button type="submit" class="btn-login">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login to Staff Portal
-                </button>
-            </form>
-            
-            <div class="security-notice">
-                <i class="fas fa-shield-alt me-2"></i>
-                <strong>Security Notice:</strong> This is a secure staff portal. Your login information is encrypted and protected.
-            </div>
-            
-            <div class="sample-credentials">
-                <h6><i class="fas fa-info-circle me-2"></i>Default Staff Login:</h6>
-                <p><strong>Username:</strong> Your staff email (e.g., director@isnm.ug)</p>
-                <p><strong>Password:</strong> 12345678 (default for all staff)</p>
-            </div>
-            
-            <div class="text-center mt-4">
-                <p class="mb-0">
-                    <a href="staff-password-reset.php" class="text-decoration-none">
-                        <i class="fas fa-key me-2"></i>Forgot Password?
-                    </a>
-                </p>
-                <p class="mb-0">
-                    <a href="index.php" class="text-decoration-none">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Home
-                    </a>
-                </p>
-                <p class="mt-2">
-                    <small>
-                        Student? <a href="student-login.php" class="text-decoration-none">Click here for student login</a>
-                    </small>
-                </p>
+                <div class="footer-text">
+                    <p>Student? <a href="student-login.php">Click here for student login</a></p>
+                </div>
             </div>
         </div>
     </div>

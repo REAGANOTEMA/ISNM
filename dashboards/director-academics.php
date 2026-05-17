@@ -9,30 +9,47 @@ requireRole('Director Academics');
 // Database connection is already established in config.php
 global $conn;
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
-$user_id = $user['id'] ?? 0;
+// Get user information from session
+$user_id = $_SESSION['user_id'] ?? 0;
+$user_role = $_SESSION['role'] ?? '';
+$user_email = $_SESSION['email'] ?? '';
+$user_name = $_SESSION['full_name'] ?? '';
 
-// Get academic statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_lecturers = 20; // Fallback value
-$active_courses = 8; // Fallback value
-$avg_gpa = 3.4; // Fallback value
+// Get Director Academics dashboard statistics using stored procedure
+$stats_query = "CALL get_dashboard_statistics(?, ?)";
+$stats_stmt = $conn->prepare($stats_query);
+$stats_stmt->bind_param("is", $user_id, $user_role);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
 
-// Get program statistics (using fallback data)
-$nursing_students = 85; // Fallback value
-$midwifery_students = 65; // Fallback value
-$diploma_nursing = 45; // Fallback value
-$diploma_midwifery = 35; // Fallback value
+// Set statistics from database or fallback values
+$total_students = $stats['total_students'] ?? 150;
+$total_lecturers = $stats['total_lecturers'] ?? 20;
+$active_courses = $stats['active_courses'] ?? 8;
+$avg_gpa = $stats['avg_gpa'] ?? 3.4;
 
-// Get recent academic activities (using fallback data)
-$academic_activities = [
+// Get program statistics from database
+$nursing_students_sql = "SELECT COUNT(*) as count FROM students WHERE program LIKE '%Nursing%' AND status = 'Active'";
+$nursing_students_result = $conn->query($nursing_students_sql);
+$nursing_students = $nursing_students_result ? $nursing_students_result->fetch_assoc()['count'] : 85;
+
+$midwifery_students_sql = "SELECT COUNT(*) as count FROM students WHERE program LIKE '%Midwifery%' AND status = 'Active'";
+$midwifery_students_result = $conn->query($midwifery_students_sql);
+$midwifery_students = $midwifery_students_result ? $midwifery_students_result->fetch_assoc()['count'] : 65;
+
+$diploma_nursing_sql = "SELECT COUNT(*) as count FROM students WHERE program LIKE '%Diploma%' AND program LIKE '%Nursing%' AND status = 'Active'";
+$diploma_nursing_result = $conn->query($diploma_nursing_sql);
+$diploma_nursing = $diploma_nursing_result ? $diploma_nursing_result->fetch_assoc()['count'] : 45;
+
+$diploma_midwifery_sql = "SELECT COUNT(*) as count FROM students WHERE program LIKE '%Diploma%' AND program LIKE '%Midwifery%' AND status = 'Active'";
+$diploma_midwifery_result = $conn->query($diploma_midwifery_sql);
+$diploma_midwifery = $diploma_midwifery_result ? $diploma_midwifery_result->fetch_assoc()['count'] : 35;
+
+// Get recent academic activities from database
+$academic_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE module_accessed = 'academic' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 4";
+$academic_activities_result = $conn->query($academic_activities_sql);
+$academic_activities = $academic_activities_result ? $academic_activities_result->fetch_all(MYSQLI_ASSOC) : [
     ['activity' => 'New curriculum developed', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 hour'))],
     ['activity' => 'Student grades processed', 'created_at' => date('Y-m-d H:i:s', strtotime('-3 hours'))],
     ['activity' => 'Academic calendar updated', 'created_at' => date('Y-m-d H:i:s', strtotime('-5 hours'))],

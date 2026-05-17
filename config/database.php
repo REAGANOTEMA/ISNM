@@ -62,11 +62,13 @@ function executePrepared($conn, $query, $types, $params) {
  * @param string $input
  * @return string
  */
-function sanitizeInput($input) {
-    $input = trim($input);
-    $input = stripslashes($input);
-    $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
-    return $input;
+if (!function_exists('sanitizeInput')) {
+    function sanitizeInput($input) {
+        $input = trim($input);
+        $input = stripslashes($input);
+        $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+        return $input;
+    }
 }
 
 /**
