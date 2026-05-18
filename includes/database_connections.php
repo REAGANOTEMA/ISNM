@@ -7,7 +7,7 @@ class DatabaseConnection {
     private static $config = [
         'host' => 'localhost',
         'username' => 'root',
-        'password' => 'ReagaN23#',
+        'password' => '',
         'charset' => 'utf8mb4'
     ];
 

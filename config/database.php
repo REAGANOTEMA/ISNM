@@ -7,7 +7,7 @@
 // Database connection parameters
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
-define('DB_PASS', 'ReagaN23#');
+define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 // Database names
