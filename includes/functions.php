@@ -1,6 +1,47 @@
 <?php
 // Additional helper functions for ISNM Student Management System
 
+// Sanitize user input to prevent XSS attacks
+if (!function_exists('sanitizeInput')) {
+    function sanitizeInput($input) {
+        return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
+}
+
+// Validate email address
+if (!function_exists('validateEmail')) {
+    function validateEmail($email) {
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+}
+
+// Validate phone number
+if (!function_exists('validatePhone')) {
+    function validatePhone($phone) {
+        // Remove any non-digit characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Check if it's a valid Uganda phone number (10 digits starting with 0, or 12 digits starting with 256)
+        if (strlen($phone) == 10 && substr($phone, 0, 1) == '0') {
+            return true;
+        } elseif (strlen($phone) == 12 && substr($phone, 0, 3) == '256') {
+            return true;
+        } elseif (strlen($phone) == 13 && substr($phone, 0, 4) == '+256') {
+            return true;
+        }
+        
+        return false;
+    }
+}
+
+// Validate index number
+if (!function_exists('validateIndexNumber')) {
+    function validateIndexNumber($indexNumber) {
+        // Basic validation - should be alphanumeric and reasonable length
+        return !empty($indexNumber) && strlen($indexNumber) >= 5 && strlen($indexNumber) <= 50;
+    }
+}
+
 // Generate unique ID for various records
 function generateUniqueId($prefix, $table, $field) {
     global $conn;

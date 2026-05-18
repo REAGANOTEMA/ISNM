@@ -1,19 +1,27 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../security-middleware.php';
+// Include unified authentication system
+require_once '../auth-service.php';
 
-// Strict dashboard protection - only director ICT allowed
-requireRole('Director ICT');
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user is authenticated
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../index.php');
+    exit;
+}
 
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_role = $_SESSION['role'] ?? '';
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
+// Get current user
+$user = $auth_service->getCurrentUser();
+$user_id = $user['id'] ?? 0;
+$user_role = $user['role'] ?? '';
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
+
+// Connect to staff database for dashboard statistics
+$conn = getStaffConnection();
 
 // Get Director ICT dashboard statistics using stored procedure
 $stats_query = "CALL get_dashboard_statistics(?, ?)";

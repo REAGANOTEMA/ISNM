@@ -36,9 +36,9 @@ class AuthenticationService {
      * @return bool
      */
     private function isStaffAccountLocked($email) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         
-        $stmt = $conn->prepare("SELECT locked_until FROM users WHERE email = ? AND role != 'student' AND locked_until > NOW()");
+        $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE email = ? AND status = 'Active' AND locked_until > NOW()");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -79,15 +79,15 @@ class AuthenticationService {
      * @param string $email
      */
     private function recordStaffFailedAttempt($email) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         
         // Increment login attempts
-        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE email = ? AND role != 'student'");
+        $stmt = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE email = ? AND status = 'Active'");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         
         // Check if we should lock the account
-        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE email = ? AND role != 'student'");
+        $stmt = $conn->prepare("SELECT login_attempts FROM staff WHERE email = ? AND status = 'Active'");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -96,7 +96,7 @@ class AuthenticationService {
         if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
             // Lock the account
             $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
-            $stmt = $conn->prepare("UPDATE users SET locked_until = ? WHERE email = ? AND role != 'student'");
+            $stmt = $conn->prepare("UPDATE staff SET locked_until = ? WHERE email = ? AND status = 'Active'");
             $stmt->bind_param("ss", $lockUntil, $email);
             $stmt->execute();
         }
@@ -107,9 +107,9 @@ class AuthenticationService {
      * @param int $userId
      */
     private function resetFailedAttempts($userId) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         
-        $stmt = $conn->prepare("UPDATE users SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
     }
@@ -217,13 +217,12 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
         }
         
-        $conn = getConnection();
+        $conn = getStaffConnection();
         
         // Query database for staff user
-        $sql = "SELECT * FROM users WHERE 
-                email = ? AND 
-                role != 'student' AND 
-                status = 'active'";
+        $sql = "SELECT s.*, sr.role_name FROM staff s 
+                LEFT JOIN staff_roles sr ON s.role_id = sr.id
+                WHERE s.email = ? AND s.status = 'Active'";
         
         error_log("DEBUG: Executing query: $sql with email: $email");
         
@@ -241,7 +240,7 @@ class AuthenticationService {
         }
         
         $staff = $result->fetch_assoc();
-        error_log("DEBUG: User found - ID: " . $staff['id'] . ", Role: " . $staff['role'] . ", Status: " . $staff['status']);
+        error_log("DEBUG: User found - ID: " . $staff['id'] . ", Role: " . $staff['role_name'] . ", Status: " . $staff['status']);
         error_log("DEBUG: Password hash in DB: " . substr($staff['password'], 0, 20) . "...");
         
         // Verify password - allow both default password and hashed passwords
@@ -274,8 +273,10 @@ class AuthenticationService {
                 'email' => $staff['email'],
                 'full_name' => $staff['full_name'],
                 'phone' => $staff['phone'],
-                'role' => $staff['role'],
-                'type' => 'staff'
+                'role' => $staff['role_name'],
+                'type' => 'staff',
+                'position' => $staff['position'],
+                'department' => $staff['department']
             ]
         ];
     }
@@ -294,82 +295,94 @@ class AuthenticationService {
         // Regenerate session ID for security
         session_regenerate_id(true);
         
-        // Set standardized session variables
+        // Store user information in session
         $_SESSION['user_id'] = $user['id'];
+        $_SESSION['email'] = $user['email'];
+        $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['type'] = $user['type'];
-        
-        // Additional session data for convenience
-        $_SESSION['full_name'] = $user['full_name'];
-        $_SESSION['email'] = $user['email'] ?? '';
         $_SESSION['phone'] = $user['phone'] ?? '';
-        $_SESSION['index_number'] = $user['index_number'] ?? '';
+        $_SESSION['position'] = $user['position'] ?? '';
+        $_SESSION['department'] = $user['department'] ?? '';
+        $_SESSION['logged_in'] = true;
+        $_SESSION['login_time'] = time();
         
-        // Session security
-        $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
-        $_SESSION['created_at'] = time();
-        $_SESSION['last_activity'] = time();
+        // Log the login in staff activity log
+        if ($user['type'] === 'staff') {
+            $conn = getStaffConnection();
+            $stmt = $conn->prepare("INSERT INTO staff_login_sessions (staff_id, session_token, ip_address, user_agent, created_at, expires_at) VALUES (?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))");
+            $session_token = session_id();
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $stmt->bind_param("isss", $user['id'], $session_token, $ip_address, $user_agent);
+            $stmt->execute();
+            
+            // Log activity
+            $log_stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) VALUES (?, 'Login', 'User logged in successfully', 'authentication', ?, ?)");
+            $log_stmt->bind_param("iss", $user['id'], $ip_address, $user_agent);
+            $log_stmt->execute();
+        }
         
         return true;
     }
     
     /**
-     * Destroy session securely
-     */
-    public function destroySession() {
-        // Start session if not started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Unset all session variables
-        $_SESSION = array();
-        
-        // Destroy session cookie
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        
-        // Destroy session
-        session_destroy();
-    }
-    
-    /**
-     * Check if user is authenticated and session is valid
+     * Check if user is authenticated
      * @return bool
      */
     public function isAuthenticated() {
-        // Start session if not started
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Check required session variables
-        if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
-            return false;
+        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+    }
+    
+    /**
+     * Logout user and destroy session
+     * @return bool
+     */
+    public function logout() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
         
-        // Check session timeout (30 minutes)
-        $timeout = 1800; // 30 minutes
-        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
-            $this->destroySession();
-            return false;
+        // Log the logout if staff
+        if (isset($_SESSION['type']) && $_SESSION['type'] === 'staff' && isset($_SESSION['user_id'])) {
+            $conn = getStaffConnection();
+            $stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) VALUES (?, 'Logout', 'User logged out', 'authentication', ?, ?)");
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $stmt->bind_param("iss", $_SESSION['user_id'], $ip_address, $user_agent);
+            $stmt->execute();
         }
         
-        // Check IP address for session hijacking
-        if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
-            $this->destroySession();
-            return false;
-        }
-        
-        // Update last activity
-        $_SESSION['last_activity'] = time();
+        // Destroy session
+        session_unset();
+        session_destroy();
         
         return true;
+    }
+    
+    /**
+     * Get current authenticated user
+     * @return array|null
+     */
+    public function getCurrentUser() {
+        if (!$this->isAuthenticated()) {
+            return null;
+        }
+        
+        return [
+            'id' => $_SESSION['user_id'] ?? null,
+            'email' => $_SESSION['email'] ?? null,
+            'full_name' => $_SESSION['full_name'] ?? null,
+            'role' => $_SESSION['role'] ?? null,
+            'type' => $_SESSION['type'] ?? null,
+            'phone' => $_SESSION['phone'] ?? null,
+            'position' => $_SESSION['position'] ?? null,
+            'department' => $_SESSION['department'] ?? null
+        ];
     }
     
     /**
@@ -378,83 +391,53 @@ class AuthenticationService {
      * @return string
      */
     public function getDashboardRoute($role) {
-        // Students always go to student dashboard
-        if (strtolower($role) === 'student') {
-            return 'dashboards/student.php';
-        }
+        $role = strtolower($role);
         
-        // Enhanced staff routing based on role with exact department mapping
-        $roleLower = strtolower($role);
-        
-        // Exact department mappings
-        $departmentDashboards = [
+        $dashboardRoutes = [
             'director general' => 'dashboards/director-general.php',
-            'school principal' => 'dashboards/school-principal.php',
-            'principal' => 'dashboards/school-principal.php',
-            'lecturer' => 'dashboards/lecturers.php',
-            'lecturers' => 'dashboards/lecturers.php',
-            'school secretary' => 'dashboards/school-secretary.php',
-            'secretary' => 'dashboards/school-secretary.php',
-            'school bursar' => 'dashboards/school-bursar.php',
-            'accountant' => 'dashboards/school-bursar.php',
-            'bursar' => 'dashboards/school-bursar.php',
-            'administrator' => 'dashboards/admin-dashboard.php',
-            'admin' => 'dashboards/admin-dashboard.php',
-            'hr' => 'dashboards/hr-dashboard.php',
-            'human resources' => 'dashboards/hr-dashboard.php',
-            'librarian' => 'dashboards/librarian-dashboard.php',
-            'library' => 'dashboards/librarian-dashboard.php',
-            'it support' => 'dashboards/it-dashboard.php',
-            'it' => 'dashboards/it-dashboard.php',
-            'nursing department' => 'dashboards/nursing-department.php',
-            'midwifery department' => 'dashboards/midwifery-department.php',
-            'clinical instructor' => 'dashboards/clinical-instructor.php',
+            'hr manager' => 'dashboards/hr-manager.php',
+            'bursar' => 'dashboards/bursar.php',
             'academic registrar' => 'dashboards/academic-registrar.php',
-            'student affairs' => 'dashboards/student-affairs.php'
+            'school principal' => 'dashboards/school-principal.php',
+            'director academics' => 'dashboards/director-academics.php',
+            'director finance' => 'dashboards/director-finance.php',
+            'director ict' => 'dashboards/director-ict.php',
+            'head nursing' => 'dashboards/head-nursing.php',
+            'head midwifery' => 'dashboards/head-midwifery.php',
+            'ceo' => 'dashboards/ceo.php',
+            'deputy principal' => 'dashboards/deputy-principal.php',
+            'drivers' => 'dashboards/drivers.php',
+            'lab technicians' => 'dashboards/lab-technicians.php',
+            'matrons' => 'dashboards/matrons.php',
+            'non-teaching staff' => 'dashboards/non-teaching-staff.php',
+            'school librarian' => 'dashboards/school-librarian.php',
+            'security' => 'dashboards/security.php',
+            'senior lecturers' => 'dashboards/senior-lecturers.php',
+            'wardens' => 'dashboards/wardens.php',
+            'lecturers' => 'dashboards/lecturers.php'
         ];
         
-        // Check for exact match first
-        if (isset($departmentDashboards[$roleLower])) {
-            return $departmentDashboards[$roleLower];
-        }
-        
-        // Check for partial matches
-        foreach ($departmentDashboards as $keyword => $dashboard) {
-            if (strpos($roleLower, $keyword) !== false && file_exists($dashboard)) {
-                return $dashboard;
-            }
-        }
-        
-        // Clean role for file-based routing
-        $roleClean = strtolower(str_replace([' ', '-'], '', $role));
-        $dashboardFile = "dashboards/{$roleClean}.php";
-        
-        // Check if exact dashboard exists
-        if (file_exists($dashboardFile)) {
-            return $dashboardFile;
-        }
-        
-        // Final fallback to admin dashboard
-        return file_exists('dashboards/admin-dashboard.php') ? 'dashboards/admin-dashboard.php' : 'dashboards/student.php';
+        return $dashboardRoutes[$role] ?? 'dashboards/ceo.php';
     }
     
     /**
-     * Check if user can create students
+     * Check if user can create student accounts
      * @param string $role
      * @return bool
      */
     public function canCreateStudents($role) {
-        $roleLower = strtolower($role);
+        $role = strtolower($role);
         
-        // Direct allowed roles
-        $allowedRoles = ['secretary', 'principal', 'accountant', 'school secretary', 'school principal', 'school bursar'];
+        $allowedRoles = [
+            'director general',
+            'hr manager',
+            'academic registrar',
+            'school principal',
+            'director academics',
+            'ceo'
+        ];
         
-        // Check if role is allowed or contains "director"
-        if (in_array($roleLower, $allowedRoles) || strpos($roleLower, 'director') !== false) {
-            return true;
-        }
-        
-        return false;
+        return in_array($role, $allowedRoles);
     }
     
     /**
@@ -465,142 +448,14 @@ class AuthenticationService {
     public function createStudentAccount($studentData) {
         $conn = getConnection();
         
-        // Validate required fields
-        $requiredFields = ['index_number', 'full_name', 'phone'];
-        foreach ($requiredFields as $field) {
-            if (empty($studentData[$field])) {
-                return ['success' => false, 'message' => "Field '$field' is required"];
-            }
-        }
-        
-        $indexNumber = sanitizeInput($studentData['index_number']);
-        $fullName = sanitizeInput($studentData['full_name']);
-        $phone = sanitizeInput($studentData['phone']);
-        
-        // Validate formats
-        if (!validateIndexNumber($indexNumber)) {
-            return ['success' => false, 'message' => 'Invalid index number format'];
-        }
-        
-        if (!validatePhone($phone)) {
-            return ['success' => false, 'message' => 'Invalid phone number format'];
-        }
-        
-        // Check if index number already exists
-        if (studentExistsByIndexNumber($indexNumber)) {
-            return ['success' => false, 'message' => 'Index number already exists'];
-        }
-        
         try {
-            // Insert student record
-            $sql = "INSERT INTO users (index_number, full_name, phone, role, type, status) 
-                    VALUES (?, ?, ?, 'student', 'student', 'active')";
+            $stmt = $conn->prepare("INSERT INTO users (index_number, full_name, phone, role, status, created_at) VALUES (?, ?, ?, 'student', 'active', NOW())");
+            $stmt->bind_param("sss", $studentData['index_number'], $studentData['full_name'], $studentData['phone']);
+            $stmt->execute();
             
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $indexNumber, $fullName, $phone);
-            
-            if ($stmt->execute()) {
-                return ['success' => true, 'message' => 'Student account created successfully'];
-            } else {
-                return ['success' => false, 'message' => 'Error creating student account'];
-            }
-            
+            return ['success' => true, 'message' => 'Student account created successfully'];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
-        }
-    }
-    
-    /**
-     * Change password for a user
-     * @param int $userId
-     * @param string $currentPassword
-     * @param string $newPassword
-     * @return array
-     */
-    public function changePassword($userId, $currentPassword, $newPassword) {
-        $conn = getConnection();
-        
-        // Validate inputs
-        if (empty($currentPassword) || empty($newPassword)) {
-            return ['success' => false, 'message' => 'Current and new passwords are required'];
-        }
-        
-        if (strlen($newPassword) < 8) {
-            return ['success' => false, 'message' => 'New password must be at least 8 characters long'];
-        }
-        
-        // Get current password hash
-        $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            return ['success' => false, 'message' => 'User not found'];
-        }
-        
-        $user = $result->fetch_assoc();
-        
-        // Verify current password
-        if (!password_verify($currentPassword, $user['password'])) {
-            return ['success' => false, 'message' => 'Current password is incorrect'];
-        }
-        
-        // Hash new password
-        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        
-        // Update password
-        $update_stmt = $conn->prepare("UPDATE users SET password = ?, password_changed = TRUE, is_first_login = FALSE WHERE id = ?");
-        $update_stmt->bind_param("si", $hashedPassword, $userId);
-        
-        if ($update_stmt->execute()) {
-            return ['success' => true, 'message' => 'Password changed successfully'];
-        } else {
-            return ['success' => false, 'message' => 'Error changing password'];
-        }
-    }
-    
-    /**
-     * Reset password using token
-     * @param string $token
-     * @param string $newPassword
-     * @return array
-     */
-    public function resetPasswordWithToken($token, $newPassword) {
-        $conn = getConnection();
-        
-        // Validate inputs
-        if (empty($token) || empty($newPassword)) {
-            return ['success' => false, 'message' => 'Token and new password are required'];
-        }
-        
-        if (strlen($newPassword) < 8) {
-            return ['success' => false, 'message' => 'New password must be at least 8 characters long'];
-        }
-        
-        // Check if token is valid and not expired
-        $stmt = $conn->prepare("SELECT id, email FROM users WHERE reset_token = ? AND reset_expiry > NOW()");
-        $stmt->bind_param("s", $token);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            return ['success' => false, 'message' => 'Invalid or expired reset token'];
-        }
-        
-        $user = $result->fetch_assoc();
-        
-        // Hash new password
-        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        
-        // Update password and clear reset token
-        $update_stmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expiry = NULL, password_changed = TRUE, is_first_login = FALSE WHERE id = ?");
-        $update_stmt->bind_param("si", $hashedPassword, $user['id']);
-        
-        if ($update_stmt->execute()) {
-            return ['success' => true, 'message' => 'Password reset successfully'];
-        } else {
-            return ['success' => false, 'message' => 'Error resetting password'];
+            return ['success' => false, 'message' => 'Failed to create student account: ' . $e->getMessage()];
         }
     }
     
@@ -610,60 +465,41 @@ class AuthenticationService {
      * @return array
      */
     public function createStaffAccount($staffData) {
-        $conn = getConnection();
-        
-        // Validate required fields
-        $requiredFields = ['full_name', 'email', 'phone', 'password', 'role'];
-        foreach ($requiredFields as $field) {
-            if (empty($staffData[$field])) {
-                return ['success' => false, 'message' => "Field '$field' is required"];
-            }
-        }
-        
-        $fullName = sanitizeInput($staffData['full_name']);
-        $email = sanitizeInput($staffData['email']);
-        $phone = sanitizeInput($staffData['phone']);
-        $password = $staffData['password'];
-        $role = sanitizeInput($staffData['role']);
-        
-        // Validate formats
-        if (!validateEmail($email)) {
-            return ['success' => false, 'message' => 'Invalid email format'];
-        }
-        
-        if (!validatePhone($phone)) {
-            return ['success' => false, 'message' => 'Invalid phone number format'];
-        }
-        
-        if (strlen($password) < 8) {
-            return ['success' => false, 'message' => 'Password must be at least 8 characters long'];
-        }
-        
-        // Check if email already exists
-        if (userExistsByEmail($email)) {
-            return ['success' => false, 'message' => 'Email already exists'];
-        }
+        $conn = getStaffConnection();
         
         try {
             // Hash password
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $hashedPassword = password_hash($staffData['password'], PASSWORD_DEFAULT);
             
-            // Insert staff record
-            $sql = "INSERT INTO users (full_name, email, phone, password, role, type, status) 
-                    VALUES (?, ?, ?, ?, ?, 'staff', 'active')";
+            // Get role_id from staff_roles table
+            $roleStmt = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ?");
+            $roleStmt->bind_param("s", $staffData['role']);
+            $roleStmt->execute();
+            $roleResult = $roleStmt->get_result();
+            $roleRow = $roleResult->fetch_assoc();
             
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssss", $fullName, $email, $phone, $hashedPassword, $role);
-            
-            if ($stmt->execute()) {
-                return ['success' => true, 'message' => 'Staff account created successfully'];
-            } else {
-                return ['success' => false, 'message' => 'Error creating staff account'];
+            if (!$roleRow) {
+                return ['success' => false, 'message' => 'Invalid role specified'];
             }
             
+            $roleId = $roleRow['id'];
+            
+            $stmt = $conn->prepare("INSERT INTO staff (full_name, email, phone, password, role_id, position, department, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', NOW())");
+            $stmt->bind_param("ssssiss", $staffData['full_name'], $staffData['email'], $staffData['phone'], $hashedPassword, $roleId, $staffData['position'], $staffData['department']);
+            $stmt->execute();
+            
+            return ['success' => true, 'message' => 'Staff account created successfully'];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Failed to create staff account: ' . $e->getMessage()];
         }
+    }
+    
+    /**
+     * Destroy session (alias for logout)
+     * @return bool
+     */
+    public function destroySession() {
+        return $this->logout();
     }
 }
 

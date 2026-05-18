@@ -1,29 +1,60 @@
 <?php
 /**
  * Database Configuration for ISNM Student Management System
+ * Supports three databases: staffs_db, students_db, and website_db
  */
 
 // Database connection parameters
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', 'ReagaN23#');
-define('DB_NAME', 'isnm_db');
 define('DB_CHARSET', 'utf8mb4');
 
-// Create database connection
+// Database names
+define('STAFF_DB_NAME', 'staffs_db');
+define('STUDENTS_DB_NAME', 'students_db');
+define('WEBSITE_DB_NAME', 'website_db');
+
+// Include the unified database connection system
+require_once __DIR__ . '/../includes/database_connections.php';
+
+// Create database connection (default to students_db for students)
 function getConnection() {
     try {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        $conn->set_charset(DB_CHARSET);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Database connection failed: " . $conn->connect_error);
-        }
-        
-        return $conn;
+        return DatabaseConnection::getStudentsConnection();
     } catch (Exception $e) {
         error_log("Database Error: " . $e->getMessage());
         die("Database connection failed. Please contact administrator.");
+    }
+}
+
+// Create staff database connection (for staff authentication)
+function getStaffConnection() {
+    try {
+        return DatabaseConnection::getStaffConnection();
+    } catch (Exception $e) {
+        error_log("Staff Database Error: " . $e->getMessage());
+        die("Staff database connection failed. Please contact administrator.");
+    }
+}
+
+// Create students database connection
+function getStudentsConnection() {
+    try {
+        return DatabaseConnection::getStudentsConnection();
+    } catch (Exception $e) {
+        error_log("Students Database Error: " . $e->getMessage());
+        die("Students database connection failed. Please contact administrator.");
+    }
+}
+
+// Create website database connection
+function getWebsiteConnection() {
+    try {
+        return DatabaseConnection::getWebsiteConnection();
+    } catch (Exception $e) {
+        error_log("Website Database Error: " . $e->getMessage());
+        die("Website database connection failed. Please contact administrator.");
     }
 }
 

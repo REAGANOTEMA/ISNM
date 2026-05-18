@@ -7,6 +7,27 @@ CREATE DATABASE IF NOT EXISTS staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 USE staffs_db;
 
 -- Drop existing tables if they exist (for fresh installation)
+DROP TABLE IF EXISTS security_incidents;
+DROP TABLE IF EXISTS security_patrols;
+DROP TABLE IF EXISTS access_control_logs;
+DROP TABLE IF EXISTS security_equipment;
+DROP TABLE IF EXISTS emergency_contacts;
+DROP TABLE IF EXISTS student_welfare_cases;
+DROP TABLE IF EXISTS counseling_sessions;
+DROP TABLE IF EXISTS room_inspections;
+DROP TABLE IF EXISTS duty_rosters;
+DROP TABLE IF EXISTS visitor_logs;
+DROP TABLE IF EXISTS student_activities;
+DROP TABLE IF EXISTS vehicles;
+DROP TABLE IF EXISTS trip_logs;
+DROP TABLE IF EXISTS fuel_management;
+DROP TABLE IF EXISTS route_schedules;
+DROP TABLE IF EXISTS student_health_records;
+DROP TABLE IF EXISTS health_incidents;
+DROP TABLE IF EXISTS meal_tracking;
+DROP TABLE IF EXISTS lab_equipment_maintenance;
+DROP TABLE IF EXISTS lab_safety_records;
+DROP TABLE IF EXISTS chemical_inventory;
 DROP TABLE IF EXISTS skills_lab_sessions;
 DROP TABLE IF EXISTS skills_laboratory;
 DROP TABLE IF EXISTS it_infrastructure;
@@ -635,15 +656,14 @@ CREATE TABLE generated_documents (
     file_path VARCHAR(500),
     template_used INT NULL,
     generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NULL,
     is_public BOOLEAN DEFAULT FALSE,
     access_code VARCHAR(50) UNIQUE,
     download_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (generated_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_document_type (document_type),
     INDEX idx_student_id (student_id),
@@ -1081,7 +1101,9 @@ INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path
 ('Bursar', 'Financial assistant', 'Administrative', 'dashboards/bursar.php', '{"financial": true, "fees": true, "can_assist_bursar": true}'),
 ('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}');
 
--- Insert main administrator account
+-- Insert main administrator account with unified credentials
+-- Email: administration@isnm.ac
+-- Password: 12345678 (bcrypt hash)
 INSERT INTO staff (
     staff_id, 
     full_name, 
@@ -1098,8 +1120,8 @@ INSERT INTO staff (
 ) VALUES (
     'ADMIN001',
     'System Administrator',
-    'administrations@isnm.ac',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    'administration@isnm.ac',
+    '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
     'System Administrator',
     'Executive Office',
     (SELECT id FROM staff_roles WHERE role_name = 'Director General' LIMIT 1),
@@ -1109,8 +1131,8 @@ INSERT INTO staff (
     TRUE,
     NOW()
 ) ON DUPLICATE KEY UPDATE 
-    email = 'administrations@isnm.ac',
-    password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    email = 'administration@isnm.ac',
+    password = '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
     is_first_login = TRUE,
     updated_at = NOW();
 
@@ -2253,9 +2275,533 @@ CREATE TABLE skills_lab_sessions (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (lab_id) REFERENCES skills_laboratory(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (lecturer_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (lecturer_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_session_code (session_code),
     INDEX idx_status (status)
+);
+
+-- SECURITY DEPARTMENT TABLES
+
+-- Security Incidents Table
+CREATE TABLE security_incidents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    incident_number VARCHAR(50) NOT NULL UNIQUE,
+    incident_type ENUM('Unauthorized Access', 'Theft', 'Vandalism', 'Assault', 'Parking Violation', 'Vehicle Entry', 'Visitor Check-in', 'Emergency', 'Other') NOT NULL,
+    incident_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    location VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    severity ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
+    status ENUM('Reported', 'Under Investigation', 'Resolved', 'Closed') DEFAULT 'Reported',
+    reported_by INT NOT NULL,
+    assigned_to INT,
+    resolution_notes TEXT,
+    resolved_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (reported_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (assigned_to) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_incident_number (incident_number),
+    INDEX idx_incident_type (incident_type),
+    INDEX idx_incident_date (incident_date),
+    INDEX idx_severity (severity),
+    INDEX idx_status (status)
+);
+
+-- Security Patrols Table
+CREATE TABLE security_patrols (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patrol_number VARCHAR(50) NOT NULL UNIQUE,
+    guard_id INT NOT NULL,
+    patrol_route VARCHAR(200) NOT NULL,
+    patrol_area ENUM('Main Gate', 'Academic Block', 'Hostel Area', 'Parking Lot', 'Library', 'Laboratory', 'Sports Field', 'Perimeter', 'Full Campus') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    patrol_date DATE NOT NULL,
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled', 'On Break') DEFAULT 'Scheduled',
+    observations TEXT,
+    incidents_found INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (guard_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_patrol_number (patrol_number),
+    INDEX idx_guard_id (guard_id),
+    INDEX idx_patrol_date (patrol_date),
+    INDEX idx_status (status)
+);
+
+-- Access Control Logs Table
+CREATE TABLE access_control_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    log_number VARCHAR(50) NOT NULL UNIQUE,
+    access_type ENUM('Entry', 'Exit', 'Vehicle Entry', 'Vehicle Exit', 'Visitor Check-in', 'Visitor Check-out') NOT NULL,
+    person_type ENUM('Student', 'Staff', 'Visitor', 'Unknown') NOT NULL,
+    person_id INT NULL,
+    person_name VARCHAR(200),
+    access_point VARCHAR(100) NOT NULL,
+    vehicle_number VARCHAR(50),
+    access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    purpose VARCHAR(200),
+    status ENUM('Authorized', 'Unauthorized', 'Pending') DEFAULT 'Authorized',
+    processed_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (processed_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_log_number (log_number),
+    INDEX idx_access_type (access_type),
+    INDEX idx_access_time (access_time),
+    INDEX idx_access_point (access_point),
+    INDEX idx_status (status)
+);
+
+-- Security Equipment Table
+CREATE TABLE security_equipment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipment_code VARCHAR(50) NOT NULL UNIQUE,
+    equipment_name VARCHAR(200) NOT NULL,
+    equipment_type ENUM('CCTV Camera', 'Access Control System', 'Metal Detector', 'Radio', 'Alarm System', 'Fire Extinguisher', 'Emergency Light', 'Other') NOT NULL,
+    location VARCHAR(200) NOT NULL,
+    serial_number VARCHAR(100),
+    purchase_date DATE,
+    warranty_expiry DATE,
+    status ENUM('Operational', 'Under Maintenance', 'Out of Service', 'Retired') DEFAULT 'Operational',
+    last_maintenance_date DATE,
+    next_maintenance_date DATE,
+    maintained_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (maintained_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_equipment_code (equipment_code),
+    INDEX idx_equipment_type (equipment_type),
+    INDEX idx_location (location),
+    INDEX idx_status (status)
+);
+
+-- Emergency Contacts Table
+CREATE TABLE emergency_contacts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    contact_name VARCHAR(200) NOT NULL,
+    contact_type ENUM('Police', 'Fire', 'Ambulance', 'Hospital', 'School Administration', 'Security Chief', 'Other') NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    alternative_phone VARCHAR(20),
+    email VARCHAR(100),
+    address TEXT,
+    priority ENUM('Primary', 'Secondary', 'Tertiary') DEFAULT 'Primary',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_contact_type (contact_type),
+    INDEX idx_priority (priority),
+    INDEX idx_is_active (is_active)
+);
+
+-- WARDENS DEPARTMENT TABLES
+
+-- Student Welfare Cases Table
+CREATE TABLE student_welfare_cases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    case_type ENUM('Academic Support', 'Personal Counseling', 'Financial Support', 'Health Issues', 'Disciplinary Issues', 'Homesickness', 'Family Problems', 'Other') NOT NULL,
+    priority ENUM('Low', 'Medium', 'High', 'Urgent') DEFAULT 'Medium',
+    case_description TEXT NOT NULL,
+    immediate_actions TEXT,
+    status ENUM('Open', 'In Progress', 'Under Review', 'Resolved', 'Closed') DEFAULT 'Open',
+    assigned_warden INT NOT NULL,
+    follow_up_required BOOLEAN DEFAULT TRUE,
+    follow_up_date DATE,
+    parent_contacted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (assigned_warden) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_case_number (case_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_case_type (case_type),
+    INDEX idx_priority (priority),
+    INDEX idx_status (status),
+    INDEX idx_assigned_warden (assigned_warden)
+);
+
+-- Counseling Sessions Table
+CREATE TABLE counseling_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    counselor_id INT NOT NULL,
+    session_type ENUM('Individual', 'Group', 'Family', 'Crisis Intervention') NOT NULL,
+    topic VARCHAR(200) NOT NULL,
+    scheduled_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    location VARCHAR(100),
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Rescheduled') DEFAULT 'Scheduled',
+    session_notes TEXT,
+    action_plan TEXT,
+    follow_up_required BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (counselor_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_session_number (session_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_counselor_id (counselor_id),
+    INDEX idx_scheduled_date (scheduled_date),
+    INDEX idx_status (status)
+);
+
+-- Room Inspections Table
+CREATE TABLE room_inspections (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    inspection_number VARCHAR(50) NOT NULL UNIQUE,
+    room_id INT NOT NULL,
+    hostel_name VARCHAR(100) NOT NULL,
+    room_number VARCHAR(20) NOT NULL,
+    inspection_date DATE NOT NULL,
+    inspector_id INT NOT NULL,
+    cleanliness_score DECIMAL(3,2),
+    condition_score DECIMAL(3,2),
+    overall_status ENUM('Excellent', 'Good', 'Fair', 'Poor', 'Critical') DEFAULT 'Good',
+    findings TEXT,
+    maintenance_required BOOLEAN DEFAULT FALSE,
+    maintenance_notes TEXT,
+    follow_up_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (inspector_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_inspection_number (inspection_number),
+    INDEX idx_room_id (room_id),
+    INDEX idx_inspection_date (inspection_date),
+    INDEX idx_overall_status (overall_status)
+);
+
+-- Duty Rosters Table
+CREATE TABLE duty_rosters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    roster_number VARCHAR(50) NOT NULL UNIQUE,
+    warden_id INT NOT NULL,
+    duty_date DATE NOT NULL,
+    shift ENUM('Morning', 'Afternoon', 'Evening', 'Night') NOT NULL,
+    duty_area ENUM('Hostel A', 'Hostel B', 'Common Areas', 'Perimeter', 'Full Campus') NOT NULL,
+    status ENUM('Scheduled', 'On Duty', 'Completed', 'Absent', 'Replaced') DEFAULT 'Scheduled',
+    replacement_warden INT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (warden_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (replacement_warden) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_roster_number (roster_number),
+    INDEX idx_warden_id (warden_id),
+    INDEX idx_duty_date (duty_date),
+    INDEX idx_status (status)
+);
+
+-- Visitor Logs Table
+CREATE TABLE visitor_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    log_number VARCHAR(50) NOT NULL UNIQUE,
+    visitor_name VARCHAR(200) NOT NULL,
+    visitor_type ENUM('Parent', 'Guardian', 'Official', 'Contractor', 'Delivery', 'Other') NOT NULL,
+    visitor_id_number VARCHAR(100),
+    visitor_phone VARCHAR(20),
+    purpose VARCHAR(200) NOT NULL,
+    person_visiting VARCHAR(200) NOT NULL,
+    visit_date DATE NOT NULL,
+    check_in_time TIME NOT NULL,
+    check_out_time TIME,
+    status ENUM('Checked In', 'Checked Out', 'Overstay') DEFAULT 'Checked In',
+    authorized_by INT NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (authorized_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_log_number (log_number),
+    INDEX idx_visit_date (visit_date),
+    INDEX idx_visitor_type (visitor_type),
+    INDEX idx_status (status)
+);
+
+-- Student Activities Table
+CREATE TABLE student_activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    activity_number VARCHAR(50) NOT NULL UNIQUE,
+    activity_name VARCHAR(200) NOT NULL,
+    activity_type ENUM('Sports', 'Cultural', 'Academic', 'Social', 'Religious', 'Workshop', 'Other') NOT NULL,
+    description TEXT,
+    activity_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    location VARCHAR(200),
+    organizer_id INT NOT NULL,
+    max_participants INT,
+    current_participants INT DEFAULT 0,
+    status ENUM('Planning', 'Open for Registration', 'Registration Closed', 'In Progress', 'Completed', 'Cancelled') DEFAULT 'Planning',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (organizer_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_activity_number (activity_number),
+    INDEX idx_activity_date (activity_date),
+    INDEX idx_activity_type (activity_type),
+    INDEX idx_status (status)
+);
+
+-- DRIVERS DEPARTMENT TABLES
+
+-- Vehicles Table
+CREATE TABLE vehicles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_code VARCHAR(50) NOT NULL UNIQUE,
+    vehicle_name VARCHAR(200) NOT NULL,
+    vehicle_type ENUM('Bus', 'Van', 'Car', 'Motorcycle', 'Other') NOT NULL,
+    license_plate VARCHAR(20) NOT NULL UNIQUE,
+    capacity INT NOT NULL,
+    manufacturer VARCHAR(100),
+    model VARCHAR(100),
+    year INT,
+    fuel_type ENUM('Petrol', 'Diesel', 'Electric', 'Hybrid') DEFAULT 'Diesel',
+    status ENUM('Available', 'In Use', 'Maintenance', 'Out of Service', 'Retired') DEFAULT 'Available',
+    purchase_date DATE,
+    last_service_date DATE,
+    next_service_date DATE,
+    insurance_expiry DATE,
+    assigned_driver INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (assigned_driver) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_vehicle_code (vehicle_code),
+    INDEX idx_license_plate (license_plate),
+    INDEX idx_status (status),
+    INDEX idx_assigned_driver (assigned_driver)
+);
+
+-- Trip Logs Table
+CREATE TABLE trip_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    trip_number VARCHAR(50) NOT NULL UNIQUE,
+    vehicle_id INT NOT NULL,
+    driver_id INT NOT NULL,
+    route_name VARCHAR(200) NOT NULL,
+    trip_type ENUM('Morning Route', 'Evening Route', 'Field Trip', 'Medical Transfer', 'Other') NOT NULL,
+    departure_time TIME NOT NULL,
+    arrival_time TIME,
+    trip_date DATE NOT NULL,
+    start_location VARCHAR(200) NOT NULL,
+    end_location VARCHAR(200) NOT NULL,
+    passengers_count INT DEFAULT 0,
+    distance_km DECIMAL(10,2),
+    fuel_consumed DECIMAL(10,2),
+    status ENUM('Scheduled', 'In Transit', 'Completed', 'Cancelled', 'Delayed') DEFAULT 'Scheduled',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_trip_number (trip_number),
+    INDEX idx_vehicle_id (vehicle_id),
+    INDEX idx_driver_id (driver_id),
+    INDEX idx_trip_date (trip_date),
+    INDEX idx_status (status)
+);
+
+-- Fuel Management Table
+CREATE TABLE fuel_management (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fuel_number VARCHAR(50) NOT NULL UNIQUE,
+    vehicle_id INT NOT NULL,
+    fuel_type ENUM('Petrol', 'Diesel', 'Electric') DEFAULT 'Diesel',
+    fuel_quantity DECIMAL(10,2) NOT NULL,
+    unit_cost DECIMAL(10,2) NOT NULL,
+    total_cost DECIMAL(15,2) GENERATED ALWAYS AS (fuel_quantity * unit_cost) STORED,
+    fueling_date DATE NOT NULL,
+    fueling_station VARCHAR(200),
+    odometer_reading DECIMAL(10,2),
+    filled_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (filled_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_fuel_number (fuel_number),
+    INDEX idx_vehicle_id (vehicle_id),
+    INDEX idx_fueling_date (fueling_date)
+);
+
+-- Route Schedules Table
+CREATE TABLE route_schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    route_code VARCHAR(50) NOT NULL UNIQUE,
+    route_name VARCHAR(200) NOT NULL,
+    route_type ENUM('Morning', 'Evening', 'Both') DEFAULT 'Both',
+    departure_time TIME NOT NULL,
+    return_time TIME,
+    start_point VARCHAR(200) NOT NULL,
+    end_point VARCHAR(200) NOT NULL,
+    stops JSON,
+    distance_km DECIMAL(10,2),
+    estimated_duration_minutes INT,
+    vehicle_id INT,
+    driver_id INT,
+    days_of_operation VARCHAR(50) DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday',
+    status ENUM('Active', 'Inactive', 'Seasonal') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_route_code (route_code),
+    INDEX idx_route_type (route_type),
+    INDEX idx_status (status)
+);
+
+-- MATRONS DEPARTMENT TABLES
+
+-- Student Health Records Table
+CREATE TABLE student_health_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    record_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    blood_type VARCHAR(10),
+    allergies TEXT,
+    chronic_conditions TEXT,
+    medications TEXT,
+    emergency_contact_name VARCHAR(200),
+    emergency_contact_phone VARCHAR(20),
+    emergency_contact_relationship VARCHAR(100),
+    insurance_provider VARCHAR(200),
+    insurance_number VARCHAR(100),
+    last_checkup_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_record_number (record_number),
+    INDEX idx_student_id (student_id)
+);
+
+-- Health Incidents Table
+CREATE TABLE health_incidents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    incident_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    incident_type ENUM('Illness', 'Injury', 'Accident', 'Allergic Reaction', 'Other') NOT NULL,
+    symptoms TEXT NOT NULL,
+    severity ENUM('Minor', 'Moderate', 'Severe', 'Critical') DEFAULT 'Moderate',
+    incident_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    location VARCHAR(200),
+    action_taken TEXT,
+    treatment_given TEXT,
+    referred_to VARCHAR(200),
+    parent_notified BOOLEAN DEFAULT FALSE,
+    parent_notification_time TIMESTAMP NULL,
+    status ENUM('Reported', 'Under Observation', 'Resolved', 'Referred', 'Closed') DEFAULT 'Reported',
+    reported_by INT NOT NULL,
+    follow_up_required BOOLEAN DEFAULT FALSE,
+    follow_up_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (reported_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_incident_number (incident_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_incident_date (incident_date),
+    INDEX idx_severity (severity),
+    INDEX idx_status (status)
+);
+
+-- Meal Tracking Table
+CREATE TABLE meal_tracking (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    meal_number VARCHAR(50) NOT NULL UNIQUE,
+    student_id INT NOT NULL,
+    meal_type ENUM('Breakfast', 'Lunch', 'Dinner', 'Snack') NOT NULL,
+    meal_date DATE NOT NULL,
+    meal_served BOOLEAN DEFAULT FALSE,
+    meal_skipped BOOLEAN DEFAULT FALSE,
+    skip_reason VARCHAR(200),
+    special_dietary_requirements TEXT,
+    allergies_noted TEXT,
+    served_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (served_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_meal_number (meal_number),
+    INDEX idx_student_id (student_id),
+    INDEX idx_meal_date (meal_date),
+    INDEX idx_meal_type (meal_type)
+);
+
+-- LAB TECHNICIANS DEPARTMENT TABLES
+
+-- Lab Equipment Maintenance Table
+CREATE TABLE lab_equipment_maintenance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    maintenance_number VARCHAR(50) NOT NULL UNIQUE,
+    equipment_id INT NOT NULL,
+    equipment_name VARCHAR(200) NOT NULL,
+    maintenance_type ENUM('Preventive', 'Corrective', 'Calibration', 'Inspection', 'Repair') NOT NULL,
+    scheduled_date DATE NOT NULL,
+    completed_date DATE,
+    technician_id INT NOT NULL,
+    maintenance_description TEXT,
+    parts_used TEXT,
+    cost DECIMAL(10,2),
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Overdue') DEFAULT 'Scheduled',
+    next_maintenance_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (technician_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_maintenance_number (maintenance_number),
+    INDEX idx_equipment_id (equipment_id),
+    INDEX idx_scheduled_date (scheduled_date),
+    INDEX idx_status (status)
+);
+
+-- Lab Safety Records Table
+CREATE TABLE lab_safety_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    safety_number VARCHAR(50) NOT NULL UNIQUE,
+    lab_id INT NOT NULL,
+    inspection_type ENUM('Safety Inspection', 'Equipment Check', 'Chemical Safety', 'Fire Safety', 'General Inspection') NOT NULL,
+    inspection_date DATE NOT NULL,
+    inspector_id INT NOT NULL,
+    safety_score DECIMAL(5,2),
+    overall_status ENUM('Excellent', 'Good', 'Fair', 'Poor', 'Critical') DEFAULT 'Good',
+    findings TEXT,
+    hazards_identified TEXT,
+    corrective_actions TEXT,
+    follow_up_required BOOLEAN DEFAULT FALSE,
+    follow_up_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (lab_id) REFERENCES skills_laboratory(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (inspector_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_safety_number (safety_number),
+    INDEX idx_lab_id (lab_id),
+    INDEX idx_inspection_date (inspection_date),
+    INDEX idx_overall_status (overall_status)
+);
+
+-- Chemical Inventory Table
+CREATE TABLE chemical_inventory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    chemical_code VARCHAR(50) NOT NULL UNIQUE,
+    chemical_name VARCHAR(200) NOT NULL,
+    chemical_type ENUM('Acid', 'Base', 'Solvent', 'Reagent', 'Indicator', 'Other') NOT NULL,
+    cas_number VARCHAR(50),
+    hazard_class ENUM('Flammable', 'Corrosive', 'Toxic', 'Reactive', 'Oxidizer', 'Non-hazardous') DEFAULT 'Non-hazardous',
+    storage_location VARCHAR(100),
+    quantity_on_hand DECIMAL(10,2) NOT NULL,
+    unit_of_measure VARCHAR(20) DEFAULT 'ml',
+    reorder_level DECIMAL(10,2),
+    supplier VARCHAR(200),
+    expiry_date DATE,
+    date_received DATE,
+    received_by INT NOT NULL,
+    status ENUM('In Stock', 'Low Stock', 'Expired', 'Discontinued') DEFAULT 'In Stock',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (received_by) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_chemical_code (chemical_code),
+    INDEX idx_chemical_type (chemical_type),
+    INDEX idx_hazard_class (hazard_class),
+    INDEX idx_status (status),
+    INDEX idx_expiry_date (expiry_date)
 );
 
 -- ADDITIONAL STORED PROCEDURES FOR DASHBOARD FUNCTIONALITIES
@@ -2387,6 +2933,185 @@ END //
 DELIMITER ;
 
 DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS request_password_reset(
+    IN p_email VARCHAR(100),
+    IN p_ip_address VARCHAR(45)
+)
+BEGIN
+    DECLARE v_staff_id INT;
+    DECLARE v_reset_token VARCHAR(255);
+    DECLARE v_expires_at TIMESTAMP;
+    
+    -- Check if email exists
+    SELECT id INTO v_staff_id FROM staff WHERE email = p_email AND status = 'Active' LIMIT 1;
+    
+    IF v_staff_id IS NOT NULL THEN
+        -- Generate reset token
+        SET v_reset_token = MD5(CONCAT(p_email, NOW(), RAND()));
+        SET v_expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR);
+        
+        -- Insert reset token
+        INSERT INTO staff_password_resets (
+            staff_id, 
+            reset_token, 
+            reset_requested_at, 
+            expires_at, 
+            ip_address
+        ) VALUES (
+            v_staff_id, 
+            v_reset_token, 
+            NOW(), 
+            v_expires_at, 
+            p_ip_address
+        );
+        
+        -- Return the reset token (in production, this would be sent via email)
+        SELECT 
+            v_reset_token as reset_token,
+            v_expires_at as expires_at,
+            'Password reset token generated successfully' as message,
+            TRUE as success;
+    ELSE
+        SELECT 
+            NULL as reset_token,
+            NULL as expires_at,
+            'Email not found or account inactive' as message,
+            FALSE as success;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS reset_password_with_token(
+    IN p_reset_token VARCHAR(255),
+    IN p_new_password VARCHAR(255),
+    IN p_ip_address VARCHAR(45)
+)
+BEGIN
+    DECLARE v_staff_id INT;
+    DECLARE v_token_valid BOOLEAN;
+    DECLARE v_token_expired BOOLEAN;
+    
+    -- Check if token is valid and not expired
+    SELECT 
+        staff_id, 
+        (expires_at > NOW()) as token_valid,
+        (expires_at < NOW()) as token_expired
+    INTO 
+        v_staff_id, 
+        v_token_valid, 
+        v_token_expired
+    FROM staff_password_resets 
+    WHERE reset_token = p_reset_token AND is_used = FALSE 
+    LIMIT 1;
+    
+    IF v_staff_id IS NOT NULL AND v_token_valid = TRUE THEN
+        -- Update password
+        UPDATE staff 
+        SET password = p_new_password,
+            password_changed = TRUE,
+            is_first_login = FALSE,
+            login_attempts = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+        WHERE id = v_staff_id;
+        
+        -- Mark token as used
+        UPDATE staff_password_resets 
+        SET is_used = TRUE 
+        WHERE reset_token = p_reset_token;
+        
+        -- Log the password reset
+        INSERT INTO staff_activity_log (
+            staff_id, 
+            activity_type, 
+            activity_description, 
+            module_accessed, 
+            ip_address
+        ) VALUES (
+            v_staff_id, 
+            'Settings Change', 
+            'Password reset using token', 
+            'authentication', 
+            p_ip_address
+        );
+        
+        SELECT 
+            'Password reset successfully' as message,
+            TRUE as success;
+    ELSEIF v_staff_id IS NOT NULL AND v_token_expired = TRUE THEN
+        SELECT 
+            'Reset token has expired' as message,
+            FALSE as success;
+    ELSE
+        SELECT 
+            'Invalid reset token' as message,
+            FALSE as success;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS change_password(
+    IN p_staff_id INT,
+    IN p_current_password VARCHAR(255),
+    IN p_new_password VARCHAR(255),
+    IN p_ip_address VARCHAR(45)
+)
+BEGIN
+    DECLARE v_current_hash VARCHAR(255);
+    DECLARE v_password_correct BOOLEAN;
+    
+    -- Get current password hash
+    SELECT password INTO v_current_hash FROM staff WHERE id = p_staff_id LIMIT 1;
+    
+    -- Verify current password (this would use password_verify in PHP)
+    SET v_password_correct = (v_current_hash = p_current_password);
+    
+    IF v_password_correct = TRUE THEN
+        -- Update password
+        UPDATE staff 
+        SET password = p_new_password,
+            password_changed = TRUE,
+            is_first_login = FALSE,
+            login_attempts = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+        WHERE id = p_staff_id;
+        
+        -- Log the password change
+        INSERT INTO staff_activity_log (
+            staff_id, 
+            activity_type, 
+            activity_description, 
+            module_accessed, 
+            ip_address
+        ) VALUES (
+            p_staff_id, 
+            'Settings Change', 
+            'Password changed by user', 
+            'authentication', 
+            p_ip_address
+        );
+        
+        SELECT 
+            'Password changed successfully' as message,
+            TRUE as success;
+    ELSE
+        -- Increment login attempts
+        UPDATE staff 
+        SET login_attempts = login_attempts + 1,
+            last_failed_attempt = NOW()
+        WHERE id = p_staff_id;
+        
+        SELECT 
+            'Current password is incorrect' as message,
+            FALSE as success;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
 CREATE PROCEDURE IF NOT EXISTS get_staff_performance_summary(
     IN p_staff_id INT
 )
@@ -2484,6 +3209,164 @@ BEGIN
             ELSE 'Unpaid'
         END
     WHERE student_id = NEW.student_id;
+END //
+DELIMITER ;
+
+-- DEPARTMENT-SPECIFIC STORED PROCEDURES FOR DASHBOARD STATISTICS
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_security_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status = 'In Progress') as active_patrols,
+        (SELECT COUNT(*) FROM security_incidents WHERE DATE(incident_date) = CURDATE()) as incidents_today,
+        (SELECT COUNT(*) FROM access_control_logs WHERE DATE(access_time) = CURDATE()) as access_entries_today,
+        (SELECT COUNT(*) FROM security_equipment WHERE status = 'Operational') as operational_equipment,
+        (SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status = 'Scheduled') as scheduled_patrols,
+        (SELECT COUNT(*) FROM security_incidents WHERE severity = 'High' AND status != 'Closed') as high_priority_incidents;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_wardens_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM student_welfare_cases WHERE assigned_warden = p_user_id AND status IN ('Open', 'In Progress')) as open_welfare_cases,
+        (SELECT COUNT(*) FROM counseling_sessions WHERE counselor_id = p_user_id AND scheduled_date = CURDATE()) as todays_counseling_sessions,
+        (SELECT COUNT(*) FROM room_inspections WHERE inspection_date = CURDATE()) as todays_inspections,
+        (SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending') as pending_discipline_cases,
+        (SELECT COUNT(*) FROM duty_rosters WHERE warden_id = p_user_id AND duty_date = CURDATE()) as todays_duties,
+        (SELECT COUNT(*) FROM visitor_logs WHERE visit_date = CURDATE() AND status = 'Checked In') as current_visitors;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_drivers_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM vehicles WHERE assigned_driver = p_user_id AND status = 'Available') as available_vehicles,
+        (SELECT COUNT(*) FROM trip_logs WHERE driver_id = p_user_id AND trip_date = CURDATE() AND status = 'In Transit') as active_trips,
+        (SELECT COUNT(*) FROM trip_logs WHERE driver_id = p_user_id AND trip_date = CURDATE() AND status = 'Completed') as completed_trips_today,
+        (SELECT COUNT(*) FROM route_schedules WHERE driver_id = p_user_id AND status = 'Active') as assigned_routes,
+        (SELECT SUM(fuel_quantity) FROM fuel_management WHERE filled_by = p_user_id AND fueling_date = CURDATE()) as fuel_consumed_today,
+        (SELECT COUNT(*) FROM vehicles WHERE status = 'Maintenance') as vehicles_in_maintenance;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_matrons_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM student_welfare_cases WHERE assigned_warden = p_user_id AND status IN ('Open', 'In Progress')) as open_welfare_cases,
+        (SELECT COUNT(*) FROM counseling_sessions WHERE counselor_id = p_user_id AND scheduled_date = CURDATE()) as todays_counseling_sessions,
+        (SELECT COUNT(*) FROM health_incidents WHERE reported_by = p_user_id AND DATE(incident_date) = CURDATE()) as health_incidents_today,
+        (SELECT COUNT(*) FROM health_incidents WHERE severity IN('Severe', 'Critical') AND status != 'Closed') as critical_health_cases,
+        (SELECT COUNT(*) FROM meal_tracking WHERE served_by = p_user_id AND meal_date = CURDATE()) as meals_served_today,
+        (SELECT COUNT(*) FROM room_inspections WHERE inspector_id = p_user_id AND inspection_date = CURDATE()) as todays_inspections;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_lab_technicians_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM lab_equipment_maintenance WHERE technician_id = p_user_id AND status = 'Scheduled') as scheduled_maintenance,
+        (SELECT COUNT(*) FROM lab_equipment_maintenance WHERE technician_id = p_user_id AND status = 'In Progress') as maintenance_in_progress,
+        (SELECT COUNT(*) FROM lab_safety_records WHERE inspector_id = p_user_id AND inspection_date = CURDATE()) as todays_inspections,
+        (SELECT COUNT(*) FROM chemical_inventory WHERE status = 'Low Stock') as low_stock_chemicals,
+        (SELECT COUNT(*) FROM chemical_inventory WHERE expiry_date < DATE_ADD(CURDATE(), INTERVAL 30 DAY)) as expiring_soon,
+        (SELECT COUNT(*) FROM skills_lab_sessions WHERE lecturer_id = p_user_id AND session_date = CURDATE()) as todays_lab_sessions;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_school_librarian_dashboard_statistics(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Available') as available_books,
+        (SELECT COUNT(*) FROM library_transactions WHERE transaction_type = 'Borrow' AND DATE(borrow_date) = CURDATE()) as books_borrowed_today,
+        (SELECT COUNT(*) FROM library_transactions WHERE transaction_type = 'Return' AND DATE(return_date) = CURDATE()) as books_returned_today,
+        (SELECT COUNT(*) FROM library_transactions WHERE status = 'Overdue') as overdue_books,
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Borrowed') as books_on_loan,
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Reserved') as reserved_books;
+END //
+DELIMITER ;
+
+-- Update the main dashboard statistics procedure to include all departments
+DELIMITER //
+DROP PROCEDURE IF EXISTS get_dashboard_statistics //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS get_dashboard_statistics(
+    IN p_user_id INT,
+    IN p_role VARCHAR(100)
+)
+BEGIN
+    -- Return statistics based on user role
+    IF p_role = 'Director General' OR p_role = 'School Principal' OR p_role = 'CEO' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM student_admissions WHERE admission_status = 'Pending') as pending_applications,
+            (SELECT COUNT(DISTINCT program) FROM students WHERE status = 'Active') as active_programs,
+            (SELECT SUM(amount) FROM financial_records WHERE record_type = 'Collection' AND transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_collections;
+    ELSEIF p_role = 'Security' THEN
+        CALL get_security_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Warden' THEN
+        CALL get_wardens_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Driver' THEN
+        CALL get_drivers_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Matron' THEN
+        CALL get_matrons_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Lab Technician' THEN
+        CALL get_lab_technicians_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'School Librarian' THEN
+        CALL get_school_librarian_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'HR Manager' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM recruitment_applications WHERE status = 'Received') as pending_applications,
+            (SELECT COUNT(*) FROM staff_leave_requests WHERE status = 'Pending') as pending_leaves,
+            (SELECT COUNT(*) FROM staff_training WHERE status = 'Scheduled') as upcoming_trainings;
+    ELSEIF p_role = 'School Bursar' OR p_role = 'Bursar' OR p_role = 'Director Finance' THEN
+        SELECT 
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date = CURDATE()) as today_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as week_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as month_collections,
+            (SELECT SUM(balance) FROM fee_accounts WHERE status != 'Paid') as outstanding_fees,
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students;
+    ELSEIF p_role = 'Academic Registrar' OR p_role = 'Director Academics' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE position LIKE '%Lecturer%' AND status = 'Active') as total_lecturers,
+            (SELECT COUNT(DISTINCT course_code) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT AVG(gpa) FROM student_academic_profiles WHERE academic_status = 'Good Standing') as avg_gpa;
+    ELSEIF p_role = 'Head of Nursing' OR p_role = 'Head of Midwifery' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE program LIKE CONCAT('%', p_role, '%') AND status = 'Active') as department_students,
+            (SELECT COUNT(*) FROM staff WHERE department = p_role AND status = 'Active') as department_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT COUNT(*) FROM clinical_placements WHERE status = 'In Progress') as active_placements;
+    ELSE
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE lecturer_id = p_user_id AND status = 'Active') as assigned_courses,
+            (SELECT COUNT(*) FROM examination_records WHERE lecturer_id = p_user_id AND grade_status = 'Draft') as pending_grades;
+    END IF;
 END //
 DELIMITER ;
 

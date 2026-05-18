@@ -1,24 +1,25 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../security-middleware.php';
+// Include unified authentication system
+require_once '../auth-service.php';
 
-// Strict dashboard protection - only CEO allowed
-requireRole('Chief Executive Officer');
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user is authenticated
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../index.php');
+    exit;
+}
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Get current user
+$user = $auth_service->getCurrentUser();
 $user_id = $user['id'] ?? 0;
-$user_role = $_SESSION['role'] ?? '';
+$user_role = $user['role'] ?? '';
+
+// Connect to staff database for dashboard statistics
+$conn = getStaffConnection();
 
 // Get CEO dashboard statistics using stored procedure
 $stats_query = "CALL get_dashboard_statistics(?, ?)";

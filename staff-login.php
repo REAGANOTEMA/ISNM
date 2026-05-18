@@ -4,10 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Use enhanced configuration with multi-database support
-require_once 'includes/config_enhanced.php';
+// Use unified configuration
+require_once 'config/database.php';
 include_once 'includes/functions.php';
-include_once 'includes/photo_upload.php';
 require_once 'auth-service.php';
 
 // Global authentication service
@@ -27,19 +26,11 @@ if ($student_role) {
     exit();
 }
 
-// Handle staff login
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'staff_login') {
-    // The auth-handler.php will process this automatically
-    // No need to handle here - it's already handled in auth-handler.php
-}
-
-// Check if user is already logged in and session is valid
-if (isset($_SESSION['user_id']) && $auth_service->checkSessionValidity()) {
-    if ($_SESSION['type'] === 'staff') {
-        $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
-        header("Location: $dashboard");
-        exit();
-    }
+// Check if user is already logged in
+if ($auth_service->isAuthenticated() && isset($_SESSION['type']) && $_SESSION['type'] === 'staff') {
+    $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
+    header("Location: $dashboard");
+    exit();
 }
 ?>
 

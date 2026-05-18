@@ -1,37 +1,27 @@
 <?php
-// Start session if not already started
+// Include unified authentication system
+require_once '../auth-service.php';
+
+// Start secure session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../staff-login.php");
-    exit();
+// Check if user is authenticated
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../index.php');
+    exit;
 }
 
-// Verify role
-if ($_SESSION['role'] !== 'Drivers') {
-    header("Location: ../staff-login.php");
-    exit();
-}
-
-include '../includes/config.php';
-include '../includes/functions.php';
-include '../includes/auth_functions.php';
-
-// Database connection is already established in config.php
-global $conn;
-
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Get current user
+$user = $auth_service->getCurrentUser();
 $user_id = $user['id'] ?? 0;
+$user_role = $user['role'] ?? '';
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
+
+// Connect to staff database for dashboard statistics
+$conn = getStaffConnection();
 
 // Get driver statistics (using fallback data only)
 $total_trips_today = 8; // Fallback value

@@ -1,23 +1,27 @@
 <?php
-include_once '../includes/config.php';
-// Check if user is logged in and has Warden role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Wardens') {
-    header('Location: ../staff-login.php');
-    exit();
+// Include unified authentication system
+require_once '../auth-service.php';
+
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user is authenticated
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../index.php');
+    exit;
+}
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Get current user
+$user = $auth_service->getCurrentUser();
 $user_id = $user['id'] ?? 0;
+$user_role = $user['role'] ?? '';
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
+
+// Connect to staff database for dashboard statistics
+$conn = getStaffConnection();
 
 // Get warden statistics (using fallback data only)
 $total_students = 150; // Fallback value

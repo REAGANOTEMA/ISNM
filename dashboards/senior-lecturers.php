@@ -1,23 +1,27 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../security-middleware.php';
+// Include unified authentication system
+require_once '../auth-service.php';
 
-// Strict dashboard protection - only senior lecturers allowed
-requireRole('Senior Lecturers');
+// Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Database connection is already established in config.php
-global $conn;
+// Check if user is authenticated
+if (!$auth_service->isAuthenticated()) {
+    header('Location: ../index.php');
+    exit;
+}
 
-// Get user information
-$username = $_SESSION['username'] ?? $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE username = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Get current user
+$user = $auth_service->getCurrentUser();
 $user_id = $user['id'] ?? 0;
+$user_role = $user['role'] ?? '';
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
+
+// Connect to staff database for dashboard statistics
+$conn = getStaffConnection();
 
 // Get lecturer statistics (using fallback data only)
 $total_students = 150; // Fallback value
