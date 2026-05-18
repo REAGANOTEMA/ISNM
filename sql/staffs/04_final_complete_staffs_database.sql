@@ -861,12 +861,13 @@ CREATE TABLE search_index (
     entity_id INT NOT NULL,
     searchable_content LONGTEXT,
     keywords JSON,
+    keywords_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keywords, '$.*'))) STORED,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_entity_type (entity_type),
     INDEX idx_entity_id (entity_id),
     FULLTEXT idx_searchable_content (searchable_content),
-    FULLTEXT idx_keywords (keywords)
+    FULLTEXT idx_keywords (keywords_text)
 );
 
 -- 39. Data Sync Status Table
