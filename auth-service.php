@@ -387,35 +387,104 @@ class AuthenticationService {
     }
     
     /**
+     * Map organogram position labels to canonical staff role names
+     * @param string $position
+     * @return string
+     */
+    public function resolveOrganogramPosition($position) {
+        $position = trim($position);
+        $aliases = [
+            'Chief Executive Officer' => 'CEO',
+            'Head of Nursing' => 'Head Nursing',
+            'Head of Midwifery' => 'Head Midwifery',
+        ];
+        return $aliases[$position] ?? $position;
+    }
+
+    /**
+     * Normalize role/position strings for comparison
+     * @param string $value
+     * @return string
+     */
+    public function normalizeRoleKey($value) {
+        return strtolower(preg_replace('/[^a-z0-9]+/i', ' ', trim($value)));
+    }
+
+    /**
+     * Check if organogram position matches the user's DB role
+     * @param string $requestedPosition
+     * @param string $userRole
+     * @return bool
+     */
+    public function positionMatchesRole($requestedPosition, $userRole) {
+        $requested = $this->normalizeRoleKey($this->resolveOrganogramPosition($requestedPosition));
+        $role = $this->normalizeRoleKey($userRole);
+        if ($requested === '' || $role === '') {
+            return false;
+        }
+        return strpos($role, $requested) !== false || strpos($requested, $role) !== false;
+    }
+
+    /**
+     * Look up active staff email for a role (used by organogram login hints)
+     * @param string $roleName
+     * @return string|null
+     */
+    public function getStaffEmailForRole($roleName) {
+        $roleName = $this->resolveOrganogramPosition($roleName);
+        try {
+            $conn = getStaffConnection();
+            $stmt = $conn->prepare(
+                "SELECT s.email FROM staff s
+                 INNER JOIN staff_roles sr ON s.role_id = sr.id
+                 WHERE sr.role_name = ? AND s.status = 'Active'
+                 ORDER BY s.id ASC LIMIT 1"
+            );
+            $stmt->bind_param("s", $roleName);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            return $row['email'] ?? null;
+        } catch (Exception $e) {
+            error_log('getStaffEmailForRole: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Get dashboard route based on user role
      * @param string $role
      * @return string
      */
     public function getDashboardRoute($role) {
-        $role = strtolower($role);
+        $role = $this->normalizeRoleKey($role);
         
         $dashboardRoutes = [
             'director general' => 'dashboards/director-general.php',
+            'chief executive officer' => 'dashboards/ceo.php',
+            'ceo' => 'dashboards/ceo.php',
             'hr manager' => 'dashboards/hr-manager.php',
             'bursar' => 'dashboards/bursar.php',
+            'school bursar' => 'dashboards/school-bursar.php',
             'academic registrar' => 'dashboards/academic-registrar.php',
             'school principal' => 'dashboards/school-principal.php',
             'director academics' => 'dashboards/director-academics.php',
             'director finance' => 'dashboards/director-finance.php',
             'director ict' => 'dashboards/director-ict.php',
             'head nursing' => 'dashboards/head-nursing.php',
+            'head of nursing' => 'dashboards/head-nursing.php',
             'head midwifery' => 'dashboards/head-midwifery.php',
-            'ceo' => 'dashboards/ceo.php',
+            'head of midwifery' => 'dashboards/head-midwifery.php',
             'deputy principal' => 'dashboards/deputy-principal.php',
+            'school secretary' => 'dashboards/school-secretary.php',
             'drivers' => 'dashboards/drivers.php',
             'lab technicians' => 'dashboards/lab-technicians.php',
             'matrons' => 'dashboards/matrons.php',
-            'non-teaching staff' => 'dashboards/non-teaching-staff.php',
+            'non teaching staff' => 'dashboards/non-teaching-staff.php',
             'school librarian' => 'dashboards/school-librarian.php',
             'security' => 'dashboards/security.php',
             'senior lecturers' => 'dashboards/senior-lecturers.php',
             'wardens' => 'dashboards/wardens.php',
-            'lecturers' => 'dashboards/lecturers.php'
+            'lecturers' => 'dashboards/lecturers.php',
         ];
         
         return $dashboardRoutes[$role] ?? 'dashboards/ceo.php';

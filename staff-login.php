@@ -14,6 +14,8 @@ $auth_service = new AuthenticationService();
 
 // Store position from organogram if provided
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
+$resolved_role = $requested_position ? $auth_service->resolveOrganogramPosition($requested_position) : '';
+$suggested_email = $resolved_role ? $auth_service->getStaffEmailForRole($resolved_role) : '';
 if ($requested_position) {
     $_SESSION['requested_position'] = $requested_position;
 }
@@ -42,6 +44,7 @@ if ($auth_service->isAuthenticated() && isset($_SESSION['type']) && $_SESSION['t
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#1a237e">
+    <link rel="manifest" href="manifest.json">
     <title>Staff Login - ISNM School Management System</title>
     <link rel="icon" type="image/x-icon" href="images/school-logo.png">
     <link rel="apple-touch-icon" href="images/school-logo.png">
@@ -507,15 +510,26 @@ if ($auth_service->isAuthenticated() && isset($_SESSION['type']) && $_SESSION['t
                     </div>
                 <?php endif; ?>
 
+                <?php if ($requested_position): ?>
+                    <div class="alert alert-info mb-3" role="status">
+                        <i class="fas fa-sitemap me-2"></i>
+                        Logging in as: <strong><?php echo htmlspecialchars($requested_position); ?></strong>
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST" action="auth-handler.php">
                     <input type="hidden" name="action" value="staff_login">
+                    <?php if ($requested_position): ?>
+                    <input type="hidden" name="requested_position" value="<?php echo htmlspecialchars($requested_position); ?>">
+                    <?php endif; ?>
                     
                     <div class="form-group">
                         <label for="email" class="form-label">Email Address</label>
                         <div class="input-group">
                             <i class="fas fa-envelope"></i>
                             <input type="email" class="form-control" id="email" name="email" 
-                                   placeholder="Enter your staff email" required autocomplete="email">
+                                   placeholder="Enter your staff email" required autocomplete="email"
+                                   value="<?php echo $suggested_email ? htmlspecialchars($suggested_email) : ''; ?>">
                         </div>
                     </div>
                     

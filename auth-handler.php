@@ -89,22 +89,8 @@ function handleStaffLogin() {
         $auth_service->createSecureSession($result['user']);
         $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
         
-        // If user arrived via an organogram position link, prefer that destination when it matches role
-        $requested = $_SESSION['requested_position'] ?? '';
-        if (!empty($requested)) {
-            // Normalize both strings for comparison
-            $normRequested = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $requested));
-            $normUserRole = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $result['user']['role']));
-
-            // If requested position text appears in the role name (normalized), redirect there
-            if (strpos($normUserRole, trim($normRequested)) !== false || strpos($normRequested, $normUserRole) !== false) {
-                // Map requested position to dashboard route using same router
-                $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
-                unset($_SESSION['requested_position']);
-                header("Location: $dashboard");
-                exit();
-            }
-            // otherwise fall through to default dashboard
+        // If user arrived via organogram, clear position hint after login
+        if (!empty($_SESSION['requested_position'])) {
             unset($_SESSION['requested_position']);
         }
 

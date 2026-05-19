@@ -12,6 +12,7 @@
   <meta name="theme-color" content="#3E2723">
   <meta name="msapplication-TileColor" content="#3E2723">
   <meta name="msapplication-config" content="/browserconfig.xml">
+  <link rel="manifest" href="manifest.json">
   
   <title><?php echo isset($pageTitle) ? $pageTitle : 'Iganga School of Nursing and Midwifery'; ?></title>
   <meta name="description" content="Iganga School of Nursing and Midwifery - Quality Healthcare Education in Uganda">
