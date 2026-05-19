@@ -297,85 +297,98 @@ function hasPermission($permission, $userId = null) {
 }
 }
 
-// Performance monitoring
-function trackPerformance($metric, $value, $unit = '', $database = 'staffs') {
-    try {
-        $sql = "INSERT INTO performance_metrics (user_id, metric_type, metric_value, metric_unit, recorded_at) VALUES (?, ?, ?, ?, NOW())";
-        $params = [$_SESSION['user_id'] ?? 0, $metric, $value, $unit];
-        
-        DatabaseConnection::executeInsert($database, $sql, $params);
-        
-    } catch (Exception $e) {
-        error_log("Performance tracking error: " . $e->getMessage());
+if (!function_exists('trackPerformance')) {
+    // Performance monitoring
+    function trackPerformance($metric, $value, $unit = '', $database = 'staffs') {
+        try {
+            $sql = "INSERT INTO performance_metrics (user_id, metric_type, metric_value, metric_unit, recorded_at) VALUES (?, ?, ?, ?, NOW())";
+            $params = [$_SESSION['user_id'] ?? 0, $metric, $value, $unit];
+            
+            DatabaseConnection::executeInsert($database, $sql, $params);
+            
+        } catch (Exception $e) {
+            error_log("Performance tracking error: " . $e->getMessage());
+        }
     }
 }
 
 // Smart suggestions
-function addSmartSuggestion($userId, $suggestion, $type = 'action', $priority = 'medium') {
-    try {
-        $sql = "INSERT INTO smart_suggestions (user_id, suggestion_type, suggestion_text, priority, created_at) VALUES (?, ?, ?, ?, NOW())";
-        $params = [$userId, $type, $suggestion, $priority];
-        
-        DatabaseConnection::executeInsert('staffs', $sql, $params);
-        
-    } catch (Exception $e) {
-        error_log("Smart suggestion error: " . $e->getMessage());
-    }
-}
-
-// Document generation logging
-function logDocumentGeneration($documentType, $documentId, $database = 'staffs') {
-    try {
-        $sql = "INSERT INTO document_generation_log (document_type, document_id, generated_by, created_at) VALUES (?, ?, ?, NOW())";
-        $params = [$documentType, $documentId, $_SESSION['user_id'] ?? 0];
-        
-        DatabaseConnection::executeInsert($database, $sql, $params);
-        
-    } catch (Exception $e) {
-        error_log("Document generation log error: " . $e->getMessage());
-    }
-}
-
-// Real-time updates
-function addRealTimeUpdate($updateType, $title, $description, $data = null, $priority = 'medium') {
-    try {
-        $sql = "INSERT INTO real_time_updates (update_type, update_title, update_description, update_data, priority, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
-        $params = [$updateType, $title, $description, json_encode($data), $priority];
-        
-        DatabaseConnection::executeInsert('staffs', $sql, $params);
-        
-    } catch (Exception $e) {
-        error_log("Real-time update error: " . $e->getMessage());
-    }
-}
-
-// System settings management
-function getSystemSetting($key, $default = null) {
-    try {
-        $sql = "SELECT setting_value FROM system_settings WHERE setting_key = ? AND is_public = 1";
-        $result = DatabaseConnection::executeQuery('staffs', $sql, [$key]);
-        
-        if ($result && count($result) > 0) {
-            return $result[0]['setting_value'];
+if (!function_exists('addSmartSuggestion')) {
+    // Smart suggestions
+    function addSmartSuggestion($userId, $suggestion, $type = 'action', $priority = 'medium') {
+        try {
+            $sql = "INSERT INTO smart_suggestions (user_id, suggestion_type, suggestion_text, priority, created_at) VALUES (?, ?, ?, ?, NOW())";
+            $params = [$userId, $type, $suggestion, $priority];
+            
+            DatabaseConnection::executeInsert('staffs', $sql, $params);
+            
+        } catch (Exception $e) {
+            error_log("Smart suggestion error: " . $e->getMessage());
         }
-        
-        return $default;
-        
-    } catch (Exception $e) {
-        error_log("System setting retrieval error: " . $e->getMessage());
-        return $default;
     }
 }
 
-function setSystemSetting($key, $value, $type = 'text') {
-    try {
-        $sql = "INSERT INTO system_settings (setting_key, setting_value, setting_type, created_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()";
-        $params = [$key, $value, $type];
-        
-        DatabaseConnection::executeQuery('staffs', $sql, $params);
-        
-    } catch (Exception $e) {
-        error_log("System setting update error: " . $e->getMessage());
+if (!function_exists('logDocumentGeneration')) {
+    // Document generation logging
+    function logDocumentGeneration($documentType, $documentId, $database = 'staffs') {
+        try {
+            $sql = "INSERT INTO document_generation_log (document_type, document_id, generated_by, created_at) VALUES (?, ?, ?, NOW())";
+            $params = [$documentType, $documentId, $_SESSION['user_id'] ?? 0];
+            
+            DatabaseConnection::executeInsert($database, $sql, $params);
+            
+        } catch (Exception $e) {
+            error_log("Document generation log error: " . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('addRealTimeUpdate')) {
+    // Real-time updates
+    function addRealTimeUpdate($updateType, $title, $description, $data = null, $priority = 'medium') {
+        try {
+            $sql = "INSERT INTO real_time_updates (update_type, update_title, update_description, update_data, priority, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+            $params = [$updateType, $title, $description, json_encode($data), $priority];
+            
+            DatabaseConnection::executeInsert('staffs', $sql, $params);
+            
+        } catch (Exception $e) {
+            error_log("Real-time update error: " . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('getSystemSetting')) {
+    // System settings management
+    function getSystemSetting($key, $default = null) {
+        try {
+            $sql = "SELECT setting_value FROM system_settings WHERE setting_key = ? AND is_public = 1";
+            $result = DatabaseConnection::executeQuery('staffs', $sql, [$key]);
+            
+            if ($result && count($result) > 0) {
+                return $result[0]['setting_value'];
+            }
+            
+            return $default;
+            
+        } catch (Exception $e) {
+            error_log("System setting retrieval error: " . $e->getMessage());
+            return $default;
+        }
+    }
+}
+
+if (!function_exists('setSystemSetting')) {
+    function setSystemSetting($key, $value, $type = 'text') {
+        try {
+            $sql = "INSERT INTO system_settings (setting_key, setting_value, setting_type, created_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()";
+            $params = [$key, $value, $type];
+            
+            DatabaseConnection::executeQuery('staffs', $sql, $params);
+            
+        } catch (Exception $e) {
+            error_log("System setting update error: " . $e->getMessage());
+        }
     }
 }
 ?>

@@ -82,6 +82,7 @@ function handleStaffLogin() {
     
     $email = sanitizeInput($_POST['email'] ?? '');
     $password = sanitizeInput($_POST['password'] ?? '');
+    $requestedPosition = $_POST['requested_position'] ?? '';
     
     $result = $auth_service->authenticateStaff($email, $password);
     
@@ -89,13 +90,25 @@ function handleStaffLogin() {
         $auth_service->createSecureSession($result['user']);
         $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
         
-        // If user arrived via organogram, clear position hint after login
-        if (!empty($_SESSION['requested_position'])) {
-            unset($_SESSION['requested_position']);
+        // Determine dashboard route
+        $dashboard = null;
+        
+        // Priority 1: If coming from organogram position, resolve to dashboard
+        if (!empty($requestedPosition)) {
+            // Resolve organogram position to role and get dashboard
+            $resolvedRole = $auth_service->resolveOrganogramPosition($requestedPosition);
+            $dashboard = $auth_service->getDashboardRoute($resolvedRole);
+            // Clear position hint after use
+            if (!empty($_SESSION['requested_position'])) {
+                unset($_SESSION['requested_position']);
+            }
         }
-
-        // Get dashboard route based on role
-        $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
+        
+        // Priority 2: Use user's actual role-based dashboard
+        if (empty($dashboard)) {
+            $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
+        }
+        
         header("Location: $dashboard");
         exit();
     } else {
