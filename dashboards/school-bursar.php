@@ -18,7 +18,7 @@ if (!$auth_service->isAuthenticated()) {
 
 // Check if user has the correct role
 $userRole = $_SESSION['role'] ?? '';
-if (stripos($userRole, 'bursar') === false && stripos($userRole, 'school') === false && stripos($userRole, 'accountant') === false) {
+if (!$auth_service->hasFullInstitutionAccess($userRole) && stripos($userRole, 'bursar') === false && stripos($userRole, 'school') === false && stripos($userRole, 'accountant') === false) {
     header('Location: ../staff-login.php?error=unauthorized');
     exit();
 }

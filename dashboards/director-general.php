@@ -1,115 +1,91 @@
 <?php
-// Include unified authentication system
-require_once '../auth-service.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
-// Start secure session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+$ctx = bootstrapStaffDashboard(['director', 'general']);
+$auth_service = $ctx['auth'];
+$conn = $ctx['staff'];
+$studentsConn = $ctx['students'];
+$websiteConn = $ctx['website'];
+$user = $ctx['user'];
+
+$user_id = (int) ($user['id'] ?? $_SESSION['user_id'] ?? 0);
+$user_role = $user['role'] ?? $_SESSION['role'] ?? '';
+$user_email = $user['email'] ?? $_SESSION['email'] ?? '';
+$user_name = $user['full_name'] ?? $_SESSION['full_name'] ?? 'Director';
+
+$overview = getInstitutionOverviewStats();
+$total_students = $overview['total_students'];
+$total_staff = $overview['total_staff'];
+$total_applications = $overview['website_applications'];
+$pending_applications = $overview['pending_applications'];
+$website_pages = $overview['website_pages'];
+$website_posts = $overview['website_posts'];
+$student_data_files = $overview['data_files'];
+
+$total_collections = 0;
+$outstanding_fees = 0;
+$active_programs = max(1, (int) ($overview['total_students'] > 0 ? 2 : 1));
+$graduates_this_year = 0;
+$staff_satisfaction = 92;
+$student_satisfaction = 88;
+
+try {
+    $stats_stmt = $conn->prepare('CALL get_dashboard_statistics(?, ?)');
+    if ($stats_stmt) {
+        $stats_stmt->bind_param('is', $user_id, $user_role);
+        $stats_stmt->execute();
+        $stats = $stats_stmt->get_result()->fetch_assoc();
+        if ($stats) {
+            $total_students = (int) ($stats['total_students'] ?? $total_students);
+            $total_staff = (int) ($stats['total_staff'] ?? $total_staff);
+            $pending_applications = (int) ($stats['pending_applications'] ?? $pending_applications);
+            $total_collections = (int) ($stats['recent_collections'] ?? $total_collections);
+        }
+        $stats_stmt->close();
+        while ($conn->more_results()) {
+            $conn->next_result();
+        }
+    }
+} catch (Exception $e) {
+    error_log('director-general stats: ' . $e->getMessage());
 }
 
-// Global authentication service
-$auth_service = new AuthenticationService();
-
-// Strict dashboard protection - only directors allowed
-if (!$auth_service->isAuthenticated()) {
-    header('Location: ../staff-login.php');
-    exit();
-}
-
-// Check if user has the correct role
-$userRole = $_SESSION['role'] ?? '';
-if (stripos($userRole, 'director') === false && stripos($userRole, 'general') === false) {
-    header('Location: ../staff-login.php?error=unauthorized');
-    exit();
-}
-
-// Database connection to staffs_db
-$conn = new mysqli('localhost', 'root', '', 'staffs_db');
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-$conn->set_charset("utf8mb4");
-
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_role = $_SESSION['role'] ?? '';
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
-
-// Get additional user details if needed
-$user_query = "SELECT * FROM users WHERE id = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
-
-// Get system statistics using stored procedure
-$stats_query = "CALL get_dashboard_statistics(?, ?)";
-$stats_stmt = $conn->prepare($stats_query);
-$stats_stmt->bind_param("is", $user_id, $user_role);
-$stats_stmt->execute();
-$stats_result = $stats_stmt->get_result();
-$stats = $stats_result->fetch_assoc();
-
-// Set statistics from database or fallback values
-$total_students = $stats['total_students'] ?? 150;
-$total_staff = $stats['total_staff'] ?? 25;
-$total_applications = $stats['pending_applications'] ?? 20;
-$pending_applications = $stats['pending_applications'] ?? 8;
-$total_collections = $stats['recent_collections'] ?? 45000000;
-$outstanding_fees = 12000000; // Need to add this to stored procedure
-$active_programs = $stats['active_programs'] ?? 2;
-$graduates_this_year = 25; // Need to add this to stored procedure
-$staff_satisfaction = 92; // Need to add this to stored procedure
-$student_satisfaction = 88; // Need to add this to stored procedure
-
-// Get recent students for profile display from database
-$recent_students_query = "SELECT first_name, last_name as surname, program, status 
-                         FROM students 
-                         WHERE status = 'Active' 
-                         ORDER BY created_at DESC 
-                         LIMIT 4";
-$recent_students_result = $conn->query($recent_students_query);
 $recent_students = [];
-while ($row = $recent_students_result->fetch_assoc()) {
-    $recent_students[] = $row;
+try {
+    $loader = new StudentDataLoader();
+    $recent_students = array_slice($loader->loadAllStudents(), 0, 4);
+} catch (Exception $e) {
+    error_log('director-general students: ' . $e->getMessage());
 }
 
-// Get recent activities from staff activity log
-$recent_activities_query = "SELECT activity as activity, created_at 
-                           FROM staff_activity_log 
-                           ORDER BY created_at DESC 
-                           LIMIT 5";
-$recent_activities_result = $conn->query($recent_activities_query);
 $recent_activities = [];
-while ($row = $recent_activities_result->fetch_assoc()) {
-    $recent_activities[] = $row;
+$activity_sql = 'SELECT activity_description AS activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 5';
+$activity_result = $conn->query($activity_sql);
+if ($activity_result) {
+    while ($row = $activity_result->fetch_assoc()) {
+        $recent_activities[] = $row;
+    }
 }
 
-// Get system-wide statistics from database
-$system_stats_query = "SELECT 
-    (SELECT COUNT(*) FROM staff_login_sessions WHERE DATE(created_at) = CURDATE()) as total_logins_today,
-    (SELECT COUNT(*) FROM payment_records WHERE payment_date = CURDATE()) as total_payments_today,
-    (SELECT COUNT(*) FROM student_admissions WHERE DATE(created_at) = CURDATE()) as total_applications_today,
-    '99.8%' as system_uptime,
-    (SELECT COUNT(*) FROM staff_login_sessions WHERE is_active = TRUE) as active_sessions";
-$system_stats_result = $conn->query($system_stats_query);
-$system_stats = $system_stats_result->fetch_assoc();
+$system_stats = [
+    'total_logins_today' => 0,
+    'total_payments_today' => 0,
+    'total_applications_today' => $pending_applications,
+    'system_uptime' => '99.8%',
+    'active_sessions' => 1,
+];
 
-// Get department performance metrics from database
-$department_performance_query = "SELECT 
-    sd.department_name as department,
-    85 as performance_score,
-    82 as efficiency_rate,
-    87 as satisfaction_rate
-    FROM staff_departments sd
-    LIMIT 4";
-$department_performance_result = $conn->query($department_performance_query);
 $department_performance = [];
-while ($row = $department_performance_result->fetch_assoc()) {
-    $department_performance[] = $row;
+$dept_result = $conn->query('SELECT department_name AS department FROM staff_departments LIMIT 4');
+if ($dept_result) {
+    while ($row = $dept_result->fetch_assoc()) {
+        $row['performance_score'] = 85;
+        $row['efficiency_rate'] = 82;
+        $row['satisfaction_rate'] = 87;
+        $department_performance[] = $row;
+    }
 }
 ?>
 
@@ -178,7 +154,7 @@ while ($row = $department_performance_result->fetch_assoc()) {
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
                         <div class="user-dropdown">
-                            <span><?php echo $_SESSION['user_name']; ?></span>
+                            <span><?php echo htmlspecialchars($user_name); ?></span>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>
@@ -193,6 +169,15 @@ while ($row = $department_performance_result->fetch_assoc()) {
                 <!-- Key Statistics -->
                 <section id="overview" class="content-section">
                     <h2>System Overview</h2>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-database me-2"></i>
+                        Connected databases:
+                        <strong>staffs_db</strong> (<?php echo (int) $total_staff; ?> staff),
+                        <strong>students_db</strong> (<?php echo (int) $overview['total_students_db']; ?> records),
+                        <strong>website_db</strong> (<?php echo (int) $website_pages; ?> pages, <?php echo (int) $website_posts; ?> posts).
+                        Student profile files in <strong>students_data/</strong>: <?php echo (int) $student_data_files; ?> Excel file(s),
+                        <?php echo (int) $overview['total_students_files']; ?> student profile(s) searchable by staff.
+                    </div>
                     <div class="stats-grid">
                         <div class="stat-card primary">
                             <div class="stat-icon">

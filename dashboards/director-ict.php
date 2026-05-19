@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Check if user is authenticated
 if (!$auth_service->isAuthenticated()) {
-    header('Location: ../index.php');
+    header('Location: ../staff-login.php');
     exit;
 }
 
@@ -138,6 +138,7 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- System Overview -->
                 <section id="overview" class="content-section">
                     <h2>System Overview</h2>

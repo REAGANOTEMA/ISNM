@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Check if user is authenticated
 if (!$auth_service->isAuthenticated()) {
-    header('Location: ../index.php');
+    header('Location: ../staff-login.php');
     exit;
 }
 
@@ -153,6 +153,7 @@ $academic_activities = $academic_activities_result ? $academic_activities_result
             
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Academic Overview -->
                 <section id="overview" class="content-section">
                     <h2>Academic Overview</h2>

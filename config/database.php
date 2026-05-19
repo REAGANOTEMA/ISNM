@@ -7,8 +7,10 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', 'ReagaN23#');
-define('DB_NAME', 'isnm_db');
+define('DB_NAME', 'students_db');
 define('DB_CHARSET', 'utf8mb4');
+define('STUDENTS_DB_NAME', 'students_db');
+define('WEBSITE_DB_NAME', 'website_db');
 
 // Staff database connection parameters
 define('STAFF_DB_HOST', 'localhost');
@@ -17,10 +19,15 @@ define('STAFF_DB_PASS', 'ReagaN23#');
 define('STAFF_DB_NAME', 'staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
-// Create database connection (default to isnm_db for students)
+// Default connection — students_db (legacy name kept for compatibility)
 function getConnection() {
+    return getStudentsConnection();
+}
+
+// Legacy alias
+function getStudentsConnection() {
     try {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, STUDENTS_DB_NAME);
         $conn->set_charset(DB_CHARSET);
         
         if ($conn->connect_error) {
@@ -51,27 +58,10 @@ function getStaffConnection() {
     }
 }
 
-// Create students database connection
-function getStudentsConnection() {
-    try {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, 'students_db');
-        $conn->set_charset(DB_CHARSET);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Students database connection failed: " . $conn->connect_error);
-        }
-        
-        return $conn;
-    } catch (Exception $e) {
-        error_log("Students Database Error: " . $e->getMessage());
-        die("Students database connection failed. Please contact administrator.");
-    }
-}
-
 // Create website database connection
 function getWebsiteConnection() {
     try {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, 'website_db');
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, WEBSITE_DB_NAME);
         $conn->set_charset(DB_CHARSET);
         
         if ($conn->connect_error) {

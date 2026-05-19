@@ -4,9 +4,22 @@
  * Reusable component to search and display students from Excel data
  */
 
+require_once __DIR__ . '/../auth-service.php';
 require_once __DIR__ . '/student_data_loader.php';
 
-// Initialize data loader
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$auth_service = new AuthenticationService();
+$canSearchStudents = $auth_service->isAuthenticated()
+    && ($_SESSION['type'] ?? '') === 'staff'
+    && $auth_service->canSearchStudentProfiles($_SESSION['role'] ?? '');
+
+if (!$canSearchStudents) {
+    return;
+}
+
 $dataLoader = new StudentDataLoader();
 
 // Handle search

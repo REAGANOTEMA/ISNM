@@ -307,21 +307,31 @@ class AuthenticationService {
         $_SESSION['department'] = $user['department'] ?? '';
         $_SESSION['logged_in'] = true;
         $_SESSION['login_time'] = time();
+        $_SESSION['can_access_all'] = $this->hasFullInstitutionAccess($user['role'] ?? '');
+        $_SESSION['dashboard_path'] = $this->getDashboardRoute($user['role'] ?? '');
         
-        // Log the login in staff activity log
+        // Log the login in staff activity log (non-blocking if tables differ)
         if ($user['type'] === 'staff') {
-            $conn = getStaffConnection();
-            $stmt = $conn->prepare("INSERT INTO staff_login_sessions (staff_id, session_token, ip_address, user_agent, created_at, expires_at) VALUES (?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))");
-            $session_token = session_id();
-            $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
-            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            $stmt->bind_param("isss", $user['id'], $session_token, $ip_address, $user_agent);
-            $stmt->execute();
-            
-            // Log activity
-            $log_stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) VALUES (?, 'Login', 'User logged in successfully', 'authentication', ?, ?)");
-            $log_stmt->bind_param("iss", $user['id'], $ip_address, $user_agent);
-            $log_stmt->execute();
+            try {
+                $conn = getStaffConnection();
+                $session_token = session_id();
+                $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+                $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+                $stmt = $conn->prepare("INSERT INTO staff_login_sessions (staff_id, session_token, ip_address, user_agent, created_at, expires_at) VALUES (?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))");
+                if ($stmt) {
+                    $stmt->bind_param("isss", $user['id'], $session_token, $ip_address, $user_agent);
+                    $stmt->execute();
+                }
+
+                $log_stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) VALUES (?, 'Login', 'User logged in successfully', 'authentication', ?, ?)");
+                if ($log_stmt) {
+                    $log_stmt->bind_param("iss", $user['id'], $ip_address, $user_agent);
+                    $log_stmt->execute();
+                }
+            } catch (Exception $e) {
+                error_log('Session log skipped: ' . $e->getMessage());
+            }
         }
         
         return true;
@@ -455,7 +465,69 @@ class AuthenticationService {
      * @param string $role
      * @return string
      */
+    /**
+     * Director / CEO — full access to all modules and student profiles.
+     */
+    public function hasFullInstitutionAccess($role) {
+        $role = $this->normalizeRoleKey($role);
+        $executive = [
+            'director general',
+            'ceo',
+            'chief executive officer',
+            'system administrator',
+        ];
+        return in_array($role, $executive, true);
+    }
+
+    public function canSearchStudentProfiles($role) {
+        if ($this->hasFullInstitutionAccess($role)) {
+            return true;
+        }
+        $role = $this->normalizeRoleKey($role);
+        $allowed = [
+            'director academics', 'director finance', 'director ict',
+            'school principal', 'deputy principal', 'academic registrar',
+            'hr manager', 'school secretary', 'school bursar', 'bursar',
+            'head nursing', 'head midwifery', 'head of nursing', 'head of midwifery',
+            'senior lecturers', 'lecturers', 'school librarian',
+            'matrons', 'wardens', 'lab technicians', 'non teaching staff',
+        ];
+        return in_array($role, $allowed, true) || strpos($role, 'director') !== false
+            || strpos($role, 'lecturer') !== false || strpos($role, 'registrar') !== false;
+    }
+
     public function getDashboardRoute($role) {
+        $roleName = trim($role);
+        if ($roleName !== '') {
+            try {
+                $conn = getStaffConnection();
+                $stmt = $conn->prepare(
+                    "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
+                );
+                $stmt->bind_param("s", $roleName);
+                $stmt->execute();
+                $row = $stmt->get_result()->fetch_assoc();
+                if (!empty($row['dashboard_path'])) {
+                    return ltrim($row['dashboard_path'], '/');
+                }
+
+                $resolved = $this->resolveOrganogramPosition($roleName);
+                if ($resolved !== $roleName) {
+                    $stmt2 = $conn->prepare(
+                        "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
+                    );
+                    $stmt2->bind_param("s", $resolved);
+                    $stmt2->execute();
+                    $row2 = $stmt2->get_result()->fetch_assoc();
+                    if (!empty($row2['dashboard_path'])) {
+                        return ltrim($row2['dashboard_path'], '/');
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('getDashboardRoute DB: ' . $e->getMessage());
+            }
+        }
+
         $role = $this->normalizeRoleKey($role);
         
         $dashboardRoutes = [

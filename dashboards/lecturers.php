@@ -18,35 +18,43 @@ if (!$auth_service->isAuthenticated()) {
 
 // Check if user has the correct role
 $userRole = $_SESSION['role'] ?? '';
-if (stripos($userRole, 'lecturer') === false) {
+if (!$auth_service->hasFullInstitutionAccess($userRole) && stripos($userRole, 'lecturer') === false) {
     header('Location: ../staff-login.php?error=unauthorized');
     exit();
 }
 
-// Database connection
-$conn = getConnection();
+$conn = getStaffConnection();
+$studentsConn = getStudentsConnection();
 
-// Get user information from session
 $user_id = $_SESSION['user_id'] ?? 0;
 $user_role = $_SESSION['role'] ?? '';
 $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 
-// Get additional user details if needed
-$user_query = "SELECT * FROM users WHERE id = ?";
+$user_query = "SELECT s.*, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?";
 $stmt = $conn->prepare($user_query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user_result = $stmt->get_result();
 $user = $user_result->fetch_assoc();
 
-// Get Lecturer dashboard statistics using stored procedure
-$stats_query = "CALL get_dashboard_statistics(?, ?)";
-$stats_stmt = $conn->prepare($stats_query);
-$stats_stmt->bind_param("is", $user_id, $user_role);
-$stats_stmt->execute();
-$stats_result = $stats_stmt->get_result();
-$stats = $stats_result->fetch_assoc();
+$stats = [];
+try {
+    $stats_query = "CALL get_dashboard_statistics(?, ?)";
+    $stats_stmt = $conn->prepare($stats_query);
+    if ($stats_stmt) {
+        $stats_stmt->bind_param("is", $user_id, $user_role);
+        $stats_stmt->execute();
+        $stats_result = $stats_stmt->get_result();
+        $stats = $stats_result->fetch_assoc() ?: [];
+        $stats_stmt->close();
+        while ($conn->more_results()) {
+            $conn->next_result();
+        }
+    }
+} catch (Exception $e) {
+    error_log('lecturers stats: ' . $e->getMessage());
+}
 
 // Set statistics from database or fallback values
 $total_students = $stats['total_students'] ?? 150;
@@ -138,6 +146,7 @@ $recent_activities = [
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Teaching Overview -->
                 <section id="overview" class="content-section">
                     <h2>Teaching Overview</h2>

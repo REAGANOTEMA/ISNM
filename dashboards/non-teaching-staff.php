@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Check if user is authenticated
 if (!$auth_service->isAuthenticated()) {
-    header('Location: ../index.php');
+    header('Location: ../staff-login.php');
     exit;
 }
 

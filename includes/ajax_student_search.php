@@ -1,62 +1,58 @@
 <?php
-// AJAX handler for student search functionality
+/**
+ * AJAX student search for staff dashboards (DB + students_data Excel files).
+ */
 header('Content-Type: application/json');
 
-// Use absolute includes to ensure correct resolution from dashboards and AJAX callers
-require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/functions.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/photo_upload.php';
+require_once __DIR__ . '/../auth-service.php';
+require_once __DIR__ . '/../views/student_data_loader.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
+$auth_service = new AuthenticationService();
+
+if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit();
 }
 
-$search_term = $_GET['term'] ?? '';
+$role = $_SESSION['role'] ?? '';
+if (!$auth_service->canSearchStudentProfiles($role)) {
+    echo json_encode(['success' => false, 'message' => 'You do not have permission to search student profiles']);
+    exit();
+}
 
-if (empty($search_term) || strlen($search_term) < 2) {
+$search_term = trim($_GET['term'] ?? $_GET['q'] ?? '');
+
+if (strlen($search_term) < 2) {
     echo json_encode(['success' => false, 'message' => 'Search term must be at least 2 characters']);
     exit();
 }
 
-// Search students
-$search_sql = "SELECT student_id, first_name, surname, other_name, program, level, profile_image, phone, email 
-              FROM students 
-              WHERE (first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR student_id LIKE ? OR phone LIKE ? OR email LIKE ?)
-              AND status = 'active'
-              ORDER BY surname, first_name
-              LIMIT 20";
-
-$search_param = "%$search_term%";
-$params = [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param];
-$types = 'ssssss';
-
-$students = executeQuery($search_sql, $params, $types);
-
+$loader = new StudentDataLoader();
+$students = $loader->searchStudents($search_term);
 $results = [];
-foreach ($students as $student) {
+
+foreach (array_slice($students, 0, 50) as $student) {
     $results[] = [
-        'student_id' => $student['student_id'],
-        'first_name' => $student['first_name'],
-        'surname' => $student['surname'],
-        'other_name' => $student['other_name'],
-        'full_name' => $student['surname'] . ', ' . $student['first_name'] . ($student['other_name'] ? ' ' . $student['other_name'] : ''),
-        'program' => $student['program'],
-        'level' => $student['level'],
-        'photo_url' => getPassportPhotoUrl($student['profile_image']),
-        'phone' => $student['phone'],
-        'email' => $student['email']
+        'student_id' => $student['index_number'] ?? '',
+        'index_number' => $student['index_number'] ?? '',
+        'first_name' => $student['first_name'] ?? '',
+        'surname' => $student['surname'] ?? '',
+        'other_name' => $student['other_name'] ?? '',
+        'full_name' => trim(($student['surname'] ?? '') . ' ' . ($student['first_name'] ?? '') . ' ' . ($student['other_name'] ?? '')),
+        'program' => $student['program'] ?? '',
+        'level' => $student['level'] ?? '',
+        'phone' => $student['phone'] ?? '',
+        'email' => $student['email'] ?? '',
+        'source' => $student['source_file'] ?? '',
     ];
 }
 
 echo json_encode([
     'success' => true,
     'students' => $results,
-    'count' => count($results)
+    'count' => count($results),
 ]);
-?>

@@ -354,7 +354,7 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
         
         // Make AJAX request
         // Ajax endpoint - use absolute path to ensure correct resolution from dashboards
-        fetch('/ISNM/includes/ajax_student_search.php?term=' + encodeURIComponent(searchTerm))
+        fetch('../includes/ajax_student_search.php?term=' + encodeURIComponent(searchTerm))
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

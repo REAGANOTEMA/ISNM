@@ -18,13 +18,13 @@ if (!$auth_service->isAuthenticated()) {
 
 // Check if user has the correct role
 $userRole = $_SESSION['role'] ?? '';
-if (stripos($userRole, 'bursar') === false && stripos($userRole, 'finance') === false) {
+if (!$auth_service->hasFullInstitutionAccess($userRole) && stripos($userRole, 'bursar') === false && stripos($userRole, 'finance') === false) {
     header('Location: ../staff-login.php?error=unauthorized');
     exit();
 }
 
 // Enhanced database connections
-$students_conn = new mysqli('localhost', 'root', '', 'students_db');
+$students_conn = getStudentsConnection();
 $finance_conn = new mysqli('localhost', 'root', '', 'finance_db');
 
 if ($students_conn->connect_error) {

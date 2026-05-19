@@ -24,8 +24,8 @@ if (strtolower($userRole) !== 'student') {
 }
 
 // Database connections
-$students_conn = new mysqli('localhost', 'root', '', 'students_db');
-$staff_conn = new mysqli('localhost', 'root', '', 'staffs_db');
+$students_conn = getStudentsConnection();
+$staff_conn = getStaffConnection();
 
 if ($students_conn->connect_error) {
     die("Students DB connection failed: " . $students_conn->connect_error);

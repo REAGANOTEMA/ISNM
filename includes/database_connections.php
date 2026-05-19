@@ -4,20 +4,29 @@
 
 class DatabaseConnection {
     private static $connections = [];
-    private static $config = [
-        'host' => 'localhost',
-        'username' => 'root',
-        'password' => '',
-        'charset' => 'utf8mb4'
-    ];
+    private static $config = null;
+
+    private static function getConfig() {
+        if (self::$config === null) {
+            require_once __DIR__ . '/../config/database.php';
+            self::$config = [
+                'host' => DB_HOST,
+                'username' => DB_USER,
+                'password' => DB_PASS,
+                'charset' => DB_CHARSET,
+            ];
+        }
+        return self::$config;
+    }
 
     public static function getConnection($database) {
         if (!isset(self::$connections[$database])) {
             try {
+                $cfg = self::getConfig();
                 $conn = new mysqli(
-                    self::$config['host'],
-                    self::$config['username'],
-                    self::$config['password'],
+                    $cfg['host'],
+                    $cfg['username'],
+                    $cfg['password'],
                     $database
                 );
 
@@ -25,7 +34,7 @@ class DatabaseConnection {
                     throw new Exception("Connection to {$database} failed: " . $conn->connect_error);
                 }
 
-                $conn->set_charset(self::$config['charset']);
+                $conn->set_charset($cfg['charset']);
                 self::$connections[$database] = $conn;
 
                 // Log successful connection
