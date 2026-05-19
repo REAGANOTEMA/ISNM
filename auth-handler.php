@@ -84,11 +84,9 @@ function handleStaffLogin() {
     $password = sanitizeInput($_POST['password'] ?? '');
     $requestedPosition = $_POST['requested_position'] ?? '';
     
-    $result = $auth_service->authenticateStaff($email, $password);
-    
-    if ($result['success']) {
-        $auth_service->createSecureSession($result['user']);
-        $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
+    if ($auth_service->authenticateStaff($email, $password)) {
+        // User data is now in session from authenticateStaff method
+        $_SESSION['success'] = "Login successful! Welcome, " . $_SESSION['full_name'];
         
         // Determine dashboard route
         $dashboard = null;
@@ -106,7 +104,7 @@ function handleStaffLogin() {
         
         // Priority 2: Use user's actual role-based dashboard
         if (empty($dashboard)) {
-            $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
+            $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
         }
         
         header("Location: $dashboard");
