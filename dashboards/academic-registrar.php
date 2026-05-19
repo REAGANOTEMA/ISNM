@@ -1,5 +1,6 @@
 <?php
 // Include unified authentication system
+require_once '../includes/functions.php';
 require_once '../auth-service.php';
 
 // Start secure session
@@ -45,19 +46,64 @@ $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 $user_role = $_SESSION['role'] ?? '';
 
-// Get Academic Registrar dashboard statistics using stored procedure
-$stats_query = "CALL get_dashboard_statistics(?, ?)";
-$stats_stmt = $students_conn->prepare($stats_query);
-$stats_stmt->bind_param("is", $user_id, $user_role);
-$stats_stmt->execute();
-$stats_result = $stats_stmt->get_result();
-$stats = $stats_result->fetch_assoc();
+// Normalize user profile data from session
+$user = [
+    'id' => $user_id,
+    'email' => $user_email,
+    'full_name' => $user_name,
+    'first_name' => explode(' ', trim($user_name))[0] ?? 'Academic',
+    'last_name' => trim(preg_replace('/^[^ ]+\s*/', '', trim($user_name))) ?: ''
+];
 
-// Set statistics from database or fallback values
-$total_students = $stats['total_students'] ?? 150;
-$total_lecturers = $stats['total_lecturers'] ?? 25;
-$active_courses = $stats['active_courses'] ?? 20;
-$avg_gpa = $stats['avg_gpa'] ?? 3.5;
+function tableExists($conn, $table) {
+    $stmt = $conn->prepare("SHOW TABLES LIKE ?");
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param("s", $table);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $exists = $result && $result->num_rows > 0;
+    $stmt->close();
+    return $exists;
+}
+
+function getCount($conn, $sql, $params = [], $types = '') {
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return 0;
+    }
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    if (!$stmt->execute()) {
+        $stmt->close();
+        return 0;
+    }
+    $result = $stmt->get_result();
+    $count = 0;
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = intval($row['count'] ?? 0);
+    }
+    $stmt->close();
+    return $count;
+}
+
+// Statistics for the dashboard
+$total_students = tableExists($students_conn, 'students') ? getCount($students_conn, "SELECT COUNT(*) AS count FROM students") : 0;
+$registered_students = tableExists($students_conn, 'students') ? getCount($students_conn, "SELECT COUNT(*) AS count FROM students WHERE status IN ('Active', 'active')") : 0;
+$new_admissions = tableExists($students_conn, 'students') ? getCount($students_conn, "SELECT COUNT(*) AS count FROM students WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") : 0;
+
+$total_applications = tableExists($staff_conn, 'grading_approval_workflow') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM grading_approval_workflow") : 0;
+$pending_registrations = tableExists($staff_conn, 'grading_approval_workflow') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM grading_approval_workflow WHERE current_stage IN ('HOD Review', 'Registrar Approval', 'Principal Final Approval')") : 0;
+$transcripts_issued = tableExists($staff_conn, 'transcript_generation_log') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM transcript_generation_log WHERE status IN ('Generated', 'Approved')") : 0;
+$exam_results_pending = tableExists($staff_conn, 'examination_records') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM examination_records WHERE grade IS NULL OR grade = ''") : 0;
+$course_registrations = tableExists($staff_conn, 'course_registrations') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM course_registrations WHERE status = 'Registered'") : 0;
+$graduation_candidates = tableExists($students_conn, 'students') ? getCount($students_conn, "SELECT COUNT(*) AS count FROM students WHERE status IN ('Graduated', 'graduation_candidate', 'Graduation Candidate')") : 0;
+$notifications_announcements = tableExists($students_conn, 'student_notifications') ? getCount($students_conn, "SELECT COUNT(*) AS count FROM student_notifications WHERE is_read = 0") : 0;
+$calendar_reminders = tableExists($staff_conn, 'academic_calendar') ? getCount($staff_conn, "SELECT COUNT(*) AS count FROM academic_calendar WHERE semester_start_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)") : 0;
+$data_files_count = count(glob(__DIR__ . '/../students_data/*.xlsx'));
 
 // Handle search and filter functionality
 $search_term = $_GET['search'] ?? '';
@@ -107,15 +153,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 
 // Get recent students for profile display from database
-$recent_students_query = "SELECT first_name, last_name as surname, program, status 
+$recent_students_query = "SELECT id, full_name, registration_number, course, status, created_at 
                          FROM students 
-                         WHERE status = 'Active' 
                          ORDER BY created_at DESC 
                          LIMIT 4";
 $recent_students_result = $students_conn->query($recent_students_query);
 $recent_students = [];
-while ($row = $recent_students_result->fetch_assoc()) {
-    $recent_students[] = $row;
+if ($recent_students_result) {
+    while ($row = $recent_students_result->fetch_assoc()) {
+        $recent_students[] = $row;
+    }
 }
 
 // Get real activity logs from database
@@ -1229,7 +1276,43 @@ function getSemesters() {
                             </div>
                             <div class="stat-content">
                                 <h3><?php echo $transcripts_issued; ?></h3>
-                                <p>Transcripts Issued (This Month)</p>
+                                <p>Transcripts Issued</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $new_admissions; ?></h3>
+                                <p>New Admissions (30d)</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $course_registrations; ?></h3>
+                                <p>Course Registrations</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $notifications_announcements; ?></h3>
+                                <p>Unread Notifications</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3><?php echo $calendar_reminders; ?></h3>
+                                <p>Calendar Reminders</p>
                             </div>
                         </div>
                     </div>
@@ -1240,23 +1323,48 @@ function getSemesters() {
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Recent Student Profiles</h2>
                         <div>
-                            <button class="btn btn-primary" onclick="openModal('viewAllStudents')">
-                                <i class="fas fa-users"></i> View All Students
-                            </button>
+                            <a href="../import_students_excel.php" class="btn btn-info">
+                                <i class="fas fa-file-excel"></i> Import All Students
+                            </a>
                             <button class="btn btn-success" onclick="openModal('addStudent')">
                                 <i class="fas fa-user-plus"></i> Add New Student
                             </button>
                         </div>
                     </div>
-                    
-                    <!-- Student Search -->
-                    <?php echo displayStudentSearchBox('Search students by name, ID, or phone...', 'registrarSearchResults'); ?>
-                    
-                    <!-- Student Profile Cards -->
+
+                    <div class="search-container mb-4">
+                        <form method="GET" action="academic-registrar.php" class="row g-2 align-items-center">
+                            <div class="col-md-9">
+                                <input type="text" name="search_student" class="form-control" placeholder="Search students by name, registration number, or course..." value="<?php echo htmlspecialchars($search_term); ?>">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="row mt-4">
+                        <?php if (empty($recent_students)): ?>
+                            <div class="col-12">
+                                <div class="alert alert-secondary">No recent student profiles available.</div>
+                            </div>
+                        <?php endif; ?>
                         <?php foreach ($recent_students as $student): ?>
                             <div class="col-md-6 col-lg-4 mb-4">
-                                <?php echo displayStudentProfileCard($student['student_id'], 'compact'); ?>
+                                <div class="card stat-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-2"><?php echo htmlspecialchars($student['full_name'] ?? 'Unknown Student'); ?></h5>
+                                        <p class="text-muted mb-1"><?php echo htmlspecialchars($student['registration_number'] ?? 'N/A'); ?></p>
+                                        <p class="mb-1"><strong>Course:</strong> <?php echo htmlspecialchars($student['course'] ?? 'N/A'); ?></p>
+                                        <p class="mb-2"><strong>Status:</strong> <?php echo htmlspecialchars($student['status'] ?? 'N/A'); ?></p>
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <button class="btn btn-sm btn-outline-primary">View</button>
+                                            <button class="btn btn-sm btn-outline-success">Edit</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -1397,9 +1505,9 @@ function getSemesters() {
                         <button class="btn btn-warning btn-enhanced" onclick="openModal('deactivateStudent')">
                             <i class="fas fa-user-times"></i> Deactivate Student
                         </button>
-                        <button class="btn btn-info btn-enhanced" onclick="openModal('bulkImport')">
+                        <a href="../import_students_excel.php" class="btn btn-info btn-enhanced">
                             <i class="fas fa-file-excel"></i> Bulk Import
-                        </button>
+                        </a>
                         <button class="btn btn-success btn-enhanced" onclick="openModal('generateReports')">
                             <i class="fas fa-chart-bar"></i> Generate Reports
                         </button>

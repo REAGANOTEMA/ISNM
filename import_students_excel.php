@@ -5,12 +5,16 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Use enhanced configuration with multi-database support
-require_once 'includes/config_enhanced.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Use the app's existing database configuration
+require_once 'config/database.php';
 require_once 'includes/functions.php';
 
 // Get students database connection
-$conn = getDatabaseConnection('students');
+$conn = getStudentsConnection();
 
 if (!$conn) {
     die("Connection to students database failed");
@@ -341,10 +345,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
                         $fileName = basename($file);
                         echo '<div class="file-item">';
                         echo '<span>' . $fileName . '</span>';
-                        echo '<button type="submit" name="import" class="import-btn">Import All Files</button>';
                         echo '</div>';
                     }
                     ?>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="submit" name="import" class="import-btn">Import All Files</button>
                 </div>
             </form>
             <?php

@@ -4,6 +4,8 @@
  * Centralized authentication processing for both students and staff
  */
 
+require_once 'config/database.php';
+require_once 'includes/functions.php';
 require_once 'auth-service.php';
 
 // Start secure session
@@ -87,6 +89,25 @@ function handleStaffLogin() {
         $auth_service->createSecureSession($result['user']);
         $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
         
+        // If user arrived via an organogram position link, prefer that destination when it matches role
+        $requested = $_SESSION['requested_position'] ?? '';
+        if (!empty($requested)) {
+            // Normalize both strings for comparison
+            $normRequested = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $requested));
+            $normUserRole = strtolower(preg_replace('/[^a-z0-9]+/i', ' ', $result['user']['role']));
+
+            // If requested position text appears in the role name (normalized), redirect there
+            if (strpos($normUserRole, trim($normRequested)) !== false || strpos($normRequested, $normUserRole) !== false) {
+                // Map requested position to dashboard route using same router
+                $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
+                unset($_SESSION['requested_position']);
+                header("Location: $dashboard");
+                exit();
+            }
+            // otherwise fall through to default dashboard
+            unset($_SESSION['requested_position']);
+        }
+
         // Get dashboard route based on role
         $dashboard = $auth_service->getDashboardRoute($result['user']['role']);
         header("Location: $dashboard");
@@ -188,50 +209,8 @@ function handleLogout() {
 }
 
 /**
- * Check if user is authenticated (for use in other files)
+ * Note: Helper functions requireAuth(), requireRole(), and getCurrentUser() are defined in
+ * security-middleware.php and should be used from there for consistency across the application.
  */
-function requireAuth() {
-    global $auth_service;
-    
-    if (!$auth_service->isAuthenticated()) {
-        $_SESSION['error'] = 'Authentication required';
-        header('Location: staff-login.php');
-        exit();
-    }
-}
-
-/**
- * Check if user has specific role
- */
-function requireRole($requiredRole) {
-    global $auth_service;
-    
-    requireAuth();
-    
-    if (strtolower($_SESSION['role']) !== strtolower($requiredRole)) {
-        $_SESSION['error'] = 'Access denied';
-        header('Location: dashboards/student.php');
-        exit();
-    }
-}
-
-/**
- * Get current user information
- */
-function getCurrentUser() {
-    if (isset($_SESSION['user_id'])) {
-        return [
-            'id' => $_SESSION['user_id'],
-            'role' => $_SESSION['role'],
-            'type' => $_SESSION['type'],
-            'full_name' => $_SESSION['full_name'] ?? '',
-            'email' => $_SESSION['email'] ?? '',
-            'phone' => $_SESSION['phone'] ?? '',
-            'index_number' => $_SESSION['index_number'] ?? ''
-        ];
-    }
-    
-    return null;
-}
 
 ?>

@@ -328,7 +328,8 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
             <span class="input-group-text">
                 <i class="fas fa-search"></i>
             </span>
-            <input type="text" class="form-control" id="studentSearchInput" placeholder="<?php echo htmlspecialchars($placeholder); ?>" 
+            <?php $input_id = 'studentSearchInput_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $container_id); ?>
+            <input type="text" class="form-control" id="<?php echo $input_id; ?>" placeholder="<?php echo htmlspecialchars($placeholder); ?>" 
                    onkeyup="searchStudents('<?php echo $container_id; ?>')">
             <button class="btn btn-outline-secondary" type="button" onclick="clearStudentSearch('<?php echo $container_id; ?>')">
                 <i class="fas fa-times"></i>
@@ -339,7 +340,8 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
     
     <script>
     function searchStudents(containerId) {
-        const searchTerm = document.getElementById('studentSearchInput').value;
+        const inputId = 'studentSearchInput_' + containerId;
+        const searchTerm = document.getElementById(inputId).value;
         const container = document.getElementById(containerId);
         
         if (searchTerm.length < 2) {
@@ -351,7 +353,8 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
         container.innerHTML = '<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
         
         // Make AJAX request
-        fetch('includes/ajax_student_search.php?term=' + encodeURIComponent(searchTerm))
+        // Ajax endpoint - use absolute path to ensure correct resolution from dashboards
+        fetch('/ISNM/includes/ajax_student_search.php?term=' + encodeURIComponent(searchTerm))
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -398,13 +401,22 @@ function displayStudentSearchBox($placeholder = 'Search students...', $container
     }
     
     function clearStudentSearch(containerId) {
-        document.getElementById('studentSearchInput').value = '';
-        document.getElementById(containerId).innerHTML = '';
+        const inputId = 'studentSearchInput_' + containerId;
+        const input = document.getElementById(inputId);
+        if (input) input.value = '';
+        const container = document.getElementById(containerId);
+        if (container) container.innerHTML = '';
     }
     
     function selectStudent(studentId, studentName) {
-        // This function can be overridden by the including page
-        console.log('Selected student:', studentId, studentName);
+        // Prefer modal if available
+        if (typeof showStudentProfileModal === 'function') {
+            showStudentProfileModal(studentId);
+            return;
+        }
+
+        // Fallback to profile page
+        window.location.href = '/ISNM/student_profile.php?student_id=' + encodeURIComponent(studentId);
     }
     </script>
     <?php
@@ -474,8 +486,27 @@ function displayStudentProfileModal($student_id) {
     }
     
     function sendMessage(studentId) {
-        // Implement message functionality
-        alert('Message functionality would be implemented here');
+        const message = prompt('Enter message to send to this student:');
+        if (!message) return;
+
+        fetch('/ISNM/includes/ajax_send_message.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'student_id=' + encodeURIComponent(studentId) + '&message=' + encodeURIComponent(message)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Message sent successfully');
+                try { bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide(); } catch(e){}
+            } else {
+                alert('Failed to send message: ' + (data.message || 'unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error('Send message error', err);
+            alert('Error sending message');
+        });
     }
     
     function printProfile(studentId) {

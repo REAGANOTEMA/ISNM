@@ -134,8 +134,10 @@ if (!function_exists('sanitizeInput')) {
  * @param string $email
  * @return bool
  */
-function validateEmail($email) {
-    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+if (!function_exists('validateEmail')) {
+    function validateEmail($email) {
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    }
 }
 
 /**
@@ -143,19 +145,21 @@ function validateEmail($email) {
  * @param string $phone
  * @return bool
  */
-function validatePhone($phone) {
-    // Remove non-numeric characters
-    $clean_phone = preg_replace('/[^0-9]/', '', $phone);
-    
-    // Check if it's a valid Uganda phone number (with or without country code)
-    // Accept formats: 0771234567 or 256771234567
-    if (strlen($clean_phone) === 10 && preg_match('/^0[7]\d{8}$/', $clean_phone)) {
-        return true; // Format: 0771234567
-    } elseif (strlen($clean_phone) === 12 && preg_match('/^256[7]\d{8}$/', $clean_phone)) {
-        return true; // Format: 256771234567
+if (!function_exists('validatePhone')) {
+    function validatePhone($phone) {
+        // Remove non-numeric characters
+        $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+
+        // Check if it's a valid Uganda phone number (with or without country code)
+        // Accept formats: 0771234567 or 256771234567
+        if (strlen($clean_phone) === 10 && preg_match('/^0[7]\d{8}$/', $clean_phone)) {
+            return true; // Format: 0771234567
+        } elseif (strlen($clean_phone) === 12 && preg_match('/^256[7]\d{8}$/', $clean_phone)) {
+            return true; // Format: 256771234567
+        }
+
+        return false;
     }
-    
-    return false;
 }
 
 /**

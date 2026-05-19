@@ -2,9 +2,14 @@
 // AJAX handler for student search functionality
 header('Content-Type: application/json');
 
-include_once 'config.php';
-include_once 'functions.php';
-include_once 'photo_upload.php';
+// Use absolute includes to ensure correct resolution from dashboards and AJAX callers
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/config.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/functions.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/ISNM/includes/photo_upload.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
