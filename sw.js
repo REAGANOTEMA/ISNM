@@ -24,6 +24,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(event.request).then((cached) => {
+      // Return cached version if found
+      if (cached) {
+        return cached;
+      }
+      // Otherwise, try to fetch from network
+      return fetch(event.request).catch(() => {
+        // If network request fails, try to return a fallback offline page
+        // For now, we'll just re-throw the error to let the browser handle it
+        throw new Error('Network request failed and no cached version available');
+      });
+    })
   );
 });

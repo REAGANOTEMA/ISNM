@@ -84,9 +84,11 @@ function handleStaffLogin() {
     $password = sanitizeInput($_POST['password'] ?? '');
     $requestedPosition = $_POST['requested_position'] ?? '';
     
-    if ($auth_service->authenticateStaff($email, $password)) {
-        // User data is now in session from authenticateStaff method
-        $_SESSION['success'] = "Login successful! Welcome, " . $_SESSION['full_name'];
+    $result = $auth_service->authenticateStaff($email, $password);
+    
+    if ($result['success']) {
+        $auth_service->createSecureSession($result['user']);
+        $_SESSION['success'] = "Login successful! Welcome, " . $result['user']['full_name'];
         
         // Determine dashboard route
         $dashboard = null;
@@ -110,7 +112,7 @@ function handleStaffLogin() {
         header("Location: $dashboard");
         exit();
     } else {
-        $_SESSION['error'] = $result['message'];
+        $_SESSION['error'] = 'Invalid email or password';
         header('Location: staff-login.php');
         exit();
     }
