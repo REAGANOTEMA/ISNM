@@ -3,6 +3,13 @@
 require_once '../auth-service.php';
 
 // Start secure session
+
+// Ensure auth service is available
+global $auth_service;
+if (!isset() || !($auth_service instanceof AuthenticationService)) {
+    $auth_service = new AuthenticationService();
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -300,3 +307,4 @@ $recent_incidents = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

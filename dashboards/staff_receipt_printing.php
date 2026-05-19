@@ -333,3 +333,4 @@ $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
     </script>
 </body>
 </html>
+

@@ -3,6 +3,13 @@
 require_once '../auth-service.php';
 
 // Start secure session
+
+// Ensure auth service is available
+global $auth_service;
+if (!isset() || !($auth_service instanceof AuthenticationService)) {
+    $auth_service = new AuthenticationService();
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -963,3 +970,4 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 ?>
+

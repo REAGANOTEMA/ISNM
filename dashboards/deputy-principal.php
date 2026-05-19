@@ -682,3 +682,4 @@ $recent_activities = [
     </script>
 </body>
 </html>
+

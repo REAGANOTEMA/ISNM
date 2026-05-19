@@ -9,6 +9,13 @@ ini_set('display_errors', 1);
 require_once '../auth-service.php';
 
 // Start secure session
+
+// Ensure auth service is available
+global $auth_service;
+if (!isset() || !($auth_service instanceof AuthenticationService)) {
+    $auth_service = new AuthenticationService();
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -500,3 +507,4 @@ $payroll_data = $payroll_result->fetch_assoc();
     </script>
 </body>
 </html>
+

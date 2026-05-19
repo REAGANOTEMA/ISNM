@@ -462,3 +462,4 @@ function getSemesters() {
     </div>
 </body>
 </html>
+
