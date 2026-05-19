@@ -6,14 +6,14 @@
 // Database connection parameters
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_PASS', 'ReagaN23#');
 define('DB_NAME', 'isnm_db');
 define('DB_CHARSET', 'utf8mb4');
 
 // Staff database connection parameters
 define('STAFF_DB_HOST', 'localhost');
 define('STAFF_DB_USER', 'root');
-define('STAFF_DB_PASS', '');
+define('STAFF_DB_PASS', 'ReagaN23#');
 define('STAFF_DB_NAME', 'staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
