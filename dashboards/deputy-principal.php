@@ -2,28 +2,18 @@
 include_once '../includes/config.php';
 include_once '../includes/functions.php';
 include_once '../includes/photo_upload.php';
-include_once '../auth-service.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-// Start secure session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Check if user is authenticated
-if (!$auth_service->isAuthenticated()) {
-    header('Location: ../staff-login.php');
-    exit;
-}
-
-// Get current user
-$user = $auth_service->getCurrentUser();
-$user_id = $user['id'] ?? 0;
+$ctx = bootstrapStaffDashboard(['deputy', 'principal']);
+$auth_service = $ctx['auth'];
+$conn = $ctx['staff'];
+$user = $ctx['user'];
+$user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Connect to staff database for dashboard statistics
-$conn = getStaffConnection();
+// Uses shared bootstrap staff connection
 
 // Get academic statistics using stored procedure
 $total_students = 150; // Fallback value

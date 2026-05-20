@@ -301,7 +301,6 @@ $role = $_SESSION['role'] ?? '';
                             <i class="fas fa-users"></i> Student Accounts
                         </a>
                     </li>
-                    <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -540,9 +539,6 @@ $role = $_SESSION['role'] ?? '';
             }
         }, 3000);
         <?php endif; ?>
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>

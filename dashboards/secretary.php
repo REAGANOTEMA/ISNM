@@ -3,12 +3,11 @@ include_once '../includes/config.php';
 include_once '../includes/functions.php';
 include_once '../includes/photo_upload.php';
 include_once '../includes/student_profile_component.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-// Check if user is logged in and has Secretary role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'School Secretary') {
-    header('Location: ../staff-login.php');
-    exit();
-}
+$ctx = bootstrapStaffDashboard(['school secretary', 'secretary']);
+$auth_service = $ctx['auth'];
+$user = $ctx['user'];
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

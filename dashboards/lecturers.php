@@ -1,36 +1,12 @@
 <?php
-// Include unified authentication system
-require_once '../auth-service.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-// Start secure session
+$ctx = bootstrapStaffDashboard(['lecturer']);
+$auth_service = $ctx['auth'];
+$conn = $ctx['staff'];
+$user = $ctx['user'];
+$userRole = $user['role'] ?? '';
 
-// Ensure auth service is available
-global $auth_service;
-if (!isset() || !($auth_service instanceof AuthenticationService)) {
-    $auth_service = new AuthenticationService();
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Global authentication service
-$auth_service = new AuthenticationService();
-
-// Strict dashboard protection - only lecturers allowed
-if (!$auth_service->isAuthenticated()) {
-    header('Location: ../staff-login.php');
-    exit();
-}
-
-// Check if user has the correct role
-$userRole = $_SESSION['role'] ?? '';
-if (!$auth_service->hasFullInstitutionAccess($userRole) && stripos($userRole, 'lecturer') === false) {
-    header('Location: ../staff-login.php?error=unauthorized');
-    exit();
-}
-
-$conn = getStaffConnection();
 $studentsConn = getStudentsConnection();
 
 $user_id = $_SESSION['user_id'] ?? 0;

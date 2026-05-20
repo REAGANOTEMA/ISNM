@@ -1,34 +1,14 @@
 <?php
-// Include unified authentication system
-require_once '../auth-service.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-// Start secure session
-
-// Ensure auth service is available
-global $auth_service;
-if (!isset() || !($auth_service instanceof AuthenticationService)) {
-    $auth_service = new AuthenticationService();
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Check if user is authenticated
-if (!$auth_service->isAuthenticated()) {
-    header('Location: ../staff-login.php');
-    exit;
-}
-
-// Get current user
-$user = $auth_service->getCurrentUser();
-$user_id = $user['id'] ?? 0;
+$ctx = bootstrapStaffDashboard(['warden']);
+$auth_service = $ctx['auth'];
+$conn = $ctx['staff'];
+$user = $ctx['user'];
+$user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
-
-// Connect to staff database for dashboard statistics
-$conn = getStaffConnection();
 
 // Get warden statistics (using fallback data only)
 $total_students = 150; // Fallback value

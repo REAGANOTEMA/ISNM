@@ -95,12 +95,16 @@ function handleStaffLogin() {
         
         // Priority 1: If coming from organogram position, resolve to dashboard
         if (!empty($requestedPosition)) {
-            // Resolve organogram position to role and get dashboard
+            // Resolve organogram position to role and get dashboard only when
+            // the authenticated user's role matches the requested position.
             $resolvedRole = $auth_service->resolveOrganogramPosition($requestedPosition);
-            $dashboard = $auth_service->getDashboardRoute($resolvedRole);
-            // Clear position hint after use
-            if (!empty($_SESSION['requested_position'])) {
-                unset($_SESSION['requested_position']);
+            $sessionRole = $_SESSION['role'] ?? '';
+
+            if ($auth_service->positionMatchesRole($requestedPosition, $sessionRole)) {
+                $dashboard = $auth_service->getDashboardRoute($resolvedRole);
+            } else {
+                $_SESSION['error'] = 'This account is not assigned to the selected position. Redirected to your dashboard.';
+                $dashboard = $auth_service->getDashboardRoute($sessionRole);
             }
         }
         
@@ -109,6 +113,10 @@ function handleStaffLogin() {
             $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
         }
         
+        if (empty($dashboard)) {
+            $dashboard = 'dashboards/ceo.php';
+        }
+
         header("Location: $dashboard");
         exit();
     } else {

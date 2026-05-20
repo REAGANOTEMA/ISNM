@@ -30,7 +30,13 @@ if ($student_role) {
 
 // Check if user is already logged in
 if ($auth_service->isAuthenticated() && isset($_SESSION['type']) && $_SESSION['type'] === 'staff') {
-    $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
+    $sessionRole = $_SESSION['role'] ?? '';
+    $dashboard = $auth_service->getDashboardRoute($sessionRole);
+
+    if (!empty($requested_position) && $auth_service->positionMatchesRole($requested_position, $sessionRole)) {
+        $dashboard = $auth_service->getDashboardRoute($auth_service->resolveOrganogramPosition($requested_position));
+    }
+
     header("Location: $dashboard");
     exit();
 }
