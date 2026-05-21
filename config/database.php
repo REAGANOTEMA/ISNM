@@ -10,7 +10,6 @@ define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
 define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
 define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
-define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 
 // Staff database connection parameters
 define('STAFF_DB_HOST', 'localhost');
