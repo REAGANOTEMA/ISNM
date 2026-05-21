@@ -1,9 +1,9 @@
 -- ISNM Students Database Schema
--- Database: students_db
+-- Database: igangaschoolofl_students_db
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS students_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE students_db;
+CREATE DATABASE IF NOT EXISTS igangaschoolofl_students_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE igangaschoolofl_students_db;
 
 -- Drop existing tables if they exist (for fresh installation)
 DROP TABLE IF EXISTS students;

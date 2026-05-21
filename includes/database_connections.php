@@ -50,15 +50,15 @@ class DatabaseConnection {
     }
 
     public static function getStaffConnection() {
-        return self::getConnection('staffs_db');
+        return self::getConnection('igangaschoolofl_staffs_db');
     }
 
     public static function getStudentsConnection() {
-        return self::getConnection('students_db');
+        return self::getConnection('igangaschoolofl_students_db');
     }
 
     public static function getWebsiteConnection() {
-        return self::getConnection('website_db');
+        return self::getConnection('igangaschoolofl_website_db');
     }
 
     public static function closeConnection($database) {
@@ -91,7 +91,7 @@ class DatabaseConnection {
 
     public static function testAllConnections() {
         $results = [];
-        $databases = ['staffs_db', 'students_db', 'website_db'];
+        $databases = ['igangaschoolofl_staffs_db', 'igangaschoolofl_students_db', 'igangaschoolofl_website_db'];
         
         foreach ($databases as $database) {
             $results[$database] = self::testConnection($database);

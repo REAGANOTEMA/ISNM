@@ -5,18 +5,18 @@
 
 // Database connection parameters
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', 'ReagaN23#');
-define('DB_NAME', 'students_db');
+define('DB_USER', 'igangaschoolofl_students_db');
+define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
+define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
-define('STUDENTS_DB_NAME', 'students_db');
-define('WEBSITE_DB_NAME', 'website_db');
+define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
+define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 
 // Staff database connection parameters
 define('STAFF_DB_HOST', 'localhost');
-define('STAFF_DB_USER', 'root');
-define('STAFF_DB_PASS', 'ReagaN23#');
-define('STAFF_DB_NAME', 'staffs_db');
+define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
+define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
+define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
 // Legacy compatibility functions with conflict protection

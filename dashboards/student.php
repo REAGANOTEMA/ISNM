@@ -1,21 +1,18 @@
 <?php
 // Include unified authentication system
 require_once '../auth-service.php';
+require_once '../config/database.php';
 
 // Start secure session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Ensure auth service is available
 global $auth_service;
 if (!isset($auth_service) || !($auth_service instanceof AuthenticationService)) {
     $auth_service = new AuthenticationService();
 }
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Global authentication service
-$auth_service = new AuthenticationService();
 
 // Strict dashboard protection - only students allowed
 if (!$auth_service->isAuthenticated()) {
@@ -47,17 +44,17 @@ $staff_conn->set_charset("utf8mb4");
 
 // Get student information
 $student_id = $_SESSION['user_id'];
-$student_info = $students_conn->query("SELECT * FROM students WHERE student_number = '$student_id'")->fetch_assoc();
+$student_info = $students_conn->query("SELECT * FROM users WHERE student_number = '$student_id' OR index_number = '$student_id' LIMIT 1")->fetch_assoc();
 
 // Get student academic profile
-$academic_profile = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_assoc();
+$academic_profile = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0) . " LIMIT 1")->fetch_assoc();
 
 // Get examination records (grades)
 $examination_records = $students_conn->query("SELECT er.*, gaw.current_stage, gaw.registrar_status, gaw.principal_status 
-                                              FROM examination_records er 
-                                              LEFT JOIN grading_approval_workflow gaw ON er.id = gaw.examination_record_id 
-                                              WHERE er.student_id = " . ($student_info['id'] ?? 0) . " 
-                                              ORDER BY er.exam_date DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
+                                               FROM examination_records er 
+                                               LEFT JOIN grading_approval_workflow gaw ON er.id = gaw.examination_record_id 
+                                               WHERE er.student_id = " . ($student_info['id'] ?? 0) . " 
+                                               ORDER BY er.exam_date DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
 
 // Get fee account information
 $fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
@@ -67,6 +64,9 @@ $messages = $students_conn->query("SELECT * FROM messages WHERE recipient_id = "
 
 // Get payment history
 $payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+
+// Get academic records for transcript
+$academic_records = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -874,6 +874,27 @@ $payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN 
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="finance-card">
+                                    <div class="finance-icon">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div class="finance-details">
+                                        <h3>Paid</h3>
+                                        <p class="amount">UGX <?php echo number_format($fee_account[0]['amount_paid'] ?? 0); ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="finance-card">
+                                    <div class="finance-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="finance-details">
+                                        <h3>Balance</h3>
+                                        <p class="amount">UGX <?php echo number_format($fee_account[0]['balance'] ?? 0); ?></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         

@@ -1,10 +1,10 @@
 -- ISNM Final Complete Staffs Database Schema
--- Database: staffs_db
+-- Database: igangaschoolofl_staffs_db
 -- Professional unified authentication system for all staff with role-based access control
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE staffs_db;
+CREATE DATABASE IF NOT EXISTS igangaschoolofl_staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE igangaschoolofl_staffs_db;
 
 -- Drop existing tables if they exist (for fresh installation)
 DROP TABLE IF EXISTS security_incidents;

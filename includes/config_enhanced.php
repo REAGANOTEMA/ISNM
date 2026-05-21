@@ -5,13 +5,13 @@
 // Database configuration
 $config = [
     'host' => 'localhost',
-    'username' => 'root',
-    'password' => 'ReagaN23#',
+    'username' => 'igangaschoolofl_students_db',
+    'password' => 'hbkKdmMHUfHTHuxWKPRf',
     'charset' => 'utf8mb4',
     'databases' => [
-        'staffs' => 'staffs_db',
-        'students' => 'students_db',
-        'website' => 'website_db'
+        'staffs' => 'igangaschoolofl_staffs_db',
+        'students' => 'igangaschoolofl_students_db',
+        'website' => 'igangaschoolofl_website_db'
     ]
 ];
 

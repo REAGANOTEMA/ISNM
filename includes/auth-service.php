@@ -11,11 +11,25 @@ class AuthenticationService {
     public function __construct() {
         $this->config = [
             'host' => 'localhost',
-            'username' => 'root',
-            'password' => 'ReagaN23#',
+            'username' => 'igangaschoolofl_students_db',
+            'password' => 'hbkKdmMHUfHTHuxWKPRf',
             'charset' => 'utf8mb4'
         ];
-        
+
+        $this->staff_config = [
+            'host' => 'localhost',
+            'username' => 'igangaschoolofl_staffs_db',
+            'password' => 'AgKzJjZZnT5q58jCahs8',
+            'charset' => 'utf8mb4'
+        ];
+
+        $this->website_config = [
+            'host' => 'localhost',
+            'username' => 'igangaschoolofl_website_db',
+            'password' => 'AaCH75gXpekcFQj5wPZn',
+            'charset' => 'utf8mb4'
+        ];
+
         $this->initializeConnections();
     }
     
@@ -23,30 +37,30 @@ class AuthenticationService {
         try {
             // Connect to all three databases
             $this->staffs_conn = new mysqli(
-                $this->config['host'],
-                $this->config['username'],
-                $this->config['password'],
-                'staffs_db'
+                $this->staff_config['host'],
+                $this->staff_config['username'],
+                $this->staff_config['password'],
+                'igangaschoolofl_staffs_db'
             );
-            
+
             $this->students_conn = new mysqli(
                 $this->config['host'],
                 $this->config['username'],
                 $this->config['password'],
-                'students_db'
+                'igangaschoolofl_students_db'
             );
-            
+
             $this->website_conn = new mysqli(
-                $this->config['host'],
-                $this->config['username'],
-                $this->config['password'],
-                'website_db'
+                $this->website_config['host'],
+                $this->website_config['username'],
+                $this->website_config['password'],
+                'igangaschoolofl_website_db'
             );
             
             // Set charset for all connections
-            $this->staffs_conn->set_charset($this->config['charset']);
+            $this->staffs_conn->set_charset($this->staff_config['charset']);
             $this->students_conn->set_charset($this->config['charset']);
-            $this->website_conn->set_charset($this->config['charset']);
+            $this->website_conn->set_charset($this->website_config['charset']);
             
             // Check connections
             if ($this->staffs_conn->connect_error) {

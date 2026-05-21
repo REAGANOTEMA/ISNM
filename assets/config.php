@@ -1,9 +1,9 @@
 <?php
     $server = "localhost";
-   
-    $user = "root";
-    $password = "";
-    $db = "_sms";
+    
+    $user = "igangaschoolofl_students_db";
+    $password = "hbkKdmMHUfHTHuxWKPRf";
+    $db = "igangaschoolofl_students_db";
     
     $conn = mysqli_connect($server, $user, $password, $db);
 
@@ -11,6 +11,6 @@
         header('Location: ../errors/error.html');
         exit();
     }
-
+    
 
 ?>

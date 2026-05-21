@@ -7,8 +7,8 @@ ini_set('display_errors', 1);
 
 // Database configuration
 $host = 'localhost';
-$username = 'root';
-$password = 'ReagaN23#';
+$username = 'igangaschoolofl_students_db';
+$password = 'hbkKdmMHUfHTHuxWKPRf';
 
 echo "<!DOCTYPE html>
 <html lang='en'>
@@ -84,12 +84,12 @@ echo "<!DOCTYPE html>
     <div class='setup-container'>
         <div class='text-center mb-4'>
             <h1><i class='fas fa-database'></i> ISNM Database Setup</h1>
-            <p>Creating and testing all three databases: staffs_db, students_db, website_db</p>
+            <p>Creating and testing all three databases: igangaschoolofl_staffs_db, igangaschoolofl_students_db, igangaschoolofl_website_db</p>
         </div>";
 
 try {
     // Create databases
-    $databases = ['staffs_db', 'students_db', 'website_db'];
+    $databases = ['igangaschoolofl_staffs_db', 'igangaschoolofl_students_db', 'igangaschoolofl_website_db'];
     $results = [];
     
     foreach ($databases as $database) {

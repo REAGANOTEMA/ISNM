@@ -1,9 +1,9 @@
 -- ISNM Website Database Schema
--- Database: website_db
+-- Database: igangaschoolofl_website_db
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS website_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE website_db;
+CREATE DATABASE IF NOT EXISTS igangaschoolofl_website_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE igangaschoolofl_website_db;
 
 -- Drop existing tables if they exist (for fresh installation)
 DROP TABLE IF EXISTS pages;
