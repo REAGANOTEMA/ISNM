@@ -4,25 +4,51 @@
 
 class DatabaseConnection {
     private static $connections = [];
-    private static $config = null;
+    private static $configs = null;
+    private static $dbMap = [
+        'staffs' => 'igangaschoolofl_staffs_db',
+        'students' => 'igangaschoolofl_students_db',
+        'website' => 'igangaschoolofl_website_db',
+    ];
 
-    private static function getConfig() {
-        if (self::$config === null) {
+    private static function getConfigs() {
+        if (self::$configs === null) {
             require_once __DIR__ . '/../config/database.php';
-            self::$config = [
-                'host' => DB_HOST,
-                'username' => DB_USER,
-                'password' => DB_PASS,
-                'charset' => DB_CHARSET,
+            self::$configs = [
+                'igangaschoolofl_staffs_db' => [
+                    'host' => STAFF_DB_HOST,
+                    'username' => STAFF_DB_USER,
+                    'password' => STAFF_DB_PASS,
+                    'charset' => STAFF_DB_CHARSET,
+                ],
+                'igangaschoolofl_students_db' => [
+                    'host' => DB_HOST,
+                    'username' => DB_USER,
+                    'password' => DB_PASS,
+                    'charset' => DB_CHARSET,
+                ],
+                'igangaschoolofl_website_db' => [
+                    'host' => WEBSITE_DB_HOST,
+                    'username' => WEBSITE_DB_USER,
+                    'password' => WEBSITE_DB_PASS,
+                    'charset' => WEBSITE_DB_CHARSET,
+                ],
             ];
         }
-        return self::$config;
+        return self::$configs;
+    }
+
+    private static function resolveDatabaseName($database) {
+        return self::$dbMap[$database] ?? $database;
     }
 
     public static function getConnection($database) {
+        $database = self::resolveDatabaseName($database);
         if (!isset(self::$connections[$database])) {
             try {
-                $cfg = self::getConfig();
+                $configs = self::getConfigs();
+                $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
+                
                 $conn = new mysqli(
                     $cfg['host'],
                     $cfg['username'],
@@ -62,6 +88,7 @@ class DatabaseConnection {
     }
 
     public static function closeConnection($database) {
+        $database = self::resolveDatabaseName($database);
         if (isset(self::$connections[$database])) {
             self::$connections[$database]->close();
             unset(self::$connections[$database]);
@@ -78,6 +105,7 @@ class DatabaseConnection {
     }
 
     public static function testConnection($database) {
+        $database = self::resolveDatabaseName($database);
         try {
             $conn = self::getConnection($database);
             $result = $conn->query("SELECT 1");
@@ -101,11 +129,14 @@ class DatabaseConnection {
     }
 
     public static function getConnectionInfo($database) {
+        $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
+        $configs = self::getConfigs();
+        $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
         return [
-            'host' => self::$config['host'],
+            'host' => $cfg['host'],
             'database' => $database,
-            'charset' => self::$config['charset'],
+            'charset' => $cfg['charset'],
             'connected' => $conn->ping(),
             'server_info' => $conn->get_server_info(),
             'client_info' => $conn->get_client_info()
@@ -113,6 +144,7 @@ class DatabaseConnection {
     }
 
     public static function executeQuery($database, $sql, $params = [], $types = '') {
+        $database = self::resolveDatabaseName($database);
         try {
             $conn = self::getConnection($database);
             $stmt = $conn->prepare($sql);
@@ -133,6 +165,7 @@ class DatabaseConnection {
     }
 
     public static function executeInsert($database, $sql, $params = [], $types = '') {
+        $database = self::resolveDatabaseName($database);
         try {
             $conn = self::getConnection($database);
             $stmt = $conn->prepare($sql);
@@ -153,6 +186,7 @@ class DatabaseConnection {
     }
 
     public static function executeUpdate($database, $sql, $params = [], $types = '') {
+        $database = self::resolveDatabaseName($database);
         try {
             $conn = self::getConnection($database);
             $stmt = $conn->prepare($sql);
@@ -177,21 +211,25 @@ class DatabaseConnection {
     }
 
     public static function beginTransaction($database) {
+        $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $conn->begin_transaction();
     }
 
     public static function commitTransaction($database) {
+        $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $conn->commit();
     }
 
     public static function rollbackTransaction($database) {
+        $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $conn->rollback();
     }
 
     public static function escapeString($database, $string) {
+        $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         return $conn->real_escape_string($string);
     }

@@ -19,6 +19,13 @@ define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
+// Website database connection parameters
+define('WEBSITE_DB_HOST', 'localhost');
+define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
+define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
+define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
+define('WEBSITE_DB_CHARSET', 'utf8mb4');
+
 // Legacy compatibility functions with conflict protection
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
@@ -61,8 +68,8 @@ if (!function_exists('getWebsiteConnection')) {
     // Create website database connection
     function getWebsiteConnection() {
         try {
-            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, WEBSITE_DB_NAME);
-            $conn->set_charset(DB_CHARSET);
+            $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME);
+            $conn->set_charset(WEBSITE_DB_CHARSET);
             
             if ($conn->connect_error) {
                 throw new Exception("Website database connection failed: " . $conn->connect_error);

@@ -9,25 +9,27 @@ class AuthenticationService {
     private $config;
     
     public function __construct() {
-        $this->config = [
-            'host' => 'localhost',
-            'username' => 'igangaschoolofl_students_db',
-            'password' => 'hbkKdmMHUfHTHuxWKPRf',
-            'charset' => 'utf8mb4'
+        require_once __DIR__ . '/../config/database.php';
+        
+        $this->staff_config = [
+            'host' => STAFF_DB_HOST,
+            'username' => STAFF_DB_USER,
+            'password' => STAFF_DB_PASS,
+            'charset' => STAFF_DB_CHARSET
         ];
 
-        $this->staff_config = [
-            'host' => 'localhost',
-            'username' => 'igangaschoolofl_staffs_db',
-            'password' => 'AgKzJjZZnT5q58jCahs8',
-            'charset' => 'utf8mb4'
+        $this->students_config = [
+            'host' => DB_HOST,
+            'username' => DB_USER,
+            'password' => DB_PASS,
+            'charset' => DB_CHARSET
         ];
 
         $this->website_config = [
-            'host' => 'localhost',
-            'username' => 'igangaschoolofl_website_db',
-            'password' => 'AaCH75gXpekcFQj5wPZn',
-            'charset' => 'utf8mb4'
+            'host' => WEBSITE_DB_HOST,
+            'username' => WEBSITE_DB_USER,
+            'password' => WEBSITE_DB_PASS,
+            'charset' => WEBSITE_DB_CHARSET
         ];
 
         $this->initializeConnections();
@@ -44,9 +46,9 @@ class AuthenticationService {
             );
 
             $this->students_conn = new mysqli(
-                $this->config['host'],
-                $this->config['username'],
-                $this->config['password'],
+                $this->students_config['host'],
+                $this->students_config['username'],
+                $this->students_config['password'],
                 'igangaschoolofl_students_db'
             );
 
@@ -59,7 +61,7 @@ class AuthenticationService {
             
             // Set charset for all connections
             $this->staffs_conn->set_charset($this->staff_config['charset']);
-            $this->students_conn->set_charset($this->config['charset']);
+            $this->students_conn->set_charset($this->students_config['charset']);
             $this->website_conn->set_charset($this->website_config['charset']);
             
             // Check connections
