@@ -1,39 +1,13 @@
 <?php
-// ISNM Staff Transcript Generation System
-// Professional transcript generation for students
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Database connections
-$students_host = 'localhost';
-$students_username = 'root';
-$students_password = '';
-$students_database = 'students_db';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../auth-service.php';
 
-$staff_host = 'localhost';
-$staff_username = 'root';
-$staff_password = '';
-$staff_database = 'staffs_db';
-
-// Create connections
-$students_conn = new mysqli($students_host, $students_username, $students_password, $students_database);
-$staff_conn = new mysqli($staff_host, $staff_username, $staff_password, $staff_database);
-
-if ($students_conn->connect_error) {
-    die("Students DB connection failed: " . $students_conn->connect_error);
-}
-
-if ($staff_conn->connect_error) {
-    die("Staff DB connection failed: " . $staff_conn->connect_error);
-}
-
-// Set charset
-$students_conn->set_charset("utf8mb4");
-$staff_conn->set_charset("utf8mb4");
-
-// Include authentication
-require_once 'auth-service.php';
+// Database connections using standard functions
+$students_conn = getStudentsConnection();
+$staff_conn = getStaffConnection();
 
 // Start secure session
 if (session_status() === PHP_SESSION_NONE) {

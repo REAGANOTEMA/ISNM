@@ -8,7 +8,7 @@ $userRole = $user['role'] ?? '';
 
 // Enhanced database connections
 $students_conn = getStudentsConnection();
-$finance_conn = new mysqli('localhost', 'root', '', 'finance_db');
+$finance_conn = getStaffConnection();
 
 if ($students_conn->connect_error) {
     die("Students DB connection failed: " . $students_conn->connect_error);

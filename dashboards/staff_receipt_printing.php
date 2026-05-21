@@ -1,28 +1,12 @@
 <?php
-// ISNM Staff Receipt Printing System
-// Professional receipt generation and printing for staff
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Database connection to staffs_db
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'staffs_db';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../auth-service.php';
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Set charset
-$conn->set_charset("utf8mb4");
-
-// Include authentication
-require_once 'auth-service.php';
+// Database connection
+$conn = getStaffConnection();
 
 // Start secure session
 if (session_status() === PHP_SESSION_NONE) {

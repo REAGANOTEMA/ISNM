@@ -93,26 +93,17 @@ function handleStaffLogin() {
         // Determine dashboard route
         $dashboard = null;
         
-        // Priority 1: If coming from organogram position, resolve to dashboard
+        // Priority 1: If coming from organogram position, always go to that position's dashboard
         if (!empty($requestedPosition)) {
-            // Resolve organogram position to role and get dashboard only when
-            // the authenticated user's role matches the requested position.
-            $resolvedRole = $auth_service->resolveOrganogramPosition($requestedPosition);
-            $sessionRole = $_SESSION['role'] ?? '';
-
-            if ($auth_service->positionMatchesRole($requestedPosition, $sessionRole)) {
-                $dashboard = $auth_service->getDashboardRoute($resolvedRole);
-            } else {
-                $_SESSION['error'] = 'This account is not assigned to the selected position. Redirected to your dashboard.';
-                $dashboard = $auth_service->getDashboardRoute($sessionRole);
-            }
+            $dashboard = $auth_service->getDashboardRoute($requestedPosition);
         }
         
-        // Priority 2: Use user's actual role-based dashboard
+        // Priority 2: Use user's actual role-based dashboard if no position specified
         if (empty($dashboard)) {
             $dashboard = $auth_service->getDashboardRoute($_SESSION['role']);
         }
         
+        // Priority 3: Fallback to CEO dashboard
         if (empty($dashboard)) {
             $dashboard = 'dashboards/ceo.php';
         }
@@ -121,7 +112,12 @@ function handleStaffLogin() {
         exit();
     } else {
         $_SESSION['error'] = 'Invalid email or password';
-        header('Location: staff-login.php');
+        // Preserve position parameter on failed login
+        $redirectUrl = 'staff-login.php';
+        if (!empty($requestedPosition)) {
+            $redirectUrl .= '?position=' . urlencode($requestedPosition);
+        }
+        header("Location: $redirectUrl");
         exit();
     }
 }
@@ -219,5 +215,219 @@ function handleLogout() {
  * Note: Helper functions requireAuth(), requireRole(), and getCurrentUser() are defined in
  * security-middleware.php and should be used from there for consistency across the application.
  */
+
+// Handle AJAX-style JSON requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    
+    // Requirement Portal endpoints
+    if (strpos($action, 'requirement_') === 0) {
+        header('Content-Type: application/json');
+        
+        require_once 'includes/requirements_functions.php';
+        
+        // Check authentication
+        if (!isset($_SESSION['user_id']) || $_SESSION['type'] !== 'staff') {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit();
+        }
+        
+        $userName = $_SESSION['full_name'] ?? 'Director';
+        
+        switch ($action) {
+            case 'requirement_clear':
+                handleRequirementClear();
+                break;
+                
+            case 'requirement_unclear':
+                handleRequirementUnclear();
+                break;
+                
+            case 'requirement_clear_all':
+                handleRequirementClearAll();
+                break;
+                
+            case 'requirement_unclear_all':
+                handleRequirementUnclearAll();
+                break;
+                
+            case 'requirement_search':
+                handleRequirementSearch();
+                break;
+                
+            case 'requirement_filter':
+                handleRequirementFilter();
+                break;
+                
+            default:
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid action']);
+                exit();
+        }
+        exit();
+    }
+}
+
+// Handle GET requests for exports
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['export'])) {
+    require_once 'includes/requirements_functions.php';
+    
+    if ($_GET['export'] === 'csv') {
+        $csv = exportRequirementsToCSV();
+        
+        if ($csv) {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="requirements_' . date('Y-m-d') . '.csv"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            echo $csv;
+            exit();
+        }
+    }
+}
+
+/**
+ * Handle clearing a single requirement
+ */
+function handleRequirementClear() {
+    require_once 'includes/requirements_functions.php';
+    
+    $studentId = (int) ($_POST['student_id'] ?? 0);
+    $itemId = (int) ($_POST['item_id'] ?? 0);
+    $userName = $_SESSION['full_name'] ?? 'Director';
+    
+    if ($studentId <= 0 || $itemId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
+        return;
+    }
+    
+    if (clearRequirement($studentId, $itemId, $userName)) {
+        echo json_encode(['success' => true, 'message' => 'Requirement cleared successfully']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error clearing requirement']);
+    }
+}
+
+/**
+ * Handle unclearing a requirement
+ */
+function handleRequirementUnclear() {
+    require_once 'includes/requirements_functions.php';
+    
+    $studentId = (int) ($_POST['student_id'] ?? 0);
+    $itemId = (int) ($_POST['item_id'] ?? 0);
+    
+    if ($studentId <= 0 || $itemId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
+        return;
+    }
+    
+    if (unclearRequirement($studentId, $itemId)) {
+        echo json_encode(['success' => true, 'message' => 'Requirement uncleared successfully']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error unclearing requirement']);
+    }
+}
+
+/**
+ * Handle clearing all requirements for a student
+ */
+function handleRequirementClearAll() {
+    require_once 'includes/requirements_functions.php';
+    
+    $studentId = (int) ($_POST['student_id'] ?? 0);
+    $userName = $_SESSION['full_name'] ?? 'Director';
+    
+    if ($studentId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid student ID']);
+        return;
+    }
+    
+    $cleared = clearAllRequirements($studentId, $userName);
+    
+    if ($cleared !== false) {
+        echo json_encode(['success' => true, 'message' => "Cleared $cleared requirements"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error clearing requirements']);
+    }
+}
+
+/**
+ * Handle unclearing all requirements for a student
+ */
+function handleRequirementUnclearAll() {
+    require_once 'includes/requirements_functions.php';
+    
+    $studentId = (int) ($_POST['student_id'] ?? 0);
+    
+    if ($studentId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid student ID']);
+        return;
+    }
+    
+    $conn = getStaffConnection();
+    
+    try {
+        $stmt = $conn->prepare("
+            UPDATE student_requirements
+            SET is_cleared = 0, cleared_by = NULL, cleared_date = NULL, updated_at = NOW()
+            WHERE student_id = ? AND is_cleared = 1
+        ");
+        
+        $stmt->bind_param("i", $studentId);
+        $result = $stmt->execute();
+        $uncleared = $stmt->affected_rows;
+        $stmt->close();
+        
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => "Reset $uncleared requirements"]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error resetting requirements']);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    }
+}
+
+/**
+ * Handle searching for students
+ */
+function handleRequirementSearch() {
+    require_once 'includes/requirements_functions.php';
+    
+    $searchTerm = sanitizeInput($_POST['search_term'] ?? '');
+    
+    if (strlen($searchTerm) < 2) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Search term too short']);
+        return;
+    }
+    
+    $results = searchStudents($searchTerm);
+    echo json_encode(['success' => true, 'data' => $results]);
+}
+
+/**
+ * Handle filtering students
+ */
+function handleRequirementFilter() {
+    require_once 'includes/requirements_functions.php';
+    
+    $filterBy = sanitizeInput($_POST['filter_by'] ?? 'all');
+    $filterValue = sanitizeInput($_POST['filter_value'] ?? '');
+    
+    $results = filterStudents($filterBy, $filterValue);
+    echo json_encode(['success' => true, 'data' => $results]);
+}
 
 ?>

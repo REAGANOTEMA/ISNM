@@ -9,19 +9,7 @@ $userRole = $user['role'] ?? '';
 // Enhanced database connections
 $students_conn = getStudentsConnection();
 $staff_conn = getStaffConnection();
-$exams_conn = new mysqli('localhost', 'root', '', 'exams_db');
-
-if ($students_conn->connect_error) {
-    die("Students DB connection failed: " . $students_conn->connect_error);
-}
-
-if ($staff_conn->connect_error) {
-    die("Staff DB connection failed: " . $staff_conn->connect_error);
-}
-
-if ($exams_conn->connect_error) {
-    die("Exams DB connection failed: " . $exams_conn->connect_error);
-}
+$exams_conn = getStaffConnection();
 
 // Set charset
 $students_conn->set_charset("utf8mb4");
