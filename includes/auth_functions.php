@@ -116,8 +116,7 @@ function checkAuth($required_role = null) {
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
         // Redirect to appropriate login page based on user type
         if (strpos($_SERVER['REQUEST_URI'], 'student') !== false || strpos($_SERVER['REQUEST_URI'], 'student_profile') !== false) {
-            header('Location: student-login.php');
-        } else {
+            header('Location: staff-login.php');        } else {
             header('Location: staff-login.php');
         }
         exit();
@@ -180,7 +179,7 @@ function protectDashboard($required_role = null) {
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
         // Redirect to appropriate login page
         if (strpos($_SERVER['REQUEST_URI'], 'student') !== false) {
-            header('Location: ../student-login.php');
+            header('Location: ../staff-login.php');
         } else {
             header('Location: ../staff-login.php');
         }

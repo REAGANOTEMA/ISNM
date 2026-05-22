@@ -10,7 +10,7 @@ require_once 'auth-service.php';
 // Check if user is logged in and has admin access
 session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'academic' && $_SESSION['role'] !== 'registrar')) {
-    header("Location: student-login.php");
+    header("Location: staff-login.php");
     exit();
 }
 

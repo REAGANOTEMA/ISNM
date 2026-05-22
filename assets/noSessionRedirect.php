@@ -9,7 +9,7 @@
         // Redirect to appropriate login page based on URL
         $current_url = $_SERVER['REQUEST_URI'];
         if (strpos($current_url, 'student') !== false || strpos($current_url, 'student_profile') !== false) {
-            header("Location: ../student-login.php");
+            header("Location: ../staff-login.php");
         } else {
             header("Location: ../staff-login.php");
         }

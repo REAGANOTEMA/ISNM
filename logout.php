@@ -12,7 +12,7 @@ session_destroy();
 
 // Redirect to appropriate login page based on original role
 if ($user_role === 'Student') {
-    header('Location: student-login.php');
+    header('Location: staff-login.php');
 } else {
     header('Location: staff-login.php');
 }

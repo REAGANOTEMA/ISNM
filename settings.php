@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['uid'])) {
     // Redirect to appropriate login page
     if (strpos($_SERVER['REQUEST_URI'], 'student') !== false) {
-        header('Location: student-login.php');
+        header('Location: staff-login.php');
     } else {
         header('Location: staff-login.php');
     }

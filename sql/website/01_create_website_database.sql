@@ -188,13 +188,14 @@ INSERT INTO galleries (title, description, folder_name, cover_image, status) VAL
 
 -- Sample settings
 INSERT INTO settings (setting_key, setting_value, setting_type, description, category, is_public) VALUES
-('school_name', 'Institute of Strategic Nursing and Midwifery', 'text', 'School name for display', 'general', TRUE),
-('school_address', 'P.O. Box 418, Iganga, Uganda', 'text', 'School address', 'general', TRUE),
-('school_phone', '+256 123 456 789', 'text', 'School phone number', 'general', TRUE),
-('school_email', 'info@isnm.ac.ug', 'email', 'School email address', 'general', TRUE),
-('school_website', 'www.isnm.ac.ug', 'url', 'School website URL', 'general', TRUE),
+('school_name', 'Iganga School of Nursing and Midwifery', 'text', 'School name for display', 'general', TRUE),
+('school_address', 'P.O. Box 416, Iganga District, Uganda', 'text', 'School address', 'general', TRUE),
+('school_phone', '+256 703 204722', 'text', 'School phone number', 'general', TRUE),
+('school_email', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', 'email', 'Primary school contact email', 'general', TRUE),
+('school_website', 'isnm.ac.ug', 'url', 'School website URL', 'general', TRUE),
 ('mission_statement', 'To provide quality nursing and midwifery education for healthcare excellence', 'text', 'School mission statement', 'general', TRUE),
-('vision_statement', 'To be a leading institution in nursing and midwifery education', 'text', 'School vision statement', 'general', TRUE),
+('vision_statement', 'To be a leading institution in nursing and midwifery education in Uganda', 'text', 'School vision statement', 'general', TRUE),
+('admissions_email', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', 'email', 'Admissions & Requirements Office — the official point of contact for all student intake and equipment clearance', 'admissions', TRUE),
 ('admissions_open', 'true', 'boolean', 'Admissions status', 'admissions', TRUE),
 ('current_academic_year', '2025/2026', 'text', 'Current academic year', 'academic', TRUE),
 ('current_semester', 'Semester 1', 'text', 'Current semester', 'academic', TRUE),
@@ -202,6 +203,7 @@ INSERT INTO settings (setting_key, setting_value, setting_type, description, cat
 ('contact_phone', '+256 123 456 789', 'text', 'Contact phone', 'contact', TRUE),
 ('social_media_facebook', 'https://facebook.com/ISNMUganda', 'url', 'Facebook page URL', 'social', TRUE),
 ('social_media_twitter', 'https://twitter.com/ISNMUganda', 'url', 'Twitter profile URL', 'social', TRUE),
+('admissions_email', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', 'email', 'Admissions & Requirements Office contact email', 'admissions', TRUE),
 ('site_maintenance', 'false', 'boolean', 'Site maintenance mode', 'system', FALSE),
 ('enable_notifications', 'true', 'boolean', 'Enable email notifications', 'notifications', FALSE),
 ('max_upload_size', '10485760', 'number', 'Maximum upload file size in bytes', 'system', FALSE),

@@ -24,6 +24,23 @@ $total_staff = $stats['total_staff'] ?? 2;
 $recent_applications = $stats['pending_applications'] ?? 8;
 $active_programs = $stats['active_programs'] ?? 2;
 
+// Get Total Revenue (sum of all verified fee payments)
+$revenue_result = $conn->query("SELECT COALESCE(SUM(amount_paid), 0) as total FROM fee_payments WHERE status = 'verified'");
+$total_revenue = (int) ($revenue_result ? $revenue_result->fetch_assoc()['total'] : 0);
+
+// Get Total Expenses (sum of all paid expenses)
+$expenses_result = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses WHERE status = 'paid'");
+$total_expenses = (int) ($expenses_result ? $expenses_result->fetch_assoc()['total'] : 0);
+
+// Get Outstanding Fees (sum of all outstanding invoice balances)
+$outstanding_result = $conn->query("SELECT COALESCE(SUM(balance), 0) as total FROM student_invoices WHERE status IN ('pending', 'partial', 'overdue')");
+$outstanding_fees = (int) ($outstanding_result ? $outstanding_result->fetch_assoc()['total'] : 0);
+
+// Close stored procedure results to prevent "Commands out of sync" errors
+while ($conn->more_results()) {
+    $conn->next_result();
+}
+
 // Get recent activities from database
 $recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
 $recent_activities_result = $conn->query($recent_activities_sql);
@@ -87,7 +104,7 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#audit">
-                            <i class="fas fa-audit"></i> Internal Audit
+                            <i class="fas fa-check-double"></i> Internal Audit
                         </a>
                     </li>
                 </ul>
@@ -456,7 +473,7 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
                 e.preventDefault();
                 document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
-                
+
                 const targetId = this.getAttribute('href').substring(1);
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';

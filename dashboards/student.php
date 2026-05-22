@@ -16,7 +16,7 @@ if (!isset($auth_service) || !($auth_service instanceof AuthenticationService)) 
 
 // Strict dashboard protection - only students allowed
 if (!$auth_service->isAuthenticated()) {
-    header('Location: ../student-login.php');
+    header('Location: ../staff-login.php');
     exit();
 }
 

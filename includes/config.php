@@ -76,7 +76,7 @@ function checkAccessLevel($required_level) {
     if (!isset($_SESSION['access_level']) || $_SESSION['access_level'] < $required_level) {
         // Redirect to appropriate login page based on session role
         if (isset($_SESSION['role']) && $_SESSION['role'] === 'Student') {
-            header("Location: ../student-login.php");
+            header("Location: ../staff-login.php");
         } else {
             header("Location: ../staff-login.php");
         }

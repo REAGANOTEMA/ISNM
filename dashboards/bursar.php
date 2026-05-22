@@ -88,81 +88,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Enhanced functionality functions
 function handleAddStudent() {
-    global $students_conn, $finance_conn;
-    
-    $student_id = generateStudentId();
-    $first_name = sanitizeInput($_POST['first_name']);
-    $surname = sanitizeInput($_POST['surname']);
-    $other_name = sanitizeInput($_POST['other_name'] ?? '');
-    $date_of_birth = sanitizeInput($_POST['date_of_birth']);
-    $gender = sanitizeInput($_POST['gender']);
-    $nationality = sanitizeInput($_POST['nationality']);
-    $address = sanitizeInput($_POST['address']);
-    $phone = sanitizeInput($_POST['phone']);
-    $email = sanitizeInput($_POST['email']);
-    $program = sanitizeInput($_POST['program']);
-    $level = sanitizeInput($_POST['level']);
-    $intake_year = sanitizeInput($_POST['intake_year']);
-    $intake_period = sanitizeInput($_POST['intake_period']);
-    $registration_date = date('Y-m-d');
-    
-    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, registration_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    $stmt = $students_conn->prepare($sql);
-    $stmt->bind_param("ssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $registration_date, 'Active', $_SESSION['user_id']);
-    
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Student added successfully!";
-        
-        // Create fee account
-        $fee_sql = "INSERT INTO fee_accounts (student_id, program, total_fees, paid_amount, balance, fee_status, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)";
-        $fee_stmt = $finance_conn->prepare($fee_sql);
-        $program_fees = getProgramFees($program);
-        $fee_stmt->bind_param("ssdddds", $student_id, $program, $program_fees, 0, $program_fees, 'Unpaid', $_SESSION['user_id']);
-        $fee_stmt->execute();
-        
-        // Log activity
-        $log_sql = "INSERT INTO bursar_activity_log (activity, created_at, created_by) VALUES (?, NOW(), ?)";
-        $log_stmt = $finance_conn->prepare($log_sql);
-        $log_stmt->bind_param("sis", "New student registered: $first_name $surname", $_SESSION['user_id']);
-        $log_stmt->execute();
-    } else {
-        $_SESSION['error'] = "Failed to add student.";
-    }
-    
-    header("Location: bursar.php");
-    exit();
-    $guardian_name = sanitizeInput($_POST['guardian_name']);
-    $guardian_phone = sanitizeInput($_POST['guardian_phone']);
-    $guardian_email = sanitizeInput($_POST['guardian_email']);
-    $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
-    $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
-    
-    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?)";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
-    
-    if ($stmt->execute()) {
-        // Create initial fee account
-        $academic_year = $_POST['academic_year'] ?? date('Y') . '/' . (date('Y') + 1);
-        $total_fees = $_POST['total_fees'] ?? 0;
-        
-        $fee_sql = "INSERT INTO student_fee_accounts (student_id, academic_year, program, level, year, semester, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, 1, 1, ?, 0, ?, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'unpaid')";
-        
-        $fee_stmt = $conn->prepare($fee_sql);
-        $fee_stmt->bind_param("sssssd", $student_id, $academic_year, $program, $level, $total_fees, $total_fees);
-        $fee_stmt->execute();
-        
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
-        $_SESSION['success'] = "Student added successfully with fee account!";
-    } else {
-        $_SESSION['error'] = "Error adding student: " . $conn->error;
-    }
-    
-    header("Location: bursar.php");
-    exit();
-}
+     global $students_conn, $finance_conn, $conn;
+     
+     $student_id = generateStudentId();
+     $first_name = sanitizeInput($_POST['first_name']);
+     $surname = sanitizeInput($_POST['surname']);
+     $other_name = sanitizeInput($_POST['other_name'] ?? '');
+     $date_of_birth = sanitizeInput($_POST['date_of_birth']);
+     $gender = sanitizeInput($_POST['gender']);
+     $nationality = sanitizeInput($_POST['nationality']);
+     $address = sanitizeInput($_POST['address']);
+     $phone = sanitizeInput($_POST['phone']);
+     $email = sanitizeInput($_POST['email']);
+     $program = sanitizeInput($_POST['program']);
+     $level = sanitizeInput($_POST['level']);
+     $intake_year = sanitizeInput($_POST['intake_year']);
+     $intake_period = sanitizeInput($_POST['intake_period']);
+     $registration_date = date('Y-m-d');
+     $guardian_name = sanitizeInput($_POST['guardian_name']);
+     $guardian_phone = sanitizeInput($_POST['guardian_phone']);
+     $guardian_email = sanitizeInput($_POST['guardian_email']);
+     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
+     $emergency_contact_phone = sanitizeInput($_POST['emergency
 
 // Handle student update
 function handleUpdateStudent() {

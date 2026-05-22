@@ -142,7 +142,7 @@ class SecurityMiddleware {
      */
     private function redirectToLogin() {
         if (isset($_SESSION['type']) && $_SESSION['type'] === 'student') {
-            header('Location: student-login.php');
+            header('Location: staff-login.php');
         } else {
             header('Location: staff-login.php');
         }

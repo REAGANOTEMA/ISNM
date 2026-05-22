@@ -10,7 +10,7 @@ require_once 'auth-service.php';
 // Start session and check authentication
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header("Location: student-login.php");
+    header("Location: staff-login.php");
     exit();
 }
 
