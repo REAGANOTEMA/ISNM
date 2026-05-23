@@ -52,19 +52,22 @@ if ($has_student_hint) {
 
 // ── 4. Already logged-in? → redirect to dashboard immediately ─────────
 if ($auth_service->isAuthenticated()) {
-    if (($_SESSION['type'] ?? '') === 'staff') {
-        $sessionRole = $_SESSION['role'] ?? '';
-        $dashboard   = $auth_service->getDashboardRoute($sessionRole);
-        if (!empty($requested_position)
-            && $auth_service->positionMatchesRole($requested_position, $sessionRole)
-        ) {
-            $dashboard = $auth_service->getDashboardRoute(
-                $auth_service->resolveOrganogramPosition($requested_position)
-            );
+        if (($_SESSION['type'] ?? '') === 'staff') {
+            $sessionRole = $_SESSION['role'] ?? '';
+            $dashboard   = $auth_service->getDashboardRoute($sessionRole);
+            $requestedPositionFromSession = $_SESSION['requested_position'] ?? '';
+            if (!empty($requestedPositionFromSession)
+                && $auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
+            ) {
+                $dashboard = $auth_service->getDashboardRoute(
+                    $auth_service->resolveOrganogramPosition($requestedPositionFromSession)
+                );
+                // Clear the session variable after use
+                unset($_SESSION['requested_position']);
+            }
+            header("Location: $dashboard");
+            exit();
         }
-        header("Location: $dashboard");
-        exit();
-    }
     if (($_SESSION['type'] ?? '') === 'student') {
         header('Location: dashboards/student.php');
         exit();

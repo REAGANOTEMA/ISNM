@@ -1,4 +1,4 @@
-USE staffs_db;
+USE igangaschoolofl_staffs_db;
 
 -- Insert default admin user
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at)
