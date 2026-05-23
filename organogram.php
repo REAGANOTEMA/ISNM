@@ -604,21 +604,21 @@ include('shared/_header.php');
                         </div>
                     </div>
                 </div>
-                <div class="org-branch">
-                    <div class="org-node management floating">
-                        <i class="fas fa-user-check org-icon"></i>
-                        <div class="org-title">Director Admissions & Requirements</div>
-                        <div class="org-subtitle">Admissions & Requirements Clearance</div>
-                        <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
-                    </div>
-                </div>
+<div class="org-branch">
+    <div class="org-node administrative">
+        <i class="fas fa-user-check org-icon"></i>
+        <div class="org-title">Director Admissions & Requirements</div>
+        <div class="org-subtitle">Admissions & Requirements Clearance</div>
+        <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+        <div class="org-actions">
+            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
+                <i class="fas fa-user-shield me-2"></i>Staff Login
+            </button>
+        </div>
+    </div>
+</div>
             </div>
 
             <!-- Administrative Staff Level -->

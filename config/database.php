@@ -3,37 +3,52 @@
  * Database Configuration for ISNM Student Management System
  */
 
-// Database connection parameters
-// Localhost configuration (XAMPP)
-// For hosting use: localhost, username: igangaschoolofl, password from hosting panel
-// Based on testing, we need to use port 3307 and password 'ReagaN23#'
-
-// Students Database
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'root');
-define('DB_PASS', 'ReagaN23#');
-define('DB_PORT', 3307);
+/**
+ * Students Database Connection
+ * Hostname: localhost
+ * Database: igangaschoolofl_students_db
+ * Username: igangaschoolofl_students_db
+ * Password: hbkKdmMHUfHTHuxWKPRf
+ */
+define('DB_HOST', 'localhost');
+define('DB_USER', 'igangaschoolofl_students_db');
+define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
+define('DB_PORT', 3306);
 define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
 define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
 
-// Staff database connection parameters
-define('STAFF_DB_HOST', '127.0.0.1');
-define('STAFF_DB_USER', 'root');
-define('STAFF_DB_PASS', 'ReagaN23#');
-define('STAFF_DB_PORT', 3307);
+/* 
+ * Staff database connection parameters
+ * Hostname: localhost
+ * Database: igangaschoolofl_staffs_db
+ * Username: igangaschoolofl_staffs_db
+ * Password: AgKzJjZZnT5q58jCahs8
+ */
+define('STAFF_DB_HOST', 'localhost');
+define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
+define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
+define('STAFF_DB_PORT', 3306);
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
-// Website database connection parameters
-define('WEBSITE_DB_HOST', '127.0.0.1');
-define('WEBSITE_DB_USER', 'root');
-define('WEBSITE_DB_PASS', 'ReagaN23#');
-define('WEBSITE_DB_PORT', 3307);
+/* 
+ * Website database connection parameters
+ * Hostname: localhost
+ * Database: igangaschoolofl_website_db
+ * Username: igangaschoolofl_website_db
+ * Password: AaCH75gXpekcFQj5wPZn
+ */
+define('WEBSITE_DB_HOST', 'localhost');
+define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
+define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
+define('WEBSITE_DB_PORT', 3306);
 define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 define('WEBSITE_DB_CHARSET', 'utf8mb4');
 
-// Legacy compatibility functions with conflict protection
+/**
+ * Legacy compatibility functions with conflict protection
+ */
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
         try {
@@ -198,7 +213,7 @@ if (!function_exists('validatePhone')) {
     function validatePhone($phone) {
         // Remove non-numeric characters
         $clean_phone = preg_replace('/[^0-9]/', '', $phone);
-
+        
         // Check if it's a valid Uganda phone number (with or without country code)
         // Accept formats: 0771234567 or 256771234567
         if (strlen($clean_phone) === 10 && preg_match('/^0[7]\d{8}$/', $clean_phone)) {
@@ -206,7 +221,7 @@ if (!function_exists('validatePhone')) {
         } elseif (strlen($clean_phone) === 12 && preg_match('/^256[7]\d{8}$/', $clean_phone)) {
             return true; // Format: 256771234567
         }
-
+        
         return false;
     }
 }

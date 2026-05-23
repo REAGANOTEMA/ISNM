@@ -1,12 +1,11 @@
 USE igangaschoolofl_staffs_db;
 
 -- Insert default admin user
-INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at)
-VALUES ('ADMIN001', 'System Administrator', 'administration@isnm.ac.ug', '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'System Administrator', 'Executive Office', 1, 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'administration@isnm.ac.ug', password = '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', is_first_login = TRUE, updated_at = NOW();
+INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at)
+VALUES ('ADMIN001', 'System Administrator', 'administration@isnm.ac.ug', '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'System Administrator', 'Executive Office', 1, 'Active', CURDATE(), FALSE, TRUE, NOW());
 
 -- Insert system settings
-INSERT INTO system_settings (setting_key, setting_value, setting_type, description, category, is_public) VALUES
+INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description, category, is_public) VALUES
 ('school_name', 'Institute of Strategic Nursing and Midwifery', 'text', 'School name', 'general', TRUE),
 ('academic_year', '2025/2026', 'text', 'Current academic year', 'academic', TRUE),
 ('semester', 'Semester 2', 'text', 'Current semester', 'academic', TRUE),
