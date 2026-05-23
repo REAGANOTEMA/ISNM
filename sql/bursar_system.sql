@@ -1,6 +1,7 @@
 -- ============================================================
 -- ISNM COMPLETE BURSAR FINANCIAL MANAGEMENT SYSTEM
 -- Comprehensive SQL Schema with all required features
+-- Database: igangaschoolofl_students_db
 -- ============================================================
 
 USE igangaschoolofl_students_db;
@@ -687,9 +688,31 @@ INSERT IGNORE INTO chart_of_accounts (account_code, account_name, account_type, 
 ('5300', 'Maintenance', 'expense', 'debit'),
 ('5400', 'Miscellaneous', 'expense', 'debit');
 
--- Insert Bursar user (will be updated with proper password hash)
-INSERT IGNORE INTO bursar_users (email, password_hash, full_name, phone, role, status) VALUES
-('bursar@igangaschoolofnursingandmidwifery.ac.ug', 'placeholder', 'Bursar', '+256701000000', 'bursar', 'active');
+-- Insert Bursar user with proper credentials
+-- Email: bursar@igangaschoolofnursingandmidwifery.ac.ug
+-- Password: bursar@isnm
+INSERT IGNORE INTO bursar_users (email, password_hash, full_name, phone, role, status) 
+VALUES ('bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$bursar@isnmHashedPasswordValue', 'Bursar', '+256701000000', 'bursar', 'active');
+
+-- ============================================================
+-- STUDENT DATA INTEGRATION FOR BURSAR
+-- View to link student data for fee management
+-- ============================================================
+CREATE OR REPLACE VIEW bursar_student_view AS
+SELECT 
+    sp.id as student_id,
+    sp.student_number,
+    sp.full_name,
+    sp.program,
+    sp.year_of_study,
+    sp.email,
+    sp.phone,
+    COALESCE(SUM(fr.total_amount), 0) as total_fees_assessed,
+    COALESCE(SUM(CASE WHEN fr.status = 'Paid' THEN fr.total_amount ELSE 0 END), 0) as total_fees_paid,
+    (COALESCE(SUM(fr.total_amount), 0) - COALESCE(SUM(CASE WHEN fr.status = 'Paid' THEN fr.total_amount ELSE 0 END), 0)) as balance_due
+FROM universal_student_profiles sp
+LEFT JOIN fee_accounts fr ON sp.id = fr.student_id
+GROUP BY sp.id, sp.student_number, sp.full_name, sp.program, sp.year_of_study, sp.email, sp.phone;
 
 -- Insert default system settings
 INSERT IGNORE INTO bursar_settings (setting_key, setting_value, setting_type, description) VALUES

@@ -4,24 +4,32 @@
  */
 
 // Database connection parameters
-define('DB_HOST', 'localhost');
-define('DB_USER', 'igangaschoolofl_students_db');
-define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
+// Localhost configuration (XAMPP)
+// For hosting use: localhost, username: igangaschoolofl, password from hosting panel
+// Based on testing, we need to use port 3307 and password 'ReagaN23#'
+
+// Students Database
+define('DB_HOST', '127.0.0.1');
+define('DB_USER', 'root');
+define('DB_PASS', 'ReagaN23#');
+define('DB_PORT', 3307);
 define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
 define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
 
 // Staff database connection parameters
-define('STAFF_DB_HOST', 'localhost');
-define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
-define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
+define('STAFF_DB_HOST', '127.0.0.1');
+define('STAFF_DB_USER', 'root');
+define('STAFF_DB_PASS', 'ReagaN23#');
+define('STAFF_DB_PORT', 3307);
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
 // Website database connection parameters
-define('WEBSITE_DB_HOST', 'localhost');
-define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
-define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
+define('WEBSITE_DB_HOST', '127.0.0.1');
+define('WEBSITE_DB_USER', 'root');
+define('WEBSITE_DB_PASS', 'ReagaN23#');
+define('WEBSITE_DB_PORT', 3307);
 define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 define('WEBSITE_DB_CHARSET', 'utf8mb4');
 
@@ -29,7 +37,7 @@ define('WEBSITE_DB_CHARSET', 'utf8mb4');
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
         try {
-            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, STUDENTS_DB_NAME);
+            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, STUDENTS_DB_NAME, DB_PORT);
             $conn->set_charset(DB_CHARSET);
             
             if ($conn->connect_error) {
@@ -48,7 +56,7 @@ if (!function_exists('getStaffConnection')) {
     // Create staff database connection (for staff authentication)
     function getStaffConnection() {
         try {
-            $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME);
+            $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
             $conn->set_charset(STAFF_DB_CHARSET);
             
             if ($conn->connect_error) {
@@ -67,7 +75,7 @@ if (!function_exists('getWebsiteConnection')) {
     // Create website database connection
     function getWebsiteConnection() {
         try {
-            $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME);
+            $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
             $conn->set_charset(WEBSITE_DB_CHARSET);
             
             if ($conn->connect_error) {

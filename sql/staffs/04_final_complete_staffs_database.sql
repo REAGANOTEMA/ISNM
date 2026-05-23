@@ -244,7 +244,7 @@ CREATE TABLE staff_login_sessions (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_staff_id (staff_id),
     INDEX idx_session_token (session_token),
@@ -275,7 +275,7 @@ CREATE TABLE staff_password_resets (
     staff_id INT NOT NULL,
     reset_token VARCHAR(255) NOT NULL UNIQUE,
     reset_requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_used BOOLEAN DEFAULT FALSE,
     ip_address VARCHAR(45),
     FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -1195,35 +1195,13 @@ INSERT INTO staff_departments (department_name, department_code, description, de
 
 -- Insert default receipt templates
 INSERT INTO receipt_templates (template_name, template_type, template_content, template_variables, created_by) VALUES
-('Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{"receipt_number": "string", "student_name": "string", "amount": "number", "date": "date", "payment_method": "string"}', (SELECT id FROM staff WHERE email = 'isnm@administration.ac'));
+('Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{"receipt_number": "string", "student_name": "string", "amount": "number", "date": "date", "payment_method": "string"}', (SELECT id FROM staff WHERE email = 'administration@isnm.ac'));
 
 -- Insert default transcript templates
 INSERT INTO generated_documents (document_type, generated_by, document_title, document_content, access_code, generation_date) VALUES
-('Student Transcript', (SELECT id FROM staff WHERE email = 'isnm@administration.ac'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', 'TRANS_' . date('YmdHis'), NOW());
+('Student Transcript', (SELECT id FROM staff WHERE email = 'administration@isnm.ac'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', CONCAT('TRANS_', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), NOW());
 
--- Insert default system settings
-INSERT INTO system_settings (setting_key, setting_value, setting_type, description, is_public) VALUES
-('school_name', 'Iganga School of Nursing and Midwifery', 'text', 'Official school name', true),
-('school_code', 'ISNM', 'text', 'School abbreviation', true),
-('academic_year', '2024-2025', 'text', 'Current academic year', true),
-('semester', 'Semester 1', 'text', 'Current semester', true),
-('max_login_attempts', '5', 'number', 'Maximum login attempts before lockout', false),
-('lockout_duration', '900', 'number', 'Account lockout duration in seconds', false),
-('session_timeout', '3600', 'number', 'Session timeout in seconds', false),
-('default_password', '12345678', 'text', 'Default password for new accounts', false),
-('school_address', 'Iganga, Uganda', 'text', 'School physical address', true),
-('school_phone', '+256 XXX XXX XXX', 'text', 'School contact phone', true),
-('school_email', 'info@isnm.ug', 'text', 'School contact email', true),
-('developer_email', 'isnm@administration.ac', 'text', 'Developer login email', false),
-('allow_password_change', 'true', 'boolean', 'Allow staff to change passwords', true),
-('require_two_factor', 'false', 'boolean', 'Require two-factor authentication', false),
-('allow_profile_upload', 'true', 'boolean', 'Allow staff to upload profile pictures', true),
-('max_file_size', '5242880', 'number', 'Maximum file upload size in bytes', false),
-('allowed_file_types', 'jpg,jpeg,png,pdf,doc,docx', 'text', 'Allowed file types for upload', false),
-('allow_receipt_printing', 'true', 'boolean', 'Allow staff to print receipts', true),
-('allow_transcript_generation', 'true', 'boolean', 'Allow transcript generation for authorized staff', false),
-('receipt_template_path', 'templates/receipts/', 'text', 'Path to receipt templates', false),
-('transcript_template_path', 'templates/transcripts/', 'text', 'Path to transcript templates', false);
+
 
 -- Create view for staff login information
 CREATE OR REPLACE VIEW staff_login_view AS

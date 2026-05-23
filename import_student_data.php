@@ -8,67 +8,34 @@ require_once 'config/database.php';
 require_once 'auth-service.php';
 
 // Check if user is logged in and has admin access
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'academic' && $_SESSION['role'] !== 'registrar')) {
     header("Location: staff-login.php");
     exit();
 }
 
-// Function to create students table
+// Function to create students table - table already exists, just ensure structure
 function createStudentsTable($conn) {
-    $sql = "CREATE TABLE IF NOT EXISTS students (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        student_id VARCHAR(50) UNIQUE,
-        index_number VARCHAR(50) UNIQUE,
-        surname VARCHAR(100) NOT NULL,
-        first_name VARCHAR(100) NOT NULL,
-        other_name VARCHAR(100),
-        full_name VARCHAR(255) GENERATED ALWAYS AS (CONCAT(first_name, ' ', IFNULL(other_name, ''), ' ', surname)) STORED,
-        gender ENUM('Male', 'Female') NOT NULL,
-        date_of_birth DATE,
-        nationality VARCHAR(100) DEFAULT 'Uganda',
-        district VARCHAR(100),
-        address TEXT,
-        phone VARCHAR(20),
-        email VARCHAR(255) UNIQUE,
-        program VARCHAR(200),
-        level ENUM('Certificate', 'Diploma', 'Degree') NOT NULL,
-        intake_year INT,
-        intake_period VARCHAR(20),
-        enrollment_date DATE,
-        graduation_date DATE,
-        status ENUM('active', 'inactive', 'graduated', 'suspended', 'withdrawn') DEFAULT 'active',
-        gpa DECIMAL(3,2) DEFAULT 0.00,
-        academic_status ENUM('good', 'probation', 'warning') DEFAULT 'good',
-        fees_balance DECIMAL(10,2) DEFAULT 0.00,
-        last_login TIMESTAMP NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX (student_id),
-        INDEX (index_number),
-        INDEX (email),
-        INDEX (surname),
-        INDEX (first_name),
-        INDEX (program),
-        INDEX (level),
-        INDEX (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
-    if (!$conn->query($sql)) {
-        throw new Exception("Error creating students table: " . $conn->error);
-    }
+    // Table already exists with correct structure from 01_create_students_database.sql
+    // No need to create or modify
+    return true;
 }
 
-// Function to import all student data sets
-function importAllStudentData() {
-    $conn = getConnection();
-    
-    $imported_count = 0;
-    $error_count = 0;
-    $errors = [];
-    
-    // First, create students table if it doesn't exist
-    createStudentsTable($conn);
+    // Function to import all student data sets
+    function importAllStudentData() {
+        $conn = getConnection();
+        
+        $imported_count = 0;
+        $error_count = 0;
+        $errors = [];
+        
+        // Serial number for generating registration numbers
+        $serial = 0;
+        
+        // First, create students table if it doesn't exist
+        createStudentsTable($conn);
     
     // SET 25 MIDWIVES Data
     $set25_midwives = [
@@ -136,58 +103,73 @@ function importAllStudentData() {
     // Combine all datasets
     $all_students = array_merge($set25_midwives, $dme_students, $cn_students, $cm_students);
     
-    foreach ($all_students as $student_data) {
-        try {
-            $student_id = generateStudentId();
-            $surname = $student_data[0];
-            $first_name = $student_data[1];
-            $other_name = $student_data[2];
-            $gender = $student_data[3];
-            $index_number = $student_data[4];
-            $date_of_birth = $student_data[5];
-            $district = $student_data[6];
-            $nationality = $student_data[7];
-            $phone = $student_data[8];
-            $email = $student_data[9];
-            $program = $student_data[10];
-            $level = $student_data[11];
-            $intake_year = $student_data[12];
-            $intake_period = $student_data[13];
-            
-            // Check if student already exists
-            $check_sql = "SELECT COUNT(*) as count FROM students WHERE index_number = ? OR email = ?";
-            $check_stmt = $conn->prepare($check_sql);
-            $check_stmt->bind_param("ss", $index_number, $email);
-            $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
-            
-            if ($check_result->fetch_assoc()['count'] > 0) {
-                continue; // Skip existing student
-            }
-            
-            // Also add to users table for login access
-            $username = strtolower(str_replace(['/', ' '], '', $index_number));
-            $password = password_hash('password123', PASSWORD_DEFAULT); // Default password
-            
-            $user_sql = "INSERT INTO users (user_id, username, first_name, last_name, full_name, index_number, phone, email, password, role, type, status) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'student', 'active')";
-            $user_stmt = $conn->prepare($user_sql);
-            $full_name = trim("$first_name $other_name $surname");
-            $user_stmt->bind_param("sssssssss", $index_number, $username, $first_name, $surname, $full_name, $index_number, $phone, $email, $password);
-            
-            if (!$user_stmt->execute()) {
-                $error_count++;
-                $errors[] = "Error creating user account: $first_name $surname - " . $user_stmt->error;
-                continue;
-            }
-            
-            $sql = "INSERT INTO students (student_id, index_number, surname, first_name, other_name, gender, date_of_birth, nationality, district, phone, email, program, level, intake_year, intake_period, enrollment_date, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'active')";
-            
+     foreach ($all_students as $student_data) {
+         try {
+             // Map data from import format to database columns
+             $surname = $student_data[0];
+             $first_name = $student_data[1];
+             $other_name = $student_data[2];
+             $gender = $student_data[3];
+             $index_number = $student_data[4];
+             $date_of_birth = $student_data[5];
+             $district = $student_data[6];
+             $nationality = $student_data[7];
+             $phone = $student_data[8];
+             $email = $student_data[9];
+   $program = $student_data[10];
+   $level = $student_data[11];
+   $intake_year = $student_data[12];
+   $intake_period = $student_data[13];
+   $course = $program;
+             
+             // Generate student number based on index number or create one
+             $student_number = !empty($index_number) ? strtoupper(str_replace(['/', ' '], '', $index_number)) : 'ISNM' . rand(100000, 999999);
+             $registration_number = !empty($index_number) ? 'ISNM/' . $intake_year . '/' . str_pad(++$serial, 3, '0', STR_PAD_LEFT) : '';
+             $national_student_id_number = null; // Not in import data, set to NULL
+             
+              // Set default values for missing fields
+              $mobile_number = $phone;
+              $current_year = 1; // Default to first year
+              $level = $student_data[11]; // Already set from data
+              $set_name = 'Set ' . $intake_year; // Approximate
+              $intake_date = $intake_year . '-' . ($intake_period === 'January' ? '01-15' : ($intake_period === 'July' ? '07-15' : '01-15'));
+              $address = $district . ', Uganda';
+              $emergency_contact_name = '';
+              $emergency_contact_phone = '';
+              $emergency_contact_email = '';
+              $guardian_name = '';
+              $guardian_phone = '';
+              $profile_picture = '';
+              
+              // Full name
+              $full_name = trim("$first_name $other_name $surname");
+             
+   // Password for login
+   $password = password_hash('12345678', PASSWORD_DEFAULT);
+
+   // Debug: echo national_student_id_number
+   echo "Processing: $first_name $surname<br>";
+   echo "national_student_id_number: ".($national_student_id_number === null ? 'NULL' : $national_student_id_number)."<br>";
+
+    // Insert student record
+            $sql = "INSERT INTO students (student_number, registration_number, national_student_id_number, index_number, first_name, surname, other_name, email, password, phone, program, current_year, level, set_name, current_semester, intake_date, date_of_birth, gender, nationality, address, emergency_contact_name, emergency_contact_phone, emergency_contact_email, guardian_name, guardian_phone, profile_picture, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssssssssssss", $student_id, $index_number, $surname, $first_name, $other_name, $gender, $date_of_birth, $nationality, $district, $phone, $email, $program, $level, $intake_year, $intake_period);
+            $status = 'Active';
+            $current_semester = 'Semester 1'; // Default value
+            $password_changed = FALSE;
+            $is_first_login = TRUE;
+            $last_login = null;
+            $login_attempts = 0;
             
-            if ($stmt->execute()) {
+            $stmt->bind_param("ssssssssssssssssssssssssssss", 
+                $student_number, $registration_number, $national_student_id_number, $index_number, 
+                $first_name, $surname, $other_name, $email, $password, $phone, $program, $year, $level, $set_name, $current_semester, $intake_date, 
+                $date_of_birth, $gender, $nationality, $address, $emergency_contact_name, $emergency_contact_phone, 
+                $emergency_contact_email, $guardian_name, $guardian_phone, $profile_picture, $status);
+              
+             if ($stmt->execute()) {
                 $imported_count++;
             } else {
                 $error_count++;
@@ -365,11 +347,23 @@ $total_students_sql = "SELECT COUNT(*) as total FROM students";
 $total_result = $conn->query($total_students_sql);
 $total_students = $total_result->fetch_assoc()['total'];
 
-$by_program_sql = "SELECT program, COUNT(*) as count FROM students GROUP BY program ORDER BY count DESC";
-$programs_stats = $conn->query($by_program_sql);
+$by_program_sql = "SELECT course, COUNT(*) as count FROM students GROUP BY course ORDER BY count DESC";
+$programs_result = $conn->query($by_program_sql);
+$programs_stats = [];
+if ($programs_result) {
+    while ($row = $programs_result->fetch_assoc()) {
+        $programs_stats[] = $row;
+    }
+}
 
-$by_year_sql = "SELECT intake_year, COUNT(*) as count FROM students GROUP BY intake_year ORDER BY intake_year DESC";
-$year_stats = $conn->query($by_year_sql);
+$by_year_sql = "SELECT year, COUNT(*) as count FROM students GROUP BY year ORDER BY year DESC";
+$year_result = $conn->query($by_year_sql);
+$year_stats = [];
+if ($year_result) {
+    while ($row = $year_result->fetch_assoc()) {
+        $year_stats[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>

@@ -23,7 +23,7 @@ class AuthenticationService {
     private function isStudentAccountLocked($indexNumber) {
         $conn = getConnection();
         
-        $stmt = $conn->prepare("SELECT locked_until FROM users WHERE index_number = ? AND role = 'student' AND locked_until > NOW()");
+        $stmt = $conn->prepare("SELECT locked_until FROM students WHERE index_number = ? AND status = 'Active' AND locked_until > NOW()");
         $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -55,12 +55,12 @@ class AuthenticationService {
         $conn = getConnection();
         
         // Increment login attempts
-        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE index_number = ? AND role = 'student'");
+        $stmt = $conn->prepare("UPDATE students SET login_attempts = login_attempts + 1 WHERE index_number = ?");
         $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         
         // Check if we should lock the account
-        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE index_number = ? AND role = 'student'");
+        $stmt = $conn->prepare("SELECT login_attempts FROM students WHERE index_number = ?");
         $stmt->bind_param("s", $indexNumber);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -69,7 +69,7 @@ class AuthenticationService {
         if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
             // Lock the account
             $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
-            $stmt = $conn->prepare("UPDATE users SET locked_until = ? WHERE index_number = ? AND role = 'student'");
+            $stmt = $conn->prepare("UPDATE students SET locked_until = ? WHERE index_number = ?");
             $stmt->bind_param("ss", $lockUntil, $indexNumber);
             $stmt->execute();
         }
@@ -104,10 +104,10 @@ class AuthenticationService {
     }
     
     /**
-     * Reset failed login attempts on successful login
+     * Reset failed login attempts on successful login for staff
      * @param int $userId
      */
-    private function resetFailedAttempts($userId) {
+    private function resetStaffFailedAttempts($userId) {
         $conn = getStaffConnection();
         
         $stmt = $conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
@@ -116,77 +116,83 @@ class AuthenticationService {
     }
     
     /**
-     * Authenticate student using 3-field verification
-     * @param string $indexNumber
-     * @param string $fullName
-     * @param string $phoneNumber
-     * @return array
+     * Reset failed login attempts on successful login for student
+     * @param int $userId
      */
-    public function authenticateStudent($indexNumber, $fullName, $phoneNumber) {
-        // Validate inputs
-        $indexNumber = sanitizeInput($indexNumber);
-        $fullName = sanitizeInput($fullName);
-        $phoneNumber = sanitizeInput($phoneNumber);
-        
-        if (empty($indexNumber) || empty($fullName) || empty($phoneNumber)) {
-            return ['success' => false, 'message' => 'All fields are required for student login'];
-        }
-        
-        if (!validateIndexNumber($indexNumber)) {
-            return ['success' => false, 'message' => 'Invalid index number format'];
-        }
-        
-        if (!validatePhone($phoneNumber)) {
-            return ['success' => false, 'message' => 'Invalid phone number format'];
-        }
-        
-        // Check if account is locked
-        if ($this->isStudentAccountLocked($indexNumber)) {
-            return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
-        }
-        
+    private function resetStudentFailedAttempts($userId) {
         $conn = getConnection();
         
-        // Split full name into first and last name
-        $nameParts = explode(' ', trim($fullName));
-        $firstName = $nameParts[0] ?? '';
-        $lastName = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : '';
-        
-        // Query database - ALL THREE fields must match exactly
-        $sql = "SELECT * FROM users WHERE 
-                index_number = ? AND 
-                full_name = ? AND 
-                phone = ? AND 
-                role = 'student' AND 
-                status = 'active'";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $indexNumber, $fullName, $phoneNumber);
+        $stmt = $conn->prepare("UPDATE students SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
+        $stmt->bind_param("i", $userId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            $this->recordStudentFailedAttempt($indexNumber);
-            return ['success' => false, 'message' => 'Invalid student credentials. All fields must match exactly.'];
-        }
-        
-        $student = $result->fetch_assoc();
-        
-        // Reset failed attempts on successful login
-        $this->resetFailedAttempts($student['id']);
-        
-        return [
-            'success' => true, 
-            'user' => [
-                'id' => $student['id'],
-                'index_number' => $student['index_number'],
-                'full_name' => $student['full_name'],
-                'phone' => $student['phone'],
-                'role' => $student['role'],
-                'type' => 'student'
-            ]
-        ];
     }
+    
+     /**
+      * Authenticate student using 3-field verification
+      * @param string $indexNumber
+      * @param string $fullName
+      * @param string $phoneNumber
+      * @return array
+      */
+     public function authenticateStudent($indexNumber, $fullName, $phoneNumber) {
+         // Validate inputs
+         $indexNumber = sanitizeInput($indexNumber);
+         $fullName = sanitizeInput($fullName);
+         $phoneNumber = sanitizeInput($phoneNumber);
+         
+         if (empty($indexNumber) || empty($fullName) || empty($phoneNumber)) {
+             return ['success' => false, 'message' => 'All fields are required for student login'];
+         }
+         
+         if (!validateIndexNumber($indexNumber)) {
+             return ['success' => false, 'message' => 'Invalid index number format'];
+         }
+         
+         if (!validatePhone($phoneNumber)) {
+             return ['success' => false, 'message' => 'Invalid phone number format'];
+         }
+         
+         // Check if account is locked
+         if ($this->isStudentAccountLocked($indexNumber)) {
+             return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
+         }
+         
+         $conn = getConnection();
+         
+         // Query database - ALL THREE fields must match exactly
+         $sql = "SELECT * FROM students WHERE 
+                 index_number = ? AND 
+                 full_name = ? AND 
+                 phone = ? AND 
+                 status = 'Active'";
+         
+         $stmt = $conn->prepare($sql);
+         $stmt->bind_param("sss", $indexNumber, $fullName, $phoneNumber);
+         $stmt->execute();
+         $result = $stmt->get_result();
+         
+         if ($result->num_rows === 0) {
+             $this->recordStudentFailedAttempt($indexNumber);
+             return ['success' => false, 'message' => 'Invalid student credentials. All fields must match exactly.'];
+         }
+         
+         $student = $result->fetch_assoc();
+         
+         // Reset failed attempts on successful login
+         $this->resetStudentFailedAttempts($student['id']);
+         
+         return [
+             'success' => true, 
+             'user' => [
+                 'id' => $student['id'],
+                 'index_number' => $student['index_number'],
+                 'full_name' => $student['full_name'],
+                 'phone' => $student['phone'],
+                 'role' => 'student',
+                 'type' => 'student'
+             ]
+         ];
+     }
     
     /**
      * Authenticate staff using email and password

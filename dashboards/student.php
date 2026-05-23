@@ -42,19 +42,21 @@ if ($staff_conn->connect_error) {
 $students_conn->set_charset("utf8mb4");
 $staff_conn->set_charset("utf8mb4");
 
-// Get student information
-$student_id = $_SESSION['user_id'];
-$student_info = $students_conn->query("SELECT * FROM users WHERE student_number = '$student_id' OR index_number = '$student_id' LIMIT 1")->fetch_assoc();
+        // Get student information
+        $student_id = $_SESSION['user_id'];
+        $student_info = $students_conn->query("SELECT * FROM students WHERE id = $student_id LIMIT 1")->fetch_assoc();
 
-// Get student academic profile
-$academic_profile = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0) . " LIMIT 1")->fetch_assoc();
+        // Get student academic profile
+        $academic_profile = $students_conn->query("SELECT * FROM student_academic_records WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY semester DESC, academic_year DESC LIMIT 1")->fetch_assoc();
 
-// Get examination records (grades)
-$examination_records = $students_conn->query("SELECT er.*, gaw.current_stage, gaw.registrar_status, gaw.principal_status 
-                                               FROM examination_records er 
-                                               LEFT JOIN grading_approval_workflow gaw ON er.id = gaw.examination_record_id 
-                                               WHERE er.student_id = " . ($student_info['id'] ?? 0) . " 
-                                               ORDER BY er.exam_date DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
+        // Get examination records (grades)
+        $examination_records = $students_conn->query("SELECT *, 
+                                                            NULL as current_stage, 
+                                                            NULL as registrar_status, 
+                                                            NULL as principal_status 
+                                                    FROM student_academic_records 
+                                                    WHERE student_id = " . ($student_info['id'] ?? 0) . " 
+                                                    ORDER BY created_at DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
 
 // Get fee account information
 $fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
@@ -460,13 +462,22 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                 <section id="overview" class="content-section">
                     <h2>Academic Overview</h2>
                     <div class="student-info-cards">
-                        <div class="info-card">
-                            <div class="info-icon">
-                                <i class="fas fa-id-card"></i>
-                            </div>
+                                <div class="info-card">
+                                    <div class="info-icon">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h4>Student Information</h4>
+                                        <p><strong>ID:</strong> <?php echo $student_info['id']; ?></p>
+                                        <p><strong>Program:</strong> <?php echo $student_info['program']; ?></p>
+                                        <p><strong>Level:</strong> <?php echo $student_info['level']; ?></p>
+                                        <p><strong>Year:</strong> <?php echo $student_info['current_year']; ?></p>
+                                        <p><strong>Semester:</strong> <?php echo $student_info['current_semester']; ?></p>
+                                    </div>
+                                </div>
                             <div class="info-content">
                                 <h4>Student Information</h4>
-                                <p><strong>ID:</strong> <?php echo $student_info['student_id']; ?></p>
+                                <p><strong>ID:</strong> <?php echo $student_info['id']; ?></p>
                                 <p><strong>Program:</strong> <?php echo $student_info['program']; ?></p>
                                 <p><strong>Level:</strong> <?php echo $student_info['level']; ?></p>
                                 <p><strong>Year:</strong> <?php echo $student_info['current_year']; ?></p>

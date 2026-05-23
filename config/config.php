@@ -10,6 +10,28 @@ session_start();
 define('APP_NAME', 'ISNM Student Management System');
 define('APP_VERSION', '1.0.0');
 define('APP_URL', 'http://localhost/ISNM');
+define('APP_EMAIL_DOMAIN', 'igangaschoolofnursingandmidwifery.ac.ug');
+
+// Department Email Contacts (for student messaging)
+define('EMAIL_DIRECTOR_GENERAL', 'director_general@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_DIRECTOR_ACADEMICS', 'director_academics@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_DIRECTOR_FINANCE', 'director_finance@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_DIRECTOR_ICT', 'director_ict@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_PRINCIPAL', 'principal@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_DEPUTY_PRINCIPAL', 'deputy_principal@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_BURSAR', 'bursar@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_ADMISSIONS', 'admissions@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_REGISTRAR', 'registrar@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_HR', 'hr@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_SECRETARY', 'secretary@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_LIBRARIAN', 'librarian@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_NURSING_HEAD', 'nursing@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_MIDWIFERY_HEAD', 'midwifery@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_MATRONS', 'matrons@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_WARDENS', 'wardens@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_LAB', 'lab@igangaschoolofnursingandmidwifery.ac.ug');
+define('EMAIL_SECURITY', 'security@igangaschoolofnursingandmidwifery.ac.ug');
 
 // File upload settings
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');

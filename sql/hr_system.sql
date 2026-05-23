@@ -785,8 +785,10 @@ INSERT IGNORE INTO performance_indicators (indicator_code, indicator_name, indic
 ('PI006', 'Compliance', 'Conduct', 'score', 15);
 
 -- Insert HR user (will be updated with proper password hash)
+-- Email: hr@igangaschoolofnursingandmidwifery.ac.ug
+-- Password: hr@isnm
 INSERT IGNORE INTO hr_users (email, password_hash, full_name, role, status) VALUES
-('hr@igangaschoolofnursingandmidwifery.ac.ug', 'placeholder', 'HR Manager', 'hr_manager', 'active');
+('hr@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$hr@isnmHashedPasswordValue', 'HR Manager', 'hr_manager', 'active');
 
 -- Insert default HR settings
 INSERT IGNORE INTO hr_settings (setting_key, setting_value, setting_type, description) VALUES

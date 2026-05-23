@@ -1,4 +1,4 @@
--- ISNM Students Database Schema
+-- ISNM Students Database Schema with Login Support
 -- Database: igangaschoolofl_students_db
 
 -- Create database if not exists
@@ -6,41 +6,67 @@ CREATE DATABASE IF NOT EXISTS igangaschoolofl_students_db CHARACTER SET utf8mb4 
 USE igangaschoolofl_students_db;
 
 -- Drop existing tables if they exist (for fresh installation)
-DROP TABLE IF EXISTS students;
-DROP TABLE IF EXISTS student_profiles;
-DROP TABLE IF EXISTS student_academic_records;
-DROP TABLE IF EXISTS student_attendance;
-DROP TABLE IF EXISTS student_fees;
-DROP TABLE IF EXISTS student_timetables;
+DROP TABLE IF EXISTS student_messages;
 DROP TABLE IF EXISTS student_notifications;
 DROP TABLE IF EXISTS student_downloads;
+DROP TABLE IF EXISTS student_timetables;
+DROP TABLE IF EXISTS student_fees;
+DROP TABLE IF EXISTS student_attendance;
+DROP TABLE IF EXISTS student_academic_records;
+DROP TABLE IF EXISTS student_profiles;
+DROP TABLE IF EXISTS students;
 
--- 1. Students Table
+-- 1. Students Table with Login Support
 CREATE TABLE students (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    registration_number VARCHAR(50) NOT NULL UNIQUE,
-    national_student_id_number VARCHAR(50),
-    index_number VARCHAR(50),
-    mobile_number VARCHAR(20),
-    email VARCHAR(100),
-    course VARCHAR(100),
-    year INT,
+    student_number VARCHAR(50) UNIQUE NOT NULL,
+    registration_number VARCHAR(50) UNIQUE,
+    national_student_id_number VARCHAR(50) UNIQUE,
+    index_number VARCHAR(50) UNIQUE,
+    
+    first_name VARCHAR(100) NOT NULL,
+    surname VARCHAR(100) NOT NULL,
+    other_name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255), -- For student login
+    
+    phone VARCHAR(20),
+    program VARCHAR(100),
+    current_year INT,
+    level VARCHAR(50),
     set_name VARCHAR(50),
+    current_semester VARCHAR(20),
     intake_date DATE,
     date_of_birth DATE,
     gender ENUM('Male', 'Female', 'Other') DEFAULT 'Other',
+    nationality VARCHAR(100),
     address TEXT,
+    
     emergency_contact_name VARCHAR(100),
     emergency_contact_phone VARCHAR(20),
-    status ENUM('Active', 'Inactive', 'Graduated', 'Suspended') DEFAULT 'Active',
+    emergency_contact_email VARCHAR(100),
+    
+    guardian_name VARCHAR(200),
+    guardian_phone VARCHAR(20),
+    
+    profile_picture VARCHAR(500),
+    
+    status ENUM('Active', 'Inactive', 'Graduated', 'Suspended', 'Withdrawn') DEFAULT 'Active',
+    
+    last_login TIMESTAMP NULL,
+    login_attempts INT DEFAULT 0,
+    password_changed BOOLEAN DEFAULT FALSE,
+    is_first_login BOOLEAN DEFAULT TRUE,
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_number (student_number),
     INDEX idx_registration_number (registration_number),
     INDEX idx_national_id (national_student_id_number),
     INDEX idx_index_number (index_number),
-    INDEX idx_course (course),
-    INDEX idx_year (year),
+    INDEX idx_email (email),
+    INDEX idx_program (program),
+    INDEX idx_current_year (current_year),
     INDEX idx_status (status)
 );
 
@@ -49,10 +75,10 @@ CREATE TABLE student_profiles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     bio TEXT,
-    profile_picture VARCHAR(255),
     interests TEXT,
     skills TEXT,
     achievements TEXT,
+    education_background TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -66,10 +92,12 @@ CREATE TABLE student_academic_records (
     semester VARCHAR(50),
     academic_year VARCHAR(20),
     subject VARCHAR(100),
+    course_code VARCHAR(20),
     grade VARCHAR(10),
     marks DECIMAL(5,2),
     credits DECIMAL(3,1),
     gpa DECIMAL(3,2),
+    cgpa DECIMAL(3,2),
     remarks TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -86,8 +114,10 @@ CREATE TABLE student_attendance (
     student_id INT NOT NULL,
     date DATE NOT NULL,
     subject VARCHAR(100),
+    course_code VARCHAR(20),
     status ENUM('Present', 'Absent', 'Late', 'Excused') NOT NULL,
     remarks TEXT,
+    recorded_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -125,6 +155,7 @@ CREATE TABLE student_timetables (
     day_of_week ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
     time_slot VARCHAR(50) NOT NULL,
     subject VARCHAR(100) NOT NULL,
+    course_code VARCHAR(20),
     lecturer VARCHAR(100),
     classroom VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -141,9 +172,10 @@ CREATE TABLE student_notifications (
     student_id INT NOT NULL,
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
-    type ENUM('General', 'Academic', 'Fee', 'Attendance', 'Exam', 'Event') DEFAULT 'General',
+    type ENUM('General', 'Academic', 'Fee', 'Attendance', 'Exam', 'Event', 'Matron', 'Bursar') DEFAULT 'General',
     priority ENUM('Low', 'Medium', 'High', 'Urgent') DEFAULT 'Medium',
     is_read BOOLEAN DEFAULT FALSE,
+    action_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -170,5 +202,84 @@ CREATE TABLE student_downloads (
     INDEX idx_file_type (file_type),
     INDEX idx_created_at (created_at)
 );
+
+-- 9. Student Messages to Departments
+CREATE TABLE student_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    department_email VARCHAR(100) NOT NULL, -- e.g., matrons@..., bursar@...
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    replied BOOLEAN DEFAULT FALSE,
+    reply_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    replied_at TIMESTAMP NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_student_id (student_id),
+    INDEX idx_department_email (department_email),
+    INDEX idx_is_read (is_read)
+);
+
+-- 10. Password Reset Tokens
+CREATE TABLE student_password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    reset_token VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_reset_token (reset_token),
+    INDEX idx_expires_at (expires_at)
+);
+
+-- Views for easy access
+
+-- Student Login View
+CREATE OR REPLACE VIEW student_login_view AS
+SELECT 
+    id,
+    student_number,
+    full_name,
+    email,
+    password,
+    course,
+    status,
+    last_login,
+    login_attempts,
+    is_first_login
+FROM students
+WHERE status = 'Active';
+
+-- Student Dashboard View
+CREATE OR REPLACE VIEW student_dashboard_view AS
+SELECT 
+    s.id,
+    s.student_number,
+    s.full_name,
+    s.course,
+    s.year,
+    s.set_name,
+    s.email,
+    s.profile_picture,
+    COALESCE(sa.gpa, 0) as current_gpa,
+    COALESCE(sf.balance, 0) as fee_balance,
+    COALESCE(sa2.attendance_rate, 0) as attendance_rate
+FROM students s
+LEFT JOIN (
+    SELECT student_id, gpa FROM student_academic_records 
+    WHERE semester = (SELECT MAX(semester) FROM student_academic_records)
+    GROUP BY student_id
+) sa ON s.id = sa.student_id
+LEFT JOIN (
+    SELECT student_id, SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as attendance_rate
+    FROM student_attendance GROUP BY student_id
+) sa2 ON s.id = sa2.student_id
+LEFT JOIN (
+    SELECT student_id, SUM(amount) as balance FROM student_fees 
+    WHERE status IN ('Unpaid', 'Partially Paid', 'Overdue') GROUP BY student_id
+) sf ON s.id = sf.student_id
+WHERE s.status = 'Active';
 
 -- End of Students Database Schema
