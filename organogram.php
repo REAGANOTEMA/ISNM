@@ -470,6 +470,84 @@ include('shared/_header.php');
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
         }
+        
+        /* School Header Styles */
+        .school-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .school-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .school-info {
+            text-align: center;
+            margin: 0 20px;
+            color: white;
+        }
+        
+        .school-info h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .school-info p {
+            font-size: 1rem;
+            font-style: italic;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        /* Responsive adjustments for school header */
+        @media (max-width: 768px) {
+            .school-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .school-info {
+                margin: 15px 0;
+            }
+            
+            .school-logo {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .school-info h2 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .school-logo {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .school-info h2 {
+                font-size: 1.2rem;
+            }
+            
+            .school-info p {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 
     <main>
