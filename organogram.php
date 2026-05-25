@@ -72,6 +72,22 @@ include('shared/_header.php');
             flex-direction: column;
             justify-content: space-between;
         }
+        
+        .org-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+        
+        .org-subtitle {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.4;
+            word-wrap: break-word;
+            flex-grow: 1;
+        }
 
         .org-node:hover {
             transform: translateY(-5px);
@@ -110,21 +126,26 @@ include('shared/_header.php');
         }
 
         .org-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
+            font-size: 2rem;
+            margin-bottom: 10px;
             display: block;
         }
 
         .org-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
+            line-height: 1.2;
+            word-wrap: break-word;
         }
-
+        
         .org-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.3;
+            word-wrap: break-word;
+            flex-grow: 1;
+            margin-bottom: 10px;
         }
 
         .org-link {
@@ -670,20 +691,53 @@ include('shared/_header.php');
                              </button>
                          </div>
                      </div>
-                 </div>
-                 <div class="org-branch">
-                     <div class="org-node administrative">
-                         <i class="fas fa-user-graduate org-icon"></i>
-                         <div class="org-title">Deputy Principal</div>
-                         <div class="org-subtitle">Assistant Academic Officer</div>
-                         <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
+                  </div>
+                  <div class="org-branch">
+                      <div class="org-node administrative">
+                          <i class="fas fa-user-graduate org-icon"></i>
+                          <div class="org-title">Deputy Principal</div>
+                          <div class="org-subtitle">Assistant Academic Officer</div>
+                          <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
+                              <i class="fas fa-sign-in-alt"></i> Login
+                          </a>
+                          <div class="org-actions">
+                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
+                                  <i class="fas fa-user-shield me-2"></i>Staff Login
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="org-branch">
+                      <div class="org-node administrative">
+                          <i class="fas fa-money-check-alt org-icon"></i>
+                          <div class="org-title">School Bursar</div>
+                          <div class="org-subtitle">Chief Financial Officer</div>
+                          <a href="staff-login.php?position=School%20Bursar" class="org-link">
+                              <i class="fas fa-sign-in-alt"></i> Login
+                          </a>
+                          <div class="org-actions">
+                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
+                                  <i class="fas fa-user-shield me-2"></i>Staff Login
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="org-branch">
+                      <div class="org-node administrative">
+                          <i class="fas fa-user-check org-icon"></i>
+                          <div class="org-title">Director Admissions & Requirements</div>
+                          <div class="org-subtitle">Admissions & Requirements Clearance</div>
+                          <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
+                              <i class="fas fa-sign-in-alt"></i> Login
+                          </a>
+                          <div class="org-actions">
+                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
+                                  <i class="fas fa-user-shield me-2"></i>Staff Login
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
                      </div>
                  </div>
                  <div class="org-branch">

@@ -133,9 +133,9 @@
               
               <div class="board-members">
                 <div class="member-card">
-                  <div class="member-image">
-                    <img src="images/byawaka.jpg" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
-                  </div>
+             <div class="member-image">
+                     <img src="images/byawaka.JPG" alt="Mr. Baliddawa David Byawaka" class="img-fluid rounded-3">
+                   </div>
                   <div class="member-info">
                     <h4>Mr. Baliddawa David Byawaka</h4>
                     <p>Chairman Board of Directors</p>
@@ -151,9 +151,9 @@
                   </div>
                 </div>
                 <div class="member-card">
-                  <div class="member-image">
-                    <img src="images/stephen.jpg" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
-                  </div>
+             <div class="member-image">
+                     <img src="images/stephen.JPG" alt="Dr. Banonya Stephen" class="img-fluid rounded-3">
+                   </div>
                   <div class="member-info">
                     <h4>Dr. Banonya Stephen</h4>
                     <p>Member Board of Directors</p>
@@ -296,14 +296,14 @@
                   </div>
                 </div>
                 <div class="slide">
-                  <img src="images/class.jpg" alt="Modern Classrooms" class="img-fluid rounded-3 slide-img-classroom">
+                   <img src="images/class.JPG" alt="Modern Classrooms" class="img-fluid rounded-3 slide-img-classroom">
                   <div class="slide-caption">
                     <h4>Modern Classrooms</h4>
                     <p>Well-equipped learning environments with modern teaching aids</p>
                   </div>
                 </div>
                 <div class="slide">
-                  <img src="images/school.jpg" alt="Campus Facilities" class="img-fluid rounded-3 slide-img-campus">
+                   <img src="images/school.JPG" alt="Campus Facilities" class="img-fluid rounded-3 slide-img-campus">
                   <div class="slide-caption">
                     <h4>Campus Facilities</h4>
                     <p>Safe and comfortable learning environment for students</p>
