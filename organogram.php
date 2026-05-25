@@ -66,7 +66,11 @@ include('shared/_header.php');
             transition: all 0.3s ease;
             border: 3px solid transparent;
             position: relative;
-            min-width: 200px;
+            width: 220px;
+            height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .org-node:hover {
@@ -234,6 +238,8 @@ include('shared/_header.php');
             align-items: flex-start;
             margin: 30px 0;
             position: relative;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         .org-level::before {
@@ -293,23 +299,23 @@ include('shared/_header.php');
         }
 
         .org-level.management {
-            justify-content: space-around;
+            justify-content: center;
         }
 
         .org-level.administrative {
-            justify-content: space-around;
+            justify-content: center;
         }
 
         .org-level.academic {
-            justify-content: space-around;
+            justify-content: center;
         }
 
         .org-level.support {
-            justify-content: space-around;
+            justify-content: center;
         }
 
         .org-level.student {
-            justify-content: space-around;
+            justify-content: center;
         }
 
         @media (max-width: 1200px) {
@@ -466,12 +472,25 @@ include('shared/_header.php');
         }
     </style>
 
-<main>
-    <div class="organogram-container">
-        <div class="page-header">
-            <h1><i class="fas fa-sitemap"></i> ISNM Organizational Structure</h1>
-            <p>Click on your position to access your personalized dashboard</p>
+    <main>
+        <div class="school-header">
+            <div class="logo-container">
+                <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
+            </div>
+            <div class="school-info">
+                <h2>Iganga School of Nursing and Midwifery</h2>
+                <p>"Chosen to Serve - Based on a disciplined mind for health action"</p>
+            </div>
+            <div class="logo-container">
+                <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
+            </div>
         </div>
+        
+        <div class="organogram-container">
+            <div class="page-header">
+                <h1><i class="fas fa-sitemap"></i> ISNM Organizational Structure</h1>
+                <p>Click on your position to access your personalized dashboard</p>
+            </div>
 
         <div class="organogram-tree">
             <!-- Executive Leadership Level -->
@@ -557,21 +576,69 @@ include('shared/_header.php');
                 </div>
             </div>
 
-            <!-- School Management Level -->
-            <div class="org-level administrative">
-                <div class="org-branch">
-                    <div class="org-node administrative">
-                        <i class="fas fa-chalkboard-teacher org-icon"></i>
-                        <div class="org-title">School Principal</div>
-                        <div class="org-subtitle">Chief Academic Officer</div>
-                        <a href="staff-login.php?position=School%20Principal" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Principal'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
+             <!-- School Management Level -->
+             <div class="org-level administrative">
+                 <div class="org-branch">
+                     <div class="org-node administrative">
+                         <i class="fas fa-chalkboard-teacher org-icon"></i>
+                         <div class="org-title">School Principal</div>
+                         <div class="org-subtitle">Chief Academic Officer</div>
+                         <a href="staff-login.php?position=School%20Principal" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Principal'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="org-branch">
+                     <div class="org-node administrative">
+                         <i class="fas fa-user-graduate org-icon"></i>
+                         <div class="org-title">Deputy Principal</div>
+                         <div class="org-subtitle">Assistant Academic Officer</div>
+                         <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="org-branch">
+                     <div class="org-node administrative">
+                         <i class="fas fa-money-check-alt org-icon"></i>
+                         <div class="org-title">School Bursar</div>
+                         <div class="org-subtitle">Chief Financial Officer</div>
+                         <a href="staff-login.php?position=School%20Bursar" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="org-branch">
+                     <div class="org-node administrative">
+                         <i class="fas fa-user-check org-icon"></i>
+                         <div class="org-title">Director Admissions & Requirements</div>
+                         <div class="org-subtitle">Admissions & Requirements Clearance</div>
+                         <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
                     </div>
                 </div>
                 <div class="org-branch">
@@ -812,22 +879,37 @@ include('shared/_header.php');
                         </div>
                     </div>
                 </div>
-                <div class="org-branch">
-                    <div class="org-node support">
-                        <i class="fas fa-user-shield org-icon"></i>
-                        <div class="org-title">Security</div>
-                        <div class="org-subtitle">Campus Security</div>
-                        <a href="staff-login.php?position=Security" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Security'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                 <div class="org-branch">
+                     <div class="org-node support">
+                         <i class="fas fa-user-shield org-icon"></i>
+                         <div class="org-title">Security</div>
+                         <div class="org-subtitle">Campus Security</div>
+                         <a href="staff-login.php?position=Security" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Security'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="org-branch">
+                     <div class="org-node support">
+                         <i class="fas fa-warehouse org-icon"></i>
+                         <div class="org-title">Store Keeper</div>
+                         <div class="org-subtitle">Inventory Management</div>
+                         <a href="staff-login.php?position=Store%20Keeper" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Store%20Keeper'">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
 
             <!-- Student Leadership Level -->
             <div class="org-level student">

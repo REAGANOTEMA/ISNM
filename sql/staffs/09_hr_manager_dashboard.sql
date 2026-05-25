@@ -72,7 +72,7 @@ SELECT
     spf.rating as latest_rating,
     COALESCE(sl.total_leaves, 0) as total_leaves,
     COALESCE(sta.attendance_rate, 0) as attendance_rate,
-    COALESCE(st.training_count, 0) as training_completed
+    COALESCE(stt.training_count, 0) as training_completed
 FROM staff st
 LEFT JOIN staff_performance spf ON st.id = spf.staff_id
 LEFT JOIN (
@@ -85,7 +85,7 @@ LEFT JOIN (
 ) sta ON st.id = sta.staff_id
 LEFT JOIN (
     SELECT staff_id, COUNT(*) as training_count FROM staff_training WHERE status = 'Completed' GROUP BY staff_id
-) st ON st.id = st.staff_id
+) stt ON st.id = stt.staff_id
 LEFT JOIN staff_roles sr ON st.role_id = sr.id;
 
 -- ============================================================

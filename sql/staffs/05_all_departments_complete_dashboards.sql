@@ -135,8 +135,13 @@ INSERT IGNORE INTO staff (
 
 -- Security
 ('SEC001', 'Security Officer', 'security@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$security@isnmHashedPassword', '+256701000022', 'Security', 'Security Services',
- (SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
+  '$2y$10$security@isnmHashedPassword', '+256701000022', 'Security', 'Security Services',
+  (SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
+
+-- Store Keeper
+('STK001', 'Store Keeper', 'storekeeper@igangaschoolofnursingandmidwifery.ac.ug',
+  '$2y$10$storekeeper@isnmHashedPassword', '+256701000023', 'Store Keeper', 'Support',
+  (SELECT id FROM staff_roles WHERE role_name = 'Store Keeper' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
 
 -- ============================================================
 -- 2. STUDENT DATA INTEGRATION - UNIVERSAL STUDENT TABLE
@@ -371,14 +376,17 @@ FROM universal_student_profiles sp;
 DELIMITER //
 
 -- Search all students by various criteria
-CREATE PROCEDURE search_all_students(
+CREATE OR REPLACE PROCEDURE search_all_students(
     IN p_search_term VARCHAR(255),
     IN p_program VARCHAR(100),
     IN p_intake_set VARCHAR(50),
     IN p_status VARCHAR(50),
-    IN p_limit INT DEFAULT 100
+    IN p_limit INT
 )
 BEGIN
+    IF p_limit IS NULL OR p_limit <= 0 THEN
+        SET p_limit = 100;
+    END IF;
     SELECT 
         id, student_number, full_name, program, intake_set, 
         year_of_study, status, gpa, photo_path
@@ -471,12 +479,8 @@ BEGIN
 END //
 
 -- Log search activity
-CREATE TRIGGER log_student_search
-AFTER SELECT ON universal_student_profiles
-FOR EACH ROW
-BEGIN
-    -- This trigger fires on select - in production use application-level logging
-END //
+-- Note: MySQL does not support AFTER SELECT triggers
+-- Search logging should be implemented at the application level
 
 DELIMITER ;
 
@@ -493,13 +497,13 @@ SELECT
 FROM staff s
 JOIN staff_roles sr ON s.role_id = sr.id
 WHERE sr.role_name IN (
-    'Director General', 'CEO', 'Director Academics', 'Director ICT', 
-    'Director Finance', 'School Principal', 'Deputy Principal', 'School Bursar',
-    'Director Admissions & Requirements', 'Academic Registrar', 'HR Manager',
-    'School Secretary', 'School Librarian', 'Head Nursing', 'Head Midwifery',
-    'Senior Lecturers', 'Lecturers', 'Matrons', 'Wardens', 'Lab Technicians',
-    'Drivers', 'Security'
-);
+     'Director General', 'CEO', 'Director Academics', 'Director ICT', 
+     'Director Finance', 'School Principal', 'Deputy Principal', 'School Bursar',
+     'Director Admissions & Requirements', 'Academic Registrar', 'HR Manager',
+     'School Secretary', 'School Librarian', 'Head Nursing', 'Head Midwifery',
+     'Senior Lecturers', 'Lecturers', 'Matrons', 'Wardens', 'Lab Technicians',
+     'Drivers', 'Security', 'Store Keeper'
+ );
 
 -- ============================================================
 -- 11. INSERT DEFAULT INSTITUTE SETTINGS

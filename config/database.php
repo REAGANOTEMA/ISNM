@@ -62,7 +62,7 @@ if (!function_exists('getStudentsConnection')) {
             return $conn;
         } catch (Exception $e) {
             error_log("Database Error: " . $e->getMessage());
-            die("Database connection failed. Please contact administrator.");
+            die("Database connection failed. Please contact the administrator.");
         }
     }
 }
@@ -81,7 +81,7 @@ if (!function_exists('getStaffConnection')) {
             return $conn;
         } catch (Exception $e) {
             error_log("Staff Database Error: " . $e->getMessage());
-            die("Staff database connection failed. Please contact administrator.");
+            die("Staff database connection failed. Please contact the administrator.");
         }
     }
 }
@@ -100,7 +100,7 @@ if (!function_exists('getWebsiteConnection')) {
             return $conn;
         } catch (Exception $e) {
             error_log("Website Database Error: " . $e->getMessage());
-            die("Website database connection failed. Please contact administrator.");
+            die("Website database connection failed. Please contact the administrator.");
         }
     }
 }

@@ -1102,7 +1102,8 @@ INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path
 ('School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{"administrative": true, "documentation": true, "can_manage_documents": true}'),
 ('Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{"academic": true, "administrative": true, "can_assist_principal": true}'),
 ('Bursar', 'Financial assistant', 'Administrative', 'dashboards/bursar.php', '{"financial": true, "fees": true, "can_assist_bursar": true}'),
-('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}');
+('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}'),
+('Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{"store": true, "inventory": true, "can_manage_store": true}');
 
 -- Insert main administrator account with unified credentials
 -- Email: administration@isnm.ac
@@ -1148,7 +1149,7 @@ SELECT
     1
 FROM staff s 
 JOIN staff_roles sr ON s.role_id = sr.id 
-WHERE sr.role_name IN ('Director General', 'School Principal', 'CEO', 'Director Academics', 'Director Finance', 'Director ICT', 'HR Manager', 'Academic Registrar', 'School Bursar', 'School Librarian', 'Head Nursing', 'Head Midwifery', 'Lecturers', 'Senior Lecturers', 'Non-Teaching Staff', 'Lab Technicians', 'Matrons', 'Security', 'Drivers', 'Wardens', 'School Secretary', 'Bursar', 'Deputy Principal');
+WHERE sr.role_name IN ('Director General', 'School Principal', 'CEO', 'Director Academics', 'Director Finance', 'Director ICT', 'HR Manager', 'Academic Registrar', 'School Bursar', 'School Librarian', 'Head Nursing', 'Head Midwifery', 'Lecturers', 'Senior Lecturers', 'Non-Teaching Staff', 'Lab Technicians', 'Matrons', 'Security', 'Drivers', 'Wardens', 'School Secretary', 'Bursar', 'Deputy Principal', 'Store Keeper');
 
 -- Insert sample user preferences
 INSERT INTO user_preferences (user_id, preference_key, preference_value, preference_type) VALUES

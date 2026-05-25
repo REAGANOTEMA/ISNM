@@ -271,7 +271,7 @@ class AuthenticationService {
         error_log("DEBUG: Authentication successful");
         
         // Reset failed attempts on successful login
-        $this->resetFailedAttempts($staff['id']);
+        $this->resetStaffFailedAttempts($staff['id']);
         
         return [
             'success' => true, 
