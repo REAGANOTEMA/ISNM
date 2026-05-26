@@ -66,27 +66,36 @@ include('shared/_header.php');
             transition: all 0.3s ease;
             border: 3px solid transparent;
             position: relative;
-            width: 220px;
-            height: 260px;
+            width: 240px;
+            min-height: 280px;
+            max-height: 280px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
         
         .org-title {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 5px;
-            line-height: 1.3;
+            margin-bottom: 8px;
+            line-height: 1.2;
             word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            max-height: 3.6em;
+            overflow: hidden;
         }
         
         .org-subtitle {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #555;
-            line-height: 1.4;
+            line-height: 1.3;
             word-wrap: break-word;
+            overflow-wrap: break-word;
             flex-grow: 1;
+            margin-bottom: 8px;
+            overflow: hidden;
         }
 
         .org-node:hover {
@@ -129,23 +138,6 @@ include('shared/_header.php');
             font-size: 2rem;
             margin-bottom: 10px;
             display: block;
-        }
-
-        .org-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 3px;
-            line-height: 1.2;
-            word-wrap: break-word;
-        }
-        
-        .org-subtitle {
-            font-size: 0.85rem;
-            color: #555;
-            line-height: 1.3;
-            word-wrap: break-word;
-            flex-grow: 1;
-            margin-bottom: 10px;
         }
 
         .org-link {
@@ -368,10 +360,11 @@ include('shared/_header.php');
             }
 
             .org-node {
-                min-width: 140px;
-                padding: 12px;
-                margin: 8px 4px;
-                max-width: 160px;
+                width: 180px;
+                min-height: 260px;
+                max-height: 260px;
+                padding: 15px;
+                margin: 10px;
             }
 
             .org-icon {
@@ -379,13 +372,14 @@ include('shared/_header.php');
             }
 
             .org-title {
-                font-size: 0.9rem;
-                font-weight: 500;
+                font-size: 0.85rem;
+                font-weight: 600;
+                max-height: 3em;
             }
 
             .org-subtitle {
                 font-size: 0.75rem;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
             
             .org-link {
@@ -738,87 +732,6 @@ include('shared/_header.php');
                       </div>
                   </div>
               </div>
-                     </div>
-                 </div>
-                 <div class="org-branch">
-                     <div class="org-node administrative">
-                         <i class="fas fa-money-check-alt org-icon"></i>
-                         <div class="org-title">School Bursar</div>
-                         <div class="org-subtitle">Chief Financial Officer</div>
-                         <a href="staff-login.php?position=School%20Bursar" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
-                     </div>
-                 </div>
-                 <div class="org-branch">
-                     <div class="org-node administrative">
-                         <i class="fas fa-user-check org-icon"></i>
-                         <div class="org-title">Director Admissions & Requirements</div>
-                         <div class="org-subtitle">Admissions & Requirements Clearance</div>
-                         <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
-                             <i class="fas fa-sign-in-alt"></i> Login
-                         </a>
-                         <div class="org-actions">
-                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
-                                 <i class="fas fa-user-shield me-2"></i>Staff Login
-                             </button>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-                    </div>
-                </div>
-                <div class="org-branch">
-                    <div class="org-node administrative">
-                        <i class="fas fa-user-graduate org-icon"></i>
-                        <div class="org-title">Deputy Principal</div>
-                        <div class="org-subtitle">Assistant Academic Officer</div>
-                        <a href="staff-login.php?position=Deputy%20Principal" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Deputy%20Principal'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="org-branch">
-                    <div class="org-node administrative">
-                        <i class="fas fa-money-check-alt org-icon"></i>
-                        <div class="org-title">School Bursar</div>
-                        <div class="org-subtitle">Chief Financial Officer</div>
-                        <a href="staff-login.php?position=School%20Bursar" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=School%20Bursar'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                        </div>
-                    </div>
-                </div>
-<div class="org-branch">
-    <div class="org-node administrative">
-        <i class="fas fa-user-check org-icon"></i>
-        <div class="org-title">Director Admissions & Requirements</div>
-        <div class="org-subtitle">Admissions & Requirements Clearance</div>
-        <a href="staff-login.php?position=Director%20Admissions%20%26%20Requirements" class="org-link">
-            <i class="fas fa-sign-in-alt"></i> Login
-        </a>
-        <div class="org-actions">
-            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20Admissions%20%26%20Requirements'">
-                <i class="fas fa-user-shield me-2"></i>Staff Login
-            </button>
-        </div>
-    </div>
-</div>
-            </div>
 
             <!-- Administrative Staff Level -->
             <div class="org-level administrative">
