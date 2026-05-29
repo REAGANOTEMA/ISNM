@@ -1,12 +1,12 @@
 -- ============================================================
--- ISNM LAB TECHNICIANS DASHBOARD SQL
--- Complete Laboratory Management System
+-- ISNM SICKBAY DASHBOARD SQL
+-- Complete Medical Support System
 -- ============================================================
 
 USE igangaschoolofl_staffs_db;
 
 -- ============================================================
--- 1. LAB TECHNICIANS USER ACCOUNTS
+-- 1. SICKBAY USER ACCOUNTS
 -- ============================================================
 
 INSERT IGNORE INTO staff (
@@ -22,15 +22,12 @@ INSERT IGNORE INTO staff (
     hire_date,
     created_at
 ) VALUES
-('LAB001', 'Lab Technician', 'lab@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$lab@isnmHashedPassword', '+256701000020', 'Lab Technicians', 'Support',
- (SELECT id FROM staff_roles WHERE role_name = 'Lab Technicians' LIMIT 1), 'Active', CURDATE(), NOW()),
-('LAB002', 'Senior Lab Technician', 'senior_lab@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$senior_lab@isnmHashedPassword', '+256701000031', 'Senior Lab Technician', 'Support',
- (SELECT id FROM staff_roles WHERE role_name = 'Lab Technicians' LIMIT 1), 'Active', CURDATE(), NOW());
+('SICK001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug',
+ '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', '+256701000020', 'Sickbay', 'Support',
+ (SELECT id FROM staff_roles WHERE role_name = 'Sickbay' LIMIT 1), 'Active', CURDATE(), NOW());
 
 -- ============================================================
--- 2. LABORATORY MANAGEMENT TABLES
+-- 2. MEDICAL SUPPORT MANAGEMENT TABLES
 -- ============================================================
 
 -- Laboratory Equipment
@@ -190,7 +187,7 @@ CREATE TABLE IF NOT EXISTS lab_experiments (
 );
 
 -- ============================================================
--- 3. PROCEDURES FOR LAB TECHNICIANS
+-- 3. PROCEDURES FOR SICKBAY
 -- ============================================================
 
 DELIMITER //

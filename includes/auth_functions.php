@@ -145,7 +145,7 @@ function checkAuth($required_role = null) {
                 'student' => ['student', 'students'],
                 'director' => ['director general', 'director academics', 'director ict', 'director finance', 'chief executive officer'],
                 'lecturer' => ['lecturers', 'senior lecturers', 'head of nursing', 'head of midwifery', 'teacher'],
-                'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'drivers', 'security', 'non-teaching staff'],
+                'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'sickbay', 'drivers', 'security', 'non-teaching staff'],
                 'accountant' => ['school bursar', 'director finance']
             ];
             
@@ -208,7 +208,7 @@ function protectDashboard($required_role = null) {
                 'student' => ['student', 'students'],
                 'director' => ['director general', 'director academics', 'director ict', 'director finance', 'chief executive officer'],
                 'lecturer' => ['lecturers', 'senior lecturers', 'head of nursing', 'head of midwifery', 'teacher'],
-                'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'drivers', 'security', 'non-teaching staff'],
+                'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'sickbay', 'drivers', 'security', 'non-teaching staff'],
                 'accountant' => ['school bursar', 'director finance']
             ];
             
@@ -289,7 +289,8 @@ function getUserDashboard($role) {
         // Support Staff
         'Matrons' => 'matrons.php',
         'Wardens' => 'wardens.php',
-        'Lab Technicians' => 'lab-technicians.php',
+        'Lab Technicians' => 'sickbay.php',
+        'Sickbay' => 'sickbay.php',
         'Drivers' => 'drivers.php',
         'Security' => 'security.php',
         'Non-Teaching Staff' => 'non-teaching-staff.php',

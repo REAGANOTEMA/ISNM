@@ -19,18 +19,21 @@ class DatabaseConnection {
                     'host' => STAFF_DB_HOST,
                     'username' => STAFF_DB_USER,
                     'password' => STAFF_DB_PASS,
+                    'port' => STAFF_DB_PORT,
                     'charset' => STAFF_DB_CHARSET,
                 ],
                 'igangaschoolofl_students_db' => [
                     'host' => DB_HOST,
                     'username' => DB_USER,
                     'password' => DB_PASS,
+                    'port' => DB_PORT,
                     'charset' => DB_CHARSET,
                 ],
                 'igangaschoolofl_website_db' => [
                     'host' => WEBSITE_DB_HOST,
                     'username' => WEBSITE_DB_USER,
                     'password' => WEBSITE_DB_PASS,
+                    'port' => WEBSITE_DB_PORT,
                     'charset' => WEBSITE_DB_CHARSET,
                 ],
             ];
@@ -53,11 +56,12 @@ class DatabaseConnection {
                     $cfg['host'],
                     $cfg['username'],
                     $cfg['password'],
-                    $database
+                    $database,
+                    $cfg['port'] ?? 3306
                 );
 
                 if ($conn->connect_error) {
-                    throw new Exception("Connection to {$database} failed: " . $conn->connect_error);
+                    throw new Exception("Connection to {$database} failed on {$cfg['host']}:" . ($cfg['port'] ?? 3306) . " - " . $conn->connect_error);
                 }
 
                 $conn->set_charset($cfg['charset']);
@@ -109,7 +113,6 @@ class DatabaseConnection {
         try {
             $conn = self::getConnection($database);
             $result = $conn->query("SELECT 1");
-            $conn->close();
             return $result !== false;
         } catch (Exception $e) {
             error_log("Connection test failed for {$database}: " . $e->getMessage());

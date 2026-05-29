@@ -1102,7 +1102,7 @@ $recent_activities = [
                                             <option value="">Select Position</option>
                                             <option value="lecturer">Lecturer</option>
                                             <option value="senior-lecturer">Senior Lecturer</option>
-                                            <option value="lab-technician">Laboratory Technician</option>
+                                            <option value="sickbay">Sickbay</option>
                                             <option value="admin-staff">Administrative Staff</option>
                                         </select>
                                     </div>

@@ -1,12 +1,12 @@
 <?php
 /**
  * ═════════════════════════════════════════════════════════════════════════
- * ISNM UNIFIED LOGIN — SINGLE ENTRY POINT FOR ALL USERS
+ * ISNM ORGANOGRAM STAFF LOGIN — ORGANOGRAM ACCESS ONLY
  * ═════════════════════════════════════════════════════════════════════════
  * ① Staff logins  →  staff table (AuthenticationService),
  *                     hr_users table (inline fallback),
  *                     bursar_users table (inline fallback)
- * ② Student logins →  users table (index_number + full_name + phone)
+ * ② Student logins → managed separately via student-login.php
  *
  * All redirects for EVERY role hit this page:
  *   dashboards/*.php  →  staff-login.php
@@ -38,19 +38,32 @@ $auth_service = new AuthenticationService();
 
 // ── 3. Role-selection hint from organogram links ─────────────────────
 $requested_position = isset($_GET['position']) ? urldecode($_GET['position']) : '';
+if (!$requested_position && !empty($_SESSION['requested_position'])) {
+    $requested_position = $_SESSION['requested_position'];
+}
 $resolved_role      = $requested_position ? $auth_service->resolveOrganogramPosition($requested_position) : '';
 $suggested_email    = $resolved_role ? $auth_service->getStaffEmailForRole($resolved_role) : '';
 if ($requested_position) {
     $_SESSION['requested_position'] = $requested_position;
 }
 
-// ── 3b. Student-role hint from student-login.php redirect stub ────────
-$has_student_hint = !empty($_SESSION['student_role']);
+// ── 3b. Student-role hint from valid portal links ──────────────────
+$has_student_hint = !empty($_GET['student_role']) ? trim($_GET['student_role']) : '';
 if ($has_student_hint) {
-    unset($_SESSION['student_role']);
+    $_SESSION['student_role'] = urldecode($has_student_hint);
 }
 
-// ── 4. Already logged-in? → redirect to dashboard immediately ─────────
+// ── 4. Staff login must be initiated from the organogram page only ───
+if (!$requested_position) {
+    header('Location: organogram.php');
+    exit();
+}
+
+$_SESSION['staff_login_allowed']  = true;
+$_SESSION['staff_login_position'] = $requested_position;
+$_SESSION['requested_position']  = $requested_position;
+
+// ── 5. Already logged-in? → redirect to dashboard immediately ─────────
 if ($auth_service->isAuthenticated()) {
         if (($_SESSION['type'] ?? '') === 'staff') {
             $sessionRole = $_SESSION['role'] ?? '';
@@ -59,9 +72,11 @@ if ($auth_service->isAuthenticated()) {
             if (!empty($requestedPositionFromSession)
                 && $auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
             ) {
-                $dashboard = $auth_service->getDashboardRoute(
-                    $auth_service->resolveOrganogramPosition($requestedPositionFromSession)
-                );
+                $resolvedPosition = $auth_service->resolveOrganogramPosition($requestedPositionFromSession);
+                $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolvedPosition);
+                if ($requestedDashboard) {
+                    $dashboard = $requestedDashboard;
+                }
                 // Clear the session variable after use
                 unset($_SESSION['requested_position']);
             }
@@ -81,18 +96,7 @@ if ($login_error)   { unset($_SESSION['error']); }
 if ($login_success) { unset($_SESSION['success']); }
 
 // ── 6. Determine active tab ──────────────────────────────────────────
-$active_staff_tab   = 'show active';
-$active_student_tab = '';
-if ($login_error) {
-    if (!empty($_SESSION['error_source']) && $_SESSION['error_source'] === 'student') {
-        $active_staff_tab   = '';
-        $active_student_tab = 'show';
-        unset($_SESSION['error_source']);
-    }
-} elseif ($has_student_hint) {
-    $active_staff_tab   = '';
-    $active_student_tab = 'show';
-}
+$active_staff_tab = 'show active';
 
 
 
@@ -110,7 +114,7 @@ if ($login_error) {
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#1a237e">
   <link rel="manifest" href="manifest.json">
-  <title>Login — ISNM School Management System</title>
+  <title>Staff Login — ISNM</title>
   <link rel="icon"   type="image/x-icon"  href="images/school-logo.png">
   <link rel="apple-touch-icon"              href="images/school-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -356,7 +360,7 @@ if ($login_error) {
           <img src="images/school-logo.png" alt="ISNM Logo">
         </div>
         <h1>ISNM Portal</h1>
-        <p>Iganga School of Nursing and Midwifery — Staff &amp; Student Sign-In</p>
+        <p>Iganga School of Nursing and Midwifery — Staff Sign-In (Organogram only)</p>
 
         <?php if ($requested_position): ?>
           <div style="margin-top:10px;">
@@ -372,18 +376,10 @@ if ($login_error) {
     <!-- ══ Tab bar ══════════════════════════════════════════════════ -->
     <div class="tab-bar" role="tablist">
       <button type="button"
-        class="tab-btn <?php echo $active_staff_tab === 'show active' ? 'active' : ''; ?>"
+        class="tab-btn active"
         id="tab-staff" role="tab"
-        data-bs-toggle="tab" data-bs-target="#panel-staff"
-        aria-controls="panel-staff" aria-selected="true">
+        aria-selected="true">
         <i class="fas fa-user-tie"></i> Staff Login
-      </button>
-      <button type="button"
-        class="tab-btn <?php echo $active_student_tab === 'show' ? 'active' : ''; ?>"
-        id="tab-student" role="tab"
-        data-bs-toggle="tab" data-bs-target="#panel-student"
-        aria-controls="panel-student" aria-selected="false">
-        <i class="fas fa-user-graduate"></i> Student Login
       </button>
     </div>
 
@@ -439,81 +435,7 @@ if ($login_error) {
           </button>
         </form>
 
-        <div class="info-block info" style="margin-top:20px;">
-          <div class="block-title"><i class="fas fa-users me-1"></i> Who should use this tab?</div>
-          <div style="font-size:.80rem; margin-top:6px; line-height:1.65;">
-            Principal, Academic Registrar, Director General, Director Academics,<br>
-            Director Finance, Director ICT, Bursar, HR Manager, Lecturers,<br>
-            Librarian, Matrons, Wardens, Security, Lab Technicians, Drivers,<br>
-            Secretary, Deputy Principal and all other staff roles.
-          </div>
-        </div>
-
-        <div class="info-block sample" style="margin-top:10px;">
-          <div class="block-title"><i class="fas fa-key me-1"></i> Default Credentials</div>
-          <div style="font-size:.80rem; line-height:1.65;">
-            <strong>Password:</strong> <kbd>12345678</kbd>&ensp;
-            <strong>(HR)</strong> <kbd>Lovely2God</kbd>&ensp;
-            <strong>(Bursar)</strong> <kbd>bursar@isnm</kbd><br>
-            Every role uses the same password with their staff email.
-          </div>
-        </div>
-      </div><!-- /panel-staff -->
-
-      <!-- ══ TAB: Student ════════════════════════════════════════════ -->
-      <div class="tab-panel <?php echo $active_student_tab; ?>"
-           id="panel-student" role="tabpanel" aria-labelledby="tab-student">
-
-        <form method="POST" action="auth-handler.php">
-          <input type="hidden" name="action" value="student_login">
-
-          <div class="form-group">
-            <label for="stu-index" class="form-label">Index Number</label>
-            <div class="input-group">
-              <i class="fas fa-id-card"></i>
-              <input type="text" class="form-control" id="stu-index" name="index_number"
-                     placeholder="e.g. U001/CM/056/16" required autocomplete="username">
-            </div>
-            <div style="font-size:.77rem; color:var(--text-light); margin-top:5px;">
-              Format: UXXX/CC/XXX/XX &nbsp;|&nbsp; Example: U001/CM/056/16
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="stu-name" class="form-label">Full Name</label>
-            <div class="input-group">
-              <i class="fas fa-user"></i>
-              <input type="text" class="form-control" id="stu-name" name="full_name"
-                     placeholder="Enter your full name as on your registration" required autocomplete="name">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="stu-phone" class="form-label">Phone Number</label>
-            <div class="input-group">
-              <i class="fas fa-phone"></i>
-              <input type="tel" class="form-control" id="stu-phone" name="phone_number"
-                     placeholder="e.g. 0771234567" required autocomplete="tel">
-            </div>
-            <div style="font-size:.77rem; color:var(--text-light); margin-top:5px;">
-              Enter the phone number registered with your student account.
-            </div>
-          </div>
-
-          <button type="submit" class="btn-login" style="margin-top:4px;">
-            <i class="fas fa-user-graduate me-2"></i>Login to Student Portal
-          </button>
-        </form>
-
-        <div class="info-block sample" style="margin-top:20px;">
-          <div class="block-title"><i class="fas fa-info-circle me-1"></i> Sample Credentials (for testing)</div>
-          <div style="font-size:.80rem; line-height:1.75; margin-top:6px;">
-            <strong>Index:</strong> U001/CM/056/16<br>
-            <strong>Name:</strong> Aisha Nakato<br>
-            <strong>Phone:</strong> 0771234567
-          </div>
-        </div>
-      </div><!-- /panel-student -->
+        <!-- Removed public role hints and default credentials for security -->
 
     </div><!-- /.login-body -->
 
@@ -522,7 +444,7 @@ if ($login_error) {
 
       <div class="help-links">
         <a href="staff-password-reset.php"><i class="fas fa-key"></i>Forgot Password?</a>
-        <a href="index.php"><i class="fas fa-arrow-left"></i>Back to Home Page</a>
+        <a href="organogram.php"><i class="fas fa-arrow-left"></i>Back to Organogram</a>
       </div>
 
       <div class="info-block info" style="border-left-color:var(--info); text-align:left;">

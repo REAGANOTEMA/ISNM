@@ -20,6 +20,20 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $auth_service = new AuthenticationService();
 
+function validateStaffLoginAccess() {
+    if (empty($_SESSION['staff_login_allowed']) || !$_SESSION['staff_login_allowed']) {
+        header('Location: organogram.php');
+        exit();
+    }
+}
+
+function validateStudentLoginAccess() {
+    if (empty($_SESSION['student_login_allowed']) || !$_SESSION['student_login_allowed']) {
+        header('Location: student-login.php');
+        exit();
+    }
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────
 
 /** Try unified-staff auth; return result array on success, null on failure. */
@@ -152,9 +166,13 @@ switch ($action) {
 
     // ── Staff / organogram login ────────────────────────────────────
     case 'staff_login':
+        validateStaffLoginAccess();
         $email    = trim($_POST['email'] ?? '');
         $password = (string)($_POST['password'] ?? '');
-        $requested_position = $_POST['requested_position'] ?? '';
+        $requested_position = trim($_POST['requested_position'] ?? '');
+        if ($requested_position === '' && !empty($_SESSION['requested_position'])) {
+            $requested_position = $_SESSION['requested_position'];
+        }
 
         if ($email === '' || $password === '') {
             $_SESSION['error'] = 'Email and password are required.';
@@ -185,22 +203,40 @@ switch ($action) {
 
             if ($requested_position !== '') {
                 $resolved = $auth_service->resolveOrganogramPosition($requested_position);
-                if ($auth_service->positionMatchesRole($requested_position, $sessionRole)) {
-                    $dashboard = $auth_service->getDashboardRoute($resolved);
+                $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolved);
+                if ($requestedDashboard && $auth_service->positionMatchesRole($requested_position, $sessionRole)) {
+                    $dashboard = $requestedDashboard;
                 }
             }
             if (!$dashboard) { $dashboard = 'dashboards/ceo.php'; }
+
+            // Mark that this login originated from the organogram (if present)
+            if (!empty($requested_position)) {
+                $_SESSION['logged_in_via_organogram'] = true;
+                $_SESSION['logged_in_via_position'] = $requested_position;
+                $_SESSION['requested_position'] = $requested_position;
+            }
+
+            // Clear the temporary gating flag (used to allow staff-login.php access)
+            unset($_SESSION['staff_login_allowed']);
+            unset($_SESSION['staff_login_position']);
 
             $_SESSION['success'] = 'Welcome, ' . ($_SESSION['full_name'] ?? 'User');
             header("Location: $dashboard");
         } else {
             $_SESSION['error'] = 'Invalid email or password.';
-            header('Location: staff-login.php');
+            $redirectUrl = 'staff-login.php';
+            $redirectPosition = $requested_position ?: ($_SESSION['requested_position'] ?? '');
+            if ($redirectPosition !== '') {
+                $redirectUrl .= '?position=' . urlencode($redirectPosition);
+            }
+            header("Location: $redirectUrl");
         }
         exit();
 
     // ── Student login ─────────────────────────────────────────────
     case 'student_login':
+        validateStudentLoginAccess();
         handleStudentLogin();
         break;
 
@@ -232,16 +268,21 @@ function handleStudentLogin() {
     $index_number = sanitizeInput($_POST['index_number'] ?? '');
     $full_name    = sanitizeInput($_POST['full_name']    ?? '');
     $phone_number = sanitizeInput($_POST['phone_number'] ?? '');
+    $student_role  = sanitizeInput($_POST['student_role'] ?? '');
+
+    if ($student_role) {
+        $_SESSION['student_role'] = $student_role;
+    }
 
     $res = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
     if ($res['success']) {
         $auth_service->createSecureSession($res['user']);
+        unset($_SESSION['student_login_allowed']);
         $_SESSION['success'] = 'Welcome, ' . $res['user']['full_name'];
         header('Location: dashboards/student.php');
     } else {
-        $_SESSION['error']   = $res['message'];
-        $_SESSION['error_source'] = 'student';
-        header('Location: staff-login.php');
+        $_SESSION['error'] = $res['message'];
+        header('Location: student-login.php');
     }
     exit();
 }

@@ -63,7 +63,7 @@ class SecurityMiddleware {
                     'student' => ['student', 'students'],
                     'director' => ['director general', 'director academics', 'director ict', 'director finance', 'chief executive officer'],
                     'lecturer' => ['lecturers', 'senior lecturers', 'head of nursing', 'head of midwifery', 'teacher'],
-                    'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'drivers', 'security', 'non-teaching staff'],
+                    'admin' => ['school principal', 'deputy principal', 'school secretary', 'academic registrar', 'hr manager', 'school librarian', 'matrons', 'wardens', 'lab technicians', 'sickbay', 'drivers', 'security', 'non-teaching staff'],
                     'accountant' => ['school bursar', 'director finance']
                 ];
                 

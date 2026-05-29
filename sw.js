@@ -4,7 +4,6 @@ const ASSETS = [
   './index.php',
   './organogram.php',
   './staff-login.php',
-  './student-login.php',
   './images/school-logo.png',
   './manifest.json'
 ];
@@ -23,6 +22,14 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
   }
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.pathname.endsWith('/student-login.php')) {
+    // student-login.php is a redirect stub and should not be cached by the service worker.
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {

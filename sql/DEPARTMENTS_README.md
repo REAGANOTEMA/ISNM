@@ -18,7 +18,7 @@ Complete SQL database schema for all department dashboards at Iganga School of N
 5. **09_hr_manager_dashboard.sql** - Staff management, performance, recruitment
 6. **10_library_dashboard.sql** - Library books, borrowing, members
 7. **11_security_dashboard.sql** - Incidents, patrols, visitors, equipment
-8. **12_lab_technicians_dashboard.sql** - Lab equipment, inventory, safety
+8. **12_sickbay_dashboard.sql** - Lab equipment, inventory, safety
 9. **13_matrons_wardens_dashboard.sql** - Student welfare, health records, counseling
 10. **14_director_academics_dashboard.sql** - Programs, curriculum, analytics
 11. **15_director_finance_dashboard.sql** - Financial reports, budgets, student balances

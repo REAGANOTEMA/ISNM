@@ -28,8 +28,8 @@ SOURCE sql/staffs/10_library_dashboard.sql;
 -- 8. Security Dashboard
 SOURCE sql/staffs/11_security_dashboard.sql;
 
--- 9. Lab Technicians Dashboard
-SOURCE sql/staffs/12_lab_technicians_dashboard.sql;
+-- 9. Sickbay Dashboard (formerly Lab Technicians)
+SOURCE sql/staffs/12_sickbay_dashboard.sql;
 
 -- 10. Matrons & Wardens Dashboard
 SOURCE sql/staffs/13_matrons_wardens_dashboard.sql;
@@ -43,31 +43,25 @@ SOURCE sql/staffs/15_director_finance_dashboard.sql;
 -- ============================================================
 -- DEPARTMENT LOGIN CREDENTIALS SUMMARY
 -- ============================================================
--- All emails follow: department@igangaschoolofnursingandmidwifery.ac.ug
--- All passwords follow: department@isnm
--- ============================================================
--- Director General: director_general@igangaschoolofnursingandmidwifery.ac.ug / bursar@isnm
--- CEO: ceo@igangaschoolofnursingandmidwifery.ac.ug / ceo@isnm
--- Director Academics: director_academics@igangaschoolofnursingandmidwifery.ac.ug / director_academics@isnm
--- Director ICT: director_ict@igangaschoolofnursingandmidwifery.ac.ug / director_ict@isnm
--- Director Finance: director_finance@igangaschoolofnursingandmidwifery.ac.ug / director_finance@isnm
--- School Principal: principal@igangaschoolofnursingandmidwifery.ac.ug / principal@isnm
--- Deputy Principal: deputy_principal@igangaschoolofnursingandmidwifery.ac.ug / deputy_principal@isnm
--- School Bursar: bursar@igangaschoolofnursingandmidwifery.ac.ug / bursar@isnm
--- Director Admissions & Requirements: admissions@igangaschoolofnursingandmidwifery.ac.ug / admissions@isnm
--- Academic Registrar: registrar@igangaschoolofnursingandmidwifery.ac.ug / registrar@isnm
--- HR Manager: hr@igangaschoolofnursingandmidwifery.ac.ug / hr@isnm
--- School Secretary: secretary@igangaschoolofnursingandmidwifery.ac.ug / secretary@isnm
--- School Librarian: librarian@igangaschoolofnursingandmidwifery.ac.ug / librarian@isnm
--- Head of Nursing: nursing@igangaschoolofnursingandmidwifery.ac.ug / nursing@isnm
--- Head of Midwifery: midwifery@igangaschoolofnursingandmidwifery.ac.ug / midwifery@isnm
--- Senior Lecturers: senior_lecturers@igangaschoolofnursingandmidwifery.ac.ug / senior_lecturers@isnm
--- Lecturers: lecturers@igangaschoolofnursingandmidwifery.ac.ug / lecturers@isnm
--- Matrons: matrons@igangaschoolofnursingandmidwifery.ac.ug / matrons@isnm
--- Wardens: wardens@igangaschoolofnursingandmidwifery.ac.ug / wardens@isnm
--- Lab Technicians: lab@igangaschoolofnursingandmidwifery.ac.ug / lab@isnm
--- Drivers: drivers@igangaschoolofnursingandmidwifery.ac.ug / drivers@isnm
--- Security: security@igangaschoolofnursingandmidwifery.ac.ug / security@isnm
+-- School Principal: principal@igangaschoolofnursingandmidwifery.ac.ug / isnm2026
+-- Deputy Principal: dep-principal@igangaschoolofnursingandmidwifery.ac.ug / Isnm2026
+-- Academic Registrar: academicregistrar@igangaschoolofnursingandmidwifery.ac.ug / Lovely2God
+-- HR Manager: hr-manager@igangaschoolofnursingandmidwifery.ac.ug / Alexis2026
+-- School Secretary: secretary@igangaschoolofnursingandmidwifery.ac.ug / Lovely2God
+-- School Librarian: library@igangaschoolofnursingandmidwifery.ac.ug / isnm2026
+-- Head of Nursing: nursing-dep@igangaschoolofnursingandmidwifery.ac.ug / isnm4life
+-- Head of Midwifery: midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug / Life2save
+-- Senior Lecturers: senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug / isnm2026
+-- Lecturers: lecturers@igangaschoolofnursingandmidwifery.ac.ug / Isnm4life
+-- Matrons: matron@igangaschoolofnursingandmidwifery.ac.ug / Isnm2026
+-- Wardens: warden@igangaschoolofnursingandmidwifery.ac.ug / Lovely2God
+-- Sickbay: sickbay@igangaschoolofnursingandmidwifery.ac.ug / isnm2026
+-- Drivers: drivers@igangaschoolofnursingandmidwifery.ac.ug / isnm4life
+-- Security: security@igangaschoolofnursingandmidwifery.ac.ug / safty1st
+-- Store Keeper: store@igangaschoolofnursingandmidwifery.ac.ug / Isnm4life
+-- Guild President: guildpresident@igangaschoolofnursingandmidwifery.ac.ug / isnm4life
+-- Admissions: admissions@igangaschoolofnursingandmidwifery.ac.ug / 2268926931
+-- Director ICT: dannybict@igangaschoolofnursingandmidwifery.ac.ug / Lovely2God
 -- ============================================================
 
 COMMIT;

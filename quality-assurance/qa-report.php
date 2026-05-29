@@ -113,7 +113,7 @@ class QualityAssurance {
             'principal', 'deputy-principal', 'school-bursar', 'academic-registrar',
             'hr-manager', 'school-secretary', 'school-librarian',
             'head-nursing', 'head-midwifery', 'senior-lecturers', 'lecturers',
-            'matrons', 'wardens', 'lab-technicians', 'non-teaching-staff'
+            'matrons', 'wardens', 'sickbay', 'non-teaching-staff'
         ];
         
         foreach ($dashboard_roles as $role) {
@@ -124,7 +124,7 @@ class QualityAssurance {
         
         // Test role validation
         $this->runTest('Role Validation', function() {
-            $valid_roles = ['Director General', 'CEO', 'Director ICT', 'Director Finance', 'Principal', 'Deputy Principal', 'School Bursar', 'Academic Registrar', 'HR Manager', 'School Secretary', 'School Librarian', 'Head of Nursing', 'Head of Midwifery', 'Senior Lecturers', 'Lecturers', 'Matrons', 'Wardens', 'Lab Technicians', 'Non-Teaching Staff', 'Student'];
+            $valid_roles = ['Director General', 'CEO', 'Director ICT', 'Director Finance', 'Principal', 'Deputy Principal', 'School Bursar', 'Academic Registrar', 'HR Manager', 'School Secretary', 'School Librarian', 'Head of Nursing', 'Head of Midwifery', 'Senior Lecturers', 'Lecturers', 'Matrons', 'Wardens', 'Sickbay', 'Non-Teaching Staff', 'Student'];
             return count($valid_roles) > 0;
         });
     }

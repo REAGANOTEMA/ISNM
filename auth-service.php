@@ -22,13 +22,31 @@ class AuthenticationService {
      */
     private function isStudentAccountLocked($indexNumber) {
         $conn = getConnection();
-        
         $stmt = $conn->prepare("SELECT locked_until FROM students WHERE index_number = ? AND status = 'Active' AND locked_until > NOW()");
-        $stmt->bind_param("s", $indexNumber);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('isStudentAccountLocked prepare failed: ' . $conn->error);
+            return false;
+        }
+        if (!$stmt->bind_param("s", $indexNumber)) {
+            error_log('isStudentAccountLocked bind_param failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+        if (!$stmt->execute()) {
+            error_log('isStudentAccountLocked execute failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
         $result = $stmt->get_result();
-        
-        return $result->num_rows > 0;
+        if ($result === false) {
+            error_log('isStudentAccountLocked get_result failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+
+        $locked = $result->num_rows > 0;
+        $stmt->close();
+        return $locked;
     }
     
     /**
@@ -38,13 +56,31 @@ class AuthenticationService {
      */
     private function isStaffAccountLocked($email) {
         $conn = getStaffConnection();
-        
         $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE email = ? AND status = 'Active' AND locked_until > NOW()");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('isStaffAccountLocked prepare failed: ' . $conn->error);
+            return false;
+        }
+        if (!$stmt->bind_param("s", $email)) {
+            error_log('isStaffAccountLocked bind_param failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+        if (!$stmt->execute()) {
+            error_log('isStaffAccountLocked execute failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
         $result = $stmt->get_result();
-        
-        return $result->num_rows > 0;
+        if ($result === false) {
+            error_log('isStaffAccountLocked get_result failed: ' . $stmt->error);
+            $stmt->close();
+            return false;
+        }
+
+        $locked = $result->num_rows > 0;
+        $stmt->close();
+        return $locked;
     }
     
     /**
@@ -56,22 +92,49 @@ class AuthenticationService {
         
         // Increment login attempts
         $stmt = $conn->prepare("UPDATE students SET login_attempts = login_attempts + 1 WHERE index_number = ?");
-        $stmt->bind_param("s", $indexNumber);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('recordStudentFailedAttempt prepare failed: ' . $conn->error);
+        } else {
+            if ($stmt->bind_param("s", $indexNumber) && $stmt->execute()) {
+                $stmt->close();
+            } else {
+                error_log('recordStudentFailedAttempt execute failed: ' . $stmt->error);
+                $stmt->close();
+            }
+        }
         
         // Check if we should lock the account
         $stmt = $conn->prepare("SELECT login_attempts FROM students WHERE index_number = ?");
-        $stmt->bind_param("s", $indexNumber);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('recordStudentFailedAttempt prepare failed: ' . $conn->error);
+            return;
+        }
+        if (!$stmt->bind_param("s", $indexNumber) || !$stmt->execute()) {
+            error_log('recordStudentFailedAttempt execute failed: ' . $stmt->error);
+            $stmt->close();
+            return;
+        }
         $result = $stmt->get_result();
+        if ($result === false) {
+            error_log('recordStudentFailedAttempt get_result failed: ' . $stmt->error);
+            $stmt->close();
+            return;
+        }
         $user = $result->fetch_assoc();
+        $stmt->close();
         
         if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
             // Lock the account
             $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
             $stmt = $conn->prepare("UPDATE students SET locked_until = ? WHERE index_number = ?");
-            $stmt->bind_param("ss", $lockUntil, $indexNumber);
-            $stmt->execute();
+            if ($stmt === false) {
+                error_log('recordStudentFailedAttempt prepare failed: ' . $conn->error);
+                return;
+            }
+            if (!$stmt->bind_param("ss", $lockUntil, $indexNumber) || !$stmt->execute()) {
+                error_log('recordStudentFailedAttempt execute failed: ' . $stmt->error);
+            }
+            $stmt->close();
         }
     }
     
@@ -84,22 +147,49 @@ class AuthenticationService {
         
         // Increment login attempts
         $stmt = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE email = ? AND status = 'Active'");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('recordStaffFailedAttempt prepare failed: ' . $conn->error);
+        } else {
+            if ($stmt->bind_param("s", $email) && $stmt->execute()) {
+                $stmt->close();
+            } else {
+                error_log('recordStaffFailedAttempt execute failed: ' . $stmt->error);
+                $stmt->close();
+            }
+        }
         
         // Check if we should lock the account
         $stmt = $conn->prepare("SELECT login_attempts FROM staff WHERE email = ? AND status = 'Active'");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('recordStaffFailedAttempt prepare failed: ' . $conn->error);
+            return;
+        }
+        if (!$stmt->bind_param("s", $email) || !$stmt->execute()) {
+            error_log('recordStaffFailedAttempt execute failed: ' . $stmt->error);
+            $stmt->close();
+            return;
+        }
         $result = $stmt->get_result();
+        if ($result === false) {
+            error_log('recordStaffFailedAttempt get_result failed: ' . $stmt->error);
+            $stmt->close();
+            return;
+        }
         $user = $result->fetch_assoc();
+        $stmt->close();
         
         if ($user && $user['login_attempts'] >= $this->maxLoginAttempts) {
             // Lock the account
             $lockUntil = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
             $stmt = $conn->prepare("UPDATE staff SET locked_until = ? WHERE email = ? AND status = 'Active'");
-            $stmt->bind_param("ss", $lockUntil, $email);
-            $stmt->execute();
+            if ($stmt === false) {
+                error_log('recordStaffFailedAttempt prepare failed: ' . $conn->error);
+                return;
+            }
+            if (!$stmt->bind_param("ss", $lockUntil, $email) || !$stmt->execute()) {
+                error_log('recordStaffFailedAttempt execute failed: ' . $stmt->error);
+            }
+            $stmt->close();
         }
     }
     
@@ -234,15 +324,41 @@ class AuthenticationService {
         error_log("DEBUG: Executing query: $sql with email: $email");
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
+        if ($stmt === false) {
+            error_log('authenticateStaff prepare failed: ' . $conn->error . ' -- SQL: ' . $sql);
+            // record failed attempt conservatively
+            $this->recordStaffFailedAttempt($email);
+            return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
+        if (!$stmt->bind_param("s", $email)) {
+            error_log('authenticateStaff bind_param failed: ' . $stmt->error);
+            $stmt->close();
+            $this->recordStaffFailedAttempt($email);
+            return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
+        if (!$stmt->execute()) {
+            error_log('authenticateStaff execute failed: ' . $stmt->error);
+            $stmt->close();
+            $this->recordStaffFailedAttempt($email);
+            return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
         $result = $stmt->get_result();
-        
+        if ($result === false) {
+            error_log('authenticateStaff get_result failed: ' . $stmt->error);
+            $stmt->close();
+            $this->recordStaffFailedAttempt($email);
+            return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
         error_log("DEBUG: Found " . $result->num_rows . " users");
-        
+
         if ($result->num_rows === 0) {
             error_log("DEBUG: No user found, recording failed attempt");
             $this->recordStaffFailedAttempt($email);
+            $stmt->close();
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
         
@@ -251,7 +367,7 @@ class AuthenticationService {
         error_log("DEBUG: Password hash in DB: " . substr($staff['password'], 0, 20) . "...");
         
         // Verify password - allow both default password and hashed passwords
-        $defaultPassword = '12345678';
+        $defaultPassword = 'staff@123';
         $passwordValid = false;
         
         // Check if password matches default password
@@ -450,15 +566,38 @@ class AuthenticationService {
         $roleName = $this->resolveOrganogramPosition($roleName);
         try {
             $conn = getStaffConnection();
-            $stmt = $conn->prepare(
-                "SELECT s.email FROM staff s
+            $sql = "SELECT s.email FROM staff s
                  INNER JOIN staff_roles sr ON s.role_id = sr.id
                  WHERE sr.role_name = ? AND s.status = 'Active'
-                 ORDER BY s.id ASC LIMIT 1"
-            );
-            $stmt->bind_param("s", $roleName);
-            $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
+                 ORDER BY s.id ASC LIMIT 1";
+
+            $stmt = $conn->prepare($sql);
+            if ($stmt === false) {
+                error_log('getStaffEmailForRole prepare failed: ' . $conn->error . ' -- SQL: ' . $sql);
+                return null;
+            }
+
+            if (!$stmt->bind_param("s", $roleName)) {
+                error_log('getStaffEmailForRole bind_param failed: ' . $stmt->error);
+                $stmt->close();
+                return null;
+            }
+
+            if (!$stmt->execute()) {
+                error_log('getStaffEmailForRole execute failed: ' . $stmt->error);
+                $stmt->close();
+                return null;
+            }
+
+            $res = $stmt->get_result();
+            if ($res === false) {
+                error_log('getStaffEmailForRole get_result failed: ' . $stmt->error);
+                $stmt->close();
+                return null;
+            }
+
+            $row = $res->fetch_assoc();
+            $stmt->close();
             return $row['email'] ?? null;
         } catch (Exception $e) {
             error_log('getStaffEmailForRole: ' . $e->getMessage());
@@ -485,57 +624,8 @@ class AuthenticationService {
         return in_array($role, $executive, true);
     }
 
-    public function canSearchStudentProfiles($role) {
-        if ($this->hasFullInstitutionAccess($role)) {
-            return true;
-        }
-        $role = $this->normalizeRoleKey($role);
-        $allowed = [
-            'director academics', 'director finance', 'director ict',
-            'school principal', 'deputy principal', 'academic registrar',
-            'hr manager', 'school secretary', 'school bursar', 'bursar',
-            'head nursing', 'head midwifery', 'head of nursing', 'head of midwifery',
-            'senior lecturers', 'lecturers', 'school librarian',
-            'matrons', 'wardens', 'lab technicians', 'non teaching staff',
-        ];
-        return in_array($role, $allowed, true) || strpos($role, 'director') !== false
-            || strpos($role, 'lecturer') !== false || strpos($role, 'registrar') !== false;
-    }
-
-    public function getDashboardRoute($role) {
-        $roleName = trim($role);
-        if ($roleName !== '') {
-            try {
-                $conn = getStaffConnection();
-                $stmt = $conn->prepare(
-                    "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
-                );
-                $stmt->bind_param("s", $roleName);
-                $stmt->execute();
-                $row = $stmt->get_result()->fetch_assoc();
-                if (!empty($row['dashboard_path'])) {
-                    return ltrim($row['dashboard_path'], '/');
-                }
-
-                $resolved = $this->resolveOrganogramPosition($roleName);
-                if ($resolved !== $roleName) {
-                    $stmt2 = $conn->prepare(
-                        "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
-                    );
-                    $stmt2->bind_param("s", $resolved);
-                    $stmt2->execute();
-                    $row2 = $stmt2->get_result()->fetch_assoc();
-                    if (!empty($row2['dashboard_path'])) {
-                        return ltrim($row2['dashboard_path'], '/');
-                    }
-                }
-            } catch (Exception $e) {
-                error_log('getDashboardRoute DB: ' . $e->getMessage());
-            }
-        }
-
-        $role = $this->normalizeRoleKey($role);
-        
+    public function getDashboardRouteFromKey($key) {
+        $key = $this->normalizeRoleKey($this->resolveOrganogramPosition($key));
         $dashboardRoutes = [
             'director general' => 'dashboards/director-general.php',
             'chief executive officer' => 'dashboards/ceo.php',
@@ -555,7 +645,8 @@ class AuthenticationService {
             'deputy principal' => 'dashboards/deputy-principal.php',
             'school secretary' => 'dashboards/school-secretary.php',
             'drivers' => 'dashboards/drivers.php',
-            'lab technicians' => 'dashboards/lab-technicians.php',
+            'lab technicians' => 'dashboards/sickbay.php',
+            'sickbay' => 'dashboards/sickbay.php',
             'matrons' => 'dashboards/matrons.php',
             'non teaching staff' => 'dashboards/non-teaching-staff.php',
             'school librarian' => 'dashboards/school-librarian.php',
@@ -563,9 +654,65 @@ class AuthenticationService {
             'senior lecturers' => 'dashboards/senior-lecturers.php',
             'wardens' => 'dashboards/wardens.php',
             'lecturers' => 'dashboards/lecturers.php',
+            'principal' => 'dashboards/school-principal.php',
+            'secretary' => 'dashboards/school-secretary.php',
+            'storekeeper' => 'dashboards/storekeeper.php',
         ];
-        
-        return $dashboardRoutes[$role] ?? 'dashboards/ceo.php';
+
+        return $dashboardRoutes[$key] ?? null;
+    }
+
+    public function canSearchStudentProfiles($role) {
+        if ($this->hasFullInstitutionAccess($role)) {
+            return true;
+        }
+        $role = $this->normalizeRoleKey($role);
+        $allowed = [
+            'director academics', 'director finance', 'director ict',
+            'school principal', 'deputy principal', 'academic registrar',
+            'hr manager', 'school secretary', 'school bursar', 'bursar',
+            'head nursing', 'head midwifery', 'head of nursing', 'head of midwifery',
+            'senior lecturers', 'lecturers', 'school librarian',
+            'matrons', 'wardens', 'lab technicians', 'sickbay', 'non teaching staff',
+        ];
+        return in_array($role, $allowed, true) || strpos($role, 'director') !== false
+            || strpos($role, 'lecturer') !== false || strpos($role, 'registrar') !== false;
+    }
+
+    public function getDashboardRoute($role) {
+        $roleName = trim($role);
+        if ($roleName !== '') {
+            try {
+                $conn = getStaffConnection();
+                $stmt = $conn->prepare(
+                    "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
+                );
+                if ($stmt !== false && $stmt->bind_param("s", $roleName) && $stmt->execute()) {
+                    $row = $stmt->get_result()->fetch_assoc();
+                    if (!empty($row['dashboard_path'])) {
+                        return ltrim($row['dashboard_path'], '/');
+                    }
+                }
+
+                $resolved = $this->resolveOrganogramPosition($roleName);
+                if ($resolved !== $roleName) {
+                    $stmt2 = $conn->prepare(
+                        "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
+                    );
+                    if ($stmt2 !== false && $stmt2->bind_param("s", $resolved) && $stmt2->execute()) {
+                        $row2 = $stmt2->get_result()->fetch_assoc();
+                        if (!empty($row2['dashboard_path'])) {
+                            return ltrim($row2['dashboard_path'], '/');
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('getDashboardRoute DB: ' . $e->getMessage());
+            }
+        }
+
+        $route = $this->getDashboardRouteFromKey($role);
+        return $route ?? 'dashboards/ceo.php';
     }
     
     /**

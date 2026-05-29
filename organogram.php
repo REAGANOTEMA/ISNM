@@ -897,13 +897,13 @@ include('shared/_header.php');
                 <div class="org-branch">
                     <div class="org-node support">
                         <i class="fas fa-flask org-icon"></i>
-                        <div class="org-title">Lab Technicians</div>
-                        <div class="org-subtitle">Laboratory Support</div>
-                        <a href="staff-login.php?position=Lab%20Technicians" class="org-link">
+                        <div class="org-title">Sickbay</div>
+                        <div class="org-subtitle">Student Health Support</div>
+                        <a href="staff-login.php?position=Sickbay" class="org-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
                         <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Lab%20Technicians'">
+                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Sickbay'">
                                 <i class="fas fa-user-shield me-2"></i>Staff Login
                             </button>
                         </div>

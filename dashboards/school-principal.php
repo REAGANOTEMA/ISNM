@@ -688,7 +688,7 @@ $pass_percentage = $pass_rate_data['total_count'] > 0 ? ($pass_rate_data['pass_c
                                 <p>Teaching Staff</p>
                             </div>
                             <div class="staff-stat">
-                                <h4><?php echo $conn->query("SELECT COUNT(*) as count FROM users WHERE role IN ('Matrons', 'Lab Technicians', 'Drivers', 'Security', 'School Secretary', 'School Librarian') AND status = 'active'")->fetch_assoc()['count']; ?></h4>
+                                <h4><?php echo $conn->query("SELECT COUNT(*) as count FROM users WHERE role IN ('Matrons', 'Sickbay', 'Drivers', 'Security', 'School Secretary', 'School Librarian') AND status = 'active'")->fetch_assoc()['count']; ?></h4>
                                 <p>Support Staff</p>
                             </div>
                             <div class="staff-stat">

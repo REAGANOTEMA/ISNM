@@ -679,7 +679,7 @@ if ($dept_result) {
                                             <option value="Lecturers">Lecturers</option>
                                             <option value="Matrons">Matrons</option>
                                             <option value="Wardens">Wardens</option>
-                                            <option value="Lab Technicians">Lab Technicians</option>
+                                            <option value="Sickbay">Sickbay</option>
                                             <option value="Non-Teaching Staff">Non-Teaching Staff</option>
                                         </select>
                                     </div>

@@ -115,22 +115,24 @@ try {
         echo "Error creating students table: " . $conn->error . "<br>";
     }
     
-    // Insert sample staff users
+    // Insert sample staff users with standardized emails and common password
+    $defaultPassword = 'staff@123';
+    $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+    
     $staffUsers = [
-        ['DG001', 'john.mugisha', 'John', 'Mugisha', 'john.mugisha@isnm.ac.ug', 'password', 'Director General'],
-        ['CEO001', 'sarah.nakato', 'Sarah', 'Nakato', 'sarah.nakato@isnm.ac.ug', 'password', 'Chief Executive Officer'],
-        ['SP001', 'peter.lutaaya', 'Peter', 'Lutaaya', 'peter.lutaaya@isnm.ac.ug', 'password', 'School Principal'],
-        ['SEC001', 'joy.nabwire', 'Joy', 'Nabwire', 'joy.nabwire@isnm.ac.ug', 'password', 'School Secretary'],
-        ['AR001', 'henry.mugisha', 'Henry', 'Mugisha', 'henry.mugisha@isnm.ac.ug', 'password', 'Academic Registrar'],
-        ['BUR001', 'patience.nabasumba', 'Patience', 'Nabasumba', 'patience.nabasumba@isnm.ac.ug', 'password', 'School Bursar'],
-        ['HR001', 'robert.ssewanyana', 'Robert', 'Ssewanyana', 'robert.ssewanyana@isnm.ac.ug', 'password', 'HR Manager'],
-        ['DA001', 'michael.mukasa', 'Michael', 'Mukasa', 'michael.mukasa@isnm.ac.ug', 'password', 'Director Academics'],
-        ['DI001', 'david.ssekandi', 'David', 'Ssekandi', 'david.ssekandi@isnm.ac.ug', 'password', 'Director ICT'],
-        ['DF001', 'grace.namulinda', 'Grace', 'Namulinda', 'grace.namulinda@isnm.ac.ug', 'password', 'Director Finance']
+        ['DG001', 'john.mugisha', 'John', 'Mugisha', 'director.general@isnm.ac.ug', 'Director General'],
+        ['CEO001', 'sarah.nakato', 'Sarah', 'Nakato', 'ceo@isnm.ac.ug', 'Chief Executive Officer'],
+        ['SP001', 'peter.lutaaya', 'Peter', 'Lutaaya', 'principal@isnm.ac.ug', 'School Principal'],
+        ['SEC001', 'joy.nabwire', 'Joy', 'Nabwire', 'secretary@isnm.ac.ug', 'School Secretary'],
+        ['AR001', 'henry.mugisha', 'Henry', 'Mugisha', 'registrar@isnm.ac.ug', 'Academic Registrar'],
+        ['BUR001', 'patience.nabasumba', 'Patience', 'Nabasumba', 'bursar@isnm.ac.ug', 'School Bursar'],
+        ['HR001', 'robert.ssewanyana', 'Robert', 'Ssewanyana', 'hr.manager@isnm.ac.ug', 'HR Manager'],
+        ['DA001', 'michael.mukasa', 'Michael', 'Mukasa', 'director.academics@isnm.ac.ug', 'Director Academics'],
+        ['DI001', 'david.ssekandi', 'David', 'Ssekandi', 'director.ict@isnm.ac.ug', 'Director ICT'],
+        ['DF001', 'grace.namulinda', 'Grace', 'Namulinda', 'director.finance@isnm.ac.ug', 'Director Finance']
     ];
     
     foreach ($staffUsers as $user) {
-        $hashedPassword = password_hash($user[6], PASSWORD_DEFAULT);
         $sql = "INSERT IGNORE INTO users (user_id, username, first_name, last_name, email, password, role) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssssss", $user[0], $user[1], $user[2], $user[3], $user[4], $hashedPassword, $user[5]);
@@ -186,9 +188,9 @@ try {
     echo "<br><strong>Database setup completed successfully!</strong><br>";
     echo "<h3>Staff Login Credentials:</h3>";
     echo "<table border='1' cellpadding='5'>";
-    echo "<tr><th>Username</th><th>Password</th><th>Role</th></tr>";
+    echo "<tr><th>Email</th><th>Password</th><th>Role</th></tr>";
     foreach ($staffUsers as $user) {
-        echo "<tr><td>{$user[1]}</td><td>password</td><td>{$user[5]}</td></tr>";
+        echo "<tr><td>{$user[4]}</td><td>staff@123</td><td>{$user[5]}</td></tr>";
     }
     echo "</table><br>";
     
