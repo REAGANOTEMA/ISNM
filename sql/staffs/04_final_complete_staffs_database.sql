@@ -1516,8 +1516,10 @@ CREATE TABLE inventory (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item_code VARCHAR(50) NOT NULL UNIQUE,
     item_name VARCHAR(200) NOT NULL,
-    item_category ENUM('Office Supplies', 'Laboratory Equipment', 'Medical Supplies', 'Furniture', 'Computers', 'Books', 'Uniforms', 'Food', 'Cleaning Supplies', 'Other') NOT NULL,
+    item_category ENUM('Office Supplies', 'Laboratory Equipment', 'Medical Supplies', 'Furniture', 'Computers', 'Books', 'Uniforms', 'Food', 'Cleaning Supplies', 'Transport', 'Security', 'Hospitality', 'Other') NOT NULL,
     description TEXT,
+    department VARCHAR(100) DEFAULT 'General',
+    report_to VARCHAR(100) DEFAULT 'HR Manager',
     unit_of_measure VARCHAR(50) NOT NULL,
     quantity_on_hand INT DEFAULT 0,
     reorder_level INT DEFAULT 10,
@@ -1530,7 +1532,28 @@ CREATE TABLE inventory (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    INDEX idx_item_code (item_code)
+    INDEX idx_item_code (item_code),
+    INDEX idx_inventory_department (department),
+    INDEX idx_inventory_report_to (report_to)
+);
+
+CREATE TABLE inventory_reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_number VARCHAR(50) NOT NULL UNIQUE,
+    inventory_id INT NOT NULL,
+    reported_by INT NOT NULL,
+    report_to VARCHAR(100) NOT NULL,
+    department VARCHAR(100) DEFAULT 'General',
+    report_type ENUM('Low Stock','Damage','Request','Adjustment','Transfer','Other') NOT NULL DEFAULT 'Request',
+    report_notes TEXT,
+    request_status ENUM('Open','In Review','Resolved','Closed') DEFAULT 'Open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (reported_by) REFERENCES staff(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_inventory_report_number (report_number),
+    INDEX idx_inventory_report_status (request_status),
+    INDEX idx_inventory_report_department (department)
 );
 
 CREATE TABLE inventory_transactions (
@@ -1549,6 +1572,17 @@ CREATE TABLE inventory_transactions (
     FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_transaction_number (transaction_number)
 );
+
+-- Sample department inventory items
+INSERT IGNORE INTO inventory (item_code, item_name, item_category, description, department, report_to, unit_of_measure, quantity_on_hand, reorder_level, unit_cost, currency, location, supplier, status, created_by) VALUES
+('NUR001', 'Surgical Masks', 'Medical Supplies', 'Disposable surgical masks for patient care', 'Nursing', 'HR Manager', 'boxes', 120, 15, 12.50, 'UGX', 'Nursing Store', 'MedSupply Ltd', 'In Stock', 1),
+('MID001', 'Midwifery Kits', 'Medical Supplies', 'Delivery and emergency midwifery kits', 'Midwifery', 'HR Manager', 'sets', 35, 5, 105.00, 'UGX', 'Midwifery Store', 'HealthEquip Ltd', 'In Stock', 1),
+('SCK001', 'Patient First Aid Kits', 'Medical Supplies', 'Portable first aid kits for sickbay emergencies', 'Sickbay', 'School Principal', 'kits', 18, 3, 75.00, 'UGX', 'Sickbay Storage', 'CarePlus Ltd', 'In Stock', 1),
+('LIB001', 'Reference Books', 'Books', 'Professional reference books for library use', 'Library', 'School Librarian', 'pcs', 210, 20, 45.00, 'UGX', 'Library Shelves', 'EduBooks Ltd', 'In Stock', 1),
+('ICT001', 'Network Switch', 'Computers', 'Managed network switch for campus ICT infrastructure', 'ICT', 'Director ICT', 'pcs', 8, 2, 420.00, 'UGX', 'ICT Server Room', 'TechNet Ltd', 'In Stock', 1),
+('SEC001', 'Security Badges', 'Security', 'Access control badges for security staff', 'Security', 'Director General', 'pcs', 120, 20, 5.00, 'UGX', 'Security Office', 'SecureID Ltd', 'In Stock', 1),
+('BRS001', 'Official Ledger Books', 'Office Supplies', 'Ledgers for bursar financial records', 'Bursar', 'School Bursar', 'pcs', 60, 10, 18.00, 'UGX', 'Bursar Office', 'OfficeMate Ltd', 'In Stock', 1),
+('HRM001', 'Employee File Folders', 'Office Supplies', 'Folders for HR employee records', 'HR', 'HR Manager', 'pcs', 220, 30, 2.20, 'UGX', 'HR Office', 'Stationery Co', 'In Stock', 1);
 
 CREATE TABLE sponsorships (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -2745,7 +2779,7 @@ CREATE TABLE meal_tracking (
     INDEX idx_meal_type (meal_type)
 );
 
--- LAB TECHNICIANS DEPARTMENT TABLES
+-- SICKBAY / LEGACY LAB TECHNICIANS DEPARTMENT TABLES
 
 -- Lab Equipment Maintenance Table
 CREATE TABLE lab_equipment_maintenance (

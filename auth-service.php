@@ -216,6 +216,146 @@ class AuthenticationService {
         $stmt->bind_param("i", $userId);
         $stmt->execute();
     }
+
+    /**
+     * Normalize full name into first and surname values
+     * @param string $fullName
+     * @return array
+     */
+    private function splitFullName($fullName) {
+        $clean = trim(preg_replace('/\s+/', ' ', $fullName));
+        $parts = explode(' ', $clean);
+        $firstName = array_shift($parts);
+        $surname = trim(implode(' ', $parts));
+        return [trim($firstName), trim($surname) ?: $firstName];
+    }
+
+    /**
+     * Load a student from the database or create a minimal student record from master student_data
+     * @param string $indexNumber
+     * @param string $fullName
+     * @param string $phoneNumber
+     * @return array|null
+     */
+    private function loadOrCreateStudentFromMaster($indexNumber, $fullName, $phoneNumber) {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT * FROM students WHERE index_number = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param('s', $indexNumber);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result && $result->num_rows === 1) {
+                return $result->fetch_assoc();
+            }
+        }
+
+        if (!file_exists(__DIR__ . '/views/student_data_loader.php')) {
+            return null;
+        }
+        require_once __DIR__ . '/views/student_data_loader.php';
+        $loader = new StudentDataLoader();
+        $candidates = $loader->searchStudents($indexNumber);
+        $studentMatch = null;
+
+        foreach ($candidates as $student) {
+            if (strcasecmp(trim($student['index_number'] ?? ''), trim($indexNumber)) === 0) {
+                $studentMatch = $student;
+                break;
+            }
+        }
+
+        if (!$studentMatch) {
+            $candidates = $loader->searchStudents($fullName);
+            foreach ($candidates as $student) {
+                if (strcasecmp(trim($student['full_name'] ?? ''), trim($fullName)) === 0 && preg_replace('/[^0-9]/', '', $student['phone'] ?? '') === preg_replace('/[^0-9]/', '', $phoneNumber)) {
+                    $studentMatch = $student;
+                    break;
+                }
+            }
+        }
+
+        if (!$studentMatch) {
+            return null;
+        }
+
+        list($firstName, $surname) = $this->splitFullName($fullName);
+        $otherName = trim($studentMatch['other_name'] ?? '');
+        $email = trim($studentMatch['email'] ?? '');
+        $program = trim($studentMatch['program'] ?? '');
+        $level = trim($studentMatch['level'] ?? '');
+        $setName = trim($studentMatch['set'] ?? '');
+        $intakeYear = trim($studentMatch['intake_year'] ?? '');
+
+        $insert = $conn->prepare(
+            "INSERT INTO students (student_number, index_number, first_name, surname, other_name, email, phone, program, level, set_name, status, is_first_login, password_changed, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', TRUE, FALSE, NOW(), NOW())"
+        );
+        if (!$insert) {
+            return null;
+        }
+
+        $studentNumber = $indexNumber;
+        $insert->bind_param('ssssssssss', $studentNumber, $indexNumber, $firstName, $surname, $otherName, $email, $phoneNumber, $program, $level, $setName);
+        if ($insert->execute()) {
+            $newId = $conn->insert_id;
+            $rowStmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+            if ($rowStmt) {
+                $rowStmt->bind_param('i', $newId);
+                $rowStmt->execute();
+                $row = $rowStmt->get_result();
+                if ($row && $row->num_rows === 1) {
+                    return $row->fetch_assoc();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Update a student's password after first login verification
+     * @param int $studentId
+     * @param string $password
+     * @return array
+     */
+    public function setStudentPassword($studentId, $password) {
+        if (empty($studentId) || !is_int($studentId) || $studentId <= 0) {
+            return ['success' => false, 'message' => 'Invalid student record'];
+        }
+        if (empty($password) || strlen($password) < 8) {
+            return ['success' => false, 'message' => 'Password must be at least 8 characters long'];
+        }
+
+        $conn = getConnection();
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare(
+            "UPDATE students SET password = ?, password_changed = TRUE, is_first_login = FALSE, login_attempts = 0, locked_until = NULL, updated_at = NOW() WHERE id = ?"
+        );
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Unable to prepare password update'];
+        }
+        $stmt->bind_param('si', $hash, $studentId);
+        if ($stmt->execute()) {
+            return ['success' => true, 'message' => 'Password saved successfully'];
+        }
+        return ['success' => false, 'message' => 'Failed to update password'];
+    }
+
+    /**
+     * Load a single student record by ID
+     * @param int $studentId
+     * @return array|null
+     */
+    public function getStudentById($studentId) {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('i', $studentId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return ($result && $result->num_rows === 1) ? $result->fetch_assoc() : null;
+    }
     
      /**
       * Authenticate student using 3-field verification
@@ -224,14 +364,15 @@ class AuthenticationService {
       * @param string $phoneNumber
       * @return array
       */
-     public function authenticateStudent($indexNumber, $fullName, $phoneNumber) {
+     public function authenticateStudent($indexNumber, $fullName, $phoneNumber, $password = null) {
          // Validate inputs
          $indexNumber = sanitizeInput($indexNumber);
          $fullName = sanitizeInput($fullName);
          $phoneNumber = sanitizeInput($phoneNumber);
+         $password = is_string($password) ? trim($password) : null;
          
          if (empty($indexNumber) || empty($fullName) || empty($phoneNumber)) {
-             return ['success' => false, 'message' => 'All fields are required for student login'];
+             return ['success' => false, 'message' => 'Index number, full name and phone number are required.'];
          }
          
          if (!validateIndexNumber($indexNumber)) {
@@ -247,32 +388,41 @@ class AuthenticationService {
              return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
          }
          
-         $conn = getConnection();
-         
-         // Query database - ALL THREE fields must match exactly
-         $sql = "SELECT * FROM students WHERE 
-                 index_number = ? AND 
-                 full_name = ? AND 
-                 phone = ? AND 
-                 status = 'Active'";
-         
-         $stmt = $conn->prepare($sql);
-         $stmt->bind_param("sss", $indexNumber, $fullName, $phoneNumber);
-         $stmt->execute();
-         $result = $stmt->get_result();
-         
-         if ($result->num_rows === 0) {
+         $student = $this->loadOrCreateStudentFromMaster($indexNumber, $fullName, $phoneNumber);
+         if (!$student) {
              $this->recordStudentFailedAttempt($indexNumber);
-             return ['success' => false, 'message' => 'Invalid student credentials. All fields must match exactly.'];
+             return ['success' => false, 'message' => 'Unable to find a matching student profile. Please verify your details.'];
          }
          
-         $student = $result->fetch_assoc();
+         if (!empty($student['password'])) {
+             if (empty($password)) {
+                 return ['success' => false, 'message' => 'Password is required for this student account.'];
+             }
+             
+             $passwordValid = false;
+             if (password_verify($password, $student['password'])) {
+                 $passwordValid = true;
+             } elseif ($student['password'] === $password) {
+                 $passwordValid = true;
+             }
+             
+             if (!$passwordValid) {
+                 $this->recordStudentFailedAttempt($indexNumber);
+                 return ['success' => false, 'message' => 'Invalid student credentials. Please check your password.'];
+             }
+         } else {
+             // First login flow: allow verification by verified student details.
+             if (strcasecmp($student['full_name'], $fullName) !== 0 || preg_replace('/[^0-9]/', '', $student['phone']) !== preg_replace('/[^0-9]/', '', $phoneNumber)) {
+                 $this->recordStudentFailedAttempt($indexNumber);
+                 return ['success' => false, 'message' => 'Student verification failed. Please use the exact registered details.'];
+             }
+         }
          
-         // Reset failed attempts on successful login
+         // Reset failed attempts on successful login or first login validation
          $this->resetStudentFailedAttempts($student['id']);
          
-         return [
-             'success' => true, 
+         $result = [
+             'success' => true,
              'user' => [
                  'id' => $student['id'],
                  'index_number' => $student['index_number'],
@@ -282,6 +432,12 @@ class AuthenticationService {
                  'type' => 'student'
              ]
          ];
+         
+         if (empty($student['password'])) {
+             $result['first_login'] = true;
+         }
+         
+         return $result;
      }
     
     /**
@@ -645,7 +801,7 @@ class AuthenticationService {
             'deputy principal' => 'dashboards/deputy-principal.php',
             'school secretary' => 'dashboards/school-secretary.php',
             'drivers' => 'dashboards/drivers.php',
-            'lab technicians' => 'dashboards/sickbay.php',
+            'lab technicians' => 'dashboards/sickbay.php', // legacy alias preserved for redirect compatibility
             'sickbay' => 'dashboards/sickbay.php',
             'matrons' => 'dashboards/matrons.php',
             'non teaching staff' => 'dashboards/non-teaching-staff.php',
@@ -657,6 +813,9 @@ class AuthenticationService {
             'principal' => 'dashboards/school-principal.php',
             'secretary' => 'dashboards/school-secretary.php',
             'storekeeper' => 'dashboards/storekeeper.php',
+            'computer department' => 'dashboards/director-ict.php',
+            'ict officer' => 'dashboards/director-ict.php',
+            'director ict' => 'dashboards/director-ict.php',
         ];
 
         return $dashboardRoutes[$key] ?? null;
@@ -669,6 +828,7 @@ class AuthenticationService {
         $role = $this->normalizeRoleKey($role);
         $allowed = [
             'director academics', 'director finance', 'director ict',
+            'computer department', 'ict officer',
             'school principal', 'deputy principal', 'academic registrar',
             'hr manager', 'school secretary', 'school bursar', 'bursar',
             'head nursing', 'head midwifery', 'head of nursing', 'head of midwifery',
@@ -721,7 +881,7 @@ class AuthenticationService {
      * @return bool
      */
     public function canCreateStudents($role) {
-        $role = strtolower($role);
+        $role = strtolower(trim($role));
         
         $allowedRoles = [
             'director general',
@@ -729,10 +889,15 @@ class AuthenticationService {
             'academic registrar',
             'school principal',
             'director academics',
+            'director ict',
+            'computer department',
+            'ict officer',
+            'school secretary',
+            'secretary',
             'ceo'
         ];
         
-        return in_array($role, $allowedRoles);
+        return in_array($role, $allowedRoles, true);
     }
     
     /**
@@ -741,11 +906,44 @@ class AuthenticationService {
      * @return array
      */
     public function createStudentAccount($studentData) {
-        $conn = getConnection();
+        $index = sanitizeInput($studentData['index_number'] ?? '');
+        $fullName = sanitizeInput($studentData['full_name'] ?? '');
+        $phone = sanitizeInput($studentData['phone'] ?? '');
         
+        if (empty($index) || empty($fullName) || empty($phone)) {
+            return ['success' => false, 'message' => 'Index number, full name and phone are required to create a student account.'];
+        }
+        
+        if (!validateIndexNumber($index)) {
+            return ['success' => false, 'message' => 'Invalid index number format'];
+        }
+        if (!validatePhone($phone)) {
+            return ['success' => false, 'message' => 'Invalid phone number format'];
+        }
+
+        $conn = getConnection();
+        $existing = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
+        if ($existing) {
+            $existing->bind_param('s', $index);
+            $existing->execute();
+            $existingRes = $existing->get_result();
+            if ($existingRes && $existingRes->num_rows > 0) {
+                return ['success' => false, 'message' => 'A student account with this index number already exists.'];
+            }
+        }
+
+        list($firstName, $surname) = $this->splitFullName($fullName);
+        if (empty($firstName) || empty($surname)) {
+            return ['success' => false, 'message' => 'Please provide a valid full name with at least two names.'];
+        }
+
         try {
-            $stmt = $conn->prepare("INSERT INTO users (index_number, full_name, phone, role, status, created_at) VALUES (?, ?, ?, 'student', 'active', NOW())");
-            $stmt->bind_param("sss", $studentData['index_number'], $studentData['full_name'], $studentData['phone']);
+            $stmt = $conn->prepare(
+                "INSERT INTO students (student_number, index_number, first_name, surname, phone, status, is_first_login, password_changed, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, 'Active', TRUE, FALSE, NOW(), NOW())"
+            );
+            $studentNumber = $index;
+            $stmt->bind_param('sssss', $studentNumber, $index, $firstName, $surname, $phone);
             $stmt->execute();
             
             return ['success' => true, 'message' => 'Student account created successfully'];

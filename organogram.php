@@ -335,14 +335,18 @@ include('shared/_header.php');
             .org-level.management,
             .org-level.administrative,
             .org-level.academic,
-            .org-level.support {
-                flex-wrap: wrap;
+            .org-level.support,
+            .org-level.student {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 18px;
                 justify-content: center;
             }
             
             .org-branch {
-                flex: 0 0 45%;
-                margin: 10px;
+                width: 100%;
+                max-width: none;
+                margin: 0;
             }
         }
 
@@ -393,15 +397,18 @@ include('shared/_header.php');
             }
 
             .org-level {
-                flex-direction: column;
-                align-items: center;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 16px;
+                justify-content: center;
+                align-items: stretch;
                 margin: 20px 0;
             }
 
             .org-branch {
                 width: 100%;
-                max-width: 180px;
-                margin: 5px 0;
+                max-width: none;
+                margin: 0;
             }
 
             .org-branch::before,
@@ -425,6 +432,12 @@ include('shared/_header.php');
             
             .page-header h1 {
                 font-size: 1.5rem;
+            }
+            
+            .org-level {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 12px;
             }
             
             .org-node {

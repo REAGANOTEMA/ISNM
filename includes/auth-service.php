@@ -219,7 +219,7 @@ class AuthenticationService {
             'Lecturers' => 'dashboards/lecturers.php',
             'Senior Lecturers' => 'dashboards/senior-lecturers.php',
             'Non-Teaching Staff' => 'dashboards/non-teaching-staff.php',
-            'Lab Technicians' => 'dashboards/sickbay.php',
+            'Lab Technicians' => 'dashboards/sickbay.php', // legacy alias preserved for Sickbay
             'Sickbay' => 'dashboards/sickbay.php',
             'Matrons' => 'dashboards/matrons.php',
             'Security' => 'dashboards/security.php',

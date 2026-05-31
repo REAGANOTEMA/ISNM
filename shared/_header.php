@@ -143,6 +143,30 @@
       background: rgba(255,255,255,0.1);
       border-radius: 6px;
     }
+
+    .navbar-toggler-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: transparent;
+      background-image: none;
+      position: relative;
+      color: var(--isnm-yellow);
+    }
+
+    .navbar-toggler-icon::before {
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      content: "\f0c9";
+      font-size: 1.2rem;
+      color: var(--isnm-yellow);
+    }
+
+    .navbar-toggler:not(.collapsed) .navbar-toggler-icon::before {
+      content: "\f00d";
+    }
     
     .navbar-toggler:focus {
       box-shadow: 0 0 0 3px rgba(255,215,0,0.3);

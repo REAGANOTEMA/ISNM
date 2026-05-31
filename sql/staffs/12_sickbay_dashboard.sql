@@ -1,6 +1,7 @@
 -- ============================================================
 -- ISNM SICKBAY DASHBOARD SQL
 -- Complete Medical Support System
+-- Formerly Lab Technicians department, now consolidated under Sickbay
 -- ============================================================
 
 USE igangaschoolofl_staffs_db;
@@ -172,7 +173,7 @@ CREATE TABLE IF NOT EXISTS lab_experiments (
     students_enrolled INT,
     students_completed INT,
     instructor_id INT,
-    lab_technician_id INT,
+    sickbay_staff_id INT,
     equipment_used TEXT,
     reagents_used TEXT,
     observations TEXT,
@@ -181,7 +182,7 @@ CREATE TABLE IF NOT EXISTS lab_experiments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (session_id) REFERENCES lab_skills_sessions(id) ON DELETE SET NULL,
     FOREIGN KEY (instructor_id) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (lab_technician_id) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (sickbay_staff_id) REFERENCES staff(id) ON DELETE SET NULL,
     INDEX idx_experiment_id (experiment_id),
     INDEX idx_experiment_date (experiment_date)
 );

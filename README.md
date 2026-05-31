@@ -38,7 +38,7 @@ The ISNM system is a complete school management solution designed specifically f
 - **Directors**: Academics, ICT, Finance
 - **School Management**: Principal, Deputy Principal, Bursar
 - **Administrative Staff**: Registrar, HR Manager, Secretary, Librarian
-- **Academic Staff**: Department Heads, Lecturers, Lab Technicians
+- **Academic Staff**: Department Heads, Lecturers, Sickbay
 - **Support Staff**: Matrons, Drivers, Security
 - **Student Leadership**: Guild President, Class Representatives
 - **Students**: Complete student portal access

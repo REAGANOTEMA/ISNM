@@ -240,6 +240,10 @@ switch ($action) {
         handleStudentLogin();
         break;
 
+    case 'student_set_password':
+        handleStudentSetPassword();
+        break;
+
     // ── Create student account ───────────────────────────────────
     case 'create_student':
         handleCreateStudent();
@@ -265,25 +269,96 @@ switch ($action) {
 
 function handleStudentLogin() {
     global $auth_service;
-    $index_number = sanitizeInput($_POST['index_number'] ?? '');
-    $full_name    = sanitizeInput($_POST['full_name']    ?? '');
-    $phone_number = sanitizeInput($_POST['phone_number'] ?? '');
+    $index_number = trim($_POST['index_number'] ?? '');
+    $full_name    = trim($_POST['full_name'] ?? '');
+    $phone_number = trim($_POST['phone_number'] ?? '');
+    $password      = $_POST['password'] ?? null;
     $student_role  = sanitizeInput($_POST['student_role'] ?? '');
 
     if ($student_role) {
         $_SESSION['student_role'] = $student_role;
     }
 
-    $res = $auth_service->authenticateStudent($index_number, $full_name, $phone_number);
+    $res = $auth_service->authenticateStudent($index_number, $full_name, $phone_number, $password);
     if ($res['success']) {
-        $auth_service->createSecureSession($res['user']);
-        unset($_SESSION['student_login_allowed']);
-        $_SESSION['success'] = 'Welcome, ' . $res['user']['full_name'];
-        header('Location: dashboards/student.php');
+        if (!empty($res['first_login'])) {
+            $_SESSION['pending_student_auth'] = [
+                'student_id' => $res['user']['id'],
+                'index_number' => $res['user']['index_number'],
+                'full_name' => $res['user']['full_name'],
+                'phone' => $res['user']['phone']
+            ];
+            unset($_SESSION['student_login_allowed']);
+            $_SESSION['success'] = 'Details verified. Please set your student portal password.';
+            header('Location: student-password-setup.php');
+        } else {
+            $auth_service->createSecureSession($res['user']);
+            unset($_SESSION['student_login_allowed']);
+            $_SESSION['success'] = 'Welcome, ' . $res['user']['full_name'];
+            header('Location: dashboards/student.php');
+        }
     } else {
         $_SESSION['error'] = $res['message'];
         header('Location: student-login.php');
     }
+    exit();
+}
+
+function handleStudentSetPassword() {
+    global $auth_service;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $pending = $_SESSION['pending_student_auth'] ?? null;
+    if (!$pending || empty($pending['student_id'])) {
+        $_SESSION['error'] = 'Student verification session expired. Please login again.';
+        header('Location: student-login.php');
+        exit();
+    }
+
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+
+    if (trim($password) === '' || trim($confirm_password) === '') {
+        $_SESSION['error'] = 'Please enter and confirm your new password.';
+        header('Location: student-password-setup.php');
+        exit();
+    }
+
+    if ($password !== $confirm_password) {
+        $_SESSION['error'] = 'Passwords do not match.';
+        header('Location: student-password-setup.php');
+        exit();
+    }
+
+    $result = $auth_service->setStudentPassword((int)$pending['student_id'], $password);
+    if (!$result['success']) {
+        $_SESSION['error'] = $result['message'];
+        header('Location: student-password-setup.php');
+        exit();
+    }
+
+    $student = $auth_service->getStudentById((int)$pending['student_id']);
+    if (!$student) {
+        $_SESSION['error'] = 'Unable to load student after password setup. Please login again.';
+        header('Location: student-login.php');
+        exit();
+    }
+
+    $auth_service->createSecureSession([
+        'id' => $student['id'],
+        'index_number' => $student['index_number'],
+        'full_name' => $student['first_name'] . ' ' . $student['surname'],
+        'phone' => $student['phone'] ?? '',
+        'role' => 'student',
+        'type' => 'student'
+    ]);
+
+    unset($_SESSION['pending_student_auth']);
+    unset($_SESSION['student_login_allowed']);
+    $_SESSION['success'] = 'Password created successfully. You are now logged in.';
+    header('Location: dashboards/student.php');
     exit();
 }
 

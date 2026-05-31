@@ -24,24 +24,52 @@ $conn = getConnection();
 
 // Function to check if user has permission to view student profile
 function canViewStudentProfile($viewer_role, $viewer_type, $target_student_id = null) {
+    $viewer_role = strtolower(trim($viewer_role));
+
     // All students can view their own profile
     if ($viewer_type === 'student' && $target_student_id === $_SESSION['user_id']) {
         return true;
     }
-    
-    // Staff roles that can view any student profile
-    $allowed_roles = ['admin', 'principal', 'deputy_principal', 'academic', 'registrar', 
-                      'accountant', 'hr', 'director', 'secretary', 'librarian', 'counselor', 'tutor'];
-    
-    return in_array($viewer_role, $allowed_roles) && $viewer_type === 'staff';
+
+    if ($viewer_type !== 'staff') {
+        return false;
+    }
+
+    $allowed_roles = [
+        'admin', 'principal', 'school principal', 'deputy principal', 'academic registrar',
+        'registrar', 'director academics', 'director finance', 'director ict',
+        'computer department', 'ict officer', 'school secretary', 'school bursar',
+        'bursar', 'head nursing', 'head midwifery', 'matron', 'matrons',
+        'warden', 'wardens', 'school librarian', 'librarian', 'counselor', 'tutor',
+        'hr manager', 'academic', 'secretary', 'storekeeper'
+    ];
+
+    return in_array($viewer_role, $allowed_roles, true)
+        || str_contains($viewer_role, 'director')
+        || str_contains($viewer_role, 'registrar')
+        || str_contains($viewer_role, 'matron')
+        || str_contains($viewer_role, 'warden');
 }
 
 // Function to check if user can edit student profile
 function canEditStudentProfile($viewer_role, $viewer_type, $target_student_id = null) {
-    // Only admin, principal, academic registrar, and academic staff can edit
-    $editor_roles = ['admin', 'principal', 'deputy_principal', 'academic', 'registrar'];
-    
-    return in_array($viewer_role, $editor_roles) && $viewer_type === 'staff';
+    if ($viewer_type !== 'staff') {
+        return false;
+    }
+
+    $viewer_role = strtolower(trim($viewer_role));
+    $editor_roles = [
+        'admin', 'principal', 'school principal', 'deputy principal',
+        'academic registrar', 'registrar', 'director academics', 'director ict',
+        'computer department', 'ict officer', 'school bursar', 'bursar',
+        'school secretary', 'academic', 'director'
+    ];
+
+    return in_array($viewer_role, $editor_roles, true)
+        || str_contains($viewer_role, 'director')
+        || str_contains($viewer_role, 'registrar')
+        || str_contains($viewer_role, 'computer')
+        || str_contains($viewer_role, 'ict');
 }
 
 // Get student ID from URL or use current user
@@ -967,6 +995,11 @@ function handlePasswordChange() {
                     
                     <form method="POST" action="student_profile.php">
                         <input type="hidden" name="action" value="update_profile">
+                        <?php if (!$can_edit): ?>
+                            <div class="alert alert-info">
+                                Only authorized staff members in charge of student profiles may make changes. Please contact your matron or ICT support team for updates.
+                            </div>
+                        <?php endif; ?>
                         
                         <div class="row g-3">
                             <div class="col-lg-6 col-md-12">
@@ -1055,7 +1088,7 @@ function handlePasswordChange() {
                         </div>
                         
                         <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                            <button type="submit" class="btn btn-primary btn-lg" <?php echo $can_edit ? '' : 'disabled'; ?> >
                                 <i class="fas fa-save"></i> Update Profile
                             </button>
                         </div>

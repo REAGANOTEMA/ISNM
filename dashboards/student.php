@@ -69,6 +69,12 @@ $payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN 
 
 // Get academic records for transcript
 $academic_records = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_all(MYSQLI_ASSOC);
+
+// Get current timetable for the student
+$timetable = [];
+if (!empty($student_info['student_id']) && !empty($student_info['current_semester'])) {
+    $timetable = getStudentTimetable($student_info['student_id'], $student_info['current_semester']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -548,8 +554,8 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                         <div class="profile-header">
                             <div class="profile-avatar">
                                 <img src="../images/default-avatar.png" alt="Profile" class="avatar-img" id="studentProfileImage">
-                                <button class="btn btn-sm btn-primary" onclick="openModal('uploadPhoto')">
-                                    <i class="fas fa-camera"></i> Change Photo
+                                <button class="btn btn-sm btn-primary" onclick="openCommunicationCenter()">
+                                    <i class="fas fa-camera"></i> Request Photo Update
                                 </button>
                             </div>
                             <div class="profile-info">
@@ -560,13 +566,13 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                                 <p><strong>Phone:</strong> <?php echo $student_info['phone']; ?></p>
                             </div>
                             <div class="profile-actions">
-                                <button class="btn btn-outline-primary" onclick="openModal('editProfile')">
-                                    <i class="fas fa-edit"></i> Edit Profile
+                                <button class="btn btn-outline-primary" onclick="openCommunicationCenter()">
+                                    <i class="fas fa-edit"></i> Request Profile Update
                                 </button>
-                                <button class="btn btn-outline-secondary" onclick="openModal('changePassword')">
-                                    <i class="fas fa-lock"></i> Change Password
+                                <button class="btn btn-outline-secondary" onclick="openCommunicationCenter()">
+                                    <i class="fas fa-lock"></i> Request Password Help
                                 </button>
-                                <button class="btn btn-outline-info" onclick="openModal('printProfile')">
+                                <button class="btn btn-outline-info" onclick="printProfile()">
                                     <i class="fas fa-print"></i> Print Profile
                                 </button>
                                 <button class="btn btn-outline-success" onclick="openModal('downloadDocuments')">
@@ -1036,7 +1042,7 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                             </div>
                             <h3>Contact Principal</h3>
                             <p>Send messages to the School Principal</p>
-                            <button class="btn btn-primary" onclick="openModal('contactPrincipal')">Send Message</button>
+                            <button class="btn btn-primary" onclick="openCommunicationCenter()">Send Message</button>
                         </div>
                         
                         <div class="comm-card">
@@ -1045,7 +1051,7 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                             </div>
                             <h3>Contact Matron</h3>
                             <p>Get in touch with the student matron for welfare issues</p>
-                            <button class="btn btn-primary" onclick="openModal('contactMatron')">Send Message</button>
+                            <button class="btn btn-primary" onclick="openCommunicationCenter()">Send Message</button>
                         </div>
                         
                         <div class="comm-card">
@@ -1054,7 +1060,7 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                             </div>
                             <h3>Contact Classmates</h3>
                             <p>Communicate with fellow students in your class</p>
-                            <button class="btn btn-primary" onclick="openModal('contactClassmates')">Find Classmates</button>
+                            <button class="btn btn-primary" onclick="openCommunicationCenter()">Find Classmates</button>
                         </div>
                         
                         <div class="comm-card">
@@ -1063,7 +1069,7 @@ $academic_records = $students_conn->query("SELECT * FROM student_academic_profil
                             </div>
                             <h3>Contact Lecturers</h3>
                             <p>Reach out to your course instructors</p>
-                            <button class="btn btn-primary" onclick="openModal('contactLecturers')">View Lecturers</button>
+                            <button class="btn btn-primary" onclick="openCommunicationCenter()">View Lecturers</button>
                         </div>
                     </div>
                 </section>

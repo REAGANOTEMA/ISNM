@@ -44,7 +44,7 @@ After successful login, you will be redirected to a dashboard specific to your r
 - Deputy Principal
 - School Secretary
 - Lecturers/Senior Lecturers
-- Lab Technicians, Matrons, Wardens
+- Sickbay, Matrons, Wardens
 - Non-teaching staff
 - Drivers, Security, School Librarian
 

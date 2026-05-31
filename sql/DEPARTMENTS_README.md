@@ -56,7 +56,7 @@ All passwords follow: `department@isnm`
 | Lecturers | lecturers@... | lecturers@isnm |
 | Matrons | matrons@... | matrons@isnm |
 | Wardens | wardens@... | wardens@isnm |
-| Lab Technicians | lab@... | lab@isnm |
+| Sickbay | sickbay@... | sickbay@isnm |
 | Drivers | drivers@... | drivers@isnm |
 | Security | security@... | security@isnm |
 

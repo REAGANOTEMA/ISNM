@@ -289,7 +289,7 @@ function getUserDashboard($role) {
         // Support Staff
         'Matrons' => 'matrons.php',
         'Wardens' => 'wardens.php',
-        'Lab Technicians' => 'sickbay.php',
+        'Lab Technicians' => 'sickbay.php', // legacy alias preserved for Sickbay
         'Sickbay' => 'sickbay.php',
         'Drivers' => 'drivers.php',
         'Security' => 'security.php',

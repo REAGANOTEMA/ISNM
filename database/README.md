@@ -138,7 +138,7 @@ CALL check_database_health();
 - **Administration**: Director General, Principal, Registrar, Secretary, Bursar
 - **Directors**: Academics, Finance, ICT, Deputy Principal
 - **Academic Staff**: Lecturers, Senior Lecturers, Department Heads
-- **Support Staff**: Librarian, HR, Lab Technicians, Drivers, Security
+- **Support Staff**: Librarian, HR, Sickbay, Drivers, Security
 
 ### Default Credentials
 - **Staff Email Format**: `firstname.lastname@isnm.ac.ug`

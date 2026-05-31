@@ -261,6 +261,107 @@
     padding-top: 5px;
 }
 
+.dashboard-inventory-widget-wrapper {
+    width: 100%;
+}
+
+.inventory-panel-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: center;
+}
+
+.inventory-summary-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.inventory-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.12);
+}
+
+.inventory-badge.primary { background: var(--isnm-blue); }
+.inventory-badge.warning { background: var(--isnm-gold); }
+.inventory-badge.info { background: var(--isnm-light-blue); }
+
+.inventory-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.inventory-card {
+    padding: 22px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
+}
+
+.inventory-card h4 {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: #334155;
+}
+
+.inventory-card-value {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.inventory-items-table-wrap {
+    overflow-x: auto;
+}
+
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.inventory-table th,
+.inventory-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.inventory-table th {
+    background: #fafafa;
+    color: #334155;
+    font-weight: 700;
+}
+
+.inventory-table tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.low-stock-row {
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.inventory-report-form {
+    margin-top: 24px;
+}
+
+.inventory-report-form .card-body {
+    display: grid;
+    gap: 18px;
+}
+
 @media (max-width: 768px) {
     .dashboard-sidebar {
         width: 70px;
@@ -278,4 +379,43 @@
     .stats-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.inventory-reports-page .content-section {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+}
+
+.inventory-reports-page .inventory-table th,
+.inventory-reports-page .inventory-table td {
+    padding: 16px 18px;
+}
+
+.inventory-reports-page .btn-primary {
+    min-width: 96px;
+}
+
+.inventory-report-shortcut-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--isnm-blue);
+    color: white;
+    border-radius: 999px;
+    box-shadow: 0 20px 40px rgba(30, 58, 138, 0.18);
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.inventory-report-shortcut-btn:hover {
+    transform: translateY(-2px);
+    background: var(--isnm-light-blue);
 }

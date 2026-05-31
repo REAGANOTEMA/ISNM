@@ -103,6 +103,15 @@ if ($login_success) {
           </div>
         </div>
 
+        <div class="mb-3">
+          <label class="form-label" for="stu-password">Password</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+            <input id="stu-password" name="password" class="form-control" type="password" placeholder="Enter your password (if already set)" autocomplete="current-password">
+          </div>
+          <div class="text-muted mt-1" style="font-size:.85rem;">If this is your first login, leave this field blank and set your password on the next page.</div>
+        </div>
+
         <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal</button>
       </form>
 

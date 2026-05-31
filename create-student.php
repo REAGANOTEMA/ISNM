@@ -270,7 +270,7 @@ $currentUser = getCurrentUser();
                     <strong>Permission Granted:</strong> You are authorized to create student accounts as <?php echo htmlspecialchars($currentUser['role']); ?>
                 </div>
 
-                <form method="POST" action="create-student.php">
+                <form method="POST" action="auth-handler.php">
                     <input type="hidden" name="action" value="create_student">
                     
                     <div class="form-group">
