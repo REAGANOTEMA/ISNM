@@ -6,6 +6,7 @@ CREATE DATABASE IF NOT EXISTS igangaschoolofl_students_db CHARACTER SET utf8mb4 
 USE igangaschoolofl_students_db;
 
 -- Drop existing tables if they exist (for fresh installation)
+SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS student_messages;
 DROP TABLE IF EXISTS student_notifications;
 DROP TABLE IF EXISTS student_downloads;
@@ -14,7 +15,9 @@ DROP TABLE IF EXISTS student_fees;
 DROP TABLE IF EXISTS student_attendance;
 DROP TABLE IF EXISTS student_academic_records;
 DROP TABLE IF EXISTS student_profiles;
+DROP TABLE IF EXISTS student_password_resets;
 DROP TABLE IF EXISTS students;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Students Table with Login Support
 CREATE TABLE students (
@@ -27,12 +30,16 @@ CREATE TABLE students (
     first_name VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
     other_name VARCHAR(100),
+    full_name VARCHAR(300),
     email VARCHAR(100) UNIQUE,
     password VARCHAR(255), -- For student login
     
     phone VARCHAR(20),
+    mobile_number VARCHAR(20),
     program VARCHAR(100),
+    course VARCHAR(100),
     current_year INT,
+    year INT,
     level VARCHAR(50),
     set_name VARCHAR(50),
     current_semester VARCHAR(20),
@@ -50,10 +57,12 @@ CREATE TABLE students (
     guardian_phone VARCHAR(20),
     
     profile_picture VARCHAR(500),
+    passport_photo VARCHAR(500),
     
-    status ENUM('Active', 'Inactive', 'Graduated', 'Suspended', 'Withdrawn') DEFAULT 'Active',
+    status ENUM('Active', 'Inactive', 'Graduated', 'Suspended', 'Withdrawn', 'deleted') DEFAULT 'Active',
     
     last_login TIMESTAMP NULL,
+    locked_until TIMESTAMP NULL,
     login_attempts INT DEFAULT 0,
     password_changed BOOLEAN DEFAULT FALSE,
     is_first_login BOOLEAN DEFAULT TRUE,
@@ -66,9 +75,90 @@ CREATE TABLE students (
     INDEX idx_index_number (index_number),
     INDEX idx_email (email),
     INDEX idx_program (program),
+    INDEX idx_course (course),
     INDEX idx_current_year (current_year),
+    INDEX idx_year (year),
     INDEX idx_status (status)
 );
+
+DROP TRIGGER IF EXISTS students_before_insert;
+DROP TRIGGER IF EXISTS students_before_update;
+
+DELIMITER //
+CREATE TRIGGER students_before_insert
+BEFORE INSERT ON students
+FOR EACH ROW
+BEGIN
+    IF NEW.full_name IS NULL OR NEW.full_name = '' THEN
+        SET NEW.full_name = TRIM(CONCAT(NEW.first_name, ' ', COALESCE(NEW.other_name, ''), ' ', NEW.surname));
+    END IF;
+
+    IF (NEW.phone IS NULL OR NEW.phone = '') AND NEW.mobile_number IS NOT NULL THEN
+        SET NEW.phone = NEW.mobile_number;
+    END IF;
+    IF (NEW.mobile_number IS NULL OR NEW.mobile_number = '') AND NEW.phone IS NOT NULL THEN
+        SET NEW.mobile_number = NEW.phone;
+    END IF;
+
+    IF (NEW.program IS NULL OR NEW.program = '') AND NEW.course IS NOT NULL THEN
+        SET NEW.program = NEW.course;
+    END IF;
+    IF (NEW.course IS NULL OR NEW.course = '') AND NEW.program IS NOT NULL THEN
+        SET NEW.course = NEW.program;
+    END IF;
+
+    IF (NEW.current_year IS NULL OR NEW.current_year = 0) AND NEW.year IS NOT NULL THEN
+        SET NEW.current_year = NEW.year;
+    END IF;
+    IF (NEW.year IS NULL OR NEW.year = 0) AND NEW.current_year IS NOT NULL THEN
+        SET NEW.year = NEW.current_year;
+    END IF;
+
+    IF (NEW.profile_picture IS NULL OR NEW.profile_picture = '') AND NEW.passport_photo IS NOT NULL THEN
+        SET NEW.profile_picture = NEW.passport_photo;
+    END IF;
+    IF (NEW.passport_photo IS NULL OR NEW.passport_photo = '') AND NEW.profile_picture IS NOT NULL THEN
+        SET NEW.passport_photo = NEW.profile_picture;
+    END IF;
+END //
+
+CREATE TRIGGER students_before_update
+BEFORE UPDATE ON students
+FOR EACH ROW
+BEGIN
+    IF NEW.full_name IS NULL OR NEW.full_name = '' THEN
+        SET NEW.full_name = TRIM(CONCAT(NEW.first_name, ' ', COALESCE(NEW.other_name, ''), ' ', NEW.surname));
+    END IF;
+
+    IF (NEW.phone IS NULL OR NEW.phone = '') AND NEW.mobile_number IS NOT NULL THEN
+        SET NEW.phone = NEW.mobile_number;
+    END IF;
+    IF (NEW.mobile_number IS NULL OR NEW.mobile_number = '') AND NEW.phone IS NOT NULL THEN
+        SET NEW.mobile_number = NEW.phone;
+    END IF;
+
+    IF (NEW.program IS NULL OR NEW.program = '') AND NEW.course IS NOT NULL THEN
+        SET NEW.program = NEW.course;
+    END IF;
+    IF (NEW.course IS NULL OR NEW.course = '') AND NEW.program IS NOT NULL THEN
+        SET NEW.course = NEW.program;
+    END IF;
+
+    IF (NEW.current_year IS NULL OR NEW.current_year = 0) AND NEW.year IS NOT NULL THEN
+        SET NEW.current_year = NEW.year;
+    END IF;
+    IF (NEW.year IS NULL OR NEW.year = 0) AND NEW.current_year IS NOT NULL THEN
+        SET NEW.year = NEW.current_year;
+    END IF;
+
+    IF (NEW.profile_picture IS NULL OR NEW.profile_picture = '') AND NEW.passport_photo IS NOT NULL THEN
+        SET NEW.profile_picture = NEW.passport_photo;
+    END IF;
+    IF (NEW.passport_photo IS NULL OR NEW.passport_photo = '') AND NEW.profile_picture IS NOT NULL THEN
+        SET NEW.passport_photo = NEW.profile_picture;
+    END IF;
+END //
+DELIMITER ;
 
 -- 2. Student Profiles Table
 CREATE TABLE student_profiles (
@@ -241,10 +331,10 @@ CREATE OR REPLACE VIEW student_login_view AS
 SELECT 
     id,
     student_number,
-    full_name,
+    COALESCE(full_name, TRIM(CONCAT(first_name, ' ', COALESCE(other_name, ''), ' ', surname))) AS full_name,
     email,
     password,
-    course,
+    COALESCE(course, program) AS course,
     status,
     last_login,
     login_attempts,
@@ -257,12 +347,12 @@ CREATE OR REPLACE VIEW student_dashboard_view AS
 SELECT 
     s.id,
     s.student_number,
-    s.full_name,
-    s.course,
-    s.year,
+    COALESCE(s.full_name, TRIM(CONCAT(s.first_name, ' ', COALESCE(s.other_name, ''), ' ', s.surname))) AS full_name,
+    COALESCE(s.course, s.program) AS course,
+    COALESCE(s.year, s.current_year) AS year,
     s.set_name,
     s.email,
-    s.profile_picture,
+    COALESCE(s.profile_picture, s.passport_photo) AS profile_picture,
     COALESCE(sa.gpa, 0) as current_gpa,
     COALESCE(sf.balance, 0) as fee_balance,
     COALESCE(sa2.attendance_rate, 0) as attendance_rate

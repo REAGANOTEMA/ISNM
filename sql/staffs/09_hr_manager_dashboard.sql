@@ -48,16 +48,12 @@ SELECT
     s.status,
     s.hire_date,
     s.last_login,
-    sp.profile_picture,
-    sp.bio,
-    sp.qualifications,
     CASE 
         WHEN s.locked_until > NOW() THEN 'Locked'
         WHEN s.login_attempts >= 5 THEN 'Warning'
         ELSE 'Active'
     END as account_status
 FROM staff s
-LEFT JOIN staff_profiles sp ON s.id = sp.staff_id
 LEFT JOIN staff_roles sr ON s.role_id = sr.id;
 
 -- Staff Performance Summary View

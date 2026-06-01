@@ -4,41 +4,48 @@
 -- ============================================================
 
 -- Execute all SQL files in order
+-- NOTE: phpMyAdmin's SQL editor does not support the client-only `SOURCE` command.
+-- If you are running these files inside phpMyAdmin, import each referenced file individually in the order below.
+-- Alternatively run from the MySQL client (recommended) using: mysql -u user -p < file.sql
+
 -- 1. Core staffs database with all departments
-SOURCE sql/staffs/04_final_complete_staffs_database.sql;
+-- SOURCE sql/staffs/04_final_complete_staffs_database.sql;  -- commented for phpMyAdmin compatibility
 
 -- 2. All departments complete dashboards with student search
-SOURCE sql/staffs/05_all_departments_complete_dashboards.sql;
+-- SOURCE sql/staffs/05_all_departments_complete_dashboards.sql;
 
 -- 3. Academic Registrar Dashboard
-SOURCE sql/staffs/06_academic_registrar_dashboard.sql;
+-- SOURCE sql/staffs/06_academic_registrar_dashboard.sql;
 
 -- 4. Nursing Department Dashboard
-SOURCE sql/staffs/07_nursing_department_dashboard.sql;
+-- SOURCE sql/staffs/07_nursing_department_dashboard.sql;
 
 -- 5. Midwifery Department Dashboard
-SOURCE sql/staffs/08_midwifery_department_dashboard.sql;
+-- SOURCE sql/staffs/08_midwifery_department_dashboard.sql;
 
 -- 6. HR Manager Dashboard
-SOURCE sql/staffs/09_hr_manager_dashboard.sql;
+-- SOURCE sql/staffs/09_hr_manager_dashboard.sql;
 
 -- 7. Library Dashboard
-SOURCE sql/staffs/10_library_dashboard.sql;
+-- SOURCE sql/staffs/10_library_dashboard.sql;
 
 -- 8. Security Dashboard
-SOURCE sql/staffs/11_security_dashboard.sql;
+-- SOURCE sql/staffs/11_security_dashboard.sql;
 
 -- 9. Sickbay Dashboard (formerly Lab Technicians)
-SOURCE sql/staffs/12_sickbay_dashboard.sql;
+-- SOURCE sql/staffs/12_sickbay_dashboard.sql;
 
 -- 10. Matrons & Wardens Dashboard
-SOURCE sql/staffs/13_matrons_wardens_dashboard.sql;
+-- SOURCE sql/staffs/13_matrons_wardens_dashboard.sql;
 
 -- 11. Director Academics Dashboard
-SOURCE sql/staffs/14_director_academics_dashboard.sql;
+-- SOURCE sql/staffs/14_director_academics_dashboard.sql;
 
 -- 12. Director Finance Dashboard
-SOURCE sql/staffs/15_director_finance_dashboard.sql;
+-- SOURCE sql/staffs/15_director_finance_dashboard.sql;
+
+-- 13. Student Management Permissions and Procedures
+-- SOURCE sql/staffs/16_student_management_permissions.sql;
 
 -- ============================================================
 -- DEPARTMENT LOGIN CREDENTIALS SUMMARY

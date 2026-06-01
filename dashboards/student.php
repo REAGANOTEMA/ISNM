@@ -42,6 +42,11 @@ if ($staff_conn->connect_error) {
 $students_conn->set_charset("utf8mb4");
 $staff_conn->set_charset("utf8mb4");
 
+function tableExists($conn, $tableName) {
+    $result = $conn->query("SHOW TABLES LIKE '" . $conn->real_escape_string($tableName) . "'");
+    return $result && $result->num_rows > 0;
+}
+
         // Get student information
         $student_id = $_SESSION['user_id'];
         $student_info = $students_conn->query("SELECT * FROM students WHERE id = $student_id LIMIT 1")->fetch_assoc();
@@ -58,14 +63,46 @@ $staff_conn->set_charset("utf8mb4");
                                                     WHERE student_id = " . ($student_info['id'] ?? 0) . " 
                                                     ORDER BY created_at DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
 
-// Get fee account information
-$fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
+// Get fee/invoice summary information
+if (tableExists($students_conn, 'student_fee_accounts')) {
+    $fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
+    $invoice_summary = [
+        'total_fees' => $fee_account[0]['total_fees'] ?? 0,
+        'amount_paid' => $fee_account[0]['amount_paid'] ?? 0,
+        'balance' => $fee_account[0]['balance'] ?? 0,
+    ];
+    $pending_invoices = [];
+    $next_invoice = $fee_account[0] ?? [];
+} else {
+    $invoice_summary = $students_conn->query("SELECT COALESCE(SUM(total_amount), 0) as total_fees, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(balance), 0) as balance FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_assoc();
+    $pending_invoices = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC")->fetch_all(MYSQLI_ASSOC);
+    $next_invoice = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC LIMIT 1")->fetch_assoc();
+}
 
-// Get recent messages
-$messages = $students_conn->query("SELECT * FROM messages WHERE recipient_id = " . ($student_info['id'] ?? 0) . " AND recipient_role = 'Students' ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+// Get recent staff messages
+$messages = [];
+if (tableExists($students_conn, 'messages')) {
+    $messages = $students_conn->query("SELECT * FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+}
 
 // Get payment history
-$payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+if (tableExists($students_conn, 'payments')) {
+    $payment_history = $students_conn->query("SELECT * FROM payments WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+} elseif (tableExists($students_conn, 'fee_payments')) {
+    $payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+} else {
+    $payment_history = [];
+}
+
+// Get live announcements for students
+$announcements = [];
+if (tableExists($students_conn, 'announcements')) {
+    $announcements = $students_conn->query("SELECT a.*, COALESCE(u.full_name, CONCAT(u.first_name, ' ', u.surname)) AS posted_by_name FROM announcements a LEFT JOIN users u ON a.posted_by = u.id WHERE a.status = 'published' AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expiry_date IS NULL OR a.expiry_date >= CURDATE()) ORDER BY a.priority DESC, a.posted_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+} elseif (tableExists($students_conn, 'student_notifications')) {
+    $announcements = $students_conn->query("SELECT id, title AS title, message AS content, type AS announcement_type, priority, created_at AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM student_notifications WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY created_at DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+} elseif (tableExists($students_conn, 'messages')) {
+    $announcements = $students_conn->query("SELECT id, subject AS title, message AS content, message_type AS announcement_type, priority, sent_date AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " AND message_type = 'announcement' ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+}
 
 // Get academic records for transcript
 $academic_records = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_all(MYSQLI_ASSOC);
@@ -916,7 +953,7 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                         </div>
                         
                         <div class="payment-actions">
-                            <button class="btn btn-primary btn-lg" onclick="openModal('makePayment')">
+                            <button class="btn btn-primary btn-lg" onclick="showStudentPaymentModal()">
                                 <i class="fas fa-credit-card"></i> Make Payment
                             </button>
                             <button class="btn btn-outline-info" onclick="openModal('viewPaymentHistory')">
@@ -926,6 +963,15 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                                 <i class="fas fa-receipt"></i> Download Receipt
                             </button>
                         </div>
+
+                        <?php if (!empty($pending_invoices)): ?>
+                        <div class="alert alert-warning mt-4">
+                            <h5>Pending Invoice</h5>
+                            <p><strong>Invoice:</strong> <?php echo htmlspecialchars($next_invoice['invoice_number'] ?? 'N/A'); ?></p>
+                            <p><strong>Amount Due:</strong> UGX <?php echo number_format($next_invoice['balance'] ?? 0); ?></p>
+                            <p><strong>Due Date:</strong> <?php echo htmlspecialchars($next_invoice['due_date'] ?? 'Not set'); ?></p>
+                        </div>
+                        <?php endif; ?>
                         
                         <!-- Recent Payments -->
                         <div class="recent-payments">
@@ -968,6 +1014,33 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <!-- Announcements Section -->
+                <section id="announcements" class="content-section">
+                    <h2>Staff Announcements</h2>
+                    <?php if (!empty($announcements)): ?>
+                        <div class="announcements-list">
+                            <?php foreach ($announcements as $announcement): ?>
+                                <div class="announcement-card mb-3 p-3 border rounded shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h4><?php echo htmlspecialchars($announcement['title']); ?></h4>
+                                            <p class="text-muted mb-1"><?php echo ucfirst(htmlspecialchars($announcement['announcement_type'])); ?> announcement</p>
+                                        </div>
+                                        <span class="badge bg-<?php echo $announcement['priority'] === 'urgent' ? 'danger' : ($announcement['priority'] === 'high' ? 'warning' : 'secondary'); ?> text-capitalize"><?php echo htmlspecialchars($announcement['priority']); ?></span>
+                                    </div>
+                                    <p><?php echo nl2br(htmlspecialchars($announcement['content'])); ?></p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Posted by <?php echo htmlspecialchars($announcement['posted_by_name'] ?? 'Staff'); ?> on <?php echo date('M j, Y', strtotime($announcement['posted_date'])); ?></small>
+                                        <small class="text-muted">Target: <?php echo htmlspecialchars(ucfirst($announcement['target_audience'])); ?></small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info">No announcements available right now. Check back later for updates from school staff.</div>
+                    <?php endif; ?>
                 </section>
                 
                 <!-- Messages Section -->
@@ -1105,7 +1178,62 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body" id="paymentModalBody">
-                        <!-- Payment content -->
+                        <form id="studentPaymentForm" autocomplete="off">
+                            <input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_info['id'] ?? 0); ?>">
+                            <input type="hidden" id="invoiceId" value="<?php echo htmlspecialchars($next_invoice['id'] ?? ''); ?>">
+                            <div class="row gy-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Invoice</label>
+                                    <input type="text" class="form-control" id="invoiceNumber" value="<?php echo htmlspecialchars($next_invoice['invoice_number'] ?? 'Not available'); ?>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Amount Due (UGX)</label>
+                                    <input type="text" class="form-control" id="invoiceBalance" value="UGX <?php echo number_format($next_invoice['balance'] ?? $invoice_summary['balance'] ?? 0); ?>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Payment Amount (UGX)</label>
+                                    <input type="number" class="form-control" id="paymentAmount" min="1000" step="1000" value="<?php echo max(1000, number_format($next_invoice['balance'] ?? $invoice_summary['balance'] ?? 0, 0, '.', '')); ?>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Payment Method</label>
+                                    <select class="form-control" id="paymentMethod" required>
+                                        <option value="mtn_momo">MTN Mobile Money</option>
+                                        <option value="airtel_money">Airtel Money</option>
+                                        <option value="bank_deposit">Bank Deposit</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="paymentPhone" value="<?php echo htmlspecialchars($student_info['phone'] ?? $student_info['mobile_number'] ?? ''); ?>" placeholder="07XXXXXXXX" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Reference Number</label>
+                                    <input type="text" class="form-control" id="paymentReference" placeholder="Payment reference" value="PMT-<?php echo date('YmdHis'); ?>" required>
+                                </div>
+                                <div class="col-12" id="bankFields" style="display:none;">
+                                    <div class="row gy-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Bank Name</label>
+                                            <select class="form-control" id="bankName">
+                                                <option value="">Select bank</option>
+                                                <option value="centenary_bank">Centenary Bank</option>
+                                                <option value="stanbic_bank">Stanbic Bank</option>
+                                                <option value="equity_bank">Equity Bank</option>
+                                                <option value="dfcu_bank">DFCU Bank</option>
+                                                <option value="absa_bank">Absa Bank</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Account Number</label>
+                                            <input type="text" class="form-control" id="bankAccountNumber" placeholder="Bank account number">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 alert alert-info" id="paymentHint">
+                                <i class="fas fa-info-circle"></i> Enter the amount you are paying, choose a method, and add your mobile number. Bank deposit payments will be verified by the finance office.
+                            </div>
+                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -1290,38 +1418,83 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
             modal.show();
         }
         
-        function processPayment(method) {
-            // Implementation for processing payment
-            console.log('Processing payment with method:', method);
-            
-            // Show processing message
+        function showStudentPaymentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            document.getElementById('invoiceBalance').value = 'UGX ' + Number(<?php echo json_encode(floatval($next_invoice['balance'] ?? $invoice_summary['balance'] ?? 0)); ?>).toLocaleString();
+            document.getElementById('paymentAmount').value = Number(<?php echo json_encode(floatval($next_invoice['balance'] ?? $invoice_summary['balance'] ?? 0)); ?>).toFixed(0);
+            modal.show();
+        }
+
+        document.getElementById('paymentMethod').addEventListener('change', function () {
+            const bankPanel = document.getElementById('bankFields');
+            bankPanel.style.display = this.value === 'bank_deposit' ? 'block' : 'none';
+        });
+
+        function submitStudentPayment() {
+            const studentId = document.getElementById('studentId').value;
+            const invoiceId = document.getElementById('invoiceId').value;
+            const amount = document.getElementById('paymentAmount').value;
+            const method = document.getElementById('paymentMethod').value;
+            const phone = document.getElementById('paymentPhone').value;
+            const reference = document.getElementById('paymentReference').value;
+            const bankName = document.getElementById('bankName').value;
+            const accountNumber = document.getElementById('bankAccountNumber').value;
+
+            if (!studentId || !amount || amount <= 0 || !method || !phone || !reference) {
+                alert('Please fill in all required payment fields.');
+                return;
+            }
+
+            const payload = new FormData();
+            payload.append('action', method === 'mtn_momo' ? 'initiate_mtn_payment' : method === 'airtel_money' ? 'initiate_airtel_payment' : 'initiate_bank_payment');
+            payload.append('student_id', studentId);
+            payload.append('invoice_id', invoiceId);
+            payload.append('amount', amount);
+            payload.append('phone', phone);
+            payload.append('reference', reference);
+            payload.append('bank_name', bankName);
+            payload.append('account_number', accountNumber);
+            payload.append('payment_method', method);
+
             const modalBody = document.getElementById('paymentModalBody');
             modalBody.innerHTML = `
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Processing...</span>
-                    </div>
-                    <h4 class="mt-3">Processing Payment</h4>
-                    <p>Please wait while we process your payment...</p>
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Submitting your payment request. Please wait...</p>
                 </div>
             `;
-            
-            // Simulate payment processing
-            setTimeout(() => {
-                modalBody.innerHTML = `
-                    <div class="text-center">
-                        <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
-                        <h4 class="mt-3">Payment Successful!</h4>
-                        <p>Your payment has been processed successfully.</p>
-                        <div class="payment-receipt">
-                            <p><strong>Receipt Number:</strong> ISNM${Date.now()}</p>
-                            <p><strong>Amount:</strong> UGX ${document.getElementById(method + 'Amount').value}</p>
-                            <p><strong>Method:</strong> ${method.charAt(0).toUpperCase() + method.slice(1)}</p>
+
+            fetch('../payment_processor.php', {
+                method: 'POST',
+                body: payload
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Payment Request Sent</h4>
+                            <p>${data.message}</p>
+                            <p><strong>Payment Reference:</strong> ${data.payment_reference || reference}</p>
+                            <button class="btn btn-primary mt-3" onclick="window.location.reload()">Refresh Dashboard</button>
                         </div>
-                        <button class="btn btn-primary" onclick="downloadReceipt()">Download Receipt</button>
+                    `;
+                } else {
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Payment failed.</strong><br>${data.message || 'Please try again or contact the bursar.'}
+                        </div>
+                    `;
+                }
+            })
+            .catch(() => {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        An error occurred while sending your payment request. Please refresh the page and try again.
                     </div>
                 `;
-            }, 3000);
+            });
         }
         
         function downloadReceipt() {
@@ -1332,20 +1505,7 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
         
         // Payment confirmation handler
         document.getElementById('confirmPayment').addEventListener('click', function() {
-            const modalTitle = document.getElementById('paymentModalTitle').textContent;
-            let paymentMethod = '';
-            
-            if (modalTitle.includes('MTN')) {
-                paymentMethod = 'mtn';
-            } else if (modalTitle.includes('Airtel')) {
-                paymentMethod = 'airtel';
-            } else if (modalTitle.includes('Bank')) {
-                paymentMethod = 'bank';
-            } else if (modalTitle.includes('Cash')) {
-                paymentMethod = 'cash';
-            }
-            
-            processPayment(paymentMethod);
+            submitStudentPayment();
         });
         
         // Navigation

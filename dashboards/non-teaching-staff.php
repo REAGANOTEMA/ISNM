@@ -705,11 +705,80 @@ $recent_activities = [
                         </form>
                     `;
                     break;
+                case 'announcements':
+                    modalTitle.textContent = 'Post Announcement';
+                    modalBody.innerHTML = `
+                        <form id="sendAnnouncementForm">
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input id="annTitle" type="text" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Audience</label>
+                                <select id="annTarget" class="form-control">
+                                    <option value="all">All</option>
+                                    <option value="students">Students</option>
+                                    <option value="staff">Staff</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Priority</label>
+                                <select id="annPriority" class="form-control">
+                                    <option value="normal">Normal</option>
+                                    <option value="important">Important</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea id="annContent" class="form-control" rows="5" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Expiry Date</label>
+                                <input id="annExpiry" type="date" class="form-control">
+                            </div>
+                        </form>`;
+                    break;
                 // Add more cases as needed
             }
             
             modal.show();
         }
+
+        // Attach modalAction handler for announcements in non-teaching-staff dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalActionBtn = document.getElementById('modalAction');
+            if (!modalActionBtn) return;
+            modalActionBtn.addEventListener('click', function() {
+                const modalTitle = document.getElementById('modalTitle').textContent || '';
+                if (modalTitle.includes('Announcement')) {
+                    const title = document.getElementById('annTitle').value.trim();
+                    const content = document.getElementById('annContent').value.trim();
+                    const target = document.getElementById('annTarget').value;
+                    const priority = document.getElementById('annPriority').value;
+                    const expiry = document.getElementById('annExpiry').value || '';
+                    if (!title || !content) { alert('Title and message required.'); return; }
+
+                    const fd = new FormData();
+                    fd.append('title', title);
+                    fd.append('content', content);
+                    fd.append('announcement_type', 'general');
+                    fd.append('target_audience', target);
+                    fd.append('priority', priority);
+                    fd.append('expiry_date', expiry);
+                    fd.append('status', 'published');
+
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';
+
+                    fetch('../includes/ajax_publish_announcement.php', { method: 'POST', body: fd })
+                        .then(r => r.json()).then(resp => {
+                            if (resp.success) { modalBody.innerHTML = '<div class="alert alert-success">Published.</div>'; setTimeout(()=>location.reload(),900); }
+                            else { modalBody.innerHTML = '<div class="alert alert-danger">Failed: ' + (resp.message||'Unknown') + '</div>'; }
+                        }).catch(()=>{ modalBody.innerHTML = '<div class="alert alert-danger">Network error.</div>'; });
+                }
+            });
+        });
     </script>
 </body>
 </html>

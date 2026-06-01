@@ -3,6 +3,9 @@
  * Mobile Money Payment Processor - Integration for MTN MoMo & Airtel Money
  */
 require_once __DIR__ . '/includes/financial_functions.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 class PaymentProcessor {
     
@@ -28,17 +31,18 @@ class PaymentProcessor {
         $payment_reference = generatePaymentReference();
         
         $conn = getConnection();
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare(" 
             INSERT INTO payments (
-                payment_reference, student_id, amount, 
+                payment_reference, student_id, amount, invoice_id,
                 payment_method, payment_provider, reference_number,
                 payment_date, status
-            ) VALUES (?, ?, ?, 'mobile_money', 'mtn_momo', ?, NOW(), 'pending')
+            ) VALUES (?, ?, ?, ?, 'mobile_money', 'mtn_momo', ?, NOW(), 'pending')
         ");
-        $stmt->bind_param("siiss", 
+        $stmt->bind_param("sidiss", 
             $payment_reference,
             $student_id,
             $amount,
+            $invoice_id,
             $reference,
             $phone
         );
@@ -61,17 +65,18 @@ class PaymentProcessor {
         $payment_reference = generatePaymentReference();
         
         $conn = getConnection();
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare(" 
             INSERT INTO payments (
-                payment_reference, student_id, amount,
+                payment_reference, student_id, amount, invoice_id,
                 payment_method, payment_provider, reference_number,
                 payment_date, status
-            ) VALUES (?, ?, ?, 'mobile_money', 'airtel_money', ?, NOW(), 'pending')
+            ) VALUES (?, ?, ?, ?, 'mobile_money', 'airtel_money', ?, NOW(), 'pending')
         ");
-        $stmt->bind_param("siiss",
+        $stmt->bind_param("sidiss",
             $payment_reference,
             $student_id,
             $amount,
+            $invoice_id,
             $reference,
             $phone
         );
@@ -85,6 +90,36 @@ class PaymentProcessor {
         }
         
         return ['success' => false, 'message' => 'Payment failed'];
+    }
+
+    public function processBankDeposit($bankName, $accountNumber, $amount, $reference, $student_id, $invoice_id = null) {
+        $payment_reference = generatePaymentReference();
+
+        $conn = getConnection();
+        $stmt = $conn->prepare(" 
+            INSERT INTO payments (
+                payment_reference, student_id, amount,
+                payment_method, payment_provider, reference_number,
+                account_number, payment_date, status
+            ) VALUES (?, ?, ?, 'bank_deposit', 'bank', ?, ?, NOW(), 'pending')
+        ");
+        $stmt->bind_param("sidss", 
+            $payment_reference,
+            $student_id,
+            $amount,
+            $reference,
+            $accountNumber
+        );
+
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'payment_reference' => $payment_reference,
+                'message' => 'Bank deposit recorded. Your payment will be verified by the finance office.'
+            ];
+        }
+
+        return ['success' => false, 'message' => 'Bank deposit registration failed'];
     }
     
     /**
@@ -149,6 +184,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['amount'],
                     $_POST['reference'],
                     $_POST['student_id']
+                );
+                echo json_encode($result);
+                break;
+            case 'initiate_bank_payment':
+                $result = $processor->processBankDeposit(
+                    $_POST['bank_name'],
+                    $_POST['account_number'],
+                    $_POST['amount'],
+                    $_POST['reference'],
+                    $_POST['student_id'],
+                    $_POST['invoice_id'] ?? null
                 );
                 echo json_encode($result);
                 break;

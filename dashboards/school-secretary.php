@@ -41,53 +41,41 @@ $recent_activities = [
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Secretary Dashboard - ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard-style.css" rel="stylesheet">
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>School Secretary Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Office Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#correspondence">
-                            <i class="fas fa-envelope"></i> Correspondence
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#appointments">
-                            <i class="fas fa-calendar"></i> Appointments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#meetings">
-                            <i class="fas fa-users"></i> Meetings
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#documents">
-                            <i class="fas fa-file-alt"></i> Document Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
+                case 'announcement':
+                    modalTitle.textContent = 'Make School Announcement';
+                    modalBody.innerHTML = `
+                        <form id="sendAnnouncementForm">
+                            <div class="mb-3">
+                                <label class="form-label">Announcement Title</label>
+                                <input id="annTitle" type="text" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Audience</label>
+                                <select id="annTarget" class="form-control" required>
+                                    <option value="all">All (Students & Staff)</option>
+                                    <option value="students">Students Only</option>
+                                    <option value="staff">Staff Only</option>
+                                    <option value="lecturers">Lecturers Only</option>
+                                    <option value="parents">Parents Only</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Priority Level</label>
+                                <select id="annPriority" class="form-control" required>
+                                    <option value="normal">Normal</option>
+                                    <option value="important">Important</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea id="annContent" class="form-control" rows="6" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Expiry Date (optional)</label>
+                                <input id="annExpiry" type="date" class="form-control">
+                            </div>
+                        </form>`;
                         <a class="nav-link" href="#communications">
                             <i class="fas fa-bullhorn"></i> Communications
                         </a>
@@ -825,6 +813,44 @@ $recent_activities = [
             
             modal.show();
         }
+
+        // Attach modalAction handler to publish announcements from this dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalActionBtn = document.getElementById('modalAction');
+            if (!modalActionBtn) return;
+            modalActionBtn.addEventListener('click', function() {
+                const modalTitle = document.getElementById('modalTitle').textContent || '';
+                if (modalTitle.includes('Make School Announcement')) {
+                    const title = document.getElementById('annTitle').value.trim();
+                    const content = document.getElementById('annContent').value.trim();
+                    const target = document.getElementById('annTarget').value;
+                    const priority = document.getElementById('annPriority').value;
+                    const expiry = document.getElementById('annExpiry').value || '';
+
+                    if (!title || !content) { alert('Title and message are required.'); return; }
+
+                    const fd = new FormData();
+                    fd.append('title', title);
+                    fd.append('content', content);
+                    fd.append('announcement_type', 'school');
+                    fd.append('target_audience', target);
+                    fd.append('priority', priority);
+                    fd.append('expiry_date', expiry);
+                    fd.append('status', 'published');
+
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';
+
+                    fetch('../includes/ajax_publish_announcement.php', { method: 'POST', body: fd })
+                        .then(r => r.json())
+                        .then(resp => {
+                            if (resp.success) { modalBody.innerHTML = '<div class="alert alert-success">Announcement published successfully.</div>'; setTimeout(()=>location.reload(),900); }
+                            else { modalBody.innerHTML = '<div class="alert alert-danger">Failed: ' + (resp.message || 'Unknown') + '</div>'; }
+                        })
+                        .catch(() => { modalBody.innerHTML = '<div class="alert alert-danger">Network error while publishing announcement.</div>'; });
+                }
+            });
+        });
     </script>
 </body>
 </html>

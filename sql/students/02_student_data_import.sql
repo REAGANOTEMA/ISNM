@@ -64,6 +64,26 @@ WHERE password IS NULL OR password = '';
 -- Auto-create fee records for imported students
 -- ============================================================
 
+-- Ensure the student_fees table exists before inserting fee records.
+CREATE TABLE IF NOT EXISTS student_fees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    fee_type VARCHAR(100) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    due_date DATE,
+    paid_date DATE,
+    status ENUM('Unpaid', 'Partially Paid', 'Paid', 'Overdue') DEFAULT 'Unpaid',
+    payment_method VARCHAR(50),
+    receipt_number VARCHAR(50),
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_id (student_id),
+    INDEX idx_fee_type (fee_type),
+    INDEX idx_status (status),
+    INDEX idx_due_date (due_date)
+);
+
 -- Insert default fee structure for new students
 INSERT IGNORE INTO student_fees (student_id, fee_type, amount, due_date, status)
 SELECT id, 'Tuition Fee', 500000, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'Unpaid'

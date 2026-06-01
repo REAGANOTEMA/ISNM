@@ -1234,11 +1234,11 @@ INSERT INTO staff_departments (department_name, department_code, description, de
 
 -- Insert default receipt templates
 INSERT INTO receipt_templates (template_name, template_type, template_content, template_variables, created_by) VALUES
-('Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{"receipt_number": "string", "student_name": "string", "amount": "number", "date": "date", "payment_method": "string"}', (SELECT id FROM staff WHERE email = 'administration@isnm.ac'));
+('Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{"receipt_number": "string", "student_name": "string", "amount": "number", "date": "date", "payment_method": "string"}', (SELECT id FROM staff WHERE email = 'director.general@isnm.ac.ug'));
 
 -- Insert default transcript templates
 INSERT INTO generated_documents (document_type, generated_by, document_title, document_content, access_code, generation_date) VALUES
-('Student Transcript', (SELECT id FROM staff WHERE email = 'administration@isnm.ac'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', CONCAT('TRANS_', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), NOW());
+('Student Transcript', (SELECT id FROM staff WHERE email = 'director.general@isnm.ac.ug'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', CONCAT('TRANS_', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), NOW());
 
 
 

@@ -594,31 +594,34 @@ if ($dept_result) {
                 case 'sendAnnouncement':
                     modalTitle.textContent = 'Send System Announcement';
                     modalBody.innerHTML = `
-                        <form>
+                        <form id="sendAnnouncementForm">
                             <div class="mb-3">
                                 <label class="form-label">Announcement Title</label>
-                                <input type="text" class="form-control" placeholder="Enter title">
+                                <input type="text" id="annTitle" class="form-control" placeholder="Enter title">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Message</label>
-                                <textarea class="form-control" rows="4" placeholder="Enter your announcement"></textarea>
+                                <textarea id="annContent" class="form-control" rows="4" placeholder="Enter your announcement"></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Target Audience</label>
-                                <select class="form-control">
-                                    <option>All Staff and Students</option>
-                                    <option>Staff Only</option>
-                                    <option>Students Only</option>
-                                    <option>Specific Department</option>
+                                <select id="annTarget" class="form-control">
+                                    <option value="all">All</option>
+                                    <option value="students">Students</option>
+                                    <option value="staff">Staff</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Priority</label>
-                                <select class="form-control">
-                                    <option>Normal</option>
-                                    <option>High</option>
-                                    <option>Urgent</option>
+                                <select id="annPriority" class="form-control">
+                                    <option value="medium">Normal</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
                                 </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Expiry Date (optional)</label>
+                                <input type="date" id="annExpiry" class="form-control">
                             </div>
                         </form>
                     `;
@@ -800,6 +803,53 @@ if ($dept_result) {
             
             modal.show();
         }
+
+        // Global modal action handler for director announcements
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalActionBtn = document.getElementById('modalAction');
+            if (!modalActionBtn) return;
+            modalActionBtn.addEventListener('click', function() {
+                const modalTitle = document.getElementById('modalTitle').textContent || '';
+                if (modalTitle.includes('Send System Announcement')) {
+                    const title = document.getElementById('annTitle').value.trim();
+                    const content = document.getElementById('annContent').value.trim();
+                    const target = document.getElementById('annTarget').value;
+                    const priority = document.getElementById('annPriority').value;
+                    const expiry = document.getElementById('annExpiry').value || '';
+
+                    if (!title || !content) {
+                        alert('Title and message are required.');
+                        return;
+                    }
+
+                    const fd = new FormData();
+                    fd.append('title', title);
+                    fd.append('content', content);
+                    fd.append('announcement_type', 'general');
+                    fd.append('target_audience', target);
+                    fd.append('priority', priority);
+                    fd.append('expiry_date', expiry);
+                    fd.append('status', 'published');
+
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';
+
+                    fetch('../includes/ajax_publish_announcement.php', { method: 'POST', body: fd })
+                        .then(r => r.json())
+                        .then(resp => {
+                            if (resp.success) {
+                                modalBody.innerHTML = '<div class="alert alert-success">Announcement published successfully.</div>';
+                                setTimeout(() => location.reload(), 900);
+                            } else {
+                                modalBody.innerHTML = '<div class="alert alert-danger">Failed to publish announcement: ' + (resp.message || 'Unknown error') + '</div>';
+                            }
+                        })
+                        .catch(() => {
+                            modalBody.innerHTML = '<div class="alert alert-danger">Network error while publishing announcement.</div>';
+                        });
+                }
+            });
+        });
         
         // Staff management functions
         function editStaffMember(staffId) {

@@ -6,6 +6,11 @@
 
 USE igangaschoolofl_staffs_db;
 
+-- Ensure required roles exist (prevent NULL role_id when inserting staff)
+INSERT IGNORE INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions) VALUES
+('Director Admissions & Requirements', 'Admissions and requirements management', 'Management', 'dashboards/director-admissions.php', '{"admissions": true, "can_manage_applications": true}'),
+('Guild President', 'Student leadership representative', 'Student', 'dashboards/guild-president.php', '{"student_leader": true, "can_access_student_affairs": true}');
+
 -- ============================================================
 -- 1. INSERT ALL DEPARTMENT STAFF ACCOUNTS WITH PROPER CREDENTIALS
 -- Email format: department@igangaschoolofnursingandmidwifery.ac.ug
@@ -282,6 +287,9 @@ FROM universal_student_profiles sp;
 -- 8. PROCEDURES FOR STUDENT SEARCH AND MANAGEMENT
 -- ============================================================
 
+-- Ensure no conflicting procedure exists before creating (prevents #1304)
+DROP PROCEDURE IF EXISTS get_all_students;
+
 DELIMITER //
 
 -- Search all students by various criteria
@@ -326,6 +334,7 @@ BEGIN
 END //
 
 -- Update student photo
+DROP PROCEDURE IF EXISTS update_student_photo//
 CREATE PROCEDURE update_student_photo(
     IN p_student_id INT,
     IN p_new_photo_path VARCHAR(500),
@@ -396,6 +405,18 @@ DELIMITER ;
 -- ============================================================
 -- 10. GRANT DASHBOARD ACCESS TO ALL STAFF
 -- ============================================================
+-- Ensure `staff_dashboard_access` table exists (some environments may not have it)
+CREATE TABLE IF NOT EXISTS staff_dashboard_access (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    dashboard_path VARCHAR(255) NOT NULL,
+    access_level VARCHAR(50) DEFAULT 'Full',
+    granted_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_dashboard_path (dashboard_path),
+    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT IGNORE INTO staff_dashboard_access (staff_id, dashboard_path, access_level, granted_by)
 SELECT 

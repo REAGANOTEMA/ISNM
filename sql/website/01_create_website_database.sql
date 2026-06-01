@@ -139,6 +139,31 @@ CREATE TABLE news (
     INDEX idx_published_at (published_at)
 );
 
+-- 8. Announcements Table
+CREATE TABLE IF NOT EXISTS announcements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content LONGTEXT NOT NULL,
+    announcement_type ENUM('general', 'academic', 'finance', 'admissions', 'events', 'emergency') DEFAULT 'general',
+    target_audience ENUM('all', 'students', 'staff', 'website') DEFAULT 'all',
+    priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+    posted_by_name VARCHAR(200) DEFAULT NULL,
+    posted_by_role VARCHAR(100) DEFAULT NULL,
+    posted_by INT DEFAULT NULL,
+    posted_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expiry_date DATE NULL,
+    status ENUM('draft', 'published', 'expired') DEFAULT 'draft',
+    attachment_path VARCHAR(500) DEFAULT NULL,
+    view_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_announcement_type (announcement_type),
+    INDEX idx_target_audience (target_audience),
+    INDEX idx_priority (priority),
+    INDEX idx_status (status),
+    INDEX idx_posted_date (posted_date)
+);
+
 -- 8. Settings Table (Enhanced)
 CREATE TABLE settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -185,6 +210,13 @@ INSERT INTO galleries (title, description, folder_name, cover_image, status) VAL
 ('Campus Life', 'Photos of campus activities and facilities', 'campus-life', 'images/gallery/campus1.jpg', 'Active'),
 ('Graduation Ceremony', 'Recent graduation ceremony photos', 'graduation-2025', 'images/gallery/graduation1.jpg', 'Active'),
 ('Clinical Training', 'Clinical practice and training sessions', 'clinical-training', 'images/gallery/clinical1.jpg', 'Active');
+
+-- Sample announcements (published by authorized roles)
+INSERT INTO announcements (title, content, announcement_type, target_audience, priority, posted_by_name, posted_by_role, status, posted_date) VALUES
+('Orientation Week 2026', 'Orientation for new students will run from July 1–5. All new students must report to the main hall by 8:00 AM.', 'academic', 'students', 'high', 'Dr. Jane K. Mwambazi', 'Director General', 'published', NOW()),
+('Fee Payment Deadline', 'Final deadline for Semester 1 fees is June 30, 2026. Late payments will attract penalties.', 'finance', 'students', 'urgent', 'Mr. Samuel Ochieng', 'Director Finance', 'published', NOW()),
+('Admissions Open', 'Applications for the Certificate and Diploma programs are now open. Apply via the Admissions portal.', 'admissions', 'all', 'medium', 'Ms. Alice Nabulime', 'Director Admissions', 'published', NOW()),
+('Institution Leadership Message', 'The CEO welcomes all stakeholders to the new phase of institutional growth and collaboration.', 'general', 'staff', 'medium', 'Mr. Peter K. Lule', 'CEO', 'published', NOW());
 
 -- Sample settings
 INSERT INTO settings (setting_key, setting_value, setting_type, description, category, is_public) VALUES
