@@ -531,7 +531,12 @@ class AuthenticationService {
             $passwordValid = true;
         } else {
             // Check against hashed password
-            $passwordValid = password_verify($password, $staff['password']);
+            if (password_verify($password, $staff['password'])) {
+                $passwordValid = true;
+            } elseif ($staff['password'] === $password) {
+                // Fallback: accept plaintext stored passwords (for initial import/setup)
+                $passwordValid = true;
+            }
         }
         
         if (!$passwordValid) {
