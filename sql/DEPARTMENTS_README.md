@@ -6,8 +6,8 @@ Complete SQL database schema for all department dashboards at Iganga School of N
 ## File Structure
 
 ### Core Database Files
-- `bursar_system.sql` - Financial management system
-- `hr_system.sql` - Human resources management system
+- `students/bursar_system.sql` - Financial management system
+- `staffs/hr_system.sql` - Human resources management system
 - `staffs/04_final_complete_staffs_database.sql` - Core staff database with all tables
 
 ### Department Dashboards
@@ -87,8 +87,8 @@ mysql -u username -p < sql/staffs/99_MASTER_ALL_DEPARTMENTS.sql
 
 ### Option 2: Run Individual Files
 ```bash
-mysql -u username -p igangaschoolofl_staffs_db < sql/bursar_system.sql
-mysql -u username -p igangaschoolofl_staffs_db < sql/hr_system.sql
+mysql -u username -p igangaschoolofl_students_db < sql/students/bursar_system.sql
+mysql -u username -p igangaschoolofl_staffs_db < sql/staffs/hr_system.sql
 mysql -u username -p igangaschoolofl_staffs_db < sql/staffs/04_final_complete_staffs_database.sql
 # ... continue with other files
 ```
@@ -96,4 +96,4 @@ mysql -u username -p igangaschoolofl_staffs_db < sql/staffs/04_final_complete_st
 ## Database Names
 - Main staff database: `igangaschoolofl_staffs_db`
 - Bursar database: `igangaschoolofl_students_db`
-- Uses database from bursar_system.sql for compatibility
+- Uses database from sql/students/bursar_system.sql for compatibility

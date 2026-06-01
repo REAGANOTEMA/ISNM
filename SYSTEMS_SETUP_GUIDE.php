@@ -257,7 +257,7 @@
                     <ol>
                         <li>Open your terminal/command prompt</li>
                         <li>Navigate to your MySQL client or phpMyAdmin</li>
-                        <li>Run the SQL script: <code>sql/bursar_system.sql</code></li>
+                        <li>Run the SQL script: <code>sql/students/bursar_system.sql</code></li>
                         <li>Visit <code>bursar_setup.php</code> to initialize the system</li>
                         <li>Login with credentials above at <code>bursar_login.php</code></li>
                     </ol>
@@ -324,7 +324,7 @@
                     <ol>
                         <li>Open your terminal/command prompt</li>
                         <li>Navigate to your MySQL client or phpMyAdmin</li>
-                        <li>Run the SQL script: <code>sql/hr_system.sql</code> (note: this uses <strong>staff database</strong>)</li>
+                        <li>Run the SQL script: <code>sql/staffs/hr_system.sql</code> (note: this uses <strong>staff database</strong>)</li>
                         <li>Visit <code>hr_setup.php</code> to initialize the system</li>
                         <li>Login with credentials above at <code>hr_login.php</code></li>
                     </ol>
@@ -382,12 +382,12 @@
                         <tr>
                             <td>Bursar (Financial)</td>
                             <td><code>igangaschoolofl_students_db</code></td>
-                            <td><code>sql/bursar_system.sql</code></td>
+                            <td><code>sql/students/bursar_system.sql</code></td>
                         </tr>
                         <tr>
                             <td>HR (Staff)</td>
                             <td><code>igangaschoolofl_staffs_db</code></td>
-                            <td><code>sql/hr_system.sql</code></td>
+                            <td><code>sql/staffs/hr_system.sql</code></td>
                         </tr>
                     </table>
                 </div>
@@ -403,9 +403,9 @@
                     </ol>
                     
                     <p style="margin-top: 15px;"><strong>Via Command Line (MySQL):</strong></p>
-                    <div class="code-box">
-mysql -u username -p database_name < sql/bursar_system.sql
-mysql -u username -p database_name < sql/hr_system.sql
+                        <div class="code-box">
+mysql -u username -p database_name < sql/students/bursar_system.sql
+mysql -u username -p database_name < sql/staffs/hr_system.sql
                     </div>
                 </div>
             </div>
@@ -453,8 +453,8 @@ mysql -u username -p database_name < sql/hr_system.sql
                 <div class="subsection">
                     <h3>SQL Database Scripts</h3>
                     <ul>
-                        <li><code>sql/bursar_system.sql</code> - Complete Bursar schema</li>
-                        <li><code>sql/hr_system.sql</code> - Complete HR schema</li>
+                        <li><code>sql/students/bursar_system.sql</code> - Complete Bursar schema</li>
+                        <li><code>sql/staffs/hr_system.sql</code> - Complete HR schema</li>
                     </ul>
                 </div>
             </div>
@@ -467,8 +467,8 @@ mysql -u username -p database_name < sql/hr_system.sql
                     <h3>Step 1: Run Database Scripts</h3>
                     <p>Execute both SQL scripts to create all necessary tables and data:</p>
                     <ul>
-                        <li>Run <code>sql/bursar_system.sql</code> in <code>igangaschoolofl_students_db</code></li>
-                        <li>Run <code>sql/hr_system.sql</code> in <code>igangaschoolofl_staffs_db</code></li>
+                        <li>Run <code>sql/students/bursar_system.sql</code> in <code>igangaschoolofl_students_db</code></li>
+                        <li>Run <code>sql/staffs/hr_system.sql</code> in <code>igangaschoolofl_staffs_db</code></li>
                     </ul>
                 </div>
                 

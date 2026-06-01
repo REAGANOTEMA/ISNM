@@ -66,7 +66,7 @@ try {
         $messages[] = '✓ All required database tables exist';
     } else {
         $messages[] = '⚠ Missing tables: ' . implode(', ', $tables_missing);
-        $messages[] = 'Please run: sql/hr_system.sql';
+        $messages[] = 'Please run: sql/staffs/hr_system.sql';
     }
     
     $conn->close();

@@ -11,7 +11,7 @@
 --     → Creates tables in igangaschoolofl_staffs_db database
 --     → Creates: staff_roles, fee_accounts, universal_student_profiles, etc.
 -- 
---  2. sql/bursar_system.sql
+--  2. sql/students/bursar_system.sql
 --     → Creates tables in igangaschoolofl_students_db database
 --     → Creates: student_invoices, payments, sponsorships, budget_records, etc.
 -- 

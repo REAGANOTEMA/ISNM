@@ -193,7 +193,7 @@ You now have two professional, production-ready management systems for ISNM (Iga
 - `bursar_reports.php` - Financial reports
 - `bursar_budgets.php` - Budget management
 - `bursar_settings.php` - System settings
-- `sql/bursar_system.sql` - Complete database schema
+-- `sql/students/bursar_system.sql` - Complete database schema (moved)
 
 **HR System:**
 - `hr_login.php` - Login page
@@ -209,7 +209,7 @@ You now have two professional, production-ready management systems for ISNM (Iga
 - `hr_training.php` - Training & development
 - `hr_reports.php` - HR reports
 - `hr_settings.php` - System settings
-- `sql/hr_system.sql` - Complete database schema
+-- `sql/staffs/hr_system.sql` - Complete database schema
 
 **Documentation:**
 - `SYSTEMS_SETUP_GUIDE.php` - Interactive setup guide
@@ -270,12 +270,12 @@ Execute the SQL scripts to create tables and initial data:
 1. **For Bursar System:**
    - Open phpMyAdmin or MySQL client
    - Select database: `igangaschoolofl_students_db`
-   - Import/execute: `sql/bursar_system.sql`
+   - Import/execute: `sql/students/bursar_system.sql`
 
 2. **For HR System:**
    - Open phpMyAdmin or MySQL client
    - Select database: `igangaschoolofl_staffs_db`
-   - Import/execute: `sql/hr_system.sql`
+   - Import/execute: `sql/staffs/hr_system.sql`
 
 ### Step 2: Initialize Systems
 

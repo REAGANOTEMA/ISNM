@@ -66,7 +66,7 @@ try {
         $messages[] = '✓ All required database tables exist';
     } else {
         $messages[] = '⚠ Missing tables: ' . implode(', ', $tables_missing);
-        $messages[] = 'Please run: sql/bursar_system.sql';
+        $messages[] = 'Please run: sql/students/bursar_system.sql';
     }
     
     // 3. Check and create default programs if not exist

@@ -12,136 +12,45 @@ USE igangaschoolofl_staffs_db;
 -- Password format: department@isnm
 -- ============================================================
 
--- Insert all department staff accounts
 INSERT IGNORE INTO staff (
-    staff_id, 
-    full_name, 
-    email, 
-    password, 
-    phone, 
-    position, 
-    department, 
-    role_id, 
-    status, 
-    hire_date,
-    password_changed,
-    is_first_login,
-    created_at
+        staff_id,
+        full_name,
+        email,
+        password,
+        phone,
+        position,
+        department,
+        role_id,
+        status,
+        hire_date,
+        password_changed,
+        is_first_login,
+        created_at
 ) VALUES
--- Director General
-('DG001', 'Director General', 'director_general@igangaschoolofnursingandmidwifery.ac.ug', 
- '$2y$10$bursar@isnmHashedPassword1234567890', '+256701000001', 'Director General', 'Executive Office',
- (SELECT id FROM staff_roles WHERE role_name = 'Director General' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Chief Executive Officer
-('CEO001', 'Chief Executive Officer', 'ceo@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$ceo@isnmHashedPassword12345678', '+256701000002', 'Chief Executive Officer', 'Executive Office',
- (SELECT id FROM staff_roles WHERE role_name = 'CEO' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Director Academics
-('DA001', 'Director Academics', 'director_academics@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$director_academics@isnmHashedPassword', '+256701000003', 'Director Academics', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Director Academics' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Director ICT
-('DICT001', 'Director ICT', 'director_ict@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$director_ict@isnmHashedPassword', '+256701000004', 'Director ICT', 'Information Technology',
- (SELECT id FROM staff_roles WHERE role_name = 'Director ICT' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Director Finance
-('DF001', 'Director Finance', 'director_finance@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$director_finance@isnmHashedPassword', '+256701000005', 'Director Finance', 'Finance Department',
- (SELECT id FROM staff_roles WHERE role_name = 'Director Finance' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- School Principal
-('PRINC001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$VVoHfONmCz.Bsvn1.t1UoesLbM01KNPXKT/b/VJIzxeUq0M9LabK.', '+256701000006', 'School Principal', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'School Principal' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Deputy Principal
-('DEPUT001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$ANzSCNiGrURlS1ovFbQUKuK6ldOOBpiC0iW/MB7HVw/I5JC9wud.m', '+256701000007', 'Deputy Principal', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Deputy Principal' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- School Bursar
-('BURS001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$bursar@isnmHashedPassword', '+256701000008', 'School Bursar', 'Finance Department',
- (SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Director Admissions & Requirements
-('DA001', 'Director Admissions & Requirements', 'admissions@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$skSWQ0izbJELN0UIM2qMFeaKeHaMM6dQ8raJgH7BKP0O1.klQdzxC', '+256701000009', 'Director Admissions & Requirements', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Academic Registrar
-('REG001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$Ha21Vlb7p046OaklPLFCteb8raqKNilEWDlzq8ypXVz491hHIICXS', '+256701000010', 'Academic Registrar', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Academic Registrar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- HR Manager
-('HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$jEb8/OsV.9cydSvrBrZ1Hejase4BaTkPXT3FO/Gf9EazTrbXprKYi', '+256701000011', 'HR Manager', 'Human Resources',
- (SELECT id FROM staff_roles WHERE role_name = 'HR Manager' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- School Secretary
-('SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$MtVRrE2x6uXh0CwEobzG.ueN1zcL/aE541mbLWpg3e7gnX4HkUxn.', '+256701000012', 'School Secretary', 'Administrative Support',
- (SELECT id FROM staff_roles WHERE role_name = 'School Secretary' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- School Librarian
-('LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$GGfcvNfejW3f2fRptIUQIuK4c/W44n94twWtTAaOTqTVSuLZ52DsC', '+256701000013', 'School Librarian', 'Library Services',
- (SELECT id FROM staff_roles WHERE role_name = 'School Librarian' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Head of Nursing
-('NUR001', 'Head of Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$YO8OuL81gpaFdgP4nJEebeXNhLeM1.hFMD5KidDV9YDGkJMdAqbgW', '+256701000014', 'Head of Nursing', 'Nursing Department',
- (SELECT id FROM staff_roles WHERE role_name = 'Head Nursing' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Head of Midwifery
-('MID001', 'Head of Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$G7pMLdi2UjjmhEd8Lx0bmeaM7tGD4jrfvMsZh6HvY1Po8YqFRubRu', '+256701000015', 'Head of Midwifery', 'Midwifery Department',
- (SELECT id FROM staff_roles WHERE role_name = 'Head Midwifery' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Senior Lecturers
-('SL001', 'Senior Lecturer', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$1gsFX/B27b5YuIAP7D5OSO2acgrtV7RcIMeja6RblX/9e5YSFfguy', '+256701000016', 'Senior Lecturers', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Senior Lecturers' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Lecturers
-('LEC001', 'Lecturer', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$e52TV/DaoNDl4kjssi3Te.YHnpxHlaxatBX2wNg5yv3JkoYEEYV9i', '+256701000017', 'Lecturers', 'Academic Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Lecturers' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Matrons
-('MAT001', 'Matron', 'matron@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$Qj7feWYysqaK1INwS50PFehU09Tgf6MOUNVBJZaOw3LZW/jGHZEkO', '+256701000018', 'Matrons', 'Student Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Matrons' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Wardens
-('WAR001', 'Warden', 'warden@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$jCKwMrdU.s1DVuA2HHFp6eBPK05F70IUoyAvRZX6Qf3wdPsCZBXM2', '+256701000019', 'Wardens', 'Student Affairs',
- (SELECT id FROM staff_roles WHERE role_name = 'Wardens' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Sickbay
-('SICK001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', '+256701000020', 'Sickbay', 'Support',
- (SELECT id FROM staff_roles WHERE role_name = 'Sickbay' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Drivers
-('DRV001', 'Driver', 'drivers@igangaschoolofnursingandmidwifery.ac.ug',
- '$2y$10$HrQ6V56zJJxIz8j.2grJVOWs2DjFGzA/wxzejvE3vtkk57KFuAjge', '+256701000021', 'Drivers', 'Support',
- (SELECT id FROM staff_roles WHERE role_name = 'Drivers' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-
--- Security
-('SEC001', 'Security Officer', 'security@igangaschoolofnursingandmidwifery.ac.ug',
-  '$2y$10$0rLJuecuJuF6.Exxp7AQO.w0Dh0iwfwZri45gwya6OqENBJwjPA7C', '+256701000022', 'Security', 'Security Services',
-  (SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
-
--- Store Keeper
-('STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug',
-  '$2y$10$8qETvaYu2nreko/c/DyPROdIlMZyAciahJOVwHCV0KG4WxrcicxnS', '+256701000023', 'Store Keeper', 'Support',
-  (SELECT id FROM staff_roles WHERE role_name = 'Store Keeper' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
+('DG001','Director General','directorgeneral@igangaschoolofnursingandmidwifery.ac.ug','DorisJoy2026', '+256701000001','Director General','Executive Office',(SELECT id FROM staff_roles WHERE role_name = 'Director General' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('CEO001','Chief Executive Officer','ceo@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God', '+256701000002','Chief Executive Officer','Executive Office',(SELECT id FROM staff_roles WHERE role_name = 'CEO' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('DA001','Director Academics','directoracademic@igangaschoolofnursingandmidwifery.ac.ug','Stephen123', '+256701000003','Director Academics','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Director Academics' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('DICT001','Director ICT','dannybict@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God', '+256701000004','Director ICT','Information Technology',(SELECT id FROM staff_roles WHERE role_name = 'Director ICT' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('DF001','Director Finance','finance@igangaschoolofnursingandmidwifery.ac.ug','DorisJoy2026', '+256701000005','Director Finance','Finance Department',(SELECT id FROM staff_roles WHERE role_name = 'Director Finance' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('PRINC001','School Principal','principal@igangaschoolofnursingandmidwifery.ac.ug','isnm2026', '+256701000006','School Principal','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'School Principal' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('DEPUT001','Deputy Principal','dep-principal@igangaschoolofnursingandmidwifery.ac.ug','Isnm2026', '+256701000007','Deputy Principal','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Deputy Principal' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('BURS001','School Bursar','bursar@igangaschoolofnursingandmidwifery.ac.ug','DorisJoy2026', '+256701000008','School Bursar','Finance Department',(SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('ADMS001','Director Admissions & Requirements','admissions@igangaschoolofnursingandmidwifery.ac.ug','2268926931', '+256701000009','Director Admissions & Requirements','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('REG001','Academic Registrar','academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God', '+256701000010','Academic Registrar','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Academic Registrar' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('HR001','HR Manager','hr-manager@igangaschoolofnursingandmidwifery.ac.ug','Alexis2026', '+256701000011','HR Manager','Human Resources',(SELECT id FROM staff_roles WHERE role_name = 'HR Manager' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('SEC001','School Secretary','secretary@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God', '+256701000012','School Secretary','Administrative Support',(SELECT id FROM staff_roles WHERE role_name = 'School Secretary' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('LIB001','School Librarian','library@igangaschoolofnursingandmidwifery.ac.ug','isnm2026', '+256701000013','School Librarian','Library Services',(SELECT id FROM staff_roles WHERE role_name = 'School Librarian' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('NUR001','Head of Nursing','nursing-dep@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000014','Head of Nursing','Nursing Department',(SELECT id FROM staff_roles WHERE role_name = 'Head Nursing' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('MID001','Head of Midwifery','midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug','Life2save', '+256701000015','Head of Midwifery','Midwifery Department',(SELECT id FROM staff_roles WHERE role_name = 'Head Midwifery' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('SL001','Senior Lecturer','senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug','isnm2026', '+256701000016','Senior Lecturers','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Senior Lecturers' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('LEC001','Lecturer','lecturers@igangaschoolofnursingandmidwifery.ac.ug','Isnm4life', '+256701000017','Lecturers','Academic Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Lecturers' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('MAT001','Matron','matron@igangaschoolofnursingandmidwifery.ac.ug','Isnm2026', '+256701000018','Matrons','Student Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Matrons' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('WAR001','Warden','warden@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God', '+256701000019','Warden','Student Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Wardens' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('SICK001','Sickbay','sickbay@igangaschoolofnursingandmidwifery.ac.ug','isnm2026', '+256701000020','Sickbay','Support',(SELECT id FROM staff_roles WHERE role_name = 'Sickbay' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('DRV001','Driver','drivers@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000021','Drivers','Support',(SELECT id FROM staff_roles WHERE role_name = 'Drivers' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('SECUR001','Security Officer','security@igangaschoolofnursingandmidwifery.ac.ug','safty1st', '+256701000022','Security','Security Services',(SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('STK001','Store Keeper','store@igangaschoolofnursingandmidwifery.ac.ug','Isnm4life', '+256701000023','Store Keeper','Support',(SELECT id FROM staff_roles WHERE role_name = 'Store Keeper' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('GUILD001','Guild President','guildpresident@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000024','Guild President','Student Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Guild President' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW());
 
 -- ============================================================
 -- 2. STUDENT DATA INTEGRATION - UNIVERSAL STUDENT TABLE

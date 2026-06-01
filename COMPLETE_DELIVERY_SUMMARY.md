@@ -128,7 +128,7 @@ bursar_reports.php            (0.4 KB) - Reports module
 bursar_budgets.php            (0.4 KB) - Budget module
 bursar_settings.php           (0.4 KB) - Settings
 bursar_payment_detail.php     (0.4 KB) - Payment details
-sql/bursar_system.sql         (29.4 KB) - Complete schema
+sql/students/bursar_system.sql         (29.4 KB) - Complete schema
 ```
 
 #### Features Included
@@ -319,7 +319,7 @@ hr_performance.php            (0.4 KB) - Performance appraisal
 hr_training.php               (0.4 KB) - Training & development
 hr_reports.php                (0.4 KB) - Reports module
 hr_settings.php               (0.4 KB) - Settings
-sql/hr_system.sql             (31.9 KB) - Complete schema
+sql/staffs/hr_system.sql             (31.9 KB) - Complete schema
 ```
 
 #### Features Included
@@ -392,8 +392,8 @@ Both systems feature:
 ### 4. **Database Schemas** 🗄️
 
 #### Complete SQL Scripts
-- `sql/bursar_system.sql` - 29.4 KB
-- `sql/hr_system.sql` - 31.9 KB
+-- `sql/students/bursar_system.sql` - 29.4 KB
+-- `sql/staffs/hr_system.sql` - 31.9 KB
 
 #### Total Tables Created
 - **Bursar:** 25+ tables
@@ -497,10 +497,10 @@ Created comprehensive documentation:
 ### 1. Run SQL Scripts
 ```bash
 # Bursar System
-mysql -u user -p igangaschoolofl_students_db < sql/bursar_system.sql
+mysql -u user -p igangaschoolofl_students_db < sql/students/bursar_system.sql
 
 # HR System
-mysql -u user -p igangaschoolofl_staffs_db < sql/hr_system.sql
+mysql -u user -p igangaschoolofl_staffs_db < sql/staffs/hr_system.sql
 ```
 
 ### 2. Initialize Systems

@@ -22,7 +22,7 @@ Your comprehensive Bursar and HR Management Systems are now fully implemented an
 ✅ bursar_budgets.php                  - Budget management module
 ✅ bursar_settings.php                 - System configuration module
 ✅ bursar_payment_detail.php           - Payment details view
-✅ sql/bursar_system.sql               - Complete database schema (29.4 KB)
+✅ sql/students/bursar_system.sql               - Complete database schema (29.4 KB)
 ```
 
 ### **HR System** (13 PHP files + 1 SQL file)
@@ -40,7 +40,7 @@ Your comprehensive Bursar and HR Management Systems are now fully implemented an
 ✅ hr_training.php                     - Training & development module
 ✅ hr_reports.php                      - HR reports module
 ✅ hr_settings.php                     - System configuration module
-✅ sql/hr_system.sql                   - Complete database schema (31.9 KB)
+✅ sql/staffs/hr_system.sql                   - Complete database schema (31.9 KB)
 ```
 
 ### **Documentation** (5 files)
@@ -257,10 +257,10 @@ Your comprehensive Bursar and HR Management Systems are now fully implemented an
 ### 1. Setup Databases
 ```bash
 # Bursar Database
-mysql -u user -p igangaschoolofl_students_db < sql/bursar_system.sql
+mysql -u user -p igangaschoolofl_students_db < sql/students/bursar_system.sql
 
 # HR Database
-mysql -u user -p igangaschoolofl_staffs_db < sql/hr_system.sql
+mysql -u user -p igangaschoolofl_staffs_db < sql/staffs/hr_system.sql
 ```
 
 ### 2. Initialize Systems
@@ -287,8 +287,8 @@ C:\xampp\htdocs\ISNM\
 ├── bursar_*.php          (12 files)
 ├── hr_*.php              (13 files)
 ├── sql/
-│   ├── bursar_system.sql
-│   └── hr_system.sql
+│   ├── sql/students/bursar_system.sql
+│   └── sql/staffs/hr_system.sql
 ├── systems_home.php
 ├── SYSTEMS_SETUP_GUIDE.php
 ├── README_FINANCIAL_HR_SYSTEMS.md
