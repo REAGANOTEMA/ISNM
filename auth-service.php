@@ -475,7 +475,7 @@ class AuthenticationService {
         // Query database for staff user
         $sql = "SELECT s.*, sr.role_name FROM staff s 
                 LEFT JOIN staff_roles sr ON s.role_id = sr.id
-                WHERE s.email = ? AND s.status = 'Active'";
+                WHERE s.email = ? AND (LOWER(s.status) = 'active' OR s.status IS NULL)";
         
         error_log("DEBUG: Executing query: $sql with email: $email");
         

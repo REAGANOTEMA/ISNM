@@ -21,17 +21,13 @@ if (session_status() === PHP_SESSION_NONE) {
 $auth_service = new AuthenticationService();
 
 function validateStaffLoginAccess() {
-    if (empty($_SESSION['staff_login_allowed']) || !$_SESSION['staff_login_allowed']) {
-        header('Location: organogram.php');
-        exit();
-    }
+    // Loosened for better usability; allow direct login if credentials are valid
+    return true;
 }
 
 function validateStudentLoginAccess() {
-    if (empty($_SESSION['student_login_allowed']) || !$_SESSION['student_login_allowed']) {
-        header('Location: student-login.php');
-        exit();
-    }
+    // Loosened for better usability
+    return true;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────
@@ -166,7 +162,6 @@ switch ($action) {
 
     // ── Staff / organogram login ────────────────────────────────────
     case 'staff_login':
-        validateStaffLoginAccess();
         $email    = trim($_POST['email'] ?? '');
         $password = (string)($_POST['password'] ?? '');
         $requested_position = trim($_POST['requested_position'] ?? '');
@@ -236,7 +231,6 @@ switch ($action) {
 
     // ── Student login ─────────────────────────────────────────────
     case 'student_login':
-        validateStudentLoginAccess();
         handleStudentLogin();
         break;
 

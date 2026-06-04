@@ -148,8 +148,9 @@ if (!function_exists('executePrepared')) {
 
 if (!function_exists('validateIndexNumber')) {
     function validateIndexNumber($index_number) {
-        // Format: U001/CM/056/16
-        return preg_match('/^U\d{3}\/(CM|CN|DMORDN)\/\d{3}\/\d{2}$/', $index_number);
+        // Allow various ISNM formats: U001/..., JUL24/..., STU...
+        if (empty($index_number)) return false;
+        return strlen($index_number) >= 5;
     }
 }
 
@@ -214,12 +215,13 @@ if (!function_exists('validatePhone')) {
         // Remove non-numeric characters
         $clean_phone = preg_replace('/[^0-9]/', '', $phone);
         
-        // Check if it's a valid Uganda phone number (with or without country code)
-        // Accept formats: 0771234567 or 256771234567
+        // Accept 9 or 10 digit local numbers, or 12 digit international
         if (strlen($clean_phone) === 10 && preg_match('/^0[7]\d{8}$/', $clean_phone)) {
             return true; // Format: 0771234567
         } elseif (strlen($clean_phone) === 12 && preg_match('/^256[7]\d{8}$/', $clean_phone)) {
             return true; // Format: 256771234567
+        } elseif (strlen($clean_phone) === 9 && preg_match('/^7\d{8}$/', $clean_phone)) {
+            return true; // Format: 771234567
         }
         
         return false;
