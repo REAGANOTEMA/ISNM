@@ -198,7 +198,7 @@ switch ($action) {
 
             if ($requested_position !== '') {
                 $resolved = $auth_service->resolveOrganogramPosition($requested_position);
-                $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolved);
+                $requestedDashboard = $auth_service->getDashboardRoute($resolved);
                 if ($requestedDashboard && $auth_service->positionMatchesRole($requested_position, $sessionRole)) {
                     $dashboard = $requestedDashboard;
                 }

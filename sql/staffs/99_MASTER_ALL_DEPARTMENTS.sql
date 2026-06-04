@@ -10,7 +10,7 @@
 
 -- 0. Database Foundations and Student System
 SOURCE create_databases.sql;
-USE igangaschoolofl_staffs_db;
+USE `igangaschoolofl_staffs_db`;
 SET FOREIGN_KEY_CHECKS = 0;
 
 SOURCE sql/students/01_create_students_database.sql;
@@ -18,6 +18,7 @@ SOURCE sql/students/bursar_system.sql;
 
 -- 1. Core staffs database with all departments
 SOURCE sql/staffs/04_final_complete_staffs_database.sql;
+USE `igangaschoolofl_staffs_db`;
 
 -- 2. All departments complete dashboards with student search
 SOURCE sql/staffs/05_all_departments_complete_dashboards.sql;
@@ -53,6 +54,7 @@ SOURCE sql/staffs/14_director_academics_dashboard.sql;
 SOURCE sql/staffs/15_director_finance_dashboard.sql;
 
 -- 13. Student Management Permissions and Procedures
+USE `igangaschoolofl_staffs_db`;
 SOURCE sql/staffs/16_student_management_permissions.sql;
 SET FOREIGN_KEY_CHECKS = 1;
 

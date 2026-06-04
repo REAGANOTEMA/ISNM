@@ -1087,7 +1087,7 @@ INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path
 ('Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{"ict": true, "systems": true, "infrastructure": true, "can_manage_system": true, "can_view_all_departments": true, "can_view_financial": true, "can_view_academic": true, "can_view_hr": true, "can_view_students": true, "can_view_all_records": true, "can_edit_own_department": true, "can_view_other_departments": true}'),
 ('HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{"hr": true, "staff": true, "recruitment": true, "training": true, "can_manage_staff": true}'),
 ('Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{"academic": true, "students": true, "registration": true, "transcripts": true, "certificates": true}'),
-('School Bursar', 'Financial operations and fee management', 'Administrative', 'dashboards/school-bursar.php', '{"financial": true, "fees": true, "collections": true, "can_manage_fees": true}'),
+('School Bursar', 'Financial operations and fee management', 'Administrative', 'bursar_dashboard.php', '{"financial": true, "fees": true, "collections": true, "can_manage_fees": true}'),
 ('School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{"library": true, "resources": true, "catalog": true}'),
 ('Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{"nursing": true, "department": true, "faculty": true}'),
 ('Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{"midwifery": true, "department": true, "faculty": true}'),
@@ -1101,8 +1101,8 @@ INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path
 ('Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{"student_welfare": true, "discipline": true, "residential": true}'),
 ('School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{"administrative": true, "documentation": true, "can_manage_documents": true}'),
 ('Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{"academic": true, "administrative": true, "can_assist_principal": true}'),
-('Bursar', 'Financial assistant', 'Administrative', 'dashboards/bursar.php', '{"financial": true, "fees": true, "can_assist_bursar": true}'),
-('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}'),
+('Bursar', 'Financial assistant', 'Administrative', 'bursar_dashboard.php', '{"financial": true, "fees": true, "can_assist_bursar": true}'),
+('Secretary', 'Administrative assistant', 'Administrative', 'dashboards/school-secretary.php', '{"administrative": true, "documentation": true, "can_assist_secretary": true}'),
 ('Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{"store": true, "inventory": true, "can_manage_store": true}');
 
 -- Insert main administrator and dashboard staff accounts with unified credentials
