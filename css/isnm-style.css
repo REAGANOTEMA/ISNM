@@ -219,15 +219,24 @@ h1, h2, h3 {
 }
 
 .program-card,
-.intro-content,
-.contact-grid,
-.section-header {
+.contact-grid {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 2rem;
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   height: 100%;
+  border: 2px solid rgba(15, 76, 58, 0.2);
+  position: relative;
+  z-index: 5;
+}
+
+.intro-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
   border: 2px solid rgba(15, 76, 58, 0.2);
   position: relative;
   z-index: 5;

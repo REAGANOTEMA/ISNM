@@ -19,15 +19,15 @@
     <!-- Introduction Section -->
     <section class="history-intro py-5">
       <div class="container">
+        <div class="section-header text-center animate-fade-in mb-5">
+          <div class="header-icon">
+            <i class="fas fa-landmark"></i>
+          </div>
+          <h2 class="section-title">Our Foundation</h2>
+        </div>
         <div class="row">
           <div class="col-lg-12">
             <div class="intro-content animate-fade-in">
-              <div class="section-header">
-                <div class="header-icon">
-                  <i class="fas fa-landmark"></i>
-                </div>
-                <h2 class="section-title">Our Foundation</h2>
-              </div>
               <p class="intro-text">
                 Iganga School of Nursing and Midwifery was established in 2009 with a vision to produce world-class healthcare professionals. 
                 Starting with just 13 students, we have grown into a premier institution with over 315 students, 
@@ -480,14 +480,14 @@
     }
     
     .intro-content {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.08);
-      border: 1px solid #e9ecef;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 4rem 3rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+      border: 1px solid rgba(226, 232, 240, 0.8);
       position: relative;
       margin: 0 auto;
-      max-width: 900px;
+      max-width: 1000px;
     }
 
      .intro-content::before {
@@ -503,12 +503,12 @@
      }
 
      .intro-text {
-       font-size: 1.1rem;
-       color: #495057;
+       font-size: 1.2rem;
+       color: #2d3748;
        line-height: 1.8;
-       margin-bottom: 2.5rem;
+       margin-bottom: 3.5rem;
        text-align: center;
-       max-width: 900px;
+       max-width: 850px;
        margin-left: auto;
        margin-right: auto;
      }
@@ -516,29 +516,30 @@
      /* Key Highlights - Perfect Grid for All Screens */
      .key-highlights {
        display: grid;
-       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-       gap: 1.5rem;
+       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+       gap: 2rem;
        margin-top: 1rem;
      }
 
      .highlight-item {
-       background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-       border-radius: 18px;
-       padding: 1.8rem 1.2rem;
+       background: #ffffff;
+       border-radius: 20px;
+       padding: 2.5rem 1.5rem;
        text-align: center;
        transition: all 0.3s ease;
-       border: 1px solid #dee2e6;
+       border: 1px solid #edf2f7;
        display: flex;
        flex-direction: column;
        align-items: center;
        justify-content: center;
        min-height: 200px;
+       box-shadow: 0 4px 6px rgba(0,0,0,0.02);
      }
 
      .highlight-item:hover {
-       transform: translateY(-8px);
-       box-shadow: 0 18px 35px rgba(0,0,0,0.15);
-       background: linear-gradient(135deg, #e9ecef, #dee2e6);
+       transform: translateY(-10px);
+       box-shadow: 0 20px 40px rgba(26, 35, 126, 0.08);
+       border-color: #1a237e;
      }
 
      .highlight-icon {
@@ -1063,17 +1064,17 @@
       }
       
       .intro-content {
-        padding: 1.8rem 1.2rem;
-        border-radius: 16px;
+        padding: 3rem 1.5rem;
+        border-radius: 20px;
       }
       
       .section-header {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
       }
       
       .intro-text {
-        font-size: 1rem;
-        margin-bottom: 2rem;
+        font-size: 1.1rem;
+        margin-bottom: 3rem;
         padding: 0 0.5rem;
       }
       
@@ -1160,12 +1161,12 @@
       .current-leadership,
       .leadership-philosophy,
       .future-plans {
-        padding: 1.5rem;
+        padding: 2.5rem 1.2rem;
         border-radius: 14px;
       }
       
       .intro-text {
-        font-size: 0.95rem;
+        font-size: 1.05rem;
         padding: 0 0.3rem;
       }
       
