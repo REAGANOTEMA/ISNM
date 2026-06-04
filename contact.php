@@ -51,10 +51,10 @@ include_once 'shared/_header.php'; ?>
             </div>
             <h4>Phone Numbers</h4>
             <div class="contact-details">
-              <p><i class="fas fa-user-tie"></i> Principal: 0782 990 403</p>
+              <p><i class="fas fa-user-tie"></i> Principal: +256 782 990 403</p>
               <p><i class="fas fa-user-shield"></i> Deputy Principal: 0782 633 253</p>
               <p><i class="fas fa-user-cog"></i> Director: 0753 393 340</p>
-              <p><i class="fas fa-users"></i> HRM: 0703 999 796</p>
+              <p><i class="fas fa-users"></i> HRM: +256 703 999 796</p>
             </div>
           </div>
           
@@ -64,9 +64,9 @@ include_once 'shared/_header.php'; ?>
             </div>
             <h4>Email</h4>
             <div class="contact-details">
-              <p><i class="fas fa-at"></i> iganganursingschool@gmail.com</p>
-              <p><i class="fas fa-graduation-cap"></i> admissions@isnm.ac.ug</p>
-              <p><i class="fas fa-info-circle"></i> info@isnm.ac.ug</p>
+              <p><i class="fas fa-at"></i> info@igangaschoolofnursingandmidwifery.ac.ug</p>
+              <p><i class="fas fa-graduation-cap"></i> admissions@igangaschoolofnursingandmidwifery.ac.ug</p>
+              <p><i class="fas fa-info-circle"></i> registrar@igangaschoolofnursingandmidwifery.ac.ug</p>
             </div>
           </div>
           
@@ -76,7 +76,7 @@ include_once 'shared/_header.php'; ?>
             </div>
             <h4>Website & Social</h4>
             <div class="contact-details">
-              <p><i class="fas fa-globe-africa"></i> www.isnm.ac.ug</p>
+              <p><i class="fas fa-globe-africa"></i> www.igangaschoolofnursingandmidwifery.ac.ug</p>
               <p><i class="fas fa-share-alt"></i> Follow us on social media</p>
               <p><i class="fab fa-facebook"></i> Facebook: @ISNMUganda</p>
             </div>

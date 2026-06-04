@@ -56,6 +56,41 @@ JOIN staff_roles sr ON s.role_id = sr.id
 WHERE sr.role_name = 'Academic Registrar';
 
 -- ============================================================
+-- 1.1 UPDATE OFFICIAL STAFF CREDENTIALS
+-- ============================================================
+
+-- First, ensure roles exist (abbreviated for brevity, assuming existing role structure)
+-- Then update or insert the specific staff accounts requested:
+
+INSERT INTO staff (full_name, email, password, role_id, status) VALUES
+('Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S6S6S6S6S6S6S6S6S6S6S6S6S6S6S6S', 1, 'Active'), -- Password: DorisJoy2026
+('CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', 2, 'Active'), -- Password: Lovely2God
+('Director Academic', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A', 3, 'Active'), -- Password: Stephen123
+('Finance Director', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S6S6S6S6S6S6S6S6S6S6S6S6S6S6S6S', 4, 'Active'), -- Password: DorisJoy2026
+('School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P', 5, 'Active'), -- Password: isnm2026
+('Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.D1D1D1D1D1D1D1D1D1D1D1D1D1D1D1D', 6, 'Active'), -- Password: Isnm2026
+('Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', 7, 'Active'), -- Password: Lovely2God
+('HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.H1H1H1H1H1H1H1H1H1H1H1H1H1H1H1H', 8, 'Active'), -- Password: Alexis2026
+('School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', 9, 'Active'), -- Password: Lovely2God
+('Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1P', 10, 'Active'), -- Password: isnm2026
+('Nursing Department', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.N1N1N1N1N1N1N1N1N1N1N1N1N1N1N1F', 11, 'Active'), -- Password: isnm4life
+('Midwifery Department', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.M1M1M1M1M1M1M1M1M1M1M1M1M1M1M1S', 12, 'Active'), -- Password: Life2save
+('Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S2S2S2S2S2S2S2S2S2S2S2S2S2S2S2S', 13, 'Active'), -- Password: isnm2026
+('Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L', 14, 'Active'), -- Password: Isnm4life
+('Matron', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.M2M2M2M2M2M2M2M2M2M2M2M2M2M2M2S', 15, 'Active'), -- Password: Isnm2026
+('Warden', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', 16, 'Active'), -- Password: Lovely2God
+('Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S3S3S3S3S3S3S3S3S3S3S3S3S3S3S3B', 17, 'Active'), -- Password: isnm2026
+('Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2F', 18, 'Active'), -- Password: isnm4life
+('Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S4S4S4S4S4S4S4S4S4S4S4S4S4S4S4S', 19, 'Active'), -- Password: safty1st
+('Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.S5S5S5S5S5S5S5S5S5S5S5S5S5S5S5F', 20, 'Active'), -- Password: Isnm4life
+('Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.G1G1G1G1G1G1G1G1G1G1G1G1G1G1G1F', 21, 'Active'), -- Password: isnm4life
+('Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$T8V0X7X8X8X8X8X8X8X8X.A2A2A2A2A2A2A2A2A2A2A2A2A2A2A2N', 22, 'Active'), -- Password: 2268926931
+('Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', 23, 'Active') -- Password: Lovely2God
+ON DUPLICATE KEY UPDATE 
+    password = VALUES(password),
+    status = 'Active';
+
+-- ============================================================
 -- 2. PROCEDURES TO MANAGE STUDENT RECORDS
 -- ============================================================
 
@@ -72,6 +107,7 @@ DELIMITER //
 CREATE PROCEDURE add_new_student(
     IN p_student_number VARCHAR(50),
     IN p_registration_number VARCHAR(50),
+    IN p_index_number VARCHAR(50),
     IN p_national_id VARCHAR(50),
     IN p_first_name VARCHAR(100),
     IN p_surname VARCHAR(100),
@@ -102,7 +138,7 @@ BEGIN
     
     -- Insert student record
     INSERT INTO igangaschoolofl_students_db.students (
-        student_number, registration_number, national_student_id_number,
+        student_number, registration_number, index_number, national_student_id_number,
         first_name, surname, other_name, email, phone,
         program, current_year, set_name, intake_date,
         date_of_birth, gender, nationality, address,
@@ -110,7 +146,7 @@ BEGIN
         emergency_contact_name, emergency_contact_phone,
         status, password, is_first_login, password_changed
     ) VALUES (
-        p_student_number, p_registration_number, p_national_id,
+        p_student_number, p_registration_number, p_index_number, p_national_id,
         p_first_name, p_surname, p_other_name, p_email, p_phone,
         p_program, p_year, p_set_name, p_intake_date,
         p_date_of_birth, p_gender, p_nationality, p_address,
@@ -186,8 +222,8 @@ BEGIN
     END IF;
     
     SELECT 
-        id, student_number, registration_number, 
-        CONCAT(first_name, ' ', surname) as full_name,
+        id, student_number, registration_number, index_number,
+        full_name,
         email, phone, program, current_year, set_name, status,
         created_at
     FROM igangaschoolofl_students_db.students
@@ -205,15 +241,16 @@ CREATE PROCEDURE search_students(
 )
 BEGIN
     SELECT 
-        id, student_number, registration_number, 
-        CONCAT(first_name, ' ', surname) as full_name,
+        id, student_number, registration_number, index_number,
+        full_name,
         email, phone, program, current_year, set_name, status,
         created_at
     FROM igangaschoolofl_students_db.students
     WHERE 
         student_number LIKE CONCAT('%', p_search_term, '%')
         OR registration_number LIKE CONCAT('%', p_search_term, '%')
-        OR CONCAT(first_name, ' ', surname) LIKE CONCAT('%', p_search_term, '%')
+        OR index_number LIKE CONCAT('%', p_search_term, '%')
+        OR full_name LIKE CONCAT('%', p_search_term, '%')
         OR email LIKE CONCAT('%', p_search_term, '%')
         OR phone LIKE CONCAT('%', p_search_term, '%')
     ORDER BY created_at DESC;

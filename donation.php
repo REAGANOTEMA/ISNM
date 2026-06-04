@@ -68,7 +68,7 @@
 
     /* Enhanced Donation Overview */
     .donation-overview {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: linear-gradient(135deg, #FFF8DC 0%, #F5F5DC 100%); /* Warm professional cream */
       position: relative;
     }
 
@@ -1253,7 +1253,7 @@
                     <strong>Account Number:</strong> 9030001234567<br>
                     <strong>Branch:</strong> Iganga Branch<br>
                     <strong>SWIFT Code:</strong> SBICUGKX</p>
-                    <p class="mb-0">Please use your donation reference: <strong id="donationReference"></strong></p>
+                    <p class="mb-0">Please use your donation reference and visit <a href="https://igangaschoolofnursingandmidwifery.ac.ug">our portal</a> to confirm.</p>
                   </div>
                 </div>
               </div>

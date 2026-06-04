@@ -14,18 +14,16 @@ USE igangaschoolofl_students_db;
 -- Example: Import students from Set 28 (January 2026 Intake)
 -- Format: student_number, registration_number, national_id, full_name, course, year, set_name, intake_date, email, phone
 
--- INSERT INTO students (
---     student_number, registration_number, national_student_id_number, 
---     full_name, course, year, set_name, intake_date, email, mobile_number,
---     status, password, is_first_login
--- ) VALUES
--- ('2026S001', 'ISNM/2026/001', '1234567890123456', 'Student One', 
---  'Diploma in Nursing', 1, 'Set 28', '2026-01-15', 'student1@isnm.ac.ug',
---  '+256701000001', 'Active', '$2y$10$defaultPasswordHash', TRUE),
--- 
--- ('2026S002', 'ISNM/2026/002', '1234567890123457', 'Student Two',
---  'Diploma in Midwifery', 1, 'Set 28', '2026-01-15', 'student2@isnm.ac.ug',
---  '+256701000002', 'Active', '$2y$10$defaultPasswordHash', TRUE);
+INSERT IGNORE INTO students (
+    student_number, registration_number, index_number, national_student_id_number, 
+    first_name, surname, other_name, program, course, current_year, set_name, intake_date, email, phone, mobile_number,
+    status, password, is_first_login
+) VALUES
+('2026S001', 'ISNM/2026/001', 'U001/01', '1234567890123456', 'Alice', 'Nakamya', 'Faith', 'Diploma in Nursing', 'Diploma in Nursing', 1, 'Set 28', '2026-01-15', 'alice.nakamya@isnm.ac.ug', '+256701000001', '+256701000001', 'Active', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', TRUE),
+('2026S002', 'ISNM/2026/002', 'U001/02', '1234567890123457', 'Brian', 'Otim', 'Joseph', 'Diploma in Midwifery', 'Diploma in Midwifery', 1, 'Set 28', '2026-01-15', 'brian.otim@isnm.ac.ug', '+256701000002', '+256701000002', 'Active', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', TRUE),
+('2026S003', 'ISNM/2026/003', 'U001/03', '1234567890123458', 'Catherine', 'Nalumansi', NULL, 'Certificate in Nursing', 'Certificate in Nursing', 1, 'Set 28', '2026-01-15', 'catherine.nalumansi@isnm.ac.ug', '+256701000003', '+256701000003', 'Active', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', TRUE),
+('2026S004', 'ISNM/2026/004', 'U001/04', '1234567890123459', 'David', 'Mugisha', 'Peter', 'Diploma in Nursing', 'Diploma in Nursing', 1, 'Set 28', '2026-01-15', 'david.mugisha@isnm.ac.ug', '+256701000004', '+256701000004', 'Active', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', TRUE),
+('2026S005', 'ISNM/2026/005', 'U001/05', '1234567890123460', 'Elizabeth', 'Namukasa', 'Grace', 'Diploma in Midwifery', 'Diploma in Midwifery', 1, 'Set 28', '2026-01-15', 'elizabeth.namukasa@isnm.ac.ug', '+256701000005', '+256701000005', 'Active', '$2y$10$N9qo8uLOickgx2ZMRZoMy.MrqJhZ3eP4dZB6lYqZ3eP4dZB6lYqZ3eP', TRUE);
 
 -- ============================================================
 -- PASSWORD HASH TEMPLATE
@@ -89,3 +87,8 @@ INSERT IGNORE INTO student_fees (student_id, fee_type, amount, due_date, status)
 SELECT id, 'Tuition Fee', 500000, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'Unpaid'
 FROM students 
 WHERE status = 'Active' AND id NOT IN (SELECT DISTINCT student_id FROM student_fees WHERE fee_type = 'Tuition Fee');
+
+INSERT IGNORE INTO student_fees (student_id, fee_type, amount, due_date, status)
+SELECT id, 'Registration Fee', 20000, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'Unpaid'
+FROM students 
+WHERE status = 'Active' AND id NOT IN (SELECT DISTINCT student_id FROM student_fees WHERE fee_type = 'Registration Fee');

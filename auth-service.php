@@ -451,9 +451,9 @@ class AuthenticationService {
         $email = sanitizeInput($email);
         $password = sanitizeInput($password);
         
-        // Convert to standard format if using isnm@2026 format
+        // Convert to standard official institutional format if missing domain
         if (strpos($email, '@') === false) {
-            $email = $email . '@isnm.ug';
+            $email = $email . '@igangaschoolofnursingandmidwifery.ac.ug';
         }
         
         if (empty($email) || empty($password)) {
