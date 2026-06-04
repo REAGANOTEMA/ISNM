@@ -75,6 +75,7 @@
     $ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant']);
     $auth_service = $ctx['auth'];
     $user = $ctx['user'];
+    $user_name = $user['full_name'] ?? '';
     $conn = getConnection();
     
     // Get financial statistics
@@ -111,7 +112,7 @@
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>ISNM Financial System</h4>
-                <small><?php echo htmlspecialchars(($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? '')); ?></small>
+                <small><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></small>
                 <span class="badge bg-success">School Bursar</span>
             </div>
             

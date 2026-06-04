@@ -2,8 +2,11 @@
 /**
  * Bursar Payments Page
  */
-session_start();
-if (!isset($_SESSION['bursar_id'])) { header('Location: staff-login.php'); exit; }
+require_once 'auth-service.php';
+if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !in_array($_SESSION['role'], ['School Bursar', 'Bursar'])) {
+    header('Location: staff-login.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html>

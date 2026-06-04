@@ -5,6 +5,7 @@ $ctx = bootstrapStaffDashboard(['hr manager', 'school principal', 'director gene
 $auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
 $user = $ctx['user'];
+$user_name = $user['full_name'] ?? '';
 $user_role = strtolower($user['role'] ?? '');
 
 $allowed_update_roles = ['hr manager', 'school principal', 'director general', 'director finance', 'director ict'];
@@ -66,7 +67,7 @@ foreach ($reports as $report) {
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>Inventory Reports</h4>
-                <p><?php echo htmlspecialchars($user['full_name'] ?? $user['first_name'] ?? ''); ?></p>
+                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
             </div>
             <nav class="sidebar-nav">
                 <ul class="nav flex-column">

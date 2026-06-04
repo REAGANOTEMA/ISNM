@@ -4,19 +4,20 @@
  * Financial Management System for ISNM
  */
 
-session_start();
+require_once 'auth-service.php';
 
 // Check authentication
-if (!isset($_SESSION['bursar_id'])) {
-    header('Location: bursar_login.php');
+if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !in_array($_SESSION['role'], ['School Bursar', 'Bursar'])) {
+    $_SESSION['error'] = "Access denied. Bursar privileges required.";
+    header('Location: staff-login.php');
     exit;
 }
 
 require_once 'config/database.php';
 
 $conn = getStudentsConnection();
-$user_id = $_SESSION['bursar_id'];
-$user_name = $_SESSION['bursar_name'];
+$user_id = $_SESSION['user_id'];
+$user_name = $_SESSION['full_name'];
 
 // Get dashboard statistics
 $stats = array(
@@ -635,7 +636,7 @@ $conn->close();
             </div>
             
             <nav class="sidebar-menu">
-                <li><a href="#dashboard" class="active"><i class="fas fa-th-large"></i> Dashboard</a></li>
+                <li><a href="bursar_dashboard.php" class="active"><i class="fas fa-th-large"></i> Dashboard</a></li>
                 <li><a href="bursar_student_fees.php"><i class="fas fa-graduation-cap"></i> Student Fees</a></li>
                 <li><a href="bursar_invoices.php"><i class="fas fa-file-invoice"></i> Invoices</a></li>
                 <li><a href="bursar_payments.php"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
@@ -647,10 +648,13 @@ $conn->close();
             
             <div class="sidebar-footer">
                 <div class="user-info">
-                    <strong><?php echo htmlspecialchars($user_name); ?></strong>
-                    <span><?php echo htmlspecialchars($_SESSION['bursar_role']); ?></span>
+                    <strong><?php echo htmlspecialchars($_SESSION['full_name']); ?></strong>
+                    <span><?php echo htmlspecialchars($_SESSION['role']); ?></span>
                 </div>
-                <button class="btn-logout" onclick="logout();">
+                <form action="auth-handler.php" method="POST" id="logoutForm" style="display:none;">
+                    <input type="hidden" name="action" value="logout">
+                </form>
+                <button class="btn-logout" onclick="document.getElementById('logoutForm').submit();">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>

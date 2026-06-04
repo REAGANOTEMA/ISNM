@@ -41,61 +41,22 @@ $recent_activities = [
 ?>
 
 <!DOCTYPE html>
-                case 'announcement':
-                    modalTitle.textContent = 'Make School Announcement';
-                    modalBody.innerHTML = `
-                        <form id="sendAnnouncementForm">
-                            <div class="mb-3">
-                                <label class="form-label">Announcement Title</label>
-                                <input id="annTitle" type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Target Audience</label>
-                                <select id="annTarget" class="form-control" required>
-                                    <option value="all">All (Students & Staff)</option>
-                                    <option value="students">Students Only</option>
-                                    <option value="staff">Staff Only</option>
-                                    <option value="lecturers">Lecturers Only</option>
-                                    <option value="parents">Parents Only</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Priority Level</label>
-                                <select id="annPriority" class="form-control" required>
-                                    <option value="normal">Normal</option>
-                                    <option value="important">Important</option>
-                                    <option value="urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea id="annContent" class="form-control" rows="6" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Expiry Date (optional)</label>
-                                <input id="annExpiry" type="date" class="form-control">
-                            </div>
-                        </form>`;
-                        <a class="nav-link" href="#communications">
-                            <i class="fas fa-bullhorn"></i> Communications
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#reports">
-                            <i class="fas fa-chart-bar"></i> Office Reports
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
-
-        <!-- Main Content -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Secretary Dashboard - ISNM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/isnm-style.css">
+    <link rel="stylesheet" href="dashboard-style.css">
+    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
+</head>
+<body>
+    <?php include_once '../includes/sidebar.php'; ?>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-main">
         <div class="main-content">
             <!-- Header -->
             <header class="dashboard-header">
@@ -111,7 +72,7 @@ $recent_activities = [
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
                         <div class="user-dropdown">
-                            <span><?php echo $user['first_name']; ?></span>
+                            <span><?php echo htmlspecialchars($user_name); ?></span>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>

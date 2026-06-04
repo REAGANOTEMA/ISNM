@@ -1,13 +1,13 @@
 <?php
-session_start();
-include_once 'includes/config.php';
+require_once 'auth-service.php';
 include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
 
 // Check if user is logged in and has appropriate access level
-if (!isset($_SESSION['user_id']) || $_SESSION['access_level'] < 6) {
-    header("Location: login.php");
+if (!$auth_service->isAuthenticated() || !$auth_service->canSearchStudentProfiles($_SESSION['role'])) {
+    $_SESSION['error'] = "Access denied. Insufficient permissions.";
+    header("Location: staff-login.php");
     exit();
 }
 

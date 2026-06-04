@@ -44,7 +44,7 @@ $recent_activities = [
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>School Librarian Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
+                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
             </div>
             
             <nav class="sidebar-nav">
@@ -110,7 +110,7 @@ $recent_activities = [
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
                         <div class="user-dropdown">
-                            <span><?php echo $user['first_name']; ?></span>
+                            <span><?php echo htmlspecialchars($user_name); ?></span>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>

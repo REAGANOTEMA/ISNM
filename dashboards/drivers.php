@@ -103,7 +103,7 @@ $recent_trips = [
                 </div>
                 <div class="col-md-6 text-end">
                     <div class="user-info">
-                        <span class="me-3">Welcome, <?php echo $_SESSION['first_name']; ?></span>
+                        <span class="me-3">Welcome, <?php echo htmlspecialchars($user_name); ?></span>
                         <a href="../logout.php" class="btn btn-light btn-sm">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>

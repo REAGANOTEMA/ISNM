@@ -311,25 +311,25 @@
 <?php include('shared/_footer.php');?>
 
 <style>
-    /* Hero Header Styles */
-    .hero-header {
-      position: relative;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
-      color: white;
-      padding: 6rem 0 4rem;
-      overflow: hidden;
-    }
+/* Hero Header Styles */
+     .hero-header {
+       position: relative;
+       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+       color: white;
+       padding: 5rem 0 3rem;
+       overflow: hidden;
+     }
 
-    .hero-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      opacity: 0.3;
-    }
+     .hero-header::before {
+       content: '';
+       position: absolute;
+       top: 0;
+       left: 0;
+       right: 0;
+       bottom: 0;
+       background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+       opacity: 0.3;
+     }
 
     .hero-overlay {
       position: absolute;
@@ -358,28 +358,61 @@
       text-align: center;
     }
 
-    .hero-title {
-      font-size: 3.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      letter-spacing: 2px;
-    }
+.hero-title {
+       font-size: 3rem;
+       font-weight: 700;
+       margin-bottom: 1rem;
+       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+       letter-spacing: 2px;
+     }
 
-    .hero-subtitle {
-      font-size: 1.5rem;
-      font-weight: 300;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
+     .hero-subtitle {
+       font-size: 1.3rem;
+       font-weight: 300;
+       margin-bottom: 2rem;
+       opacity: 0.9;
+     }
 
-    .hero-decoration {
-      width: 100px;
-      height: 4px;
-      background: linear-gradient(90deg, #ffd700, #ffed4e);
-      margin: 0 auto;
-      border-radius: 2px;
-    }
+     .hero-decoration {
+       width: 100px;
+       height: 4px;
+       background: linear-gradient(90deg, #ffd700, #ffed4e);
+       margin: 0 auto;
+       border-radius: 2px;
+     }
+
+     @media (max-width: 768px) {
+       .hero-header {
+         padding: 4rem 0 2.5rem;
+       }
+       
+       .hero-title {
+         font-size: 2.2rem;
+         letter-spacing: 1px;
+       }
+       
+       .hero-subtitle {
+         font-size: 1.1rem;
+       }
+       
+       .hero-decoration {
+         width: 70px;
+       }
+     }
+
+     @media (max-width: 480px) {
+       .hero-header {
+         padding: 3.5rem 0 2rem;
+       }
+       
+       .hero-title {
+         font-size: 1.8rem;
+       }
+       
+       .hero-subtitle {
+         font-size: 1rem;
+       }
+     }
 
     /* Section Headers */
     .section-header {
@@ -422,94 +455,125 @@
       color: white;
     }
 
-    .section-title {
-      font-size: 2.5rem;
+.section-title {
+      font-size: 2rem;
       font-weight: 700;
       color: #1e3c72;
       margin-bottom: 0.5rem;
     }
-
+    
     /* Introduction Section */
-    .intro-content {
-      background: white;
-      border-radius: 25px;
-      padding: 3rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
+    .history-intro {
       position: relative;
       overflow: hidden;
     }
-
-    .intro-content::before {
+    
+    .history-intro::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
-      background-size: 200% 100%;
-      animation: shimmer 3s ease-in-out infinite;
+      height: 100%;
+      background: radial-gradient(circle at 10% 20%, rgba(126, 34, 206, 0.03) 0%, transparent 50%);
+      pointer-events: none;
     }
-
-    .intro-text {
-      font-size: 1.2rem;
-      color: #495057;
-      line-height: 1.8;
-      margin-bottom: 3rem;
-      text-align: center;
-    }
-
-    /* Key Highlights */
-    .key-highlights {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-    }
-
-    .highlight-item {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    
+    .intro-content {
+      background: white;
       border-radius: 20px;
       padding: 2rem;
-      text-align: center;
-      transition: all 0.3s ease;
-      border: 1px solid #dee2e6;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+      border: 1px solid #e9ecef;
+      position: relative;
+      margin: 0 auto;
+      max-width: 900px;
     }
 
-    .highlight-item:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-      background: linear-gradient(135deg, #e9ecef, #dee2e6);
-    }
+     .intro-content::before {
+       content: '';
+       position: absolute;
+       top: 0;
+       left: 0;
+       right: 0;
+       height: 4px;
+       background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+       background-size: 200% 100%;
+       animation: shimmer 3s ease-in-out infinite;
+     }
 
-    .highlight-icon {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, #7e22ce, #6b21a8);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 8px 25px rgba(126, 34, 206, 0.3);
-    }
+     .intro-text {
+       font-size: 1.1rem;
+       color: #495057;
+       line-height: 1.8;
+       margin-bottom: 2.5rem;
+       text-align: center;
+       max-width: 900px;
+       margin-left: auto;
+       margin-right: auto;
+     }
 
-    .highlight-icon i {
-      font-size: 2rem;
-      color: white;
-    }
+     /* Key Highlights - Perfect Grid for All Screens */
+     .key-highlights {
+       display: grid;
+       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+       gap: 1.5rem;
+       margin-top: 1rem;
+     }
 
-    .highlight-item h4 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 0.5rem;
-    }
+     .highlight-item {
+       background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+       border-radius: 18px;
+       padding: 1.8rem 1.2rem;
+       text-align: center;
+       transition: all 0.3s ease;
+       border: 1px solid #dee2e6;
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       min-height: 200px;
+     }
 
-    .highlight-item p {
-      color: #6c757d;
-      margin: 0;
-    }
+     .highlight-item:hover {
+       transform: translateY(-8px);
+       box-shadow: 0 18px 35px rgba(0,0,0,0.15);
+       background: linear-gradient(135deg, #e9ecef, #dee2e6);
+     }
+
+     .highlight-icon {
+       width: 60px;
+       height: 60px;
+       background: linear-gradient(135deg, #7e22ce, #6b21a8);
+       border-radius: 50%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       margin-bottom: 1rem;
+       box-shadow: 0 6px 20px rgba(126, 34, 206, 0.25);
+       flex-shrink: 0;
+     }
+
+     .highlight-icon i {
+       font-size: 1.6rem;
+       color: white;
+     }
+
+     .highlight-item h4 {
+       font-size: 1.15rem;
+       font-weight: 700;
+       color: #1e3c72;
+       margin-bottom: 0.4rem;
+       word-wrap: break-word;
+       line-height: 1.3;
+     }
+
+     .highlight-item p {
+       color: #6c757d;
+       margin: 0;
+       font-size: 0.95rem;
+       line-height: 1.5;
+     }
 
     /* Timeline Section */
     .timeline-section {
@@ -992,22 +1056,54 @@
       animation: scaleIn 0.8s ease-out;
     }
 
-    /* Responsive Design */
+/* Responsive Design - Introduction Section Specific */
     @media (max-width: 768px) {
-      .hero-title {
-        font-size: 2.5rem;
-      }
-      
-      .hero-subtitle {
-        font-size: 1.2rem;
-      }
-      
       .section-title {
-        font-size: 2rem;
+        font-size: 1.75rem;
+      }
+      
+      .intro-content {
+        padding: 1.8rem 1.2rem;
+        border-radius: 16px;
+      }
+      
+      .section-header {
+        margin-bottom: 2rem;
+      }
+      
+      .intro-text {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem;
       }
       
       .key-highlights {
         grid-template-columns: 1fr;
+        gap: 1.2rem;
+      }
+      
+      .highlight-item {
+        padding: 1.5rem 1rem;
+        min-height: 160px;
+        border-radius: 14px;
+      }
+      
+      .highlight-icon {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 0.8rem;
+      }
+      
+      .highlight-icon i {
+        font-size: 1.3rem;
+      }
+      
+      .highlight-item h4 {
+        font-size: 1.05rem;
+      }
+      
+      .highlight-item p {
+        font-size: 0.9rem;
       }
       
       .achievements-grid {
@@ -1060,15 +1156,45 @@
     }
 
     @media (max-width: 480px) {
-      .impact-stats {
-        grid-template-columns: 1fr;
-      }
-      
       .intro-content,
       .current-leadership,
       .leadership-philosophy,
       .future-plans {
-        padding: 2rem;
+        padding: 1.5rem;
+        border-radius: 14px;
+      }
+      
+      .intro-text {
+        font-size: 0.95rem;
+        padding: 0 0.3rem;
+      }
+      
+      .key-highlights {
+        gap: 1rem;
+      }
+      
+      .highlight-item {
+        padding: 1.2rem 0.8rem;
+        min-height: 140px;
+        border-radius: 12px;
+      }
+      
+      .highlight-icon {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 0.6rem;
+      }
+      
+      .highlight-icon i {
+        font-size: 1.2rem;
+      }
+      
+      .highlight-item h4 {
+        font-size: 1rem;
+      }
+      
+      .highlight-item p {
+        font-size: 0.85rem;
       }
     }
   </style>

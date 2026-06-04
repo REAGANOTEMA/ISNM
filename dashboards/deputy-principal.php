@@ -13,7 +13,11 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Uses shared bootstrap staff connection
+// Fix user display name
+$display_name = $user['full_name'] ?? 'Deputy Principal';
+$name_parts = explode(' ', trim($display_name), 2);
+$first_name = $name_parts[0] ?? 'User';
+$last_name = $name_parts[1] ?? '';
 
 // Get academic statistics using stored procedure
 $total_students = 150; // Fallback value
@@ -45,7 +49,7 @@ $recent_activities = [
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>Deputy Principal Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
+                <p><?php echo htmlspecialchars($display_name); ?></p>
             </div>
             
             <nav class="sidebar-nav">

@@ -1003,7 +1003,7 @@
           <div class="col-lg-6">
             <div class="project-card">
               <div class="project-image">
-                <img src="images/computer-lab.jpg" alt="Computer Lab" class="img-fluid">
+                <img src="images/computer-student.jfif" alt="Computer Lab" class="img-fluid">
               </div>
               <div class="project-content">
                 <h3>Computer Lab Enhancement</h3>

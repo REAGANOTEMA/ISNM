@@ -9,6 +9,8 @@ $ctx = bootstrapStaffDashboard(['school secretary', 'secretary']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 
+$user_name = $user['full_name'] ?? '';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -446,7 +448,7 @@ $appointments = [
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>Secretary Dashboard</h4>
-                <p><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></p>
+                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
             </div>
             
             <nav class="sidebar-nav">

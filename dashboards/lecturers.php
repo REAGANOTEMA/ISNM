@@ -120,7 +120,7 @@ $recent_activities = [
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
                         <div class="user-dropdown">
-                            <span><?php echo $user['first_name']; ?></span>
+                            <span><?php echo htmlspecialchars($user_name); ?></span>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>

@@ -85,31 +85,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
+// Get Bursar statistics
+$bursar_stats = [];
+try {
+    $stats_stmt = $staff_conn->prepare('CALL get_dashboard_statistics(?, ?)');
+    if ($stats_stmt) {
+        $stats_stmt->bind_param('is', $user_id, $user_role);
+        $stats_stmt->execute();
+        $bursar_stats = $stats_stmt->get_result()->fetch_assoc() ?: [];
+        $stats_stmt->close();
+        while ($staff_conn->more_results()) { $staff_conn->next_result(); }
+    }
+} catch (Exception $e) {
+    error_log('bursar stats: ' . $e->getMessage());
+}
 
-// Enhanced functionality functions
-function handleAddStudent() {
-     global $students_conn, $finance_conn, $conn;
-     
-     $student_id = generateStudentId();
-     $first_name = sanitizeInput($_POST['first_name']);
-     $surname = sanitizeInput($_POST['surname']);
-     $other_name = sanitizeInput($_POST['other_name'] ?? '');
-     $date_of_birth = sanitizeInput($_POST['date_of_birth']);
-     $gender = sanitizeInput($_POST['gender']);
-     $nationality = sanitizeInput($_POST['nationality']);
-     $address = sanitizeInput($_POST['address']);
-     $phone = sanitizeInput($_POST['phone']);
-     $email = sanitizeInput($_POST['email']);
-     $program = sanitizeInput($_POST['program']);
-     $level = sanitizeInput($_POST['level']);
-     $intake_year = sanitizeInput($_POST['intake_year']);
-     $intake_period = sanitizeInput($_POST['intake_period']);
-     $registration_date = date('Y-m-d');
-     $guardian_name = sanitizeInput($_POST['guardian_name']);
-     $guardian_phone = sanitizeInput($_POST['guardian_phone']);
-     $guardian_email = sanitizeInput($_POST['guardian_email']);
-     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
-     $emergency_contact_phone = sanitizeInput($_POST['emergency
+$today_collections = $bursar_stats['today_collections'] ?? 0;
+$week_collections = $bursar_stats['week_collections'] ?? 0;
+$month_collections = $bursar_stats['month_collections'] ?? 0;
+$outstanding_fees = $bursar_stats['outstanding_fees'] ?? 0;
+$total_students = $bursar_stats['total_students'] ?? 0;
+
+// Get recent students from student data loader
+$recent_students = [];
+try {
+    $loader = new StudentDataLoader();
+    $recent_students = array_slice($loader->loadAllStudents(), 0, 8);
+} catch (Exception $e) {
+    error_log('bursar students: ' . $e->getMessage());
+}
+
+// Get recent payments
+$recent_payments = [];
+try {
+    $fp_sql = "SELECT fp.*, s.first_name, s.surname FROM fee_payments fp
+               JOIN students s ON fp.student_id = s.id
+               ORDER BY fp.payment_date DESC LIMIT 10";
+    $fp_result = $staff_conn->query($fp_sql);
+    if ($fp_result) {
+        while ($row = $fp_result->fetch_assoc()) {
+            $recent_payments[] = $row;
+        }
+    }
+} catch (Exception $e) {
+    error_log('bursar payments: ' . $e->getMessage());
+}
 
 // Handle student update
 function handleUpdateStudent() {
@@ -266,33 +286,25 @@ function generateReceiptNumber() {
     return $receipt_no;
 }
 
-// Get user information
-$user = getUserInfo($_SESSION['user_id']);
+// Get user information from bootstrap
+$user_name = $user['full_name'] ?? 'Bursar';
 
-// Get statistics
-$total_students_sql = "SELECT COUNT(*) as count FROM students";
-$total_students_result = executeQuery($total_students_sql);
-$total_students = $total_students_result[0]['count'];
+// Get additional stats
+$active_students = 0;
+$total_collections_raw = 0;
+try {
+    $active_stmt = $staff_conn->prepare("SELECT COUNT(*) as c FROM students WHERE status = 'Active'");
+    if ($active_stmt) { $active_stmt->execute(); $active_students = (int)($active_stmt->get_result()->fetch_assoc()['c'] ?? 0); }
+    $coll_stmt = $staff_conn->prepare("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE status = 'verified'");
+    if ($coll_stmt) { $coll_stmt->execute(); $total_collections_raw = (int)($coll_stmt->get_result()->fetch_assoc()['total'] ?? 0); }
+} catch (Exception $e) { error_log('bursar extra stats: ' . $e->getMessage()); }
 
-$active_students_sql = "SELECT COUNT(*) as count FROM students WHERE status = 'active'";
-$active_students_result = executeQuery($active_students_sql);
-$active_students = $active_students_result[0]['count'];
-
-$total_collections_sql = "SELECT SUM(amount_paid) as total FROM fee_payments WHERE status = 'verified'";
-$total_collections_result = executeQuery($total_collections_sql);
-$total_collections = $total_collections_result[0]['total'] ?? 0;
-
-$outstanding_fees_sql = "SELECT SUM(balance) as total FROM student_fee_accounts WHERE balance > 0";
-$outstanding_fees_result = executeQuery($outstanding_fees_sql);
-$outstanding_fees = $outstanding_fees_result[0]['total'] ?? 0;
-
-// Get recent students
-$recent_students_sql = "SELECT * FROM students ORDER BY created_at DESC LIMIT 8";
-$recent_students = executeQuery($recent_students_sql);
-
-// Get recent payments
-$recent_payments_sql = "SELECT fp.*, s.first_name, s.surname FROM fee_payments fp JOIN students s ON fp.student_id = s.student_id ORDER BY fp.payment_date DESC LIMIT 10";
-$recent_payments = executeQuery($recent_payments_sql);
+if (empty($recent_students)) { $recent_students = []; }
+if (empty($recent_payments)) { $recent_payments = []; }
+if (!isset($total_students)) { $total_students = 0; }
+if (!isset($active_students)) { $active_students = 0; }
+if (!isset($total_collections_raw)) { $total_collections_raw = 0; }
+if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
 ?>
 
 <!DOCTYPE html>

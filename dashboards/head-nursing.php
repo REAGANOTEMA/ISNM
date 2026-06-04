@@ -51,7 +51,7 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
                 <h4>Head of Nursing Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
+                <p><?php echo htmlspecialchars($user['full_name'] ?? 'User'); ?></p>
             </div>
             
             <nav class="sidebar-nav">
