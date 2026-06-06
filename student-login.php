@@ -14,52 +14,324 @@ $login_error   = $_SESSION['error']   ?? '';
 $login_success = $_SESSION['success'] ?? '';
 $student_hint  = $_SESSION['student_role'] ?? '';
 
-if ($login_error) {
-    unset($_SESSION['error']);
-}
-if ($login_success) {
-    unset($_SESSION['success']);
-}
+if ($login_error) { unset($_SESSION['error']); }
+if ($login_success) { unset($_SESSION['success']); }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Login — ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    body { margin:0; font-family:'Poppins',sans-serif; background: linear-gradient(135deg, #0d47a1 0%, #283593 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; color:#fff; }
-    .login-card { width:100%; max-width:520px; background:#fff; color:#212121; border-radius:24px; box-shadow:0 28px 60px rgba(0,0,0,.22); overflow:hidden; }
-    .login-header { background:linear-gradient(135deg,#1a237e 0%,#283593 100%); padding:36px 30px; text-align:center; }
-    .login-header img { width:84px; height:84px; border-radius:50%; border:4px solid rgba(255,255,255,.24); margin-bottom:18px; }
-    .login-header h1 { margin-bottom:10px; font-size:2rem; letter-spacing:.18em; text-transform:uppercase; }
-    .login-header p { margin:0; opacity:.85; font-size:.95rem; }
-    .login-body { padding:30px; }
-    .form-label { display:block; margin-bottom:8px; font-weight:600; color:#212121; }
-    .form-control { border-radius:14px; padding:14px 16px; border:1px solid #d7dce3; width:100%; }
-    .input-group-text { background:#f5f7fb; border:none; border-radius:14px 0 0 14px; color:#5f6d7f; }
-    .btn-login { width:100%; padding:14px 18px; border:none; border-radius:16px; font-weight:700; font-size:1rem; color:#fff; background:linear-gradient(135deg,#1976d2,#42a5f5); transition:transform .22s ease, box-shadow .22s ease; }
-    .btn-login:hover { transform:translateY(-1px); box-shadow:0 18px 32px rgba(25,118,210,.25); }
-    .info-block { background:#f7f9fc; border-radius:16px; padding:18px; margin-top:20px; color:#2d3a4b; }
-    .info-block .block-title { margin-bottom:10px; font-weight:700; }
-    .link-row { margin-top:18px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-    .link-row a { color:#1976d2; text-decoration:none; font-size:.95rem; }
-    .hint-pill { display:inline-block; margin-top:10px; padding:8px 16px; background:rgba(25,118,210,.12); color:#0d47a1; border-radius:999px; font-size:.88rem; }
+  :root {
+    --primary: #2e7d32;
+    --primary-dark: #1b5e20;
+    --primary-mid: #388e3c;
+    --accent: #ffd600;
+    --accent-dark: #f9a825;
+    --text-dark: #212121;
+    --text-mid: #616161;
+    --text-light: #9e9e9e;
+    --bg-light: #f8f8f8;
+    --card-bg: #ffffff;
+    --border: #e0e0e0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    background: 
+      linear-gradient(135deg, #2e7d32 0%, #388e3c 40%, #1b5e20 100%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .bg-particles {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  
+  .particle {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    animation: float-particle linear infinite;
+  }
+  
+  @keyframes float-particle {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    50% { transform: translateY(50vh) scale(1); }
+    90% { opacity: 1; }
+    100% { transform: translateY(-50px) scale(0); opacity: 0; }
+  }
+
+  .login-wrapper { 
+    width: 100%; max-width: 520px; margin: 0 auto; position: relative; z-index: 1;
+  }
+
+  .login-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 
+      0 2px 4px rgba(0,0,0,0.04),
+      0 4px 8px rgba(0,0,0,0.06),
+      0 8px 16px rgba(0,0,0,0.08),
+      0 16px 32px rgba(0,0,0,0.1),
+      0 32px 64px rgba(0,0,0,0.12);
+    animation: cardEntrance 0.6s ease-out;
+  }
+  
+  @keyframes cardEntrance {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-header {
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    color: #fff;
+    padding: 48px 30px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .login-header::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: 
+      radial-gradient(circle at 30% 40%, rgba(255,255,255,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 0%, transparent 50%);
+    animation: rotateBg 40s linear infinite;
+  }
+  
+  @keyframes rotateBg {
+    from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+  }
+  
+  .header-inner { position: relative; z-index: 2; }
+
+  .logo-wrap {
+    width: 100px; height: 100px;
+    margin: 0 auto 20px;
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 
+      8px 8px 16px rgba(0,0,0,0.2),
+      -4px -4px 8px rgba(255,255,255,0.1),
+      inset 2px 2px 4px rgba(255,255,255,0.3);
+    position: relative;
+  }
+  
+  .logo-wrap::after {
+    content: '';
+    position: absolute;
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    z-index: -1; opacity: 0.7;
+  }
+  
+  .logo-wrap img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+
+  .login-header h1 {
+    font-size: 1.85rem; font-weight: 800; margin: 0 0 6px;
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.85) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .login-header p { opacity: 0.88; font-size: 0.92rem; font-weight: 400; }
+  
+  .hint-pill {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 5px 16px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px;
+    font-size: 0.8rem; font-weight: 500;
+  }
+
+  .login-body { 
+    padding: 32px 30px 28px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  }
+
+  .form-group { margin-bottom: 18px; }
+  
+  .form-label {
+    font-weight: 600; color: var(--text-dark);
+    margin-bottom: 8px; font-size: 0.9rem; display: block;
+  }
+  
+  .input-group { position: relative; }
+  
+  .input-group-text {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 46px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: 12px 0 0 12px;
+    color: var(--text-light);
+    font-size: 1rem;
+    z-index: 2;
+    transition: all 0.2s ease;
+  }
+  
+  .input-group:focus-within .input-group-text {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
+  }
+  
+  .form-control {
+    border: 2px solid var(--border);
+    border-radius: 0 12px 12px 0;
+    padding: 13px 14px 13px 46px;
+    font-size: 14px;
+    transition: all 0.25s ease;
+    background: var(--bg-light);
+    height: auto;
+  }
+  
+  .form-control:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(46,125,50,0.1);
+    outline: none;
+  }
+  
+  .form-control::placeholder { color: var(--text-light); }
+  
+  .form-text {
+    font-size: 0.8rem; color: var(--text-mid);
+    margin-top: 4px; font-weight: 400;
+  }
+
+  .btn-login {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; border: none;
+    border-radius: 12px; padding: 15px 24px;
+    font-size: 15px; font-weight: 700;
+    width: 100%; cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(46,125,50,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  
+  .btn-login::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .btn-login:hover::before { left: 100%; }
+  
+  .btn-login:hover {
+    box-shadow: 0 6px 20px rgba(46,125,50,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+  }
+  
+  .btn-login:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(46,125,50,0.3), inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .info-block {
+    border-radius: 12px; padding: 18px 20px;
+    margin-top: 20px; font-size: 0.83rem;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border-left: 3px solid var(--primary);
+    color: var(--text-dark);
+  }
+  
+  .info-block .block-title {
+    font-weight: 600; margin-bottom: 8px;
+    color: var(--primary-dark);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .link-row {
+    margin-top: 18px;
+    display: flex; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  
+  .link-row a {
+    color: var(--primary); text-decoration: none;
+    font-size: 0.88rem; transition: color 0.2s ease;
+  }
+  
+  .link-row a:hover { color: var(--primary-dark); }
+  .link-row a i { margin-right: 5px; }
+
+  .alert {
+    border-radius: 10px; margin-bottom: 18px;
+    border: none; padding: 12px 16px;
+    font-size: 0.88rem;
+  }
+  
+  .alert-danger { background: #ffebee; color: #c62828; border-left: 4px solid #ef5350; }
+  .alert-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #66bb6a; }
+
+  @media(max-width:768px){
+    .login-card { border-radius: 20px; }
+    .login-header { padding: 36px 24px 32px; }
+    .login-body { padding: 24px 20px; }
+    .login-header h1 { font-size: 1.5rem; }
+  }
+  
+  @media(max-width:480px){
+    .login-card { border-radius: 16px; }
+    .login-header { padding: 30px 18px 26px; }
+    .login-body { padding: 20px 16px; }
+    .logo-wrap { width: 85px; height: 85px; }
+    .logo-wrap img { width: 68px; height: 68px; }
+    .link-row { flex-direction: column; gap: 8px; }
+  }
   </style>
 </head>
 <body>
+
+<div class="bg-particles" id="particles"></div>
+
+<div class="login-wrapper">
   <div class="login-card">
     <div class="login-header">
-      <img src="images/school-logo.png" alt="ISNM Logo">
-      <h1>Student Portal</h1>
-      <p>Secure student access from the official student portal only.</p>
-      <?php if ($student_hint): ?>
-        <div class="hint-pill"><i class="fas fa-info-circle"></i> Portal: <?php echo htmlspecialchars($student_hint); ?></div>
-      <?php endif; ?>
+      <div class="header-inner">
+        <div class="logo-wrap">
+          <img src="images/school-logo.png" alt="ISNM Logo">
+        </div>
+        <h1>Student Portal</h1>
+        <p>Secure student access — ISNM Learning Management System</p>
+        <?php if ($student_hint): ?>
+          <div class="hint-pill">
+            <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($student_hint); ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
+    
     <div class="login-body">
       <?php if ($login_error): ?>
         <div class="alert alert-danger" role="alert">
@@ -78,54 +350,99 @@ if ($login_success) {
           <input type="hidden" name="student_role" value="<?php echo htmlspecialchars($student_hint); ?>">
         <?php endif; ?>
 
-        <div class="mb-3">
-          <label class="form-label" for="stu-index">Index Number</label>
+        <div class="form-group">
+          <label class="form-label" for="stu-index">
+            <i class="fas fa-id-card" style="margin-right: 6px; color: var(--primary);"></i>Index Number
+          </label>
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-            <input id="stu-index" name="index_number" class="form-control" type="text" required placeholder="U001/CM/056/16" autocomplete="username">
+            <input id="stu-index" name="index_number" class="form-control" type="text" required 
+                   placeholder="U001/CM/056/16" autocomplete="username">
           </div>
-          <div class="text-muted mt-1" style="font-size:.85rem;">Format: UXXX/CC/XXX/XX</div>
+          <div class="form-text">Format: UXXX/CC/XXX/XX</div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label" for="stu-name">Full Name</label>
+        <div class="form-group">
+          <label class="form-label" for="stu-name">
+            <i class="fas fa-user" style="margin-right: 6px; color: var(--primary);"></i>Full Name
+          </label>
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-user"></i></span>
-            <input id="stu-name" name="full_name" class="form-control" type="text" required placeholder="Enter your full name" autocomplete="name">
+            <input id="stu-name" name="full_name" class="form-control" type="text" required 
+                   placeholder="Enter your full name as registered" autocomplete="name">
           </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label" for="stu-phone">Phone Number</label>
+        <div class="form-group">
+          <label class="form-label" for="stu-phone">
+            <i class="fas fa-phone" style="margin-right: 6px; color: var(--primary);"></i>Phone Number
+          </label>
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-phone"></i></span>
-            <input id="stu-phone" name="phone_number" class="form-control" type="tel" required placeholder="0771234567" autocomplete="tel">
+            <input id="stu-phone" name="phone_number" class="form-control" type="tel" required 
+                   placeholder="0771234567" autocomplete="tel">
           </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label" for="stu-password">Password</label>
+        <div class="form-group">
+          <label class="form-label" for="stu-password">
+            <i class="fas fa-lock" style="margin-right: 6px; color: var(--primary);"></i>Password
+          </label>
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-lock"></i></span>
-            <input id="stu-password" name="password" class="form-control" type="password" placeholder="Enter your password (if already set)" autocomplete="current-password">
+            <input id="stu-password" name="password" class="form-control" type="password" 
+                   placeholder="Enter your password (if already set)" autocomplete="current-password">
           </div>
-          <div class="text-muted mt-1" style="font-size:.85rem;">If this is your first login, leave this field blank and set your password on the next page.</div>
+          <div class="form-text">First time? Leave blank to set your password.</div>
         </div>
 
-        <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal</button>
+        <button type="submit" class="btn-login">
+          <i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal
+        </button>
       </form>
 
       <div class="info-block">
-        <div class="block-title">Student Portal Access</div>
-        <p>Students should log in from the official student portal only. Staff access is handled exclusively from the organogram page.</p>
-        <p>If you were redirected from a portal link, your session will preserve the portal hint.</p>
+        <div class="block-title"><i class="fas fa-graduation-cap"></i> Student Portal</div>
+        <p style="margin-bottom: 6px;">Access your academic records, course materials, and student services.</p>
+        <p style="margin-bottom: 0; font-size: 0.78rem;">Your session is secure and encrypted.</p>
       </div>
 
       <div class="link-row">
-        <a href="organogram.php"><i class="fas fa-arrow-left"></i> Staff login via organogram</a>
-        <a href="index.php"><i class="fas fa-home"></i> Back to homepage</a>
+        <a href="organogram.php"><i class="fas fa-arrow-left"></i> Staff login</a>
+        <a href="index.php"><i class="fas fa-home"></i> Homepage</a>
       </div>
     </div>
   </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Create floating particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 15; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    const size = 2 + Math.random() * 4;
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.animationDuration = (10 + Math.random() * 15) + 's';
+    particle.style.animationDelay = Math.random() * 10 + 's';
+    container.appendChild(particle);
+  }
+
+  // iOS viewport guard
+  const m = 'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no';
+  document.querySelectorAll('input[type="email"],input[type="password"],input[type="text"],input[type="tel"]').forEach(function(el) {
+    el.addEventListener('focus', function() { 
+      document.querySelector('meta[name=viewport]').setAttribute('content', m); 
+    });
+    el.addEventListener('blur', function() { 
+      document.querySelector('meta[name=viewport]').setAttribute('content', m + ',shrink-to-fit=no'); 
+    });
+  });
+});
+</script>
 </body>
 </html>

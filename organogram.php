@@ -134,6 +134,12 @@ include('shared/_header.php');
             color: white;
         }
 
+        .org-node.ict {
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+            color: white;
+            border: 3px solid #90e0ef;
+        }
+
         .org-icon {
             font-size: 2rem;
             margin-bottom: 10px;
@@ -652,24 +658,6 @@ include('shared/_header.php');
                 </div>
                 <div class="org-branch">
                     <div class="org-node management floating">
-                        <i class="fas fa-laptop-code org-icon"></i>
-                        <div class="org-title">Director ICT</div>
-                        <div class="org-subtitle">Technology Director</div>
-                        <a href="staff-login.php?position=Director%20ICT" class="org-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                        <div class="org-actions">
-                            <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20ICT'">
-                                <i class="fas fa-user-shield me-2"></i>Staff Login
-                            </button>
-                            <button class="btn-3d" onclick="window.location.href='computer_lab.php'" style="background: linear-gradient(135deg, #0077b6, #00b4d8); color: white; box-shadow: 0 3px 0 #005f92, 0 4px 8px rgba(0,0,0,0.15);">
-                                <i class="fas fa-desktop me-2"></i>Computer Lab
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="org-branch">
-                    <div class="org-node management floating">
                         <i class="fas fa-coins org-icon"></i>
                         <div class="org-title">Director Finance</div>
                         <div class="org-subtitle">Financial Affairs Director</div>
@@ -966,6 +954,50 @@ include('shared/_header.php');
                          <div class="org-actions">
                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Store%20Keeper'">
                                  <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- ICT Department - Independent Authority Section -->
+             <div class="page-header" style="margin-top: 20px; margin-bottom: 15px;">
+                 <h2 style="font-size: 1.5rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                     <i class="fas fa-laptop-code"></i> ICT Department
+                 </h2>
+                 <p style="opacity: 0.85; font-size: 0.95rem;">Computer Lab & Technology Services</p>
+             </div>
+             
+             <div class="org-level" style="background: linear-gradient(135deg, #0077b6 0%, #005f92 100%); border-radius: 20px; padding: 30px; margin: 15px 0; box-shadow: 0 10px 30px rgba(0, 119, 182, 0.3);">
+                 <div class="org-branch">
+                     <div class="org-node" style="background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); color: white; border: 3px solid #90e0ef; box-shadow: 0 10px 30px rgba(0, 180, 216, 0.4);" class="floating">
+                         <i class="fas fa-user-tie org-icon" style="font-size: 2.2rem;"></i>
+                         <div class="org-title" style="font-size: 1.1rem; font-weight: 700;">Director ICT</div>
+                         <div class="org-subtitle" style="color: rgba(255,255,255,0.9);">Head of ICT Department<br>Oversight & Management</div>
+                         <a href="staff-login.php?position=Director%20ICT" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20ICT'" style="background: linear-gradient(135deg, #0077b6, #005f92); color: white; box-shadow: 0 3px 0 #003d66, 0 4px 8px rgba(0,0,0,0.15);">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="org-branch">
+                     <div class="org-node" style="background: linear-gradient(135deg, #0288d1 0%, #01579b 100%); color: white; border: 3px solid #4fc3f7; box-shadow: 0 10px 30px rgba(2, 136, 209, 0.4);" class="floating">
+                         <i class="fas fa-desktop org-icon" style="font-size: 2.2rem;"></i>
+                         <div class="org-title" style="font-size: 1.1rem; font-weight: 700;">Computer Lab</div>
+                         <div class="org-subtitle" style="color: rgba(255,255,255,0.9);">ICT Operations<br>Lab Management</div>
+                         <a href="staff-login.php?position=Computer%20Lab%20Manager" class="org-link">
+                             <i class="fas fa-sign-in-alt"></i> Login
+                         </a>
+                         <div class="org-actions">
+                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Computer%20Lab%20Manager'" style="background: linear-gradient(135deg, #0288d1, #01579b); color: white; box-shadow: 0 3px 0 #004c8c, 0 4px 8px rgba(0,0,0,0.15);">
+                                 <i class="fas fa-user-shield me-2"></i>Staff Login
+                             </button>
+                             <button class="btn-3d" onclick="window.location.href='computer_lab.php'" style="background: linear-gradient(135deg, #4fc3f7, #0288d1); color: white; box-shadow: 0 3px 0 #01579b, 0 4px 8px rgba(0,0,0,0.15);">
+                                 <i class="fas fa-desktop me-2"></i>Lab Dashboard
                              </button>
                          </div>
                      </div>

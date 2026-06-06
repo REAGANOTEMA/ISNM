@@ -1,0 +1,7 @@
+[06-Jun-2026 14:51:10 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[06-Jun-2026 14:51:10 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[06-Jun-2026 14:51:10 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[06-Jun-2026 14:51:10 Africa/Kampala] PHP Warning:  mysqli::__construct(): (HY000/1049): Unknown database 'isnm_ict' in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 68
+[06-Jun-2026 14:51:10 Africa/Kampala] Database connection error: Connection to isnm_ict failed on localhost:3306 - Unknown database 'isnm_ict'
+[06-Jun-2026 14:51:10 Africa/Kampala] Connection test failed for isnm_ict: Connection to isnm_ict failed on localhost:3306 - Unknown database 'isnm_ict'
+[06-Jun-2026 14:51:10 Africa/Kampala] Warning: Failed to connect to isnm_ict database

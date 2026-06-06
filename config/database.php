@@ -11,8 +11,8 @@
  * Password: hbkKdmMHUfHTHuxWKPRf
  */
 define('DB_HOST', 'localhost');
-define('DB_USER', 'igangaschoolofl_students_db');
-define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_PORT', 3306);
 define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
@@ -22,12 +22,12 @@ define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
  * Staff database connection parameters
  * Hostname: localhost
  * Database: igangaschoolofl_staffs_db
- * Username: igangaschoolofl_staffs_db
- * Password: AgKzJjZZnT5q58jCahs8
+ * Username: root (for local XAMPP development)
+ * Password: (empty for XAMPP default)
  */
 define('STAFF_DB_HOST', 'localhost');
-define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
-define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
+define('STAFF_DB_USER', 'root');
+define('STAFF_DB_PASS', '');
 define('STAFF_DB_PORT', 3306);
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
@@ -36,15 +36,47 @@ define('STAFF_DB_CHARSET', 'utf8mb4');
  * Website database connection parameters
  * Hostname: localhost
  * Database: igangaschoolofl_website_db
- * Username: igangaschoolofl_website_db
- * Password: AaCH75gXpekcFQj5wPZn
+ * Username: root (for local XAMPP development)
+ * Password: (empty for XAMPP default)
  */
 define('WEBSITE_DB_HOST', 'localhost');
-define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
-define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
+define('WEBSITE_DB_USER', 'root');
+define('WEBSITE_DB_PASS', '');
 define('WEBSITE_DB_PORT', 3306);
 define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 define('WEBSITE_DB_CHARSET', 'utf8mb4');
+
+/** 
+ * ICT/Computer Lab database connection parameters
+ * Hostname: localhost
+ * Database: isnm_ict
+ * Username: root (for local XAMPP development)
+ * Password: (empty for XAMPP default)
+ */
+define('ICT_DB_HOST', 'localhost');
+define('ICT_DB_USER', 'root');
+define('ICT_DB_PASS', '');
+define('ICT_DB_PORT', 3306);
+define('ICT_DB_NAME', 'isnm_ict');
+define('ICT_DB_CHARSET', 'utf8mb4');
+
+if (!function_exists('getICTConnection')) {
+    function getICTConnection() {
+        try {
+            $conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
+            $conn->set_charset(ICT_DB_CHARSET);
+            
+            if ($conn->connect_error) {
+                throw new Exception("ICT database connection failed: " . $conn->connect_error);
+            }
+            
+            return $conn;
+        } catch (Exception $e) {
+            error_log("ICT Database Error: " . $e->getMessage());
+            die("ICT database connection failed. Please contact the administrator.");
+        }
+    }
+}
 
 /**
  * Legacy compatibility functions with conflict protection

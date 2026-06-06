@@ -350,7 +350,7 @@ function auditTrail($user_id, $action, $details, $ip_address = null) {
     $ip_address = $ip_address ?? $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
-    $sql = "INSERT INTO audit_trail (user_id, action, details, ip_address, user_agent, timestamp) 
+    $sql = "INSERT INTO staff_audit_logs (staff_id, action, old_values, ip_address, user_agent, created_at) 
             VALUES (?, ?, ?, ?, ?, NOW())";
     
     $stmt = $GLOBALS['conn']->prepare($sql);
@@ -389,23 +389,43 @@ function getSystemStatistics() {
     
     // Student statistics
     $stats['students'] = [
-        'total' => executeQuery('students', "SELECT COUNT(*) as count FROM students")[0]['count'],
-        'active' => executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'active'")[0]['count'],
-        'graduated' => executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'graduated'")[0]['count']
+        'total' => 0,
+        'active' => 0,
+        'graduated' => 0
     ];
+    try {
+        $stats['students']['total'] = executeQuery('students', "SELECT COUNT(*) as count FROM students")[0]['count'] ?? 0;
+        $stats['students']['active'] = executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'Active'")[0]['count'] ?? 0;
+        $stats['students']['graduated'] = executeQuery('students', "SELECT COUNT(*) as count FROM students WHERE status = 'Graduated'")[0]['count'] ?? 0;
+    } catch (Exception $e) {
+        error_log('Student stats error: ' . $e->getMessage());
+    }
     
     // User statistics
     $stats['users'] = [
-        'total' => executeQuery('staffs', "SELECT COUNT(*) as count FROM staff")[0]['count'],
-        'active' => executeQuery('staffs', "SELECT COUNT(*) as count FROM staff WHERE status = 'active'")[0]['count']
+        'total' => 0,
+        'active' => 0
     ];
+    try {
+        $stats['users']['total'] = executeQuery('staffs', "SELECT COUNT(*) as count FROM staff")[0]['count'] ?? 0;
+        $stats['users']['active'] = executeQuery('staffs', "SELECT COUNT(*) as count FROM staff WHERE status = 'Active'")[0]['count'] ?? 0;
+    } catch (Exception $e) {
+        error_log('Staff stats error: ' . $e->getMessage());
+    }
     
-    // Financial statistics
+    // Financial statistics (defensive - tables may not exist)
     $stats['finance'] = [
-        'total_fees' => executeQuery('students', "SELECT SUM(total_fees) as total FROM student_fee_accounts")[0]['total'] ?? 0,
-        'total_paid' => executeQuery('students', "SELECT SUM(amount_paid) as total FROM fee_payments")[0]['total'] ?? 0,
-        'total_balance' => executeQuery('students', "SELECT SUM(balance) as total FROM student_fee_accounts")[0]['total'] ?? 0
+        'total_fees' => 0,
+        'total_paid' => 0,
+        'total_balance' => 0
     ];
+    try {
+        $stats['finance']['total_fees'] = executeQuery('staffs', "SELECT SUM(amount) as total FROM fee_accounts")[0]['total'] ?? 0;
+        $stats['finance']['total_paid'] = executeQuery('staffs', "SELECT SUM(amount) as total FROM payment_records WHERE status = 'Completed'")[0]['total'] ?? 0;
+        $stats['finance']['total_balance'] = executeQuery('staffs', "SELECT SUM(balance) as total FROM fee_accounts")[0]['total'] ?? 0;
+    } catch (Exception $e) {
+        error_log('Finance stats error: ' . $e->getMessage());
+    }
     
     return $stats;
 }

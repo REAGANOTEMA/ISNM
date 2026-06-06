@@ -16,7 +16,7 @@ if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !in_ar
 
 require_once 'config/database.php';
 
-$conn = getStudentsConnection();
+$conn = getICTConnection();
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['full_name'];
 

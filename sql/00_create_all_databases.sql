@@ -1,18 +1,12 @@
--- Create all four databases for ISNM system
--- Run this script in phpMyAdmin or MySQL command line
+-- ============================================================
+-- ISNM COMPLETE MASTER SETUP SQL
+-- Run this file in phpMyAdmin SQL tab to set up everything
+-- ============================================================
 
--- Create staffs_db
+-- Create all four databases
 CREATE DATABASE IF NOT EXISTS `igangaschoolofl_staffs_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Create students_db  
 CREATE DATABASE IF NOT EXISTS `igangaschoolofl_students_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Create website_db
 CREATE DATABASE IF NOT EXISTS `igangaschoolofl_website_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Create ICT/Computer Lab database
 CREATE DATABASE IF NOT EXISTS `isnm_ict` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Show databases
-SHOW DATABASES LIKE 'igangaschoolofl%';
-SHOW DATABASES LIKE 'isnm%';
+SELECT 'Databases created successfully' as status;
