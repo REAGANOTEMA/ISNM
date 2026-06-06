@@ -3,10 +3,10 @@
  * Debug script for staff database SQL.
  */
 
-$host = '127.0.0.1';
-$user = 'root';
-$pass = 'ReagaN23#';
-$port = 3307;
+$host = 'localhost';
+$user = 'igangaschoolofl_staffs_db';
+$pass = 'AgKzJjZZnT5q58jCahs8';
+$port = 3306;
 $db = 'igangaschoolofl_staffs_db';
 
 echo "Setting up database: $db<br>";

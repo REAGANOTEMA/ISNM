@@ -70,25 +70,19 @@ UPDATE staff_roles
 SET permissions = '{"ict": true, "systems": true, "infrastructure": true, "can_manage_system": true, "can_add_students": true, "can_manage_students": true, "can_view_all_students": true, "can_view_all_departments": true, "can_edit_student_data": true}' 
 WHERE role_name = 'Director ICT';
 
--- Ensure all roles have correct dashboard paths
-UPDATE staff_roles SET dashboard_path = 'bursar_dashboard.php' WHERE role_name IN ('School Bursar', 'Bursar');
-UPDATE staff_roles SET dashboard_path = 'dashboards/school-secretary.php' WHERE role_name IN ('School Secretary', 'Secretary');
-UPDATE staff_roles SET dashboard_path = 'dashboards/director-admissions.php' WHERE role_name = 'Director Admissions & Requirements';
-UPDATE staff_roles SET dashboard_path = 'dashboards/sickbay.php' WHERE role_name = 'Sickbay';
-
 -- Grant dashboard access to Student Management for Secretary
 INSERT IGNORE INTO staff_dashboard_access (staff_id, dashboard_path, access_level, granted_by)
 SELECT s.id, 'dashboards/student-management.php', 'Full', 1
 FROM staff s
 JOIN staff_roles sr ON s.role_id = sr.id
-WHERE sr.role_name = 'School Secretary';
+WHERE sr.role_name = 'School Secretary' AND s.id IS NOT NULL;
 
 -- Grant dashboard access to Student Management for Director ICT
 INSERT IGNORE INTO staff_dashboard_access (staff_id, dashboard_path, access_level, granted_by)
 SELECT s.id, 'dashboards/student-management.php', 'Full', 1
 FROM staff s
 JOIN staff_roles sr ON s.role_id = sr.id
-WHERE sr.role_name = 'Director ICT';
+WHERE sr.role_name = 'Director ICT' AND s.id IS NOT NULL;
 
 -- Grant dashboard access to Student Management for Academic Registrar (already has this access)
 INSERT IGNORE INTO staff_dashboard_access (staff_id, dashboard_path, access_level, granted_by)

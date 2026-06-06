@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 $host = 'localhost';
-$dbname = 'isnm_db';
-$username = 'root';
-$password = 'ReagaN23#';
+$dbname = 'igangaschoolofl_students_db';
+$username = 'igangaschoolofl_students_db';
+$password = 'hbkKdmMHUfHTHuxWKPRf';
 
 // Create connection
 $conn = new mysqli($host, $username, $password, $dbname);

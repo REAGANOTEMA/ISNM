@@ -7,8 +7,8 @@
 // Database configuration
 $host = 'localhost';
 $db   = 'igangaschoolofl_staffs_db';
-$user = 'root';
-$pass = '';
+$user = 'igangaschoolofl_staffs_db';
+$pass = 'AgKzJjZZnT5q58jCahs8';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

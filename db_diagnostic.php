@@ -10,8 +10,10 @@ $methods = [
 ];
 
 $users = [
-    ['user' => 'root', 'pass' => ''],
+    ['user' => 'igangaschoolofl_students_db', 'pass' => 'hbkKdmMHUfHTHuxWKPRf'],
     ['user' => 'igangaschoolofl_staffs_db', 'pass' => 'AgKzJjZZnT5q58jCahs8'],
+    ['user' => 'igangaschoolofl_website_db', 'pass' => 'AaCH75gXpekcFQj5wPZn'],
+    ['user' => 'root', 'pass' => ''],
 ];
 
 foreach ($methods as $method) {
