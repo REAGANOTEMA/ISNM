@@ -662,6 +662,9 @@ include('shared/_header.php');
                             <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Director%20ICT'">
                                 <i class="fas fa-user-shield me-2"></i>Staff Login
                             </button>
+                            <button class="btn-3d" onclick="window.location.href='computer_lab.php'" style="background: linear-gradient(135deg, #0077b6, #00b4d8); color: white; box-shadow: 0 3px 0 #005f92, 0 4px 8px rgba(0,0,0,0.15);">
+                                <i class="fas fa-desktop me-2"></i>Computer Lab
+                            </button>
                         </div>
                     </div>
                 </div>
