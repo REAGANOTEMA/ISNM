@@ -258,13 +258,13 @@ if (!function_exists('generateFinancialStatement')) {
 if (!function_exists('getPaymentProviderLogo')) {
     function getPaymentProviderLogo($provider) {
         $logos = [
-            'mtn_momo' => '../images/mtn-logo.png',
-            'airtel_money' => '../images/airtel-logo.png',
-            'stanbic_bank' => '../images/stanbic-logo.png',
-            'equity_bank' => '../images/equity-logo.png',
-            'centenary_bank' => '../images/centenary-logo.png',
+            'mtn_momo' => '../images/mtn-logo.svg',
+            'airtel_money' => '../images/airtel-logo.svg',
+            'stanbic_bank' => '../images/stanbic-logo.svg',
+            'equity_bank' => '../images/equity-logo.svg',
+            'centenary_bank' => '../images/centenary-logo.svg',
         ];
-        return $logos[$provider] ?? '../images/bank-default.png';
+        return $logos[$provider] ?? '../images/bank-default.svg';
     }
 }
 ?>

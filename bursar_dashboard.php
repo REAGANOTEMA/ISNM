@@ -129,10 +129,10 @@ try {
             p.payment_date,
             p.status
         FROM payments p
-        JOIN student_invoices si ON p.student_id = si.student_id
+        JOIN students s ON p.student_id = s.student_id
         ORDER BY p.payment_date DESC
         LIMIT 10
-    ");
+    ');
     
     if ($result) {
         while ($row = $result->fetch_assoc()) {
@@ -141,6 +141,35 @@ try {
     }
 } catch (Exception $e) {
     error_log('Recent transactions error: ' . $e->getMessage());
+}
+
+// Fallback: if no transactions found, join with student_invoices
+if (empty($recent_transactions)) {
+    try {
+        $result = $conn->query("
+            SELECT 
+                p.id,
+                p.payment_reference,
+                p.student_index_number,
+                p.student_id,
+                'Unknown Student' as student_name,
+                p.amount_received,
+                p.payment_method,
+                p.payment_date,
+                p.status
+            FROM payments p
+            ORDER BY p.payment_date DESC
+            LIMIT 10
+        ");
+        
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_transactions[] = $row;
+            }
+        }
+    } catch (Exception $e) {
+        error_log('Recent transactions fallback error: ' . $e->getMessage());
+    }
 }
 
 $conn->close();
@@ -753,7 +782,28 @@ $conn->close();
                             <td><?php echo htmlspecialchars($transaction['student_name']); ?></td>
                             <td><?php echo htmlspecialchars($transaction['student_index_number']); ?></td>
                             <td>UGX <?php echo number_format($transaction['amount_received'], 0); ?></td>
-                            <td><?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($transaction['payment_method']))); ?></td>
+                            <td>
+                                <?php 
+                                    $provider = $transaction['payment_method'] ?? '';
+                                    $logo_path = '';
+                                    $logo_map = [
+                                        'mobile_money' => '../images/mtn-logo.svg',
+                                        'momo' => '../images/mtn-logo.svg',
+                                        'mtn' => '../images/mtn-logo.svg',
+                                        'airtel_money' => '../images/airtel-logo.svg',
+                                        'airtel' => '../images/airtel-logo.svg',
+                                        'bank_deposit' => '../images/bank-default.svg',
+                                        'bank_transfer' => '../images/bank-default.svg',
+                                        'cash' => '../images/bank-default.svg',
+                                        'cheque' => '../images/bank-default.svg',
+                                    ];
+                                    $logo_path = $logo_map[strtolower($provider)] ?? '../images/bank-default.svg';
+                                ?>
+                                <?php if (file_exists($logo_path)): ?>
+                                    <img src="<?php echo $logo_path; ?>" alt="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $provider))); ?>" style="height: 20px; vertical-align: middle; margin-right: 6px; border-radius: 3px;">
+                                <?php endif; ?>
+                                <?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($transaction['payment_method']))); ?>
+                            </td>
                             <td><?php echo date('M d, Y', strtotime($transaction['payment_date'])); ?></td>
                             <td>
                                 <?php

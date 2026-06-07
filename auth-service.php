@@ -901,6 +901,8 @@ class AuthenticationService {
             'secretary',
             'ceo',
             'computer lab manager',
+            'bursar',
+            'school bursar',
         ];
         
         return in_array($role, $allowedRoles, true);

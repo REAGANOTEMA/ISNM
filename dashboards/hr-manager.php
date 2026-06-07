@@ -454,6 +454,10 @@ FROM staff
 GROUP BY department";
 $hr_stats_result = $staff_conn->query($hr_stats_sql);
 $hr_stats = $hr_stats_result->fetch_assoc();
+$total_staff_count = $hr_stats['total_staff'] ?? 0;
+$on_leave_count = $hr_stats['on_leave'] ?? 0;
+
+$active_staff = $total_staff_count - $on_leave_count;
 
 // Get real student statistics from database
 $student_stats_sql = "SELECT 

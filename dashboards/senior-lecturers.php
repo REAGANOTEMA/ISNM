@@ -16,6 +16,8 @@ $total_staff = 8; // Fallback value
 $total_applications = 8; // Fallback value
 $active_programs = 2; // Fallback value
 $assigned_courses = 6; // Fallback value for courses
+$lectures_this_week = 8; // Fallback value
+$pending_grades = 3; // Fallback value
 
 // Get recent activities (using a simple approach)
 $recent_activities = [

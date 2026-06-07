@@ -651,15 +651,38 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <strong><?php echo htmlspecialchars($payment['surname'] . ', ' . $payment['first_name']); ?></strong>
-                                    <p class="mb-1">Amount: UGX <?php echo number_format($payment['amount_paid']); ?></p>
-                                    <small class="text-muted">Receipt: <?php echo htmlspecialchars($payment['receipt_number']); ?></small>
+                                    <p class="mb-1">
+                                        <?php 
+                                            $pm = strtolower($payment['payment_method'] ?? '');
+                                            $logo_map = [
+                                                'mobile_money' => '../images/mtn-logo.svg',
+                                                'momo' => '../images/mtn-logo.svg',
+                                                'mtn' => '../images/mtn-logo.svg',
+                                                'airtel_money' => '../images/airtel-logo.svg',
+                                                'airtel' => '../images/airtel-logo.svg',
+                                                'bank_deposit' => '../images/bank-default.svg',
+                                                'bank_transfer' => '../images/bank-default.svg',
+                                                'cash' => '../images/bank-default.svg',
+                                                'cheque' => '../images/bank-default.svg',
+                                            ];
+                                            $logo_path = $logo_map[$pm] ?? '../images/bank-default.svg';
+                                        ?>
+                                        <?php if (file_exists($logo_path)): ?>
+                                            <img src="<?php echo $logo_path; ?>" alt="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $pm))); ?>" style="height: 22px; vertical-align: middle; margin-right: 5px; border-radius: 3px;">
+                                        <?php endif; ?>
+                                        Amount: UGX <?php echo number_format($payment['amount_paid']); ?>
+                                    </p>
+                                    <small class="text-muted">
+                                        <strong>Method:</strong> <?php echo ucfirst(str_replace('_', ' ', $pm ?: 'N/A')); ?> | 
+                                        <strong>Receipt:</strong> <?php echo htmlspecialchars($payment['receipt_number'] ?? 'N/A'); ?>
+                                    </small>
                                 </div>
                                 <div class="text-end">
                                     <small class="text-muted">
                                         <?php echo date('M j, Y H:i', strtotime($payment['payment_date'])); ?>
                                     </small>
                                     <br>
-                                    <span class="fee-status bg-success">Verified</span>
+                                    <span class="badge bg-success">Verified</span>
                                 </div>
                             </div>
                         </div>

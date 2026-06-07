@@ -7,7 +7,7 @@ $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
 // Database connection
-$conn = getConnection();
+$conn = getStaffConnection();
 
 // Get user information from session
 $user_id = $_SESSION['user_id'] ?? 0;

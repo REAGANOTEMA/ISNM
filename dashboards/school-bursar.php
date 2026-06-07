@@ -299,20 +299,24 @@
                         <h5>Supported Payment Methods:</h5>
                         <div class="d-flex gap-3 align-items-center">
                             <div class="text-center">
-                                <i class="fas fa-mobile-alt fa-2x text-primary"></i>
+                                <img src="../images/mtn-logo.svg" alt="MTN Mobile Money" class="payment-logo" style="height: 32px; background: #FFCC00; border-radius: 6px; padding: 4px;">
                                 <div><small>MTN Mobile Money</small></div>
                             </div>
                             <div class="text-center">
-                                <i class="fas fa-mobile-alt fa-2x text-danger"></i>
+                                <img src="../images/airtel-logo.svg" alt="Airtel Money" class="payment-logo" style="height: 32px; background: #ED1C24; border-radius: 6px; padding: 4px;">
                                 <div><small>Airtel Money</small></div>
                             </div>
                             <div class="text-center">
-                                <i class="fas fa-university fa-2x text-success"></i>
-                                <div><small>Bank Transfer</small></div>
+                                <img src="../images/stanbic-logo.svg" alt="Stanbic Bank" class="payment-logo" style="height: 32px; background: #005DAA; border-radius: 6px; padding: 4px;">
+                                <div><small>Stanbic Bank</small></div>
                             </div>
                             <div class="text-center">
-                                <i class="fas fa-money-bill fa-2x text-warning"></i>
-                                <div><small>Cash</small></div>
+                                <img src="../images/equity-logo.svg" alt="Equity Bank" class="payment-logo" style="height: 32px; background: #C8102E; border-radius: 6px; padding: 4px;">
+                                <div><small>Equity Bank</small></div>
+                            </div>
+                            <div class="text-center">
+                                <img src="../images/centenary-logo.svg" alt="Centenary Bank" class="payment-logo" style="height: 32px; background: #00843D; border-radius: 6px; padding: 4px;">
+                                <div><small>Centenary Bank</small></div>
                             </div>
                         </div>
                     </div>
@@ -342,20 +346,11 @@
                                         <td><?php echo htmlspecialchars($payment['index_number'] ?? 'N/A'); ?></td>
                                         <td>UGX <?php echo number_format($payment['amount']); ?></td>
                                         <td>
-                                            <span class="payment-method-badge">
-                                                <?php if ($payment['payment_method'] === 'mobile_money'): ?>
-                                                    <i class="fas fa-mobile-alt"></i>
-                                                <?php elseif ($payment['payment_method'] === 'bank_deposit'): ?>
-                                                    <i class="fas fa-university"></i>
-                                                <?php elseif ($payment['payment_method'] === 'cash'): ?>
-                                                    <i class="fas fa-money-bill"></i>
-                                                <?php else: ?>
-                                                    <i class="fas fa-question"></i>
-                                                <?php endif; ?>
-                                                <?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?>
-                                            </span>
+                                            <?php if ($payment['payment_provider'] ?? ''): ?>
+                                                <img src="<?php echo getPaymentProviderLogo($payment['payment_provider'] ?? ''); ?>" alt="<?php echo htmlspecialchars($payment['payment_provider'] ?? 'payment'); ?>" class="payment-logo" style="height: 24px; border-radius: 4px;">
+                                            <?php endif; ?>
+                                            <?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?>
                                         </td>
-                                        <td><?php echo date('M j, Y H:i', strtotime($payment['transaction_date'])); ?></td>
                                         <td>
                                             <span class="badge badge-status badge-<?php echo $payment['status']; ?>">
                                                 <?php echo ucfirst($payment['status']); ?>

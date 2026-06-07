@@ -2,6 +2,7 @@
 // Include unified authentication system
 require_once '../auth-service.php';
 require_once '../config/database.php';
+require_once '../includes/financial_functions.php';
 
 // Start secure session
 if (session_status() === PHP_SESSION_NONE) {
@@ -992,9 +993,15 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                                         <?php foreach ($payment_history as $payment): ?>
                                         <tr>
                                             <td><?php echo $payment['payment_id']; ?></td>
-                                            <td><?php echo date('M j, Y', strtotime($payment['payment_date'])); ?></td>
-                                            <td>UGX <?php echo number_format($payment['amount_paid']); ?></td>
-                                            <td><?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?></td>
+                                            <td>
+                                                <?php 
+                                                $provider = $payment['payment_provider'] ?? $payment['payment_method'] ?? '';
+                                                if ($provider): 
+                                                ?>
+                                                <img src="<?php echo getPaymentProviderLogo($provider); ?>" alt="<?php echo htmlspecialchars($provider); ?>" style="height: 22px; border-radius: 3px; vertical-align: middle; margin-right: 6px;">
+                                                <?php endif; ?>
+                                                <?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?>
+                                            </td>
                                             <td>
                                                 <span class="status-badge <?php echo $payment['status']; ?>">
                                                     <?php echo ucfirst($payment['status']); ?>
