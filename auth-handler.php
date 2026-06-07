@@ -366,6 +366,12 @@ function handleCreateStudent() {
         'index_number' => $_POST['index_number'] ?? '',
         'full_name'    => $_POST['full_name']    ?? '',
         'phone'        => $_POST['phone']        ?? '',
+        'set_name'     => $_POST['set_name']     ?? '',
+        'program'      => $_POST['program']      ?? '',
+        'level'        => $_POST['level']        ?? '',
+        'intake_year'  => $_POST['intake_year']  ?? '',
+        'intake_period'=> $_POST['intake_period']?? '',
+        'email'        => $_POST['email']        ?? '',
     ];
     $res = $auth_service->createStudentAccount($data);
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];

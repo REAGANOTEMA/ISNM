@@ -303,6 +303,82 @@ $currentUser = getCurrentUser();
                         <div class="help-text">Uganda phone number format (10 digits starting with 7)</div>
                     </div>
 
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <div class="input-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="student@isnm.ac.ug">
+                        </div>
+                        <div class="help-text">Optional: Matched against student records automatically</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="program">Program</label>
+                                <div class="input-icon">
+                                    <i class="fas fa-book"></i>
+                                    <select class="form-control" id="program" name="program">
+                                        <option value="">-- Select Program --</option>
+                                        <option value="Diploma in Nursing">Diploma in Nursing</option>
+                                        <option value="Diploma in Midwifery">Diploma in Midwifery</option>
+                                        <option value="Certificate in Nursing">Certificate in Nursing</option>
+                                        <option value="Certificate in Midwifery">Certificate in Midwifery</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="level">Level</label>
+                                <div class="input-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                    <select class="form-control" id="level" name="level">
+                                        <option value="">-- Select Level --</option>
+                                        <option value="Diploma">Diploma</option>
+                                        <option value="Certificate">Certificate</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="set_name">Set / Cohort</label>
+                                <div class="input-icon">
+                                    <i class="fas fa-users"></i>
+                                    <input type="text" class="form-control" id="set_name" name="set_name" 
+                                           placeholder="e.g., Set 28">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="intake_year">Intake Year</label>
+                                <div class="input-icon">
+                                    <i class="fas fa-calendar"></i>
+                                    <input type="text" class="form-control" id="intake_year" name="intake_year" 
+                                           placeholder="e.g., 2026">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="intake_period">Intake Period</label>
+                        <div class="input-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                            <select class="form-control" id="intake_period" name="intake_period">
+                                <option value="">-- Select Intake Period --</option>
+                                <option value="January">January</option>
+                                <option value="July">July</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-create">
                         <i class="fas fa-user-plus"></i> Create Student Account
                     </button>
@@ -321,22 +397,20 @@ $currentUser = getCurrentUser();
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Form validation
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
         document.querySelector('form').addEventListener('submit', function(e) {
             const indexNumber = document.getElementById('index_number').value;
             const fullName = document.getElementById('full_name').value;
             const phone = document.getElementById('phone').value;
+            const intakeYear = document.getElementById('intake_year').value;
             
-            // Validate index number format
             if (!/^U\d{3}\/(CM|CN|DMORDN)\/\d{3}\/\d{2}$/.test(indexNumber)) {
                 e.preventDefault();
                 alert('Invalid index number format. Use format: U001/CM/056/16');
                 return;
             }
             
-            // Validate phone number
             const cleanPhone = phone.replace(/[^0-9]/g, '');
             if (cleanPhone.length !== 10 || !/^7\d{9}$/.test(cleanPhone)) {
                 e.preventDefault();
@@ -344,15 +418,34 @@ $currentUser = getCurrentUser();
                 return;
             }
             
-            // Validate full name
             if (fullName.trim().length < 3) {
                 e.preventDefault();
                 alert('Please enter a valid full name');
                 return;
             }
             
-            // Confirm submission
-            if (!confirm('Are you sure you want to create this student account?')) {
+            if (intakeYear && !/^20\d{2}$/.test(intakeYear)) {
+                e.preventDefault();
+                alert('Invalid intake year. Use format: 2026');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to create this student account?')) {
+                const selectedProgram = document.getElementById('program').value;
+                const selectedLevel = document.getElementById('level').value;
+                const selectedPeriod = document.getElementById('intake_period').value;
+                const setValue = document.getElementById('set_name').value.trim();
+                if (!selectedProgram || !selectedLevel) {
+                    e.preventDefault();
+                    alert('Please select Program and Level to ensure proper student classification.');
+                    return;
+                }
+                if (setValue && !/^Set\s*\d+$/i.test(setValue)) {
+                    e.preventDefault();
+                    alert('Set name should be in format: Set 28');
+                    return;
+                }
+            } else {
                 e.preventDefault();
             }
         });

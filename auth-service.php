@@ -833,7 +833,7 @@ class AuthenticationService {
         $role = $this->normalizeRoleKey($role);
         $allowed = [
             'director academics', 'director finance', 'director ict',
-            'computer department', 'ict officer',
+            'computer department', 'ict officer', 'computer lab manager',
             'school principal', 'deputy principal', 'academic registrar',
             'hr manager', 'school secretary', 'school bursar', 'bursar',
             'head nursing', 'head midwifery', 'head of nursing', 'head of midwifery',
@@ -899,7 +899,8 @@ class AuthenticationService {
             'ict officer',
             'school secretary',
             'secretary',
-            'ceo'
+            'ceo',
+            'computer lab manager',
         ];
         
         return in_array($role, $allowedRoles, true);
@@ -909,11 +910,17 @@ class AuthenticationService {
      * Create student account
      * @param array $studentData
      * @return array
-     */
+      */
     public function createStudentAccount($studentData) {
         $index = sanitizeInput($studentData['index_number'] ?? '');
         $fullName = sanitizeInput($studentData['full_name'] ?? '');
         $phone = sanitizeInput($studentData['phone'] ?? '');
+        $setName = sanitizeInput($studentData['set_name'] ?? '');
+        $program = sanitizeInput($studentData['program'] ?? '');
+        $level = sanitizeInput($studentData['level'] ?? '');
+        $intakeYear = sanitizeInput($studentData['intake_year'] ?? '');
+        $intakePeriod = sanitizeInput($studentData['intake_period'] ?? '');
+        $email = sanitizeInput($studentData['email'] ?? '');
         
         if (empty($index) || empty($fullName) || empty($phone)) {
             return ['success' => false, 'message' => 'Index number, full name and phone are required to create a student account.'];
@@ -926,35 +933,132 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid phone number format'];
         }
 
+        if (!empty($email) && !validateEmail($email)) {
+            return ['success' => false, 'message' => 'Invalid email format'];
+        }
+        
+        if (!empty($intakeYear) && !preg_match('/^20\d{2}$/', $intakeYear)) {
+            return ['success' => false, 'message' => 'Invalid intake year format (e.g., 2026)'];
+        }
+
         $conn = getConnection();
-        $existing = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
-        if ($existing) {
-            $existing->bind_param('s', $index);
-            $existing->execute();
-            $existingRes = $existing->get_result();
-            if ($existingRes && $existingRes->num_rows > 0) {
-                return ['success' => false, 'message' => 'A student account with this index number already exists.'];
+        
+        $stmt = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param('s', $index);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($res && $res->num_rows > 0) {
+                return ['success' => false, 'message' => 'A student with this index number already exists.'];
             }
         }
 
+        $loader = null;
+        if (file_exists(__DIR__ . '/../views/student_data_loader.php')) {
+            require_once __DIR__ . '/../views/student_data_loader.php';
+            try {
+                $loader = new StudentDataLoader();
+                $match = $this->findStudentInDataFiles($loader, $index, $phone);
+                if ($match) {
+                    if (!empty($match['program']) && empty($program)) {
+                        $program = $match['program'];
+                    }
+                    if (!empty($match['level']) && empty($level)) {
+                        $level = $match['level'];
+                    }
+                    if (!empty($match['set']) && empty($setName)) {
+                        $setName = $match['set'];
+                    }
+                    if (!empty($match['intake_year']) && empty($intakeYear)) {
+                        $intakeYear = $match['intake_year'];
+                    }
+                    if (!empty($match['intake_period']) && empty($intakePeriod)) {
+                        $intakePeriod = $match['intake_period'];
+                    }
+                    if (!empty($match['email']) && empty($email)) {
+                        $email = $match['email'];
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Student data loader: ' . $e->getMessage());
+            }
+        }
+        
         list($firstName, $surname) = $this->splitFullName($fullName);
         if (empty($firstName) || empty($surname)) {
             return ['success' => false, 'message' => 'Please provide a valid full name with at least two names.'];
         }
-
+        
         try {
             $stmt = $conn->prepare(
-                "INSERT INTO students (student_number, index_number, first_name, surname, phone, status, is_first_login, password_changed, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, 'Active', TRUE, FALSE, NOW(), NOW())"
+                "INSERT INTO students (
+                    student_number, index_number, first_name, surname, other_name,
+                    phone, email, program, level, set_name, intake_year, intake_period,
+                    status, is_first_login, password_changed, created_at, updated_at
+                ) VALUES (
+                    ?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, 'Active', TRUE, FALSE, NOW(), NOW()
+                )"
             );
+            if (!$stmt) {
+                return ['success' => false, 'message' => 'Failed to prepare student account creation.'];
+            }
+            
             $studentNumber = $index;
-            $stmt->bind_param('sssss', $studentNumber, $index, $firstName, $surname, $phone);
+            $defaultPassword = password_hash('12345678', PASSWORD_DEFAULT);
+            $stmt->bind_param(
+                'sssssssssss',
+                $studentNumber,
+                $index,
+                $firstName,
+                $surname,
+                $phone,
+                $email,
+                $program,
+                $level,
+                $setName,
+                $intakeYear,
+                $intakePeriod
+            );
             $stmt->execute();
             
-            return ['success' => true, 'message' => 'Student account created successfully'];
+            return [
+                'success' => true,
+                'message' => 'Student account created successfully',
+                'data' => [
+                    'index_number' => $index,
+                    'full_name' => $fullName,
+                    'set' => $setName,
+                    'program' => $program,
+                    'level' => $level,
+                ]
+            ];
         } catch (Exception $e) {
             return ['success' => false, 'message' => 'Failed to create student account: ' . $e->getMessage()];
         }
+    }
+
+    private function findStudentInDataFiles($loader, $index, $phone) {
+        if (!$loader) {
+            return null;
+        }
+        $searchTerm = trim($index);
+        $results = $loader->searchStudents($searchTerm);
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        foreach ($results as $student) {
+            $studentPhone = preg_replace('/[^0-9]/', '', $student['phone'] ?? '');
+            $studentIndex = strtolower(trim($student['index_number'] ?? ''));
+            if ($studentIndex === strtolower($index) && $studentPhone === $cleanPhone) {
+                return $student;
+            }
+        }
+        $byName = $loader->searchStudents('');
+        foreach ($byName as $student) {
+            $studentPhone = preg_replace('/[^0-9]/', '', $student['phone'] ?? '');
+            if ($studentPhone === $cleanPhone && !empty($student['index_number'])) {
+                return $student;
+            }
+        }
+        return null;
     }
     
     /**

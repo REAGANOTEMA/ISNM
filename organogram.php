@@ -868,11 +868,11 @@ include('shared/_header.php');
                           <i class="fas fa-user-tie org-icon"></i>
                           <div class="org-title">Director ICT</div>
                           <div class="org-subtitle">Head of ICT Department — Oversight & Management</div>
-                          <a href="staff-login.php?position=Director%20ICT" class="org-link">
+                          <a href="staff-login.php?position=Director%20ICT" class="org-link" onclick="event.preventDefault(); window.location.replace('staff-login.php?position=Director%20ICT');">
                               <i class="fas fa-sign-in-alt"></i> Login
                           </a>
                           <div class="org-actions">
-                              <button class="btn-3d btn-ict-primary" onclick="window.location.href='staff-login.php?position=Director%20ICT'">
+                              <button class="btn-3d btn-ict-primary" onclick="window.location.replace('staff-login.php?position=Director%20ICT')">
                                   <i class="fas fa-user-shield me-2"></i>Staff Login
                               </button>
                           </div>
