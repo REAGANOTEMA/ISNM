@@ -4,12 +4,89 @@
 -- Includes staff accounts with proper emails and passwords
 -- ============================================================
 
+-- Create database if not exists
+CREATE DATABASE IF NOT EXISTS igangaschoolofl_staffs_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE igangaschoolofl_staffs_db;
 
--- Ensure required roles exist (prevent NULL role_id when inserting staff)
-INSERT IGNORE INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions) VALUES
-('Director Admissions & Requirements', 'Admissions and requirements management', 'Management', 'dashboards/director-admissions.php', '{"admissions": true, "can_manage_applications": true}'),
-('Guild President', 'Student leadership representative', 'Student', 'dashboards/guild-president.php', '{"student_leader": true, "can_access_student_affairs": true}');
+-- Drop existing tables if they exist (for fresh installation)
+DROP TABLE IF EXISTS staff;
+DROP TABLE IF EXISTS staff_roles;
+DROP TABLE IF EXISTS system_settings;
+DROP TABLE IF EXISTS staff_dashboard_access;
+DROP TABLE IF EXISTS universal_student_profiles;
+DROP TABLE IF EXISTS student_photos;
+DROP TABLE IF EXISTS student_search_index;
+DROP TABLE IF EXISTS student_data_imports;
+DROP TABLE IF EXISTS student_profile_edits;
+DROP TABLE IF EXISTS student_reports;
+
+-- Create staff_roles table with all required columns
+CREATE TABLE staff_roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(100) NOT NULL UNIQUE,
+    role_description TEXT,
+    role_level ENUM('Executive', 'Management', 'Academic', 'Support', 'Administrative') DEFAULT 'Academic',
+    dashboard_path VARCHAR(255),
+    permissions JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_role_name (role_name),
+    INDEX idx_role_level (role_level)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create staff table with all required columns
+CREATE TABLE staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id VARCHAR(50) NOT NULL UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    position VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    role_id INT,
+    status ENUM('Active', 'Inactive', 'On Leave', 'Suspended') DEFAULT 'Active',
+    hire_date DATE,
+    password_changed BOOLEAN DEFAULT FALSE,
+    is_first_login BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES staff_roles(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_staff_id (staff_id),
+    INDEX idx_email (email),
+    INDEX idx_position (position),
+    INDEX idx_department (department),
+    INDEX idx_status (status),
+    INDEX idx_role_id (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert all required roles
+INSERT INTO staff_roles (role_name, dashboard_path) VALUES
+('Director General', 'dashboards/director-general.php'),
+('CEO', 'dashboards/ceo.php'),
+('Director Academics', 'dashboards/director-academics.php'),
+('Director ICT', 'dashboards/director-ict.php'),
+('Director Finance', 'dashboards/director-finance.php'),
+('School Principal', 'dashboards/school-principal.php'),
+('Deputy Principal', 'dashboards/deputy-principal.php'),
+('School Bursar', 'bursar_dashboard.php'),
+('Director Admissions & Requirements', 'dashboards/director-admissions.php'),
+('Academic Registrar', 'dashboards/academic-registrar.php'),
+('HR Manager', 'dashboards/hr-manager.php'),
+('School Secretary', 'dashboards/school-secretary.php'),
+('School Librarian', 'dashboards/school-librarian.php'),
+('Head Nursing', 'dashboards/head-nursing.php'),
+('Head Midwifery', 'dashboards/head-midwifery.php'),
+('Senior Lecturers', 'dashboards/senior-lecturers.php'),
+('Lecturers', 'dashboards/lecturers.php'),
+('Matrons', 'dashboards/matrons.php'),
+('Wardens', 'dashboards/wardens.php'),
+('Sickbay', 'dashboards/sickbay.php'),
+('Drivers', 'dashboards/drivers.php'),
+('Security', 'dashboards/security.php'),
+('Store Keeper', 'dashboards/storekeeper.php'),
+('Computer Lab Manager', 'computer_lab.php'),
+('Guild President', 'dashboards/guild-president.php');
 
 -- ============================================================
 -- 1. INSERT ALL DEPARTMENT STAFF ACCOUNTS WITH PROPER CREDENTIALS
@@ -55,7 +132,8 @@ INSERT IGNORE INTO staff (
 ('DRV001','Driver','drivers@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000021','Drivers','Support',(SELECT id FROM staff_roles WHERE role_name = 'Drivers' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
 ('SECUR001','Security Officer','security@igangaschoolofnursingandmidwifery.ac.ug','safty1st', '+256701000022','Security','Security Services',(SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
 ('STK001','Store Keeper','store@igangaschoolofnursingandmidwifery.ac.ug','Isnm4life', '+256701000023','Store Keeper','Support',(SELECT id FROM staff_roles WHERE role_name = 'Store Keeper' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
-('GUILD001','Guild President','guildpresident@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000024','Guild President','Student Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Guild President' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW());
+('COMP001','Computer Lab Manager','computer-lab@igangaschoolofnursingandmidwifery.ac.ug','Techno123', '+256701000024','Computer Lab Manager','Information Technology',(SELECT id FROM staff_roles WHERE role_name = 'Computer Lab Manager' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW()),
+('GUILD001','Guild President','guildpresident@igangaschoolofnursingandmidwifery.ac.ug','isnm4life', '+256701000025','Guild President','Student Affairs',(SELECT id FROM staff_roles WHERE role_name = 'Guild President' LIMIT 1),'Active',CURDATE(),FALSE,TRUE,NOW());
 
 -- ============================================================
 -- 2. STUDENT DATA INTEGRATION - UNIVERSAL STUDENT TABLE
@@ -289,6 +367,10 @@ FROM universal_student_profiles sp;
 
 -- Ensure no conflicting procedure exists before creating (prevents #1304)
 DROP PROCEDURE IF EXISTS get_all_students;
+DROP PROCEDURE IF EXISTS search_all_students;
+DROP PROCEDURE IF EXISTS update_student_photo;
+DROP PROCEDURE IF EXISTS delete_student_photo;
+DROP PROCEDURE IF EXISTS print_student_profile;
 
 DELIMITER //
 
@@ -334,7 +416,6 @@ BEGIN
 END //
 
 -- Update student photo
-DROP PROCEDURE IF EXISTS update_student_photo//
 CREATE PROCEDURE update_student_photo(
     IN p_student_id INT,
     IN p_new_photo_path VARCHAR(500),
@@ -378,27 +459,7 @@ CREATE PROCEDURE print_student_profile(
 BEGIN
     INSERT INTO student_profile_edits (student_id, field_changed, action_type, edited_by)
     VALUES (p_student_id, 'print', 'photo_print', p_printed_by);
-END //
-
-DELIMITER ;
-
--- ============================================================
--- 9. TRIGGERS FOR AUTOMATED ACTIONS
--- ============================================================
-
-DELIMITER //
-
--- Auto-update full_name when first/last name changes
-CREATE TRIGGER update_full_name
-BEFORE UPDATE ON universal_student_profiles
-FOR EACH ROW
-BEGIN
-    SET NEW.full_name = CONCAT(NEW.first_name, ' ', NEW.last_name);
-END //
-
--- Log search activity
--- Note: MySQL does not support AFTER SELECT triggers
--- Search logging should be implemented at the application level
+END//
 
 DELIMITER ;
 
@@ -432,12 +493,29 @@ WHERE sr.role_name IN (
      'Director Admissions & Requirements', 'Academic Registrar', 'HR Manager',
      'School Secretary', 'School Librarian', 'Head Nursing', 'Head Midwifery',
      'Senior Lecturers', 'Lecturers', 'Matrons', 'Wardens', 'Sickbay',
-     'Drivers', 'Security', 'Store Keeper'
- );
+     'Drivers', 'Security', 'Store Keeper', 'Computer Lab Manager', 'Guild President'
+);
 
 -- ============================================================
 -- 11. INSERT DEFAULT INSTITUTE SETTINGS
 -- ============================================================
+
+-- Ensure system_settings table exists
+CREATE TABLE IF NOT EXISTS system_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) NOT NULL UNIQUE,
+    setting_value LONGTEXT,
+    setting_type ENUM('text', 'number', 'boolean', 'file', 'json') DEFAULT 'text',
+    description TEXT,
+    category VARCHAR(50) DEFAULT 'general',
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_setting_key (setting_key),
+    INDEX idx_setting_type (setting_type),
+    INDEX idx_category (category),
+    INDEX idx_is_public (is_public)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description, is_public) VALUES
 ('institute_name', 'Iganga School of Nursing and Midwifery', 'text', 'Full institute name', TRUE),

@@ -799,14 +799,10 @@ class AuthenticationService {
             'director academics' => 'dashboards/director-academics.php',
             'director finance' => 'dashboards/director-finance.php',
             'director ict' => 'dashboards/director-ict.php',
-            'head nursing' => 'dashboards/head-nursing.php',
-            'head of nursing' => 'dashboards/head-nursing.php',
-            'head midwifery' => 'dashboards/head-midwifery.php',
-            'head of midwifery' => 'dashboards/head-midwifery.php',
+            'computer lab manager' => 'computer_lab.php',
             'deputy principal' => 'dashboards/deputy-principal.php',
             'school secretary' => 'dashboards/school-secretary.php',
             'drivers' => 'dashboards/drivers.php',
-            'lab technicians' => 'dashboards/sickbay.php', // legacy alias preserved for redirect compatibility
             'sickbay' => 'dashboards/sickbay.php',
             'matrons' => 'dashboards/matrons.php',
             'non teaching staff' => 'dashboards/non-teaching-staff.php',
@@ -820,7 +816,11 @@ class AuthenticationService {
             'storekeeper' => 'dashboards/storekeeper.php',
             'computer department' => 'dashboards/director-ict.php',
             'ict officer' => 'dashboards/director-ict.php',
-            'director ict' => 'dashboards/director-ict.php',
+            'head nursing' => 'dashboards/head-nursing.php',
+            'head of nursing' => 'dashboards/head-nursing.php',
+            'head midwifery' => 'dashboards/head-midwifery.php',
+            'head of midwifery' => 'dashboards/head-midwifery.php',
+            'guild president' => 'dashboards/guild-president.php',
         ];
 
         return $dashboardRoutes[$key] ?? null;

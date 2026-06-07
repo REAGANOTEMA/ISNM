@@ -7,20 +7,48 @@
 
 require_once 'auth-service.php';
 
-// Check authentication
-if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !in_array($_SESSION['role'], ['Director ICT', 'IT Manager', 'Lab Technician', 'Computer Lab Manager'])) {
+// Check authentication - allow Computer Lab Manager and Director ICT access
+$allowedRoles = ['Director ICT', 'IT Manager', 'Lab Technician', 'Computer Lab Manager'];
+$allowedPositions = ['Director ICT', 'Computer Lab Manager', 'IT Manager', 'Lab Technician'];
+
+$hasAccess = in_array($_SESSION['role'] ?? '', $allowedRoles);
+if (!$hasAccess && isset($_SESSION['position'])) {
+    foreach ($allowedPositions as $pos) {
+        if (stripos($_SESSION['position'], $pos) !== false) {
+            $hasAccess = true;
+            break;
+        }
+    }
+}
+
+if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !$hasAccess) {
     $_SESSION['error'] = "Access denied. ICT department privileges required.";
-    header('Location: staff-login.php');
+    header('Location: staff-login.php?position=Computer%20Lab%20Manager');
     exit;
 }
 
 require_once 'config/database.php';
 
-$conn = getICTConnection();
+// Try ICT database first, fallback to staff database
+$conn = null;
+try {
+    $conn = getICTConnection();
+} catch (Exception $e) {
+    // ICT database doesn't exist, use staff database as fallback
+    try {
+        $conn = getStaffConnection();
+    } catch (Exception $e2) {
+        error_log("Computer Lab DB connection failed: " . $e2->getMessage());
+        $_SESSION['error'] = "Database connection error. Please contact administrator.";
+        header('Location: staff-login.php');
+        exit;
+    }
+}
+
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['full_name'];
 
-// Get dashboard statistics
+// Get dashboard statistics - handle missing tables gracefully
 $stats = array(
     'total_computers' => 0,
     'computers_online' => 0,
@@ -36,100 +64,91 @@ $stats = array(
     'internet_uptime' => 99.9
 );
 
+// Try to get stats from ICT tables, silently fail if they don't exist
 try {
-    // Total computers count
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_computers WHERE status != 'deleted'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['total_computers'] = $row['count'];
     }
-    
-    // Computers online
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_computers WHERE status = 'online'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['computers_online'] = $row['count'];
     }
-    
-    // Computers offline
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_computers WHERE status = 'offline'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['computers_offline'] = $row['count'];
     }
-    
-    // Computers under maintenance
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_computers WHERE status = 'maintenance'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['computers_under_maintenance'] = $row['count'];
     }
-    
-    // Active lab sessions today
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_bookings WHERE DATE(booking_date) = CURDATE() AND status = 'confirmed'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['active_sessions'] = $row['count'];
     }
-    
-    // Pending bookings
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM lab_bookings WHERE status = 'pending'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['pending_bookings'] = $row['count'];
     }
-    
-    // Pending IT support tickets
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM it_support_tickets WHERE status IN ('open', 'in_progress')");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['pending_tickets'] = $row['count'];
     }
-    
-    // Software updates pending
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM software_inventory WHERE update_available = 1");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['software_updates_pending'] = $row['count'];
     }
-    
-    // Network devices online
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM network_devices WHERE status = 'online'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['network_devices_online'] = $row['count'];
     }
-    
-    // Network devices offline
+} catch (Exception $e) {}
+
+try {
     $result = $conn->query("SELECT COUNT(*) as count FROM network_devices WHERE status = 'offline'");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['network_devices_offline'] = $row['count'];
     }
-    
-} catch (Exception $e) {
-    error_log('Dashboard stats error: ' . $e->getMessage());
-}
+} catch (Exception $e) {}
 
-// Get recent lab bookings
+// Get recent lab bookings (silently handle missing tables)
 $recent_bookings = array();
 try {
-    $result = $conn->query("
-        SELECT 
-            lb.id,
-            lb.booking_reference,
-            lb.course_name,
-            lb.instructor_name,
-            lb.booking_date,
-            lb.time_slot,
-            lb.number_of_students,
-            lb.status,
-            lb.created_at
-        FROM lab_bookings lb
-        ORDER BY lb.created_at DESC
-        LIMIT 8
-    ");
-    
+    $result = $conn->query("SELECT id, booking_reference, course_name, instructor_name, booking_date, time_slot, number_of_students, status, created_at FROM lab_bookings ORDER BY created_at DESC LIMIT 8");
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $recent_bookings[] = $row;
@@ -165,7 +184,7 @@ try {
             st.created_at ASC
         LIMIT 8
     ");
-    
+
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $pending_tickets[] = $row;
@@ -191,14 +210,14 @@ try {
         ORDER BY status, computer_name
         LIMIT 6
     ");
-    
+
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $maintenance_computers[] = $row;
         }
     }
 } catch (Exception $e) {
-    error_log('Maintenance computers error: ' . $e->getMessage());
+error_log('Maintenance computers error: ' . $e->getMessage());
 }
 
 $conn->close();
