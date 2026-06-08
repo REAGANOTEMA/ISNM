@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 08, 2026 at 06:26 PM
+-- Generation Time: Jun 08, 2026 at 06:32 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -825,6 +825,47 @@ CREATE TABLE `departmental_budgets` (
   `spent_amount` decimal(15,2) DEFAULT '0.00',
   `remaining_amount` decimal(15,2) DEFAULT '0.00',
   `status` enum('active','exhausted','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `employment_details`
+--
+
+CREATE TABLE `employment_details` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `job_title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `job_category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sub_department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `staff_category_id` int DEFAULT NULL,
+  `employment_type` enum('permanent','contract','temporary','part_time') COLLATE utf8mb4_unicode_ci DEFAULT 'permanent',
+  `grade` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `salary_grade` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reports_to` int DEFAULT NULL,
+  `employment_start_date` date NOT NULL,
+  `employment_end_date` date DEFAULT NULL,
+  `contract_start_date` date DEFAULT NULL,
+  `contract_end_date` date DEFAULT NULL,
+  `contract_renewal_date` date DEFAULT NULL,
+  `office_location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `office_contact` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `professional_license` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_expiry_date` date DEFAULT NULL,
+  `license_issuing_body` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nursing_council_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `council_number_expiry` date DEFAULT NULL,
+  `qualification_level` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `specialization` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `years_of_experience` int DEFAULT NULL,
+  `previous_employer` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `previous_position` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reason_for_leaving` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('active','inactive','on_leave','suspended') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2028,7 +2069,59 @@ INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`
 (28, 'BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'School Bursar', 'Finance Department', 9, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 12:00:01', '2026-06-08 12:00:01'),
 (29, 'BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Bursar', 'Finance Department', 23, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 12:00:01', '2026-06-08 12:00:01'),
 (30, 'ADM001', 'Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Director Admissions & Requirements', 'Admissions', 28, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 12:00:02', '2026-06-08 12:00:02'),
-(31, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Guild President', 'Student Affairs', 27, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 12:00:02', '2026-06-08 12:00:02');
+(31, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Guild President', 'Student Affairs', 27, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 12:00:02', '2026-06-08 12:00:02'),
+(32, 'ADMIN001', 'System Administrator', 'administration@isnm.ac.ug', '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'System Administrator', 'Executive Office', 1, 'Active', '2026-06-08', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-08 16:31:59', '2026-06-08 16:31:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_categories`
+--
+
+CREATE TABLE `staff_categories` (
+  `id` int NOT NULL,
+  `category_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_records`
+--
+
+CREATE TABLE `staff_records` (
+  `id` int NOT NULL,
+  `staff_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `staff_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `full_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('male','female','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_primary` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_secondary` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `national_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `passport_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` enum('single','married','divorced','widowed') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `home_address` text COLLATE utf8mb4_unicode_ci,
+  `residential_address` text COLLATE utf8mb4_unicode_ci,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `district` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `next_of_kin_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `next_of_kin_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `next_of_kin_relationship` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('active','on_leave','suspended','retired','resigned') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2099,6 +2192,85 @@ CREATE TABLE `staff_users` (
 ,`role` varchar(100)
 ,`updated_at` timestamp
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_categories`
+--
+
+CREATE TABLE `store_categories` (
+  `id` int NOT NULL,
+  `category_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `store_categories`
+--
+
+INSERT INTO `store_categories` (`id`, `category_name`, `description`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'General Utilities', 'Office supplies, cleaning materials, electrical items, etc.', 'active', '2026-06-08 16:32:17', '2026-06-08 16:32:17'),
+(2, 'Food Store Supplies', 'Food items, cooking ingredients, kitchen supplies, etc.', 'active', '2026-06-08 16:32:17', '2026-06-08 16:32:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory`
+--
+
+CREATE TABLE `store_inventory` (
+  `id` int NOT NULL,
+  `category_id` int NOT NULL,
+  `item_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Store',
+  `report_to` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'HR Manager',
+  `quantity` decimal(15,3) NOT NULL DEFAULT '0.000',
+  `unit` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pcs',
+  `reorder_level` decimal(15,3) DEFAULT '0.000',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory_reports`
+--
+
+CREATE TABLE `store_inventory_reports` (
+  `id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `reported_by` int NOT NULL,
+  `report_to` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Store',
+  `report_type` enum('Low Stock','Damage','Request','Adjustment','Transfer','Other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Request',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('Open','In Review','Resolved','Closed') COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory_transactions`
+--
+
+CREATE TABLE `store_inventory_transactions` (
+  `id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `transaction_type` enum('add','remove','adjust') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` decimal(15,3) NOT NULL,
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2584,6 +2756,16 @@ ALTER TABLE `departmental_budgets`
   ADD KEY `budget_id` (`budget_id`);
 
 --
+-- Indexes for table `employment_details`
+--
+ALTER TABLE `employment_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_department` (`department`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `staff_category_id` (`staff_category_id`);
+
+--
 -- Indexes for table `expenses`
 --
 ALTER TABLE `expenses`
@@ -2986,6 +3168,23 @@ ALTER TABLE `staff`
   ADD KEY `idx_role_id` (`role_id`);
 
 --
+-- Indexes for table `staff_categories`
+--
+ALTER TABLE `staff_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_name` (`category_name`);
+
+--
+-- Indexes for table `staff_records`
+--
+ALTER TABLE `staff_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `staff_id` (`staff_id`),
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `staff_roles`
 --
 ALTER TABLE `staff_roles`
@@ -2993,6 +3192,44 @@ ALTER TABLE `staff_roles`
   ADD UNIQUE KEY `role_name` (`role_name`),
   ADD KEY `idx_role_name` (`role_name`),
   ADD KEY `idx_role_level` (`role_level`);
+
+--
+-- Indexes for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_name` (`category_name`),
+  ADD KEY `idx_category_name` (`category_name`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category_id` (`category_id`),
+  ADD KEY `idx_item_name` (`item_name`),
+  ADD KEY `idx_department` (`department`),
+  ADD KEY `idx_report_to` (`report_to`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `store_inventory_reports`
+--
+ALTER TABLE `store_inventory_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_item_id` (`item_id`),
+  ADD KEY `idx_report_to` (`report_to`),
+  ADD KEY `idx_report_status` (`status`);
+
+--
+-- Indexes for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_item_id` (`item_id`),
+  ADD KEY `idx_transaction_type` (`transaction_type`),
+  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `students`
@@ -3174,6 +3411,12 @@ ALTER TABLE `communication_log`
 -- AUTO_INCREMENT for table `departmental_budgets`
 --
 ALTER TABLE `departmental_budgets`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `employment_details`
+--
+ALTER TABLE `employment_details`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -3414,13 +3657,49 @@ ALTER TABLE `security_visitors`
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `staff_categories`
+--
+ALTER TABLE `staff_categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff_records`
+--
+ALTER TABLE `staff_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `staff_roles`
 --
 ALTER TABLE `staff_roles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+
+--
+-- AUTO_INCREMENT for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory_reports`
+--
+ALTER TABLE `store_inventory_reports`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `students`
@@ -3534,6 +3813,13 @@ ALTER TABLE `bank_reconciliations`
 --
 ALTER TABLE `departmental_budgets`
   ADD CONSTRAINT `departmental_budgets_ibfk_1` FOREIGN KEY (`budget_id`) REFERENCES `budgets` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `employment_details`
+--
+ALTER TABLE `employment_details`
+  ADD CONSTRAINT `employment_details_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `employment_details_ibfk_2` FOREIGN KEY (`staff_category_id`) REFERENCES `staff_categories` (`id`);
 
 --
 -- Constraints for table `expense_approvals`
@@ -3709,6 +3995,24 @@ ALTER TABLE `security_visitors`
 --
 ALTER TABLE `staff`
   ADD CONSTRAINT `staff_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `staff_roles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD CONSTRAINT `store_inventory_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `store_categories` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `store_inventory_reports`
+--
+ALTER TABLE `store_inventory_reports`
+  ADD CONSTRAINT `store_inventory_reports_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD CONSTRAINT `store_inventory_transactions_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `student_counseling_sessions`
