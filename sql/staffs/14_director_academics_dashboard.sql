@@ -164,15 +164,15 @@ CREATE PROCEDURE academic_generate_enrollment_report(
 )
 BEGIN
     SELECT 
-        program_code,
+        program,
         COUNT(*) as total_students,
         COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_students,
         COUNT(CASE WHEN status = 'Graduated' THEN 1 END) as graduated_students,
-        AVG(gpa) as average_gpa
+        COUNT(CASE WHEN status = 'Suspended' THEN 1 END) as suspended_students
     FROM universal_student_profiles
-    WHERE academic_year = p_academic_year 
+    WHERE (p_academic_year IS NULL OR intake_set LIKE CONCAT('%', p_academic_year, '%'))
       AND (p_program_code IS NULL OR program = p_program_code)
-    GROUP BY program_code;
+    GROUP BY program;
 END //
 
 -- Update program coordinator

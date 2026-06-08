@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS registrar_student_registration (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
     FOREIGN KEY (registered_by) REFERENCES staff(id) ON DELETE SET NULL,
     FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL,
     INDEX idx_student_id (student_id),
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS registrar_transcripts (
     payment_status ENUM('Paid', 'Unpaid') DEFAULT 'Unpaid',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
     FOREIGN KEY (requested_by) REFERENCES staff(id) ON DELETE SET NULL,
     FOREIGN KEY (processed_by) REFERENCES staff(id) ON DELETE SET NULL,
     FOREIGN KEY (issued_by) REFERENCES staff(id) ON DELETE SET NULL,
@@ -111,8 +111,8 @@ CREATE TABLE IF NOT EXISTS registrar_academic_records (
     academic_standing ENUM('Good Standing', 'Probation', 'Suspension') DEFAULT 'Good Standing',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE CASCADE,
-    INDEX idx_student_id (student_id),
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
     INDEX idx_academic_year (academic_year)
 );
 
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS registrar_graduation (
     graduation_fee DECIMAL(10,2) DEFAULT 0,
     payment_status ENUM('Paid', 'Unpaid') DEFAULT 'Unpaid',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL,
     INDEX idx_student_id (student_id),
     INDEX idx_graduation_status (graduation_status)

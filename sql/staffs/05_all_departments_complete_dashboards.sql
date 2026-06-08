@@ -2,6 +2,8 @@
 -- ISNM COMPLETE ALL DEPARTMENTS DASHBOARDS SQL
 -- Staff-specific tables only - student data is in students database
 -- Run AFTER 04_final_complete_staffs_database.sql
+-- Prerequisites for views: students database (igangaschoolofl_students_db)
+-- Run AFTER sql/students/01_create_students_database.sql
 -- ============================================================
 
 USE igangaschoolofl_staffs_db;

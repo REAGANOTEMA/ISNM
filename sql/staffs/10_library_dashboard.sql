@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS library_members (
     status ENUM('Active', 'Inactive', 'Suspended', 'Expired') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE SET NULL,
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
     FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL,
     INDEX idx_member_id (member_id),
     INDEX idx_full_name (full_name)

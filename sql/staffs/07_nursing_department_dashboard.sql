@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS nursing_students (
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES universal_student_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,
     INDEX idx_student_number (student_number),
     INDEX idx_full_name (full_name),
     INDEX idx_intake_set (intake_set)
