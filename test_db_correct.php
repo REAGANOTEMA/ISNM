@@ -6,10 +6,10 @@ define('STAFF_DB_HOST', 'localhost');
 define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
-define('STAFF_DB_PORT', 3306);
+define('STAFF_DB_PORT', 3307);
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
-echo "Testing staff database connection (port 3306)...\n";
+echo "Testing staff database connection (port 3307)...\n";
 echo "Host: " . STAFF_DB_HOST . "\n";
 echo "Port: " . STAFF_DB_PORT . "\n";
 echo "User: " . STAFF_DB_USER . "\n";
@@ -40,10 +40,10 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'igangaschoolofl_students_db');
 define('DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
 define('DB_NAME', 'igangaschoolofl_students_db');
-define('DB_PORT', 3306);
+define('DB_PORT', 3307);
 define('DB_CHARSET', 'utf8mb4');
 
-echo "\nTesting students database connection (port 3306)...\n";
+echo "\nTesting students database connection (port 3307)...\n";
 echo "Host: " . DB_HOST . "\n";
 echo "Port: " . DB_PORT . "\n";
 echo "User: " . DB_USER . "\n";

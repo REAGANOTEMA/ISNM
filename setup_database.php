@@ -43,8 +43,8 @@ function runSQL($conn, $sql, $description) {
     }
 }
 
-// Get connection for setup operations
-$conn = new mysqli(DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, DB_PORT);
+// Get connection for setup operations (use root to create databases)
+$conn = new mysqli(DB_HOST, 'root', '', null, DB_PORT);
 $conn->set_charset(DB_CHARSET);
 
 if ($conn->connect_error) {
@@ -53,7 +53,7 @@ if ($conn->connect_error) {
 
 echo "<div class='info'>Connected to database server successfully</div>";
 
-// Create databases
+// Create databases (using root connection)
 $createDbs = "CREATE DATABASE IF NOT EXISTS `igangaschoolofl_staffs_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
              CREATE DATABASE IF NOT EXISTS `igangaschoolofl_students_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
              CREATE DATABASE IF NOT EXISTS `igangaschoolofl_website_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -340,22 +340,17 @@ SET FOREIGN_KEY_CHECKS = 1;
 runSQL($conn_students, $studentsTables, "Create students database core tables");
 
 // Insert default staff accounts
-$insertStaff = "
-INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
-SELECT * FROM (
-    SELECT 'BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', 
-           (SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()
-) AS tmp
-WHERE NOT EXISTS (SELECT email FROM staff WHERE email = 'bursar@isnm.ac.ug')
-LIMIT 1;
+$staffPasswordHash = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K';
+$principalPasswordHash = '$2y$10$VVoHfONmCz.Bsvn1.t1UoesLbM01KNPXKT/b/VJIzxeUq0M9LabK.';
 
-INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
-SELECT * FROM (
-    SELECT 'SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VVoHfONmCz.Bsvn1.t1UoesLbM01KNPXKT/b/VJIzxeUq0M9LabK.', 'School Principal', 'Academic Affairs', 
-           (SELECT id FROM staff_roles WHERE role_name = 'School Principal' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()
-) AS tmp
-WHERE NOT EXISTS (SELECT email FROM staff WHERE email = 'principal@igangaschoolofnursingandmidwifery.ac.ug')
-LIMIT 1;
+$insertStaff = "
+INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
+VALUES ('BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '" . $staffPasswordHash . "', 'School Bursar', 'Finance Department', 
+       (SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
+
+INSERT IGNORE INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
+VALUES ('SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '" . $principalPasswordHash . "', 'School Principal', 'Academic Affairs', 
+       (SELECT id FROM staff_roles WHERE role_name = 'School Principal' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW());
 ";
 
 runSQL($conn_staff, $insertStaff, "Insert default staff accounts");

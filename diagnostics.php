@@ -29,7 +29,7 @@ echo "<h2>Database Connection Status</h2>";
 echo "<table><tr><th>Database</th><th>Status</th><th>Tables Found</th></tr>";
 
 foreach ($dbs as $name => $creds) {
-    $conn = new mysqli($creds['host'], $creds['user'], $creds['pass'], $name, 3306);
+    $conn = new mysqli($creds['host'], $creds['user'], $creds['pass'], $name, 3307);
     if ($conn->connect_error) {
         echo "<tr><td>$name</td><td class='error'>✗ CONN FAILED</td><td>N/A</td></tr>";
     } else {
@@ -43,10 +43,10 @@ foreach ($dbs as $name => $creds) {
 echo "</table>";
 
 echo "<h2>Required Tables Check</h2>";
-$conn_staff = new mysqli('localhost', 'igangaschoolofl_staffs_db', 'AgKzJjZZnT5q58jCahs8', 'igangaschoolofl_staffs_db', 3306);
-$conn_students = new mysqli('localhost', 'igangaschoolofl_students_db', 'hbkKdmMHUfHTHuxWKPRf', 'igangaschoolofl_students_db', 3306);
-$conn_website = new mysqli('localhost', 'igangaschoolofl_website_db', 'AaCH75gXpekcFQj5wPZn', 'igangaschoolofl_website_db', 3306);
-$conn_ict = new mysqli('localhost', 'igangaschoolofl_ict', 'HHCrQVjr6QNKzSEVtx9J', 'igangaschoolofl_ict', 3306);
+$conn_staff = new mysqli('localhost', 'igangaschoolofl_staffs_db', 'AgKzJjZZnT5q58jCahs8', 'igangaschoolofl_staffs_db', 3307);
+$conn_students = new mysqli('localhost', 'igangaschoolofl_students_db', 'hbkKdmMHUfHTHuxWKPRf', 'igangaschoolofl_students_db', 3307);
+$conn_website = new mysqli('localhost', 'igangaschoolofl_website_db', 'AaCH75gXpekcFQj5wPZn', 'igangaschoolofl_website_db', 3307);
+$conn_ict = new mysqli('localhost', 'igangaschoolofl_ict', 'HHCrQVjr6QNKzSEVtx9J', 'igangaschoolofl_ict', 3307);
 
 $required = [
     'staffs_db' => ['staff', 'staff_roles', 'staff_activity_log', 'staff_login_sessions'],
