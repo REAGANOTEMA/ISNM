@@ -74,7 +74,7 @@ try {
         if ($conn && $conn->ping()) {
             echo "<p>✓ Main database connection successful</p>";
         } else {
-            echo "<p style='color:red;'>✗ Main database connection failed</p>";
+            echo "<p style='color:red;'>✗ Unable to connect to the main database. Please contact your system administrator.</p>";
         }
     } else {
         echo "<p style='color:red;'>✗ getConnection() function not found</p>";
@@ -89,7 +89,7 @@ try {
         if ($conn && $conn->ping()) {
             echo "<p>✓ Staff database connection successful</p>";
         } else {
-            echo "<p style='color:red;'>✗ Staff database connection failed</p>";
+            echo "<p style='color:red;'>✗ Unable to connect to the staff database. Please contact your system administrator.</p>";
         }
     } else {
         echo "<p style='color:red;'>✗ getStaffConnection() function not found</p>";

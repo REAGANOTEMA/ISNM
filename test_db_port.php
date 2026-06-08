@@ -18,7 +18,7 @@ echo "Database: " . STAFF_DB_NAME . "\n\n";
 try {
     $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
     if ($conn->connect_error) {
-        throw new Exception("Staff database connection failed: " . $conn->connect_error);
+        throw new Exception("Unable to connect to the staff database. Please contact your system administrator. (Error Reference: STAFF_DB_001) " . $conn->connect_error);
     }
     $conn->set_charset(STAFF_DB_CHARSET);
     echo "Staff database connection successful!\n";
@@ -44,7 +44,7 @@ echo "Database: " . DB_NAME . "\n\n";
 try {
     $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
     if ($conn->connect_error) {
-        throw new Exception("Students database connection failed: " . $conn->connect_error);
+        throw new Exception("Unable to connect to the students database. Please contact your system administrator. (Error Reference: STUDENTS_DB_001) " . $conn->connect_error);
     }
     $conn->set_charset(DB_CHARSET);
     echo "Students database connection successful!\n";

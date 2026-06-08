@@ -66,13 +66,13 @@ if (!function_exists('getICTConnection')) {
             $conn->set_charset(ICT_DB_CHARSET);
             
             if ($conn->connect_error) {
-                throw new Exception("ICT database connection failed: " . $conn->connect_error);
+                throw new Exception("ICT database connection failed: " . $conn->connect_error . " (Error Reference: ICT_DB_001)");
             }
             
             return $conn;
         } catch (Exception $e) {
             error_log("ICT Database Error: " . $e->getMessage());
-            die("ICT database connection failed. Please contact the administrator.");
+            die("We apologize, but the ICT database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: ICT_DB_001)");
         }
     }
 }
@@ -87,13 +87,13 @@ if (!function_exists('getStudentsConnection')) {
             $conn->set_charset(DB_CHARSET);
             
             if ($conn->connect_error) {
-                throw new Exception("Database connection failed: " . $conn->connect_error);
+                throw new Exception("Students database connection failed: " . $conn->connect_error . " (Error Reference: STUDENTS_DB_001)");
             }
             
             return $conn;
         } catch (Exception $e) {
             error_log("Database Error: " . $e->getMessage());
-            die("Database connection failed. Please contact the administrator.");
+            die("We apologize, but the students database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: STUDENTS_DB_001)");
         }
     }
 }
@@ -106,13 +106,13 @@ if (!function_exists('getStaffConnection')) {
             $conn->set_charset(STAFF_DB_CHARSET);
             
             if ($conn->connect_error) {
-                throw new Exception("Staff database connection failed: " . $conn->connect_error);
+                throw new Exception("Staff database connection failed: " . $conn->connect_error . " (Error Reference: STAFF_DB_001)");
             }
             
             return $conn;
         } catch (Exception $e) {
             error_log("Staff Database Error: " . $e->getMessage());
-            die("Staff database connection failed. Please contact the administrator.");
+            die("We apologize, but the staff database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: STAFF_DB_001)");
         }
     }
 }
@@ -125,13 +125,13 @@ if (!function_exists('getWebsiteConnection')) {
             $conn->set_charset(WEBSITE_DB_CHARSET);
             
             if ($conn->connect_error) {
-                throw new Exception("Website database connection failed: " . $conn->connect_error);
+                throw new Exception("Website database connection failed: " . $conn->connect_error . " (Error Reference: WEBSITE_DB_001)");
             }
             
             return $conn;
         } catch (Exception $e) {
             error_log("Website Database Error: " . $e->getMessage());
-            die("Website database connection failed. Please contact the administrator.");
+            die("We apologize, but the website database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: WEBSITE_DB_001)");
         }
     }
 }
