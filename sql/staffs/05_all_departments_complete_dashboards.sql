@@ -77,10 +77,8 @@ SELECT
     sp.guardian_phone,
     sp.photo_path as current_photo,
     COALESCE(sp.photo_uploaded, FALSE) as has_photo,
-    sr.dashboard_path as staff_dashboard
-FROM universal_student_profiles sp
-LEFT JOIN staff s ON s.id = sp.created_by
-LEFT JOIN staff_roles sr ON s.role_id = sr.id;
+    NULL as staff_dashboard
+FROM universal_student_profiles sp;
 
 -- ============================================================
 -- 7. VIEW FOR ALL STUDENTS (FOR CROSS-DEPARTMENT ACCESS)

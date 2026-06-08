@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS registrar_academic_records (
     gpa DECIMAL(3,2),
     cgpa DECIMAL(3,2),
     academic_standing ENUM('Good Standing', 'Probation', 'Suspension') DEFAULT 'Good Standing',
+    created_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES igangaschoolofl_students_db.students(id) ON DELETE CASCADE,

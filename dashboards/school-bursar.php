@@ -76,7 +76,8 @@
     $auth_service = $ctx['auth'];
     $user = $ctx['user'];
     $user_name = $user['full_name'] ?? '';
-    $conn = getConnection();
+    $staff_conn = $ctx['staff'];
+    $students_conn = getStudentsConnection();
     
     // Get financial statistics
     $today_collections = getTotalCollections('today');
@@ -84,21 +85,24 @@
     $month_collections = getTotalCollections('month');
     $outstanding_fees = getOutstandingFees();
     
-    // Get student statistics
-    $total_students_stmt = $conn->query("SELECT COUNT(*) as count FROM users WHERE role = 'student'");
-    $total_students = $total_students_stmt->fetch_assoc()['count'];
+    // Get student statistics from students database
+    $total_students_stmt = $students_conn->query("SELECT COUNT(*) as count FROM students WHERE status = 'Active'");
+    $total_students = $total_students_stmt ? $total_students_stmt->fetch_assoc()['count'] : 0;
     
-    $cleared_stmt = $conn->query("SELECT COUNT(*) as count FROM users u LEFT JOIN student_invoices si ON u.id = si.student_id WHERE (si.balance = 0 OR si.balance IS NULL)");
-    $cleared_students = $cleared_stmt->fetch_assoc()['count'];
-    $not_cleared_students = $total_students - $cleared_students;
+    $students_cleared = 0;
+    if ($total_students > 0) {
+        $cleared_stmt = $students_conn->query("SELECT COUNT(DISTINCT student_id) as count FROM student_invoices WHERE status = 'Paid'");
+        $students_cleared = $cleared_stmt ? $cleared_stmt->fetch_assoc()['count'] : 0;
+    }
+    $not_cleared_students = $total_students - $students_cleared;
     
-    // Get recent payments
+    // Get recent payments from students database
     $recent_payments = [];
-    $payments_stmt = $conn->query("
-        SELECT p.*, u.first_name, u.last_name, u.index_number 
+    $payments_stmt = $students_conn->query("
+        SELECT p.*, s.first_name, s.last_name, s.student_number, s.index_number 
         FROM payments p 
-        JOIN users u ON p.student_id = u.id 
-        ORDER BY p.transaction_date DESC 
+        JOIN students s ON p.student_id = s.id 
+        ORDER BY p.payment_date DESC 
         LIMIT 10
     ");
     while ($row = $payments_stmt->fetch_assoc()) {

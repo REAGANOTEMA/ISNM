@@ -10,6 +10,31 @@ USE igangaschoolofl_staffs_db;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Drop existing tables if they exist (for fresh installation)
+-- Drop child tables before parents to avoid foreign key constraint errors
+DROP TABLE IF EXISTS receipt_templates;
+DROP TABLE IF EXISTS staff_documents;
+DROP TABLE IF EXISTS staff_salaries;
+DROP TABLE IF EXISTS payroll_records;
+DROP TABLE IF EXISTS generated_documents;
+DROP TABLE IF EXISTS document_templates;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS dashboard_updates;
+DROP TABLE IF EXISTS error_logs;
+DROP TABLE IF EXISTS document_generation_log;
+DROP TABLE IF EXISTS activity_log;
+DROP TABLE IF EXISTS cache_management;
+DROP TABLE IF EXISTS api_keys;
+DROP TABLE IF EXISTS real_time_updates;
+DROP TABLE IF EXISTS analytics_cache;
+DROP TABLE IF EXISTS search_index;
+DROP TABLE IF EXISTS data_sync_status;
+DROP TABLE IF EXISTS performance_metrics;
+DROP TABLE IF EXISTS smart_suggestions;
+DROP TABLE IF EXISTS email_notifications_queue;
+DROP TABLE IF EXISTS user_preferences;
+DROP TABLE IF EXISTS advanced_reports;
+DROP TABLE IF EXISTS system_logs;
+DROP TABLE IF EXISTS backup_management;
 DROP TABLE IF EXISTS security_incidents;
 DROP TABLE IF EXISTS security_patrols;
 DROP TABLE IF EXISTS access_control_logs;
@@ -592,7 +617,7 @@ CREATE TABLE staff_access_control (
 );
 
 -- 23. Receipt Templates Table
-CREATE TABLE receipt_templates (
+CREATE TABLE IF NOT EXISTS receipt_templates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     template_name VARCHAR(100) NOT NULL UNIQUE,
     template_type ENUM('Fee Payment', 'Registration', 'Transcript', 'Certificate', 'General') NOT NULL,

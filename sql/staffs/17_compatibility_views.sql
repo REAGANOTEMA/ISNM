@@ -4,39 +4,39 @@
 
 USE igangaschoolofl_staffs_db;
 
--- Compatibility: fee_payments -> payment_records
+-- Compatibility: fee_payments -> payments (cross-database)
 CREATE OR REPLACE VIEW fee_payments AS
 SELECT 
     id,
     student_id,
     invoice_id AS fee_account_id,
-    amount AS amount_paid,
+    amount_received AS amount_paid,
     payment_method,
-    receipt_number,
+    payment_reference AS receipt_number,
     status,
     payment_date,
     notes,
-    processed_by,
+    received_by AS processed_by,
     created_at,
     updated_at
-FROM payment_records;
+FROM igangaschoolofl_students_db.payments;
 
--- Compatibility: student_fee_accounts -> fee_accounts  
+-- Compatibility: student_fee_accounts -> student_fee_assignments (cross-database)
 CREATE OR REPLACE VIEW student_fee_accounts AS
 SELECT 
     id,
     student_id,
-    fee_type AS program,
-    amount AS total_fees,
+    fee_structure_id,
+    assigned_amount AS total_fees,
     paid_amount AS amount_paid,
     balance,
     status,
     due_date,
-    receipt_number,
-    recorded_by AS created_by,
+    NULL AS receipt_number,
+    assigned_by AS created_by,
     created_at,
     updated_at
-FROM fee_accounts;
+FROM igangaschoolofl_students_db.student_fee_assignments;
 
 -- Compatibility: users VIEW (already exists in 04_final_complete_staffs_database.sql)
 -- Ensure it includes password for auth compatibility

@@ -11,13 +11,14 @@ VALUES ('Director ICT', 'Head of Computer Lab and IT Services - Independent Auth
 -- Create/update the ICT Director account
 -- Email: computer-lab@igangaschoolofnursingandmidwifery.ac.ug
 -- Password: Techno123 (bcrypt hash below)
-INSERT INTO staff (full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at)
-VALUES ('ICT Department', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug',
+INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at)
+VALUES ('ICT001', 'ICT Department', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug',
         '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
         'Director ICT', 'Information Communication Technology',
         (SELECT id FROM staff_roles WHERE role_name = 'Director ICT'),
         'Active', CURDATE(), FALSE, TRUE, NOW())
 ON DUPLICATE KEY UPDATE
+    staff_id = 'ICT001',
     position = 'Director ICT',
     department = 'Information Communication Technology',
     status = 'Active',

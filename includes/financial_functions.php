@@ -1,13 +1,20 @@
 <?php
 /**
  * Financial Management Functions for ISNM
+ * Uses bursar_system.sql schema (student_invoices, payments, expenditure_records, penalty_configurations)
  */
 
 require_once __DIR__ . '/../config/database.php';
 
+if (!function_exists('getStudentsConnectionFinance')) {
+    function getStudentsConnectionFinance() {
+        return getStudentsConnection();
+    }
+}
+
 if (!function_exists('generateFeeInvoiceNumber')) {
     function generateFeeInvoiceNumber() {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $prefix = 'INV-' . date('Y') . '-';
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_invoices WHERE invoice_number LIKE ?");
         $likePattern = $prefix . '%';
@@ -21,7 +28,7 @@ if (!function_exists('generateFeeInvoiceNumber')) {
 
 if (!function_exists('generatePaymentReference')) {
     function generatePaymentReference() {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $prefix = 'PMT-' . date('Ymd') . '-';
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM payments WHERE payment_reference LIKE ?");
         $likePattern = $prefix . '%';
@@ -35,7 +42,7 @@ if (!function_exists('generatePaymentReference')) {
 
 if (!function_exists('generateReceiptNumber')) {
     function generateReceiptNumber() {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $prefix = 'RCPT-' . date('Y') . '-';
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM payment_receipts WHERE receipt_number LIKE ?");
         $likePattern = $prefix . '%';
@@ -49,9 +56,9 @@ if (!function_exists('generateReceiptNumber')) {
 
 if (!function_exists('generateExpenseId')) {
     function generateExpenseId() {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $prefix = 'EXP-' . date('Y') . '-';
-        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM expenses WHERE expense_id LIKE ?");
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM expenditure_records WHERE expenditure_number LIKE ?");
         $likePattern = $prefix . '%';
         $stmt->bind_param("s", $likePattern);
         $stmt->execute();
@@ -63,11 +70,11 @@ if (!function_exists('generateExpenseId')) {
 
 if (!function_exists('getStudentBalance')) {
     function getStudentBalance($student_id) {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $stmt = $conn->prepare("
             SELECT COALESCE(SUM(balance), 0) as total_balance 
             FROM student_invoices 
-            WHERE student_id = ? AND status IN ('pending', 'partial', 'overdue')
+            WHERE student_id = ? AND status IN ('Pending', 'Partially Paid', 'Overdue')
         ");
         $stmt->bind_param("i", $student_id);
         $stmt->execute();
@@ -78,31 +85,17 @@ if (!function_exists('getStudentBalance')) {
 
 if (!function_exists('calculatePenalty')) {
     function calculatePenalty($amount, $days_late = 0, $penalty_config_id = null) {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $penalty = 0;
         
         if ($penalty_config_id) {
-            $stmt = $conn->prepare("SELECT * FROM penalty_config WHERE id = ? AND status = 'active'");
+            $stmt = $conn->prepare("SELECT * FROM penalty_configurations WHERE id = ? AND is_active = TRUE");
             $stmt->bind_param("i", $penalty_config_id);
             $stmt->execute();
             $config = $stmt->get_result()->fetch_assoc();
             
             if ($config) {
-                switch ($config['calculation_method']) {
-                    case 'fixed_amount':
-                        $penalty = $config['fixed_amount'];
-                        break;
-                    case 'percentage':
-                        $penalty = ($amount * $config['percentage_value']) / 100;
-                        break;
-                    case 'daily':
-                        $penalty = $config['daily_rate'] * $days_late;
-                        break;
-                }
-                
-                if ($config['max_penalty_amount'] > 0 && $penalty > $config['max_penalty_amount']) {
-                    $penalty = $config['max_penalty_amount'];
-                }
+                $penalty = (float)($config['amount'] ?? 0);
             }
         }
         
@@ -112,11 +105,11 @@ if (!function_exists('calculatePenalty')) {
 
 if (!function_exists('updateStudentInvoiceBalance')) {
     function updateStudentInvoiceBalance($invoice_id) {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $stmt = $conn->prepare("
-            SELECT si.total_amount, COALESCE(SUM(p.amount), 0) as paid
+            SELECT si.total_amount, COALESCE(SUM(p.amount_received), 0) as paid
             FROM student_invoices si
-            LEFT JOIN payments p ON si.id = p.invoice_id AND p.status IN ('verified', 'approved')
+            LEFT JOIN payments p ON si.id = p.invoice_id AND p.status = 'Completed'
             WHERE si.id = ?
             GROUP BY si.id
         ");
@@ -131,15 +124,15 @@ if (!function_exists('updateStudentInvoiceBalance')) {
             
             $update_stmt = $conn->prepare("
                 UPDATE student_invoices 
-                SET amount_paid = ?, balance = ?, 
+                SET amount_paid = ?, 
                     status = CASE 
-                        WHEN ? >= ? THEN 'paid' 
-                        WHEN ? > 0 THEN 'partial' 
+                        WHEN ? >= ? THEN 'Paid' 
+                        WHEN ? > 0 THEN 'Partially Paid' 
                         ELSE status 
                     END
                 WHERE id = ?
             ");
-            $update_stmt->bind_param("dddddi", $paid, $balance, $paid, $total, $paid, $invoice_id);
+            $update_stmt->bind_param("ddddi", $paid, $paid, $total, $paid, $invoice_id);
             $update_stmt->execute();
         }
     }
@@ -147,31 +140,31 @@ if (!function_exists('updateStudentInvoiceBalance')) {
 
 if (!function_exists('getTotalCollections')) {
     function getTotalCollections($period = 'today') {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         $where_clause = "";
         $current_date = date('Y-m-d');
         
         switch ($period) {
             case 'today':
-                $where_clause = "WHERE DATE(transaction_date) = '$current_date' AND status IN ('verified', 'approved')";
+                $where_clause = "WHERE DATE(payment_date) = '$current_date' AND status = 'Completed'";
                 break;
             case 'week':
-                $where_clause = "WHERE YEARWEEK(transaction_date) = YEARWEEK(NOW()) AND status IN ('verified', 'approved')";
+                $where_clause = "WHERE YEARWEEK(payment_date) = YEARWEEK(NOW()) AND status = 'Completed'";
                 break;
             case 'month':
-                $where_clause = "WHERE MONTH(transaction_date) = MONTH(NOW()) AND YEAR(transaction_date) = YEAR(NOW()) AND status IN ('verified', 'approved')";
+                $where_clause = "WHERE MONTH(payment_date) = MONTH(NOW()) AND YEAR(payment_date) = YEAR(NOW()) AND status = 'Completed'";
                 break;
         }
         
-        $stmt = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM payments $where_clause");
+        $stmt = $conn->query("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments $where_clause");
         return $stmt->fetch_assoc()['total'];
     }
 }
 
 if (!function_exists('getOutstandingFees')) {
     function getOutstandingFees() {
-        $conn = getConnection();
-        $stmt = $conn->query("SELECT COALESCE(SUM(balance), 0) as total FROM student_invoices WHERE status IN ('pending', 'partial', 'overdue')");
+        $conn = getStudentsConnection();
+        $stmt = $conn->query("SELECT COALESCE(SUM(balance), 0) as total FROM student_invoices WHERE status IN ('Pending', 'Partially Paid', 'Overdue')");
         return $stmt->fetch_assoc()['total'];
     }
 }
@@ -182,35 +175,27 @@ if (!function_exists('logFinancialActivity')) {
             session_start();
         }
         
-        $conn = getConnection();
+        $conn = getStaffConnection();
         $stmt = $conn->prepare("
-            INSERT INTO financial_audit_log 
-            (action_type, table_name, record_id, old_values, new_values, user_id, user_role, ip_address) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO staff_activity_log 
+            (staff_id, activity_type, activity_description, module_accessed, record_id, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         
         $user_id = $_SESSION['user_id'] ?? 0;
-        $user_role = $_SESSION['role'] ?? '';
+        $description = "$action_type on $table_name #$record_id";
+        $module = 'finance';
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
-        $stmt->bind_param(
-            "ssisssss",
-            $action_type,
-            $table_name,
-            $record_id,
-            json_encode($old_values),
-            json_encode($new_values),
-            $user_id,
-            $user_role,
-            $ip_address
-        );
+        $stmt->bind_param("isssiss", $user_id, $action_type, $description, $module, $record_id, $ip_address, $user_agent);
         $stmt->execute();
     }
 }
 
 if (!function_exists('generateFinancialStatement')) {
     function generateFinancialStatement($student_id) {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         
         $stmt = $conn->prepare("
             SELECT 
@@ -233,7 +218,7 @@ if (!function_exists('generateFinancialStatement')) {
         $stmt = $conn->prepare("
             SELECT 
                 p.payment_reference,
-                p.amount,
+                p.amount_received as amount,
                 p.payment_method,
                 p.payment_date,
                 p.status
@@ -261,10 +246,9 @@ if (!function_exists('getPaymentProviderLogo')) {
             'mtn_momo' => '../images/mtn-logo.svg',
             'airtel_money' => '../images/airtel-logo.svg',
             'stanbic_bank' => '../images/stanbic-logo.svg',
-            'equity_bank' => '../images/equity-logo.svg',
-            'centenary_bank' => '../images/centenary-logo.svg',
+            'equity_bank' => '../images/equity-bank.svg',
+            'centenary_bank' => '../images/centenary-bank.svg',
         ];
         return $logos[$provider] ?? '../images/bank-default.svg';
     }
 }
-?>

@@ -43,16 +43,17 @@ INSERT IGNORE INTO staff (
 -- Finance Dashboard Summary View
 -- Uses students table from students_db for active student count,
 -- and billing tables from both databases for financial summaries.
+-- Note: student_invoices => student_fee_assignments + payments in students_db
 CREATE OR REPLACE VIEW finance_dashboard_summary AS
 SELECT 
     -- Student Fee Summary (students are in the students database)
     (SELECT COUNT(*) FROM igangaschoolofl_students_db.students WHERE status = 'Active') as total_active_students,
     
-    -- Invoice Summary
-    (SELECT COUNT(*) FROM igangaschoolofl_students_db.student_invoices WHERE status = 'Pending') as pending_invoices,
-    (SELECT COUNT(*) FROM igangaschoolofl_students_db.student_invoices WHERE status = 'Paid') as paid_invoices,
-    (SELECT SUM(net_amount) FROM igangaschoolofl_students_db.student_invoices WHERE status = 'Pending') as pending_amount,
-    (SELECT SUM(net_amount) FROM igangaschoolofl_students_db.student_invoices WHERE status = 'Paid') as collected_amount,
+    -- Invoice Summary (student_fee_assignments acts as invoice records)
+    (SELECT COUNT(*) FROM igangaschoolofl_students_db.student_fee_assignments WHERE status IN ('Unpaid', 'Partially Paid', 'Overdue')) as pending_invoices,
+    (SELECT COUNT(*) FROM igangaschoolofl_students_db.student_fee_assignments WHERE status = 'Paid') as paid_invoices,
+    (SELECT SUM(assigned_amount) FROM igangaschoolofl_students_db.student_fee_assignments WHERE status IN ('Unpaid', 'Partially Paid', 'Overdue')) as pending_amount,
+    (SELECT SUM(paid_amount) FROM igangaschoolofl_students_db.student_fee_assignments WHERE status = 'Paid') as collected_amount,
     
     -- Payment Summary
     (SELECT COUNT(*) FROM igangaschoolofl_students_db.payments WHERE status = 'Completed') as total_payments,
@@ -63,7 +64,7 @@ SELECT
     (SELECT SUM(allocated_amount) FROM igangaschoolofl_staffs_db.budget_records WHERE status = 'Active') as total_budget_allocated,
     (SELECT SUM(spent_amount) FROM igangaschoolofl_staffs_db.budget_records WHERE status = 'Active') as total_budget_spent,
     
-    -- Scholarship Summary
+    -- Sponsorship Summary
     (SELECT COUNT(*) FROM igangaschoolofl_students_db.sponsorships WHERE status = 'Active') as active_scholarships,
     (SELECT SUM(amount) FROM igangaschoolofl_students_db.sponsorships WHERE status = 'Active') as total_scholarship_value;
 
@@ -73,15 +74,17 @@ SELECT
     s.student_number,
     s.full_name,
     s.program,
+    COALESCE(fs.fee_name, 'General Fee') as fee_type,
     sfa.assigned_amount as fee_balance,
     COALESCE(SUM(p.amount_received), 0) as amount_paid,
     (sfa.assigned_amount - COALESCE(SUM(p.amount_received), 0)) as outstanding_balance,
     sfa.status as fee_status
 FROM igangaschoolofl_students_db.students s
 JOIN igangaschoolofl_students_db.student_fee_assignments sfa ON s.id = sfa.student_id
+LEFT JOIN igangaschoolofl_students_db.fee_structures fs ON sfa.fee_structure_id = fs.id
 LEFT JOIN igangaschoolofl_students_db.payments p ON s.id = p.student_id AND p.status = 'Completed'
 WHERE sfa.status IN ('Unpaid', 'Partially Paid', 'Overdue')
-GROUP BY s.id, s.student_number, s.full_name, s.program, sfa.assigned_amount, sfa.status;
+GROUP BY s.id, s.student_number, s.full_name, s.program, fs.fee_name, sfa.assigned_amount, sfa.status;
 
 -- Revenue by Program View
 CREATE OR REPLACE VIEW finance_revenue_by_program AS
@@ -110,7 +113,7 @@ BEGIN
         s.student_number,
         s.full_name,
         s.program,
-        sfa.fee_type,
+        COALESCE(fs.fee_name, 'General Fee') as fee_type,
         sfa.assigned_amount as assessed_amount,
         sfa.due_date,
         sfa.paid_amount,
@@ -118,6 +121,7 @@ BEGIN
         sfa.status
     FROM igangaschoolofl_students_db.students s
     JOIN igangaschoolofl_students_db.student_fee_assignments sfa ON s.id = sfa.student_id
+    LEFT JOIN igangaschoolofl_students_db.fee_structures fs ON sfa.fee_structure_id = fs.id
     WHERE s.id = p_student_id
     ORDER BY sfa.due_date;
 END //
