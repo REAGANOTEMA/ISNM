@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS student_fee_assignments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (fee_structure_id) REFERENCES fee_structures(id) ON DELETE CASCADE,
-    FOREIGN KEY (assigned_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_student_id (student_id),
     INDEX idx_status (status),
     INDEX idx_due_date (due_date)
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS sponsorships (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_sponsorship_code (sponsorship_code),
     INDEX idx_student_id (student_id),
     INDEX idx_status (status)
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS student_invoices (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (fee_assignment_id) REFERENCES student_fee_assignments(id) ON DELETE SET NULL,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_invoice_number (invoice_number),
     INDEX idx_student_id (student_id),
     INDEX idx_status (status),
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (invoice_id) REFERENCES student_invoices(id) ON DELETE SET NULL,
-    FOREIGN KEY (received_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (received_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_payment_reference (payment_reference),
     INDEX idx_student_id (student_id),
     INDEX idx_status (status),
@@ -300,8 +300,8 @@ CREATE TABLE IF NOT EXISTS payment_receipts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (issued_by) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (voided_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (issued_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (voided_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_receipt_number (receipt_number),
     INDEX idx_payment_id (payment_id),
     INDEX idx_student_id (student_id)
@@ -325,8 +325,8 @@ CREATE TABLE IF NOT EXISTS proof_of_payments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (verified_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (uploaded_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (verified_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_proof_number (proof_number),
     INDEX idx_payment_id (payment_id),
     INDEX idx_student_id (student_id)
@@ -352,8 +352,8 @@ CREATE TABLE IF NOT EXISTS fee_adjustments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (invoice_id) REFERENCES student_invoices(id) ON DELETE SET NULL,
-    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_adjustment_number (adjustment_number),
     INDEX idx_student_id (student_id),
     INDEX idx_status (status)
@@ -379,8 +379,8 @@ CREATE TABLE IF NOT EXISTS student_penalties (
     status ENUM('Active', 'Waived', 'Paid') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (applied_by) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (waived_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (applied_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (waived_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_penalty_number (penalty_number),
     INDEX idx_student_id (student_id),
     INDEX idx_status (status)
@@ -418,7 +418,7 @@ CREATE TABLE IF NOT EXISTS fee_reminders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (invoice_id) REFERENCES student_invoices(id) ON DELETE SET NULL,
-    FOREIGN KEY (sent_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (sent_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_reminder_number (reminder_number),
     INDEX idx_student_id (student_id),
     INDEX idx_reminder_date (reminder_date)
@@ -445,8 +445,8 @@ CREATE TABLE IF NOT EXISTS expenditure_records (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (budget_record_id) REFERENCES budget_records(id) ON DELETE SET NULL,
-    FOREIGN KEY (approved_by) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (recorded_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (recorded_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_expenditure_number (expenditure_number),
     INDEX idx_expenditure_date (expenditure_date),
     INDEX idx_recorded_by (recorded_by)
@@ -471,7 +471,7 @@ CREATE TABLE IF NOT EXISTS general_ledger (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES chart_of_accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (cost_center_id) REFERENCES cost_centers(id) ON DELETE SET NULL,
-    FOREIGN KEY (posted_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (posted_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_entry_number (entry_number),
     INDEX idx_account_id (account_id),
     INDEX idx_transaction_date (transaction_date)
@@ -495,7 +495,7 @@ CREATE TABLE IF NOT EXISTS cash_book (
     recorded_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (related_student_id) REFERENCES students(id) ON DELETE SET NULL,
-    FOREIGN KEY (recorded_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (recorded_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_entry_number (entry_number),
     INDEX idx_entry_type (entry_type),
     INDEX idx_transaction_date (transaction_date)
@@ -535,8 +535,8 @@ CREATE TABLE IF NOT EXISTS assets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES asset_categories(id) ON DELETE SET NULL,
-    FOREIGN KEY (assigned_to) REFERENCES staff(id) ON DELETE SET NULL,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_to) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_asset_tag (asset_tag),
     INDEX idx_status (status)
 );
@@ -573,8 +573,8 @@ CREATE TABLE IF NOT EXISTS staff_salaries (
     created_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (staff_id) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_staff_id (staff_id),
     INDEX idx_effective_date (effective_date),
     INDEX idx_status (status)
@@ -596,7 +596,7 @@ CREATE TABLE IF NOT EXISTS financial_reports (
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Draft', 'Final', 'Archived') DEFAULT 'Draft',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (generated_by) REFERENCES staff(id) ON DELETE SET NULL,
+    FOREIGN KEY (generated_by) REFERENCES igangaschoolofl_staffs_db.staff(id) ON DELETE SET NULL,
     INDEX idx_report_type (report_type),
     INDEX idx_generated_at (generated_at)
 );

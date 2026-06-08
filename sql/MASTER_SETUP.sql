@@ -1,21 +1,25 @@
 -- ============================================================
--- ISNM MASTER SETUP - RUN IN MySQL COMMAND LINE
--- For phpMyAdmin: import each SQL file individually in the order shown
+-- ISNM MASTER SETUP - SINGLE FILE IMPORT FOR PHPMYADMIN
+-- ============================================================
+-- For phpMyAdmin: Import the single file "00_MASTER_ALL_IN_ONE.sql"
+-- Alternatively, you can import each SQL file individually in the order shown below
 -- ============================================================
 
 -- Step 1: Create databases
 SOURCE sql/00_create_all_databases.sql;
 
--- Step 2: Students Database Schema
+-- Step 2: Staffs Database Core Schema (MUST be BEFORE students for cross-database FK references)
+USE `igangaschoolofl_staffs_db`;
+SOURCE sql/staffs/04_final_complete_staffs_database.sql;
+
+-- Step 3: Students Database Schema (with bursar financial tables)
+-- Note: bursar_system.sql has FKs to igangaschoolofl_staffs_db.staff - requires staff table
 USE `igangaschoolofl_students_db`;
 SOURCE sql/students/01_create_students_database.sql;
 SOURCE sql/students/bursar_system.sql;
 
--- Step 3: Staffs Database Core Schema
+-- Step 4: Department Dashboards (views reference students_db tables, so run after step 3)
 USE `igangaschoolofl_staffs_db`;
-SOURCE sql/staffs/04_final_complete_staffs_database.sql;
-
--- Step 4: Department Dashboards (views reference students_db tables, so run after step 2)
 SOURCE sql/staffs/05_all_departments_complete_dashboards.sql;
 
 -- Step 5: Department-specific dashboard tables

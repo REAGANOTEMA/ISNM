@@ -109,9 +109,4 @@ SELECT
 FROM staff s
 WHERE s.department = 'Human Resources' OR s.position LIKE '%HR%';
 
--- Add indexes to views' underlying tables if not present
-ALTER TABLE payment_records ADD INDEX idx_student_id (student_id);
-ALTER TABLE payment_records ADD INDEX idx_status (status);
-ALTER TABLE payment_records ADD INDEX idx_receipt_number (receipt_number);
-ALTER TABLE fee_accounts ADD INDEX idx_student_id (student_id);
-ALTER TABLE fee_accounts ADD INDEX idx_status (status);
+-- End of compatibility views
