@@ -12,7 +12,7 @@ $config = [
         'staffs' => 'igangaschoolofl_staffs_db',
         'students' => 'igangaschoolofl_students_db',
         'website' => 'igangaschoolofl_website_db',
-        'ict' => 'isnm_ict'
+        'ict' => 'igangaschoolofl_ict'
     ]
 ];
 
@@ -90,7 +90,7 @@ if (!function_exists('getDatabaseConnection')) {
             case 'website':
                 return DatabaseConnection::getWebsiteConnection();
             case 'ict':
-                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('isnm_ict');
+                return DatabaseConnection::getICTConnection() ?? DatabaseConnection::getConnection('igangaschoolofl_ict');
             default:
                 throw new Exception("Unknown database: {$database}");
         }

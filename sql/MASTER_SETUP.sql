@@ -1,6 +1,6 @@
 -- ============================================================
--- ISNM MASTER SETUP - RUN IN phpMyAdmin SQL TAB
--- This file sets up ALL databases, tables, roles, and accounts
+-- ISNM MASTER SETUP - RUN IN MySQL COMMAND LINE
+-- For phpMyAdmin: import each SQL file individually
 -- ============================================================
 
 -- Step 1: Staff Database Core Schema
@@ -36,7 +36,7 @@ USE `igangaschoolofl_website_db`;
 SOURCE sql/website/01_create_website_database.sql;
 
 -- Step 7: ICT Computer Lab Database
-USE `isnm_ict`;
+USE `igangaschoolofl_ict`;
 SOURCE sql/ict/01_create_computer_lab_tables.sql;
 
 -- Step 8: Create ICT accounts in staff database
@@ -46,5 +46,5 @@ SOURCE sql/ict/create_computer_lab_manager.sql;
 
 SELECT '========================================' as '';
 SELECT 'ISNM COMPLETE SETUP FINISHED!' as '';
-SELECT 'Databases: igangaschoolofl_staffs_db, igangaschoolofl_students_db, igangaschoolofl_website_db, isnm_ict' as '';
-SELECT 'Run this in phpMyAdmin by importing this file or running each SOURCE command individually.' as '';
+SELECT 'Databases: igangaschoolofl_staffs_db, igangaschoolofl_students_db, igangaschoolofl_website_db, igangaschoolofl_ict' as '';
+SELECT 'Run this in MySQL CLI. For phpMyAdmin, import individual SQL files.' as '';

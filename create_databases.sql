@@ -11,8 +11,7 @@ CREATE DATABASE IF NOT EXISTS `igangaschoolofl_students_db` CHARACTER SET utf8mb
 CREATE DATABASE IF NOT EXISTS `igangaschoolofl_website_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Create ICT/Computer Lab database
-CREATE DATABASE IF NOT EXISTS `isnm_ict` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `igangaschoolofl_ict` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Show databases
 SHOW DATABASES LIKE 'igangaschoolofl%';
-SHOW DATABASES LIKE 'isnm%';

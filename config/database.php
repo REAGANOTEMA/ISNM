@@ -11,23 +11,22 @@
  * Password: hbkKdmMHUfHTHuxWKPRf
  */
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
 define('DB_PORT', 3306);
-define('DB_NAME', 'igangaschoolofl_students_db');
 define('DB_CHARSET', 'utf8mb4');
 define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
+define('STUDENTS_DB_USER', 'igangaschoolofl_students_db');
+define('STUDENTS_DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
 
 /* 
  * Staff database connection parameters
  * Hostname: localhost
  * Database: igangaschoolofl_staffs_db
- * Username: root (for local XAMPP development)
- * Password: (empty for XAMPP default)
+ * Username: igangaschoolofl_staffs_db
+ * Password: AgKzJjZZnT5q58jCahs8
  */
 define('STAFF_DB_HOST', 'localhost');
-define('STAFF_DB_USER', 'root');
-define('STAFF_DB_PASS', '');
+define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
+define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
 define('STAFF_DB_PORT', 3306);
 define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
@@ -36,12 +35,12 @@ define('STAFF_DB_CHARSET', 'utf8mb4');
  * Website database connection parameters
  * Hostname: localhost
  * Database: igangaschoolofl_website_db
- * Username: root (for local XAMPP development)
- * Password: (empty for XAMPP default)
+ * Username: igangaschoolofl_website_db
+ * Password: AaCH75gXpekcFQj5wPZn
  */
 define('WEBSITE_DB_HOST', 'localhost');
-define('WEBSITE_DB_USER', 'root');
-define('WEBSITE_DB_PASS', '');
+define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
+define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
 define('WEBSITE_DB_PORT', 3306);
 define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
 define('WEBSITE_DB_CHARSET', 'utf8mb4');
@@ -49,15 +48,15 @@ define('WEBSITE_DB_CHARSET', 'utf8mb4');
 /** 
  * ICT/Computer Lab database connection parameters
  * Hostname: localhost
- * Database: isnm_ict
- * Username: root (for local XAMPP development)
- * Password: (empty for XAMPP default)
+ * Database: igangaschoolofl_ict
+ * Username: igangaschoolofl_ict
+ * Password: HHCrQVjr6QNKzSEVtx9J
  */
 define('ICT_DB_HOST', 'localhost');
-define('ICT_DB_USER', 'root');
-define('ICT_DB_PASS', '');
+define('ICT_DB_USER', 'igangaschoolofl_ict');
+define('ICT_DB_PASS', 'HHCrQVjr6QNKzSEVtx9J');
 define('ICT_DB_PORT', 3306);
-define('ICT_DB_NAME', 'isnm_ict');
+define('ICT_DB_NAME', 'igangaschoolofl_ict');
 define('ICT_DB_CHARSET', 'utf8mb4');
 
 if (!function_exists('getICTConnection')) {
@@ -84,7 +83,7 @@ if (!function_exists('getICTConnection')) {
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
         try {
-            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, STUDENTS_DB_NAME, DB_PORT);
+            $conn = new mysqli(DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, DB_PORT);
             $conn->set_charset(DB_CHARSET);
             
             if ($conn->connect_error) {

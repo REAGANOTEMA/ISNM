@@ -4,8 +4,8 @@
 -- ============================================
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS isnm_ict;
-USE isnm_ict;
+CREATE DATABASE IF NOT EXISTS igangaschoolofl_ict;
+USE igangaschoolofl_ict;
 
 -- ============================================
 -- 1. Lab Computers Table
@@ -170,54 +170,54 @@ CREATE TABLE IF NOT EXISTS lab_usage_stats (
 -- ============================================
 
 -- Sample Lab Computers
-INSERT INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed, last_maintenance, next_maintenance) VALUES
-('LAB-A-001', 'Computer Lab A - Station 1', 'Lab A - Floor 1', 'online', '192.168.1.101', 'AA:BB:CC:DD:EE:01', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01'),
-('LAB-A-002', 'Computer Lab A - Station 2', 'Lab A - Floor 1', 'online', '192.168.1.102', 'AA:BB:CC:DD:EE:02', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01'),
+INSERT INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed, last_maintenance, next_maintenance, issues_reported) VALUES
+('LAB-A-001', 'Computer Lab A - Station 1', 'Lab A - Floor 1', 'online', '192.168.1.101', 'AA:BB:CC:DD:EE:01', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', NULL),
+('LAB-A-002', 'Computer Lab A - Station 2', 'Lab A - Floor 1', 'online', '192.168.1.102', 'AA:BB:CC:DD:EE:02', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', NULL),
 ('LAB-A-003', 'Computer Lab A - Station 3', 'Lab A - Floor 1', 'offline', '192.168.1.103', 'AA:BB:CC:DD:EE:03', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', 'Hardware issue - PSU replacement needed'),
-('LAB-B-001', 'Computer Lab B - Station 1', 'Lab B - Floor 2', 'online', '192.168.2.101', 'BB:CC:DD:EE:FF:01', 'Intel i7, 16GB RAM, 512GB SSD', 'Windows 11 Pro', '2024-05-15', '2024-08-15'),
+('LAB-B-001', 'Computer Lab B - Station 1', 'Lab B - Floor 2', 'online', '192.168.2.101', 'BB:CC:DD:EE:FF:01', 'Intel i7, 16GB RAM, 512GB SSD', 'Windows 11 Pro', '2024-05-15', '2024-08-15', NULL),
 ('LAB-B-002', 'Computer Lab B - Station 2', 'Lab B - Floor 2', 'maintenance', '192.168.2.102', 'BB:CC:DD:EE:FF:02', 'Intel i7, 16GB RAM, 512GB SSD', 'Windows 11 Pro', '2024-05-15', '2024-08-15', 'OS reinstallation in progress');
 
 -- Sample Lab Bookings
-INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, status, lab_assigned) VALUES
-('BK-2024-001', 'Introduction to Nursing Informatics', 'Dr. Sarah Johnson', 'sjohnson@isnm.ac.ug', '2024-06-10', '09:00 AM - 11:00 AM', 25, 'Practical session on electronic health records', 'confirmed', 'Lab A'),
-('BK-2024-002', 'Research Methods', 'Prof. Michael Okonkwo', 'mokonkwo@isnm.ac.ug', '2024-06-10', '02:00 PM - 04:00 PM', 30, 'Data analysis using SPSS', 'pending', 'Lab B'),
-('BK-2024-003', 'Computer Literacy', 'Ms. Grace Namukasa', 'gnamukasa@isnm.ac.ug', '2024-06-11', '09:00 AM - 11:00 AM', 20, 'Basic computer skills training', 'confirmed', 'Lab A');
+INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, special_requirements, status, approved_by, lab_assigned) VALUES
+('BK-2024-001', 'Introduction to Nursing Informatics', 'Dr. Sarah Johnson', 'sjohnson@isnm.ac.ug', '2024-06-10', '09:00 AM - 11:00 AM', 25, 'Practical session on electronic health records', NULL, 'confirmed', NULL, 'Lab A'),
+('BK-2024-002', 'Research Methods', 'Prof. Michael Okonkwo', 'mokonkwo@isnm.ac.ug', '2024-06-10', '02:00 PM - 04:00 PM', 30, 'Data analysis using SPSS', NULL, 'pending', NULL, 'Lab B'),
+('BK-2024-003', 'Computer Literacy', 'Ms. Grace Namukasa', 'gnamukasa@isnm.ac.ug', '2024-06-11', '09:00 AM - 11:00 AM', 20, 'Basic computer skills training', NULL, 'confirmed', NULL, 'Lab A');
 
 -- Sample IT Support Tickets
-INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description, status) VALUES
-('TKT-2024-001', 'John Mugisha', 'jmugisha@student.isnm.ac.ug', 'student', 'software', 'medium', 'Unable to access SPSS software on Lab A computers', 'open'),
-('TKT-2024-002', 'Dr. Emily Achieng', 'eachieng@isnm.ac.ug', 'staff', 'hardware', 'high', 'Projector in Lab B not displaying properly', 'in_progress'),
-('TKT-2024-003', 'Peter Kato', 'pkato@student.isnm.ac.ug', 'student', 'account', 'low', 'Forgot password for student portal', 'open'),
-('TKT-2024-004', 'Ms. Ruth Akello', 'rakello@isnm.ac.ug', 'staff', 'network', 'critical', 'WiFi connection dropping frequently in Lab A', 'open');
+INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description, status, assigned_to, resolution_notes, resolved_at) VALUES
+('TKT-2024-001', 'John Mugisha', 'jmugisha@student.isnm.ac.ug', 'student', 'software', 'medium', 'Unable to access SPSS software on Lab A computers', 'open', NULL, NULL, NULL),
+('TKT-2024-002', 'Dr. Emily Achieng', 'eachieng@isnm.ac.ug', 'staff', 'hardware', 'high', 'Projector in Lab B not displaying properly', 'in_progress', NULL, NULL, NULL),
+('TKT-2024-003', 'Peter Kato', 'pkato@student.isnm.ac.ug', 'student', 'account', 'low', 'Forgot password for student portal', 'open', NULL, NULL, NULL),
+('TKT-2024-004', 'Ms. Ruth Akello', 'rakello@isnm.ac.ug', 'staff', 'network', 'critical', 'WiFi connection dropping frequently in Lab A', 'open', NULL, NULL, NULL);
 
 -- Sample Software Inventory
-INSERT INTO software_inventory (software_name, version, license_type, license_expiry, installation_count, update_available, latest_version, category) VALUES
-('Microsoft Office 365', '2024', 'educational', '2025-12-31', 50, FALSE, '2024', 'office'),
-('SPSS Statistics', '29.0', 'commercial', '2024-12-31', 25, TRUE, '30.0', 'development'),
-('Windows 11 Pro', '23H2', 'educational', '2026-06-30', 50, FALSE, '23H2', 'os'),
-('Adobe Creative Cloud', '2024', 'educational', '2024-08-31', 15, TRUE, '2024.1', 'design'),
-('Malwarebytes Antivirus', '5.0', 'commercial', '2025-01-15', 50, FALSE, '5.0', 'antivirus');
+INSERT INTO software_inventory (software_name, version, license_key, license_type, license_expiry, installation_count, update_available, latest_version, download_url, category, notes) VALUES
+('Microsoft Office 365', '2024', NULL, 'educational', '2025-12-31', 50, FALSE, '2024', NULL, 'office', NULL),
+('SPSS Statistics', '29.0', NULL, 'commercial', '2024-12-31', 25, TRUE, '30.0', NULL, 'development', NULL),
+('Windows 11 Pro', '23H2', NULL, 'educational', '2026-06-30', 50, FALSE, '23H2', NULL, 'os', NULL),
+('Adobe Creative Cloud', '2024', NULL, 'educational', '2024-08-31', 15, TRUE, '2024.1', NULL, 'design', NULL),
+('Malwarebytes Antivirus', '5.0', NULL, 'commercial', '2025-01-15', 50, FALSE, '5.0', NULL, 'antivirus', NULL);
 
 -- Sample Network Devices
-INSERT INTO network_devices (device_name, device_type, ip_address, mac_address, location, status, firmware_version, uptime_hours) VALUES
-('Main Router', 'router', '192.168.0.1', '00:11:22:33:44:55', 'Server Room', 'online', 'v2.1.0', 720),
-('Lab A Switch', 'switch', '192.168.1.1', '00:11:22:33:44:56', 'Lab A - Floor 1', 'online', 'v1.5.2', 480),
-('Lab B Switch', 'switch', '192.168.2.1', '00:11:22:33:44:57', 'Lab B - Floor 2', 'online', 'v1.5.2', 480),
-('WiFi Access Point A', 'access_point', '192.168.0.10', '00:11:22:33:44:58', 'Lab A - Floor 1', 'online', 'v3.2.1', 240),
-('WiFi Access Point B', 'access_point', '192.168.0.11', '00:11:22:33:44:59', 'Lab B - Floor 2', 'offline', 'v3.2.1', 0),
-('Firewall', 'firewall', '192.168.0.2', '00:11:22:33:44:60', 'Server Room', 'online', 'v4.0.0', 720);
+INSERT INTO network_devices (device_name, device_type, ip_address, mac_address, location, status, firmware_version, last_check, uptime_hours, notes) VALUES
+('Main Router', 'router', '192.168.0.1', '00:11:22:33:44:55', 'Server Room', 'online', 'v2.1.0', NULL, 720, NULL),
+('Lab A Switch', 'switch', '192.168.1.1', '00:11:22:33:44:56', 'Lab A - Floor 1', 'online', 'v1.5.2', NULL, 480, NULL),
+('Lab B Switch', 'switch', '192.168.2.1', '00:11:22:33:44:57', 'Lab B - Floor 2', 'online', 'v1.5.2', NULL, 480, NULL),
+('WiFi Access Point A', 'access_point', '192.168.0.10', '00:11:22:33:44:58', 'Lab A - Floor 1', 'online', 'v3.2.1', NULL, 240, NULL),
+('WiFi Access Point B', 'access_point', '192.168.0.11', '00:11:22:33:44:59', 'Lab B - Floor 2', 'offline', 'v3.2.1', NULL, 0, 'Needs repair'),
+('Firewall', 'firewall', '192.168.0.2', '00:11:22:33:44:60', 'Server Room', 'online', 'v4.0.0', NULL, 720, NULL);
 
 -- Sample Maintenance Logs
-INSERT INTO maintenance_logs (computer_id, maintenance_type, description, performed_by, cost, status, scheduled_date, completed_date) VALUES
-('LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, 'scheduled', '2024-06-12', NULL),
-('LAB-B-002', 'routine', 'Operating system reinstallation and updates', 'IT Technician - Sarah', 0.00, 'in_progress', '2024-06-10', NULL);
+INSERT INTO maintenance_logs (computer_id, maintenance_type, description, performed_by, cost, parts_replaced, status, scheduled_date, completed_date) VALUES
+('LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, NULL, 'scheduled', '2024-06-12', NULL),
+('LAB-B-002', 'routine', 'Operating system reinstallation and updates', 'IT Technician - Sarah', 0.00, NULL, 'in_progress', '2024-06-10', NULL);
 
 -- Sample Lab Usage Statistics
-INSERT INTO lab_usage_stats (lab_name, date, total_sessions, total_users, peak_concurrent_users, average_session_duration, computers_used, computers_available) VALUES
-('Lab A', '2024-06-05', 8, 45, 25, 90, 22, 25),
-('Lab B', '2024-06-05', 6, 35, 20, 85, 18, 20),
-('Lab A', '2024-06-06', 10, 55, 28, 95, 24, 25),
-('Lab B', '2024-06-06', 7, 40, 22, 80, 19, 20);
+INSERT INTO lab_usage_stats (lab_name, date, total_sessions, total_users, peak_concurrent_users, average_session_duration, computers_used, computers_available, notes) VALUES
+('Lab A', '2024-06-05', 8, 45, 25, 90, 22, 25, NULL),
+('Lab B', '2024-06-05', 6, 35, 20, 85, 18, 20, NULL),
+('Lab A', '2024-06-06', 10, 55, 28, 95, 24, 25, NULL),
+('Lab B', '2024-06-06', 7, 40, 22, 80, 19, 20, NULL);
 
 -- ============================================
 -- Create Views for Common Queries
@@ -256,7 +256,7 @@ ORDER BY
 -- ============================================
 -- Grant Permissions (adjust as needed)
 -- ============================================
--- GRANT ALL PRIVILEGES ON isnm_ict.* TO 'ict_user'@'localhost' IDENTIFIED BY 'secure_password';
+-- GRANT ALL PRIVILEGES ON igangaschoolofl_ict.* TO 'ict_user'@'localhost' IDENTIFIED BY 'secure_password';
 -- FLUSH PRIVILEGES;
 
 -- ============================================

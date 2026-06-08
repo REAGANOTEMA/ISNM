@@ -6,7 +6,7 @@
 
 $host = 'localhost';
 $user = 'root';
-$pass = '';
+$pass = 'ReagaN23#';
 $port = 3306;
 
 // Create all databases
@@ -14,7 +14,7 @@ $databases = [
     'igangaschoolofl_staffs_db',
     'igangaschoolofl_students_db',
     'igangaschoolofl_website_db',
-    'isnm_ict',
+    'igangaschoolofl_ict',
 ];
 
 $conn = new mysqli($host, $user, $pass, $port, $port ? $port : 3306);
@@ -122,7 +122,7 @@ if ($conn->query($staff_sql) === TRUE) {
 }
 
 // Setup ICT database tables
-$conn->select_db('isnm_ict');
+$conn->select_db('igangaschoolofl_ict');
 
 $tables_sql = "CREATE TABLE IF NOT EXISTS lab_computers (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -284,5 +284,5 @@ echo "\n=== SETUP COMPLETE ===\n";
 echo "Accounts ready for login:\n";
 echo "  Director ICT: ict.director@igangaschoolofnursingandmidwifery.ac.ug / Techno123\n";
 echo "  Computer Lab Manager: computerlab@igangaschoolofnursingandmidwifery.ac.ug / LabManager123\n";
-echo "\nNote: isnm_ict database with lab tables has been created.\n";
+echo "\nNote: igangaschoolofl_ict database with lab tables has been created.\n";
 echo "Both accounts are Active and linked to their correct roles.\n";
