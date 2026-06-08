@@ -1,16 +1,24 @@
 -- ============================================================
 -- ISNM MASTER SETUP - RUN IN MySQL COMMAND LINE
--- For phpMyAdmin: import each SQL file individually
+-- For phpMyAdmin: import each SQL file individually in the order shown
 -- ============================================================
 
--- Step 1: Staff Database Core Schema
+-- Step 1: Create databases
+SOURCE sql/00_create_all_databases.sql;
+
+-- Step 2: Students Database Schema
+USE `igangaschoolofl_students_db`;
+SOURCE sql/students/01_create_students_database.sql;
+SOURCE sql/students/bursar_system.sql;
+
+-- Step 3: Staffs Database Core Schema
 USE `igangaschoolofl_staffs_db`;
 SOURCE sql/staffs/04_final_complete_staffs_database.sql;
 
--- Step 2: Department Dashboards & Accounts
+-- Step 4: Department Dashboards (views reference students_db tables, so run after step 2)
 SOURCE sql/staffs/05_all_departments_complete_dashboards.sql;
 
--- Step 3: Department-specific dashboard tables
+-- Step 5: Department-specific dashboard tables
 SOURCE sql/staffs/06_academic_registrar_dashboard.sql;
 SOURCE sql/staffs/07_nursing_department_dashboard.sql;
 SOURCE sql/staffs/08_midwifery_department_dashboard.sql;
@@ -20,29 +28,31 @@ SOURCE sql/staffs/11_security_dashboard.sql;
 SOURCE sql/staffs/12_sickbay_dashboard.sql;
 SOURCE sql/staffs/13_matrons_wardens_dashboard.sql;
 SOURCE sql/staffs/14_director_academics_dashboard.sql;
+
+-- Step 6: Director Finance Dashboard (requires students_db fee tables from step 2)
 SOURCE sql/staffs/15_director_finance_dashboard.sql;
+
+-- Step 7: Student Management Permissions
 SOURCE sql/staffs/16_student_management_permissions.sql;
 
--- Step 4: Compatibility views (fixes cross-schema references)
+-- Step 8: Compatibility views (fixes cross-schema references)
 SOURCE sql/staffs/17_compatibility_views.sql;
 
--- Step 5: Students Database Schema
-USE `igangaschoolofl_students_db`;
-SOURCE sql/students/01_create_students_database.sql;
-SOURCE sql/students/bursar_system.sql;
-
--- Step 6: Website Database Schema
-USE `igangaschoolofl_website_db`;
-SOURCE sql/website/01_create_website_database.sql;
-
--- Step 7: ICT Computer Lab Database
+-- Step 9: ICT Computer Lab Database
 USE `igangaschoolofl_ict`;
 SOURCE sql/ict/01_create_computer_lab_tables.sql;
 
--- Step 8: Create ICT accounts in staff database
+-- Step 10: Create ICT accounts in staff database
 USE `igangaschoolofl_staffs_db`;
 SOURCE sql/ict/create_ict_director_account.sql;
 SOURCE sql/ict/create_computer_lab_manager.sql;
+
+-- Step 11: Staff login credentials
+SOURCE sql/staffs/staffs_logins.sql;
+
+-- Step 12: Website Database Schema
+USE `igangaschoolofl_website_db`;
+SOURCE sql/website/01_create_website_database.sql;
 
 SELECT '========================================' as '';
 SELECT 'ISNM COMPLETE SETUP FINISHED!' as '';

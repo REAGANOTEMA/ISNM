@@ -4,6 +4,16 @@
 
 USE igangaschoolofl_staffs_db;
 
+-- Safeguard: ensure role_description column exists in staff_roles
+SET @dbname = DATABASE();
+SELECT COUNT(*) INTO @col_exists
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'staff_roles' AND COLUMN_NAME = 'role_description';
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- Ensure the Director ICT role exists
 INSERT IGNORE INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions)
 VALUES ('Director ICT', 'Head of Computer Lab and IT Services - Independent Authority', 'Management', 'dashboards/director-ict.php', '{"ict":true,"systems":true,"can_manage_it":true,"can_access_computer_lab":true}');

@@ -103,8 +103,6 @@ DROP TABLE IF EXISTS staff_permissions;
 DROP TABLE IF EXISTS staff_access_control;
 DROP TABLE IF EXISTS staff_departments;
 DROP TABLE IF EXISTS staff_profiles;
-DROP TABLE IF EXISTS staff;
-DROP TABLE IF EXISTS staff_roles;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS financial_records;
 DROP TABLE IF EXISTS fee_accounts;
@@ -321,7 +319,7 @@ CREATE TABLE staff_password_resets (
 CREATE TABLE staff_activity_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     staff_id INT NOT NULL,
-    activity_type ENUM('Login', 'Logout', 'Dashboard Access', 'Data View', 'Data Edit', 'Data Delete', 'Export', 'Print', 'Settings Change') NOT NULL,
+    activity_type ENUM('Login', 'Logout', 'Dashboard Access', 'Data View', 'Data Edit', 'Data Delete', 'Export', 'Print', 'Settings Change', 'Account Created', 'Account Updated') NOT NULL,
     activity_description TEXT,
     module_accessed VARCHAR(100),
     record_id INT NULL,
@@ -1100,14 +1098,15 @@ INSERT INTO system_settings (setting_key, setting_value, setting_type, descripti
 ('enable_system_health_monitoring', 'true', 'boolean', 'Enable system health monitoring', 'system', TRUE);
 
 -- Insert default document templates
+-- Use subquery to get an existing staff id (falls back to NULL if no staff yet)
 INSERT INTO document_templates (template_name, template_type, template_content, is_default, created_by) VALUES
-('Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border="1"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', TRUE, 1),
-('Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', TRUE, 1),
-('Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border="1"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', TRUE, 1),
-('Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', TRUE, 1),
-('Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style="border: 2px solid #000; padding: 20px; width: 300px;"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', TRUE, 1),
-('Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border="1"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', TRUE, 1),
-('Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', TRUE, 1);
+('Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border="1"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border="1"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style="border: 2px solid #000; padding: 20px; width: 300px;"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border="1"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', TRUE, (SELECT id FROM staff LIMIT 1)),
+('Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border="1"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', TRUE, (SELECT id FROM staff LIMIT 1));
 
 -- Insert default staff roles with proper permissions
 INSERT INTO staff_roles (role_name, role_description, role_level, dashboard_path, permissions) VALUES
