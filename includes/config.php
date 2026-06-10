@@ -2,15 +2,17 @@
 // Legacy configuration - uses staff database for compatibility
 // Modern code should use config/database.php + includes/config_enhanced.php
 
-$host = 'localhost';
+$host = '127.0.0.1';
 $dbname = 'igangaschoolofl_staffs_db';
 $username = 'root';
 $password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+mysqli_report(MYSQLI_REPORT_OFF);
+$conn = new mysqli($host, $username, $password, $dbname, 3307);
 
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    error_log('includes/config.php connection failed: ' . $conn->connect_error);
+    $conn = null;
 }
 
 $conn->set_charset("utf8mb4");

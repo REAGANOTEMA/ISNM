@@ -10,70 +10,45 @@
  * Username: igangaschoolofl_students_db
  * Password: hbkKdmMHUfHTHuxWKPRf
  */
-define('DB_HOST', 'localhost');
-define('DB_PORT', 3307);
-define('DB_CHARSET', 'utf8mb4');
-define('STUDENTS_DB_NAME', 'igangaschoolofl_students_db');
-define('STUDENTS_DB_USER', 'igangaschoolofl_students_db');
-define('STUDENTS_DB_PASS', 'hbkKdmMHUfHTHuxWKPRf');
+// ── Local XAMPP credentials ──────────────────────────────────────────────────
+define('DB_HOST',           '127.0.0.1');
+define('DB_PORT',           3307);
+define('DB_CHARSET',        'utf8mb4');
+define('STUDENTS_DB_NAME',  'igangaschoolofl_students_db');
+define('STUDENTS_DB_USER',  'root');
+define('STUDENTS_DB_PASS',  '');
 
-/* 
- * Staff database connection parameters
- * Hostname: localhost
- * Database: igangaschoolofl_staffs_db
- * Username: igangaschoolofl_staffs_db
- * Password: AgKzJjZZnT5q58jCahs8
- */
-define('STAFF_DB_HOST', 'localhost');
-define('STAFF_DB_USER', 'igangaschoolofl_staffs_db');
-define('STAFF_DB_PASS', 'AgKzJjZZnT5q58jCahs8');
-define('STAFF_DB_PORT', 3307);
-define('STAFF_DB_NAME', 'igangaschoolofl_staffs_db');
+define('STAFF_DB_HOST',    '127.0.0.1');
+define('STAFF_DB_USER',    'root');
+define('STAFF_DB_PASS',    '');
+define('STAFF_DB_PORT',    3307);
+define('STAFF_DB_NAME',    'igangaschoolofl_staffs_db');
 define('STAFF_DB_CHARSET', 'utf8mb4');
 
-/* 
- * Website database connection parameters
- * Hostname: localhost
- * Database: igangaschoolofl_website_db
- * Username: igangaschoolofl_website_db
- * Password: AaCH75gXpekcFQj5wPZn
- */
-define('WEBSITE_DB_HOST', 'localhost');
-define('WEBSITE_DB_USER', 'igangaschoolofl_website_db');
-define('WEBSITE_DB_PASS', 'AaCH75gXpekcFQj5wPZn');
-define('WEBSITE_DB_PORT', 3307);
-define('WEBSITE_DB_NAME', 'igangaschoolofl_website_db');
+define('WEBSITE_DB_HOST',    '127.0.0.1');
+define('WEBSITE_DB_USER',    'root');
+define('WEBSITE_DB_PASS',    '');
+define('WEBSITE_DB_PORT',    3307);
+define('WEBSITE_DB_NAME',    'igangaschoolofl_website_db');
 define('WEBSITE_DB_CHARSET', 'utf8mb4');
 
-/* 
- * ICT/Computer Lab database connection parameters
- * Hostname: localhost
- * Database: igangaschoolofl_ict
- * Username: igangaschoolofl_ict
- * Password: HHCrQVjr6QNKzSEVtx9J
- */
-define('ICT_DB_HOST', 'localhost');
-define('ICT_DB_USER', 'igangaschoolofl_ict');
-define('ICT_DB_PASS', 'HHCrQVjr6QNKzSEVtx9J');
-define('ICT_DB_PORT', 3307);
-define('ICT_DB_NAME', 'igangaschoolofl_ict');
+define('ICT_DB_HOST',    '127.0.0.1');
+define('ICT_DB_USER',    'root');
+define('ICT_DB_PASS',    '');
+define('ICT_DB_PORT',    3307);
+define('ICT_DB_NAME',    'igangaschoolofl_ict');
 define('ICT_DB_CHARSET', 'utf8mb4');
 
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
-        try {
-            $conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
-            $conn->set_charset(ICT_DB_CHARSET);
-            
-            if ($conn->connect_error) {
-                throw new Exception("ICT database connection failed: " . $conn->connect_error . " (Error Reference: ICT_DB_001)");
-            }
-            
-            return $conn;
-        } catch (Exception $e) {
-            error_log("ICT Database Error: " . $e->getMessage());
-            die("We apologize, but the ICT database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: ICT_DB_001)");
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
+        if ($conn->connect_error) {
+            error_log("ICT DB Error: " . $conn->connect_error);
+            return null;
         }
+        $conn->set_charset(ICT_DB_CHARSET);
+        return $conn;
     }
 }
 
@@ -82,57 +57,40 @@ if (!function_exists('getICTConnection')) {
  */
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
-        try {
-            $conn = new mysqli(DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, DB_PORT);
-            $conn->set_charset(DB_CHARSET);
-            
-            if ($conn->connect_error) {
-                throw new Exception("Students database connection failed: " . $conn->connect_error . " (Error Reference: STUDENTS_DB_001)");
-            }
-            
-            return $conn;
-        } catch (Exception $e) {
-            error_log("Database Error: " . $e->getMessage());
-            die("We apologize, but the students database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: STUDENTS_DB_001)");
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = new mysqli(DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, DB_PORT);
+        if ($conn->connect_error) {
+            error_log("Students DB Error: " . $conn->connect_error);
+            return null;
         }
+        $conn->set_charset(DB_CHARSET);
+        return $conn;
     }
 }
 
 if (!function_exists('getStaffConnection')) {
-    // Create staff database connection (for staff authentication)
     function getStaffConnection() {
-        try {
-            $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
-            $conn->set_charset(STAFF_DB_CHARSET);
-            
-            if ($conn->connect_error) {
-                throw new Exception("Staff database connection failed: " . $conn->connect_error . " (Error Reference: STAFF_DB_001)");
-            }
-            
-            return $conn;
-        } catch (Exception $e) {
-            error_log("Staff Database Error: " . $e->getMessage());
-            die("We apologize, but the staff database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: STAFF_DB_001)");
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
+        if ($conn->connect_error) {
+            error_log("Staff DB Error: " . $conn->connect_error);
+            return null;
         }
+        $conn->set_charset(STAFF_DB_CHARSET);
+        return $conn;
     }
 }
 
 if (!function_exists('getWebsiteConnection')) {
-    // Create website database connection
     function getWebsiteConnection() {
-        try {
-            $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
-            $conn->set_charset(WEBSITE_DB_CHARSET);
-            
-            if ($conn->connect_error) {
-                throw new Exception("Website database connection failed: " . $conn->connect_error . " (Error Reference: WEBSITE_DB_001)");
-            }
-            
-            return $conn;
-        } catch (Exception $e) {
-            error_log("Website Database Error: " . $e->getMessage());
-            die("We apologize, but the website database connection could not be established at this time. Please contact your system administrator for assistance. (Error Reference: WEBSITE_DB_001)");
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
+        if ($conn->connect_error) {
+            error_log("Website DB Error: " . $conn->connect_error);
+            return null;
         }
+        $conn->set_charset(WEBSITE_DB_CHARSET);
+        return $conn;
     }
 }
 

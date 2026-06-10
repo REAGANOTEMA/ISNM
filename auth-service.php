@@ -56,6 +56,7 @@ class AuthenticationService {
      */
     private function isStaffAccountLocked($email) {
         $conn = getStaffConnection();
+        if (!$conn) return false;
         $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE email = ? AND status = 'Active' AND locked_until > NOW()");
         if ($stmt === false) {
             error_log('isStaffAccountLocked prepare failed: ' . $conn->error);
@@ -144,6 +145,7 @@ class AuthenticationService {
      */
     private function recordStaffFailedAttempt($email) {
         $conn = getStaffConnection();
+        if (!$conn) return;
         
         // Increment login attempts
         $stmt = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE email = ? AND status = 'Active'");
@@ -199,7 +201,7 @@ class AuthenticationService {
      */
     private function resetStaffFailedAttempts($userId) {
         $conn = getStaffConnection();
-        
+        if (!$conn) return;
         $stmt = $conn->prepare("UPDATE staff SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -464,13 +466,15 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid email format'];
         }
         
-        // Check if account is locked
-        if ($this->isStaffAccountLocked($email)) {
-            error_log("DEBUG: Account is locked");
-            return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
+        $conn = getStaffConnection();
+        if (!$conn) {
+            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
         }
         
-        $conn = getStaffConnection();
+        // Check if account is locked
+        if ($this->isStaffAccountLocked($email)) {
+            return ['success' => false, 'message' => 'Account temporarily locked due to multiple failed attempts. Please try again later.'];
+        }
         
         // Query database for staff user
         $sql = "SELECT s.*, sr.role_name FROM staff s 
@@ -644,11 +648,13 @@ class AuthenticationService {
         // Log the logout if staff
         if (isset($_SESSION['type']) && $_SESSION['type'] === 'staff' && isset($_SESSION['user_id'])) {
             $conn = getStaffConnection();
+            if ($conn) {
             $stmt = $conn->prepare("INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, module_accessed, ip_address, user_agent) VALUES (?, 'Logout', 'User logged out', 'authentication', ?, ?)");
             $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
             $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
             $stmt->bind_param("iss", $_SESSION['user_id'], $ip_address, $user_agent);
             $stmt->execute();
+            }
         }
         
         // Destroy session
@@ -727,6 +733,7 @@ class AuthenticationService {
         $roleName = $this->resolveOrganogramPosition($roleName);
         try {
             $conn = getStaffConnection();
+            if (!$conn) return null;
             $sql = "SELECT s.email FROM staff s
                  INNER JOIN staff_roles sr ON s.role_id = sr.id
                  WHERE sr.role_name = ? AND s.status = 'Active'
@@ -849,6 +856,7 @@ class AuthenticationService {
         if ($roleName !== '') {
             try {
                 $conn = getStaffConnection();
+                if (!$conn) { $route = $this->getDashboardRouteFromKey($role); return $route ?? 'dashboards/ceo.php'; }
                 $stmt = $conn->prepare(
                     "SELECT dashboard_path FROM staff_roles WHERE role_name = ? LIMIT 1"
                 );
@@ -1070,7 +1078,7 @@ class AuthenticationService {
      */
     public function createStaffAccount($staffData) {
         $conn = getStaffConnection();
-        
+        if (!$conn) return ['success' => false, 'message' => 'Database unavailable.'];
         try {
             // Hash password
             $hashedPassword = password_hash($staffData['password'], PASSWORD_DEFAULT);
