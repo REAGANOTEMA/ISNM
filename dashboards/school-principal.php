@@ -201,8 +201,9 @@ $pass_percentage = $pass_rate_data['total_count'] > 0 ? ($pass_rate_data['pass_c
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>School Principal Dashboard - ISNM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -335,6 +336,7 @@ $pass_percentage = $pass_rate_data['total_count'] > 0 ? ($pass_rate_data['pass_c
             }
         }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <!-- Include Responsive Navigation -->
@@ -1297,10 +1299,12 @@ $pass_percentage = $pass_rate_data['total_count'] > 0 ? ($pass_rate_data['pass_c
             printWindow.document.write('<div class="header"><img src="../images/school-logo.png" class="logo" alt="ISNM Logo"><h2>Iganga School of Nursing and Midwifery</h2><h3>Official Academic Transcript</h3><p>Student #: ' + studentNumber + '</p></div>');
             printWindow.document.write('<p>This is an official academic transcript. For verification, contact the School Principal.</p>');
             printWindow.document.write('<button onclick="window.print()">Print</button>');
-            printWindow.document.write('</body></html>');
+            printWindow.document.write('<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body></html>');
             printWindow.document.close();
         }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
 

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>School Bursar Dashboard - ISNM Financial Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -66,6 +67,7 @@
             height: 300px;
         }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <?php
@@ -619,7 +621,8 @@
             const printContent = document.getElementById('receiptTemplate').cloneNode(true);
             printContent.style.display = 'block';
             const printWindow = window.open('', '_blank');
-            printWindow.document.write('<html><head><title>Print Receipt</title></head><body>' + printContent.innerHTML + '</body></html>');
+            printWindow.document.write('<html><head><title>Print Receipt</title></head><body>' + printContent.innerHTML + '<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body></html>');
             printWindow.document.close();
             printWindow.print();
         }
@@ -638,5 +641,6 @@
             alert('Exporting payments to Excel...');
         }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

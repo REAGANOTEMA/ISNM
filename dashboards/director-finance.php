@@ -53,12 +53,14 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Director Finance Dashboard - ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="dashboard-style.css" rel="stylesheet">
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-container">
@@ -593,6 +595,7 @@ $recent_activities = $recent_activities_result ? $recent_activities_result->fetc
             alert('Generating ' + type + ' report... This would generate and download the financial report.');
         }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
 

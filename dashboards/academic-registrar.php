@@ -729,8 +729,9 @@ function getSemesters() {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Academic Registrar Dashboard - ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -1111,6 +1112,7 @@ function getSemesters() {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-container">
@@ -2434,7 +2436,8 @@ function getSemesters() {
         printWindow.document.write('<div class="header"><img src="../images/school-logo.png" class="logo" alt="ISNM Logo"><h2>Iganga School of Nursing and Midwifery</h2><h3>Official Academic Transcript</h3><p>Transcript #: ' + transcriptNumber + '</p></div>');
         printWindow.document.write('<p>This is an official academic transcript. For verification, contact the Academic Registrar.</p>');
         printWindow.document.write('<button onclick="window.print()">Print</button>');
-        printWindow.document.write('</body></html>');
+        printWindow.document.write('<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body></html>');
         printWindow.document.close();
     }
     
@@ -2446,6 +2449,7 @@ function getSemesters() {
         window.print();
     }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
 

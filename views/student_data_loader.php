@@ -4,11 +4,9 @@
  * Loads from students_db and Excel files in students_data/
  */
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/SimpleXlsxReader.php';
 
-$spreadsheetAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');
-if ($spreadsheetAvailable) {
-    require_once __DIR__ . '/../vendor/autoload.php';
-}
+$spreadsheetAvailable = true; // SimpleXlsxReader needs no Composer
 
 class StudentDataLoader {
     private $studentsDataDir;
@@ -95,10 +93,6 @@ class StudentDataLoader {
     }
 
     private function loadFromExcelFiles() {
-        global $spreadsheetAvailable;
-        if (!$spreadsheetAvailable) {
-            return [];
-        }
         $all = [];
         foreach ($this->getExcelFiles() as $file) {
             $all = array_merge($all, $this->loadExcelFile($file));
@@ -108,22 +102,16 @@ class StudentDataLoader {
 
     private function loadExcelFile($filePath) {
         try {
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
-            if (count($rows) > 0) {
-                array_shift($rows);
-            }
+            $rows = SimpleXlsxReader::read($filePath);
+            if (count($rows) > 0) array_shift($rows); // remove header
             $students = [];
             foreach ($rows as $row) {
                 $student = $this->mapRowToStudent($row, basename($filePath));
-                if ($student) {
-                    $students[] = $student;
-                }
+                if ($student) $students[] = $student;
             }
             return $students;
         } catch (Exception $e) {
-            error_log("Error loading Excel file $filePath: " . $e->getMessage());
+            error_log('loadExcelFile ' . basename($filePath) . ': ' . $e->getMessage());
             return [];
         }
     }

@@ -26,8 +26,9 @@ $conn = getStudentsConnection();
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Guild President Dashboard - ISNM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -37,6 +38,7 @@ $conn = getStudentsConnection();
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
         .btn-primary { background: #0077b6; color: white; }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-container">
@@ -51,5 +53,6 @@ $conn = getStudentsConnection();
             </button>
         </div>
     </div>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

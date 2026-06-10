@@ -168,8 +168,9 @@ if ($result) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>ISNM Storekeeper Dashboard</title>
     <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="../assets/css/all.min.css">
@@ -308,6 +309,7 @@ if ($result) {
             opacity: 0.8;
         }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <?php include("../shared/_header.php"); ?>
@@ -627,5 +629,6 @@ if ($result) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

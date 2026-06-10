@@ -149,8 +149,9 @@ if ($action === 'view' && isset($_GET['student_id'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Student Management - ISNM</title>
     <link rel="stylesheet" href="dashboard-style.css">
     <style>
@@ -275,6 +276,7 @@ if ($action === 'view' && isset($_GET['student_id'])) {
             border-radius: 4px;
         }
     </style>
+    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
     <div class="student-container">
@@ -489,5 +491,6 @@ if ($action === 'view' && isset($_GET['student_id'])) {
             }
         }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
