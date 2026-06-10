@@ -7,7 +7,7 @@
 require_once 'auth-service.php';
 
 // Check authentication
-if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !in_array($_SESSION['role'], ['School Bursar', 'Bursar'])) {
+if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff') {
     $_SESSION['error'] = "Access denied. Bursar privileges required.";
     header('Location: staff-login.php');
     exit;
@@ -98,17 +98,17 @@ try {
     // Pending approvals
     $result = $conn->query("
         SELECT COUNT(*) as count FROM payments WHERE status = 'pending'
-        UNION ALL
-        SELECT COUNT(*) FROM fee_adjustments WHERE status = 'pending'
     ");
     if ($result) {
         $row = $result->fetch_assoc();
-        $stats['pending_approvals'] = $row['count'];
-        if ($result->more_results()) {
-            $result->next_result();
-            $row = $result->fetch_assoc();
-            $stats['pending_approvals'] += $row['count'];
-        }
+        $stats['pending_approvals'] = (int)($row['count'] ?? 0);
+    }
+    $result2 = $conn->query("
+        SELECT COUNT(*) as count FROM fee_adjustments WHERE status = 'pending'
+    ");
+    if ($result2) {
+        $row2 = $result2->fetch_assoc();
+        $stats['pending_approvals'] += (int)($row2['count'] ?? 0);
     }
     
 } catch (Exception $e) {
@@ -132,7 +132,7 @@ try {
         JOIN students s ON p.student_id = s.student_id
         ORDER BY p.payment_date DESC
         LIMIT 10
-    ');
+    ");
     
     if ($result) {
         while ($row = $result->fetch_assoc()) {
@@ -180,6 +180,9 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bursar Dashboard - ISNM Financial Management System</title>
+    <link rel="icon" type="image/png" href="images/school-logo.png">
+    <link rel="shortcut icon" type="image/png" href="images/school-logo.png">
+    <link rel="apple-touch-icon" href="images/school-logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -680,9 +683,7 @@ $conn->close();
                     <strong><?php echo htmlspecialchars($_SESSION['full_name']); ?></strong>
                     <span><?php echo htmlspecialchars($_SESSION['role']); ?></span>
                 </div>
-                <form action="auth-handler.php" method="POST" id="logoutForm" style="display:none;">
-                    <input type="hidden" name="action" value="logout">
-                </form>
+                <form action="logout.php" method="POST" id="logoutForm" style="display:none;"></form>
                 <button class="btn-logout" onclick="document.getElementById('logoutForm').submit();">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>

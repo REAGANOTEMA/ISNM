@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSIO
 
 $user_role = $_SESSION['role'];
 $user_type = $_SESSION['type'];
-$user_name = $_SESSION['first_name'] ?? 'User';
+$user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id = $_SESSION['user_id'];
 
 // Determine menu items based on user role and type
@@ -552,62 +552,28 @@ $menu_items[] = [
     .dashboard-sidebar {
         transform: translateX(0);
     }
-    
+
     .dashboard-sidebar.collapsed {
-        transform: translateX(-280px);
+        width: 70px;
     }
-    
-    /* Add sidebar toggle button for desktop */
-    .sidebar-toggle {
-        display: block;
-    }
-    
-    .sidebar-header {
-        padding: 15px;
-    }
-    
-    .sidebar-title {
-        display: none;
-    }
-    
-    .sidebar-logo-img {
-        margin-right: 0;
-    }
-    
-    .sidebar-user {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .user-avatar {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    
-    .user-info {
-        display: none;
-    }
-    
-    .sidebar-close {
-        display: none;
-    }
-    
-    .nav-text {
-        display: none;
-    }
-    
-    .nav-link {
-        justify-content: center;
-        padding: 15px;
-    }
-    
-    .nav-icon {
-        margin-right: 0;
-    }
-    
-    .sidebar-footer {
-        display: none;
-    }
+
+    .dashboard-sidebar.collapsed .nav-text,
+    .dashboard-sidebar.collapsed .sidebar-title,
+    .dashboard-sidebar.collapsed .user-info,
+    .dashboard-sidebar.collapsed .sidebar-footer { display: none; }
+
+    .dashboard-sidebar.collapsed .nav-link { justify-content: center; padding: 15px; }
+    .dashboard-sidebar.collapsed .nav-icon  { margin-right: 0; }
+
+    /* Always show nav text and user info when NOT collapsed */
+    .sidebar-title { display: block; }
+    .user-info     { display: block; }
+    .nav-text      { display: inline; }
+    .nav-link      { justify-content: flex-start; padding: 15px 25px; }
+    .nav-icon      { margin-right: 15px; }
+    .sidebar-footer { display: block; }
+
+    .sidebar-close { display: none; }
 }
 
 /* Collapsed Sidebar Toggle (Desktop) */

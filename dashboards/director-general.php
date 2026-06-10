@@ -1,14 +1,355 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
+require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
-$ctx = bootstrapStaffDashboard(['director', 'general']);
+$ctx = bootstrapStaffDashboard([]);
 $auth_service = $ctx['auth'];
-$conn = $ctx['staff'];
+$conn         = $ctx['staff'];
 $studentsConn = $ctx['students'];
-$websiteConn = $ctx['website'];
-$user = $ctx['user'];
+$user         = $ctx['user'];
+
+$user_id    = (int)($user['id'] ?? 0);
+$user_role  = $user['role']  ?? '';
+$user_name  = $user['full_name'] ?? 'Director';
+
+$overview             = getInstitutionOverviewStats();
+$total_students       = $overview['total_students'];
+$total_staff          = $overview['total_staff'];
+$total_applications   = $overview['website_applications'];
+$pending_applications = $overview['pending_applications'];
+$website_pages        = $overview['website_pages'];
+$website_posts        = $overview['website_posts'];
+$student_data_files   = $overview['data_files'];
+$total_collections    = 0;
+$outstanding_fees     = 0;
+
+// Safe stored procedure call
+if ($conn) {
+    try {
+        $st = $conn->prepare('CALL get_dashboard_statistics(?,?)');
+        if ($st) {
+            $st->bind_param('is', $user_id, $user_role);
+            $st->execute();
+            $row = $st->get_result()->fetch_assoc();
+            if ($row) {
+                $total_students       = (int)($row['total_students']       ?? $total_students);
+                $total_staff          = (int)($row['total_staff']          ?? $total_staff);
+                $pending_applications = (int)($row['pending_applications'] ?? $pending_applications);
+            }
+            $st->close();
+            while ($conn->more_results()) $conn->next_result();
+        }
+    } catch (Exception $e) { error_log('dg stats: '.$e->getMessage()); }
+}
+
+// Recent students from loader
+$recent_students = [];
+try {
+    $loader = new StudentDataLoader();
+    $recent_students = array_slice($loader->loadAllStudents(), 0, 4);
+} catch (Exception $e) {}
+
+// Recent activities
+$recent_activities = [];
+if ($conn) {
+    $ar = $conn->query('SELECT activity_type, activity_description, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 6');
+    if ($ar) while ($row = $ar->fetch_assoc()) $recent_activities[] = $row;
+}
+
+// Staff list from staff table
+$staff_list = [];
+if ($conn) {
+    $sr = $conn->query('SELECT s.id, s.full_name, s.email, s.position, s.department, s.status, s.last_login, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 10');
+    if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Director General — ISNM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="dashboard-style.css" rel="stylesheet">
+    <link href="dashboard-mobile.css" rel="stylesheet">
+    <style>
+    body { font-family:'Poppins',sans-serif; background:#f0f2f5; }
+    .dashboard-wrapper { display:flex; min-height:100vh; }
+    .page-content { margin-left:280px; flex:1; transition:margin-left .3s; }
+    @media(max-width:768px){ .page-content{ margin-left:0; padding-top:70px; } }
+    .top-bar { background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;
+               box-shadow:0 2px 8px rgba(0,0,0,.06); position:sticky; top:0; z-index:100; }
+    .top-bar h1 { font-size:1.2rem; font-weight:700; margin:0; }
+    .top-bar p  { font-size:.78rem; color:#666; margin:0; }
+    .content-area { padding:24px; }
+    .stat-card { background:#fff; border-radius:14px; padding:22px; display:flex; align-items:center;
+                 gap:16px; box-shadow:0 2px 12px rgba(0,0,0,.07); transition:transform .25s; }
+    .stat-card:hover { transform:translateY(-4px); }
+    .stat-icon { width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+                 justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0; }
+    .si-blue   { background:linear-gradient(135deg,#1a237e,#3949ab); }
+    .si-green  { background:linear-gradient(135deg,#2e7d32,#43a047); }
+    .si-cyan   { background:linear-gradient(135deg,#0277bd,#039be5); }
+    .si-orange { background:linear-gradient(135deg,#e65100,#fb8c00); }
+    .stat-content h3 { font-size:1.7rem;font-weight:700;margin:0;line-height:1; }
+    .stat-content p  { font-size:.78rem;color:#666;margin:2px 0 0; }
+    .section-card { background:#fff;border-radius:14px;padding:22px;margin-bottom:22px;
+                    box-shadow:0 2px 12px rgba(0,0,0,.07); }
+    .section-card h2 { font-size:1.05rem;font-weight:700;margin-bottom:16px;
+                       padding-bottom:10px;border-bottom:2px solid #f0f2f5; }
+    .quick-actions { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px; }
+    .action-btn { background:#fff;border:2px solid #e3e8f0;border-radius:12px;padding:18px 10px;
+                  text-align:center;cursor:pointer;transition:all .25s;display:flex;
+                  flex-direction:column;align-items:center;gap:8px; }
+    .action-btn:hover { border-color:#1a237e;background:#f0f4ff;transform:translateY(-3px); }
+    .action-btn i { font-size:1.5rem;color:#1a237e; }
+    .action-btn span { font-size:.78rem;font-weight:600;color:#333; }
+    .activity-item { display:flex;align-items:flex-start;gap:12px;padding:10px 0;
+                     border-bottom:1px solid #f0f2f5; }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-dot { width:34px;height:34px;border-radius:50%;background:#1a237e;
+                    color:#fff;display:flex;align-items:center;justify-content:center;
+                    font-size:.85rem;flex-shrink:0; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<?php include_once '../includes/sidebar.php'; ?>
+
+<div class="page-content">
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div>
+            <h1><i class="fas fa-crown me-2 text-warning"></i>Director General Dashboard</h1>
+            <p>Complete oversight — Iganga School of Nursing and Midwifery</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small d-none d-md-block" id="currentDate"></span>
+            <img src="../images/default-avatar.png" class="rounded-circle" width="38" height="38"
+                 style="border:2px solid #1a237e;object-fit:cover;" alt="Avatar">
+            <span class="fw-600 d-none d-md-inline"><?php echo htmlspecialchars($user['first_name']); ?></span>
+            <a href="../logout.php" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="content-area">
+
+        <!-- DB status alert -->
+        <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size:.82rem;">
+            <i class="fas fa-database"></i>
+            <span>
+                <strong>staffs_db</strong>: <?php echo $total_staff; ?> staff &nbsp;|&nbsp;
+                <strong>students_db</strong>: <?php echo (int)$overview['total_students_db']; ?> records &nbsp;|&nbsp;
+                <strong>students_data/</strong>: <?php echo $student_data_files; ?> Excel files,
+                <?php echo (int)$overview['total_students_files']; ?> profiles loaded
+            </span>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon si-blue"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-content"><h3><?php echo number_format($total_students); ?></h3><p>Total Students</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon si-green"><i class="fas fa-users"></i></div>
+                    <div class="stat-content"><h3><?php echo number_format($total_staff); ?></h3><p>Total Staff</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon si-cyan"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-content"><h3><?php echo number_format($total_applications); ?></h3><p>Applications</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon si-orange"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="stat-content"><h3><?php echo number_format($pending_applications); ?></h3><p>Pending Review</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Search -->
+        <div class="section-card">
+            <h2><i class="fas fa-search me-2"></i>Student Search</h2>
+            <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
+        </div>
+
+        <!-- Staff Overview -->
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>Staff Overview</h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-primary" onclick="openModal('addStaff')"><i class="fas fa-user-plus me-1"></i>Add Staff</button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('resetPassword')"><i class="fas fa-key me-1"></i>Reset Password</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm align-middle">
+                    <thead class="table-light">
+                        <tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Last Login</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($staff_list as $sm): ?>
+                        <tr>
+                            <td><div class="d-flex align-items-center gap-2">
+                                <img src="../images/default-avatar.png" width="32" height="32" class="rounded-circle">
+                                <span><?php echo htmlspecialchars($sm['full_name']); ?></span>
+                            </div></td>
+                            <td><span class="badge bg-primary"><?php echo htmlspecialchars($sm['role_name'] ?? $sm['position'] ?? '—'); ?></span></td>
+                            <td><?php echo htmlspecialchars($sm['department'] ?? '—'); ?></td>
+                            <td><span class="badge bg-<?php echo strtolower($sm['status'] ?? '') === 'active' ? 'success' : 'secondary'; ?>"><?php echo htmlspecialchars($sm['status'] ?? 'Active'); ?></span></td>
+                            <td><?php echo $sm['last_login'] ? date('d M Y', strtotime($sm['last_login'])) : '<span class="text-muted">Never</span>'; ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editStaffMember(<?php echo $sm['id']; ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeStaffMember(<?php echo $sm['id']; ?>)" title="Remove"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($staff_list)): ?>
+                        <tr><td colspan="6" class="text-center text-muted py-3">No staff records found</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="section-card">
+            <h2><i class="fas fa-history me-2"></i>Recent System Activities</h2>
+            <?php if (empty($recent_activities)): ?>
+                <p class="text-muted text-center py-3">No recent activities recorded.</p>
+            <?php else: ?>
+                <?php foreach ($recent_activities as $act): ?>
+                <div class="activity-item">
+                    <div class="activity-dot"><i class="fas fa-check"></i></div>
+                    <div>
+                        <p class="mb-0" style="font-size:.88rem;"><?php echo htmlspecialchars($act['activity_description'] ?? $act['activity_type'] ?? 'System activity'); ?></p>
+                        <small class="text-muted"><?php echo $act['created_at'] ? date('d M Y H:i', strtotime($act['created_at'])) : ''; ?></small>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-card">
+            <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
+            <div class="quick-actions">
+                <button class="action-btn" onclick="openModal('generateReport')">
+                    <i class="fas fa-file-chart-bar"></i><span>Generate Report</span></button>
+                <button class="action-btn" onclick="openModal('sendAnnouncement')">
+                    <i class="fas fa-bullhorn"></i><span>Send Announcement</span></button>
+                <button class="action-btn" onclick="openModal('addStaff')">
+                    <i class="fas fa-user-plus"></i><span>Add Staff</span></button>
+                <button class="action-btn" onclick="openModal('resetPassword')">
+                    <i class="fas fa-key"></i><span>Reset Password</span></button>
+                <button class="action-btn" onclick="window.location.href='../student_accounts_management.php'">
+                    <i class="fas fa-users"></i><span>Manage Students</span></button>
+                <button class="action-btn" onclick="openModal('systemAudit')">
+                    <i class="fas fa-shield-alt"></i><span>System Audit</span></button>
+            </div>
+        </div>
+
+    </div><!-- /content-area -->
+</div><!-- /page-content -->
+
+<!-- Action Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitle">Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="modalAction">Execute</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Clock
+(function tick(){
+    var el=document.getElementById('currentDate');
+    if(el) el.textContent=new Date().toLocaleDateString('en-UG',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+    setTimeout(tick,60000);
+})();
+
+function openModal(action){
+    var modal=new bootstrap.Modal(document.getElementById('actionModal'));
+    var title=document.getElementById('modalTitle');
+    var body=document.getElementById('modalBody');
+    var actions={
+        generateReport:'Generate System Report',
+        sendAnnouncement:'Send Announcement',
+        addStaff:'Add New Staff',
+        resetPassword:'Reset Staff Password',
+        systemAudit:'System Audit'
+    };
+    title.textContent=actions[action]||'Action';
+    var forms={
+        generateReport:'<div class="mb-3"><label class="form-label">Report Type</label><select class="form-select"><option>Monthly Performance</option><option>Financial Summary</option><option>Academic Performance</option><option>Staff Performance</option></select></div><div class="mb-3"><label class="form-label">Period</label><select class="form-select"><option>Last 30 Days</option><option>Last Quarter</option><option>Last Year</option></select></div>',
+        sendAnnouncement:'<div class="mb-3"><label class="form-label">Title</label><input id="annTitle" class="form-control" placeholder="Announcement title"></div><div class="mb-3"><label class="form-label">Message</label><textarea id="annContent" class="form-control" rows="4"></textarea></div><div class="mb-3"><label class="form-label">Target</label><select id="annTarget" class="form-select"><option value="all">All</option><option value="students">Students</option><option value="staff">Staff</option></select></div><div class="mb-3"><label class="form-label">Priority</label><select id="annPriority" class="form-select"><option value="medium">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>',
+        addStaff:'<div class="row g-3"><div class="col-md-6"><label class="form-label">Full Name</label><input class="form-control" placeholder="Full name"></div><div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" placeholder="Email"></div><div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" placeholder="Phone"></div><div class="col-md-6"><label class="form-label">Role</label><select class="form-select"><option>Director General</option><option>CEO</option><option>School Principal</option><option>School Bursar</option><option>HR Manager</option><option>Lecturers</option></select></div></div>',
+        resetPassword:'<div class="mb-3"><label class="form-label">Staff Email</label><input class="form-control" placeholder="staff@igangaschoolofnursingandmidwifery.ac.ug"></div><div class="mb-3"><label class="form-label">New Password</label><input type="password" class="form-control" id="newPass"></div><div class="mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="var c=Math.random().toString(36).slice(-10);document.getElementById(\"newPass\").value=c;">Generate Password</button></div>',
+        systemAudit:'<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>System audit log will be displayed here. Feature in development.</div>'
+    };
+    body.innerHTML=forms[action]||'<p class="text-muted">Action content loading...</p>';
+    modal.show();
+}
+
+// Announcement publish
+document.getElementById('modalAction').addEventListener('click',function(){
+    var title=document.getElementById('modalTitle').textContent;
+    if(!title.includes('Announcement')) return;
+    var t=document.getElementById('annTitle')?.value.trim();
+    var c=document.getElementById('annContent')?.value.trim();
+    if(!t||!c){alert('Title and message required.');return;}
+    var fd=new FormData();
+    fd.append('title',t);
+    fd.append('content',c);
+    fd.append('target_audience',document.getElementById('annTarget')?.value||'all');
+    fd.append('priority',document.getElementById('annPriority')?.value||'medium');
+    fd.append('status','published');
+    document.getElementById('modalBody').innerHTML='<div class="text-center py-4"><div class="spinner-border"></div><p class="mt-3">Publishing...</p></div>';
+    fetch('../includes/ajax_publish_announcement.php',{method:'POST',body:fd})
+        .then(r=>r.json()).then(resp=>{
+            document.getElementById('modalBody').innerHTML=resp.success
+                ?'<div class="alert alert-success">Published successfully.</div>'
+                :'<div class="alert alert-danger">'+(resp.message||'Failed')+'</div>';
+        }).catch(()=>{
+            document.getElementById('modalBody').innerHTML='<div class="alert alert-danger">Network error.</div>';
+        });
+});
+
+function editStaffMember(id){ openModal('resetPassword'); }
+function removeStaffMember(id){ if(confirm('Remove this staff member?')) console.log('Remove',id); }
+
+// SW registration
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/ISNM/sw.js',{scope:'/ISNM/'}).catch(function(){});
+}
+</script>
+</body>
+</html>
 
 $user_id = (int) ($user['id'] ?? $_SESSION['user_id'] ?? 0);
 $user_role = $user['role'] ?? $_SESSION['role'] ?? '';

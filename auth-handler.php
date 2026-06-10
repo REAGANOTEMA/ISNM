@@ -393,8 +393,10 @@ function handleCreateStaff() {
 }
 
 function handleLogout() {
-    global $auth_service;
-    $auth_service->destroySession();
-    header('Location: index.php');
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $type = $_SESSION['type'] ?? 'staff';
+    session_unset();
+    session_destroy();
+    header('Location: ' . ($type === 'student' ? 'student-login.php' : 'organogram.php'));
     exit();
 }

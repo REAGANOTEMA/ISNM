@@ -1,20 +1,8 @@
 <?php
-session_start();
-
-// Check user role before destroying session
-$user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'Staff';
-
-// Destroy all session variables
-$_SESSION = array();
-
-// Destroy the session
+if (session_status() === PHP_SESSION_NONE) session_start();
+$redirect = (($_SESSION['type'] ?? '') === 'student') ? 'student-login.php' : 'organogram.php';
+session_unset();
 session_destroy();
-
-// Redirect to appropriate login page based on original role
-if ($user_role === 'Student') {
-    header('Location: staff-login.php');
-} else {
-    header('Location: staff-login.php');
-}
+header('Location: ' . $redirect);
 exit();
 ?>
