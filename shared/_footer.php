@@ -237,13 +237,12 @@
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
-  <script src="js/bootstrap.bundle.js"></script>
-  <script src="./shared/app.js"></script>
-  <script src="/ISNM/assets/js/inventory-widget.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function () {});
+        // Always register from the root scope regardless of current directory
+        navigator.serviceWorker.register('/ISNM/sw.js', { scope: '/ISNM/' }).catch(function () {});
       });
     }
   </script>

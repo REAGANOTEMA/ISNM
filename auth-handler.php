@@ -193,31 +193,23 @@ switch ($action) {
         }
 
         if ($result !== null && $result['success']) {
-            $sessionRole = $_SESSION['role'] ?? '';
-            $dashboard   = $auth_service->getDashboardRoute($sessionRole);
-
-            if ($requested_position !== '') {
-                $resolved = $auth_service->resolveOrganogramPosition($requested_position);
-                $requestedDashboard = $auth_service->getDashboardRoute($resolved);
-                if ($requestedDashboard && $auth_service->positionMatchesRole($requested_position, $sessionRole)) {
-                    $dashboard = $requestedDashboard;
-                }
-            }
-            if (!$dashboard) { $dashboard = 'dashboards/ceo.php'; }
-
-            // Mark that this login originated from the organogram (if present)
-            if (!empty($requested_position)) {
-                $_SESSION['logged_in_via_organogram'] = true;
-                $_SESSION['logged_in_via_position'] = $requested_position;
-                $_SESSION['requested_position'] = $requested_position;
+            // Create session if not already done by unified auth
+            if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+                $auth_service->createSecureSession($result['user']);
             }
 
-            // Clear the temporary gating flag (used to allow staff-login.php access)
-            unset($_SESSION['staff_login_allowed']);
-            unset($_SESSION['staff_login_position']);
+            // Determine dashboard directly from the authenticated role
+            $sessionRole = $result['user']['role'] ?? ($_SESSION['role'] ?? '');
+            $dashboard   = $auth_service->getDashboardRouteFromKey($sessionRole);
+            if (!$dashboard) {
+                $dashboard = $auth_service->getDashboardRoute($sessionRole);
+            }
+            if (!$dashboard) { $dashboard = 'dashboards/director-general.php'; }
 
-            $_SESSION['success'] = 'Welcome, ' . ($_SESSION['full_name'] ?? 'User');
-            header("Location: $dashboard");
+            unset($_SESSION['staff_login_allowed'], $_SESSION['staff_login_position']);
+            $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
+            header('Location: ' . $dashboard);
+            exit();
         } else {
             $_SESSION['error'] = 'Invalid email or password.';
             $redirectUrl = 'staff-login.php';

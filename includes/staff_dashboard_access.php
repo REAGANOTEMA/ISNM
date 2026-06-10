@@ -55,15 +55,55 @@ if (!function_exists('bootstrapStaffDashboard')) {
             unset($_SESSION['logged_in_via_position']);
         }
 
+        $user = $auth_service->getCurrentUser();
+        // Ensure first_name / surname are always available even though the
+        // session only stores full_name.
+        if (!isset($user['first_name'])) {
+            $parts = explode(' ', trim($user['full_name'] ?? 'User'), 2);
+            $user['first_name'] = $parts[0];
+            $user['surname']    = $parts[1] ?? '';
+            $user['last_name']  = $user['surname'];
+        }
+
         return [
-            'auth' => $auth_service,
-            'staff' => getStaffConnection(),
+            'auth'     => $auth_service,
+            'staff'    => getStaffConnection(),
             'students' => getStudentsConnection(),
-            'website' => getWebsiteConnection(),
-            'user' => $auth_service->getCurrentUser(),
+            'website'  => getWebsiteConnection(),
+            'user'     => $user,
         ];
     }
+}
 
+if (!function_exists('getDashboardStats')) {
+    /**
+     * Safely call get_dashboard_statistics stored procedure.
+     * Returns an array of stats, never throws.
+     */
+    function getDashboardStats($conn, int $userId, string $role): array {
+        $defaults = [
+            'total_staff'          => 0,
+            'total_students'       => 0,
+            'pending_applications' => 0,
+            'active_programs'      => 2,
+            'total_revenue'        => 0,
+            'total_expenses'       => 0,
+        ];
+        if (!$conn) return $defaults;
+        $stmt = $conn->prepare('CALL get_dashboard_statistics(?, ?)');
+        if (!$stmt) return $defaults;
+        $stmt->bind_param('is', $userId, $role);
+        if (!$stmt->execute()) { $stmt->close(); return $defaults; }
+        $res = $stmt->get_result();
+        $row = ($res && !($res === false)) ? ($res->fetch_assoc() ?: []) : [];
+        $stmt->close();
+        // Drain extra result sets from stored procedure
+        while ($conn->more_results()) { $conn->next_result(); }
+        return array_merge($defaults, $row);
+    }
+}
+
+if (!function_exists('staffRequireRole')) {
     function staffRequireRole(array $roleKeywords) {
         bootstrapStaffDashboard($roleKeywords);
     }

@@ -173,3 +173,15 @@
 [09-Jun-2026 19:34:21 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
 [09-Jun-2026 19:34:21 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
 [09-Jun-2026 19:34:21 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[10-Jun-2026 09:03:53 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[10-Jun-2026 09:03:53 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[10-Jun-2026 09:03:53 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[10-Jun-2026 09:03:53 Africa/Kampala] Database connection error: Unknown database 'igangaschoolofl_ict'
+[10-Jun-2026 09:03:53 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Unknown database 'igangaschoolofl_ict'
+[10-Jun-2026 09:03:53 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[10-Jun-2026 09:03:57 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[10-Jun-2026 09:03:57 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[10-Jun-2026 09:03:57 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[10-Jun-2026 09:03:57 Africa/Kampala] Database connection error: Unknown database 'igangaschoolofl_ict'
+[10-Jun-2026 09:03:57 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Unknown database 'igangaschoolofl_ict'
+[10-Jun-2026 09:03:57 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database

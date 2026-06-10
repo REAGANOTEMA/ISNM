@@ -1,48 +1,48 @@
-const CACHE_NAME = 'isnm-static-v1';
-const ASSETS = [
-  './',
-  './index.php',
-  './organogram.php',
-  './staff-login.php',
-  './images/school-logo.png',
-  './manifest.json'
-];
+// ISNM Service Worker — passthrough only, no caching of PHP or navigation
+const CACHE_NAME = 'isnm-static-v3';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => self.skipWaiting());
+
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Tell all open tabs to reload so the new SW takes effect immediately
+        self.clients.matchAll({ type: 'window' }).then((clients) => {
+          clients.forEach((client) => client.navigate(client.url));
+        });
+      })
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') {
+  const url = new URL(event.request.url);
+
+  // Pass through everything — no caching at all for this app
+  // PHP pages, dashboards, auth, and navigation must never be cached
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.endsWith('.php') ||
+    url.origin !== self.location.origin
+  ) {
     return;
   }
 
-  const requestUrl = new URL(event.request.url);
-  if (requestUrl.pathname.endsWith('/student-login.php')) {
-    // student-login.php is a redirect stub and should not be cached by the service worker.
-    event.respondWith(fetch(event.request));
-    return;
-  }
+  // Only cache truly static immutable assets (images/fonts)
+  const isImmutable = /\.(png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/i.test(url.pathname);
+  if (!isImmutable) return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(event.request).catch(() => {
-        // If the request is for a document (navigation), try to return the shell
-        if (event.request.destination === 'document') {
-          return caches.match('./');
-        }
-        // Otherwise, return an error response
-        return new Response('Network request failed and no cached version available.', { status: 503, statusText: 'Service Unavailable' });
-      });
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        });
+      })
+    )
   );
 });
