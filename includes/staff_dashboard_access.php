@@ -4,6 +4,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth-service.php';
+require_once __DIR__ . '/../includes/student_helpers.php';
 
 if (!function_exists('bootstrapStaffDashboard')) {
     /**
