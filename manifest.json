@@ -21,5 +21,8 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "app": {
+    "tracking_id": "f9126uqsiimtrcimk2qz"
+  }
 }
