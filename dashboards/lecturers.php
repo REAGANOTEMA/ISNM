@@ -14,12 +14,7 @@ $user_role = $_SESSION['role'] ?? '';
 $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 
-$user_query = "SELECT s.*, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// User data already available from bootstrapStaffDashboard session
 
 $stats = [];
 try {

@@ -9,19 +9,11 @@ $userRole = $user['role'] ?? '';
 // Database connection
 $conn = getStaffConnection();
 
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_role = $_SESSION['role'] ?? '';
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
-
-// Get additional user details if needed
-$user_query = "SELECT * FROM users WHERE id = ?";
-$stmt = $conn->prepare($user_query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user = $user_result->fetch_assoc();
+// Get additional user details from session (already loaded by bootstrapStaffDashboard)
+$user_id    = $_SESSION['user_id'] ?? 0;
+$user_role  = $_SESSION['role']    ?? '';
+$user_email = $_SESSION['email']   ?? '';
+$user_name  = $_SESSION['full_name'] ?? '';
 
 // Get secretary statistics (using fallback data only)
 $total_students = 150; // Fallback value
