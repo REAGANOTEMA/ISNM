@@ -4,1286 +4,307 @@ require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
-$ctx = bootstrapStaffDashboard([]);
+// DG has full access - no role restriction
+$ctx          = bootstrapStaffDashboard([]);
 $auth_service = $ctx['auth'];
 $conn         = $ctx['staff'];
 $studentsConn = $ctx['students'];
 $user         = $ctx['user'];
 
-$user_id    = (int)($user['id'] ?? 0);
-$user_role  = $user['role']  ?? '';
-$user_name  = $user['full_name'] ?? 'Director';
+$user_id   = (int)($user['id'] ?? 0);
+$user_role = $user['role'] ?? '';
+$user_name = $user['full_name'] ?? 'Doris Joy';
 
-$overview             = getInstitutionOverviewStats();
-$total_students       = $overview['total_students'];
-$total_staff          = $overview['total_staff'];
-$total_applications   = $overview['website_applications'];
-$pending_applications = $overview['pending_applications'];
-$website_pages        = $overview['website_pages'];
-$website_posts        = $overview['website_posts'];
-$student_data_files   = $overview['data_files'];
-$total_collections    = 0;
-$outstanding_fees     = 0;
+$overview            = getInstitutionOverviewStats();
+$total_students      = $overview['total_students'];
+$total_staff         = $overview['total_staff'];
+$total_applications  = $overview['website_applications'];
+$pending_apps        = $overview['pending_applications'];
+$student_data_files  = $overview['data_files'];
 
-// Safe stored procedure call
-if ($conn) {
-    try {
-        $st = $conn->prepare('CALL get_dashboard_statistics(?,?)');
-        if ($st) {
-            $st->bind_param('is', $user_id, $user_role);
-            $st->execute();
-            $row = $st->get_result()->fetch_assoc();
-            if ($row) {
-                $total_students       = (int)($row['total_students']       ?? $total_students);
-                $total_staff          = (int)($row['total_staff']          ?? $total_staff);
-                $pending_applications = (int)($row['pending_applications'] ?? $pending_applications);
-            }
-            $st->close();
-            while ($conn->more_results()) $conn->next_result();
-        }
-    } catch (Exception $e) { error_log('dg stats: '.$e->getMessage()); }
+// Financial quick stats from students DB
+$today_collection = 0; $outstanding = 0;
+if ($studentsConn) {
+    $r = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('Completed','verified','approved')");
+    if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
+    $r2 = $studentsConn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('Pending','partial','Overdue','Partially Paid')");
+    if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
 }
 
-// Recent students from loader
-$recent_students = [];
-try {
-    $loader = new StudentDataLoader();
-    $recent_students = array_slice($loader->loadAllStudents(), 0, 4);
-} catch (Exception $e) {}
+// Staff list
+$staff_list = [];
+if ($conn) {
+    $sr = $conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.position,s.department,s.status,s.last_login,sr.role_name
+        FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
+    if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
+}
 
 // Recent activities
 $recent_activities = [];
 if ($conn) {
-    $ar = $conn->query('SELECT activity_type, activity_description, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 6');
-    if ($ar) while ($row = $ar->fetch_assoc()) $recent_activities[] = $row;
+    $ar = $conn->query("SELECT activity_type,activity_description,created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
+    if ($ar) while ($r = $ar->fetch_assoc()) $recent_activities[] = $r;
 }
 
-// Staff list from staff table
-$staff_list = [];
+// All departments
+$dept_list = [];
 if ($conn) {
-    $sr = $conn->query('SELECT s.id, s.full_name, s.email, s.position, s.department, s.status, s.last_login, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 10');
-    if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
+    $dr = $conn->query("SELECT department_name,department_code,department_level FROM staff_departments ORDER BY department_level,department_name");
+    if ($dr) while ($r = $dr->fetch_assoc()) $dept_list[] = $r;
+}
+
+// Recent students from loader
+$recent_students = [];
+try { $loader = new StudentDataLoader(); $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
+
+// POST: send announcement
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
+    $title    = $conn ? $conn->real_escape_string(trim($_POST['ann_title'] ?? '')) : '';
+    $body     = $conn ? $conn->real_escape_string(trim($_POST['ann_body'] ?? '')) : '';
+    $target   = $conn ? $conn->real_escape_string($_POST['ann_target'] ?? 'All') : 'All';
+    $priority = $conn ? $conn->real_escape_string($_POST['ann_priority'] ?? 'Normal') : 'Normal';
+    if ($title && $body && $studentsConn) {
+        $studentsConn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$title','$body','$target','$priority',$user_id,1,NOW())");
+        $_SESSION['success'] = "Announcement published to all $target.";
+    }
+    header('Location: director-general.php'); exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Director General — ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="dashboard-style.css" rel="stylesheet">
-    <link href="dashboard-mobile.css" rel="stylesheet">
-    <style>
-    body { font-family:'Poppins',sans-serif; background:#f0f2f5; }
-    .dashboard-wrapper { display:flex; min-height:100vh; }
-    .page-content { margin-left:280px; flex:1; transition:margin-left .3s; }
-    @media(max-width:768px){ .page-content{ margin-left:0; padding-top:70px; } }
-    .top-bar { background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;
-               box-shadow:0 2px 8px rgba(0,0,0,.06); position:sticky; top:0; z-index:100; }
-    .top-bar h1 { font-size:1.2rem; font-weight:700; margin:0; }
-    .top-bar p  { font-size:.78rem; color:#666; margin:0; }
-    .content-area { padding:24px; }
-    .stat-card { background:#fff; border-radius:14px; padding:22px; display:flex; align-items:center;
-                 gap:16px; box-shadow:0 2px 12px rgba(0,0,0,.07); transition:transform .25s; }
-    .stat-card:hover { transform:translateY(-4px); }
-    .stat-icon { width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
-                 justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0; }
-    .si-blue   { background:linear-gradient(135deg,#1a237e,#3949ab); }
-    .si-green  { background:linear-gradient(135deg,#2e7d32,#43a047); }
-    .si-cyan   { background:linear-gradient(135deg,#0277bd,#039be5); }
-    .si-orange { background:linear-gradient(135deg,#e65100,#fb8c00); }
-    .stat-content h3 { font-size:1.7rem;font-weight:700;margin:0;line-height:1; }
-    .stat-content p  { font-size:.78rem;color:#666;margin:2px 0 0; }
-    .section-card { background:#fff;border-radius:14px;padding:22px;margin-bottom:22px;
-                    box-shadow:0 2px 12px rgba(0,0,0,.07); }
-    .section-card h2 { font-size:1.05rem;font-weight:700;margin-bottom:16px;
-                       padding-bottom:10px;border-bottom:2px solid #f0f2f5; }
-    .quick-actions { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px; }
-    .action-btn { background:#fff;border:2px solid #e3e8f0;border-radius:12px;padding:18px 10px;
-                  text-align:center;cursor:pointer;transition:all .25s;display:flex;
-                  flex-direction:column;align-items:center;gap:8px; }
-    .action-btn:hover { border-color:#1a237e;background:#f0f4ff;transform:translateY(-3px); }
-    .action-btn i { font-size:1.5rem;color:#1a237e; }
-    .action-btn span { font-size:.78rem;font-weight:600;color:#333; }
-    .activity-item { display:flex;align-items:flex-start;gap:12px;padding:10px 0;
-                     border-bottom:1px solid #f0f2f5; }
-    .activity-item:last-child { border-bottom:none; }
-    .activity-dot { width:34px;height:34px;border-radius:50%;background:#1a237e;
-                    color:#fff;display:flex;align-items:center;justify-content:center;
-                    font-size:.85rem;flex-shrink:0; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Director General – Doris Joy – ISNM</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
+.page-content{margin-left:280px;flex:1;min-height:100vh}
+@media(max-width:768px){.page-content{margin-left:0}}
+.top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
+.content-area{padding:22px}
+.stat-card{background:#fff;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .25s}
+.stat-card:hover{transform:translateY(-4px)}
+.si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
+.si-blue  {background:linear-gradient(135deg,#1a237e,#3949ab)}
+.si-green {background:linear-gradient(135deg,#2e7d32,#43a047)}
+.si-cyan  {background:linear-gradient(135deg,#0277bd,#039be5)}
+.si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
+.si-red   {background:linear-gradient(135deg,#b71c1c,#ef5350)}
+.si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
+.stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
+.stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
+.section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+</style>
 </head>
 <body>
 
-<!-- Sidebar -->
 <?php include_once '../includes/sidebar.php'; ?>
 
 <div class="page-content">
-    <!-- Top bar -->
-    <div class="top-bar">
-        <div>
-            <h1><i class="fas fa-crown me-2 text-warning"></i>Director General Dashboard</h1>
-            <p>Complete oversight — Iganga School of Nursing and Midwifery</p>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-muted small d-none d-md-block" id="currentDate"></span>
-            <img src="../images/default-avatar.png" class="rounded-circle" width="38" height="38"
-                 style="border:2px solid #1a237e;object-fit:cover;" alt="Avatar">
-            <span class="fw-600 d-none d-md-inline"><?php echo htmlspecialchars($user['first_name']); ?></span>
-            <a href="../logout.php" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-sign-out-alt me-1"></i>Logout
-            </a>
-        </div>
+  <div class="top-bar">
+    <div>
+      <strong><i class="fas fa-crown me-2 text-warning"></i>Director General – Doris Joy</strong>
+      <div class="text-muted small">Full Institution Oversight | Iganga School of Nursing &amp; Midwifery</div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
+      <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <?php if(!empty($_SESSION['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php unset($_SESSION['success']); endif; ?>
+
+    <!-- DB STATUS -->
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size:.82rem">
+      <i class="fas fa-database"></i>
+      <span>
+        <strong>staffs_db:</strong> <?= $total_staff ?> staff &nbsp;|&nbsp;
+        <strong>students_db:</strong> <?= (int)$overview['total_students_db'] ?> records &nbsp;|&nbsp;
+        <strong>students_data/:</strong> <?= $student_data_files ?> Excel file(s), <?= (int)$overview['total_students_files'] ?> profiles
+      </span>
     </div>
 
-    <div class="content-area">
-
-        <!-- DB status alert -->
-        <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size:.82rem;">
-            <i class="fas fa-database"></i>
-            <span>
-                <strong>staffs_db</strong>: <?php echo $total_staff; ?> staff &nbsp;|&nbsp;
-                <strong>students_db</strong>: <?php echo (int)$overview['total_students_db']; ?> records &nbsp;|&nbsp;
-                <strong>students_data/</strong>: <?php echo $student_data_files; ?> Excel files,
-                <?php echo (int)$overview['total_students_files']; ?> profiles loaded
-            </span>
+    <!-- STATS -->
+    <div class="row g-3 mb-4">
+      <?php $cards = [
+        ['Total Students',      $total_students,               'si-blue',  'user-graduate'],
+        ['Total Staff',         $total_staff,                  'si-green', 'users'],
+        ['Today Collection',    'UGX '.number_format($today_collection), 'si-cyan', 'money-bill-wave'],
+        ['Outstanding Fees',    'UGX '.number_format($outstanding),      'si-red',    'exclamation-triangle'],
+        ['Applications',        $total_applications,           'si-orange','file-alt'],
+        ['Pending Review',      $pending_apps,                 'si-purple','hourglass-half'],
+      ];
+      foreach($cards as $c): ?>
+      <div class="col-6 col-md-2">
+        <div class="stat-card">
+          <div class="si <?= $c[2] ?>"><i class="fas fa-<?= $c[3] ?>"></i></div>
+          <div class="stat-content"><h3><?= is_numeric($c[1]) ? number_format($c[1]) : $c[1] ?></h3><p><?= $c[0] ?></p></div>
         </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
 
-        <!-- Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon si-blue"><i class="fas fa-user-graduate"></i></div>
-                    <div class="stat-content"><h3><?php echo number_format($total_students); ?></h3><p>Total Students</p></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon si-green"><i class="fas fa-users"></i></div>
-                    <div class="stat-content"><h3><?php echo number_format($total_staff); ?></h3><p>Total Staff</p></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon si-cyan"><i class="fas fa-file-alt"></i></div>
-                    <div class="stat-content"><h3><?php echo number_format($total_applications); ?></h3><p>Applications</p></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon si-orange"><i class="fas fa-hourglass-half"></i></div>
-                    <div class="stat-content"><h3><?php echo number_format($pending_applications); ?></h3><p>Pending Review</p></div>
-                </div>
-            </div>
+    <!-- STUDENT SEARCH -->
+    <div class="section-card">
+      <h2><i class="fas fa-search me-2"></i>Student Search</h2>
+      <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-card">
+      <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
+        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Academic Registrar</a>
+        <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+        <a href="../hr_dashboard.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
+        <a href="../bursar_reports.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
+        <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+      </div>
+    </div>
+
+    <!-- ALL STAFF -->
+    <div class="section-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>All Staff Members (<?= count($staff_list) ?>+)</h2>
+        <a href="../hr_dashboard.php" class="btn btn-sm btn-outline-primary">View HR Dashboard</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light"><tr><th>Staff ID</th><th>Full Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
+          <tbody>
+          <?php if(empty($staff_list)): ?>
+          <tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
+          <?php else: foreach($staff_list as $s):
+            $bc = $s['status']==='Active'?'bg-success':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger');
+          ?>
+          <tr>
+            <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
+            <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
+            <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
+            <td><?= htmlspecialchars($s['department'] ?? '—') ?></td>
+            <td><small><?= htmlspecialchars($s['email']) ?></small></td>
+            <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
+            <td><?= $s['last_login'] ? date('d M Y H:i',strtotime($s['last_login'])) : '<span class="text-muted">Never</span>' ?></td>
+          </tr>
+          <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RECENT STUDENTS FROM EXCEL -->
+    <?php if(!empty($recent_students)): ?>
+    <div class="section-card">
+      <h2><i class="fas fa-user-graduate me-2"></i>Recently Loaded Student Profiles</h2>
+      <div class="row g-2">
+      <?php foreach($recent_students as $st): ?>
+        <div class="col-md-4 col-lg-2">
+          <div class="border rounded p-2 text-center small">
+            <div class="fw-bold"><?= htmlspecialchars($st['full_name'] ?? ($st['first_name']??'').' '.($st['surname']??'')) ?></div>
+            <div class="text-muted"><?= htmlspecialchars($st['index_number'] ?? $st['student_number'] ?? '') ?></div>
+            <div><?= htmlspecialchars($st['program'] ?? $st['course'] ?? '') ?></div>
+          </div>
         </div>
+      <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
-        <!-- Student Search -->
-        <div class="section-card">
-            <h2><i class="fas fa-search me-2"></i>Student Search</h2>
-            <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
+    <!-- DEPARTMENTS -->
+    <?php if(!empty($dept_list)): ?>
+    <div class="section-card">
+      <h2><i class="fas fa-building me-2"></i>Departments</h2>
+      <div class="row g-2">
+      <?php foreach($dept_list as $d): ?>
+        <div class="col-md-3 col-6">
+          <div class="border rounded p-2">
+            <div class="fw-bold small"><?= htmlspecialchars($d['department_name']) ?></div>
+            <small class="text-muted"><?= htmlspecialchars($d['department_code'] ?? '') ?> | <?= htmlspecialchars($d['department_level'] ?? '') ?></small>
+          </div>
         </div>
+      <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
-        <!-- Staff Overview -->
-        <div class="section-card">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>Staff Overview</h2>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-primary" onclick="openModal('addStaff')"><i class="fas fa-user-plus me-1"></i>Add Staff</button>
-                    <button class="btn btn-sm btn-warning" onclick="openModal('resetPassword')"><i class="fas fa-key me-1"></i>Reset Password</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover table-sm align-middle">
-                    <thead class="table-light">
-                        <tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Last Login</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($staff_list as $sm): ?>
-                        <tr>
-                            <td><div class="d-flex align-items-center gap-2">
-                                <img src="../images/default-avatar.png" width="32" height="32" class="rounded-circle">
-                                <span><?php echo htmlspecialchars($sm['full_name']); ?></span>
-                            </div></td>
-                            <td><span class="badge bg-primary"><?php echo htmlspecialchars($sm['role_name'] ?? $sm['position'] ?? '—'); ?></span></td>
-                            <td><?php echo htmlspecialchars($sm['department'] ?? '—'); ?></td>
-                            <td><span class="badge bg-<?php echo strtolower($sm['status'] ?? '') === 'active' ? 'success' : 'secondary'; ?>"><?php echo htmlspecialchars($sm['status'] ?? 'Active'); ?></span></td>
-                            <td><?php echo $sm['last_login'] ? date('d M Y', strtotime($sm['last_login'])) : '<span class="text-muted">Never</span>'; ?></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editStaffMember(<?php echo $sm['id']; ?>)" title="Edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="removeStaffMember(<?php echo $sm['id']; ?>)" title="Remove"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <?php if (empty($staff_list)): ?>
-                        <tr><td colspan="6" class="text-center text-muted py-3">No staff records found</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <!-- RECENT ACTIVITIES -->
+    <div class="section-card">
+      <h2><i class="fas fa-history me-2"></i>Recent System Activities</h2>
+      <?php if(empty($recent_activities)): ?>
+      <p class="text-muted small">No recent activities recorded.</p>
+      <?php else: ?>
+      <ul class="list-unstyled mb-0">
+      <?php foreach($recent_activities as $act): ?>
+        <li class="border-bottom py-2 d-flex gap-3 align-items-start">
+          <span class="badge bg-primary mt-1"><?= htmlspecialchars($act['activity_type']) ?></span>
+          <div>
+            <div class="small"><?= htmlspecialchars($act['activity_description'] ?? '') ?></div>
+            <small class="text-muted"><?= $act['created_at'] ? date('d M Y H:i',strtotime($act['created_at'])) : '' ?></small>
+          </div>
+        </li>
+      <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+    </div>
 
-        <!-- Recent Activities -->
-        <div class="section-card">
-            <h2><i class="fas fa-history me-2"></i>Recent System Activities</h2>
-            <?php if (empty($recent_activities)): ?>
-                <p class="text-muted text-center py-3">No recent activities recorded.</p>
-            <?php else: ?>
-                <?php foreach ($recent_activities as $act): ?>
-                <div class="activity-item">
-                    <div class="activity-dot"><i class="fas fa-check"></i></div>
-                    <div>
-                        <p class="mb-0" style="font-size:.88rem;"><?php echo htmlspecialchars($act['activity_description'] ?? $act['activity_type'] ?? 'System activity'); ?></p>
-                        <small class="text-muted"><?php echo $act['created_at'] ? date('d M Y H:i', strtotime($act['created_at'])) : ''; ?></small>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="section-card">
-            <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
-            <div class="quick-actions">
-                <button class="action-btn" onclick="openModal('generateReport')">
-                    <i class="fas fa-file-chart-bar"></i><span>Generate Report</span></button>
-                <button class="action-btn" onclick="openModal('sendAnnouncement')">
-                    <i class="fas fa-bullhorn"></i><span>Send Announcement</span></button>
-                <button class="action-btn" onclick="openModal('addStaff')">
-                    <i class="fas fa-user-plus"></i><span>Add Staff</span></button>
-                <button class="action-btn" onclick="openModal('resetPassword')">
-                    <i class="fas fa-key"></i><span>Reset Password</span></button>
-                <button class="action-btn" onclick="window.location.href='../student_accounts_management.php'">
-                    <i class="fas fa-users"></i><span>Manage Students</span></button>
-                <button class="action-btn" onclick="openModal('systemAudit')">
-                    <i class="fas fa-shield-alt"></i><span>System Audit</span></button>
-            </div>
-        </div>
-
-    </div><!-- /content-area -->
+  </div><!-- /content-area -->
 </div><!-- /page-content -->
 
-<!-- Action Modal -->
-<div class="modal fade" id="actionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalTitle">Action</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="modalAction">Execute</button>
-            </div>
+<!-- SEND ANNOUNCEMENT MODAL -->
+<div class="modal fade" id="annModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Send Announcement – Doris Joy</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-semibold">Title *</label><input type="text" name="ann_title" class="form-control" required placeholder="Announcement title"></div>
+        <div class="mb-3"><label class="form-label fw-semibold">Message *</label><textarea name="ann_body" class="form-control" rows="4" required placeholder="Write your announcement here…"></textarea></div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold">Target Audience</label>
+            <select name="ann_target" class="form-select">
+              <option value="All">All</option><option value="Nursing">Nursing</option>
+              <option value="Midwifery">Midwifery</option><option value="Staff">Staff</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">Priority</label>
+            <select name="ann_priority" class="form-select">
+              <option value="Normal">Normal</option><option value="High">High</option><option value="Urgent">Urgent</option>
+            </select>
+          </div>
         </div>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane me-1"></i>Publish Announcement</button>
+      </div>
+    </form>
+  </div>
 </div>
+
+<?php echo displayStudentProfileModal(''); ?>
+<?php echo getStudentProfileStyles(); ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Clock
-(function tick(){
-    var el=document.getElementById('currentDate');
-    if(el) el.textContent=new Date().toLocaleDateString('en-UG',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-    setTimeout(tick,60000);
-})();
-
-function openModal(action){
-    var modal=new bootstrap.Modal(document.getElementById('actionModal'));
-    var title=document.getElementById('modalTitle');
-    var body=document.getElementById('modalBody');
-    var actions={
-        generateReport:'Generate System Report',
-        sendAnnouncement:'Send Announcement',
-        addStaff:'Add New Staff',
-        resetPassword:'Reset Staff Password',
-        systemAudit:'System Audit'
-    };
-    title.textContent=actions[action]||'Action';
-    var forms={
-        generateReport:'<div class="mb-3"><label class="form-label">Report Type</label><select class="form-select"><option>Monthly Performance</option><option>Financial Summary</option><option>Academic Performance</option><option>Staff Performance</option></select></div><div class="mb-3"><label class="form-label">Period</label><select class="form-select"><option>Last 30 Days</option><option>Last Quarter</option><option>Last Year</option></select></div>',
-        sendAnnouncement:'<div class="mb-3"><label class="form-label">Title</label><input id="annTitle" class="form-control" placeholder="Announcement title"></div><div class="mb-3"><label class="form-label">Message</label><textarea id="annContent" class="form-control" rows="4"></textarea></div><div class="mb-3"><label class="form-label">Target</label><select id="annTarget" class="form-select"><option value="all">All</option><option value="students">Students</option><option value="staff">Staff</option></select></div><div class="mb-3"><label class="form-label">Priority</label><select id="annPriority" class="form-select"><option value="medium">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>',
-        addStaff:'<div class="row g-3"><div class="col-md-6"><label class="form-label">Full Name</label><input class="form-control" placeholder="Full name"></div><div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" placeholder="Email"></div><div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" placeholder="Phone"></div><div class="col-md-6"><label class="form-label">Role</label><select class="form-select"><option>Director General</option><option>CEO</option><option>School Principal</option><option>School Bursar</option><option>HR Manager</option><option>Lecturers</option></select></div></div>',
-        resetPassword:'<div class="mb-3"><label class="form-label">Staff Email</label><input class="form-control" placeholder="staff@igangaschoolofnursingandmidwifery.ac.ug"></div><div class="mb-3"><label class="form-label">New Password</label><input type="password" class="form-control" id="newPass"></div><div class="mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="var c=Math.random().toString(36).slice(-10);document.getElementById(\"newPass\").value=c;">Generate Password</button></div>',
-        systemAudit:'<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>System audit log will be displayed here. Feature in development.</div>'
-    };
-    body.innerHTML=forms[action]||'<p class="text-muted">Action content loading...</p>';
-    modal.show();
-}
-
-// Announcement publish
-document.getElementById('modalAction').addEventListener('click',function(){
-    var title=document.getElementById('modalTitle').textContent;
-    if(!title.includes('Announcement')) return;
-    var t=document.getElementById('annTitle')?.value.trim();
-    var c=document.getElementById('annContent')?.value.trim();
-    if(!t||!c){alert('Title and message required.');return;}
-    var fd=new FormData();
-    fd.append('title',t);
-    fd.append('content',c);
-    fd.append('target_audience',document.getElementById('annTarget')?.value||'all');
-    fd.append('priority',document.getElementById('annPriority')?.value||'medium');
-    fd.append('status','published');
-    document.getElementById('modalBody').innerHTML='<div class="text-center py-4"><div class="spinner-border"></div><p class="mt-3">Publishing...</p></div>';
-    fetch('../includes/ajax_publish_announcement.php',{method:'POST',body:fd})
-        .then(r=>r.json()).then(resp=>{
-            document.getElementById('modalBody').innerHTML=resp.success
-                ?'<div class="alert alert-success">Published successfully.</div>'
-                :'<div class="alert alert-danger">'+(resp.message||'Failed')+'</div>';
-        }).catch(()=>{
-            document.getElementById('modalBody').innerHTML='<div class="alert alert-danger">Network error.</div>';
-        });
-});
-
-function editStaffMember(id){ openModal('resetPassword'); }
-function removeStaffMember(id){ if(confirm('Remove this staff member?')) console.log('Remove',id); }
-
-// SW registration
-if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/ISNM/sw.js',{scope:'/ISNM/'}).catch(function(){});
-}
+function viewFullProfile(id){ showStudentProfileModal(id); }
+function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }
+function viewAcademic(id){ window.location.href='../academic_records_management.php?student_id='+id; }
+function viewFees(id){ window.location.href='../bursar_student_fees.php?id='+id; }
+function sendMessage(id){ alert('Messaging module for student ID: '+id); }
+function printProfile(){ window.print(); }
 </script>
-</body>
-</html>
-
-$user_id = (int) ($user['id'] ?? $_SESSION['user_id'] ?? 0);
-$user_role = $user['role'] ?? $_SESSION['role'] ?? '';
-$user_email = $user['email'] ?? $_SESSION['email'] ?? '';
-$user_name = $user['full_name'] ?? $_SESSION['full_name'] ?? 'Director';
-
-$overview = getInstitutionOverviewStats();
-$total_students = $overview['total_students'];
-$total_staff = $overview['total_staff'];
-$total_applications = $overview['website_applications'];
-$pending_applications = $overview['pending_applications'];
-$website_pages = $overview['website_pages'];
-$website_posts = $overview['website_posts'];
-$student_data_files = $overview['data_files'];
-
-$total_collections = 0;
-$outstanding_fees = 0;
-$active_programs = max(1, (int) ($overview['total_students'] > 0 ? 2 : 1));
-$graduates_this_year = 0;
-$staff_satisfaction = 92;
-$student_satisfaction = 88;
-
-try {
-    $stats_stmt = $conn->prepare('CALL get_dashboard_statistics(?, ?)');
-    if ($stats_stmt) {
-        $stats_stmt->bind_param('is', $user_id, $user_role);
-        $stats_stmt->execute();
-        $stats = $stats_stmt->get_result()->fetch_assoc();
-        if ($stats) {
-            $total_students = (int) ($stats['total_students'] ?? $total_students);
-            $total_staff = (int) ($stats['total_staff'] ?? $total_staff);
-            $pending_applications = (int) ($stats['pending_applications'] ?? $pending_applications);
-            $total_collections = (int) ($stats['recent_collections'] ?? $total_collections);
-        }
-        $stats_stmt->close();
-        while ($conn->more_results()) {
-            $conn->next_result();
-        }
-    }
-} catch (Exception $e) {
-    error_log('director-general stats: ' . $e->getMessage());
-}
-
-$recent_students = [];
-try {
-    $loader = new StudentDataLoader();
-    $recent_students = array_slice($loader->loadAllStudents(), 0, 4);
-} catch (Exception $e) {
-    error_log('director-general students: ' . $e->getMessage());
-}
-
-$recent_activities = [];
-$activity_sql = 'SELECT activity_description AS activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 5';
-$activity_result = $conn->query($activity_sql);
-if ($activity_result) {
-    while ($row = $activity_result->fetch_assoc()) {
-        $recent_activities[] = $row;
-    }
-}
-
-$system_stats = [
-    'total_logins_today' => 0,
-    'total_payments_today' => 0,
-    'total_applications_today' => $pending_applications,
-    'system_uptime' => '99.8%',
-    'active_sessions' => 1,
-];
-
-$department_performance = [];
-$dept_result = $conn->query('SELECT department_name AS department FROM staff_departments LIMIT 4');
-if ($dept_result) {
-    while ($row = $dept_result->fetch_assoc()) {
-        $row['performance_score'] = 85;
-        $row['efficiency_rate'] = 82;
-        $row['satisfaction_rate'] = 87;
-        $department_performance[] = $row;
-    }
-}
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Director General Dashboard - ISNM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/isnm-style.css">
-    <link rel="stylesheet" href="dashboard-style.css">
-    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
-    
-    <!-- Responsive Dashboard CSS -->
-    <style>
-        /* Responsive Dashboard Container */
-        .dashboard-container {
-            min-height: 100vh;
-            background: #f8f9fa;
-            transition: margin-left 0.3s ease;
-        }
-        
-        .dashboard-main {
-            padding: 20px;
-            max-width: 100%;
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-container {
-                margin-left: 0 !important;
-            }
-            
-            .dashboard-main {
-                padding: 15px;
-                padding-top: 80px; /* Space for mobile menu */
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .dashboard-container.sidebar-collapsed {
-                margin-left: 0 !important;
-            }
-        }
-    </style>
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
-</head>
-<body>
-    <!-- Include Responsive Navigation -->
-    <?php include_once '../includes/sidebar.php'; ?>
-    
-    <div class="dashboard-container">
-        <!-- Main Content Area -->
-        <div class="dashboard-main">
-            <!-- Header -->
-            <div class="dashboard-header">
-                <div class="header-left">
-                    <h1>Director General Dashboard</h1>
-                    <p>Complete oversight of Iganga School of Nursing and Midwifery operations</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span><?php echo date('l, F j, Y'); ?></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo htmlspecialchars($user_name); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <!-- Student Search Section -->
-                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
-
-                <!-- Key Statistics -->
-                <section id="overview" class="content-section">
-                    <h2>System Overview</h2>
-                    <div class="alert alert-info mb-3">
-                        <i class="fas fa-database me-2"></i>
-                        Connected databases:
-                        <strong>staffs_db</strong> (<?php echo (int) $total_staff; ?> staff),
-                        <strong>students_db</strong> (<?php echo (int) $overview['total_students_db']; ?> records),
-                        <strong>website_db</strong> (<?php echo (int) $website_pages; ?> pages, <?php echo (int) $website_posts; ?> posts).
-                        Student profile files in <strong>students_data/</strong>: <?php echo (int) $student_data_files; ?> Excel file(s),
-                        <?php echo (int) $overview['total_students_files']; ?> student profile(s) searchable by staff.
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card primary">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($total_students); ?></h3>
-                                <p>Total Students</p>
-                                <small>Active enrollment</small>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card success">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($total_staff); ?></h3>
-                                <p>Total Staff</p>
-                                <small>All departments</small>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card info">
-                            <div class="stat-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($total_applications); ?></h3>
-                                <p>Total Applications</p>
-                                <small>All time</small>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card warning">
-                            <div class="stat-icon">
-                                <i class="fas fa-hourglass-half"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($pending_applications); ?></h3>
-                                <p>Pending Applications</p>
-                                <small>Require review</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Financial Overview -->
-                    <div class="financial-overview">
-                        <h3>Financial Summary</h3>
-                        <div class="financial-stats">
-                            <div class="financial-stat">
-                                <h4>UGX <?php echo number_format($total_collections); ?></h4>
-                                <p>Total Collections</p>
-                                <span class="trend positive">
-                                    <i class="fas fa-arrow-up"></i> 12% from last month
-                                </span>
-                            </div>
-                            <div class="financial-stat">
-                                <h4>UGX <?php echo number_format($outstanding_fees); ?></h4>
-                                <p>Outstanding Fees</p>
-                                <span class="trend negative">
-                                    <i class="fas fa-arrow-down"></i> 5% from last month
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <!-- Student Profiles Overview -->
-                <section id="student-profiles" class="content-section">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2>Student Profiles Overview</h2>
-                        <div>
-                            <button class="btn btn-primary" onclick="window.location.href='../student_accounts_management.php'">
-                                <i class="fas fa-users"></i> Manage All Students
-                            </button>
-                            <button class="btn btn-success" onclick="window.location.href='../bulk_photo_upload.php'">
-                                <i class="fas fa-camera"></i> Photo Upload
-                            </button>
-                            <button class="btn btn-info" onclick="window.location.href='../import_student_data.php'">
-                                <i class="fas fa-upload"></i> Import Students
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Student Search -->
-                    <?php echo displayStudentSearchBox('Search students by name, ID, or phone...', 'directorSearchResults'); ?>
-                    
-                    <!-- Student Profile Cards -->
-                    <div class="row mt-4">
-                        <?php foreach ($recent_students as $student): ?>
-                            <div class="col-md-6 col-lg-3 mb-4">
-                                <?php echo displayStudentProfileCard($student['student_id'], 'compact'); ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-                
-                <!-- System Activity Monitor -->
-                <section id="system-monitor" class="content-section">
-                    <h2>System Activity Monitor</h2>
-                    <div class="system-stats-grid">
-                        <div class="system-stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-sign-in-alt"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $system_stats['total_logins_today']; ?></h3>
-                                <p>Logins Today</p>
-                                <small>Active users</small>
-                            </div>
-                        </div>
-                        
-                        <div class="system-stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-money-bill"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $system_stats['total_payments_today']; ?></h3>
-                                <p>Payments Today</p>
-                                <small>Transactions</small>
-                            </div>
-                        </div>
-                        
-                        <div class="system-stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $system_stats['total_applications_today']; ?></h3>
-                                <p>Applications Today</p>
-                                <small>New submissions</small>
-                            </div>
-                        </div>
-                        
-                        <div class="system-stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $system_stats['active_sessions']; ?></h3>
-                                <p>Active Sessions</p>
-                                <small>Currently logged in</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Department Performance -->
-                    <h3>Department Performance Metrics</h3>
-                    <div class="department-grid">
-                        <?php foreach ($department_performance as $dept): ?>
-                        <div class="dept-card">
-                            <div class="dept-header">
-                                <h3><?php echo $dept['department']; ?></h3>
-                                <span class="dept-status active">Active</span>
-                            </div>
-                            <div class="dept-metrics">
-                                <div class="metric">
-                                    <span>Performance Score</span>
-                                    <div class="progress-bar">
-                                        <div class="progress" style="width: <?php echo $dept['performance_score']; ?>%"></div>
-                                    </div>
-                                    <span class="value"><?php echo $dept['performance_score']; ?>%</span>
-                                </div>
-                                <div class="metric">
-                                    <span>Efficiency Rate</span>
-                                    <div class="progress-bar">
-                                        <div class="progress" style="width: <?php echo $dept['efficiency_rate']; ?>%"></div>
-                                    </div>
-                                    <span class="value"><?php echo $dept['efficiency_rate']; ?>%</span>
-                                </div>
-                                <div class="metric">
-                                    <span>Satisfaction Rate</span>
-                                    <div class="progress-bar">
-                                        <div class="progress" style="width: <?php echo $dept['satisfaction_rate']; ?>%"></div>
-                                    </div>
-                                    <span class="value"><?php echo $dept['satisfaction_rate']; ?>%</span>
-                                </div>
-                            </div>
-                            <div class="dept-actions">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewDepartmentDetails('<?php echo $dept['department']; ?>')">View Details</button>
-                                <button class="btn btn-sm btn-outline-info" onclick="viewDepartmentReports('<?php echo $dept['department']; ?>')">Reports</button>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-                
-                <!-- Staff Management -->
-                <section id="staff-management" class="content-section">
-                    <h2>Staff Management Overview</h2>
-                    <div class="staff-actions">
-                        <button class="btn btn-primary" onclick="openModal('addStaff')">
-                            <i class="fas fa-user-plus"></i> Add Staff
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('editStaff')">
-                            <i class="fas fa-user-edit"></i> Edit Staff
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('resetPassword')">
-                            <i class="fas fa-key"></i> Reset Password
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('managePermissions')">
-                            <i class="fas fa-shield-alt"></i> Manage Permissions
-                        </button>
-                        <button class="btn btn-danger" onclick="openModal('deleteStaff')">
-                            <i class="fas fa-user-times"></i> Remove Staff
-                        </button>
-                    </div>
-                    
-                    <div class="staff-overview">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Role</th>
-                                        <th>Department</th>
-                                        <th>Status</th>
-                                        <th>Last Login</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $staff_query = "SELECT u.*, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role != 'Student' ORDER BY u.surname, u.first_name LIMIT 10";
-                                    $staff_result = $conn->query($staff_query);
-                                    while ($staff_member = $staff_result->fetch_assoc()) {
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <div class="user-info">
-                                                <img src="../images/default-avatar.png" alt="User">
-                                                <span><p><?php echo ($staff_member['first_name'] ?? 'User') . ' ' . ($staff_member['surname'] ?? $staff_member['last_name'] ?? ''); ?></p></span>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge bg-primary"><?php echo $staff_member['role']; ?></span></td>
-                                        <td><?php echo $staff_member['department_name'] ?? 'Administration'; ?></td>
-                                        <td>
-                                            <span class="badge bg-<?php echo $staff_member['status'] == 'active' ? 'success' : 'danger'; ?>">
-                                                <?php echo $staff_member['status']; ?>
-                                            </span>
-                                        </td>
-                                        <td><?php echo $staff_member['last_login'] ? date('M j, Y', strtotime($staff_member['last_login'])) : 'Never'; ?></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editStaffMember(<?php echo $staff_member['id']; ?>)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-info" onclick="resetStaffPassword(<?php echo $staff_member['id']; ?>)">
-                                                <i class="fas fa-key"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="viewStaffProfile(<?php echo $staff_member['id']; ?>)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteStaffMember(<?php echo $staff_member['id']; ?>)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <?php } ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-                
-                <!-- Recent Activities -->
-                <section class="content-section">
-                    <h2>Recent System Activities</h2>
-                    <div class="activities-table">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Activity</th>
-                                        <th>Department</th>
-                                        <th>Date/Time</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($recent_activities as $activity): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="user-info">
-                                                <img src="../images/default-avatar.png" alt="User">
-                                                <span><?php echo $activity['user_role']; ?></span>
-                                            </div>
-                                        </td>
-                                        <td><?php echo $activity['activity_description']; ?></td>
-                                        <td><?php echo $activity['module_affected'] ?? 'System'; ?></td>
-                                        <td><?php echo date('M j, Y H:i', strtotime($activity['activity_date'])); ?></td>
-                                        <td>
-                                            <span class="status-badge success">Completed</span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-                
-                <!-- Quick Actions -->
-                <section class="content-section">
-                    <h2>Quick Actions</h2>
-                    <div class="quick-actions">
-                        <button class="action-btn" onclick="openModal('generateReport')">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Generate Report</span>
-                        </button>
-                        <button class="action-btn" onclick="openModal('sendAnnouncement')">
-                            <i class="fas fa-bullhorn"></i>
-                            <span>Send Announcement</span>
-                        </button>
-                        <button class="action-btn" onclick="openModal('approveBudget')">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Approve Budget</span>
-                        </button>
-                        <button class="action-btn" onclick="openModal('viewAnalytics')">
-                            <i class="fas fa-chart-line"></i>
-                            <span>View Analytics</span>
-                        </button>
-                        <button class="action-btn" onclick="openModal('systemAudit')">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>System Audit</span>
-                        </button>
-                        <button class="action-btn" onclick="openModal('emergencyAlert')">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Emergency Alert</span>
-                        </button>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modals -->
-    <div class="modal fade" id="actionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- Dynamic content -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="modalAction">Execute</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-        });
-        
-        // Modal functions
-        function openModal(action) {
-            const modal = new bootstrap.Modal(document.getElementById('actionModal'));
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
-            switch(action) {
-                case 'generateReport':
-                    modalTitle.textContent = 'Generate System Report';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Report Type</label>
-                                <select class="form-control">
-                                    <option>Monthly Performance Report</option>
-                                    <option>Financial Summary</option>
-                                    <option>Academic Performance</option>
-                                    <option>Staff Performance</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Period</label>
-                                <select class="form-control">
-                                    <option>Last 30 Days</option>
-                                    <option>Last Quarter</option>
-                                    <option>Last 6 Months</option>
-                                    <option>Last Year</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Format</label>
-                                <select class="form-control">
-                                    <option>PDF</option>
-                                    <option>Excel</option>
-                                    <option>Word</option>
-                                </select>
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'sendAnnouncement':
-                    modalTitle.textContent = 'Send System Announcement';
-                    modalBody.innerHTML = `
-                        <form id="sendAnnouncementForm">
-                            <div class="mb-3">
-                                <label class="form-label">Announcement Title</label>
-                                <input type="text" id="annTitle" class="form-control" placeholder="Enter title">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea id="annContent" class="form-control" rows="4" placeholder="Enter your announcement"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Target Audience</label>
-                                <select id="annTarget" class="form-control">
-                                    <option value="all">All</option>
-                                    <option value="students">Students</option>
-                                    <option value="staff">Staff</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Priority</label>
-                                <select id="annPriority" class="form-control">
-                                    <option value="medium">Normal</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Expiry Date (optional)</label>
-                                <input type="date" id="annExpiry" class="form-control">
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'addStaff':
-                    modalTitle.textContent = 'Add New Staff Member';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">First Name</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Surname</label>
-                                        <input type="text" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone Number</label>
-                                        <input type="tel" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Role</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Role</option>
-                                            <option value="Director General">Director General</option>
-                                            <option value="CEO">Chief Executive Officer</option>
-                                            <option value="Director Academics">Director Academics</option>
-                                            <option value="Director ICT">Director ICT</option>
-                                            <option value="Director Finance">Director Finance</option>
-                                            <option value="Principal">Principal</option>
-                                            <option value="Deputy Principal">Deputy Principal</option>
-                                            <option value="School Bursar">School Bursar</option>
-                                            <option value="Academic Registrar">Academic Registrar</option>
-                                            <option value="HR Manager">HR Manager</option>
-                                            <option value="School Secretary">School Secretary</option>
-                                            <option value="School Librarian">School Librarian</option>
-                                            <option value="Head of Nursing">Head of Nursing</option>
-                                            <option value="Head of Midwifery">Head of Midwifery</option>
-                                            <option value="Senior Lecturers">Senior Lecturers</option>
-                                            <option value="Lecturers">Lecturers</option>
-                                            <option value="Matrons">Matrons</option>
-                                            <option value="Wardens">Wardens</option>
-                                            <option value="Sickbay">Sickbay</option>
-                                            <option value="Non-Teaching Staff">Non-Teaching Staff</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Department</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Department</option>
-                                            <option value="Academic Affairs">Academic Affairs</option>
-                                            <option value="Financial Affairs">Financial Affairs</option>
-                                            <option value="ICT Services">ICT Services</option>
-                                            <option value="Administration">Administration</option>
-                                            <option value="Student Affairs">Student Affairs</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Address</label>
-                                <textarea class="form-control" rows="2" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Emergency Contact</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Generate Password</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="generatedPassword" readonly>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="generatePassword()">Generate</button>
-                                </div>
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'editStaff':
-                    modalTitle.textContent = 'Edit Staff Member';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Select Staff Member</label>
-                                <select class="form-control" id="staffSelect" onchange="loadStaffDetails()" required>
-                                    <option value="">Select Staff</option>
-                                </select>
-                            </div>
-                            <div id="staffDetails">
-                                <!-- Staff details will be loaded here -->
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'resetPassword':
-                    modalTitle.textContent = 'Reset Staff Password';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Select Staff Member</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Staff</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">New Password</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="newPassword">
-                                    <button class="btn btn-outline-secondary" type="button" onclick="generatePassword()">Generate</button>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirmPassword">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Reason for Reset</label>
-                                <textarea class="form-control" rows="2" placeholder="Enter reason for password reset"></textarea>
-                            </div>
-                            <div class="alert alert-warning">
-                                <strong>Warning:</strong> The staff member will be notified of the password change.
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'deleteStaff':
-                    modalTitle.textContent = 'Remove Staff Member';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Select Staff Member</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Staff</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Reason for Removal</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Reason</option>
-                                    <option value="resignation">Resignation</option>
-                                    <option value="termination">Termination</option>
-                                    <option value="retirement">Retirement</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Additional Notes</label>
-                                <textarea class="form-control" rows="3" placeholder="Enter additional details"></textarea>
-                            </div>
-                            <div class="alert alert-danger">
-                                <strong>Warning:</strong> This action cannot be undone. The staff member will lose access to the system.
-                            </div>
-                        </form>
-                    `;
-                    break;
-                default:
-                    modalTitle.textContent = 'Action';
-                    modalBody.innerHTML = '<p>Action content will be loaded here.</p>';
-            }
-            
-            modal.show();
-        }
-
-        // Global modal action handler for director announcements
-        document.addEventListener('DOMContentLoaded', function() {
-            const modalActionBtn = document.getElementById('modalAction');
-            if (!modalActionBtn) return;
-            modalActionBtn.addEventListener('click', function() {
-                const modalTitle = document.getElementById('modalTitle').textContent || '';
-                if (modalTitle.includes('Send System Announcement')) {
-                    const title = document.getElementById('annTitle').value.trim();
-                    const content = document.getElementById('annContent').value.trim();
-                    const target = document.getElementById('annTarget').value;
-                    const priority = document.getElementById('annPriority').value;
-                    const expiry = document.getElementById('annExpiry').value || '';
-
-                    if (!title || !content) {
-                        alert('Title and message are required.');
-                        return;
-                    }
-
-                    const fd = new FormData();
-                    fd.append('title', title);
-                    fd.append('content', content);
-                    fd.append('announcement_type', 'general');
-                    fd.append('target_audience', target);
-                    fd.append('priority', priority);
-                    fd.append('expiry_date', expiry);
-                    fd.append('status', 'published');
-
-                    const modalBody = document.getElementById('modalBody');
-                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';
-
-                    fetch('../includes/ajax_publish_announcement.php', { method: 'POST', body: fd })
-                        .then(r => r.json())
-                        .then(resp => {
-                            if (resp.success) {
-                                modalBody.innerHTML = '<div class="alert alert-success">Announcement published successfully.</div>';
-                                setTimeout(() => location.reload(), 900);
-                            } else {
-                                modalBody.innerHTML = '<div class="alert alert-danger">Failed to publish announcement: ' + (resp.message || 'Unknown error') + '</div>';
-                            }
-                        })
-                        .catch(() => {
-                            modalBody.innerHTML = '<div class="alert alert-danger">Network error while publishing announcement.</div>';
-                        });
-                }
-            });
-        });
-        
-        // Staff management functions
-        function editStaffMember(staffId) {
-            console.log('Editing staff member:', staffId);
-            openModal('editStaff');
-        }
-        
-        function resetStaffPassword(staffId) {
-            console.log('Resetting password for staff:', staffId);
-            openModal('resetPassword');
-        }
-        
-        function viewStaffProfile(staffId) {
-            console.log('Viewing staff profile:', staffId);
-            // Implementation for viewing staff profile
-        }
-        
-        function deleteStaffMember(staffId) {
-            console.log('Deleting staff member:', staffId);
-            openModal('deleteStaff');
-        }
-        
-        function viewDepartmentDetails(department) {
-            console.log('Viewing department details:', department);
-            // Implementation for viewing department details
-        }
-        
-        function viewDepartmentReports(department) {
-            console.log('Viewing department reports:', department);
-            // Implementation for viewing department reports
-        }
-        
-        function generatePassword() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            let password = '';
-            for (let i = 0; i < 12; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            document.getElementById('newPassword').value = password;
-            document.getElementById('confirmPassword').value = password;
-            if (document.getElementById('generatedPassword')) {
-                document.getElementById('generatedPassword').value = password;
-            }
-        }
-        
-        function loadStaffDetails() {
-            // Implementation for loading staff details dynamically
-            console.log('Loading staff details...');
-        }
-        
-        // Auto-refresh dashboard data
-        setInterval(() => {
-            // Refresh statistics
-            console.log('Refreshing dashboard data...');
-        }, 60000); // Every minute
-    </script>
-    
-    <!-- Student Profile Modal -->
-    <?php echo displayStudentProfileModal(''); ?>
-    
-    <!-- Student Profile Styles -->
-    <?php echo getStudentProfileStyles(); ?>
-    
-    <script>
-    // Override modal functions for director dashboard
-    function viewFullProfile(studentId) {
-        showStudentProfileModal(studentId);
-    }
-    
-    function editStudent(studentId) {
-        window.location.href = '../student_accounts_management.php?action=edit&student_id=' + studentId;
-    }
-    
-    function viewAcademic(studentId) {
-        window.location.href = '../academic_records.php?student_id=' + studentId;
-    }
-    
-    function viewFees(studentId) {
-        window.location.href = '../fee_management.php?student_id=' + studentId;
-    }
-    
-    function sendMessage(studentId) {
-        // Implement messaging functionality
-        alert('Messaging functionality would be implemented here for student: ' + studentId);
-    }
-    
-    function printProfile(studentId) {
-        window.print();
-    }
-    </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
-

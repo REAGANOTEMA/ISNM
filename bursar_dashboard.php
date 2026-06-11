@@ -1,854 +1,541 @@
 <?php
-/**
- * Bursar Portal - Professional Dashboard
- * Financial Management System for ISNM
- */
+require_once __DIR__ . '/auth-service.php';
 
-require_once 'auth-service.php';
-
-// Check authentication
-if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff') {
-    $_SESSION['error'] = "Access denied. Bursar privileges required.";
-    header('Location: staff-login.php');
-    exit;
+if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
+    header('Location: staff-login.php'); exit;
+}
+$role = $_SESSION['role'] ?? '';
+$allowed = ['School Bursar','Bursar','Director Finance','Director General','CEO','School Principal'];
+if (!in_array($role, $allowed) && !$auth_service->hasFullInstitutionAccess($role)) {
+    header('Location: staff-login.php?error=unauthorized'); exit;
 }
 
-require_once 'config/database.php';
+require_once __DIR__ . '/config/database.php';
+$sconn = getStudentsConnection();
+$stconn = getStaffConnection();
+$uid = $_SESSION['user_id'];
+$uname = $_SESSION['full_name'];
+$urole = $_SESSION['role'];
 
-$conn = getStudentsConnection();
-$user_id = $_SESSION['user_id'];
-$user_name = $_SESSION['full_name'];
-
-// Get dashboard statistics
-$stats = array(
-    'today_collection' => 0,
-    'outstanding_fees' => 0,
-    'students_cleared' => 0,
-    'students_not_cleared' => 0,
-    'total_pending_invoices' => 0,
-    'total_overdue_invoices' => 0,
-    'pending_approvals' => 0
-);
-
-try {
-    // Today's collection
-    $result = $conn->query("
-        SELECT COALESCE(SUM(amount_received), 0) as total 
-        FROM payments 
-        WHERE DATE(payment_date) = CURDATE() AND status IN ('verified', 'approved')
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['today_collection'] = $row['total'];
-    }
-    
-    // Outstanding fees (unpaid + partial)
-    $result = $conn->query("
-        SELECT COALESCE(SUM(balance), 0) as total 
-        FROM student_invoices 
-        WHERE status IN ('pending', 'partial', 'overdue')
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['outstanding_fees'] = $row['total'];
-    }
-    
-    // Students cleared (all invoices paid)
-    $result = $conn->query("
-        SELECT COUNT(DISTINCT student_id) as count 
-        FROM student_invoices 
-        WHERE status = 'paid'
-        AND student_id NOT IN (
-            SELECT DISTINCT student_id FROM student_invoices WHERE status IN ('pending', 'partial', 'overdue')
-        )
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['students_cleared'] = $row['count'];
-    }
-    
-    // Students with pending/overdue
-    $result = $conn->query("
-        SELECT COUNT(DISTINCT student_id) as count 
-        FROM student_invoices 
-        WHERE status IN ('pending', 'partial', 'overdue')
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['students_not_cleared'] = $row['count'];
-    }
-    
-    // Pending invoices
-    $result = $conn->query("SELECT COUNT(*) as count FROM student_invoices WHERE status = 'pending'");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['total_pending_invoices'] = $row['count'];
-    }
-    
-    // Overdue invoices
-    $result = $conn->query("
-        SELECT COUNT(*) as count FROM student_invoices 
-        WHERE status = 'overdue' AND due_date < CURDATE()
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['total_overdue_invoices'] = $row['count'];
-    }
-    
-    // Pending approvals
-    $result = $conn->query("
-        SELECT COUNT(*) as count FROM payments WHERE status = 'pending'
-    ");
-    if ($result) {
-        $row = $result->fetch_assoc();
-        $stats['pending_approvals'] = (int)($row['count'] ?? 0);
-    }
-    $result2 = $conn->query("
-        SELECT COUNT(*) as count FROM fee_adjustments WHERE status = 'pending'
-    ");
-    if ($result2) {
-        $row2 = $result2->fetch_assoc();
-        $stats['pending_approvals'] += (int)($row2['count'] ?? 0);
-    }
-    
-} catch (Exception $e) {
-    error_log('Dashboard stats error: ' . $e->getMessage());
+function bq($conn, $sql) {
+    $r = $conn->query($sql);
+    if (!$r) return 0;
+    $row = $r->fetch_assoc();
+    return $row[array_key_first($row)] ?? 0;
 }
 
-// Get recent transactions
-$recent_transactions = array();
-try {
-    $result = $conn->query("
-        SELECT 
-            p.id,
-            p.payment_reference,
-            p.student_index_number,
-            si.student_name,
-            p.amount_received,
-            p.payment_method,
-            p.payment_date,
-            p.status
-        FROM payments p
-        JOIN students s ON p.student_id = s.student_id
-        ORDER BY p.payment_date DESC
-        LIMIT 10
-    ");
-    
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $recent_transactions[] = $row;
-        }
-    }
-} catch (Exception $e) {
-    error_log('Recent transactions error: ' . $e->getMessage());
+// ── Stats ────────────────────────────────────────────────────
+$today_collection  = bq($sconn, "SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('Completed','verified','approved')");
+$week_collection   = bq($sconn, "SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE payment_date>=DATE_SUB(CURDATE(),INTERVAL 7 DAY) AND status IN('Completed','verified','approved')");
+$month_collection  = bq($sconn, "SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE payment_date>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND status IN('Completed','verified','approved')");
+$outstanding       = bq($sconn, "SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('Pending','partial','Overdue','Partially Paid')");
+$students_cleared  = bq($sconn, "SELECT COUNT(DISTINCT s.id) v FROM students s WHERE s.status='Active' AND NOT EXISTS(SELECT 1 FROM student_invoices i WHERE i.student_id=s.id AND i.status IN('Pending','partial','Overdue','Partially Paid'))");
+$students_not_cleared = bq($sconn, "SELECT COUNT(DISTINCT student_id) v FROM student_invoices WHERE status IN('Pending','partial','Overdue','Partially Paid')");
+$pending_payments  = bq($sconn, "SELECT COUNT(*) v FROM payments WHERE status='Pending'");
+$overdue_invoices  = bq($sconn, "SELECT COUNT(*) v FROM student_invoices WHERE status='Overdue' OR (due_date<CURDATE() AND status NOT IN('Paid','Cancelled','Waived'))");
+$total_students    = bq($sconn, "SELECT COUNT(*) v FROM students WHERE status='Active'");
+
+// ── Search ───────────────────────────────────────────────────
+$search = trim($_GET['q'] ?? '');
+$search_results = [];
+if ($search) {
+    $s = $sconn->real_escape_string($search);
+    $r = $sconn->query("SELECT s.id,s.student_number,s.registration_number,s.full_name,s.first_name,s.surname,s.course,s.phone,s.email,
+        COALESCE((SELECT SUM(total_amount) FROM student_invoices WHERE student_id=s.id),0) total_billed,
+        COALESCE((SELECT SUM(amount_received) FROM payments WHERE student_id=s.id AND status IN('Completed','verified','approved')),0) total_paid
+        FROM students s
+        WHERE s.student_number LIKE '%$s%' OR s.registration_number LIKE '%$s%' OR s.full_name LIKE '%$s%'
+          OR s.first_name LIKE '%$s%' OR s.surname LIKE '%$s%' OR s.phone LIKE '%$s%'
+        LIMIT 30");
+    if ($r) while ($row = $r->fetch_assoc()) { $row['balance'] = $row['total_billed'] - $row['total_paid']; $search_results[] = $row; }
 }
 
-// Fallback: if no transactions found, join with student_invoices
-if (empty($recent_transactions)) {
-    try {
-        $result = $conn->query("
-            SELECT 
-                p.id,
-                p.payment_reference,
-                p.student_index_number,
-                p.student_id,
-                'Unknown Student' as student_name,
-                p.amount_received,
-                p.payment_method,
-                p.payment_date,
-                p.status
-            FROM payments p
-            ORDER BY p.payment_date DESC
-            LIMIT 10
-        ");
-        
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $recent_transactions[] = $row;
+// ── Recent Transactions ──────────────────────────────────────
+$recent_tx = [];
+$r = $sconn->query("SELECT p.id,p.payment_reference,p.amount_received,p.payment_method,p.payment_date,p.status,
+    COALESCE(s.full_name,CONCAT(s.first_name,' ',s.surname)) sname,
+    COALESCE(s.student_number,s.registration_number) snum
+    FROM payments p LEFT JOIN students s ON p.student_id=s.id
+    ORDER BY p.payment_date DESC, p.id DESC LIMIT 15");
+if ($r) while ($row = $r->fetch_assoc()) $recent_tx[] = $row;
+
+// ── Fee Structures ──────────────────────────────────────────
+$fee_structures = [];
+$r = $sconn->query("SELECT * FROM fee_structures WHERE is_active=1 ORDER BY fee_type,amount");
+if ($r) while ($row = $r->fetch_assoc()) $fee_structures[] = $row;
+
+// ── Overdue Debtors ─────────────────────────────────────────
+$debtors = [];
+$r = $sconn->query("SELECT COALESCE(s.full_name,CONCAT(s.first_name,' ',s.surname)) sname,
+    COALESCE(s.student_number,s.registration_number) snum, s.course, s.phone,
+    SUM(i.balance) total_owing, MAX(i.due_date) last_due
+    FROM student_invoices i JOIN students s ON i.student_id=s.id
+    WHERE i.status IN('Overdue','Pending','partial','Partially Paid')
+    GROUP BY s.id ORDER BY total_owing DESC LIMIT 20");
+if ($r) while ($row = $r->fetch_assoc()) $debtors[] = $row;
+
+// ── POST handlers ────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'record_payment') {
+        $sid     = intval($_POST['student_id'] ?? 0);
+        $amount  = floatval($_POST['amount'] ?? 0);
+        $method  = $sconn->real_escape_string($_POST['payment_method'] ?? 'Cash');
+        $ref     = $sconn->real_escape_string($_POST['reference'] ?? '');
+        $iid     = intval($_POST['invoice_id'] ?? 0) ?: 'NULL';
+        $pdate   = $sconn->real_escape_string($_POST['payment_date'] ?? date('Y-m-d'));
+        $notes   = $sconn->real_escape_string($_POST['notes'] ?? '');
+        $pref    = 'PAY-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
+        $rnum    = 'RCP-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
+
+        if ($sid && $amount > 0) {
+            $sconn->query("INSERT INTO payments (payment_reference,student_id,invoice_id,amount_received,payment_method,transaction_ref,payment_date,status,notes,received_by,created_at)
+                VALUES ('$pref',$sid,$iid,$amount,'$method','$ref','$pdate','Completed','$notes',$uid,NOW())");
+            $pid = $sconn->insert_id;
+            // Update invoice balance
+            if ($iid !== 'NULL') {
+                $sconn->query("UPDATE student_invoices SET amount_paid=amount_paid+$amount, status=CASE WHEN (net_amount-amount_paid-$amount)<=0 THEN 'Paid' WHEN amount_paid+$amount>0 THEN 'Partially Paid' ELSE status END WHERE id=$iid");
             }
+            // Auto receipt
+            $sconn->query("INSERT INTO payment_receipts (receipt_number,payment_id,student_id,amount,payment_method,issued_by,created_at) VALUES ('$rnum',$pid,$sid,$amount,'$method',$uid,NOW())");
+            $_SESSION['success'] = "Payment of UGX ".number_format($amount,0)." recorded. Receipt: $rnum";
+        } else {
+            $_SESSION['error'] = "Invalid payment data.";
         }
-    } catch (Exception $e) {
-        error_log('Recent transactions fallback error: ' . $e->getMessage());
+        header('Location: bursar_dashboard.php'); exit;
+    }
+
+    if ($action === 'add_fee_structure') {
+        $fname  = $sconn->real_escape_string($_POST['fee_name'] ?? '');
+        $ftype  = $sconn->real_escape_string($_POST['fee_type'] ?? 'Tuition');
+        $amount = floatval($_POST['amount'] ?? 0);
+        $prog   = $sconn->real_escape_string($_POST['program'] ?? '');
+        $yr     = intval($_POST['academic_year_level'] ?? 1);
+        $sem    = $sconn->real_escape_string($_POST['semester'] ?? '');
+        $ay     = $sconn->real_escape_string($_POST['academic_year'] ?? date('Y'));
+        $due    = $sconn->real_escape_string($_POST['due_date'] ?? '');
+        if ($fname && $amount > 0) {
+            $sconn->query("INSERT INTO fee_structures (fee_name,fee_type,amount,program_id,academic_year,semester,due_date,is_mandatory,is_active,created_at) VALUES ('$fname','$ftype',$amount,NULL,'$ay','$sem','".($due?:'NULL')."',1,1,NOW())");
+            $_SESSION['success'] = "Fee structure added.";
+        }
+        header('Location: bursar_dashboard.php#fees'); exit;
+    }
+
+    if ($action === 'send_reminder') {
+        $sid = intval($_POST['student_id'] ?? 0);
+        if ($sid) {
+            $rnum = 'REM-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
+            $sconn->query("INSERT INTO fee_reminders (reminder_number,student_id,reminder_type,sent_by,created_at) VALUES ('$rnum',$sid,'Email',$uid,NOW())");
+            $_SESSION['success'] = "Fee reminder sent.";
+        }
+        header('Location: bursar_dashboard.php#debtors'); exit;
     }
 }
 
-$conn->close();
+$method_logos = [
+    'Cash'=>'💵','Bank Transfer'=>'🏦','Mobile Money'=>'📱','MTN'=>'📱',
+    'Airtel'=>'📱','Cheque'=>'📋','Card'=>'💳','MasterCard'=>'💳',
+    'Visa'=>'💳','Other'=>'💰'
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bursar Dashboard - ISNM Financial Management System</title>
-    <link rel="icon" type="image/png" href="images/school-logo.png">
-    <link rel="shortcut icon" type="image/png" href="images/school-logo.png">
-    <link rel="apple-touch-icon" href="images/school-logo.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5568d3;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --light: #f3f4f6;
-            --dark: #1f2937;
-            --border: #e5e7eb;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--light);
-            color: var(--dark);
-        }
-        
-        .dashboard-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        /* Sidebar Navigation */
-        .sidebar {
-            width: 260px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            padding: 30px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .sidebar-header {
-            padding: 0 20px 30px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .sidebar-header .logo-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        
-        .sidebar-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .sidebar-header p {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-        }
-        
-        .sidebar-menu li {
-            margin: 0;
-        }
-        
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-        
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.15);
-            border-left-color: white;
-        }
-        
-        .sidebar-menu i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .sidebar-footer {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            padding: 0 20px;
-            border-top: 2px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
-        }
-        
-        .user-info {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 12px;
-        }
-        
-        .user-info strong {
-            display: block;
-            margin-bottom: 3px;
-        }
-        
-        .sidebar .btn-logout {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 8px;
-        }
-        
-        .sidebar .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Main Content Area */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 30px;
-        }
-        
-        .top-bar {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .top-bar h1 {
-            font-size: 28px;
-            color: var(--dark);
-        }
-        
-        .top-bar-right {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .btn-primary, .btn-secondary, .btn-danger {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-secondary {
-            background: var(--light);
-            color: var(--dark);
-            border: 2px solid var(--border);
-        }
-        
-        .btn-secondary:hover {
-            background: white;
-            border-color: var(--primary);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-top: 4px solid;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-card.primary {
-            border-top-color: var(--primary);
-        }
-        
-        .stat-card.success {
-            border-top-color: var(--success);
-        }
-        
-        .stat-card.warning {
-            border-top-color: var(--warning);
-        }
-        
-        .stat-card.danger {
-            border-top-color: var(--danger);
-        }
-        
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 12px;
-        }
-        
-        .stat-card.primary .stat-icon {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-        }
-        
-        .stat-card.success .stat-icon {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        
-        .stat-card.warning .stat-icon {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-        
-        .stat-card.danger .stat-icon {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        
-        .stat-label {
-            font-size: 13px;
-            color: #6b7280;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-        
-        .stat-change {
-            font-size: 12px;
-            color: var(--success);
-            font-weight: 600;
-        }
-        
-        /* Transactions Table */
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-title i {
-            font-size: 24px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-        
-        .table-container table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .table-container thead {
-            background: var(--light);
-            border-bottom: 2px solid var(--border);
-        }
-        
-        .table-container th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 700;
-            font-size: 13px;
-            color: var(--dark);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .table-container td {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
-        
-        .table-container tbody tr:hover {
-            background: var(--light);
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-        
-        .badge-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        
-        .badge-info {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-        }
-        
-        /* Alerts */
-        .alert-banner {
-            background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
-            border-left: 4px solid var(--warning);
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-banner i {
-            color: var(--warning);
-            font-size: 20px;
-        }
-        
-        .alert-banner-content {
-            flex: 1;
-        }
-        
-        .alert-banner strong {
-            display: block;
-            color: var(--dark);
-            margin-bottom: 3px;
-        }
-        
-        .alert-banner p {
-            color: #6b7280;
-            font-size: 13px;
-            margin: 0;
-        }
-        
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 0;
-                transform: translateX(-100%);
-                z-index: 1000;
-                transition: all 0.3s ease;
-            }
-            
-            .sidebar.active {
-                width: 260px;
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .top-bar {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .top-bar h1 {
-                font-size: 20px;
-            }
-            
-            .top-bar-right {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-        
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: #9ca3af;
-        }
-        
-        .no-data i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bursar Dashboard – ISNM</title>
+<link rel="icon" href="images/school-logo.png">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{--primary:#1e6b3a;--accent:#28a745;--sidebar-w:250px}
+body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#1e3a2f,#1e6b3a);position:fixed;height:100vh;overflow-y:auto;z-index:100;color:#fff}
+.sidebar .brand{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.1);text-align:center}
+.sidebar .brand img{width:50px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.sidebar .brand h6{margin:7px 0 2px;font-size:.82rem}
+.sidebar nav a{display:flex;align-items:center;gap:9px;padding:11px 18px;color:rgba(255,255,255,.82);text-decoration:none;font-size:.86rem;transition:.2s}
+.sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.15);color:#fff;border-left:3px solid #7dffb3}
+.sidebar nav a i{width:16px;text-align:center}
+.main{margin-left:var(--sidebar-w);padding:22px;min-height:100vh}
+.stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:4px solid var(--accent);transition:.2s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.stat-card .num{font-size:1.7rem;font-weight:700}
+.stat-card .lbl{font-size:.75rem;color:#6c757d;text-transform:uppercase;letter-spacing:.5px}
+.section-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:22px}
+.section-card h5{color:var(--primary);font-weight:600;border-bottom:2px solid #e9ecef;padding-bottom:8px;margin-bottom:14px}
+.badge-paid{background:#d1fae5;color:#065f46}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-overdue{background:#fee2e2;color:#991b1b}
+.badge-partial{background:#dbeafe;color:#1e40af}
+.method-icon{font-size:1.1rem}
+@media print{.sidebar,.no-print{display:none!important}.main{margin:0!important}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}}
+</style>
 </head>
 <body>
-    <div class="dashboard-wrapper">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-icon">💼</div>
-                <h2>Bursar Portal</h2>
-                <p>Financial Management</p>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <li><a href="bursar_dashboard.php" class="active"><i class="fas fa-th-large"></i> Dashboard</a></li>
-                <li><a href="bursar_student_fees.php"><i class="fas fa-graduation-cap"></i> Student Fees</a></li>
-                <li><a href="bursar_invoices.php"><i class="fas fa-file-invoice"></i> Invoices</a></li>
-                <li><a href="bursar_payments.php"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
-                <li><a href="bursar_receipts.php"><i class="fas fa-receipt"></i> Receipts</a></li>
-                <li><a href="bursar_reports.php"><i class="fas fa-chart-bar"></i> Reports</a></li>
-                <li><a href="bursar_budgets.php"><i class="fas fa-calculator"></i> Budgets</a></li>
-                <li><a href="bursar_settings.php"><i class="fas fa-cog"></i> Settings</a></li>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <strong><?php echo htmlspecialchars($_SESSION['full_name']); ?></strong>
-                    <span><?php echo htmlspecialchars($_SESSION['role']); ?></span>
-                </div>
-                <form action="logout.php" method="POST" id="logoutForm" style="display:none;"></form>
-                <button class="btn-logout" onclick="document.getElementById('logoutForm').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </div>
-        </aside>
-        
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="top-bar">
-                <h1>Financial Dashboard</h1>
-                <div class="top-bar-right">
-                    <button class="btn-secondary" onclick="generateReport()">
-                        <i class="fas fa-file-pdf"></i> Export Report
-                    </button>
-                    <button class="btn-primary" onclick="recordPayment()">
-                        <i class="fas fa-plus"></i> Record Payment
-                    </button>
-                </div>
-            </div>
-            
-            <?php if ($stats['total_overdue_invoices'] > 0): ?>
-            <div class="alert-banner">
-                <i class="fas fa-exclamation-circle"></i>
-                <div class="alert-banner-content">
-                    <strong>⚠️ Attention Required</strong>
-                    <p>You have <?php echo $stats['total_overdue_invoices']; ?> overdue invoice(s) requiring immediate attention.</p>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="stat-label">Today's Collection</div>
-                    <div class="stat-value">UGX <?php echo number_format($stats['today_collection'], 0); ?></div>
-                    <div class="stat-change"><i class="fas fa-arrow-up"></i> Updated now</div>
-                </div>
-                
-                <div class="stat-card danger">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div class="stat-label">Outstanding Fees</div>
-                    <div class="stat-value">UGX <?php echo number_format($stats['outstanding_fees'], 0); ?></div>
-                    <div class="stat-change"><?php echo $stats['students_not_cleared']; ?> students</div>
-                </div>
-                
-                <div class="stat-card success">
-                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-label">Students Cleared</div>
-                    <div class="stat-value"><?php echo $stats['students_cleared']; ?></div>
-                    <div class="stat-change">Fully paid</div>
-                </div>
-                
-                <div class="stat-card warning">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                    <div class="stat-label">Pending Invoices</div>
-                    <div class="stat-value"><?php echo $stats['total_pending_invoices']; ?></div>
-                    <div class="stat-change">Awaiting payment</div>
-                </div>
-                
-                <div class="stat-card danger">
-                    <div class="stat-icon"><i class="fas fa-hourglass-end"></i></div>
-                    <div class="stat-label">Overdue Invoices</div>
-                    <div class="stat-value"><?php echo $stats['total_overdue_invoices']; ?></div>
-                    <div class="stat-change">Past due date</div>
-                </div>
-                
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-                    <div class="stat-label">Pending Approvals</div>
-                    <div class="stat-value"><?php echo $stats['pending_approvals']; ?></div>
-                    <div class="stat-change">Awaiting review</div>
-                </div>
-            </div>
-            
-            <!-- Recent Transactions -->
-            <h2 class="section-title"><i class="fas fa-history"></i> Recent Transactions</h2>
-            <div class="table-container">
-                <?php if (!empty($recent_transactions)): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Reference</th>
-                            <th>Student</th>
-                            <th>Index Number</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recent_transactions as $transaction): ?>
-                        <tr>
-                            <td><strong><?php echo htmlspecialchars($transaction['payment_reference']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($transaction['student_name']); ?></td>
-                            <td><?php echo htmlspecialchars($transaction['student_index_number']); ?></td>
-                            <td>UGX <?php echo number_format($transaction['amount_received'], 0); ?></td>
-                            <td>
-                                <?php 
-                                    $provider = $transaction['payment_method'] ?? '';
-                                    $logo_path = '';
-                                    $logo_map = [
-                                        'mobile_money' => '../images/mtn-logo.svg',
-                                        'momo' => '../images/mtn-logo.svg',
-                                        'mtn' => '../images/mtn-logo.svg',
-                                        'airtel_money' => '../images/airtel-logo.svg',
-                                        'airtel' => '../images/airtel-logo.svg',
-                                        'bank_deposit' => '../images/bank-default.svg',
-                                        'bank_transfer' => '../images/bank-default.svg',
-                                        'cash' => '../images/bank-default.svg',
-                                        'cheque' => '../images/bank-default.svg',
-                                    ];
-                                    $logo_path = $logo_map[strtolower($provider)] ?? '../images/bank-default.svg';
-                                ?>
-                                <?php if (file_exists($logo_path)): ?>
-                                    <img src="<?php echo $logo_path; ?>" alt="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $provider))); ?>" style="height: 20px; vertical-align: middle; margin-right: 6px; border-radius: 3px;">
-                                <?php endif; ?>
-                                <?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($transaction['payment_method']))); ?>
-                            </td>
-                            <td><?php echo date('M d, Y', strtotime($transaction['payment_date'])); ?></td>
-                            <td>
-                                <?php
-                                $status = $transaction['status'];
-                                $badge_class = 'badge-info';
-                                if ($status === 'verified' || $status === 'approved') {
-                                    $badge_class = 'badge-success';
-                                }
-                                ?>
-                                <span class="badge <?php echo $badge_class; ?>"><?php echo ucfirst(htmlspecialchars($status)); ?></span>
-                            </td>
-                            <td>
-                                <a href="bursar_payment_detail.php?id=<?php echo $transaction['id']; ?>" style="color: var(--primary); text-decoration: none;">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <div class="no-data">
-                    <i class="fas fa-inbox"></i>
-                    <p>No recent transactions</p>
-                </div>
-                <?php endif; ?>
-            </div>
-        </main>
+
+<div class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="images/school-logo.png" alt="ISNM">
+    <h6>Bursar Portal</h6>
+    <small><?= htmlspecialchars($uname) ?></small>
+  </div>
+  <nav>
+    <a href="#overview"    class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="#search">                    <i class="fas fa-search"></i> Search Students</a>
+    <a href="#payments">                  <i class="fas fa-money-bill-wave"></i> Record Payment</a>
+    <a href="#transactions">              <i class="fas fa-history"></i> Transactions</a>
+    <a href="#fees">                      <i class="fas fa-file-invoice-dollar"></i> Fee Structures</a>
+    <a href="#debtors">                   <i class="fas fa-exclamation-triangle"></i> Debtors List</a>
+    <a href="bursar_invoices.php">        <i class="fas fa-file-invoice"></i> Invoices</a>
+    <a href="bursar_receipts.php">        <i class="fas fa-receipt"></i> Receipts</a>
+    <a href="bursar_reports.php">         <i class="fas fa-chart-bar"></i> Reports</a>
+    <a href="bursar_budgets.php">         <i class="fas fa-calculator"></i> Budgets</a>
+    <a href="bursar_settings.php">        <i class="fas fa-cog"></i> Settings</a>
+    <a href="logout.php">                 <i class="fas fa-sign-out-alt"></i> Logout</a>
+  </nav>
+</div>
+
+<div class="main">
+  <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <div>
+      <button class="btn btn-sm btn-outline-secondary d-md-none me-2" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+      <h4 class="d-inline fw-bold" style="color:var(--primary)">Financial Dashboard</h4>
+      <span class="ms-2 text-muted small">Role: <?= htmlspecialchars($urole) ?></span>
     </div>
-    
-    <script>
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                window.location.href = 'bursar_logout.php';
-            }
-        }
-        
-        function recordPayment() {
-            window.location.href = 'bursar_payments.php?action=new';
-        }
-        
-        function generateReport() {
-            alert('Report generation feature coming soon!');
-        }
-    </script>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button>
+      <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#paymentModal"><i class="fas fa-plus me-1"></i>Record Payment</button>
+    </div>
+  </div>
+
+  <?php if(!empty($_SESSION['success'])): ?>
+  <div class="alert alert-success alert-dismissible fade show py-2 no-print"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  <?php unset($_SESSION['success']); endif; ?>
+  <?php if(!empty($_SESSION['error'])): ?>
+  <div class="alert alert-danger alert-dismissible fade show py-2 no-print"><?= htmlspecialchars($_SESSION['error']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  <?php unset($_SESSION['error']); endif; ?>
+
+  <?php if($overdue_invoices > 0): ?>
+  <div class="alert alert-warning d-flex align-items-center py-2 mb-3 no-print">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    <strong><?= $overdue_invoices ?> overdue invoice(s)</strong>&nbsp;require immediate attention.
+  </div>
+  <?php endif; ?>
+
+  <!-- STATS -->
+  <section id="overview">
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="num text-success">UGX <?= number_format($today_collection) ?></div>
+          <div class="lbl"><i class="fas fa-sun me-1"></i>Today's Collection</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#3b82f6">
+          <div class="num" style="color:#3b82f6">UGX <?= number_format($month_collection) ?></div>
+          <div class="lbl"><i class="fas fa-calendar me-1"></i>Monthly Collection</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#ef4444">
+          <div class="num text-danger">UGX <?= number_format($outstanding) ?></div>
+          <div class="lbl"><i class="fas fa-exclamation-triangle me-1"></i>Outstanding Fees</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#f59e0b">
+          <div class="num" style="color:#f59e0b"><?= $pending_payments ?></div>
+          <div class="lbl"><i class="fas fa-hourglass-half me-1"></i>Pending Payments</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#10b981">
+          <div class="num text-success"><?= $students_cleared ?></div>
+          <div class="lbl"><i class="fas fa-check-circle me-1"></i>Students Cleared</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#ef4444">
+          <div class="num text-danger"><?= $students_not_cleared ?></div>
+          <div class="lbl"><i class="fas fa-times-circle me-1"></i>Not Cleared</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#8b5cf6">
+          <div class="num" style="color:#8b5cf6"><?= $overdue_invoices ?></div>
+          <div class="lbl"><i class="fas fa-clock me-1"></i>Overdue Invoices</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#0ea5e9">
+          <div class="num" style="color:#0ea5e9"><?= $total_students ?></div>
+          <div class="lbl"><i class="fas fa-users me-1"></i>Total Students</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDENT SEARCH -->
+  <section id="search" class="section-card no-print">
+    <h5><i class="fas fa-search me-2"></i>Search Student / Print Statement</h5>
+    <form method="GET" class="row g-2 mb-3">
+      <div class="col-md-8"><input type="text" name="q" class="form-control" placeholder="Student name, registration number, or phone…" value="<?= htmlspecialchars($search) ?>"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Search</button></div>
+      <?php if($search): ?><div class="col-md-2"><a href="bursar_dashboard.php" class="btn btn-outline-secondary w-100">Clear</a></div><?php endif; ?>
+    </form>
+    <?php if($search && !empty($search_results)): ?>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light"><tr><th>Reg No.</th><th>Name</th><th>Course</th><th>Phone</th><th>Total Billed</th><th>Total Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        <?php foreach($search_results as $st): $cleared = $st['balance'] <= 0; ?>
+        <tr>
+          <td><code><?= htmlspecialchars($st['registration_number'] ?: $st['student_number']) ?></code></td>
+          <td><strong><?= htmlspecialchars($st['full_name'] ?: $st['first_name'].' '.$st['surname']) ?></strong></td>
+          <td><?= htmlspecialchars($st['course'] ?? '—') ?></td>
+          <td><?= htmlspecialchars($st['phone'] ?? '—') ?></td>
+          <td>UGX <?= number_format($st['total_billed'],0) ?></td>
+          <td>UGX <?= number_format($st['total_paid'],0) ?></td>
+          <td class="<?= $cleared?'text-success fw-bold':'text-danger fw-bold' ?>">UGX <?= number_format($st['balance'],0) ?></td>
+          <td><span class="badge <?= $cleared?'badge-paid':'badge-overdue' ?>"><?= $cleared?'Cleared':'Owing' ?></span></td>
+          <td>
+            <a href="bursar_student_fees.php?id=<?= $st['id'] ?>" class="btn btn-sm btn-outline-primary py-0 px-2">View</a>
+            <button onclick="printStatement(<?= $st['id'] ?>,'<?= addslashes(htmlspecialchars($st['full_name']?:$st['first_name'].' '.$st['surname'])) ?>')" class="btn btn-sm btn-outline-success py-0 px-2"><i class="fas fa-print"></i></button>
+            <button onclick="recordFor(<?= $st['id'] ?>,'<?= addslashes(htmlspecialchars($st['full_name']?:$st['first_name'].' '.$st['surname'])) ?>')" class="btn btn-sm btn-outline-warning py-0 px-2"><i class="fas fa-plus"></i></button>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php elseif($search): ?>
+    <p class="text-muted">No students found for "<strong><?= htmlspecialchars($search) ?></strong>".</p>
+    <?php endif; ?>
+  </section>
+
+  <!-- RECENT TRANSACTIONS -->
+  <section id="transactions" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+      <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print me-1"></i>Print</button>
+    </div>
+    <?php if(empty($recent_tx)): ?>
+    <p class="text-muted small">No transactions recorded yet.</p>
+    <?php else: ?>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light"><tr><th>Reference</th><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        <?php foreach($recent_tx as $tx):
+          $method = $tx['payment_method'] ?? 'Other';
+          $icon = $method_logos[$method] ?? '💰';
+          $badges = ['Completed'=>'badge-paid','Pending'=>'badge-pending','Failed'=>'badge-overdue','Reversed'=>'badge-overdue'];
+          $bc = $badges[$tx['status']] ?? 'badge-partial';
+        ?>
+        <tr>
+          <td><code><?= htmlspecialchars($tx['payment_reference']) ?></code></td>
+          <td><?= htmlspecialchars($tx['sname'] ?? '—') ?> <small class="text-muted"><?= htmlspecialchars($tx['snum'] ?? '') ?></small></td>
+          <td><strong>UGX <?= number_format($tx['amount_received'],0) ?></strong></td>
+          <td><span class="method-icon"><?= $icon ?></span> <?= htmlspecialchars($method) ?></td>
+          <td><?= date('d M Y', strtotime($tx['payment_date'])) ?></td>
+          <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($tx['status']) ?></span></td>
+          <td><a href="bursar_payment_detail.php?id=<?= $tx['id'] ?>" class="btn btn-sm btn-outline-primary py-0 px-2"><i class="fas fa-eye"></i></a></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </section>
+
+  <!-- FEE STRUCTURES -->
+  <section id="fees" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-file-invoice-dollar me-2"></i>Fee Structures</h5>
+      <button class="btn btn-sm btn-primary no-print" data-bs-toggle="modal" data-bs-target="#feeModal"><i class="fas fa-plus me-1"></i>Add Fee</button>
+    </div>
+    <?php if(empty($fee_structures)): ?>
+    <p class="text-muted small">No fee structures configured yet.</p>
+    <?php else: ?>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover">
+        <thead class="table-light"><tr><th>Fee Name</th><th>Type</th><th>Amount (UGX)</th><th>Academic Year</th><th>Semester</th><th>Due Date</th><th>Mandatory</th></tr></thead>
+        <tbody>
+        <?php foreach($fee_structures as $fs): ?>
+        <tr>
+          <td><?= htmlspecialchars($fs['fee_name']) ?></td>
+          <td><span class="badge bg-info text-dark"><?= htmlspecialchars($fs['fee_type']) ?></span></td>
+          <td><strong><?= number_format($fs['amount'],0) ?></strong></td>
+          <td><?= htmlspecialchars($fs['academic_year'] ?? '—') ?></td>
+          <td><?= htmlspecialchars($fs['semester'] ?? '—') ?></td>
+          <td><?= $fs['due_date'] ?: '—' ?></td>
+          <td><?= $fs['is_mandatory'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </section>
+
+  <!-- DEBTORS -->
+  <section id="debtors" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-exclamation-triangle me-2" style="color:#ef4444"></i>Debtors List</h5>
+      <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print"><i class="fas fa-print me-1"></i>Print</button>
+    </div>
+    <?php if(empty($debtors)): ?>
+    <p class="text-success"><i class="fas fa-check-circle me-1"></i>No outstanding debts found.</p>
+    <?php else: ?>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover">
+        <thead class="table-light"><tr><th>Reg No.</th><th>Name</th><th>Course</th><th>Phone</th><th>Total Owing</th><th>Last Due</th><th>Actions</th></tr></thead>
+        <tbody>
+        <?php foreach($debtors as $d): ?>
+        <tr>
+          <td><code><?= htmlspecialchars($d['snum']) ?></code></td>
+          <td><?= htmlspecialchars($d['sname']) ?></td>
+          <td><?= htmlspecialchars($d['course'] ?? '—') ?></td>
+          <td><?= htmlspecialchars($d['phone'] ?? '—') ?></td>
+          <td class="text-danger fw-bold">UGX <?= number_format($d['total_owing'],0) ?></td>
+          <td><?= $d['last_due'] ?: '—' ?></td>
+          <td class="no-print">
+            <form method="POST" class="d-inline">
+              <input type="hidden" name="action" value="send_reminder">
+              <input type="hidden" name="student_id" value="0">
+              <button class="btn btn-sm btn-outline-warning py-0 px-2"><i class="fas fa-bell"></i> Remind</button>
+            </form>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </section>
+</div>
+
+<!-- RECORD PAYMENT MODAL -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="record_payment">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Record Payment</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Student ID *</label>
+            <input type="number" name="student_id" id="pay_student_id" class="form-control" required placeholder="Enter student DB ID">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Amount (UGX) *</label>
+            <input type="number" name="amount" class="form-control" required min="1" step="1000">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Payment Method *</label>
+            <select name="payment_method" class="form-select" required>
+              <option>Cash</option>
+              <option>MTN Mobile Money</option>
+              <option>Airtel Money</option>
+              <option>Bank Transfer</option>
+              <option>Cheque</option>
+              <option>MasterCard</option>
+              <option>Visa</option>
+              <option>Stanbic Bank</option>
+              <option>Centenary Bank</option>
+              <option>Equity Bank</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Transaction Reference</label>
+            <input type="text" name="reference" class="form-control" placeholder="e.g. MTN TxID, Bank Ref">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Payment Date</label>
+            <input type="date" name="payment_date" class="form-control" value="<?= date('Y-m-d') ?>">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Invoice ID (optional)</label>
+            <input type="number" name="invoice_id" class="form-control" placeholder="Leave blank if not applicable">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Notes</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Record Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD FEE MODAL -->
+<div class="modal fade" id="feeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="add_fee_structure">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Fee Structure</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label fw-semibold">Fee Name *</label><input type="text" name="fee_name" class="form-control" required placeholder="e.g. Tuition Fee – Nursing Year 1"></div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Fee Type</label>
+            <select name="fee_type" class="form-select">
+              <option>Tuition</option><option>Registration</option><option>Library</option>
+              <option>Laboratory</option><option>Examination</option><option>Graduation</option>
+              <option>Hostel</option><option>Clinical</option><option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Amount (UGX) *</label><input type="number" name="amount" class="form-control" required min="0" step="1000"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Academic Year</label><input type="text" name="academic_year" class="form-control" placeholder="2024-2025"></div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Semester</label>
+            <select name="semester" class="form-select"><option value="">All</option><option>Semester 1</option><option>Semester 2</option></select>
+          </div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Due Date</label><input type="date" name="due_date" class="form-control"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Fee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function recordFor(id, name){
+  document.getElementById('pay_student_id').value = id;
+  const m = new bootstrap.Modal(document.getElementById('paymentModal'));
+  m.show();
+}
+function printStatement(id, name){
+  window.open('bursar_student_fees.php?id='+id+'&print=1','_blank');
+}
+document.querySelectorAll('.sidebar nav a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.sidebar nav a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+</script>
 </body>
 </html>
