@@ -6,10 +6,10 @@ class DatabaseConnection {
     private static $connections = [];
     private static $configs = null;
     private static $dbMap = [
-        'staffs' => 'igangaschoolofl_staffs_db',
+        'staffs'   => 'igangaschoolofl_staffs_db',
         'students' => 'igangaschoolofl_students_db',
-        'website' => 'igangaschoolofl_website_db',
-        'ict' => 'igangaschoolofl_ict',
+        'website'  => 'igangaschoolofl_website_db',
+        'ict'      => 'igangaschoolofl_ict_db',
     ];
 
     private static function getConfigs() {

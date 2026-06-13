@@ -22,10 +22,12 @@ $stats_result = $stats_stmt->get_result();
 $stats = $stats_result->fetch_assoc();
 
 // Set statistics from database or fallback values
-$total_students = $stats['total_students'] ?? 150;
-$total_staff = $stats['total_staff'] ?? 2;
-$recent_applications = $stats['pending_applications'] ?? 8;
-$active_programs = $stats['active_programs'] ?? 2;
+$total_students      = $stats['total_students'] ?? 0;
+$total_staff         = $stats['total_staff'] ?? 0;
+$total_applications  = $stats['pending_applications'] ?? 0;
+$recent_applications = $total_applications;
+$active_programs     = 2;
+$total_revenue       = 0;
 
 // Get recent activities from database
 $recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";

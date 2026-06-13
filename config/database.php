@@ -72,7 +72,7 @@ if (!defined('STUDENTS_DB_NAME')) {
     define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschoolofl_students_db'));
 }
 if (!defined('STUDENTS_DB_USER')) {
-    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', 'igangaschoolofl_students_db'));
+    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', 'root'));
 }
 if (!defined('STUDENTS_DB_PASS')) {
     define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
@@ -91,7 +91,7 @@ if (!defined('STAFF_DB_NAME')) {
     define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschoolofl_staffs_db'));
 }
 if (!defined('STAFF_DB_USER')) {
-    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', 'igangaschoolofl_staffs_db'));
+    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', 'root'));
 }
 if (!defined('STAFF_DB_PASS')) {
     define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', ''));
@@ -110,7 +110,7 @@ if (!defined('WEBSITE_DB_NAME')) {
     define('WEBSITE_DB_NAME', isnm_env('WEBSITE_DB_NAME', 'igangaschoolofl_website_db'));
 }
 if (!defined('WEBSITE_DB_USER')) {
-    define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', 'igangaschoolofl_website_db'));
+    define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', 'root'));
 }
 if (!defined('WEBSITE_DB_PASS')) {
     define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', ''));
@@ -126,10 +126,10 @@ if (!defined('ICT_DB_PORT')) {
     define('ICT_DB_PORT', (int) isnm_env('ICT_DB_PORT', DB_PORT));
 }
 if (!defined('ICT_DB_NAME')) {
-    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict'));
+    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict_db'));
 }
 if (!defined('ICT_DB_USER')) {
-    define('ICT_DB_USER', isnm_env('ICT_DB_USER', 'igangaschoolofl_ict'));
+    define('ICT_DB_USER', isnm_env('ICT_DB_USER', 'root'));
 }
 if (!defined('ICT_DB_PASS')) {
     define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', ''));
@@ -142,16 +142,18 @@ if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
         mysqli_report(MYSQLI_REPORT_OFF);
 
-        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+        // Force TCP by using 127.0.0.1 — avoids socket issues on Windows/XAMPP
+        $tcpHost = ($host === 'localhost') ? '127.0.0.1' : $host;
+
+        $ports = array_values(array_unique(array_filter([$port, 3307, 3306])));
         $errors = [];
 
         foreach ($ports as $tryPort) {
-            $conn = @new mysqli($host, $user, $pass, $db, (int) $tryPort);
+            $conn = @new mysqli($tcpHost, $user, $pass, $db, (int) $tryPort);
             if (!$conn->connect_error) {
                 $conn->set_charset($charset);
                 return $conn;
             }
-
             $errors[] = $tryPort . ': ' . $conn->connect_error;
             $conn = null;
         }
