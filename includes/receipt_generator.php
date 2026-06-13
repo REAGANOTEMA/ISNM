@@ -163,6 +163,10 @@ class ReceiptGenerator {
         $nssf = $gross * 0.1;
         $other_deductions = 50000;
         $net = $gross - $paye - $nssf - $other_deductions;
+        $staff_identifier = $staff['staff_id'] ?? 'STF' . $staff_id;
+        $staff_department = $staff['department'] ?? 'Administration';
+        $staff_position = $staff['position'] ?? 'Staff';
+        $staff_name = trim(($staff['first_name'] ?? '') . ' ' . ($staff['surname'] ?? ''));
         
         $payslip_number = "PAYSLIP-" . $year . "-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-" . $staff_id;
         
@@ -208,10 +212,10 @@ class ReceiptGenerator {
                 <div class='info-grid'>
                     <div class='info-item'><strong>Payslip No:</strong> {$payslip_number}</div>
                     <div class='info-item'><strong>Payment Period:</strong> " . date('F Y', mktime(0, 0, 0, $month, 1, $year)) . "</div>
-                    <div class='info-item'><strong>Staff ID:</strong> {$staff['staff_id'] ?? 'STF' . $staff_id}</div>
-                    <div class='info-item'><strong>Department:</strong> " . ($staff['department'] ?? 'Administration') . "</div>
-                    <div class='info-item'><strong>Name:</strong> {$staff['first_name']} {$staff['surname']}</div>
-                    <div class='info-item'><strong>Position:</strong> " . ($staff['position'] ?? 'Staff') . "</div>
+                    <div class='info-item'><strong>Staff ID:</strong> {$staff_identifier}</div>
+                    <div class='info-item'><strong>Department:</strong> {$staff_department}</div>
+                    <div class='info-item'><strong>Name:</strong> {$staff_name}</div>
+                    <div class='info-item'><strong>Position:</strong> {$staff_position}</div>
                 </div>
                 
                 <div class='section-title'>Earnings</div>

@@ -206,7 +206,6 @@ function generatePayslipContent($payroll) {
     return '<!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Monthly Payslip - ISNM</title>
@@ -322,7 +321,6 @@ function generatePayslipContent($payroll) {
             <p><em>This is an electronically generated payslip and is valid without signature.</em></p>
         </div>
     </div>
-<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>';
 }

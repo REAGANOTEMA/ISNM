@@ -1,9 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['hr_id'])) { header('Location: staff-login.php'); exit; }
-    header('Location: hr_login.php');
-    exit;
-}
+if (isset($_SESSION['hr_id'])) { header('Location: hr_login.php'); exit; }
 ?>
 <!DOCTYPE html>
 <html>
