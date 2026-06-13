@@ -38,7 +38,7 @@ if ($result) {
 
 // Try to alter user with the syntax: ALTER USER ... IDENTIFIED WITH mysql_native_password BY ...
 $hosts = ['localhost', '127.0.0.1'];
-$new_password = 'ReagaN23#';
+$new_password = '';
 foreach ($hosts as $h) {
     $check = $conn->query("SELECT COUNT(*) FROM mysql.user WHERE User = '$user' AND Host = '$h'");
     if ($check) {

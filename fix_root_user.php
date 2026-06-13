@@ -41,7 +41,7 @@ if ($result) {
     echo "Error: " . $conn->error . "<br>";
 }
 
-// Now, let's set the root user (for localhost) to use mysql_native_password with password 'ReagaN23#'
+// Now, let's set the root user (for localhost) to use mysql_native_password with password ''
 // We'll do it for both localhost and 127.0.0.1 if they exist.
 $hosts = ['localhost', '127.0.0.1'];
 foreach ($hosts as $h) {
@@ -51,14 +51,14 @@ foreach ($hosts as $h) {
         $count = $check->fetch_row()[0];
         $check->close();
         if ($count > 0) {
-            echo "<br>Updating root@{$h} to use mysql_native_password with password 'ReagaN23#'...<br>";
+            echo "<br>Updating root@{$h} to use mysql_native_password with password ''...<br>";
             // Note: We cannot use prepared statements for ALTER USER with parameters for the auth method? 
             // Actually, we can for the password. We'll do:
-            // ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'ReagaN23#';
+            // ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
             $sql = "ALTER USER '$user'@'$h' IDENTIFIED WITH mysql_native_password BY ?";
             $stmt = $conn->prepare($sql);
             if ($stmt) {
-                $stmt->bind_param("s", $pass = 'ReagaN23#');
+                $stmt->bind_param("s", $pass = '');
                 if ($stmt->execute()) {
                     echo "Successfully updated root@{$h}.<br>";
                 } else {
@@ -84,17 +84,17 @@ if ($conn->query("FLUSH PRIVILEGES")) {
 echo "<br>Testing connection with new password...<br>";
 $conn->close(); // Close the old connection
 
-$conn = @new mysqli($host, $user, 'ReagaN23#', $db, $port);
+$conn = @new mysqli($host, $user, '', $db, $port);
 if ($conn->connect_error) {
     echo "Connection failed with new password: " . $conn->connect_error . "<br>";
 } else {
-    echo "Success! Connected with password 'ReagaN23#'.<br>";
+    echo "Success! Connected with password ''.<br>";
     $conn->close();
 }
 
 // Also test from 127.0.0.1
 echo "<br>Testing connection from 127.0.0.1 with password...<br>";
-$conn = @new mysqli('127.0.0.1', $user, 'ReagaN23#', $db, $port);
+$conn = @new mysqli('127.0.0.1', $user, '', $db, $port);
 if ($conn->connect_error) {
     echo "Connection failed from 127.0.0.1: " . $conn->connect_error . "<br>";
 } else {

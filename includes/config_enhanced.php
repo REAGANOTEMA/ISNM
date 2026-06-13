@@ -1,20 +1,6 @@
 <?php
 // ISNM Enhanced Configuration with Multi-Database Support
-// Supports staffs_db, students_db, and website_db
-
-// Database configuration
-$config = [
-    'host' => 'localhost',
-    'username' => 'igangaschoolofl_students_db',
-    'password' => 'hbkKdmMHUfHTHuxWKPRf',
-    'charset' => 'utf8mb4',
-    'databases' => [
-        'staffs' => 'igangaschoolofl_staffs_db',
-        'students' => 'igangaschoolofl_students_db',
-        'website' => 'igangaschoolofl_website_db',
-        'ict' => 'igangaschoolofl_ict'
-    ]
-];
+// Credentials are loaded from config/database.php and .env.
 
 // Include unified database connection system
 require_once 'database_connections.php';

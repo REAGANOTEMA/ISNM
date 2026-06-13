@@ -34,6 +34,12 @@ $students_not_cleared = bq($sconn, "SELECT COUNT(DISTINCT student_id) v FROM stu
 $pending_payments  = bq($sconn, "SELECT COUNT(*) v FROM payments WHERE status='Pending'");
 $overdue_invoices  = bq($sconn, "SELECT COUNT(*) v FROM student_invoices WHERE status='Overdue' OR (due_date<CURDATE() AND status NOT IN('Paid','Cancelled','Waived'))");
 $total_students    = bq($sconn, "SELECT COUNT(*) v FROM students WHERE status='Active'");
+$budget_total       = bq($sconn, "SELECT COALESCE(SUM(total_budget),0) v FROM budgets WHERE status IN('Approved','Active')");
+$pending_expenses   = bq($sconn, "SELECT COUNT(*) v FROM expenditures WHERE approval_status='Pending'");
+$ledger_entries     = bq($sconn, "SELECT COUNT(*) v FROM ledger_entries");
+$mobile_pending     = bq($sconn, "SELECT COUNT(*) v FROM mobile_money_transactions WHERE status='Initiated'");
+$ura_draft          = bq($sconn, "SELECT COUNT(*) v FROM ura_reports WHERE status='Draft'");
+$asset_count        = bq($sconn, "SELECT COUNT(*) v FROM assets WHERE status='Active'");
 
 // ── Search ───────────────────────────────────────────────────
 $search = trim($_GET['q'] ?? '');
@@ -73,6 +79,24 @@ $r = $sconn->query("SELECT COALESCE(s.full_name,CONCAT(s.first_name,' ',s.surnam
     WHERE i.status IN('Overdue','Pending','partial','Partially Paid')
     GROUP BY s.id ORDER BY total_owing DESC LIMIT 20");
 if ($r) while ($row = $r->fetch_assoc()) $debtors[] = $row;
+
+// ── Budgets and expenditure ─────────────────────────────────
+$active_budgets = [];
+$r = $sconn->query("SELECT b.*,(SELECT COALESCE(SUM(allocated_amount),0) FROM budget_allocations WHERE budget_id=b.id) allocated FROM budgets b WHERE b.status IN('Draft','Approved','Active') ORDER BY b.created_at DESC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $active_budgets[] = $row;
+
+$pending_expenditures = [];
+$r = $sconn->query("SELECT e.*,ba.department budget_department FROM expenditures e LEFT JOIN budgets b ON e.budget_id=b.id LEFT JOIN budget_allocations ba ON ba.budget_id=b.id WHERE e.approval_status='Pending' ORDER BY e.expense_date DESC LIMIT 15");
+if ($r) while ($row = $r->fetch_assoc()) $pending_expenditures[] = $row;
+
+// ── Mobile money and reminders ───────────────────────────────
+$mobile_transactions = [];
+$r = $sconn->query("SELECT mmt.*, COALESCE(s.full_name,CONCAT(s.first_name,' ',s.surname)) sname FROM mobile_money_transactions mmt LEFT JOIN students s ON mmt.student_id=s.id ORDER BY mmt.created_at DESC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $mobile_transactions[] = $row;
+
+$recent_reminders = [];
+$r = $sconn->query("SELECT fr.*, COALESCE(s.full_name,CONCAT(s.first_name,' ',s.surname)) sname FROM fee_reminders fr LEFT JOIN students s ON fr.student_id=s.id ORDER BY fr.sent_at DESC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $recent_reminders[] = $row;
 
 // ── POST handlers ────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -131,6 +155,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         header('Location: bursar_dashboard.php#debtors'); exit;
     }
+
+    if ($action === 'create_budget') {
+        $name = $sconn->real_escape_string($_POST['budget_name'] ?? '');
+        $year = $sconn->real_escape_string($_POST['fiscal_year'] ?? date('Y'));
+        $total = floatval($_POST['total_budget'] ?? 0);
+        if ($name && $total > 0) {
+            $sconn->query("INSERT INTO budgets (budget_name,fiscal_year,total_budget,status,created_at) VALUES ('$name','$year',$total,'Draft',NOW())");
+            $_SESSION['success'] = "Budget draft created.";
+        }
+        header('Location: bursar_dashboard.php#budgets'); exit;
+    }
+
+    if ($action === 'record_expenditure') {
+        $date = $sconn->real_escape_string($_POST['expense_date'] ?? date('Y-m-d'));
+        $dept = $sconn->real_escape_string($_POST['department'] ?? '');
+        $category = $sconn->real_escape_string($_POST['category'] ?? 'General');
+        $desc = $sconn->real_escape_string($_POST['description'] ?? '');
+        $amount = floatval($_POST['amount'] ?? 0);
+        if ($desc && $amount > 0) {
+            $sconn->query("INSERT INTO expenditures (expense_date,department,category,description,amount,approval_status) VALUES ('$date','$dept','$category','$desc',$amount,'Pending')");
+            $_SESSION['success'] = "Expenditure submitted for approval.";
+        }
+        header('Location: bursar_dashboard.php#expenditures'); exit;
+    }
+
+    if ($action === 'approve_payment') {
+        $pid = intval($_POST['payment_id'] ?? 0);
+        if ($pid) {
+            $sconn->query("UPDATE payments SET status='Completed',verified_by=$uid,verified_at=NOW() WHERE id=$pid AND status='Pending'");
+            $_SESSION['success'] = "Payment approved.";
+        }
+        header('Location: bursar_dashboard.php#mobile'); exit;
+    }
 }
 
 $method_logos = [
@@ -188,6 +245,12 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
     <a href="#payments">                  <i class="fas fa-money-bill-wave"></i> Record Payment</a>
     <a href="#transactions">              <i class="fas fa-history"></i> Transactions</a>
     <a href="#fees">                      <i class="fas fa-file-invoice-dollar"></i> Fee Structures</a>
+    <a href="#budgets">                   <i class="fas fa-calculator"></i> Budgets</a>
+    <a href="#expenditures">              <i class="fas fa-receipt"></i> Expenditures</a>
+    <a href="#ledger">                    <i class="fas fa-book"></i> Ledger & Accounts</a>
+    <a href="#mobile">                    <i class="fas fa-mobile-alt"></i> Mobile Money</a>
+    <a href="#assets">                    <i class="fas fa-boxes"></i> Assets</a>
+    <a href="#communications-finance">    <i class="fas fa-bell"></i> Communications</a>
     <a href="#debtors">                   <i class="fas fa-exclamation-triangle"></i> Debtors List</a>
     <a href="bursar_invoices.php">        <i class="fas fa-file-invoice"></i> Invoices</a>
     <a href="bursar_receipts.php">        <i class="fas fa-receipt"></i> Receipts</a>
@@ -274,6 +337,30 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
         <div class="stat-card" style="border-color:#0ea5e9">
           <div class="num" style="color:#0ea5e9"><?= $total_students ?></div>
           <div class="lbl"><i class="fas fa-users me-1"></i>Total Students</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#6366f1">
+          <div class="num" style="color:#6366f1">UGX <?= number_format($budget_total) ?></div>
+          <div class="lbl"><i class="fas fa-calculator me-1"></i>Approved Budgets</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#f59e0b">
+          <div class="num" style="color:#f59e0b"><?= $pending_expenses ?></div>
+          <div class="lbl"><i class="fas fa-hourglass-half me-1"></i>Pending Expenses</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#8b5cf6">
+          <div class="num" style="color:#8b5cf6"><?= $mobile_pending ?></div>
+          <div class="lbl"><i class="fas fa-mobile-alt me-1"></i>Mobile Money Pending</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card" style="border-color:#111827">
+          <div class="num" style="color:#111827"><?= $asset_count ?></div>
+          <div class="lbl"><i class="fas fa-boxes me-1"></i>Active Assets</div>
         </div>
       </div>
     </div>
@@ -417,6 +504,104 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
     </div>
     <?php endif; ?>
   </section>
+  <!-- BUDGETS -->
+  <section id="budgets" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-calculator me-2"></i>Budgeting & Expenditure Management</h5>
+      <button class="btn btn-sm btn-primary no-print" data-bs-toggle="modal" data-bs-target="#budgetModal"><i class="fas fa-plus me-1"></i>Create Budget</button>
+    </div>
+    <?php if(empty($active_budgets)): ?><p class="text-muted small">No budget drafts or approved budgets yet.</p><?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Budget</th><th>Fiscal Year</th><th>Total</th><th>Allocated</th><th>Status</th></tr></thead><tbody><?php foreach($active_budgets as $b): ?>
+      <tr><td><?= htmlspecialchars($b['budget_name']) ?></td><td><?= htmlspecialchars($b['fiscal_year']) ?></td><td>UGX <?= number_format($b['total_budget'],0) ?></td><td>UGX <?= number_format($b['allocated'],0) ?></td><td><span class="badge <?= $b['status']==='Approved'?'bg-success':($b['status']==='Active'?'bg-primary':'bg-secondary') ?>"><?= htmlspecialchars($b['status']) ?></span></td></tr>
+    <?php endforeach; ?></tbody></table></div><?php endif; ?>
+  </section>
+
+  <!-- EXPENDITURES -->
+  <section id="expenditures" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-receipt me-2"></i>Expenditure Tracking</h5>
+      <button class="btn btn-sm btn-warning no-print" data-bs-toggle="modal" data-bs-target="#expenseModal"><i class="fas fa-plus me-1"></i>Record Expense</button>
+    </div>
+    <?php if(empty($pending_expenditures)): ?><p class="text-muted small"><i class="fas fa-check-circle text-success me-1"></i>No pending expenditure approvals.</p><?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Date</th><th>Department</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody><?php foreach($pending_expenditures as $e): ?>
+      <tr><td><?= date('d M Y',strtotime($e['expense_date'])) ?></td><td><?= htmlspecialchars($e['department'] ?? $e['budget_department'] ?? '—') ?></td><td><?= htmlspecialchars($e['category'] ?? '—') ?></td><td><?= htmlspecialchars(substr($e['description'],0,80)) ?></td><td>UGX <?= number_format($e['amount'],0) ?></td><td><span class="badge bg-warning text-dark"><?= htmlspecialchars($e['approval_status']) ?></span></td></tr>
+    <?php endforeach; ?></tbody></table></div><?php endif; ?>
+  </section>
+
+  <!-- LEDGER -->
+  <section id="ledger" class="section-card">
+    <h5><i class="fas fa-book me-2"></i>Accounts, Ledger & Reconciliation</h5>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $ledger_entries ?></div><small>Ledger entries</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= bq($sconn,"SELECT COUNT(*) v FROM chart_accounts WHERE is_active=1") ?></div><small>Active chart accounts</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= bq($sconn,"SELECT COUNT(*) v FROM bank_accounts WHERE is_active=1") ?></div><small>Active bank accounts</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= bq($sconn,"SELECT COUNT(*) v FROM bank_reconciliations WHERE status='Completed'") ?></div><small>Completed reconciliations</small></div></div>
+    </div>
+  </section>
+
+  <!-- MOBILE MONEY -->
+  <section id="mobile" class="section-card">
+    <h5><i class="fas fa-mobile-alt me-2"></i>Mobile Money & Payment Verification</h5>
+    <?php if(empty($mobile_transactions)): ?><p class="text-muted small">No mobile money transactions recorded yet.</p><?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Provider</th><th>Student</th><th>Amount</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead><tbody><?php foreach($mobile_transactions as $m): ?>
+      <tr><td><?= htmlspecialchars($m['provider']) ?></td><td><?= htmlspecialchars($m['sname'] ?? '—') ?></td><td>UGX <?= number_format($m['amount'],0) ?></td><td><?= htmlspecialchars($m['phone_number'] ?? '—') ?></td><td><span class="badge <?= $m['status']==='Completed'?'bg-success':'bg-warning text-dark' ?>"><?= htmlspecialchars($m['status']) ?></span></td><td><?php if($m['status']==='Initiated'): ?><form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_payment"><input type="hidden" name="payment_id" value="<?= $m['id'] ?>"><button class="btn btn-sm btn-success py-0 px-2"><i class="fas fa-check"></i></button></form><?php endif; ?></td></tr>
+    <?php endforeach; ?></tbody></table></div><?php endif; ?>
+  </section>
+
+  <!-- ASSETS -->
+  <section id="assets" class="section-card">
+    <h5><i class="fas fa-boxes me-2"></i>Inventory & Asset Financial Tracking</h5>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $asset_count ?></div><small>Active assets</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold">UGX <?= number_format(bq($sconn,"SELECT COALESCE(SUM(purchase_amount),0) v FROM assets WHERE status='Active'")) ?></div><small>Purchase value</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= bq($sconn,"SELECT COUNT(*) v FROM asset_depreciation") ?></div><small>Depreciation entries</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $ura_draft ?></div><small>URA report drafts</small></div></div>
+    </div>
+  </section>
+
+  <!-- FINANCE COMMUNICATIONS -->
+  <section id="communications-finance" class="section-card">
+    <h5><i class="fas fa-bell me-2"></i>Financial Communication Tools</h5>
+    <p class="text-muted small">Fee reminders, overdue payment alerts, financial announcements, and notification queue entries are stored through <code>fee_reminders</code> and <code>notification_queue</code>.</p>
+    <?php if(!empty($recent_reminders)): ?>
+    <div class="list-group"><?php foreach($recent_reminders as $r): ?><div class="list-group-item"><strong><?= htmlspecialchars($r['sname'] ?? 'Student') ?></strong><span class="badge bg-secondary ms-2"><?= htmlspecialchars($r['reminder_type']) ?></span><small class="d-block text-muted"><?= date('d M Y H:i',strtotime($r['sent_at'])) ?></small></div><?php endforeach; ?></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- FINANCE REPORTS -->
+  <section id="finance-reports" class="section-card">
+    <h5><i class="fas fa-chart-line me-2"></i>Financial Reports & Analytics</h5>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $students_cleared ?></div><small>Students cleared</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $students_not_cleared ?></div><small>Students not cleared</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= bq($sconn,"SELECT COUNT(*) v FROM payment_receipts WHERE created_at>=CURDATE()") ?></div><small>Receipts today</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $pending_payments ?></div><small>Pending approvals</small></div></div>
+    </div>
+  </section>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="modal fade" id="budgetModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="create_budget">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Create Budget</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><div class="row g-3"><div class="col-12"><label class="form-label">Budget Name</label><input type="text" name="budget_name" class="form-control" required></div><div class="col-md-6"><label class="form-label">Fiscal Year</label><input type="text" name="fiscal_year" class="form-control" value="<?= date('Y') ?>"></div><div class="col-md-6"><label class="form-label">Total Budget</label><input type="number" name="total_budget" class="form-control" min="0" step="1000" required></div></div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Create Budget</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal fade" id="expenseModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="record_expenditure">
+      <div class="modal-header bg-warning text-dark"><h5 class="modal-title">Record Expenditure</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><div class="row g-3"><div class="col-md-6"><label class="form-label">Expense Date</label><input type="date" name="expense_date" class="form-control" value="<?= date('Y-m-d') ?>"></div><div class="col-md-6"><label class="form-label">Department</label><input type="text" name="department" class="form-control"></div><div class="col-md-6"><label class="form-label">Category</label><input type="text" name="category" class="form-control" value="General"></div><div class="col-md-6"><label class="form-label">Amount</label><input type="number" name="amount" class="form-control" min="1" step="1000" required></div><div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3" required></textarea></div></div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-warning">Submit for Approval</button></div>
+    </form>
+  </div>
 </div>
 
 <!-- RECORD PAYMENT MODAL -->

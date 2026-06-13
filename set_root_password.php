@@ -8,7 +8,7 @@ $user = 'root';
 $pass = ''; // empty password works for localhost
 $port = 3307;
 $db = '';
-$new_password = 'ReagaN23#';
+$new_password = '';
 
 echo "Connecting to MySQL at {$host}:{$port} as {$user} with empty password...<br>";
 $conn = @new mysqli($host, $user, $pass, $db, $port);

@@ -6,7 +6,7 @@
 
 $host = '127.0.0.1'; // Try 127.0.0.1 first
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $db = ''; // No database initially
 $port = 3307; // From my.ini, the server is running on 3307
 

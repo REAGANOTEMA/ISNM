@@ -5,7 +5,7 @@
 
 $host = '127.0.0.1';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $port = 3307;
 
 echo "Connecting to MySQL at {$host}:{$port} as {$user}...<br>";

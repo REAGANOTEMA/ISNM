@@ -2,6 +2,8 @@
 $rootPath = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
 if ($rootPath === '') $rootPath = '.';
 ?>
+<!-- Dashboard professional styles -->
+<link href="<?= $rootPath ?>/dashboards/dashboard-professional.css" rel="stylesheet">
 <!-- Bootstrap 5.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Font Awesome JS (icons) -->

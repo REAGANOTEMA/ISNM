@@ -31,6 +31,12 @@ $open_jobs          = hrq($sconn, "SELECT COUNT(*) v FROM recruitment_jobs WHERE
 $pending_apps       = hrq($sconn, "SELECT COUNT(*) v FROM recruitment_applications WHERE status='Received'");
 $expiring_compliance= hrq($sconn, "SELECT COUNT(*) v FROM compliance_records WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND status='Valid'");
 $disciplinary_open  = hrq($sconn, "SELECT COUNT(*) v FROM disciplinary_records WHERE status IN('Pending','Under Investigation')");
+$attendance_today   = hrq($sconn, "SELECT COUNT(*) v FROM staff_attendance WHERE attendance_date=CURDATE() AND status='Present'");
+$absent_today       = hrq($sconn, "SELECT COUNT(*) v FROM staff_attendance WHERE attendance_date=CURDATE() AND status='Absent'");
+$pending_payroll    = hrq($sconn, "SELECT COUNT(*) v FROM payroll_inputs WHERE validation_status='Pending'");
+$expiring_licenses  = hrq($sconn, "SELECT COUNT(*) v FROM professional_licenses WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND status IN('Valid','Expiring Soon')");
+$open_incidents     = hrq($sconn, "SELECT COUNT(*) v FROM disciplinary_records WHERE status IN('Pending','Under Investigation','Heard')");
+$unread_memos       = hrq($sconn, "SELECT COUNT(*) v FROM staff_memos WHERE created_at>=DATE_SUB(NOW(),INTERVAL 7 DAY)");
 
 // ── Department breakdown ─────────────────────────────────────
 $dept_stats = [];
@@ -66,6 +72,30 @@ $jobs = [];
 $r = $sconn->query("SELECT rj.*,(SELECT COUNT(*) FROM recruitment_applications WHERE job_id=rj.id) applicant_count FROM recruitment_jobs rj WHERE rj.status='Open' ORDER BY rj.posted_date DESC LIMIT 10");
 if ($r) while ($row = $r->fetch_assoc()) $jobs[] = $row;
 
+// ── Attendance summary ───────────────────────────────────────
+$attendance_today_list = [];
+$r = $sconn->query("SELECT s.staff_id,s.full_name,s.department,sa.check_in,sa.check_out,sa.status,sa.source,sa.notes FROM staff_attendance sa JOIN staff s ON sa.staff_id=s.staff_id WHERE sa.attendance_date=CURDATE() ORDER BY sa.status, s.full_name LIMIT 20");
+if ($r) while ($row = $r->fetch_assoc()) $attendance_today_list[] = $row;
+
+// ── Payroll inputs ───────────────────────────────────────────
+$payroll_inputs = [];
+$r = $sconn->query("SELECT pi.*,s.full_name,s.department FROM payroll_inputs pi JOIN staff s ON pi.staff_id=s.staff_id WHERE pi.validation_status='Pending' ORDER BY pi.created_at DESC LIMIT 15");
+if ($r) while ($row = $r->fetch_assoc()) $payroll_inputs[] = $row;
+
+// ── Compliance and contracts ─────────────────────────────────
+$expiring_contracts_list = [];
+$r = $sconn->query("SELECT sc.*,s.full_name,s.department FROM staff_contracts sc JOIN staff s ON sc.staff_id=s.staff_id WHERE sc.status='Active' AND sc.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 30 DAY) ORDER BY sc.end_date ASC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $expiring_contracts_list[] = $row;
+
+$expiring_licenses_list = [];
+$r = $sconn->query("SELECT pl.*,s.full_name,s.department FROM professional_licenses pl JOIN staff s ON pl.staff_id=s.staff_id WHERE pl.expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 30 DAY) ORDER BY pl.expiry_date ASC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $expiring_licenses_list[] = $row;
+
+// ── Communications ───────────────────────────────────────────
+$recent_memos = [];
+$r = $sconn->query("SELECT * FROM staff_memos ORDER BY created_at DESC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $recent_memos[] = $row;
+
 // ── Department requests sent to HR ───────────────────────────
 $dept_requests = [];
 $sconn2 = getStudentsConnection();
@@ -86,13 +116,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dept = $sconn->real_escape_string(trim($_POST['department'] ?? ''));
         $rid  = intval($_POST['role_id'] ?? 0);
         $hd   = $sconn->real_escape_string($_POST['hire_date'] ?? date('Y-m-d'));
+        $grade = $sconn->real_escape_string($_POST['salary_grade'] ?? '');
+        $contract_type = in_array($_POST['contract_type'] ?? '', ['Permanent','Temporary','Contract','Internship','Part Time']) ? $_POST['contract_type'] : 'Contract';
+        $contract_start = $sconn->real_escape_string($_POST['contract_start'] ?? $hd);
+        $contract_end = $sconn->real_escape_string($_POST['contract_end'] ?? '');
+        $nok_name = $sconn->real_escape_string($_POST['next_of_kin_name'] ?? '');
+        $nok_rel = $sconn->real_escape_string($_POST['next_of_kin_relationship'] ?? '');
+        $nok_phone = $sconn->real_escape_string($_POST['next_of_kin_phone'] ?? '');
+        $nok_email = $sconn->real_escape_string($_POST['next_of_kin_email'] ?? '');
         $sid  = 'STF-'.strtoupper(substr(preg_replace('/\s+/','',$fn),0,3)).'-'.date('y').str_pad(mt_rand(1,999),3,'0',STR_PAD_LEFT);
-        $pw   = password_hash('isnm@2025', PASSWORD_BCRYPT);
+        $pw   = password_hash(getenv('DEFAULT_STAFF_PASSWORD') ?: 'staff@123', PASSWORD_BCRYPT);
         if ($fn && $em) {
             $sconn->query("INSERT INTO staff (staff_id,full_name,email,phone,position,department,role_id,password,status,hire_date,is_first_login,created_at) VALUES ('$sid','$fn','$em','$ph','$pos','$dept',$rid,'$pw','Active','$hd',1,NOW())");
             if ($sconn->affected_rows > 0) {
+                $sconn->query("INSERT INTO staff_profiles (staff_id,next_of_kin_name,next_of_kin_relationship,next_of_kin_phone,next_of_kin_email) VALUES ('$sid','$nok_name','$nok_rel','$nok_phone','$nok_email')");
+                $sconn->query("INSERT INTO staff_contracts (staff_id,contract_type,start_date,end_date,salary_grade,status) VALUES ('$sid','$contract_type','$contract_start','".($contract_end?:'NULL')."','$grade','Active')");
+                $sconn->query("INSERT INTO staff_work_history (staff_id,position,department,start_date,notes) VALUES ('$sid','$pos','$dept','$hd','Initial registration')");
                 $sconn->query("INSERT INTO staff_activity_log (staff_id,activity_type,activity_description,module_accessed,created_at) VALUES ($uid,'Account Created','New staff registered: $fn','HR Management',NOW())");
-                $_SESSION['success'] = "Staff member '$fn' added. Default password: isnm@2025";
+                $_SESSION['success'] = "Staff member '$fn' added. Default password will be issued through HR policy.";
             } else { $_SESSION['error'] = "Failed: ".$sconn->error; }
         }
         header('Location: hr_dashboard.php'); exit;
@@ -128,6 +169,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['success'] = "Job vacancy posted.";
         }
         header('Location: hr_dashboard.php#recruitment'); exit;
+    }
+
+    if ($action === 'validate_payroll') {
+        $pid = intval($_POST['payroll_id'] ?? 0);
+        $status = in_array($_POST['validation_status'] ?? '', ['Validated','Rejected']) ? $_POST['validation_status'] : 'Pending';
+        $notes = $sconn->real_escape_string($_POST['notes'] ?? '');
+        if ($pid) {
+            $sconn->query("UPDATE payroll_inputs SET validation_status='$status',validated_by=$uid,notes=CONCAT(IFNULL(notes,''),'\n',$notes),created_at=created_at WHERE id=$pid");
+            $_SESSION['success'] = "Payroll input $status.";
+        }
+        header('Location: hr_dashboard.php#payroll'); exit;
+    }
+
+    if ($action === 'record_attendance') {
+        $sid = $sconn->real_escape_string($_POST['staff_id'] ?? '');
+        $date = $sconn->real_escape_string($_POST['attendance_date'] ?? date('Y-m-d'));
+        $status = in_array($_POST['attendance_status'] ?? '', ['Present','Absent','Late','Leave','Duty','Half Day']) ? $_POST['attendance_status'] : 'Present';
+        $source = in_array($_POST['attendance_source'] ?? '', ['Manual','Biometric','Roster']) ? $_POST['attendance_source'] : 'Manual';
+        $notes = $sconn->real_escape_string($_POST['attendance_notes'] ?? '');
+        if ($sid && $date) {
+            $sconn->query("INSERT INTO staff_attendance (staff_id,attendance_date,status,source,notes,recorded_by,created_at) VALUES ('$sid','$date','$status','$source','$notes',$uid,NOW()) ON DUPLICATE KEY UPDATE status=VALUES(status),source=VALUES(source),notes=VALUES(notes)");
+            $_SESSION['success'] = "Attendance recorded.";
+        }
+        header('Location: hr_dashboard.php#attendance'); exit;
+    }
+
+    if ($action === 'submit_appraisal') {
+        $sid = $sconn->real_escape_string($_POST['staff_id'] ?? '');
+        $period = $sconn->real_escape_string($_POST['appraisal_period'] ?? date('Y'));
+        $score = floatval($_POST['overall_score'] ?? 0);
+        $rating = in_array($_POST['rating'] ?? '', ['Excellent','Very Good','Good','Fair','Poor']) ? $_POST['rating'] : 'Good';
+        $comments = $sconn->real_escape_string($_POST['supervisor_comments'] ?? '');
+        $promotion = in_array($_POST['promotion_recommendation'] ?? '', ['Yes','No','Consider']) ? $_POST['promotion_recommendation'] : 'No';
+        if ($sid) {
+            $sconn->query("INSERT INTO performance_appraisals (staff_id,appraisal_period,overall_score,rating,supervisor_comments,promotion_recommendation,status,created_at) VALUES ('$sid','$period',$score,'$rating','$comments','$promotion','Submitted',NOW())");
+            $_SESSION['success'] = "Appraisal submitted.";
+        }
+        header('Location: hr_dashboard.php#performance'); exit;
+    }
+
+    if ($action === 'record_training') {
+        $sid = $sconn->real_escape_string($_POST['staff_id'] ?? '');
+        $title = $sconn->real_escape_string($_POST['training_title'] ?? '');
+        $type = in_array($_POST['training_type'] ?? '', ['Workshop','Seminar','CPD','License Renewal','Scholarship','Other']) ? $_POST['training_type'] : 'CPD';
+        $start = $sconn->real_escape_string($_POST['training_start'] ?? date('Y-m-d'));
+        $end = $sconn->real_escape_string($_POST['training_end'] ?? '');
+        if ($sid && $title) {
+            $sconn->query("INSERT INTO trainings (title,training_type,start_date,end_date,status) VALUES ('$title','$type','$start','".($end?:'NULL')."','Completed')");
+            $tid = $sconn->insert_id;
+            $sconn->query("INSERT INTO staff_training_records (staff_id,training_id,attendance_status) VALUES ('$sid',$tid,'Attended')");
+            $_SESSION['success'] = "Training record added.";
+        }
+        header('Location: hr_dashboard.php#training'); exit;
+    }
+
+    if ($action === 'report_incident') {
+        $sid = $sconn->real_escape_string($_POST['staff_id'] ?? '');
+        $date = $sconn->real_escape_string($_POST['incident_date'] ?? date('Y-m-d'));
+        $type = $sconn->real_escape_string($_POST['incident_type'] ?? 'Conduct');
+        $desc = $sconn->real_escape_string($_POST['incident_description'] ?? '');
+        if ($sid && $desc) {
+            $sconn->query("INSERT INTO disciplinary_records (staff_id,incident_date,incident_type,description,status,created_at) VALUES ('$sid','$date','$type','$desc','Pending',NOW())");
+            $_SESSION['success'] = "Incident recorded.";
+        }
+        header('Location: hr_dashboard.php#discipline'); exit;
+    }
+
+    if ($action === 'send_memo') {
+        $title = $sconn->real_escape_string($_POST['memo_title'] ?? '');
+        $body = $sconn->real_escape_string($_POST['memo_body'] ?? '');
+        $audience = in_array($_POST['memo_audience'] ?? '', ['All Staff','Department','Role','Individual']) ? $_POST['memo_audience'] : 'All Staff';
+        $target = $sconn->real_escape_string($_POST['memo_target'] ?? '');
+        if ($title && $body) {
+            $sconn->query("INSERT INTO staff_memos (title,body,audience,target_department,target_role,target_staff_id,created_by,created_at) VALUES ('$title','$body','$audience',IF('$audience'='Department','$target',NULL),IF('$audience'='Role','$target',NULL),IF('$audience'='Individual','$target',NULL),$uid,NOW())");
+            $_SESSION['success'] = "Memo published.";
+        }
+        header('Location: hr_dashboard.php#communications'); exit;
     }
 }
 ?>
@@ -217,6 +335,11 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
         ['Job Applications',     $pending_apps,        'file-alt',         '#06b6d4'],
         ['Expiring Compliance',  $expiring_compliance, 'shield-alt',       '#f97316'],
         ['Open Disciplinary',    $disciplinary_open,   'gavel',            '#ef4444'],
+        ['Attendance Today',     $attendance_today,    'fingerprint',      '#22c55e'],
+        ['Absent Today',         $absent_today,        'user-slash',       '#ef4444'],
+        ['Pending Payroll',      $pending_payroll,     'money-check-alt',  '#f59e0b'],
+        ['Expiring Licenses',    $expiring_licenses,   'id-card',          '#ec4899'],
+        ['Recent Memos',         $unread_memos,        'bullhorn',         '#6366f1'],
       ];
       foreach($cards as $c): ?>
       <div class="col-6 col-md-3">
@@ -376,6 +499,143 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
     <?php endif; ?>
   </section>
 
+  <!-- ATTENDANCE & TIME -->
+  <section id="attendance" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-fingerprint me-2"></i>Attendance & Time Management</h5>
+      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal"><i class="fas fa-plus me-1"></i>Record Attendance</button>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold text-success"><?= $attendance_today ?></div><small class="text-muted">Present today</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold text-danger"><?= $absent_today ?></div><small class="text-muted">Absent today</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold text-primary"><?= $on_leave_today ?></div><small class="text-muted">On approved leave</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= count($attendance_today_list) ?></div><small class="text-muted">Records loaded</small></div></div>
+    </div>
+    <?php if(empty($attendance_today_list)): ?>
+    <p class="text-muted small">No attendance records found for today.</p>
+    <?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Staff</th><th>Department</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Source</th><th>Notes</th></tr></thead><tbody>
+    <?php foreach($attendance_today_list as $a): ?>
+      <tr><td><strong><?= htmlspecialchars($a['full_name']) ?></strong><br><small><?= htmlspecialchars($a['staff_id']) ?></small></td><td><?= htmlspecialchars($a['department'] ?? '—') ?></td><td><span class="badge <?= $a['status']==='Present'?'bg-success':($a['status']==='Absent'?'bg-danger':'bg-warning text-dark') ?>"><?= htmlspecialchars($a['status']) ?></span></td><td><?= htmlspecialchars($a['check_in'] ?? '—') ?></td><td><?= htmlspecialchars($a['check_out'] ?? '—') ?></td><td><?= htmlspecialchars($a['source'] ?? '—') ?></td><td><?= htmlspecialchars($a['notes'] ?? '') ?></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- PAYROLL SUPPORT -->
+  <section id="payroll" class="section-card">
+    <h5><i class="fas fa-money-check-alt me-2"></i>Payroll Support & Validation</h5>
+    <?php if(empty($payroll_inputs)): ?>
+    <p class="text-muted small"><i class="fas fa-check-circle text-success me-1"></i>No pending payroll inputs.</p>
+    <?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Staff</th><th>Department</th><th>Payroll Month</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Overtime</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <?php foreach($payroll_inputs as $p): ?>
+      <tr><td><strong><?= htmlspecialchars($p['full_name']) ?></strong></td><td><?= htmlspecialchars($p['department'] ?? '—') ?></td><td><?= $p['payroll_month'] ? date('M Y',strtotime($p['payroll_month'])) : '—' ?></td><td><?= number_format($p['basic_pay'] ?? 0,0) ?></td><td><?= number_format($p['allowances'] ?? 0,0) ?></td><td><?= number_format($p['deductions'] ?? 0,0) ?></td><td><?= number_format($p['overtime_amount'] ?? 0,0) ?></td><td><span class="badge bg-warning text-dark"><?= htmlspecialchars($p['validation_status']) ?></span></td><td><form method="POST" class="d-inline"><input type="hidden" name="action" value="validate_payroll"><input type="hidden" name="payroll_id" value="<?= $p['id'] ?>"><input type="hidden" name="validation_status" value="Validated"><button class="btn btn-sm btn-success py-0 px-2"><i class="fas fa-check"></i></button></form></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- PERFORMANCE -->
+  <section id="performance" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-chart-line me-2"></i>Performance Management</h5>
+      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#appraisalModal"><i class="fas fa-plus me-1"></i>Submit Appraisal</button>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM performance_appraisals WHERE appraisal_period=YEAR(CURDATE())") ?></div><small>Appraisals this year</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM performance_appraisals WHERE promotion_recommendation='Yes'") ?></div><small>Promotion recommendations</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM performance_appraisals WHERE status='Submitted'") ?></div><small>Submitted for review</small></div></div>
+    </div>
+  </section>
+
+  <!-- TRAINING & COMPLIANCE -->
+  <section id="training" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-graduation-cap me-2"></i>Training, CPD & Compliance</h5>
+      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#trainingModal"><i class="fas fa-plus me-1"></i>Add Training</button>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM trainings WHERE status='Completed'") ?></div><small>Completed trainings</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold text-danger"><?= $expiring_licenses ?></div><small>Licenses expiring soon</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM professional_licenses WHERE status='Expired'") ?></div><small>Expired licenses</small></div></div>
+    </div>
+    <?php if(!empty($expiring_licenses_list)): ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Staff</th><th>Department</th><th>License</th><th>Number</th><th>Expiry</th></tr></thead><tbody>
+    <?php foreach($expiring_licenses_list as $l): ?>
+      <tr><td><strong><?= htmlspecialchars($l['full_name']) ?></strong></td><td><?= htmlspecialchars($l['department'] ?? '—') ?></td><td><?= htmlspecialchars($l['license_type']) ?></td><td><?= htmlspecialchars($l['license_number'] ?? '—') ?></td><td><span class="badge bg-danger"><?= date('d M Y',strtotime($l['expiry_date'])) ?></span></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- DISCIPLINE -->
+  <section id="discipline" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-gavel me-2"></i>Disciplinary & Conduct Records</h5>
+      <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#incidentModal"><i class="fas fa-plus me-1"></i>Report Incident</button>
+    </div>
+    <?php
+    $incident_list = [];
+    $r = $sconn->query("SELECT dr.*,s.full_name,s.department FROM disciplinary_records dr JOIN staff s ON dr.staff_id=s.staff_id ORDER BY dr.created_at DESC LIMIT 12");
+    if($r) while($row=$r->fetch_assoc()) $incident_list[]=$row;
+    ?>
+    <?php if(empty($incident_list)): ?>
+    <p class="text-muted small">No disciplinary records found.</p>
+    <?php else: ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Staff</th><th>Date</th><th>Type</th><th>Status</th><th>Description</th></tr></thead><tbody>
+    <?php foreach($incident_list as $i): ?>
+      <tr><td><strong><?= htmlspecialchars($i['full_name']) ?></strong></td><td><?= date('d M Y',strtotime($i['incident_date'])) ?></td><td><?= htmlspecialchars($i['incident_type'] ?? '—') ?></td><td><span class="badge bg-warning text-dark"><?= htmlspecialchars($i['status']) ?></span></td><td><?= htmlspecialchars(substr($i['description'] ?? '',0,90)) ?></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- CONTRACTS -->
+  <section id="contracts" class="section-card">
+    <h5><i class="fas fa-file-contract me-2"></i>Contract & Compliance Management</h5>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold text-danger"><?= $expiring_contracts ?></div><small>Contracts expiring soon</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM staff_profiles") ?></div><small>Profiles with next of kin</small></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= hrq($sconn,"SELECT COUNT(*) v FROM staff_documents") ?></div><small>Uploaded documents</small></div></div>
+    </div>
+    <?php if(!empty($expiring_contracts_list)): ?>
+    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Staff</th><th>Department</th><th>Type</th><th>End Date</th><th>Status</th></tr></thead><tbody>
+    <?php foreach($expiring_contracts_list as $c): ?>
+      <tr><td><strong><?= htmlspecialchars($c['full_name']) ?></strong></td><td><?= htmlspecialchars($c['department'] ?? '—') ?></td><td><?= htmlspecialchars($c['contract_type'] ?? '—') ?></td><td><?= date('d M Y',strtotime($c['end_date'])) ?></td><td><span class="badge bg-warning text-dark"><?= htmlspecialchars($c['status']) ?></span></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </section>
+
+  <!-- COMMUNICATIONS -->
+  <section id="communications" class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5><i class="fas fa-bullhorn me-2"></i>Communication System</h5>
+      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#memoModal"><i class="fas fa-plus me-1"></i>Send Memo</button>
+    </div>
+    <?php if(empty($recent_memos)): ?>
+    <p class="text-muted small">No HR announcements yet.</p>
+    <?php else: ?>
+    <div class="list-group">
+    <?php foreach($recent_memos as $m): ?>
+      <div class="list-group-item"><div class="d-flex justify-content-between"><strong><?= htmlspecialchars($m['title']) ?></strong><small><?= date('d M Y H:i',strtotime($m['created_at'])) ?></small></div><small class="text-muted"><?= htmlspecialchars($m['audience']) ?></small><p class="mb-0 mt-1"><?= nl2br(htmlspecialchars($m['body'])) ?></p></div>
+    <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="reports" class="section-card">
+    <h5><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h5>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $total_staff ?></div><small>Total active staff</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= count($dept_stats) ?></div><small>Departments reporting</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold">—</div><small>Female staff</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold">—</div><small>Male staff</small></div></div>
+    </div>
+  </section>
+
   <!-- DEPARTMENT REQUESTS -->
   <section id="dept-requests" class="section-card">
     <h5><i class="fas fa-inbox me-2"></i>Department Requests to HR (<?= count($dept_requests) ?>)</h5>
@@ -429,6 +689,105 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
   </section>
 </div>
 
+<!-- ATTENDANCE MODAL -->
+<div class="modal fade" id="attendanceModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="record_attendance">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Record Staff Attendance</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label">Staff ID</label><input type="text" name="staff_id" class="form-control" placeholder="STF-..." required></div>
+          <div class="col-md-6"><label class="form-label">Date</label><input type="date" name="attendance_date" class="form-control" value="<?= date('Y-m-d') ?>"></div>
+          <div class="col-md-6"><label class="form-label">Status</label><select name="attendance_status" class="form-select"><option>Present</option><option>Absent</option><option>Late</option><option>Leave</option><option>Duty</option><option>Half Day</option></select></div>
+          <div class="col-md-6"><label class="form-label">Source</label><select name="attendance_source" class="form-select"><option>Manual</option><option>Biometric</option><option>Roster</option></select></div>
+          <div class="col-12"><label class="form-label">Notes</label><textarea name="attendance_notes" class="form-control" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Attendance</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- APPRAISAL MODAL -->
+<div class="modal fade" id="appraisalModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="submit_appraisal">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Submit Staff Appraisal</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Staff ID</label><input type="text" name="staff_id" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">Period</label><input type="text" name="appraisal_period" class="form-control" value="<?= date('Y') ?>"></div>
+          <div class="col-md-3"><label class="form-label">Score</label><input type="number" name="overall_score" class="form-control" min="0" max="100" step="0.1" value="0"></div>
+          <div class="col-md-4"><label class="form-label">Rating</label><select name="rating" class="form-select"><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+          <div class="col-md-4"><label class="form-label">Promotion</label><select name="promotion_recommendation" class="form-select"><option>No</option><option>Consider</option><option>Yes</option></select></div>
+          <div class="col-12"><label class="form-label">Supervisor Comments</label><textarea name="supervisor_comments" class="form-control" rows="4"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Submit</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- TRAINING MODAL -->
+<div class="modal fade" id="trainingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="record_training">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Record Training / CPD</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label">Staff ID</label><input type="text" name="staff_id" class="form-control" required></div>
+          <div class="col-12"><label class="form-label">Training Title</label><input type="text" name="training_title" class="form-control" required></div>
+          <div class="col-md-6"><label class="form-label">Type</label><select name="training_type" class="form-select"><option>CPD</option><option>Workshop</option><option>Seminar</option><option>License Renewal</option><option>Scholarship</option><option>Other</option></select></div>
+          <div class="col-md-3"><label class="form-label">Start</label><input type="date" name="training_start" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">End</label><input type="date" name="training_end" class="form-control"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Training</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- INCIDENT MODAL -->
+<div class="modal fade" id="incidentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="report_incident">
+      <div class="modal-header bg-danger text-white"><h5 class="modal-title">Report Staff Incident</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Staff ID</label><input type="text" name="staff_id" class="form-control" required></div>
+          <div class="col-md-6"><label class="form-label">Incident Date</label><input type="date" name="incident_date" class="form-control" value="<?= date('Y-m-d') ?>"></div>
+          <div class="col-md-6"><label class="form-label">Incident Type</label><input type="text" name="incident_type" class="form-control" placeholder="Conduct"></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea name="incident_description" class="form-control" rows="4" required></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Record Incident</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- MEMO MODAL -->
+<div class="modal fade" id="memoModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="action" value="send_memo">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Send HR Memo / Announcement</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label">Title</label><input type="text" name="memo_title" class="form-control" required></div>
+          <div class="col-md-4"><label class="form-label">Audience</label><select name="memo_audience" class="form-select"><option>All Staff</option><option>Department</option><option>Role</option><option>Individual</option></select></div>
+          <div class="col-md-8"><label class="form-label">Target</label><input type="text" name="memo_target" class="form-control" placeholder="Department, role or staff ID"></div>
+          <div class="col-12"><label class="form-label">Message</label><textarea name="memo_body" class="form-control" rows="5" required></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Publish Memo</button></div>
+    </form>
+  </div>
+</div>
+
 <!-- ADD STAFF MODAL -->
 <div class="modal fade" id="addStaffModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
@@ -456,8 +815,16 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
               <?php endwhile; ?>
             </select>
           </div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Hire Date</label><input type="date" name="hire_date" class="form-control" value="<?= date('Y-m-d') ?>"></div>
-          <div class="col-12"><div class="alert alert-info py-2 mb-0 small"><i class="fas fa-info-circle me-1"></i>Default password will be <strong>isnm@2025</strong>. Staff must change it on first login.</div></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Salary Grade</label><input type="text" name="salary_grade" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Contract Type</label><select name="contract_type" class="form-select"><option>Contract</option><option>Permanent</option><option>Temporary</option><option>Internship</option><option>Part Time</option></select></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Hire Date</label><input type="date" name="hire_date" class="form-control" value="<?= date('Y-m-d') ?>"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Contract Start</label><input type="date" name="contract_start" class="form-control" value="<?= date('Y-m-d') ?>"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Contract End</label><input type="date" name="contract_end" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Next of Kin Name</label><input type="text" name="next_of_kin_name" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Next of Kin Relationship</label><input type="text" name="next_of_kin_relationship" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Next of Kin Phone</label><input type="text" name="next_of_kin_phone" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Next of Kin Email</label><input type="email" name="next_of_kin_email" class="form-control"></div>
+          <div class="col-12"><div class="alert alert-info py-2 mb-0 small"><i class="fas fa-info-circle me-1"></i>Default password will be issued through HR policy. Staff must change it on first login.</div></div>
         </div>
       </div>
       <div class="modal-footer">

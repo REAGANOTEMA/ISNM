@@ -481,12 +481,9 @@ class AuthenticationService {
                 LEFT JOIN staff_roles sr ON s.role_id = sr.id
                 WHERE s.email = ? AND (LOWER(s.status) = 'active' OR s.status IS NULL)";
         
-        error_log("DEBUG: Executing query: $sql with email: $email");
-        
         $stmt = $conn->prepare($sql);
         if ($stmt === false) {
-            error_log('authenticateStaff prepare failed: ' . $conn->error . ' -- SQL: ' . $sql);
-            // record failed attempt conservatively
+            error_log('authenticateStaff prepare failed: ' . $conn->error);
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
@@ -513,18 +510,13 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
-        error_log("DEBUG: Found " . $result->num_rows . " users");
-
         if ($result->num_rows === 0) {
-            error_log("DEBUG: No user found, recording failed attempt");
             $this->recordStaffFailedAttempt($email);
             $stmt->close();
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
         
         $staff = $result->fetch_assoc();
-        error_log("DEBUG: User found - ID: " . $staff['id'] . ", Role: " . $staff['role_name'] . ", Status: " . $staff['status']);
-        error_log("DEBUG: Password hash in DB: " . substr($staff['password'], 0, 20) . "...");
         
         // Verify password - allow both default password and hashed passwords
         $defaultPassword = 'staff@123';
@@ -544,12 +536,9 @@ class AuthenticationService {
         }
         
         if (!$passwordValid) {
-            error_log("DEBUG: Password verification failed");
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
-        
-        error_log("DEBUG: Authentication successful");
         
         // Reset failed attempts on successful login
         $this->resetStaffFailedAttempts($staff['id']);

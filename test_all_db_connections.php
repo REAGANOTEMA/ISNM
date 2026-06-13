@@ -1,25 +1,30 @@
 <?php
-// Test students database
-try {
-    $conn = new mysqli('localhost', 'igangaschoolofl_students_db', 'hbkKdmMHUfHTHuxWKPRf', 'igangaschoolofl_students_db');
-    if ($conn->connect_error) {
-        throw new Exception($conn->connect_error);
-    }
-    echo 'Students DB connection successful: ' . $conn->host_info . "\n";
-    $conn->close();
-} catch (Exception $e) {
-    echo 'Students DB connection failed: ' . $e->getMessage() . "\n";
-}
+require_once __DIR__ . '/config/database.php';
 
-// Test website database
-try {
-    $conn = new mysqli('localhost', 'igangaschoolofl_website_db', 'AaCH75gXpekcFQj5wPZn', 'igangaschoolofl_website_db');
-    if ($conn->connect_error) {
-        throw new Exception($conn->connect_error);
+header('Content-Type: text/plain');
+
+$tests = [
+    'students' => getStudentsConnection(),
+    'staff' => getStaffConnection(),
+    'website' => getWebsiteConnection(),
+    'ict' => getICTConnection(),
+];
+
+foreach ($tests as $name => $conn) {
+    echo strtoupper($name) . " DB connection ";
+    if (!$conn) {
+        echo "failed\n";
+        continue;
     }
-    echo 'Website DB connection successful: ' . $conn->host_info . "\n";
+
+    $result = $conn->query('SELECT 1');
+    if ($result) {
+        echo "successful: " . $conn->host_info . "\n";
+        $result->free();
+    } else {
+        echo "failed: " . $conn->error . "\n";
+    }
+
     $conn->close();
-} catch (Exception $e) {
-    echo 'Website DB connection failed: ' . $e->getMessage() . "\n";
 }
 ?>

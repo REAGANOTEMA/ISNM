@@ -1,0 +1,14 @@
+<Files ".env">
+    Require all denied
+</Files>
+
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.env">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

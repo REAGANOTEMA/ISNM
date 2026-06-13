@@ -8,7 +8,7 @@ require_once 'config/database.php';
 // But note: the config/database.php uses empty password. Let's override for testing.
 $host = '127.0.0.1';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $db = ''; // We'll test without selecting a database first
 
 echo "Testing PHP mysqli connection with password...<br>";

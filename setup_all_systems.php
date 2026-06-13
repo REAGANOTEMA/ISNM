@@ -6,7 +6,7 @@
 
 $host = 'localhost';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $port = 3306;
 
 // Create all databases

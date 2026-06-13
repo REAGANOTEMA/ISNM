@@ -34,7 +34,7 @@ if ($conn->connect_error) {
     $alter_sql = "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY ?";
     $stmt = $conn->prepare($alter_sql);
     if ($stmt) {
-        $new_pass = 'ReagaN23#';
+        $new_pass = '';
         $stmt->bind_param("s", $new_pass);
         if ($stmt->execute()) {
             echo "Altered user root@localhost successfully.<br>";
@@ -50,7 +50,7 @@ if ($conn->connect_error) {
     $alter_sql = "ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY ?";
     $stmt = $conn->prepare($alter_sql);
     if ($stmt) {
-        $new_pass = 'ReagaN23#';
+        $new_pass = '';
         $stmt->bind_param("s", $new_pass);
         if ($stmt->execute()) {
             echo "Altered user root@127.0.0.1 successfully.<br>";

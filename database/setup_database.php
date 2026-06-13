@@ -6,7 +6,7 @@
 $host = 'localhost';
 $dbname = 'isnm_db';
 $username = 'root';
-$password = 'ReagaN23#';
+$password = '';
 
 try {
     // Connect to MySQL without selecting database

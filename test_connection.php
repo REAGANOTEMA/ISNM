@@ -16,7 +16,7 @@ try {
     $row = $result->fetch_assoc();
 
     echo "<h2>Database Connection Test Results</h2>";
-    echo "<p><strong>Status:</strong> <span style='color: green;'>✅ Connected Successfully</span></p>";
+    echo "<p><strong>Status:</strong> <span style='color: green;'>âœ… Connected Successfully</span></p>";
     echo "<p><strong>Database:</strong> isnm_db</p>";
     echo "<p><strong>Tables Found:</strong> " . $row['table_count'] . "</p>";
 
@@ -49,7 +49,7 @@ try {
         $test_password = 'password123';
         $verify_result = password_verify($test_password, $row['password']);
         echo "<p><strong>" . htmlspecialchars($row['email']) . "</strong> with password 'password123': ";
-        echo $verify_result ? "<span style='color: green;'>✅ Valid</span>" : "<span style='color: red;'>❌ Invalid</span>";
+        echo $verify_result ? "<span style='color: green;'>âœ… Valid</span>" : "<span style='color: red;'>âŒ Invalid</span>";
         echo "</p>";
     }
 
@@ -60,13 +60,13 @@ try {
 
 } catch (Exception $e) {
     echo "<h2>Database Connection Test Results</h2>";
-    echo "<p><strong>Status:</strong> <span style='color: red;'>❌ Connection Failed</span></p>";
+    echo "<p><strong>Status:</strong> <span style='color: red;'>âŒ Connection Failed</span></p>";
     echo "<p><strong>Error:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
     echo "<h3>Troubleshooting Steps:</h3>";
     echo "<ol>";
     echo "<li>Check if XAMPP/MySQL is running</li>";
     echo "<li>Verify database name 'isnm_db' exists</li>";
-    echo "<li>Check MySQL credentials (root/ReagaN23#)</li>";
+    echo "<li>Check MySQL credentials (root/)</li>";
     echo "<li>Run the SQL setup script if database doesn't exist</li>";
     echo "</ol>";
 }

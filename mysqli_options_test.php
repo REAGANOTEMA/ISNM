@@ -35,14 +35,14 @@ if (!mysqli_real_connect($conn, $host, $user, $pass, $db, $port)) {
         $stmt = mysqli_prepare($conn, $sql);
         if ($stmt) {
             $new_pass = ''; // We are trying to set to empty? Actually, we want to keep the password as empty? 
-            // But the user in phpMyAdmin uses 'ReagaN23#'. Let's try to set the password to empty and then we can change it later.
+            // But the user in phpMyAdmin uses ''. Let's try to set the password to empty and then we can change it later.
             // However, we are connected with empty password, so let's try to set the authentication method and keep the empty password.
             // But note: the ALTER USER command requires the current password? Actually, no, we are changing the authentication method and setting a new password.
             // We want to set the authentication method to mysql_native_password and keep the password as empty? 
             // But the error says we are getting access denied with empty password, so maybe the password is not empty? 
-            // Let's check the phpMyAdmin config: it says password = 'ReagaN23#'
-            // So we should set the password to 'ReagaN23#' and the authentication method to mysql_native_password.
-            $new_pass = 'ReagaN23#';
+            // Let's check the phpMyAdmin config: it says password = ''
+            // So we should set the password to '' and the authentication method to mysql_native_password.
+            $new_pass = '';
             mysqli_stmt_bind_param($stmt, "s", $new_pass);
             if (mysqli_stmt_execute($stmt)) {
                 echo "Altered user '$user'@'$h' successfully.<br>";

@@ -103,6 +103,22 @@ $filterOptions = $dataLoader->getFilterOptions();
     </div>
 </div>
 
+<?php
+$stats = $dataLoader->getStatistics();
+$fileSummary = $stats['excel_file_summary'] ?? [];
+?>
+<div class="small text-muted mb-2">
+  <i class="fas fa-database me-1"></i>
+  Searching <?php echo (int) $stats['total_students']; ?> student records from <?php echo (int) $stats['data_files']; ?> Excel file(s).
+</div>
+<?php if (!empty($fileSummary)): ?>
+<div class="small mb-3">
+  <?php foreach ($fileSummary as $file): ?>
+    <span class="badge bg-light text-dark me-1 mb-1"><?= htmlspecialchars($file['name']) ?> (<?= (int) $file['students'] ?>)</span>
+  <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
 <!-- Student Results -->
 <?php if (!empty($searchTerm) || !empty(array_filter($filters))): ?>
 <div class="card">
@@ -126,9 +142,9 @@ $filterOptions = $dataLoader->getFilterOptions();
                             <th>Program</th>
                             <th>Level</th>
                             <th>Set</th>
-                            <th>Gender</th>
-                            <th>Phone</th>
+                            <th>Source File</th>
                             <th>Actions</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -141,6 +157,7 @@ $filterOptions = $dataLoader->getFilterOptions();
                                 <td><?php echo htmlspecialchars($student['program']); ?></td>
                                 <td><?php echo htmlspecialchars($student['level']); ?></td>
                                 <td><?php echo htmlspecialchars($student['set']); ?></td>
+                                <td><small class="text-muted"><?php echo htmlspecialchars($student['source_file'] ?? ''); ?></small></td>
                                 <td>
                                     <span class="badge bg-<?php echo strtolower($student['gender']) === 'male' ? 'primary' : 'danger'; ?>">
                                         <?php echo htmlspecialchars($student['gender']); ?>

@@ -2,7 +2,7 @@
 // Test connection using phpMyAdmin settings
 $host = '127.0.0.1';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $port = 3307; // from my.ini
 
 echo "Testing connection to {$host}:{$port} with user {$user} and password from phpMyAdmin...<br>";

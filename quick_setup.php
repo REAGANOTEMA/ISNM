@@ -3,7 +3,7 @@
 $host = 'localhost';
 $dbname = 'isnm_db';
 $username = 'root';
-$password = 'ReagaN23#';
+$password = '';
 
 try {
     $conn = new mysqli($host, $username, $password);

@@ -1,50 +1,146 @@
 <?php
 /**
- * Database Configuration for ISNM Student Management System
+ * ISNM database configuration.
+ * Production credentials are loaded from .env and should not be committed.
  */
 
-/**
- * Students Database Connection
- * Hostname: localhost
- * Database: igangaschoolofl_students_db
- * Username: igangaschoolofl_students_db
- * Password: hbkKdmMHUfHTHuxWKPRf
- */
-// ── Local XAMPP credentials ──────────────────────────────────────────────────
-define('DB_HOST',           '127.0.0.1');
-define('DB_PORT',           3307);
-define('DB_CHARSET',        'utf8mb4');
-define('STUDENTS_DB_NAME',  'igangaschoolofl_students_db');
-define('STUDENTS_DB_USER',  'root');
-define('STUDENTS_DB_PASS',  '');
+if (!function_exists('isnm_env')) {
+    function isnm_env(string $key, $default = null) {
+        $value = getenv($key);
+        if ($value === false && isset($_ENV[$key])) {
+            $value = $_ENV[$key];
+        }
+        if ($value === false && isset($_SERVER[$key])) {
+            $value = $_SERVER[$key];
+        }
+        return $value === false ? $default : $value;
+    }
+}
 
-define('STAFF_DB_HOST',    '127.0.0.1');
-define('STAFF_DB_USER',    'root');
-define('STAFF_DB_PASS',    '');
-define('STAFF_DB_PORT',    3307);
-define('STAFF_DB_NAME',    'igangaschoolofl_staffs_db');
-define('STAFF_DB_CHARSET', 'utf8mb4');
+if (!function_exists('isnm_load_env')) {
+    function isnm_load_env(string $path): void {
+        if (!is_file($path)) {
+            return;
+        }
 
-define('WEBSITE_DB_HOST',    '127.0.0.1');
-define('WEBSITE_DB_USER',    'root');
-define('WEBSITE_DB_PASS',    '');
-define('WEBSITE_DB_PORT',    3307);
-define('WEBSITE_DB_NAME',    'igangaschoolofl_website_db');
-define('WEBSITE_DB_CHARSET', 'utf8mb4');
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return;
+        }
 
-define('ICT_DB_HOST',    '127.0.0.1');
-define('ICT_DB_USER',    'root');
-define('ICT_DB_PASS',    '');
-define('ICT_DB_PORT',    3307);
-define('ICT_DB_NAME',    'igangaschoolofl_ict');
-define('ICT_DB_CHARSET', 'utf8mb4');
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0) {
+                continue;
+            }
+
+            [$key, $value] = array_pad(explode('=', $line, 2), 2, '');
+            $key = trim($key);
+            $value = trim($value);
+
+            if ($value !== '' && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) {
+                $value = substr($value, 1, -1);
+            }
+
+            if ($key !== '') {
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
+                putenv($key . '=' . $value);
+            }
+        }
+    }
+}
+
+isnm_load_env(__DIR__ . '/../.env');
+
+if (!defined('DB_HOST')) {
+    define('DB_HOST', isnm_env('DB_HOST', isnm_env('STUDENTS_DB_HOST', 'localhost')));
+}
+if (!defined('DB_PORT')) {
+    define('DB_PORT', (int) isnm_env('DB_PORT', isnm_env('STUDENTS_DB_PORT', 3306)));
+}
+if (!defined('DB_CHARSET')) {
+    define('DB_CHARSET', isnm_env('DB_CHARSET', 'utf8mb4'));
+}
+if (!defined('STUDENTS_DB_HOST')) {
+    define('STUDENTS_DB_HOST', isnm_env('STUDENTS_DB_HOST', DB_HOST));
+}
+if (!defined('STUDENTS_DB_PORT')) {
+    define('STUDENTS_DB_PORT', (int) isnm_env('STUDENTS_DB_PORT', DB_PORT));
+}
+if (!defined('STUDENTS_DB_NAME')) {
+    define('STUDENTS_DB_NAME', isnm_env('STUDENTS_DB_NAME', 'igangaschoolofl_students_db'));
+}
+if (!defined('STUDENTS_DB_USER')) {
+    define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', 'igangaschoolofl_students_db'));
+}
+if (!defined('STUDENTS_DB_PASS')) {
+    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
+}
+
+if (!defined('STAFF_DB_HOST')) {
+    define('STAFF_DB_HOST', isnm_env('STAFF_DB_HOST', DB_HOST));
+}
+if (!defined('STAFF_DB_PORT')) {
+    define('STAFF_DB_PORT', (int) isnm_env('STAFF_DB_PORT', DB_PORT));
+}
+if (!defined('STAFF_DB_NAME')) {
+    define('STAFF_DB_NAME', isnm_env('STAFF_DB_NAME', 'igangaschoolofl_staffs_db'));
+}
+if (!defined('STAFF_DB_USER')) {
+    define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', 'igangaschoolofl_staffs_db'));
+}
+if (!defined('STAFF_DB_PASS')) {
+    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', ''));
+}
+if (!defined('STAFF_DB_CHARSET')) {
+    define('STAFF_DB_CHARSET', isnm_env('STAFF_DB_CHARSET', DB_CHARSET));
+}
+
+if (!defined('WEBSITE_DB_HOST')) {
+    define('WEBSITE_DB_HOST', isnm_env('WEBSITE_DB_HOST', DB_HOST));
+}
+if (!defined('WEBSITE_DB_PORT')) {
+    define('WEBSITE_DB_PORT', (int) isnm_env('WEBSITE_DB_PORT', DB_PORT));
+}
+if (!defined('WEBSITE_DB_NAME')) {
+    define('WEBSITE_DB_NAME', isnm_env('WEBSITE_DB_NAME', 'igangaschoolofl_website_db'));
+}
+if (!defined('WEBSITE_DB_USER')) {
+    define('WEBSITE_DB_USER', isnm_env('WEBSITE_DB_USER', 'igangaschoolofl_website_db'));
+}
+if (!defined('WEBSITE_DB_PASS')) {
+    define('WEBSITE_DB_PASS', isnm_env('WEBSITE_DB_PASS', ''));
+}
+if (!defined('WEBSITE_DB_CHARSET')) {
+    define('WEBSITE_DB_CHARSET', isnm_env('WEBSITE_DB_CHARSET', DB_CHARSET));
+}
+
+if (!defined('ICT_DB_HOST')) {
+    define('ICT_DB_HOST', isnm_env('ICT_DB_HOST', DB_HOST));
+}
+if (!defined('ICT_DB_PORT')) {
+    define('ICT_DB_PORT', (int) isnm_env('ICT_DB_PORT', DB_PORT));
+}
+if (!defined('ICT_DB_NAME')) {
+    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict'));
+}
+if (!defined('ICT_DB_USER')) {
+    define('ICT_DB_USER', isnm_env('ICT_DB_USER', 'igangaschoolofl_ict'));
+}
+if (!defined('ICT_DB_PASS')) {
+    define('ICT_DB_PASS', isnm_env('ICT_DB_PASS', ''));
+}
+if (!defined('ICT_DB_CHARSET')) {
+    define('ICT_DB_CHARSET', isnm_env('ICT_DB_CHARSET', DB_CHARSET));
+}
 
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
         $conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
         if ($conn->connect_error) {
-            error_log("ICT DB Error: " . $conn->connect_error);
+            error_log('ICT DB Error: ' . $conn->connect_error);
             return null;
         }
         $conn->set_charset(ICT_DB_CHARSET);
@@ -52,15 +148,12 @@ if (!function_exists('getICTConnection')) {
     }
 }
 
-/**
- * Legacy compatibility functions with conflict protection
- */
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
-        $conn = new mysqli(DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, DB_PORT);
+        $conn = new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
         if ($conn->connect_error) {
-            error_log("Students DB Error: " . $conn->connect_error);
+            error_log('Students DB Error: ' . $conn->connect_error);
             return null;
         }
         $conn->set_charset(DB_CHARSET);
@@ -73,7 +166,7 @@ if (!function_exists('getStaffConnection')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
         if ($conn->connect_error) {
-            error_log("Staff DB Error: " . $conn->connect_error);
+            error_log('Staff DB Error: ' . $conn->connect_error);
             return null;
         }
         $conn->set_charset(STAFF_DB_CHARSET);
@@ -86,7 +179,7 @@ if (!function_exists('getWebsiteConnection')) {
         mysqli_report(MYSQLI_REPORT_OFF);
         $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
         if ($conn->connect_error) {
-            error_log("Website DB Error: " . $conn->connect_error);
+            error_log('Website DB Error: ' . $conn->connect_error);
             return null;
         }
         $conn->set_charset(WEBSITE_DB_CHARSET);
@@ -95,14 +188,12 @@ if (!function_exists('getWebsiteConnection')) {
 }
 
 if (!function_exists('getConnection')) {
-    // Default connection — students_db (legacy name kept for compatibility)
     function getConnection() {
         return getStudentsConnection();
     }
 }
 
 if (!function_exists('closeConnection')) {
-    // Close database connection
     function closeConnection($conn) {
         if ($conn) {
             $conn->close();
@@ -111,25 +202,24 @@ if (!function_exists('closeConnection')) {
 }
 
 if (!function_exists('executePrepared')) {
-    // Execute prepared statement safely
     function executePrepared($conn, $query, $types, $params) {
         try {
             $stmt = $conn->prepare($query);
             if (!$stmt) {
-                throw new Exception("Prepare failed: " . $conn->error);
+                throw new Exception('Prepare failed: ' . $conn->error);
             }
-            
+
             if (!empty($params)) {
                 $stmt->bind_param($types, ...$params);
             }
-            
+
             if (!$stmt->execute()) {
-                throw new Exception("Execute failed: " . $stmt->error);
+                throw new Exception('Execute failed: ' . $stmt->error);
             }
-            
+
             return $stmt;
         } catch (Exception $e) {
-            error_log("Query Error: " . $e->getMessage());
+            error_log('Query Error: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -137,7 +227,6 @@ if (!function_exists('executePrepared')) {
 
 if (!function_exists('validateIndexNumber')) {
     function validateIndexNumber($index_number) {
-        // Allow various ISNM formats: U001/..., JUL24/..., STU...
         if (empty($index_number)) return false;
         return strlen($index_number) >= 5;
     }
@@ -146,73 +235,65 @@ if (!function_exists('validateIndexNumber')) {
 if (!function_exists('studentExistsByIndexNumber')) {
     function studentExistsByIndexNumber($indexNumber) {
         $conn = getConnection();
-        
-        $stmt = $conn->prepare("SELECT id FROM users WHERE index_number = ? AND role = 'student'");
-        $stmt->bind_param("s", $indexNumber);
+        if (!$conn) return false;
+
+        $stmt = $conn->prepare('SELECT id FROM users WHERE index_number = ? AND role = ?');
+        if (!$stmt) return false;
+        $role = 'student';
+        $stmt->bind_param('ss', $indexNumber, $role);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        return $result->num_rows > 0;
+        $exists = $result && $result->num_rows > 0;
+        $stmt->close();
+
+        return $exists;
     }
 }
 
 if (!function_exists('userExistsByEmail')) {
     function userExistsByEmail($email) {
         $conn = getConnection();
-        
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
+        if (!$conn) return false;
+
+        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ?');
+        if (!$stmt) return false;
+        $stmt->bind_param('s', $email);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        return $result->num_rows > 0;
+        $exists = $result && $result->num_rows > 0;
+        $stmt->close();
+
+        return $exists;
     }
 }
 
-/**
- * Sanitize input to prevent SQL injection and XSS
- * @param string $input
- * @return string
- */
 if (!function_exists('sanitizeInput')) {
     function sanitizeInput($input) {
-        $input = trim($input);
+        $input = trim((string) $input);
         $input = stripslashes($input);
         $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
         return $input;
     }
 }
 
-/**
- * Validate email format
- * @param string $email
- * @return bool
- */
 if (!function_exists('validateEmail')) {
     function validateEmail($email) {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
 }
 
-/**
- * Validate phone number (Uganda format)
- * @param string $phone
- * @return bool
- */
 if (!function_exists('validatePhone')) {
     function validatePhone($phone) {
-        // Remove non-numeric characters
-        $clean_phone = preg_replace('/[^0-9]/', '', $phone);
-        
-        // Accept 9 or 10 digit local numbers, or 12 digit international
+        $clean_phone = preg_replace('/[^0-9]/', '', (string) $phone);
+
         if (strlen($clean_phone) === 10 && preg_match('/^0[7]\d{8}$/', $clean_phone)) {
-            return true; // Format: 0771234567
+            return true;
         } elseif (strlen($clean_phone) === 12 && preg_match('/^256[7]\d{8}$/', $clean_phone)) {
-            return true; // Format: 256771234567
+            return true;
         } elseif (strlen($clean_phone) === 9 && preg_match('/^7\d{8}$/', $clean_phone)) {
-            return true; // Format: 771234567
+            return true;
         }
-        
+
         return false;
     }
 }

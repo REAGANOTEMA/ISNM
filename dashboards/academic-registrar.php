@@ -189,6 +189,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include_once __DIR__.'/../includes/_favicon.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="dashboard-professional.css" rel="stylesheet">
+<link href="dashboard-mobile.css" rel="stylesheet">
 <style>
 :root{--primary:#2c5f8a;--accent:#1a9e6e;--sidebar-w:260px}
 body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}

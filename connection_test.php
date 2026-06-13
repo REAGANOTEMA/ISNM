@@ -19,9 +19,9 @@ if ($conn->connect_error) {
     $conn->close();
 }
 
-// Test connection with password 'ReagaN23#', 127.0.0.1, port 3307
-echo "<br>Testing connection with password 'ReagaN23#', 127.0.0.1:3307<br>";
-$conn = @new mysqli('127.0.0.1', 'root', 'ReagaN23#', '', 3307);
+// Test connection with password '', 127.0.0.1, port 3307
+echo "<br>Testing connection with password '', 127.0.0.1:3307<br>";
+$conn = @new mysqli('127.0.0.1', 'root', '', '', 3307);
 if ($conn->connect_error) {
     echo "Failed: " . $conn->connect_error . "<br>";
 } else {
@@ -29,9 +29,9 @@ if ($conn->connect_error) {
     $conn->close();
 }
 
-// Test connection with password 'ReagaN23#', localhost, port 3307
-echo "<br>Testing connection with password 'ReagaN23#', localhost:3307<br>";
-$conn = @new mysqli('localhost', 'root', 'ReagaN23#', '', 3307);
+// Test connection with password '', localhost, port 3307
+echo "<br>Testing connection with password '', localhost:3307<br>";
+$conn = @new mysqli('localhost', 'root', '', '', 3307);
 if ($conn->connect_error) {
     echo "Failed: " . $conn->connect_error . "<br>";
 } else {

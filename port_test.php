@@ -6,7 +6,7 @@
 $host = '127.0.0.1';
 $port = 3307;
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $db = '';
 
 echo "Testing connection to {$host}:{$port}...<br>";

@@ -5,7 +5,7 @@
 
 $host = '127.0.0.1';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 $port = 3307;
 $db = 'igangaschoolofl_staffs_db';
 

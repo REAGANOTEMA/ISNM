@@ -1,7 +1,7 @@
 <?php
 $socket = 'C:/xampp/mysql/mysql.sock';
 $user = 'root';
-$pass = 'ReagaN23#';
+$pass = '';
 echo 'Connecting via socket...<br>';
 $conn = @new mysqli(null, $user, $pass, '', null, $socket);
 if ($conn->connect_error) {

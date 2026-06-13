@@ -1,16 +1,10 @@
 <?php
-    $server = "localhost";
-    
-    $user = "igangaschoolofl_students_db";
-    $password = "hbkKdmMHUfHTHuxWKPRf";
-    $db = "igangaschoolofl_students_db";
-    
-    $conn = mysqli_connect($server, $user, $password, $db);
+require_once __DIR__ . '/../config/database.php';
 
-    if (!$conn) {
-        header('Location: ../errors/error.html');
-        exit();
-    }
-    
+$conn = getStudentsConnection();
 
+if (!$conn) {
+    header('Location: ../errors/error.html');
+    exit();
+}
 ?>
