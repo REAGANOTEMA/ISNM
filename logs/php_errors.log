@@ -257,3 +257,27 @@
 [12-Jun-2026 08:57:40 Africa/Kampala] Database connection error: Unknown database 'igangaschoolofl_ict'
 [12-Jun-2026 08:57:40 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Unknown database 'igangaschoolofl_ict'
 [12-Jun-2026 08:57:40 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[13-Jun-2026 07:52:59 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_staffs_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Connection test failed for igangaschoolofl_staffs_db: Access denied for user 'igangaschoolofl_staffs_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_students_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Connection test failed for igangaschoolofl_students_db: Access denied for user 'igangaschoolofl_students_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Connection test failed for igangaschoolofl_website_db: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: YES)
+[13-Jun-2026 07:52:59 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_staffs_db database
+[13-Jun-2026 07:52:59 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
+[13-Jun-2026 07:52:59 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
+[13-Jun-2026 07:52:59 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[13-Jun-2026 07:54:18 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_staffs_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Connection test failed for igangaschoolofl_staffs_db: Access denied for user 'igangaschoolofl_staffs_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_students_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Connection test failed for igangaschoolofl_students_db: Access denied for user 'igangaschoolofl_students_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Connection test failed for igangaschoolofl_website_db: Access denied for user 'igangaschoolofl_website_db'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Database connection error: Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Connection test failed for igangaschoolofl_ict: Access denied for user 'igangaschoolofl_ict'@'localhost' (using password: YES)
+[13-Jun-2026 07:54:18 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_staffs_db database
+[13-Jun-2026 07:54:18 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
+[13-Jun-2026 07:54:18 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
+[13-Jun-2026 07:54:18 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database

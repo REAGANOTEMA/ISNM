@@ -138,7 +138,7 @@ if (!defined('ICT_DB_CHARSET')) {
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
-        $conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
+        @$conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
         if ($conn->connect_error) {
             error_log('ICT DB Error: ' . $conn->connect_error);
             return null;
@@ -151,7 +151,7 @@ if (!function_exists('getICTConnection')) {
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
-        $conn = new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
+        @$conn = new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
         if ($conn->connect_error) {
             error_log('Students DB Error: ' . $conn->connect_error);
             return null;
@@ -164,7 +164,7 @@ if (!function_exists('getStudentsConnection')) {
 if (!function_exists('getStaffConnection')) {
     function getStaffConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
-        $conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
+        @$conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
         if ($conn->connect_error) {
             error_log('Staff DB Error: ' . $conn->connect_error);
             return null;
@@ -177,7 +177,7 @@ if (!function_exists('getStaffConnection')) {
 if (!function_exists('getWebsiteConnection')) {
     function getWebsiteConnection() {
         mysqli_report(MYSQLI_REPORT_OFF);
-        $conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
+        @$conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
         if ($conn->connect_error) {
             error_log('Website DB Error: ' . $conn->connect_error);
             return null;

@@ -35,13 +35,18 @@ function validateStudentLoginAccess() {
 /** Try unified-staff auth; return result array on success, null on failure. */
 function tryStaffAuth(string $email, string $password, AuthenticationService $auth_service) {
     $result = $auth_service->authenticateStaff($email, $password);
-    return $result['success'] ? $result : null;
+    if ($result['success']) return $result;
+    if (stripos($result['message'] ?? '', 'Database unavailable') !== false) return $result;
+    return null;
 }
 
 /** Try hr_users table auth; return result array on success, null on failure. */
 function tryHrAuth(string $email, string $password) {
     try {
         $conn = getStaffConnection();
+        if (!$conn) {
+            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
+        }
         $stmt = $conn->prepare(
             'SELECT id, email, password_hash, full_name, role, status
              FROM hr_users WHERE email = ? AND status = "active" LIMIT 1'
@@ -92,6 +97,9 @@ function tryHrAuth(string $email, string $password) {
 function tryBursarAuth(string $email, string $password) {
     try {
         $conn = getStudentsConnection();
+        if (!$conn) {
+            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
+        }
         $stmt = $conn->prepare(
             'SELECT id, email, password_hash, full_name, role, status
              FROM bursar_users WHERE email = ? AND status = "active" LIMIT 1'
@@ -211,7 +219,7 @@ switch ($action) {
             header('Location: ' . $dashboard);
             exit();
         } else {
-            $_SESSION['error'] = 'Invalid email or password.';
+            $_SESSION['error'] = ($result['message'] ?? 'Invalid email or password.');
             $redirectUrl = 'staff-login.php';
             $redirectPosition = $requested_position ?: ($_SESSION['requested_position'] ?? '');
             if ($redirectPosition !== '') {
