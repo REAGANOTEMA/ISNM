@@ -1,6 +1,6 @@
 <?php
 // ISNM Unified Database Connection System
-// Connects to all three databases: staffs_db, students_db, website_db
+// Connects to all four databases: staffs_db, students_db, website_db, ict
 
 class DatabaseConnection {
     private static $connections = [];
@@ -24,10 +24,10 @@ class DatabaseConnection {
                     'charset' => STAFF_DB_CHARSET,
                 ],
 'igangaschoolofl_students_db' => [
-                     'host' => DB_HOST,
+                     'host' => STUDENTS_DB_HOST,
                      'username' => STUDENTS_DB_USER,
                      'password' => STUDENTS_DB_PASS,
-                     'port' => DB_PORT,
+                     'port' => STUDENTS_DB_PORT,
                      'charset' => DB_CHARSET,
                  ],
                 'igangaschoolofl_website_db' => [

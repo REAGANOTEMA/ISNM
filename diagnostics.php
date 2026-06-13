@@ -45,9 +45,9 @@ echo '</table>';
 
 $required = [
     'staffs' => ['staff', 'staff_roles', 'staff_activity_log', 'staff_login_sessions'],
-    'students' => ['students', 'student_fees'],
-    'website' => ['website_pages', 'website_settings'],
-    'ict' => ['ict_equipment', 'computer_lab'],
+    'students' => ['students', 'bursar_users'],
+    'website' => ['pages'],
+    'ict' => ['lab_computers', 'lab_bookings', 'it_support_tickets'],
 ];
 
 echo '<h2>Required Tables Check</h2>';

@@ -77,6 +77,9 @@ if (!defined('STUDENTS_DB_USER')) {
 if (!defined('STUDENTS_DB_PASS')) {
     define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
 }
+if (!defined('STUDENTS_DB_CHARSET')) {
+    define('STUDENTS_DB_CHARSET', isnm_env('STUDENTS_DB_CHARSET', DB_CHARSET));
+}
 
 if (!defined('STAFF_DB_HOST')) {
     define('STAFF_DB_HOST', isnm_env('STAFF_DB_HOST', DB_HOST));
@@ -135,55 +138,50 @@ if (!defined('ICT_DB_CHARSET')) {
     define('ICT_DB_CHARSET', isnm_env('ICT_DB_CHARSET', DB_CHARSET));
 }
 
+if (!function_exists('isnm_mysqli_connect')) {
+    function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
+        mysqli_report(MYSQLI_REPORT_OFF);
+
+        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
+        $errors = [];
+
+        foreach ($ports as $tryPort) {
+            $conn = @new mysqli($host, $user, $pass, $db, (int) $tryPort);
+            if (!$conn->connect_error) {
+                $conn->set_charset($charset);
+                return $conn;
+            }
+
+            $errors[] = $tryPort . ': ' . $conn->connect_error;
+            $conn = null;
+        }
+
+        error_log($label . ' DB Error: ' . implode(' | ', $errors));
+        return null;
+    }
+}
+
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
-        mysqli_report(MYSQLI_REPORT_OFF);
-        @$conn = new mysqli(ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT);
-        if ($conn->connect_error) {
-            error_log('ICT DB Error: ' . $conn->connect_error);
-            return null;
-        }
-        $conn->set_charset(ICT_DB_CHARSET);
-        return $conn;
+        return isnm_mysqli_connect('ICT', ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT, ICT_DB_CHARSET);
     }
 }
 
 if (!function_exists('getStudentsConnection')) {
     function getStudentsConnection() {
-        mysqli_report(MYSQLI_REPORT_OFF);
-        @$conn = new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
-        if ($conn->connect_error) {
-            error_log('Students DB Error: ' . $conn->connect_error);
-            return null;
-        }
-        $conn->set_charset(DB_CHARSET);
-        return $conn;
+        return isnm_mysqli_connect('Students', STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT, STUDENTS_DB_CHARSET);
     }
 }
 
 if (!function_exists('getStaffConnection')) {
     function getStaffConnection() {
-        mysqli_report(MYSQLI_REPORT_OFF);
-        @$conn = new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
-        if ($conn->connect_error) {
-            error_log('Staff DB Error: ' . $conn->connect_error);
-            return null;
-        }
-        $conn->set_charset(STAFF_DB_CHARSET);
-        return $conn;
+        return isnm_mysqli_connect('Staff', STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT, STAFF_DB_CHARSET);
     }
 }
 
 if (!function_exists('getWebsiteConnection')) {
     function getWebsiteConnection() {
-        mysqli_report(MYSQLI_REPORT_OFF);
-        @$conn = new mysqli(WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT);
-        if ($conn->connect_error) {
-            error_log('Website DB Error: ' . $conn->connect_error);
-            return null;
-        }
-        $conn->set_charset(WEBSITE_DB_CHARSET);
-        return $conn;
+        return isnm_mysqli_connect('Website', WEBSITE_DB_HOST, WEBSITE_DB_USER, WEBSITE_DB_PASS, WEBSITE_DB_NAME, WEBSITE_DB_PORT, WEBSITE_DB_CHARSET);
     }
 }
 

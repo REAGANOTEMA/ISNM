@@ -5,14 +5,18 @@ require_once __DIR__ . '/config/database.php';
 $conn = getWebsiteConnection();
 
 $announcements = [];
-try {
-    $stmt = $conn->prepare("SELECT id, title, content, announcement_type, target_audience, priority, posted_by_name, posted_by_role, posted_date, expiry_date, attachment_path FROM announcements WHERE status = 'published' AND (expiry_date IS NULL OR expiry_date >= CURDATE()) ORDER BY priority DESC, posted_date DESC");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $announcements = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-} catch (Exception $e) {
-    error_log('Announcements fetch error: ' . $e->getMessage());
+if ($conn) {
+    try {
+        $stmt = $conn->prepare("SELECT id, title, content, announcement_type, target_audience, priority, posted_by_name, posted_by_role, posted_date, expiry_date, attachment_path FROM announcements WHERE status = 'published' AND (expiry_date IS NULL OR expiry_date >= CURDATE()) ORDER BY priority DESC, posted_date DESC");
+        if ($stmt) {
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $announcements = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+        }
+    } catch (Exception $e) {
+        error_log('Announcements fetch error: ' . $e->getMessage());
+    }
 }
 
 ?>

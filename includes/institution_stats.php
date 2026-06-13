@@ -21,9 +21,13 @@ if (!function_exists('getInstitutionOverviewStats')) {
 
         try {
             $staffConn = getStaffConnection();
-            $r = $staffConn->query("SELECT COUNT(*) AS c FROM staff WHERE status = 'Active'");
-            if ($r) {
-                $stats['total_staff'] = (int) ($r->fetch_assoc()['c'] ?? 0);
+            if ($staffConn) {
+                $r = $staffConn->query("SELECT COUNT(*) AS c FROM staff WHERE status = 'Active'");
+                if ($r) {
+                    $stats['total_staff'] = (int) ($r->fetch_assoc()['c'] ?? 0);
+                }
+            } else {
+                error_log('institution_stats staff: staff database connection unavailable');
             }
         } catch (Exception $e) {
             error_log('institution_stats staff: ' . $e->getMessage());
@@ -31,13 +35,17 @@ if (!function_exists('getInstitutionOverviewStats')) {
 
         try {
             $studentsConn = getStudentsConnection();
-            $tables = ['students', 'users'];
-            foreach ($tables as $table) {
-                $check = $studentsConn->query("SHOW TABLES LIKE '{$table}'");
-                if ($check && $check->num_rows > 0) {
-                    $r = $studentsConn->query("SELECT COUNT(*) AS c FROM `{$table}`");
-                    if ($r) {
-                        $stats['total_students_db'] += (int) ($r->fetch_assoc()['c'] ?? 0);
+            if (!$studentsConn) {
+                error_log('institution_stats students: students database connection unavailable');
+            } else {
+                $tables = ['students', 'users'];
+                foreach ($tables as $table) {
+                    $check = $studentsConn->query("SHOW TABLES LIKE '{$table}'");
+                    if ($check && $check->num_rows > 0) {
+                        $r = $studentsConn->query("SELECT COUNT(*) AS c FROM `{$table}`");
+                        if ($r) {
+                            $stats['total_students_db'] += (int) ($r->fetch_assoc()['c'] ?? 0);
+                        }
                     }
                 }
             }
@@ -58,27 +66,31 @@ if (!function_exists('getInstitutionOverviewStats')) {
 
         try {
             $websiteConn = getWebsiteConnection();
-            foreach (
-                [
-                    'website_pages' => 'pages',
-                    'website_posts' => 'posts',
-                    'website_applications' => 'applications',
-                ] as $key => $table
-            ) {
-                $check = $websiteConn->query("SHOW TABLES LIKE '{$table}'");
-                if ($check && $check->num_rows > 0) {
-                    $r = $websiteConn->query("SELECT COUNT(*) AS c FROM `{$table}`");
-                    if ($r) {
-                        $stats[$key] = (int) ($r->fetch_assoc()['c'] ?? 0);
+            if ($websiteConn) {
+                foreach (
+                    [
+                        'website_pages' => 'pages',
+                        'website_posts' => 'posts',
+                        'website_applications' => 'applications',
+                    ] as $key => $table
+                ) {
+                    $check = $websiteConn->query("SHOW TABLES LIKE '{$table}'");
+                    if ($check && $check->num_rows > 0) {
+                        $r = $websiteConn->query("SELECT COUNT(*) AS c FROM `{$table}`");
+                        if ($r) {
+                            $stats[$key] = (int) ($r->fetch_assoc()['c'] ?? 0);
+                        }
                     }
                 }
-            }
-            $check = $websiteConn->query("SHOW TABLES LIKE 'applications'");
-            if ($check && $check->num_rows > 0) {
-                $r = $websiteConn->query("SELECT COUNT(*) AS c FROM applications WHERE status IN ('Pending','Submitted','Under Review')");
-                if ($r) {
-                    $stats['pending_applications'] = (int) ($r->fetch_assoc()['c'] ?? 0);
+                $check = $websiteConn->query("SHOW TABLES LIKE 'applications'");
+                if ($check && $check->num_rows > 0) {
+                    $r = $websiteConn->query("SELECT COUNT(*) AS c FROM applications WHERE status IN ('Pending','Submitted','Under Review')");
+                    if ($r) {
+                        $stats['pending_applications'] = (int) ($r->fetch_assoc()['c'] ?? 0);
+                    }
                 }
+            } else {
+                error_log('institution_stats website: website database connection unavailable');
             }
         } catch (Exception $e) {
             error_log('institution_stats website: ' . $e->getMessage());

@@ -43,123 +43,124 @@ INSERT IGNORE INTO staff_roles (role_name, role_description, role_level, dashboa
 
 -- Computer Lab (ICT)
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('ICT001', 'ICT Department', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$YbvXcNKL.Sb66t6mR6m3lOrDoSaqKyB5.lnVjV55LwTlXHU3dc7Du', 'Director ICT', 'Information Communication Technology', (SELECT id FROM staff_roles WHERE role_name = 'Director ICT'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$YbvXcNKL.Sb66t6mR6m3lOrDoSaqKyB5.lnVjV55LwTlXHU3dc7Du', position = 'Director ICT', department = 'Information Communication Technology', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('ICT001', 'ICT Department', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', ''y$DMMHJfmRKhlq0p27/ESo1eSGDO5/9f/TZgk4.k2A3.7x9I2QpX.Tu', 'Director ICT', 'Information Communication Technology', (SELECT id FROM staff_roles WHERE role_name = 'Director ICT'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$DMMHJfmRKhlq0p27/ESo1eSGDO5/9f/TZgk4.k2A3.7x9I2QpX.Tu', position = 'Director ICT', department = 'Information Communication Technology', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Computer Director (Danny BICT)
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('ICT002', 'ICT Director', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', 'Director ICT', 'Information Technology', (SELECT id FROM staff_roles WHERE role_name = 'Director ICT'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', position = 'Director ICT', department = 'Information Technology', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('ICT002', 'ICT Director', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', ''y$Lytn/lu03eHWkq6BJ1U31.ZLR/04IPi.c7RczJT0OHIvHlE7vGhKi', 'Director ICT', 'Information Technology', (SELECT id FROM staff_roles WHERE role_name = 'Director ICT'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$Lytn/lu03eHWkq6BJ1U31.ZLR/04IPi.c7RczJT0OHIvHlE7vGhKi', position = 'Director ICT', department = 'Information Technology', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Director General
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', 'Director General', 'Executive Office', (SELECT id FROM staff_roles WHERE role_name = 'Director General'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', position = 'Director General', department = 'Executive Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', ''y$eiGSi0YZjyhpnlJZDIPjX.DPwGZyGtXtPkgsiYEpiffv4gZd87ugK', 'Director General', 'Executive Office', (SELECT id FROM staff_roles WHERE role_name = 'Director General'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$eiGSi0YZjyhpnlJZDIPjX.DPwGZyGtXtPkgsiYEpiffv4gZd87ugK', position = 'Director General', department = 'Executive Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- CEO
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', 'Chief Executive Officer', 'Executive Office', (SELECT id FROM staff_roles WHERE role_name = 'CEO'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'ceo@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', position = 'Chief Executive Officer', department = 'Executive Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', ''y$MlEwPe6dr4v6T1xrqVKt..Uot0x/K84/ezvyO7S.NBTALBYvuvSfe', 'Chief Executive Officer', 'Executive Office', (SELECT id FROM staff_roles WHERE role_name = 'CEO'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'ceo@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$MlEwPe6dr4v6T1xrqVKt..Uot0x/K84/ezvyO7S.NBTALBYvuvSfe', position = 'Chief Executive Officer', department = 'Executive Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Director Academics
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$yYblgV/22GUeIOFnbqx8fuPUEOW38WA0swzVwkyOJcZCvo25yhhcy', 'Director Academics', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Director Academics'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$yYblgV/22GUeIOFnbqx8fuPUEOW38WA0swzVwkyOJcZCvo25yhhcy', position = 'Director Academics', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', ''y$GIZKHiTHTjQUFrMvaPhg8O0UF0bQDa1ioooaN8idtY2mrHM/umDXC', 'Director Academics', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Director Academics'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$GIZKHiTHTjQUFrMvaPhg8O0UF0bQDa1ioooaN8idtY2mrHM/umDXC', position = 'Director Academics', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Director Finance
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$yYblgV/22GUeIOFnbqx8fuPUEOW38WA0swzVwkyOJcZCvo25yhhcy', 'Director Finance', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Director Finance'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'finance@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$yYblgV/22GUeIOFnbqx8fuPUEOW38WA0swzVwkyOJcZCvo25yhhcy', position = 'Director Finance', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', ''y$ahdRmP2iiZLwj0p7vA83guFL3QA0VF12selmxJ89eoniowhpsTez2', 'Director Finance', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Director Finance'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'finance@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$ahdRmP2iiZLwj0p7vA83guFL3QA0VF12selmxJ89eoniowhpsTez2', position = 'Director Finance', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- School Principal
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', 'School Principal', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'School Principal'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'principal@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', position = 'School Principal', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
-
+('SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', ''yxJd25DvGLAGCZnizad4.OJ0VzFcv0N.a22Lhgs1QrHQGmjQAkRrS', 'School Principal', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'School Principal'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'principal@igangaschoolofnursingandmidwifery.ac.ug', password = ''yxJd25DvGLAGCZnizad4.OJ0VzFcv0N.a22Lhgs1QrHQGmjQAkRrS', position = 'School Principal', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+ 
 -- Deputy Principal
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$pMIjA1T.3kUGmxKqjMW5mu1z5ph45dXcVGcEOFTfWmf2Y4lq8ubKq', 'Deputy Principal', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Deputy Principal'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$pMIjA1T.3kUGmxKqjMW5mu1z5ph45dXcVGcEOFTfWmf2Y4lq8ubKq', position = 'Deputy Principal', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', ''y$.P2.VeVT1xA5nL1f6pLtPuTOOqKrNGtzF1BbKCKCNmMu1VcWVP29G', 'Deputy Principal', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Deputy Principal'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$.P2.VeVT1xA5nL1f6pLtPuTOOqKrNGtzF1BbKCKCNmMu1VcWVP29G', position = 'Deputy Principal', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Academic Registrar
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', 'Academic Registrar', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Academic Registrar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', position = 'Academic Registrar', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', ''yVALUES
+('AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K'MFJKF9uZgHi86egqKJoHeXRS9s4i4USfVW.xvvyJwg7TaR6B/D7.', 'Academic Registrar', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Academic Registrar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', password = ''yON DUPLICATE KEY UPDATE email = 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K'MFJKF9uZgHi86egqKJoHeXRS9s4i4USfVW.xvvyJwg7TaR6B/D7.', position = 'Academic Registrar', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- HR Manager
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$XGx17byJLB81IDwlGX68Vu1Twdmp1k3I.rZv3jFazmpCmcF53C4TK', 'HR Manager', 'Human Resources', (SELECT id FROM staff_roles WHERE role_name = 'HR Manager'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$XGx17byJLB81IDwlGX68Vu1Twdmp1k3I.rZv3jFazmpCmcF53C4TK', position = 'HR Manager', department = 'Human Resources', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', ''y$F5AukHOfo738zDyQAD6ml.gzg1X7dRFwpHjEvKN15YcdMMA2RwECe', 'HR Manager', 'Human Resources', (SELECT id FROM staff_roles WHERE role_name = 'HR Manager'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$F5AukHOfo738zDyQAD6ml.gzg1X7dRFwpHjEvKN15YcdMMA2RwECe', position = 'HR Manager', department = 'Human Resources', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- School Secretary
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', 'School Secretary', 'Administrative Office', (SELECT id FROM staff_roles WHERE role_name = 'School Secretary'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'secretary@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$tjp9vRwJgHDx3y/pjsaGcOKvODnIuS5AacGKa8thS.xEqmZjqE.8K', position = 'School Secretary', department = 'Administrative Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', ''y$Uti21aFQR4BFiykX7gItnOLPiITWAidDYdoKx1mRUEvrmmOnILmvu', 'School Secretary', 'Administrative Office', (SELECT id FROM staff_roles WHERE role_name = 'School Secretary'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'secretary@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$Uti21aFQR4BFiykX7gItnOLPiITWAidDYdoKx1mRUEvrmmOnILmvu', position = 'School Secretary', department = 'Administrative Office', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- School Librarian
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', 'School Librarian', 'Library Services', (SELECT id FROM staff_roles WHERE role_name = 'School Librarian'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'library@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', position = 'School Librarian', department = 'Library Services', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', ''y$qusMuMofxGj9zvKH.8ZELew0iy6fInIvO9SdYW1RIdaRl.kLRby6C', 'School Librarian', 'Library Services', (SELECT id FROM staff_roles WHERE role_name = 'School Librarian'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'library@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$qusMuMofxGj9zvKH.8ZELew0iy6fInIvO9SdYW1RIdaRl.kLRby6C', position = 'School Librarian', department = 'Library Services', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Head Nursing
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', 'Head Nursing', 'Nursing Department', (SELECT id FROM staff_roles WHERE role_name = 'Head Nursing'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', position = 'Head Nursing', department = 'Nursing Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', ''y$oWr7NXab4WjcDfXzEVeYu.Fnx.guIVsYTtxCwvnMA18SNmx3fhmJC', 'Head Nursing', 'Nursing Department', (SELECT id FROM staff_roles WHERE role_name = 'Head Nursing'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$oWr7NXab4WjcDfXzEVeYu.Fnx.guIVsYTtxCwvnMA18SNmx3fhmJC', position = 'Head Nursing', department = 'Nursing Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Head Midwifery
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$1jwbAYVyvfaeNVGhVCszEuS96YrBMN510mox58.t.u/AyVThajqf.', 'Head Midwifery', 'Midwifery Department', (SELECT id FROM staff_roles WHERE role_name = 'Head Midwifery'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$1jwbAYVyvfaeNVGhVCszEuS96YrBMN510mox58.t.u/AyVThajqf.', position = 'Head Midwifery', department = 'Midwifery Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', ''y$fIuQ1u9j0CcI7vmqDvDY0.BSitSJvGAG4WZgu.5/uWPvDlR34H3wC', 'Head Midwifery', 'Midwifery Department', (SELECT id FROM staff_roles WHERE role_name = 'Head Midwifery'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$fIuQ1u9j0CcI7vmqDvDY0.BSitSJvGAG4WZgu.5/uWPvDlR34H3wC', position = 'Head Midwifery', department = 'Midwifery Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Lecturers
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', 'Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Lecturers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', position = 'Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', ''y$Chsg431DMWv1C/CA0kuKwOUBolMfAT3C8gXsYYmLb9ywuMUec9OQS', 'Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Lecturers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$Chsg431DMWv1C/CA0kuKwOUBolMfAT3C8gXsYYmLb9ywuMUec9OQS', position = 'Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Senior Lecturers
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', 'Senior Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Senior Lecturers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', position = 'Senior Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', ''y$bWrDY1uX.CDk7s/3emXmpOkJDJuJkKS0jNuy90Rfq6Z5etNOTP.Ou', 'Senior Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Senior Lecturers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$bWrDY1uX.CDk7s/3emXmpOkJDJuJkKS0jNuy90Rfq6Z5etNOTP.Ou', position = 'Senior Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Sickbay
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', 'Sickbay', 'Support', (SELECT id FROM staff_roles WHERE role_name = 'Sickbay'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$ZkO0LLssX9526dIxDkU61.7T9oBtWrS2KzSzpGS.QdPxXs7Esj6iq', position = 'Sickbay', department = 'Support', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', ''y$ZcCtv7ecJKUjQe3rqVoehuZNz/lwd6flBjnjFWqyWsHsiGqTHAiGm', 'Sickbay', 'Support', (SELECT id FROM staff_roles WHERE role_name = 'Sickbay'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$ZcCtv7ecJKUjQe3rqVoehuZNz/lwd6flBjnjFWqyWsHsiGqTHAiGm', position = 'Sickbay', department = 'Support', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Matrons
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Tf2S7lIURsI4Yy4W/FE1IunGyL/16cCDFZ4gRlX9iYuu9gZ/MGai2', 'Matrons', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Matrons'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'matron@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$Tf2S7lIURsI4Yy4W/FE1IunGyL/16cCDFZ4gRlX9iYuu9gZ/MGai2', position = 'Matrons', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', ''y$ef1NUTZNKGH3lBY4z1Ci3uVqoJlppcsGrDeG1HHsTFxtFkjay2yS2', 'Matrons', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Matrons'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'matron@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$ef1NUTZNKGH3lBY4z1Ci3uVqoJlppcsGrDeG1HHsTFxtFkjay2yS2', position = 'Matrons', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Security
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$uIV8SvG3vMkB7xEtxxrZt.cG17nVQEbB62v5I8hwu7lGv.dTSj1.q', 'Security', 'Security Services', (SELECT id FROM staff_roles WHERE role_name = 'Security'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'security@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$uIV8SvG3vMkB7xEtxxrZt.cG17nVQEbB62v5I8hwu7lGv.dTSj1.q', position = 'Security', department = 'Security Services', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', ''y$T350Cp4oSaFYEv0YuwY9mOQyIsvTRgVow98/kxuOiiVbUXBWsANNi', 'Security', 'Security Services', (SELECT id FROM staff_roles WHERE role_name = 'Security'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'security@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$T350Cp4oSaFYEv0YuwY9mOQyIsvTRgVow98/kxuOiiVbUXBWsANNi', position = 'Security', department = 'Security Services', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Drivers
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', 'Drivers', 'Transport', (SELECT id FROM staff_roles WHERE role_name = 'Drivers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'drivers@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', position = 'Drivers', department = 'Transport', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', ''y$BiD7I3vrSBPspALT0lNnnelpblIqWdXzkFEh1momE2l4r4.fdOF46', 'Drivers', 'Transport', (SELECT id FROM staff_roles WHERE role_name = 'Drivers'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'drivers@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$BiD7I3vrSBPspALT0lNnnelpblIqWdXzkFEh1momE2l4r4.fdOF46', position = 'Drivers', department = 'Transport', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Wardens
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Tf2S7lIURsI4Yy4W/FE1IunGyL/16cCDFZ4gRlX9iYuu9gZ/MGai2', 'Wardens', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Wardens'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'warden@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$Tf2S7lIURsI4Yy4W/FE1IunGyL/16cCDFZ4gRlX9iYuu9gZ/MGai2', position = 'Wardens', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', ''y$dbPX4zRG9liMJVx8.PGuGeHA9JrrJ/VYZUtYAf/0nT0vlzEQ3Os1m', 'Wardens', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Wardens'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'warden@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$dbPX4zRG9liMJVx8.PGuGeHA9JrrJ/VYZUtYAf/0nT0vlzEQ3Os1m', position = 'Wardens', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Store Keeper
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', 'Store Keeper', 'Facilities Management', (SELECT id FROM staff_roles WHERE role_name = 'Store Keeper'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'store@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', position = 'Store Keeper', department = 'Facilities Management', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', ''y$tTtWq3poisOvsnCoZ01nyuV77d5nccNO9FEEF1gqhktGeFftYvNvK', 'Store Keeper', 'Facilities Management', (SELECT id FROM staff_roles WHERE role_name = 'Store Keeper'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'store@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$tTtWq3poisOvsnCoZ01nyuV77d5nccNO9FEEF1gqhktGeFftYvNvK', position = 'Store Keeper', department = 'Facilities Management', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Guild President
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', 'Guild President', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Guild President'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8iYE247Rn3acYY5HVDmL1.C4E2R5eYZ9HcQIsVP5ab4Xq3XACxMse', position = 'Guild President', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', ''y$HMbwAHXSxqJv6e9UJ2WXIOp1ohG8w.Gov8x/PCe6lmv.gNFepLuRq', 'Guild President', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Guild President'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$HMbwAHXSxqJv6e9UJ2WXIOp1ohG8w.Gov8x/PCe6lmv.gNFepLuRq', position = 'Guild President', department = 'Student Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- Director Admissions & Requirements
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('ADM001', 'Director Admissions & Requirements', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$pd2saau1EgKXhjnwRlZWieF8ZzSz5Rs4lODIEfdL1M7Id4.qkEjyi', 'Director Admissions & Requirements', 'Admissions', (SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'admissions@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$pd2saau1EgKXhjnwRlZWieF8ZzSz5Rs4lODIEfdL1M7Id4.qkEjyi', position = 'Director Admissions & Requirements', department = 'Admissions', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('ADM001', 'Director Admissions & Requirements', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', ''y$p9ZOBOvgYPcdBSqA03mcXeGDWNHXlOM7PxKKD//7CKz9lY8E3u7Ly', 'Director Admissions & Requirements', 'Admissions', (SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'admissions@igangaschoolofnursingandmidwifery.ac.ug', password = ''y$p9ZOBOvgYPcdBSqA03mcXeGDWNHXlOM7PxKKD//7CKz9lY8E3u7Ly', position = 'Director Admissions & Requirements', department = 'Admissions', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 -- School Bursar (staff table login)
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
