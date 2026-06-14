@@ -2,19 +2,17 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'ict']);
-$auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
 $user = $ctx['user'];
-$user_id = (int) ($user['id'] ?? 0);
-$user_role = $user['role'] ?? '';
-$user_email = $user['email'] ?? '';
-$user_name = $user['full_name'] ?? '';
+$user_name = $user['full_name'] ?? 'ICT Director';
 
-// Get Director ICT dashboard statistics - use fallbacks
+// Set ICT dashboard statistics with fallbacks
+$total_computers = 60;
+$active_users = 204;
+$system_uptime = '99.9%';
+$storage_used = '450 GB';
 $total_students = 150;
 $total_staff = 2;
-$recent_applications = 8;
-$active_programs = 2;
 
 // Try to get real stats
 try {
@@ -50,59 +48,176 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Director ICT Dashboard - ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard-style.css" rel="stylesheet">
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/isnm-style.css">
+    <link rel="stylesheet" href="dashboard-style.css">
+    <link rel="stylesheet" href="dashboard-professional.css">
+    <link rel="stylesheet" href="dashboard-mobile.css">
+    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
+    <style>
+        :root {
+            --isnm-blue: #1e3a8a;
+            --isnm-light-blue: #3b82f6;
+            --isnm-green: #059669;
+            --isnm-gold: #d97706;
+            --isnm-dark-green: #0f4c3a;
+        }
+        
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .infra-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        
+        .infra-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .infra-header h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        
+        .status-badge {
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        
+        .status-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-item span {
+            color: #64748b;
+        }
+        
+        .detail-item strong {
+            color: #0f172a;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .status-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.online {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-indicator.warning {
+            background: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        
+        .status-info h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        
+        .status-info p {
+            margin: 3px 0 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--isnm-blue), var(--isnm-light-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="dashboard-sidebar">
             <div class="sidebar-header">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ICT Director Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
+                <h4>ISNM Management</h4>
+                <small><?php echo htmlspecialchars($user_name); ?></small>
+                <span class="badge bg-info">Director ICT</span>
             </div>
             
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> System Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#infrastructure">
-                            <i class="fas fa-server"></i> Infrastructure
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#network">
-                            <i class="fas fa-network-wired"></i> Network Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#security">
-                            <i class="fas fa-shield-alt"></i> Security
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#users">
-                            <i class="fas fa-users"></i> User Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#support">
-                            <i class="fas fa-headset"></i> IT Support
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#reports">
-                            <i class="fas fa-chart-bar"></i> Reports
-                        </a>
-                    </li>
-                </ul>
+            <nav class="sidebar-menu">
+                <a href="#overview" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i> System Overview
+                </a>
+                <a href="#infrastructure" class="nav-link">
+                    <i class="fas fa-server"></i> Infrastructure
+                </a>
+                <a href="#network" class="nav-link">
+                    <i class="fas fa-network-wired"></i> Network Management
+                </a>
+                <a href="#security" class="nav-link">
+                    <i class="fas fa-shield-alt"></i> Security
+                </a>
+                <a href="#support" class="nav-link">
+                    <i class="fas fa-headset"></i> IT Support
+                </a>
+                <a href="#activity" class="nav-link">
+                    <i class="fas fa-history"></i> Activity Log
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -113,9 +228,9 @@ try {
         </div>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="dashboard-main">
             <!-- Header -->
-            <header class="dashboard-header">
+            <div class="dashboard-header">
                 <div class="header-left">
                     <h1>Director ICT Dashboard</h1>
                     <p>Technology Infrastructure & Systems Management</p>
@@ -123,47 +238,43 @@ try {
                 <div class="header-right">
                     <div class="date-time">
                         <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
+                        <span><?php echo date('l, F j, Y'); ?></span>
                     </div>
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo $user['first_name']; ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
+                        <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>
-            </header>
+            </div>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
-                <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- System Overview -->
                 <section id="overview" class="content-section">
                     <h2>System Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
                                 <i class="fas fa-desktop"></i>
                             </div>
                             <div class="stat-content">
-                                <h3><?php echo $total_computers; ?></h3>
+                                <h3><?php echo number_format($total_computers); ?></h3>
                                 <p>Total Computers</p>
                             </div>
                         </div>
                         
                         <div class="stat-card">
-                            <div class="stat-icon">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #059669, #10b981);">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div class="stat-content">
-                                <h3><?php echo $active_users; ?></h3>
+                                <h3><?php echo number_format($active_users); ?></h3>
                                 <p>Active Users</p>
                             </div>
                         </div>
                         
                         <div class="stat-card">
-                            <div class="stat-icon">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
                                 <i class="fas fa-clock"></i>
                             </div>
                             <div class="stat-content">
@@ -173,7 +284,7 @@ try {
                         </div>
                         
                         <div class="stat-card">
-                            <div class="stat-icon">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #0f4c3a, #059669);">
                                 <i class="fas fa-hdd"></i>
                             </div>
                             <div class="stat-content">
@@ -186,23 +297,8 @@ try {
 
                 <!-- Infrastructure -->
                 <section id="infrastructure" class="content-section">
-                    <h2>IT Infrastructure</h2>
-                    <div class="infrastructure-actions">
-                        <button class="btn btn-primary" onclick="openModal('addEquipment')">
-                            <i class="fas fa-plus"></i> Add Equipment
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('maintenance')">
-                            <i class="fas fa-tools"></i> Schedule Maintenance
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('inventory')">
-                            <i class="fas fa-list"></i> Inventory Report
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('backup')">
-                            <i class="fas fa-save"></i> Backup Systems
-                        </button>
-                    </div>
-                    
-                    <div class="infrastructure-grid">
+                    <h2><i class="fas fa-server me-2"></i>IT Infrastructure</h2>
+                    <div class="infra-grid">
                         <div class="infra-card">
                             <div class="infra-header">
                                 <h4>Computer Laboratory</h4>
@@ -282,24 +378,9 @@ try {
 
                 <!-- Network Management -->
                 <section id="network" class="content-section">
-                    <h2>Network Management</h2>
-                    <div class="network-actions">
-                        <button class="btn btn-primary" onclick="openModal('networkConfig')">
-                            <i class="fas fa-cog"></i> Network Configuration
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('bandwidth')">
-                            <i class="fas fa-chart-line"></i> Bandwidth Monitor
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('firewall')">
-                            <i class="fas fa-fire"></i> Firewall Rules
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('vpn')">
-                            <i class="fas fa-lock"></i> VPN Management
-                        </button>
-                    </div>
-                    
-                    <div class="network-status">
-                        <h3>Network Status Overview</h3>
+                    <h2><i class="fas fa-network-wired me-2"></i>Network Management</h2>
+                    <div class="network-status mb-4">
+                        <h3 class="mb-3">Network Status Overview</h3>
                         <div class="status-grid">
                             <div class="status-item">
                                 <div class="status-indicator online"></div>
@@ -338,47 +419,36 @@ try {
 
                 <!-- Security -->
                 <section id="security" class="content-section">
-                    <h2>Security Management</h2>
-                    <div class="security-actions">
-                        <button class="btn btn-primary" onclick="openModal('userSecurity')">
-                            <i class="fas fa-user-shield"></i> User Security
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('antivirus')">
-                            <i class="fas fa-virus"></i> Antivirus Scan
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('accessLogs')">
-                            <i class="fas fa-list-alt"></i> Access Logs
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('securityAudit')">
-                            <i class="fas fa-audit"></i> Security Audit
-                        </button>
-                    </div>
-                    
+                    <h2><i class="fas fa-shield-alt me-2"></i>Security Management</h2>
                     <div class="security-overview">
-                        <h3>Security Status</h3>
-                        <div class="security-metrics">
-                            <div class="security-metric">
-                                <div class="metric-header">
-                                    <h4>Threat Level</h4>
-                                    <span class="threat-level low">Low</span>
+                        <h3 class="mb-3">Security Status</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <i class="fas fa-shield-check"></i>
                                 </div>
-                                <p>No active threats detected</p>
+                                <div class="stat-content">
+                                    <h3>Low</h3>
+                                    <p>Threat Level</p>
+                                </div>
                             </div>
-                            
-                            <div class="security-metric">
-                                <div class="metric-header">
-                                    <h4>Last Scan</h4>
-                                    <span class="scan-status recent">2 hours ago</span>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1e3a8a);">
+                                    <i class="fas fa-clock-rotate-left"></i>
                                 </div>
-                                <p>0 threats found</p>
+                                <div class="stat-content">
+                                    <h3>2 hours ago</h3>
+                                    <p>Last Scan</p>
+                                </div>
                             </div>
-                            
-                            <div class="security-metric">
-                                <div class="metric-header">
-                                    <h4>Failed Logins</h4>
-                                    <span class="login-status normal">3 today</span>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    <i class="fas fa-key"></i>
                                 </div>
-                                <p>All within normal range</p>
+                                <div class="stat-content">
+                                    <h3>3</h3>
+                                    <p>Failed Logins Today</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -386,214 +456,86 @@ try {
 
                 <!-- IT Support -->
                 <section id="support" class="content-section">
-                    <h2>IT Support Tickets</h2>
-                    <div class="support-actions">
-                        <button class="btn btn-primary" onclick="openModal('newTicket')">
-                            <i class="fas fa-plus"></i> New Ticket
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('assignTicket')">
-                            <i class="fas fa-user-plus"></i> Assign Ticket
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('ticketReport')">
-                            <i class="fas fa-chart-bar"></i> Support Report
-                        </button>
-                    </div>
-                    
-                    <div class="tickets-table">
-                        <h3>Recent Support Tickets</h3>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Ticket ID</th>
-                                        <th>User</th>
-                                        <th>Issue</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>#IT-001</td>
-                                        <td>John Student</td>
-                                        <td>Cannot access student portal</td>
-                                        <td><span class="priority high">High</span></td>
-                                        <td><span class="status-badge in-progress">In Progress</span></td>
-                                        <td>2 hours ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary">View</button>
-                                            <button class="btn btn-sm btn-outline-success">Resolve</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#IT-002</td>
-                                        <td>Mary Lecturer</td>
-                                        <td>Slow computer performance</td>
-                                        <td><span class="priority medium">Medium</span></td>
-                                        <td><span class="status-badge pending">Pending</span></td>
-                                        <td>4 hours ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary">View</button>
-                                            <button class="btn btn-sm btn-outline-success">Resolve</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <h2><i class="fas fa-headset me-2"></i>IT Support Tickets</h2>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>User</th>
+                                    <th>Issue</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#IT-001</td>
+                                    <td>John Student</td>
+                                    <td>Cannot access student portal</td>
+                                    <td><span class="badge bg-danger">High</span></td>
+                                    <td><span class="badge bg-warning">In Progress</span></td>
+                                    <td>2 hours ago</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#IT-002</td>
+                                    <td>Mary Lecturer</td>
+                                    <td>Slow computer performance</td>
+                                    <td><span class="badge bg-warning text-dark">Medium</span></td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                    <td>4 hours ago</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
                 <!-- Recent Activities -->
-                <section class="activities-section">
-                    <h2>Recent IT Activities</h2>
-                    <div class="activities-list">
+                <section id="activity" class="content-section">
+                    <h2><i class="fas fa-history me-2"></i>Recent IT Activities</h2>
+                    <div>
                         <?php foreach ($recent_activities as $activity): ?>
                         <div class="activity-item">
                             <div class="activity-icon">
-                                <i class="fas fa-<?php echo $activity['icon'] ?? 'check-circle'; ?>"></i>
+                                <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="activity-content">
-                                <p><strong><?php echo $activity['action'] ?? $activity['activity'] ?? 'Activity'; ?></strong></p>
-                                <small><?php echo date('M j, Y H:i', strtotime($activity['created_at'])); ?></small>
+                            <div class="activity-content flex-grow-1">
+                                <strong><?php echo htmlspecialchars($activity['activity'] ?? 'Activity'); ?></strong>
+                                <small class="text-muted d-block"><?php echo date('M j, Y H:i', strtotime($activity['created_at'])); ?></small>
                             </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
-<!-- ... -->
+                </section>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="actionModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- Dynamic content -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="modalAction">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Update current date/time
-        function updateDateTime() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
-        }
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-
-        // Navigation
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar navigation
+            document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    const target = this.getAttribute('href');
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    document.querySelector(target).style.display = 'block';
                 });
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
-                }
             });
         });
-
-        // Modal functions
-        function openModal(action) {
-            const modal = new bootstrap.Modal(document.getElementById('actionModal'));
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
-            switch(action) {
-                case 'addEquipment':
-                    modalTitle.textContent = 'Add IT Equipment';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Equipment Type</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Type</option>
-                                    <option value="Computer">Computer</option>
-                                    <option value="Printer">Printer</option>
-                                    <option value="Server">Server</option>
-                                    <option value="Network">Network Device</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Brand/Model</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Serial Number</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Location</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Purchase Date</label>
-                                <input type="date" class="form-control" required>
-                            </div>
-                        </form>
-                    `;
-                    break;
-                case 'maintenance':
-                    modalTitle.textContent = 'Schedule Maintenance';
-                    modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Equipment</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Equipment</option>
-                                    <option value="comp-lab-01">Computer Lab - PC 01</option>
-                                    <option value="comp-lab-02">Computer Lab - PC 02</option>
-                                    <option value="server-main">Main Server</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Maintenance Type</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Type</option>
-                                    <option value="routine">Routine Check</option>
-                                    <option value="repair">Repair</option>
-                                    <option value="upgrade">Upgrade</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Scheduled Date</label>
-                                <input type="date" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Technician</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                        </form>
-                    `;
-                    break;
-                // Add more cases as needed
-            }
-            
-            modal.show();
-        }
     </script>
-<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
-
