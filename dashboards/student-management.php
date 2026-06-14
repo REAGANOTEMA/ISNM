@@ -169,10 +169,31 @@ body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
     </div>
     <div class="section-card">
       <h5><i class="fas fa-database me-2"></i>Excel Data Search Coverage</h5>
-      <p class="mb-2">The universal search below reads every <code>.xlsx</code> and <code>.xlsm</code> file inside <code>students_data/</code>, including subfolders, and searches names, index numbers, NSIN, phone, email, program, level, set, year, source file, and course codes.</p>
-      <div class="d-flex flex-wrap gap-1">
-        <?php foreach(($stats['excel_file_summary'] ?? []) as $f): ?><span class="badge bg-light text-dark border"><?= htmlspecialchars($f['name']) ?> (<?= (int)$f['students'] ?>)</span><?php endforeach; ?>
-      </div>
+      <p class="mb-3">The universal search below reads every <code>.xlsx</code> and <code>.xlsm</code> file inside <code>students_data/</code>, including subfolders, and searches names, index numbers, NSIN, phone, email, program, level, set, year, source file, and course codes.</p>
+      <?php if (!empty($stats['excel_file_summary'])): ?>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>File Name</th>
+                <th class="text-end">Student Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach(($stats['excel_file_summary'] ?? []) as $i => $f): ?>
+                <tr>
+                  <td><?= $i + 1 ?></td>
+                  <td><code><?= htmlspecialchars($f['name']) ?></code></td>
+                  <td class="text-end"><span class="badge bg-primary"><?= (int)$f['students'] ?></span></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php else: ?>
+        <p class="text-muted small">No Excel files found in <code>students_data/</code>.</p>
+      <?php endif; ?>
     </div>
   </section>
 

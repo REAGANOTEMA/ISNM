@@ -25,6 +25,22 @@ if (!$auth_service->isAuthenticated()) {
 // Get user information
 $staff_id = $_SESSION['user_id'] ?? 0;
 $staff_email = $_SESSION['email'] ?? '';
+$staff_role = $_SESSION['role'] ?? '';
+
+// Check if user has permission to generate receipts
+$can_generate_receipts = false;
+if (stripos($staff_role, 'Director') !== false ||
+    stripos($staff_role, 'General') !== false ||
+    stripos($staff_role, 'Bursar') !== false ||
+    stripos($staff_role, 'Principal') !== false) {
+    $can_generate_receipts = true;
+}
+
+if (!$can_generate_receipts) {
+    $_SESSION['error'] = "You don't have permission to generate receipts.";
+    header("Location: staff-login.php");
+    exit();
+}
 
 // Handle receipt generation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) {

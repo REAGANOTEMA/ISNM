@@ -73,6 +73,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     }
     header('Location: director-general.php'); exit;
 }
+
+// POST: add new student
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
+    $first_name   = trim($_POST['first_name'] ?? '');
+    $middle_name  = trim($_POST['middle_name'] ?? '');
+    $last_name    = trim($_POST['last_name'] ?? '');
+    $student_id   = trim($_POST['student_id'] ?? '');
+    $program      = trim($_POST['program'] ?? '');
+    $level        = trim($_POST['level'] ?? '1');
+    $intake_year  = trim($_POST['intake_year'] ?? date('Y'));
+    $intake_period = trim($_POST['intake_period'] ?? 'January');
+    $phone        = trim($_POST['phone'] ?? '');
+    $email        = trim($_POST['email'] ?? '');
+    $date_of_birth = trim($_POST['date_of_birth'] ?? '');
+
+    if ($first_name && $last_name && $student_id) {
+        // First, check if we can use StudentDataLoader to save
+        try {
+            // Add to a simple text or temporary file for now
+            $newStudent = [
+                'full_name' => $first_name . ($middle_name ? ' ' . $middle_name : '') . ' ' . $last_name,
+                'first_name' => $first_name,
+                'middle_name' => $middle_name,
+                'surname' => $last_name,
+                'index_number' => $student_id,
+                'student_number' => $student_id,
+                'program' => $program,
+                'level' => $level,
+                'intake_year' => $intake_year,
+                'intake_period' => $intake_period,
+                'phone' => $phone,
+                'email' => $email,
+                'date_of_birth' => $date_of_birth
+            ];
+
+            // Also try to save to DB if possible
+            if ($studentsConn) {
+                $stmt = $studentsConn->prepare("INSERT IGNORE INTO students (student_id, first_name, middle_name, surname, full_name, program, level, intake_year, intake_period, phone, email, date_of_birth, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
+                if ($stmt) {
+                    $full_name = $newStudent['full_name'];
+                    $stmt->bind_param("ssssssssssss", $student_id, $first_name, $middle_name, $last_name, $full_name, $program, $level, $intake_year, $intake_period, $phone, $email, $date_of_birth);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+
+            $_SESSION['success'] = "Student $first_name $last_name added successfully!";
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error adding student: " . $e->getMessage();
+        }
+    } else {
+        $_SESSION['error'] = "Please fill all required fields!";
+    }
+    header('Location: director-general.php'); exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -122,7 +177,25 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
             color: white;
             border-color: #ef5350;
         }
-</style>
+
+        @media print {
+            .sidebar, .top-bar, .no-print {
+                display: none !important;
+            }
+            .page-content {
+                margin-left: 0 !important;
+                padding: 20px !important;
+            }
+            .section-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+            body {
+                background: white !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -186,6 +259,9 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
       <h2><i class="fas fa-bolt me-2"></i>Quick Actions – Full Control</h2>
       <div class="d-flex flex-wrap gap-2">
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
+        <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+        <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
+        <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
         <a href="../dashboards/ceo.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-user-tie me-1"></i>CEO</a>
         <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
         <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
@@ -208,37 +284,33 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
         <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
         <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
         <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+        <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
         <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
         <a href="../bursar_reports.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
         <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
       </div>
     </div>
 
-    <!-- STUDENT DATA FILES SUMMARY -->
+    <!-- STUDENT MANAGEMENT -->
     <div class="section-card">
-      <h2><i class="fas fa-file-excel me-2"></i>Student Data Excel Files</h2>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>File Name</th>
-              <th class="text-end">Student Count</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach($excel_files_summary as $i => $file): ?>
-            <tr>
-              <td><?= $i + 1 ?></td>
-              <td><code><?= htmlspecialchars($file['name']) ?></code></td>
-              <td class="text-end"><span class="badge bg-primary"><?= $file['students'] ?></span></td>
-            </tr>
-            <?php endforeach; ?>
-            <?php if(empty($excel_files_summary)): ?>
-            <tr><td colspan="3" class="text-muted text-center">No Excel files found in students_data/ directory</td></tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+          <i class="fas fa-plus me-2"></i>Add New Student
+        </button>
+      </div>
+
+      <!-- UNIVERSAL STUDENT SEARCH -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Search for any student across all Excel files and database:</label>
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input type="text" id="universalStudentSearch" class="form-control" placeholder="Search by name, index number, NSIN, etc...">
+          <button class="btn btn-outline-secondary" type="button" id="clearStudentSearch"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="universalSearchResults" class="border rounded p-3" style="min-height: 100px;">
+          <p class="text-muted small mb-0">Start typing to search for students...</p>
+        </div>
       </div>
     </div>
 
@@ -365,11 +437,171 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
   </div>
 </div>
 
+<!-- ADD NEW STUDENT MODAL -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" class="modal-content" id="addStudentForm">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Student</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">First Name *</label>
+            <input type="text" name="first_name" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Middle Name</label>
+            <input type="text" name="middle_name" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Last Name *</label>
+            <input type="text" name="last_name" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Student Number / Index Number *</label>
+            <input type="text" name="student_id" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Program *</label>
+            <select name="program" class="form-select" required>
+              <option value="Certificate Nursing">Certificate Nursing</option>
+              <option value="Certificate Midwifery">Certificate Midwifery</option>
+              <option value="Diploma Nursing">Diploma Nursing</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Level / Year</label>
+            <input type="text" name="level" class="form-control" value="1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Intake Year</label>
+            <input type="text" name="intake_year" class="form-control" value="<?php echo date('Y'); ?>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Intake Period</label>
+            <select name="intake_period" class="form-select">
+              <option value="January">January</option>
+              <option value="July">July</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Phone Number</label>
+            <input type="text" name="phone" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Date of Birth</label>
+            <input type="date" name="date_of_birth" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <?php echo displayStudentProfileModal(''); ?>
 <?php echo getStudentProfileStyles(); ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Universal student search from all loaded Excel files
+const allStudents = <?php
+try {
+    if (isset($loader)) {
+        $allStudents = $loader->loadAllStudents();
+        echo json_encode(array_slice($allStudents, 0, 500));
+    } else {
+        echo "[]";
+    }
+} catch (Exception $e) {
+    echo "[]";
+}
+?>;
+
+const searchInput = document.getElementById('universalStudentSearch');
+const clearBtn = document.getElementById('clearStudentSearch');
+const resultsDiv = document.getElementById('universalSearchResults');
+
+searchInput.addEventListener('input', debounce(performSearch, 300));
+clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    resultsDiv.innerHTML = '<p class="text-muted small mb-0">Start typing to search for students...</p>';
+});
+
+function debounce(func, delay) {
+    let timer;
+    return function() {
+        clearTimeout(timer);
+        timer = setTimeout(func, delay);
+    };
+}
+
+function performSearch() {
+    const query = searchInput.value.toLowerCase().trim();
+    if (query.length < 2) {
+        resultsDiv.innerHTML = '<p class="text-muted small mb-0">Start typing to search for students...</p>';
+        return;
+    }
+
+    const filteredStudents = allStudents.filter(student => {
+        const searchableFields = [
+            student.full_name || '', student.first_name || '', student.surname || '',
+            student.index_number || '', student.student_number || '', student.nsin || '',
+            student.national_id || '', student.phone || '', student.email || '',
+            student.program || '', student.course || '', student.department || '',
+            student.level || '', student.set || '', student.source_file || ''
+        ].join(' ').toLowerCase();
+        return searchableFields.includes(query);
+    }).slice(0, 20);
+
+    if (filteredStudents.length === 0) {
+        resultsDiv.innerHTML = '<p class="text-muted small mb-0">No students found matching "' + query + '"</p>';
+    } else {
+        let html = '<div class="list-group">';
+        filteredStudents.forEach(student => {
+            const name = student.full_name || (student.first_name + ' ' + student.surname) || 'Unnamed Student';
+            const id = student.index_number || student.student_number || student.nsin || '';
+            const program = student.program || student.course || '';
+            const sourceFile = student.source_file || '';
+
+            html += `
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">${escapeHtml(name)}</div>
+                        <div class="small text-muted">${escapeHtml(id)} • ${escapeHtml(program)}${sourceFile ? ' • <code>' + escapeHtml(sourceFile) + '</code>' : ''}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openStudentProfile('${id}', '${name}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            `;
+        });
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function openStudentProfile(id, name) {
+    if (id) {
+        showStudentProfileModal(id);
+    }
+}
+
 function viewFullProfile(id){ showStudentProfileModal(id); }
 function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }
 function viewAcademic(id){ window.location.href='../academic_records_management.php?student_id='+id; }

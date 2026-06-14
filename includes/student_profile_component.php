@@ -3,31 +3,84 @@
 // This component can be included in any dashboard to display student profiles consistently
 
 function displayStudentProfileCard($student_id, $view_mode = 'compact') {
+    // If student_id is empty, return empty content instead of error
+    if (empty($student_id)) {
+        return '<div class="alert alert-info">Select a student to view their profile</div>';
+    }
+    
     global $conn;
     
-    // Get student data
-    $student_sql = "SELECT * FROM students WHERE student_id = ?";
-    $student_result = executeQuery($student_sql, [$student_id], 's');
-    $student = $student_result[0] ?? null;
+    // Get student data - fallback to simpler query if executeQuery is not available
+    $student = null;
+    if (function_exists('getStudentsConnection')) {
+        $db = getStudentsConnection();
+        if ($db) {
+            $stmt = $db->prepare("SELECT * FROM students WHERE student_id = ?");
+            if ($stmt) {
+                $stmt->bind_param("s", $student_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result && $result->num_rows > 0) {
+                    $student = $result->fetch_assoc();
+                }
+                $stmt->close();
+            }
+        }
+    }
     
     if (!$student) {
         return '<div class="alert alert-warning">Student not found</div>';
     }
     
     // Get academic records
-    $academic_sql = "SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC LIMIT 3";
-    $academic_records = executeQuery($academic_sql, [$student_id], 's');
+    $academic_records = [];
+    if (function_exists('getStudentsConnection')) {
+        $db = getStudentsConnection();
+        if ($db) {
+            $stmt = $db->prepare("SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC LIMIT 3");
+            if ($stmt) {
+                $stmt->bind_param("s", $student_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result) {
+                    while ($row = $result->fetch_assoc()) {
+                        $academic_records[] = $row;
+                    }
+                }
+                $stmt->close();
+            }
+        }
+    }
     
     // Get fee information
-    $fee_sql = "SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC LIMIT 1";
-    $fee_info = executeQuery($fee_sql, [$student_id], 's');
-    $current_fees = $fee_info[0] ?? null;
+    $current_fees = null;
+    if (function_exists('getStudentsConnection')) {
+        $db = getStudentsConnection();
+        if ($db) {
+            $stmt = $db->prepare("SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC LIMIT 1");
+            if ($stmt) {
+                $stmt->bind_param("s", $student_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result && $result->num_rows > 0) {
+                    $current_fees = $result->fetch_assoc();
+                }
+                $stmt->close();
+            }
+        }
+    }
     
-    // Calculate age
-    $age = calculateAge($student['date_of_birth']);
+    // Calculate age (simplified fallback)
+    $age = 'N/A';
+    if (function_exists('calculateAge')) {
+        $age = calculateAge($student['date_of_birth']);
+    }
     
-    // Get profile photo URL
-    $photo_url = getPassportPhotoUrl($student['profile_image']);
+    // Get profile photo URL (simplified fallback)
+    $photo_url = 'https://coresg-normal.trae.ai/api/v1/text_to_image?prompt=professional%20school%20portrait%20placeholder&image_size=square';
+    if (function_exists('getPassportPhotoUrl')) {
+        $photo_url = getPassportPhotoUrl($student['profile_image']);
+    }
     
     ob_start(); // Start output buffering
     
