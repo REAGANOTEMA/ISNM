@@ -327,6 +327,18 @@ class AuthenticationService {
         return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
     }
 
+    public function checkSessionValidity() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) return false;
+        $timeout = 3600;
+        if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > $timeout) {
+            $this->logout();
+            return false;
+        }
+        $_SESSION['login_time'] = time();
+        return true;
+    }
+
     public function logout() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (isset($_SESSION['type'], $_SESSION['user_id']) && $_SESSION['type'] === 'staff') {

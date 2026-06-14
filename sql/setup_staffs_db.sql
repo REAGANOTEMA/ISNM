@@ -32,9 +32,9 @@ SELECT
     s.current_year as year_of_study,
     s.current_semester as semester,
     s.nationality,
-    s.religion,
+    NULL as religion,
     s.address,
-    s.district,
+    NULL as district,
     s.guardian_name,
     s.guardian_phone,
     s.emergency_contact_name,
@@ -3384,8 +3384,8 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ON DUPLICATE KEY UPDATE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$1gsFX/B27b5YuIAP7D5OSO2acgrtV7RcIMeja6RblX/9e5YSFfguy', position = 'Senior Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('NTS001', 'Non-Teaching Staff', 'nonteaching@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'nonteaching@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Non-Teaching Staff', department = 'Administrative', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('NTS001', 'Non-Teaching Staff', 'nonteaching@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'nonteaching@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Non-Teaching Staff', department = 'Administrative', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
 ('LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', 'Sickbay', 'Support', (SELECT id FROM staff_roles WHERE role_name = 'Sickbay'), 'Active', CURDATE(), FALSE, TRUE, NOW())
@@ -3412,12 +3412,12 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ON DUPLICATE KEY UPDATE email = 'store@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8qETvaYu2nreko/c/DyPROdIlMZyAciahJOVwHCV0KG4WxrcicxnS', position = 'Store Keeper', department = 'Facilities Management', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'bursar@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'School Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'School Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'bursar.assistant@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('BURS002', 'Bursar', 'bursar.assistant@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'bursar.assistant@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
 ('ADM001', 'Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Director Admissions & Requirements', 'Admissions', (SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements'), 'Active', CURDATE(), FALSE, TRUE, NOW())

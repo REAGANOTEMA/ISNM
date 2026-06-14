@@ -1187,8 +1187,8 @@ ON DUPLICATE KEY UPDATE email = 'academicregistrar@igangaschoolofnursingandmidwi
 
 -- School Bursar
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
-VALUES ('BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()) 
-ON DUPLICATE KEY UPDATE email = 'bursar@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', is_first_login = TRUE, updated_at = NOW();
+VALUES ('BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()) 
+ON DUPLICATE KEY UPDATE email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', is_first_login = TRUE, updated_at = NOW();
 
 -- HR Manager
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) 
@@ -1218,7 +1218,7 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ('HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$G7pMLdi2UjjmhEd8Lx0bmeaM7tGD4jrfvMsZh6HvY1Po8YqFRubRu', 'Head Midwifery', 'Midwifery Department', (SELECT id FROM staff_roles WHERE role_name = 'Head Midwifery' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$e52TV/DaoNDl4kjssi3Te.YHnpxHlaxatBX2wNg5yv3JkoYEEYV9i', 'Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Lecturers' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$1gsFX/B27b5YuIAP7D5OSO2acgrtV7RcIMeja6RblX/9e5YSFfguy', 'Senior Lecturer', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Senior Lecturers' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-('NTS001', 'Non-Teaching Staff', 'nonteaching@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
+('NTS001', 'Non-Teaching Staff', 'nonteaching@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', 'Sickbay', 'Support', (SELECT id FROM staff_roles WHERE role_name = 'Sickbay' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Qj7feWYysqaK1INwS50PFehU09Tgf6MOUNVBJZaOw3LZW/jGHZEkO', 'Matrons', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Matrons' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$0rLJuecuJuF6.Exxp7AQO.w0Dh0iwfwZri45gwya6OqENBJwjPA7C', 'Security', 'Security Services', (SELECT id FROM staff_roles WHERE role_name = 'Security' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
@@ -1226,7 +1226,7 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ('WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$jCKwMrdU.s1DVuA2HHFp6eBPK05F70IUoyAvRZX6Qf3wdPsCZBXM2', 'Wardens', 'Student Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Wardens' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ANzSCNiGrURlS1ovFbQUKuK6ldOOBpiC0iW/MB7HVw/I5JC9wud.m', 'Deputy Principal', 'Academic Affairs', (SELECT id FROM staff_roles WHERE role_name = 'Deputy Principal' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
 ('STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8qETvaYu2nreko/c/DyPROdIlMZyAciahJOVwHCV0KG4WxrcicxnS', 'Store Keeper', 'Facilities Management', (SELECT id FROM staff_roles WHERE role_name = 'Store Keeper' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW()),
-('BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW())
+('BURS002', 'Bursar', 'bursar.assistant@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar' LIMIT 1), 'Active', CURDATE(), FALSE, TRUE, NOW())
 ON DUPLICATE KEY UPDATE email = VALUES(email), password = VALUES(password), is_first_login = TRUE, updated_at = NOW();
 
 -- Insert dashboard access permissions for all staff roles
@@ -1289,7 +1289,7 @@ INSERT INTO receipt_templates (template_name, template_type, template_content, t
 
 -- Insert default transcript templates
 INSERT INTO generated_documents (document_type, generated_by, document_title, document_content, access_code, generation_date) VALUES
-('Student Transcript', (SELECT id FROM staff WHERE email = 'director.general@isnm.ac.ug'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', CONCAT('TRANS_', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), NOW());
+('Transcript', (SELECT id FROM staff WHERE email = 'director.general@isnm.ac.ug'), 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', CONCAT('TRANS_', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')), NOW());
 
 
 
@@ -1592,7 +1592,7 @@ CREATE TABLE inventory_reports (
     id INT AUTO_INCREMENT PRIMARY KEY,
     report_number VARCHAR(50) NOT NULL UNIQUE,
     inventory_id INT NOT NULL,
-    reported_by INT NOT NULL,
+    reported_by INT NULL,
     report_to VARCHAR(100) NOT NULL,
     department VARCHAR(100) DEFAULT 'General',
     report_type ENUM('Low Stock','Damage','Request','Adjustment','Transfer','Other') NOT NULL DEFAULT 'Request',
@@ -1997,7 +1997,7 @@ CREATE TABLE grading_approval_workflow (
     workflow_number VARCHAR(50) NOT NULL UNIQUE,
     examination_record_id INT NOT NULL,
     current_stage ENUM('Lecturer Entry', 'HOD Review', 'Registrar Approval', 'Principal Final Approval', 'Published', 'Rejected') DEFAULT 'Lecturer Entry',
-    submitted_by INT NOT NULL,
+    submitted_by INT NULL,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     hod_reviewed_by INT NULL,
     hod_reviewed_at TIMESTAMP NULL,
@@ -2030,7 +2030,7 @@ CREATE TABLE transcript_generation_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     transcript_number VARCHAR(50) NOT NULL UNIQUE,
     student_id INT NOT NULL,
-    requested_by INT NOT NULL,
+    requested_by INT NULL,
     approved_by INT NULL,
     generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     purpose VARCHAR(200),
@@ -2123,7 +2123,7 @@ CREATE TABLE grade_change_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
     workflow_number VARCHAR(50) NOT NULL,
     examination_record_id INT NOT NULL,
-    changed_by INT NOT NULL,
+    changed_by INT NULL,
     previous_grade VARCHAR(5),
     new_grade VARCHAR(5),
     previous_ca_marks DECIMAL(5,2),
@@ -2145,7 +2145,7 @@ CREATE TABLE grading_notifications (
     notification_id VARCHAR(50) NOT NULL UNIQUE,
     workflow_number VARCHAR(50) NOT NULL,
     recipient_id INT NOT NULL,
-    sender_id INT NOT NULL,
+    sender_id INT NULL,
     notification_type ENUM('Grade Submitted', 'HOD Review Required', 'Registrar Approval Required', 'Principal Approval Required', 'Grade Published', 'Grade Rejected', 'Grade Modified') NOT NULL,
     message TEXT,
     is_read BOOLEAN DEFAULT FALSE,
@@ -4566,9 +4566,9 @@ SELECT
     s.current_year as year_of_study,
     s.current_semester as semester,
     s.nationality,
-    s.religion,
+    NULL as religion,
     s.address,
-    s.district,
+    NULL as district,
     s.guardian_name,
     s.guardian_phone,
     s.emergency_contact_name,
@@ -8000,8 +8000,8 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ON DUPLICATE KEY UPDATE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$1gsFX/B27b5YuIAP7D5OSO2acgrtV7RcIMeja6RblX/9e5YSFfguy', position = 'Senior Lecturer', department = 'Academic Affairs', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('NTS001', 'Non-Teaching Staff', 'nonteaching@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'nonteaching@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Non-Teaching Staff', department = 'Administrative', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('NTS001', 'Non-Teaching Staff', 'nonteaching@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Non-Teaching Staff', 'Administrative', (SELECT id FROM staff_roles WHERE role_name = 'Non-Teaching Staff'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'nonteaching@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Non-Teaching Staff', department = 'Administrative', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
 ('LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', 'Sickbay', 'Support', (SELECT id FROM staff_roles WHERE role_name = 'Sickbay'), 'Active', CURDATE(), FALSE, TRUE, NOW())
@@ -8028,12 +8028,12 @@ INSERT INTO staff (staff_id, full_name, email, password, position, department, r
 ON DUPLICATE KEY UPDATE email = 'store@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$8qETvaYu2nreko/c/DyPROdIlMZyAciahJOVwHCV0KG4WxrcicxnS', position = 'Store Keeper', department = 'Facilities Management', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('BUR001', 'School Bursar', 'bursar@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'bursar@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'School Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'School Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'School Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'School Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
-('BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
-ON DUPLICATE KEY UPDATE email = 'bursar.assistant@isnm.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
+('BURS002', 'Bursar', 'bursar.assistant@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Bursar', 'Finance Department', (SELECT id FROM staff_roles WHERE role_name = 'Bursar'), 'Active', CURDATE(), FALSE, TRUE, NOW())
+ON DUPLICATE KEY UPDATE email = 'bursar.assistant@igangaschoolofnursingandmidwifery.ac.ug', password = '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', position = 'Bursar', department = 'Finance Department', status = 'Active', is_first_login = TRUE, updated_at = NOW();
 
 INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date, password_changed, is_first_login, created_at) VALUES
 ('ADM001', 'Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', 'Director Admissions & Requirements', 'Admissions', (SELECT id FROM staff_roles WHERE role_name = 'Director Admissions & Requirements'), 'Active', CURDATE(), FALSE, TRUE, NOW())
@@ -8098,6 +8098,27 @@ CREATE TABLE categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_slug (slug),
     INDEX idx_parent_id (parent_id)
+);
+
+-- 3. Posts Table (Blog/News)
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL UNIQUE,
+    content LONGTEXT NOT NULL,
+    excerpt TEXT,
+    featured_image VARCHAR(500),
+    category_id INT,
+    author VARCHAR(100),
+    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_slug (slug),
+    INDEX idx_status (status),
+    INDEX idx_category_id (category_id),
+    INDEX idx_published_at (published_at)
 );
 
 -- 4. Galleries Table
