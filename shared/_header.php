@@ -2088,6 +2088,9 @@ include_once 'includes/functions.php'; ?>
             <li><a class="dropdown-item" href="staff-login.php">
               <i class="fas fa-user-tie"></i> Staff Login
             </a></li>
+            <li><a class="dropdown-item" href="student-directory.php">
+              <i class="fas fa-address-book"></i> Student Directory
+            </a></li>
             <li><a class="dropdown-item" href="application.php">
               <i class="fas fa-edit"></i> Apply Now
             </a></li>

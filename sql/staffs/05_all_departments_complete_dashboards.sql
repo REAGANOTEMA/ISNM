@@ -24,7 +24,7 @@ SELECT
     s.first_name,
     s.other_name as middle_name,
     s.surname as last_name,
-    COALESCE(s.full_name, TRIM(CONCAT(s.first_name, ' ', COALESCE(s.other_name, ''), ' ', s.surname))) as full_name,
+    TRIM(CONCAT(s.first_name, ' ', COALESCE(s.other_name, ''), ' ', s.surname)) as full_name,
     s.email,
     s.phone,
     s.date_of_birth,

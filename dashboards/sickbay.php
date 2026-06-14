@@ -54,6 +54,9 @@ $recent_issues = [
             </div>
             <div class="text-end">
                 <p class="mb-1">Welcome, <strong><?php echo htmlspecialchars($user_name); ?></strong></p>
+                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+<a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+<a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
                 <a href="../logout.php" class="btn btn-sm btn-danger">
                     <i class="fas fa-sign-out-alt me-1"></i>Logout
                 </a>

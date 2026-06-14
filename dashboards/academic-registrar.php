@@ -244,7 +244,12 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
     <a href="#trash">               <i class="fas fa-trash-alt"></i> Trash Bin
       <?php if($trash_count>0): ?><span class="badge bg-danger ms-1"><?=$trash_count?></span><?php endif; ?>
     </a>
-    <a href="../logout.php">        <i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="d-flex justify-content-center flex-wrap mb-2 px-3">
+      <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+      <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+      <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
+    </div>
+    <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </nav>
 </div>
 

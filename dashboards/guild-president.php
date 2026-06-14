@@ -45,6 +45,12 @@ $conn = getStudentsConnection();
         <h1><i class="fas fa-crown"></i> Guild President Dashboard</h1>
         <p>Welcome, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?></p>
         
+        <div class="text-center mb-3">
+            <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+            <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+            <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
+        </div>
+        
         <div class="card">
             <h3>Student Leadership Panel</h3>
             <p>Access student-related information and manage student affairs.</p>

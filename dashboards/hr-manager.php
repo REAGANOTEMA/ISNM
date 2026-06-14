@@ -163,12 +163,39 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
       <?php endforeach; ?>
     </div>
 
+    <!-- STORE REQUESTS -->
+    <?php
+    $storeReqs = [];
+    if ($staff_conn) {
+        $sr = $staff_conn->query("SELECT sr.request_number, sr.urgency, sr.status, sr.created_at, s.full_name as requester FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC LIMIT 5");
+        if ($sr) while ($row = $sr->fetch_assoc()) $storeReqs[] = $row;
+    }
+    ?>
+    <div class="card-section">
+      <h2><i class="fas fa-shopping-cart me-2 text-warning"></i>Pending Store Requests <?= count($storeReqs) ? '<span class="badge bg-danger ms-1">'.count($storeReqs).'</span>' : '' ?></h2>
+      <?php if (empty($storeReqs)): ?>
+        <p class="text-muted small">No pending store requests.</p>
+      <?php else: foreach ($storeReqs as $sr_): ?>
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <div><code class="fw-bold"><?= htmlspecialchars($sr_['request_number']) ?></code><small class="text-muted ms-2">by <?= htmlspecialchars($sr_['requester'] ?? '') ?></small></div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span>
+            <small class="text-muted"><?= date('d M', strtotime($sr_['created_at'])) ?></small>
+          </div>
+        </div>
+      <?php endforeach; ?>
+        <div class="text-center mt-2"><a href="../dashboards/storekeeper.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Manage Store</a></div>
+      <?php endif; ?>
+    </div>
+
     <!-- Quick Actions -->
     <div class="card-section">
       <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
       <div class="d-flex flex-wrap gap-2">
+        <a href="../store_request.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-shopping-cart me-1"></i>Store Request</a>
+        <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
+        <a href="../student-directory.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStaffModal"><i class="fas fa-user-plus me-1"></i>Add Staff</button>
-        <a href="../hr_dashboard.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-tachometer-alt me-1"></i>Full HR Dashboard</a>
         <a href="../hr_staff_records.php" class="btn btn-outline-info btn-sm"><i class="fas fa-id-card me-1"></i>Staff Records</a>
         <a href="../hr_leave.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-calendar me-1"></i>Leave Management</a>
         <a href="../hr_payroll.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-check me-1"></i>Payroll</a>

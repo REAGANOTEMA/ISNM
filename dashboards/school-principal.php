@@ -236,8 +236,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
     <div class="card-section">
       <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
       <div class="d-flex flex-wrap gap-2">
+        <a href="../store_request.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-shopping-cart me-1"></i>Store Request</a>
+        <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
+        <a href="../student-directory.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
         <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Academic Registrar</a>
-        <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+        <a href="../dashboards/bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
         <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
         <a href="../dashboards/director-academics.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Director Academics</a>
         <a href="../import_students_excel.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>

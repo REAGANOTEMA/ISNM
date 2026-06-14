@@ -180,6 +180,11 @@ $conn->close();
             <h2><i class="fas fa-file-alt me-2"></i>Document Template Management</h2>
             <p class="mb-0">Manage receipt templates, document templates, and generated documents</p>
         </div>
+        <div class="d-flex gap-2">
+            <a href="../student-directory.php" class="btn btn-sm btn-outline-info"><i class="fas fa-address-book me-1"></i>Directory</a>
+            <a href="../store_request.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+            <a href="../news.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-newspaper me-1"></i>News</a>
+        </div>
         <a href="?table=receipt_templates" class="btn btn-light btn-sm">Receipt Templates</a>
         <a href="?table=document_templates" class="btn btn-light btn-sm">Document Templates</a>
     </div>

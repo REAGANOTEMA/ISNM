@@ -8086,29 +8086,8 @@ CREATE TABLE pages (
     INDEX idx_page_order (page_order)
 );
 
--- 2. Posts Table (Blog/News)
-CREATE TABLE posts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    slug VARCHAR(200) NOT NULL UNIQUE,
-    content LONGTEXT NOT NULL,
-    excerpt TEXT,
-    featured_image VARCHAR(500),
-    category_id INT,
-    author VARCHAR(100),
-    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
-    published_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    INDEX idx_slug (slug),
-    INDEX idx_status (status),
-    INDEX idx_category_id (category_id),
-    INDEX idx_published_at (published_at)
-);
-
--- 3. Categories Table (MUST be before posts FK reference)
-CREATE TABLE IF NOT EXISTS categories (
+-- 2. Categories Table (MUST be before posts for FK reference)
+CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     slug VARCHAR(100) NOT NULL UNIQUE,
@@ -8119,6 +8098,75 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_slug (slug),
     INDEX idx_parent_id (parent_id)
+);
+
+-- 4. Galleries Table
+CREATE TABLE galleries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    folder_name VARCHAR(100) NOT NULL,
+    cover_image VARCHAR(500),
+    status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+);
+
+-- 5. Applications Table
+CREATE TABLE applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    course VARCHAR(100),
+    year INT,
+    previous_school VARCHAR(200),
+    guardian_name VARCHAR(100),
+    guardian_phone VARCHAR(20),
+    message TEXT,
+    status ENUM('New', 'Under Review', 'Accepted', 'Rejected', 'Waitlisted') DEFAULT 'New',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_status (status),
+    INDEX idx_course (course),
+    INDEX idx_created_at (created_at)
+);
+
+-- 6. Contact Submissions Table
+CREATE TABLE contact_submissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message LONGTEXT NOT NULL,
+    status ENUM('New', 'Read', 'Responded') DEFAULT 'New',
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+);
+
+-- 7. News Table
+CREATE TABLE news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL UNIQUE,
+    content LONGTEXT NOT NULL,
+    excerpt TEXT,
+    featured_image VARCHAR(500),
+    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_slug (slug),
+    INDEX idx_status (status),
+    INDEX idx_published_at (published_at)
 );
 
 -- Enhance news table with author columns for director publishing
@@ -8159,11 +8207,13 @@ CREATE TABLE IF NOT EXISTS news_images (
 
 -- ============================================================
 -- STORE MANAGEMENT SYSTEM
+-- Tables for store inventory, requests, orders, and transactions
 -- ============================================================
 
 SET @_old_fk = @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 7d. Store Categories
 CREATE TABLE IF NOT EXISTS store_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE,
@@ -8171,9 +8221,12 @@ CREATE TABLE IF NOT EXISTS store_categories (
     icon VARCHAR(50) DEFAULT 'fas fa-box',
     status ENUM('active','inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category_name (category_name),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7e. Store Inventory
 CREATE TABLE IF NOT EXISTS store_inventory (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT NOT NULL,
@@ -8187,9 +8240,13 @@ CREATE TABLE IF NOT EXISTS store_inventory (
     status ENUM('active','inactive','discontinued') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category_id (category_id),
+    INDEX idx_item_name (item_name),
+    INDEX idx_status (status),
     FOREIGN KEY (category_id) REFERENCES store_categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7f. Store Inventory Transactions (audit trail)
 CREATE TABLE IF NOT EXISTS store_inventory_transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item_id INT NOT NULL,
@@ -8202,9 +8259,14 @@ CREATE TABLE IF NOT EXISTS store_inventory_transactions (
     reason TEXT,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_item_id (item_id),
+    INDEX idx_transaction_type (transaction_type),
+    INDEX idx_created_at (created_at),
+    INDEX idx_reference (reference_type, reference_id),
     FOREIGN KEY (item_id) REFERENCES store_inventory(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7g. Store Requests (staff request items from store)
 CREATE TABLE IF NOT EXISTS store_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     request_number VARCHAR(50) NOT NULL UNIQUE,
@@ -8221,9 +8283,15 @@ CREATE TABLE IF NOT EXISTS store_requests (
     fulfilled_at DATETIME DEFAULT NULL,
     rejection_reason TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_request_number (request_number),
+    INDEX idx_requested_by (requested_by),
+    INDEX idx_status (status),
+    INDEX idx_forwarded_to (forwarded_to),
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7h. Store Request Items (line items in each request)
 CREATE TABLE IF NOT EXISTS store_request_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     request_id INT NOT NULL,
@@ -8234,10 +8302,13 @@ CREATE TABLE IF NOT EXISTS store_request_items (
     notes TEXT,
     status ENUM('pending','fulfilled','cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_request_id (request_id),
+    INDEX idx_item_id (item_id),
     FOREIGN KEY (request_id) REFERENCES store_requests(id) ON DELETE CASCADE,
     FOREIGN KEY (item_id) REFERENCES store_inventory(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7i. Store Orders (storekeeper orders replenishment)
 CREATE TABLE IF NOT EXISTS store_orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_number VARCHAR(50) NOT NULL UNIQUE,
@@ -8251,9 +8322,13 @@ CREATE TABLE IF NOT EXISTS store_orders (
     received_by INT DEFAULT NULL,
     received_at DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_order_number (order_number),
+    INDEX idx_status (status),
+    INDEX idx_requested_by (requested_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 7j. Store Order Items
 CREATE TABLE IF NOT EXISTS store_order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -8264,12 +8339,15 @@ CREATE TABLE IF NOT EXISTS store_order_items (
     notes TEXT,
     status ENUM('pending','received','cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_order_id (order_id),
+    INDEX idx_item_id (item_id),
     FOREIGN KEY (order_id) REFERENCES store_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (item_id) REFERENCES store_inventory(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = @_old_fk;
 
+-- Populate Store Categories
 INSERT IGNORE INTO store_categories (category_name, description, icon) VALUES
 ('General Utilities', 'Office supplies, cleaning, electrical, and general maintenance items', 'fas fa-tools'),
 ('Food Store Supplies', 'Food items, cooking ingredients, and kitchen supplies', 'fas fa-utensils'),
@@ -8282,16 +8360,17 @@ INSERT IGNORE INTO store_categories (category_name, description, icon) VALUES
 ('ICT Supplies', 'Computer consumables, printer supplies, and ICT accessories', 'fas fa-laptop'),
 ('Teaching & Training', 'Teaching aids, simulation supplies, and training materials', 'fas fa-chalkboard-user');
 
+-- Populate Store Items (using variables for category IDs)
 SET @gen_util = (SELECT id FROM store_categories WHERE category_name = 'General Utilities');
-SET @food = (SELECT id FROM store_categories WHERE category_name = 'Food Store Supplies');
-SET @medical = (SELECT id FROM store_categories WHERE category_name = 'Medical Supplies');
+SET @food     = (SELECT id FROM store_categories WHERE category_name = 'Food Store Supplies');
+SET @medical  = (SELECT id FROM store_categories WHERE category_name = 'Medical Supplies');
 SET @cleaning = (SELECT id FROM store_categories WHERE category_name = 'Cleaning & Hygiene');
 SET @stationery = (SELECT id FROM store_categories WHERE category_name = 'Office Stationery');
 SET @electrical = (SELECT id FROM store_categories WHERE category_name = 'Electrical & Hardware');
-SET @kitchen = (SELECT id FROM store_categories WHERE category_name = 'Kitchen & Dining');
-SET @furniture = (SELECT id FROM store_categories WHERE category_name = 'Furniture & Storage');
-SET @ict = (SELECT id FROM store_categories WHERE category_name = 'ICT Supplies');
-SET @teaching = (SELECT id FROM store_categories WHERE category_name = 'Teaching & Training');
+SET @kitchen    = (SELECT id FROM store_categories WHERE category_name = 'Kitchen & Dining');
+SET @furniture  = (SELECT id FROM store_categories WHERE category_name = 'Furniture & Storage');
+SET @ict        = (SELECT id FROM store_categories WHERE category_name = 'ICT Supplies');
+SET @teaching   = (SELECT id FROM store_categories WHERE category_name = 'Teaching & Training');
 
 INSERT IGNORE INTO store_inventory (category_id, item_name, unit, reorder_level) VALUES
 (@gen_util, 'Surgical Gloves', 'boxes', 50),
@@ -8533,76 +8612,6 @@ INSERT IGNORE INTO store_inventory (category_id, item_name, unit, reorder_level)
 (@teaching, 'Nursing Wall Charts', 'sets', 10),
 (@teaching, 'Midwifery Wall Charts', 'sets', 10),
 (@teaching, 'Educational DVDs', 'pcs', 20);
-
-
--- 4. Galleries Table
-CREATE TABLE galleries (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    folder_name VARCHAR(100) NOT NULL,
-    cover_image VARCHAR(500),
-    status ENUM('Active', 'Inactive') DEFAULT 'Active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at)
-);
-
--- 5. Applications Table
-CREATE TABLE applications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    course VARCHAR(100),
-    year INT,
-    previous_school VARCHAR(200),
-    guardian_name VARCHAR(100),
-    guardian_phone VARCHAR(20),
-    message TEXT,
-    status ENUM('New', 'Under Review', 'Accepted', 'Rejected', 'Waitlisted') DEFAULT 'New',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_status (status),
-    INDEX idx_course (course),
-    INDEX idx_created_at (created_at)
-);
-
--- 6. Contact Submissions Table
-CREATE TABLE contact_submissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    subject VARCHAR(200) NOT NULL,
-    message LONGTEXT NOT NULL,
-    status ENUM('New', 'Read', 'Responded') DEFAULT 'New',
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at)
-);
-
--- 7. News Table
-CREATE TABLE news (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    slug VARCHAR(200) NOT NULL UNIQUE,
-    content LONGTEXT NOT NULL,
-    excerpt TEXT,
-    featured_image VARCHAR(500),
-    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
-    published_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_slug (slug),
-    INDEX idx_status (status),
-    INDEX idx_published_at (published_at)
-);
 
 -- 8. Announcements Table
 CREATE TABLE IF NOT EXISTS announcements (

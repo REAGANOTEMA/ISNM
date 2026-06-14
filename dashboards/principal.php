@@ -500,6 +500,9 @@ $pending_applications = executeQuery($pending_applications_sql);
             </nav>
             
             <div class="mt-auto">
+                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+<a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+<a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
                 <a href="../logout.php" class="btn btn-danger btn-sm w-100">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>

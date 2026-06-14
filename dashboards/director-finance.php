@@ -163,6 +163,10 @@ try {
                         <i class="fas fa-calendar"></i>
                         <span><?php echo date('l, F j, Y'); ?></span>
                     </div>
+                    <a href="../store_request.php" class="btn btn-sm btn-outline-primary ms-2"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+                    <a href="../news.php" class="btn btn-sm btn-outline-primary ms-1"><i class="fas fa-newspaper me-1"></i>News</a>
+                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-address-book me-1"></i>Directory</a>
+                    <a href="../index.php" class="btn btn-sm btn-outline-secondary ms-1"><i class="fas fa-home"></i></a>
                     <div class="user-menu">
                         <img src="../images/default-avatar.png" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>

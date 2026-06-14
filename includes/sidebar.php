@@ -69,6 +69,30 @@ if ($user_type === 'student') {
         'link' => '#schedule',
         'active' => false
     ];
+
+    // Store Request link for students
+    $menu_items[] = [
+        'icon' => 'fas fa-shopping-cart',
+        'title' => 'Store Request',
+        'link' => '../store_request.php',
+        'active' => false
+    ];
+
+    // News link for students
+    $menu_items[] = [
+        'icon' => 'fas fa-newspaper',
+        'title' => 'News',
+        'link' => '../news.php',
+        'active' => false
+    ];
+
+    // Student Directory link for students
+    $menu_items[] = [
+        'icon' => 'fas fa-address-book',
+        'title' => 'Student Directory',
+        'link' => '../student-directory.php',
+        'active' => false
+    ];
 }
 
 // Staff-specific menu items
@@ -139,6 +163,30 @@ if ($user_type === 'staff') {
         ];
     }
     
+    // Store Request link
+    $menu_items[] = [
+        'icon' => 'fas fa-shopping-cart',
+        'title' => 'Store Request',
+        'link' => '../store_request.php',
+        'active' => false
+    ];
+
+    // News Management link
+    $menu_items[] = [
+        'icon' => 'fas fa-newspaper',
+        'title' => 'News',
+        'link' => '../news.php',
+        'active' => false
+    ];
+
+    // Student Directory link
+    $menu_items[] = [
+        'icon' => 'fas fa-address-book',
+        'title' => 'Student Directory',
+        'link' => '../student-directory.php',
+        'active' => false
+    ];
+
     // Staff tools based on role
     $menu_items[] = [
         'icon' => 'fas fa-tools',

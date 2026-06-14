@@ -143,6 +143,9 @@ body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
     <a href="#communications"><i class="fas fa-bullhorn"></i> Communications</a>
     <a href="#hostel-library"><i class="fas fa-bed"></i> Hostel & Library</a>
     <a href="#self-service"><i class="fas fa-user-graduate"></i> Self-Service</a>
+    <a href="../student-directory.php"><i class="fas fa-address-book"></i> Student Directory</a>
+    <a href="../store_request.php"><i class="fas fa-shopping-cart"></i> Store Request</a>
+    <a href="../news.php"><i class="fas fa-newspaper"></i> News</a>
     <a href="#reports"><i class="fas fa-chart-bar"></i> Reports</a>
     <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </nav>

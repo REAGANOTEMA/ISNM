@@ -1,9 +1,8 @@
--- ISNM Website Database Schema
--- Database: igangaschoolofl_website_db
+-- ISNM Database Setup: igangaschoolofl_website_db
+-- Import into the igangaschoolofl_website_db database via phpMyAdmin
+-- =============================================
 
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS igangaschoolofl_website_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE igangaschoolofl_website_db;
+USE `igangaschoolofl_website_db`;
 
 -- Drop existing tables if they exist (for fresh installation)
 DROP TABLE IF EXISTS pages;
@@ -47,6 +46,27 @@ CREATE TABLE categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_slug (slug),
     INDEX idx_parent_id (parent_id)
+);
+
+-- 3. Posts Table (Blog/News)
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL UNIQUE,
+    content LONGTEXT NOT NULL,
+    excerpt TEXT,
+    featured_image VARCHAR(500),
+    category_id INT,
+    author VARCHAR(100),
+    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_slug (slug),
+    INDEX idx_status (status),
+    INDEX idx_category_id (category_id),
+    INDEX idx_published_at (published_at)
 );
 
 -- 4. Galleries Table
@@ -101,22 +121,25 @@ CREATE TABLE contact_submissions (
     INDEX idx_created_at (created_at)
 );
 
--- 7. News Table
+-- 7. News Table (with author tracking for director publishing)
 CREATE TABLE news (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    slug VARCHAR(200) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
     content LONGTEXT NOT NULL,
     excerpt TEXT,
     featured_image VARCHAR(500),
-    status ENUM('Published', 'Draft', 'Archived') DEFAULT 'Draft',
-    published_at TIMESTAMP NULL,
+    author_id INT DEFAULT NULL,
+    author_name VARCHAR(200) DEFAULT NULL,
+    author_role VARCHAR(100) DEFAULT NULL,
+    status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
+    published_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_slug (slug),
     INDEX idx_status (status),
     INDEX idx_published_at (published_at)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 8. Announcements Table
 CREATE TABLE IF NOT EXISTS announcements (
@@ -192,7 +215,7 @@ INSERT INTO galleries (title, description, folder_name, cover_image, status) VAL
 
 -- Sample announcements (published by authorized roles)
 INSERT INTO announcements (title, content, announcement_type, target_audience, priority, posted_by_name, posted_by_role, status, posted_date) VALUES
-('Orientation Week 2026', 'Orientation for new students will run from July 1–5. All new students must report to the main hall by 8:00 AM.', 'academic', 'students', 'high', 'Dr. Jane K. Mwambazi', 'Director General', 'published', NOW()),
+('Orientation Week 2026', 'Orientation for new students will run from July 1â€“5. All new students must report to the main hall by 8:00 AM.', 'academic', 'students', 'high', 'Dr. Jane K. Mwambazi', 'Director General', 'published', NOW()),
 ('Fee Payment Deadline', 'Final deadline for Semester 1 fees is June 30, 2026. Late payments will attract penalties.', 'finance', 'students', 'urgent', 'Mr. Samuel Ochieng', 'Director Finance', 'published', NOW()),
 ('Admissions Open', 'Applications for the Certificate and Diploma programs are now open. Apply via the Admissions portal.', 'admissions', 'all', 'medium', 'Ms. Alice Nabulime', 'Director Admissions', 'published', NOW()),
 ('Institution Leadership Message', 'The CEO welcomes all stakeholders to the new phase of institutional growth and collaboration.', 'general', 'staff', 'medium', 'Mr. Peter K. Lule', 'CEO', 'published', NOW());
@@ -206,7 +229,7 @@ INSERT INTO settings (setting_key, setting_value, setting_type, description, cat
 ('school_website', 'isnm.ac.ug', 'url', 'School website URL', 'general', TRUE),
 ('mission_statement', 'To provide quality nursing and midwifery education for healthcare excellence', 'text', 'School mission statement', 'general', TRUE),
 ('vision_statement', 'To be a leading institution in nursing and midwifery education in Uganda', 'text', 'School vision statement', 'general', TRUE),
-('admissions_email', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', 'email', 'Admissions & Requirements Office — the official point of contact for all student intake and equipment clearance', 'admissions', TRUE),
+('admissions_email', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', 'email', 'Admissions & Requirements Office â€” the official point of contact for all student intake and equipment clearance', 'admissions', TRUE),
 ('admissions_open', 'true', 'boolean', 'Admissions status', 'admissions', TRUE),
 ('current_academic_year', '2025/2026', 'text', 'Current academic year', 'academic', TRUE),
 ('current_semester', 'Semester 1', 'text', 'Current semester', 'academic', TRUE),
@@ -231,3 +254,7 @@ INSERT INTO settings (setting_key, setting_value, setting_type, description, cat
 ('terms_of_service', 'By using this site, you agree to...', 'text', 'Terms of service content', 'legal', TRUE);
 
 -- End of Website Database Schema
+
+SELECT '========================================' as '';
+SELECT 'ISNM COMPLETE SETUP FINISHED!' as '';
+SELECT 'All databases and tables created successfully.' as '';

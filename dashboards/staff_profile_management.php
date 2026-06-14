@@ -259,6 +259,11 @@ $access_list = $access_stmt->get_result();
         <div class="profile-header">
             <h2><i class="fas fa-user-circle me-2"></i>Staff Profile Management</h2>
             <p>Manage your profile picture and access control</p>
+            <div class="text-center mb-3">
+                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+                <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
+            </div>
         </div>
         
         <?php if (isset($_SESSION['error'])): ?>

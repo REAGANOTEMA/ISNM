@@ -263,6 +263,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
     <div class="section-card">
       <h2><i class="fas fa-bolt me-2"></i>Quick Actions – Full Control</h2>
       <div class="d-flex flex-wrap gap-2">
+        <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
         <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
         <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
@@ -290,8 +291,8 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
         <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
         <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
         <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
-        <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
-        <a href="../bursar_reports.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
+        <a href="../dashboards/bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
+        <a href="../dashboards/school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
         <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
       </div>
     </div>
@@ -328,7 +329,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
     <div class="section-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>All Staff Members (<?= count($staff_list) ?>+)</h2>
-        <a href="../hr_dashboard.php" class="btn btn-sm btn-outline-primary">View HR Dashboard</a>
+        <a href="../dashboards/hr-manager.php" class="btn btn-sm btn-outline-primary">View HR Dashboard</a>
       </div>
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle">
@@ -388,6 +389,34 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
       </div>
     </div>
     <?php endif; ?>
+
+    <!-- STORE REQUESTS WIDGET -->
+    <?php
+    $storeReqs = [];
+    if ($conn) {
+        $sr = $conn->query("SELECT sr.request_number, sr.urgency, sr.status, sr.created_at, s.full_name as requester FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC LIMIT 5");
+        if ($sr) while ($row = $sr->fetch_assoc()) $storeReqs[] = $row;
+    }
+    ?>
+    <div class="section-card">
+      <h2><i class="fas fa-shopping-cart me-2 text-warning"></i>Pending Store Requests <?= count($storeReqs) ? '<span class="badge bg-danger ms-1">'.count($storeReqs).'</span>' : '' ?></h2>
+      <?php if (empty($storeReqs)): ?>
+        <p class="text-muted small">No pending store requests.</p>
+      <?php else: foreach ($storeReqs as $sr_): ?>
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <div>
+            <code class="fw-bold"><?= htmlspecialchars($sr_['request_number']) ?></code>
+            <small class="text-muted ms-2">by <?= htmlspecialchars($sr_['requester'] ?? '') ?></small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span>
+            <small class="text-muted"><?= date('d M', strtotime($sr_['created_at'])) ?></small>
+          </div>
+        </div>
+      <?php endforeach; ?>
+        <div class="text-center mt-2"><a href="../dashboards/storekeeper.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Go to Store</a></div>
+      <?php endif; ?>
+    </div>
 
     <!-- RECENT ACTIVITIES -->
     <div class="section-card">

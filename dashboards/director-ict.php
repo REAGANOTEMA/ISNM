@@ -218,9 +218,21 @@ try {
                 <a href="#activity" class="nav-link">
                     <i class="fas fa-history"></i> Activity Log
                 </a>
+                <a href="../news.php" class="nav-link">
+                    <i class="fas fa-newspaper"></i> Manage News
+                </a>
+                <a href="../store_request.php" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i> Store Request
+                </a>
+                <a href="../student-directory.php" class="nav-link">
+                    <i class="fas fa-address-book"></i> Student Directory
+                </a>
             </nav>
             
             <div class="sidebar-footer">
+                <a href="../index.php" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-home"></i> Homepage
+                </a>
                 <a href="../logout.php" class="btn btn-danger btn-sm">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>

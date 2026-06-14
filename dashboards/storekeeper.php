@@ -1,634 +1,724 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$ctx = bootstrapStaffDashboard(['storekeeper', 'bursar', 'finance']);
-$auth_service = $ctx['auth'];
+$ctx = bootstrapStaffDashboard(['storekeeper', 'store', 'inventory']);
+$staffConn = $ctx['staff'];
 $user = $ctx['user'];
-$userRole = $user['role'] ?? '';
 
-// Enhanced database connections
-$students_conn = getStudentsConnection();
-$staff_conn = getStaffConnection();
+$userId = (int)($_SESSION['user_id'] ?? 0);
+$userName = $user['full_name'] ?? 'Store Keeper';
 
-if ($students_conn->connect_error) {
-    die("Students DB connection failed: " . $students_conn->connect_error);
-}
-
-if ($staff_conn->connect_error) {
-    die("Staff DB connection failed: " . $staff_conn->connect_error);
-}
-
-// Set charset
-$students_conn->set_charset("utf8mb4");
-$staff_conn->set_charset("utf8mb4");
-
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
-$user_role = $_SESSION['role'] ?? '';
-
-// Handle form submissions for inventory management
+// --- Handle POST actions ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    switch ($_POST['action']) {
-        case 'update_quantity':
-            handleUpdateQuantity();
-            break;
-        case 'add_stock':
-            handleAddStock();
-            break;
-        case 'remove_stock':
-            handleRemoveStock();
-            break;
-    }
-}
+    $action = $_POST['action'];
 
-// Function to update quantity directly
-function handleUpdateQuantity() {
-    global $staff_conn;
-    
-    $item_id = $_POST['item_id'] ?? 0;
-    $new_quantity = $_POST['quantity'] ?? 0;
-    $unit = $_POST['unit'] ?? '';
-    
-    if ($item_id > 0 && is_numeric($new_quantity)) {
-        $stmt = $staff_conn->prepare("UPDATE store_inventory SET quantity = ?, unit = ?, updated_at = NOW() WHERE id = ?");
-        $stmt->bind_param("dsi", $new_quantity, $unit, $item_id);
-        
-        if ($stmt->execute()) {
-            $_SESSION['success_message'] = "Inventory updated successfully!";
+    // Add / Remove / Adjust stock
+    if (in_array($action, ['add_stock', 'remove_stock', 'adjust_stock'])) {
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        $qty = (float)($_POST['quantity'] ?? 0);
+        $reason = $staffConn->real_escape_string(trim($_POST['reason'] ?? $action));
+
+        $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=$itemId");
+        $curRow = $cur ? $cur->fetch_assoc() : null;
+        $qtyBefore = $curRow ? (float)$curRow['quantity'] : 0;
+
+        if ($action === 'add_stock') {
+            $qtyAfter = $qtyBefore + $qty;
+            $type = 'add';
+        } elseif ($action === 'remove_stock') {
+            $qty = min($qty, $qtyBefore);
+            $qtyAfter = $qtyBefore - $qty;
+            $type = 'remove';
         } else {
-            $_SESSION['error_message'] = "Error updating inventory: " . $stmt->error;
+            $qtyAfter = max(0, $qty);
+            $qty = $qtyAfter - $qtyBefore;
+            $type = 'adjust';
         }
-        $stmt->close();
+
+        $staffConn->query("UPDATE store_inventory SET quantity=$qtyAfter WHERE id=$itemId");
+        $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES ($itemId, '$type', $qty, $qtyBefore, $qtyAfter, '$reason', $userId)");
+        $_SESSION['store_msg'] = ['type'=>'success','text'=>'Stock updated successfully.'];
+        header('Location: storekeeper.php'); exit;
     }
-    
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
+
+    // Fulfill request item
+    if ($action === 'fulfill_item') {
+        $reqItemId = (int)($_POST['req_item_id'] ?? 0);
+        $qty = (float)($_POST['quantity'] ?? 0);
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        $reqId = (int)($_POST['request_id'] ?? 0);
+
+        if ($qty > 0) {
+            $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=$itemId");
+            $curRow = $cur->fetch_assoc();
+            $avail = $curRow ? (float)$curRow['quantity'] : 0;
+            $qty = min($qty, $avail);
+
+            $staffConn->query("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+$qty, status='fulfilled' WHERE id=$reqItemId");
+            $staffConn->query("UPDATE store_inventory SET quantity=quantity-$qty WHERE id=$itemId");
+            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ($itemId, 'request_fulfilled', $qty, 'Fulfilled request #$reqId', $userId, 'request', $reqId)");
+        }
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Forward request to HR/Director
+    if ($action === 'forward_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $forwardTo = (int)($_POST['forward_to'] ?? 0);
+        $forwardRole = $staffConn->real_escape_string($_POST['forward_role'] ?? '');
+        $staffConn->query("UPDATE store_requests SET status='forwarded', forwarded_to=$forwardTo, forwarded_to_role='$forwardRole' WHERE id=$reqId");
+        $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request forwarded for approval.'];
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Mark request as fulfilled
+    if ($action === 'fulfill_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $staffConn->query("UPDATE store_requests SET status='fulfilled', fulfilled_by=$userId, fulfilled_at=NOW() WHERE id=$reqId");
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Reject request
+    if ($action === 'reject_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $reason = $staffConn->real_escape_string(trim($_POST['rejection_reason'] ?? 'No reason'));
+        $staffConn->query("UPDATE store_requests SET status='rejected', rejection_reason='$reason' WHERE id=$reqId");
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Create order
+    if ($action === 'create_order') {
+        $items = $_POST['order_items'] ?? [];
+        $supplier = $staffConn->real_escape_string(trim($_POST['supplier'] ?? 'Internal Requisition'));
+        $notes = $staffConn->real_escape_string(trim($_POST['notes'] ?? ''));
+        $valid = [];
+
+        foreach ($items as $i) {
+            $iid = (int)($i['item_id'] ?? 0);
+            $qty = (float)($i['quantity'] ?? 0);
+            $price = (float)($i['unit_price'] ?? 0);
+            if ($iid > 0 && $qty > 0) $valid[] = [$iid, $qty, $price];
+        }
+
+        if (!empty($valid)) {
+            $ordNum = 'PO-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+            $total = array_sum(array_map(fn($v)=>$v[1]*$v[2], $valid));
+            $staffConn->query("INSERT INTO store_orders (order_number, supplier, notes, total_amount, status, requested_by) VALUES ('$ordNum', '$supplier', '$notes', $total, 'pending_approval', $userId)");
+            $orderId = $staffConn->insert_id;
+
+            $ins = $staffConn->prepare("INSERT INTO store_order_items (order_id, item_id, quantity_ordered, unit_price) VALUES (?, ?, ?, ?)");
+            foreach ($valid as $v) {
+                $ins->bind_param("iidd", $orderId, $v[0], $v[1], $v[2]);
+                $ins->execute();
+            }
+            $ins->close();
+            $_SESSION['store_msg'] = ['type'=>'success','text'=>"Order <strong>$ordNum</strong> created."];
+        }
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Receive order
+    if ($action === 'receive_order') {
+        $orderId = (int)($_POST['order_id'] ?? 0);
+        $staffConn->query("UPDATE store_orders SET status='received', received_by=$userId, received_at=NOW() WHERE id=$orderId");
+        $items = $staffConn->query("SELECT oi.id, oi.item_id, oi.quantity_ordered FROM store_order_items oi WHERE oi.order_id=$orderId AND oi.status='pending'");
+        while ($row = $items->fetch_assoc()) {
+            $staffConn->query("UPDATE store_order_items SET quantity_received=quantity_ordered, status='received' WHERE id={$row['id']}");
+            $staffConn->query("UPDATE store_inventory SET quantity=quantity+{$row['quantity_ordered']} WHERE id={$row['item_id']}");
+            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ({$row['item_id']}, 'order_received', {$row['quantity_ordered']}, 'Order #$orderId received', $userId, 'order', $orderId)");
+        }
+        header('Location: storekeeper.php'); exit;
+    }
+
+    // Approve order
+    if ($action === 'approve_order') {
+        $orderId = (int)($_POST['order_id'] ?? 0);
+        $staffConn->query("UPDATE store_orders SET status='approved', approved_by=$userId, approved_at=NOW() WHERE id=$orderId");
+        header('Location: storekeeper.php'); exit;
+    }
 }
 
-// Function to add stock
-function handleAddStock() {
-    global $staff_conn;
-    
-    $item_id = $_POST['item_id'] ?? 0;
-    $quantity_to_add = $_POST['quantity'] ?? 0;
-    $reason = $_POST['reason'] ?? 'Stock added';
-    
-    if ($item_id > 0 && is_numeric($quantity_to_add) && $quantity_to_add > 0) {
-        // Get current quantity
-        $stmt = $staff_conn->prepare("SELECT quantity FROM store_inventory WHERE id = ?");
-        $stmt->bind_param("i", $item_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $item = $result->fetch_assoc();
-        $stmt->close();
-        
-        if ($item) {
-            $new_quantity = $item['quantity'] + $quantity_to_add;
-            
-            // Update inventory
-            $update_stmt = $staff_conn->prepare("UPDATE store_inventory SET quantity = ?, updated_at = NOW() WHERE id = ?");
-            $update_stmt->bind_param("di", $new_quantity, $item_id);
-            $update_stmt->execute();
-            $update_stmt->close();
-            
-            // Log transaction
-            $log_stmt = $staff_conn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by) VALUES (?, 'add', ?, ?, ?)");
-            $log_stmt->bind_param("iiss", $item_id, $quantity_to_add, $reason, $user_id);
-            $log_stmt->execute();
-            $log_stmt->close();
-            
-            $_SESSION['success_message'] = "Stock added successfully!";
-        } else {
-            $_SESSION['error_message'] = "Item not found!";
-        }
-    } else {
-        $_SESSION['error_message'] = "Invalid quantity!";
-    }
-    
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
+// --- Load Data ---
+$msg = $_SESSION['store_msg'] ?? null; unset($_SESSION['store_msg']);
 
-// Function to remove stock
-function handleRemoveStock() {
-    global $staff_conn;
-    
-    $item_id = $_POST['item_id'] ?? 0;
-    $quantity_to_remove = $_POST['quantity'] ?? 0;
-    $reason = $_POST['reason'] ?? 'Stock removed';
-    
-    if ($item_id > 0 && is_numeric($quantity_to_remove) && $quantity_to_remove > 0) {
-        // Get current quantity
-        $stmt = $staff_conn->prepare("SELECT quantity FROM store_inventory WHERE id = ?");
-        $stmt->bind_param("i", $item_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $item = $result->fetch_assoc();
-        $stmt->close();
-        
-        if ($item && $item['quantity'] >= $quantity_to_remove) {
-            $new_quantity = $item['quantity'] - $quantity_to_remove;
-            
-            // Update inventory
-            $update_stmt = $staff_conn->prepare("UPDATE store_inventory SET quantity = ?, updated_at = NOW() WHERE id = ?");
-            $update_stmt->bind_param("di", $new_quantity, $item_id);
-            $update_stmt->execute();
-            $update_stmt->close();
-            
-            // Log transaction
-            $log_stmt = $staff_conn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by) VALUES (?, 'remove', ?, ?, ?)");
-            $log_stmt->bind_param("iiss", $item_id, $quantity_to_remove, $reason, $user_id);
-            $log_stmt->execute();
-            $log_stmt->close();
-            
-            $_SESSION['success_message'] = "Stock removed successfully!";
-        } else {
-            $_SESSION['error_message'] = "Insufficient stock or item not found!";
-        }
-    } else {
-        $_SESSION['error_message'] = "Invalid quantity!";
-    }
-    
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
+// Categories + items
+$categories = [];
+$r = $staffConn->query("SELECT id, category_name FROM store_categories WHERE status='active'");
+if ($r) while ($row = $r->fetch_assoc()) $categories[] = $row;
 
-// Get inventory items
-$inventory_items = [];
-$result = $staff_conn->query("SELECT * FROM store_inventory ORDER BY category, item_name");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $inventory_items[] = $row;
-    }
-    $result->free();
-}
+$inventory = [];
+$r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
+if ($r) while ($row = $r->fetch_assoc()) $inventory[] = $row;
+
+// Low stock items
+$lowStock = [];
+$r = $staffConn->query("SELECT si.*, sc.category_name FROM store_inventory si JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' AND si.quantity <= si.reorder_level ORDER BY (si.quantity / NULLIF(si.reorder_level,0)) ASC LIMIT 20");
+if ($r) while ($row = $r->fetch_assoc()) $lowStock[] = $row;
+
+// Pending requests
+$pendingReqs = [];
+$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name, s.position as requester_role FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
+if ($r) while ($row = $r->fetch_assoc()) $pendingReqs[] = $row;
+
+// Recent fulfilled
+$fulfilledReqs = [];
+$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('fulfilled','rejected') ORDER BY sr.updated_at DESC LIMIT 10");
+if ($r) while ($row = $r->fetch_assoc()) $fulfilledReqs[] = $row;
+
+// Orders
+$orders = [];
+$r = $staffConn->query("SELECT so.*, s.full_name as requester_name FROM store_orders so LEFT JOIN staff s ON so.requested_by=s.id ORDER BY so.created_at DESC LIMIT 15");
+if ($r) while ($row = $r->fetch_assoc()) $orders[] = $row;
+
+// Transaction history (last 50)
+$transactions = [];
+$r = $staffConn->query("SELECT sit.*, si.item_name FROM store_inventory_transactions sit JOIN store_inventory si ON sit.item_id=si.id ORDER BY sit.created_at DESC LIMIT 50");
+if ($r) while ($row = $r->fetch_assoc()) $transactions[] = $row;
+
+// Staff for forwarding
+$directors = [];
+$r = $staffConn->query("SELECT s.id, s.full_name, s.position, sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE (sr.role_name LIKE '%Director%' OR sr.role_name LIKE '%HR%' OR sr.role_name LIKE '%Principal%' OR sr.role_name LIKE '%CEO%') AND s.status='Active' ORDER BY s.full_name");
+if ($r) while ($row = $r->fetch_assoc()) $directors[] = $row;
+
+$tab = $_GET['tab'] ?? 'dashboard';
+$statsInv = count($inventory);
+$statsPending = count($pendingReqs);
+$statsLowStock = count($lowStock);
+$statsOrders = count($orders);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>ISNM Storekeeper Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/css/all.min.css">
-    <link rel="stylesheet" href="dashboard-style.css">
-    <style>
-        .inventory-card {
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        .inventory-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--light-bg);
-        }
-        .item-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-text);
-        }
-        .item-category {
-            background: var(--secondary-color);
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-        }
-        .quantity-display {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin: 15px 0;
-            color: var(--primary-color);
-        }
-        .unit-display {
-            display: block;
-            text-align: center;
-            font-size: 1rem;
-            color: var(--dark-text);
-            opacity: 0.8;
-        }
-        .stock-form {
-            margin-top: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .form-control {
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            width: 100%;
-        }
-        .btn-stock {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-add {
-            background: var(--success-color);
-            color: white;
-        }
-        .btn-add:hover {
-            background: #219653;
-            transform: translateY(-2px);
-        }
-        .btn-remove {
-            background: var(--accent-color);
-            color: white;
-        }
-        .btn-remove:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-        }
-        .btn-update {
-            background: var(--secondary-color);
-            color: white;
-        }
-        .btn-update:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-        .alert {
-            border-radius: 8px;
-        }
-        .category-section {
-            margin-bottom: 30px;
-        }
-        .category-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark-text);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        .category-title i {
-            margin-right: 10px;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--secondary-color);
-        }
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        .stat-label {
-            font-size: 1.1rem;
-            color: var(--dark-text);
-            opacity: 0.8;
-        }
-    </style>
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Store Keeper - ISNM Management</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+* { box-sizing:border-box; }
+:root {
+    --primary:#1a237e; --primary-lt:#3949ab; --accent:#ffd700;
+    --success:#2e7d32; --danger:#c62828; --warning:#e65100;
+    --bg:#f0f2f5; --card-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+body { font-family:'Segoe UI',sans-serif; background:var(--bg); margin:0; min-height:100vh; display:flex; flex-direction:column; }
+.page-content { margin-left:280px; flex:1; min-height:100vh; }
+@media(max-width:768px) { .page-content { margin-left:0; } }
+
+.top-bar { background:#fff; padding:12px 22px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,.07); position:sticky; top:0; z-index:100; }
+.content-area { padding:22px; }
+
+.stat-card { background:#fff; border-radius:14px; padding:18px; display:flex; align-items:center; gap:14px; box-shadow:var(--card-shadow); transition:transform .25s; }
+.stat-card:hover { transform:translateY(-3px); }
+.stat-icon { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0; }
+.stat-info h3 { font-size:1.5rem;font-weight:700;margin:0;line-height:1.2; }
+.stat-info p { font-size:.78rem;color:#666;margin:2px 0 0; }
+
+.section-card { background:#fff; border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:var(--card-shadow); }
+.section-card h2 { font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5; }
+
+.tab-nav { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; background:#fff; border-radius:12px; padding:6px; box-shadow:var(--card-shadow); }
+.tab-nav a { padding:8px 18px; border-radius:8px; text-decoration:none; font-size:.85rem; font-weight:600; color:#555; transition:all .2s; }
+.tab-nav a:hover { background:#e8eaf6; color:var(--primary); }
+.tab-nav a.active { background:var(--primary); color:#fff; }
+
+.badge-success { background:#e8f5e9; color:#2e7d32; }
+.badge-warning { background:#fff3e0; color:#e65100; }
+.badge-danger { background:#ffebee; color:#c62828; }
+.badge-info { background:#e3f2fd; color:#1565c0; }
+
+.request-card { background:#fff; border-radius:12px; padding:16px; margin-bottom:10px; border:1px solid #e8e8e8; transition:box-shadow .2s; }
+.request-card:hover { box-shadow:0 4px 15px rgba(0,0,0,.1); }
+.request-card .req-num { font-weight:700; color:var(--primary); }
+.request-card .req-meta { font-size:.82rem; color:#888; }
+.request-card .req-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+.item-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+.item-row:last-child { border-bottom:none; }
+.item-row .item-name { flex:1; font-weight:600; }
+.item-row .item-qty { min-width:60px; text-align:center; }
+.item-row .item-unit { color:#888; font-size:.85rem; min-width:40px; }
+
+.qty-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.8rem; font-weight:600; }
+.qty-ok { background:#e8f5e9; color:#2e7d32; }
+.qty-warn { background:#fff3e0; color:#e65100; }
+.qty-bad { background:#ffebee; color:#c62828; }
+
+footer { background:var(--primary); color:rgba(255,255,255,.8); text-align:center; padding:15px; margin-top:auto; font-size:.85rem; }
+footer a { color:var(--accent); text-decoration:none; }
+
+@media(max-width:768px) {
+    .tab-nav a { padding:6px 12px; font-size:.78rem; }
+    .content-area { padding:12px; }
+    .request-card .req-actions { flex-direction:column; }
+}
+</style>
 </head>
 <body>
-    <?php include("../shared/_header.php"); ?>
-    
-    <main>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="page-header text-center mb-4">
-                        <h1><i class="fas fa-warehouse"></i> ISNM Storekeeper Dashboard</h1>
-                        <p class="text-muted">Manage inventory for General Utilities and Food Store Supplies</p>
-                    </div>
-                    
-                    <?php if (isset($_SESSION['success_message'])): ?>
-                        <div class="alert alert-success alert-dismissible fade show">
-                            <?php 
-                                echo $_SESSION['success_message'];
-                                unset($_SESSION['success_message']);
-                            ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if (isset($_SESSION['error_message'])): ?>
-                        <div class="alert alert-danger alert-dismissible fade show">
-                            <?php 
-                                echo $_SESSION['error_message'];
-                                unset($_SESSION['error_message']);
-                            ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <div class="row">
-                        <!-- Statistics Cards -->
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stat-value"><?php echo count($inventory_items); ?></div>
-                                <div class="stat-label">Total Items</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stat-value">
-                                    <?php 
-                                        $total_quantity = 0;
-                                        foreach ($inventory_items as $item) {
-                                            $total_quantity += $item['quantity'];
-                                        }
-                                        echo number_format($total_quantity);
-                                    ?>
-                                </div>
-                                <div class="stat-label">Total Units in Stock</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stat-value"><?php echo $user_name; ?></div>
-                                <div class="stat-label">Current User</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stat-value"><?php echo date('M d, Y'); ?></div>
-                                <div class="stat-label">Today's Date</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- General Utilities Section -->
-                    <div class="col-md-12">
-                        <div class="category-section">
-                            <h2 class="category-title"><i class="fas fa-tools"></i> General Utilities</h2>
-                            <div class="row">
-                                <?php 
-                                $general_items = array_filter($inventory_items, function($item) {
-                                    return strtolower($item['category']) === 'general utilities';
-                                });
-                                
-                                if (empty($general_items)): ?>
-                                    <div class="col-md-12">
-                                        <p class="text-muted">No general utilities items found.</p>
-                                    </div>
-                                <?php else: ?>
-                                    <?php foreach ($general_items as $item): ?>
-                                        <div class="col-md-4">
-                                            <div class="inventory-card">
-                                                <div class="item-header">
-                                                    <span class="item-name"><?php echo htmlspecialchars($item['item_name']); ?></span>
-                                                    <span class="item-category"><?php echo htmlspecialchars($item['category']); ?></span>
-                                                </div>
-                                                <div class="quantity-display"><?php echo number_format($item['quantity']); ?></div>
-                                                <div class="unit-display"><?php echo htmlspecialchars($item['unit']); ?></div>
-                                                
-                                                <form method="POST" action="" class="stock-form">
-                                                    <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                    <input type="hidden" name="action" value="update_quantity">
-                                                    
-                                                    <div class="form-group">
-                                                        <label class="form-label">Quantity:</label>
-                                                        <input type="number" name="quantity" class="form-control" value="<?php echo $item['quantity']; ?>" min="0" step="any" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Unit:</label>
-                                                        <input type="text" name="unit" class="form-control" value="<?php echo htmlspecialchars($item['unit']); ?>" required>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-update w-100">Update Quantity</button>
-                                                </form>
-                                                
-                                                <div class="mt-3">
-                                                    <button type="button" class="btn btn-add me-2" data-bs-toggle="modal" data-bs-target="#addStockModal-<?php echo $item['id']; ?>">
-                                                        <i class="fas fa-plus me-1"></i> Add Stock
-                                                    </button>
-                                                    <button type="button" class="btn btn-remove" data-bs-toggle="modal" data-bs-target="#removeStockModal-<?php echo $item['id']; ?>">
-                                                        <i class="fas fa-minus me-1"></i> Remove Stock
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Add Stock Modal -->
-                                        <div class="modal fade" id="addStockModal-<?php echo $item['id']; ?>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <form method="POST" action="">
-                                                        <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                        <input type="hidden" name="action" value="add_stock">
-                                                        
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Add Stock to <?php echo htmlspecialchars($item['item_name']); ?></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Quantity to Add:</label>
-                                                                <input type="number" name="quantity" class="form-control" min="1" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Reason:</label>
-                                                                <input type="text" name="reason" class="form-control" placeholder="e.g., New delivery, returned items" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-success">Add Stock</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Remove Stock Modal -->
-                                        <div class="modal fade" id="removeStockModal-<?php echo $item['id']; ?>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <form method="POST" action="">
-                                                        <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                        <input type="hidden" name="action" value="remove_stock">
-                                                        
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Remove Stock from <?php echo htmlspecialchars($item['item_name']); ?></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Quantity to Remove:</label>
-                                                                <input type="number" name="quantity" class="form-control" min="1" max="<?php echo $item['quantity']; ?>" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Reason:</label>
-                                                                <input type="text" name="reason" class="form-control" placeholder="e.g., Usage, damaged, expired" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger">Remove Stock</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Food Store Supplies Section -->
-                    <div class="col-md-12">
-                        <div class="category-section">
-                            <h2 class="category-title"><i class="fas fa-utensils"></i> Food Store Supplies</h2>
-                            <div class="row">
-                                <?php 
-                                $food_items = array_filter($inventory_items, function($item) {
-                                    return strtolower($item['category']) === 'food store supplies';
-                                });
-                                
-                                if (empty($food_items)): ?>
-                                    <div class="col-md-12">
-                                        <p class="text-muted">No food store supplies items found.</p>
-                                    </div>
-                                <?php else: ?>
-                                    <?php foreach ($food_items as $item): ?>
-                                        <div class="col-md-4">
-                                            <div class="inventory-card">
-                                                <div class="item-header">
-                                                    <span class="item-name"><?php echo htmlspecialchars($item['item_name']); ?></span>
-                                                    <span class="item-category"><?php echo htmlspecialchars($item['category']); ?></span>
-                                                </div>
-                                                <div class="quantity-display"><?php echo number_format($item['quantity']); ?></div>
-                                                <div class="unit-display"><?php echo htmlspecialchars($item['unit']); ?></div>
-                                                
-                                                <form method="POST" action="" class="stock-form">
-                                                    <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                    <input type="hidden" name="action" value="update_quantity">
-                                                    
-                                                    <div class="form-group">
-                                                        <label class="form-label">Quantity:</label>
-                                                        <input type="number" name="quantity" class="form-control" value="<?php echo $item['quantity']; ?>" min="0" step="any" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Unit:</label>
-                                                        <input type="text" name="unit" class="form-control" value="<?php echo htmlspecialchars($item['unit']); ?>" required>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-update w-100">Update Quantity</button>
-                                                </form>
-                                                
-                                                <div class="mt-3">
-                                                    <button type="button" class="btn btn-add me-2" data-bs-toggle="modal" data-bs-target="#addFoodStockModal-<?php echo $item['id']; ?>">
-                                                        <i class="fas fa-plus me-1"></i> Add Stock
-                                                    </button>
-                                                    <button type="button" class="btn btn-remove" data-bs-toggle="modal" data-bs-target="#removeFoodStockModal-<?php echo $item['id']; ?>">
-                                                        <i class="fas fa-minus me-1"></i> Remove Stock
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Add Stock Modal -->
-                                        <div class="modal fade" id="addFoodStockModal-<?php echo $item['id']; ?>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <form method="POST" action="">
-                                                        <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                        <input type="hidden" name="action" value="add_stock">
-                                                        
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Add Stock to <?php echo htmlspecialchars($item['item_name']); ?></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Quantity to Add:</label>
-                                                                <input type="number" name="quantity" class="form-control" min="1" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Reason:</label>
-                                                                <input type="text" name="reason" class="form-control" placeholder="e.g., New delivery, returned items" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-success">Add Stock</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Remove Stock Modal -->
-                                        <div class="modal fade" id="removeFoodStockModal-<?php echo $item['id']; ?>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <form method="POST" action="">
-                                                        <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
-                                                        <input type="hidden" name="action" value="remove_stock">
-                                                        
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Remove Stock from <?php echo htmlspecialchars($item['item_name']); ?></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Quantity to Remove:</label>
-                                                                <input type="number" name="quantity" class="form-control" min="1" max="<?php echo $item['quantity']; ?>" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Reason:</label>
-                                                                <input type="text" name="reason" class="form-control" placeholder="e.g., Usage, damaged, expired" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger">Remove Stock</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
+
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+
+<div class="page-content">
+    <div class="top-bar">
+        <div>
+            <strong><i class="fas fa-warehouse me-2 text-primary"></i>Store Keeper</strong>
+            <span class="text-muted small ms-2"><?= htmlspecialchars($userName) ?></span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
+            <a href="../news.php" class="btn btn-sm btn-outline-light"><i class="fas fa-newspaper me-1"></i>News</a>
+            <a href="../store_request.php" class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i>New Request</a>
+            <a href="../student-directory.php" class="btn btn-sm btn-outline-light"><i class="fas fa-address-book me-1"></i>Directory</a>
+            <a href="../index.php" class="btn btn-sm btn-outline-light"><i class="fas fa-home me-1"></i></a>
+            <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <?php if ($msg): ?>
+        <div class="alert alert-<?= $msg['type'] === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show py-2"><?= $msg['text'] ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#1a237e,#3949ab)"><i class="fas fa-box"></i></div>
+                    <div class="stat-info"><h3><?= $statsInv ?></h3><p>Inventory Items</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#e65100,#fb8c00)"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="stat-info"><h3><?= $statsPending ?></h3><p>Pending Requests</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#c62828,#ef5350)"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="stat-info"><h3><?= $statsLowStock ?></h3><p>Low Stock Items</p></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#2e7d32,#43a047)"><i class="fas fa-truck"></i></div>
+                    <div class="stat-info"><h3><?= $statsOrders ?></h3><p>Orders</p></div>
                 </div>
             </div>
         </div>
-    </main>
-    
-    <?php include("../shared/_footer.php"); ?>
-    
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
-    </script>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <a href="?tab=dashboard" class="<?= $tab === 'dashboard' ? 'active' : '' ?>"><i class="fas fa-chart-pie me-1"></i>Dashboard</a>
+            <a href="?tab=requests" class="<?= $tab === 'requests' ? 'active' : '' ?>"><i class="fas fa-clipboard-list me-1"></i>Requests <?= $statsPending ? '<span class="badge bg-danger ms-1">'.$statsPending.'</span>' : '' ?></a>
+            <a href="?tab=inventory" class="<?= $tab === 'inventory' ? 'active' : '' ?>"><i class="fas fa-boxes me-1"></i>Inventory</a>
+            <a href="?tab=orders" class="<?= $tab === 'orders' ? 'active' : '' ?>"><i class="fas fa-truck me-1"></i>Orders</a>
+            <a href="?tab=transactions" class="<?= $tab === 'transactions' ? 'active' : '' ?>"><i class="fas fa-history me-1"></i>History</a>
+            <a href="../store_request.php" class="ms-auto"><i class="fas fa-plus-circle me-1"></i>New Request</a>
+        </div>
+
+<?php if ($tab === 'dashboard'): ?>
+        <!-- === DASHBOARD TAB === -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="section-card">
+                    <h2><i class="fas fa-exclamation-triangle text-warning me-2"></i>Low Stock Alerts</h2>
+                    <?php if (empty($lowStock)): ?>
+                        <p class="text-muted small">All items are well stocked.</p>
+                    <?php else: ?>
+                    <div style="max-height:300px;overflow-y:auto">
+                        <?php foreach ($lowStock as $item): 
+                            $ratio = $item['reorder_level'] > 0 ? round($item['quantity'] / $item['reorder_level'] * 100) : 0;
+                            $cls = $ratio <= 25 ? 'qty-bad' : ($ratio <= 75 ? 'qty-warn' : 'qty-ok');
+                        ?>
+                        <div class="item-row">
+                            <span class="item-name"><small class="text-muted">[<?= htmlspecialchars($item['category_name']) ?>]</small> <?= htmlspecialchars($item['item_name']) ?></span>
+                            <span class="qty-badge <?= $cls ?>"><?= number_format($item['quantity']) ?> / <?= number_format($item['reorder_level']) ?> <?= htmlspecialchars($item['unit']) ?></span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openAddStock(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['item_name'])) ?>')"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card">
+                    <h2><i class="fas fa-clipboard-list text-primary me-2"></i>Recent Pending Requests</h2>
+                    <?php if (empty($pendingReqs)): ?>
+                        <p class="text-muted small">No pending requests.</p>
+                    <?php else: foreach (array_slice($pendingReqs, 0, 5) as $req): 
+                        $urgencyBadge = $req['urgency'] === 'urgent' ? 'bg-danger' : ($req['urgency'] === 'high' ? 'bg-warning text-dark' : ($req['urgency'] === 'medium' ? 'bg-info' : 'bg-secondary'));
+                    ?>
+                    <div class="request-card">
+                        <div class="d-flex justify-content-between">
+                            <span class="req-num"><?= htmlspecialchars($req['request_number']) ?></span>
+                            <span class="badge <?= $urgencyBadge ?>"><?= $req['urgency'] ?></span>
+                        </div>
+                        <div class="req-meta"><?= htmlspecialchars($req['requester_name'] ?? 'Unknown') ?> | <?= htmlspecialchars($req['department'] ?? '') ?> | <?= date('d M Y H:i', strtotime($req['created_at'])) ?></div>
+                        <div class="req-actions mt-2">
+                            <button class="btn btn-sm btn-success" onclick="openFulfill(<?= $req['id'] ?>)"><i class="fas fa-check me-1"></i>Fulfill</button>
+                            <button class="btn btn-sm btn-info text-white" onclick="openForward(<?= $req['id'] ?>)"><i class="fas fa-forward me-1"></i>Forward</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="openReject(<?= $req['id'] ?>)"><i class="fas fa-times me-1"></i>Reject</button>
+                        </div>
+                    </div>
+                    <?php endforeach; endif; ?>
+                    <div class="text-center mt-2"><a href="?tab=requests" class="btn btn-sm btn-outline-primary">View All Requests</a></div>
+                </div>
+            </div>
+        </div>
+<?php elseif ($tab === 'requests'): ?>
+        <!-- === REQUESTS TAB === -->
+        <div class="section-card">
+            <h2><i class="fas fa-clipboard-list me-2"></i>Pending Store Requests</h2>
+            <?php if (empty($pendingReqs)): ?>
+                <p class="text-muted">No pending requests at the moment.</p>
+            <?php else: foreach ($pendingReqs as $req):
+                $urgencyBadge = $req['urgency'] === 'urgent' ? 'bg-danger' : ($req['urgency'] === 'high' ? 'bg-warning text-dark' : ($req['urgency'] === 'medium' ? 'bg-info' : 'bg-secondary'));
+                $reqItems = $staffConn->query("SELECT sri.*, si.item_name, si.unit, si.quantity as avail_qty FROM store_request_items sri JOIN store_inventory si ON sri.item_id=si.id WHERE sri.request_id={$req['id']}");
+            ?>
+            <div class="request-card">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <div>
+                        <span class="req-num"><?= htmlspecialchars($req['request_number']) ?></span>
+                        <span class="badge <?= $urgencyBadge ?> ms-2"><?= $req['urgency'] ?></span>
+                        <span class="badge bg-secondary ms-1"><?= $req['status'] ?></span>
+                    </div>
+                    <small class="text-muted"><?= date('d M Y H:i', strtotime($req['created_at'])) ?></small>
+                </div>
+                <div class="req-meta mb-2">
+                    <i class="fas fa-user me-1"></i><?= htmlspecialchars($req['requester_name'] ?? 'Unknown') ?>
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-building me-1"></i><?= htmlspecialchars($req['department'] ?? 'N/A') ?>
+                    <?php if ($req['forwarded_to_role']): ?>
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-forward me-1"></i>Forwarded to: <?= htmlspecialchars($req['forwarded_to_role']) ?>
+                    <?php endif; ?>
+                </div>
+                <?php if ($req['notes']): ?><div class="small text-muted mb-2"><i class="fas fa-comment me-1"></i><?= htmlspecialchars($req['notes']) ?></div><?php endif; ?>
+                <table class="table table-sm table-bordered mb-2">
+                    <thead class="table-light"><tr><th>Item</th><th>Qty Requested</th><th>Available</th><th>Fulfill</th></tr></thead>
+                    <tbody>
+                        <?php while ($ri = $reqItems->fetch_assoc()): 
+                            $avail = (float)$ri['avail_qty'];
+                            $reqd = (float)$ri['quantity_requested'];
+                        ?>
+                        <tr>
+                            <td><?= htmlspecialchars($ri['item_name']) ?></td>
+                            <td><?= number_format($reqd) ?> <?= htmlspecialchars($ri['unit']) ?></td>
+                            <td><span class="qty-badge <?= $avail >= $reqd ? 'qty-ok' : 'qty-bad' ?>"><?= number_format($avail) ?></span></td>
+                            <td>
+                                <?php if ($ri['status'] === 'fulfilled'): ?>
+                                <span class="badge bg-success">Done</span>
+                                <?php else: ?>
+                                <form method="POST" class="d-flex gap-1">
+                                    <input type="hidden" name="action" value="fulfill_item">
+                                    <input type="hidden" name="req_item_id" value="<?= $ri['id'] ?>">
+                                    <input type="hidden" name="item_id" value="<?= $ri['item_id'] ?>">
+                                    <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
+                                    <input type="number" name="quantity" class="form-control form-control-sm" style="width:70px" value="<?= min($reqd, $avail) ?>" max="<?= $avail ?>" min="0" step="any">
+                                    <button class="btn btn-sm btn-success" <?= $avail <= 0 ? 'disabled' : '' ?>><i class="fas fa-check"></i></button>
+                                </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-success" onclick="fulfillAll(<?= $req['id'] ?>)"><i class="fas fa-check-double me-1"></i>Mark All Fulfilled</button>
+                    <button class="btn btn-sm btn-info text-white" onclick="openForward(<?= $req['id'] ?>)"><i class="fas fa-forward me-1"></i>Forward to HR/Director</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="openReject(<?= $req['id'] ?>)"><i class="fas fa-times me-1"></i>Reject</button>
+                </div>
+            </div>
+            <?php endforeach; endif; ?>
+        </div>
+
+        <div class="section-card">
+            <h2><i class="fas fa-history me-2"></i>Recent Fulfilled / Rejected</h2>
+            <?php if (empty($fulfilledReqs)): ?>
+                <p class="text-muted small">No history yet.</p>
+            <?php else: ?>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead><tr><th>#</th><th>Requester</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($fulfilledReqs as $r): ?>
+                        <tr>
+                            <td><code><?= htmlspecialchars($r['request_number']) ?></code></td>
+                            <td><?= htmlspecialchars($r['requester_name'] ?? '') ?></td>
+                            <td><span class="badge bg-<?= $r['status'] === 'fulfilled' ? 'success' : 'danger' ?>"><?= $r['status'] ?></span></td>
+                            <td><small><?= date('d M Y', strtotime($r['updated_at'])) ?></small></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
+        </div>
+<?php elseif ($tab === 'inventory'): ?>
+        <!-- === INVENTORY TAB === -->
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0"><i class="fas fa-boxes me-2"></i>Full Inventory</h2>
+                <input type="text" id="invFilter" class="form-control form-control-sm" style="width:250px" placeholder="Search items...">
+            </div>
+            <div class="table-responsive" style="max-height:600px;overflow-y:auto">
+                <table class="table table-sm table-hover" id="invTable">
+                    <thead class="table-light sticky-top"><tr><th>Item</th><th>Category</th><th>Stock</th><th>Unit</th><th>Reorder At</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($inventory as $item):
+                            $isLow = $item['quantity'] <= $item['reorder_level'];
+                        ?>
+                        <tr class="inv-row" data-name="<?= strtolower(htmlspecialchars($item['item_name'].' '.$item['category_name'])) ?>">
+                            <td class="fw-semibold"><?= htmlspecialchars($item['item_name']) ?></td>
+                            <td><small class="text-muted"><?= htmlspecialchars($item['category_name']) ?></small></td>
+                            <td><span class="qty-badge <?= $isLow ? 'qty-bad' : 'qty-ok' ?>"><?= number_format($item['quantity']) ?></span></td>
+                            <td><?= htmlspecialchars($item['unit']) ?></td>
+                            <td><?= number_format($item['reorder_level']) ?></td>
+                            <td><?= $item['status'] ?></td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="openAddStock(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['item_name'])) ?>')"><i class="fas fa-plus me-2 text-success"></i>Add Stock</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="openRemoveStock(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['item_name'])) ?>', <?= $item['quantity'] ?>)"><i class="fas fa-minus me-2 text-danger"></i>Remove Stock</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="openAdjustStock(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['item_name'])) ?>', <?= $item['quantity'] ?>)"><i class="fas fa-sliders-h me-2 text-primary"></i>Adjust</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<?php elseif ($tab === 'orders'): ?>
+        <!-- === ORDERS TAB === -->
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="section-card">
+                    <h2><i class="fas fa-plus-circle me-2 text-success"></i>Create Purchase Order</h2>
+                    <form method="POST" id="orderForm">
+                        <input type="hidden" name="action" value="create_order">
+                        <div class="mb-2"><label class="form-label fw-semibold">Supplier / Source</label><input type="text" name="supplier" class="form-control" placeholder="Internal Requisition"></div>
+                        <div class="mb-2"><label class="form-label fw-semibold">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+                        <label class="form-label fw-semibold">Items to Order</label>
+                        <div id="orderItems" style="max-height:300px;overflow-y:auto">
+                            <?php foreach ($inventory as $item): ?>
+                            <div class="d-flex align-items-center gap-1 mb-1" style="font-size:.82rem">
+                                <input type="checkbox" class="order-item-cb form-check-input" data-id="<?= $item['id'] ?>" data-name="<?= htmlspecialchars($item['item_name']) ?>">
+                                <span style="flex:1"><?= htmlspecialchars($item['item_name']) ?></span>
+                                <input type="number" class="form-control form-control-sm" style="width:60px" placeholder="Qty" disabled>
+                                <input type="number" class="form-control form-control-sm" style="width:65px" placeholder="Price" disabled>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-2"><i class="fas fa-save me-1"></i>Create Order</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="section-card">
+                    <h2><i class="fas fa-truck me-2"></i>Orders &amp; Receiving</h2>
+                    <?php if (empty($orders)): ?><p class="text-muted">No orders yet.</p>
+                    <?php else: foreach ($orders as $ord): 
+                        $badgeCls = $ord['status'] === 'received' ? 'bg-success' : ($ord['status'] === 'approved' ? 'bg-info' : ($ord['status'] === 'pending_approval' ? 'bg-warning text-dark' : ($ord['status'] === 'cancelled' ? 'bg-danger' : 'bg-secondary')));
+                    ?>
+                    <div class="request-card">
+                        <div class="d-flex justify-content-between">
+                            <span class="req-num"><?= htmlspecialchars($ord['order_number']) ?></span>
+                            <span class="badge <?= $badgeCls ?>"><?= $ord['status'] ?></span>
+                        </div>
+                        <div class="req-meta"><?= htmlspecialchars($ord['supplier']) ?> | UGX <?= number_format($ord['total_amount']) ?> | <?= htmlspecialchars($ord['requester_name'] ?? '') ?></div>
+                        <?php if ($ord['status'] === 'approved'): ?>
+                        <form method="POST" class="mt-2">
+                            <input type="hidden" name="action" value="receive_order">
+                            <input type="hidden" name="order_id" value="<?= $ord['id'] ?>">
+                            <button class="btn btn-sm btn-success"><i class="fas fa-check-double me-1"></i>Receive Order</button>
+                        </form>
+                        <?php endif; ?>
+                        <?php if ($ord['status'] === 'pending_approval'): ?>
+                        <form method="POST" class="mt-2">
+                            <input type="hidden" name="action" value="approve_order">
+                            <input type="hidden" name="order_id" value="<?= $ord['id'] ?>">
+                            <button class="btn btn-sm btn-primary"><i class="fas fa-check me-1"></i>Approve</button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </div>
+        </div>
+<?php elseif ($tab === 'transactions'): ?>
+        <!-- === TRANSACTIONS TAB === -->
+        <div class="section-card">
+            <h2><i class="fas fa-history me-2"></i>Transaction History</h2>
+            <div class="table-responsive" style="max-height:500px;overflow-y:auto">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light"><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Before</th><th>After</th><th>Reason</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($transactions as $t): 
+                            $tBadge = $t['transaction_type'] === 'add' || $t['transaction_type'] === 'order_received' ? 'bg-success' : ($t['transaction_type'] === 'remove' || $t['transaction_type'] === 'request_fulfilled' ? 'bg-warning text-dark' : 'bg-secondary');
+                        ?>
+                        <tr>
+                            <td><small><?= date('d M H:i', strtotime($t['created_at'])) ?></small></td>
+                            <td><?= htmlspecialchars($t['item_name']) ?></td>
+                            <td><span class="badge <?= $tBadge ?>"><?= str_replace('_', ' ', $t['transaction_type']) ?></span></td>
+                            <td><?= number_format($t['quantity']) ?></td>
+                            <td><?= number_format($t['quantity_before']) ?></td>
+                            <td><?= number_format($t['quantity_after']) ?></td>
+                            <td><small><?= htmlspecialchars($t['reason'] ?? '') ?></small></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<?php endif; ?>
+    </div>
+</div>
+
+<!-- Stock Action Modals -->
+<div class="modal fade" id="addStockModal" tabindex="-1"><div class="modal-dialog">
+    <form method="POST" class="modal-content">
+        <input type="hidden" name="action" value="add_stock">
+        <input type="hidden" name="item_id" id="addItemId">
+        <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add Stock</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p id="addItemName" class="fw-bold"></p>
+            <div class="mb-3"><label class="form-label">Quantity to Add</label><input type="number" name="quantity" class="form-control" min="0.1" step="any" required></div>
+            <div class="mb-3"><label class="form-label">Reason</label><input type="text" name="reason" class="form-control" placeholder="e.g., New delivery" required></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i>Add</button></div>
+    </form>
+</div></div>
+
+<div class="modal fade" id="removeStockModal" tabindex="-1"><div class="modal-dialog">
+    <form method="POST" class="modal-content">
+        <input type="hidden" name="action" value="remove_stock">
+        <input type="hidden" name="item_id" id="rmItemId">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-minus-circle me-2"></i>Remove Stock</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p id="rmItemName" class="fw-bold"></p>
+            <p id="rmCurrentQty" class="text-muted small"></p>
+            <div class="mb-3"><label class="form-label">Quantity to Remove</label><input type="number" name="quantity" id="rmQuantity" class="form-control" min="0.1" step="any" required></div>
+            <div class="mb-3"><label class="form-label">Reason</label><input type="text" name="reason" class="form-control" placeholder="e.g., Usage, damaged" required></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i>Remove</button></div>
+    </form>
+</div></div>
+
+<div class="modal fade" id="adjustStockModal" tabindex="-1"><div class="modal-dialog">
+    <form method="POST" class="modal-content">
+        <input type="hidden" name="action" value="adjust_stock">
+        <input type="hidden" name="item_id" id="adjItemId">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-sliders-h me-2"></i>Adjust Stock</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p id="adjItemName" class="fw-bold"></p>
+            <p id="adjCurrentQty" class="text-muted small"></p>
+            <div class="mb-3"><label class="form-label">New Quantity</label><input type="number" name="quantity" class="form-control" min="0" step="any" required></div>
+            <div class="mb-3"><label class="form-label">Reason for Adjustment</label><input type="text" name="reason" class="form-control" placeholder="e.g., Stock count correction" required></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i>Adjust</button></div>
+    </form>
+</div></div>
+
+<!-- Forward Request Modal -->
+<div class="modal fade" id="forwardModal" tabindex="-1"><div class="modal-dialog">
+    <form method="POST" class="modal-content">
+        <input type="hidden" name="action" value="forward_request">
+        <input type="hidden" name="request_id" id="fwdReqId">
+        <div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-forward me-2"></i>Forward Request</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p>Forward this request to HR or a Director for approval:</p>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Forward To</label>
+                <select name="forward_to" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    <?php foreach ($directors as $d): ?>
+                    <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['full_name']) ?> (<?= htmlspecialchars($d['position'] ?: $d['role_name']) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <input type="hidden" name="forward_role" id="fwdRole">
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-info text-white"><i class="fas fa-forward me-1"></i>Forward</button></div>
+    </form>
+</div></div>
+
+<!-- Reject Request Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1"><div class="modal-dialog">
+    <form method="POST" class="modal-content">
+        <input type="hidden" name="action" value="reject_request">
+        <input type="hidden" name="request_id" id="rejReqId">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Reject Request</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div class="mb-3"><label class="form-label fw-semibold">Reason for Rejection</label><textarea name="rejection_reason" class="form-control" rows="3" required placeholder="Explain why this request is being rejected..."></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i>Reject</button></div>
+    </form>
+</div></div>
+
+<!-- Fulfill All Form -->
+<form method="POST" id="fulfillAllForm"><input type="hidden" name="action" value="fulfill_request"><input type="hidden" name="request_id" id="fulfillAllId"></form>
+
+<!-- Hidden staff list for forward role auto-fill -->
+<select id="directorData" style="display:none">
+<?php foreach ($directors as $d): ?>
+<option value="<?= $d['id'] ?>" data-role="<?= htmlspecialchars($d['position'] ?: $d['role_name']) ?>"></option>
+<?php endforeach; ?>
+</select>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Search filter
+$('#invFilter').on('keyup', function() {
+    let q = $(this).val().toLowerCase();
+    $('.inv-row').each(function() { $(this).toggle($(this).data('name').includes(q)); });
+});
+
+// Stock modals
+function openAddStock(id, name) { $('#addItemId').val(id); $('#addItemName').text(name); $('#addStockModal').modal('show'); }
+function openRemoveStock(id, name, qty) { $('#rmItemId').val(id); $('#rmItemName').text(name); $('#rmCurrentQty').text('Current stock: ' + qty); $('#rmQuantity').attr('max', qty); $('#removeStockModal').modal('show'); }
+function openAdjustStock(id, name, qty) { $('#adjItemId').val(id); $('#adjItemName').text(name); $('#adjCurrentQty').text('Current stock: ' + qty); $('input[name="quantity"]', '#adjustStockModal').val(qty); $('#adjustStockModal').modal('show'); }
+function openForward(id) { $('#fwdReqId').val(id); $('#forwardModal').modal('show'); }
+function openReject(id) { $('#rejReqId').val(id); $('#rejectModal').modal('show'); }
+function fulfillAll(id) { if (confirm('Mark this entire request as fulfilled?')) { $('#fulfillAllId').val(id); $('#fulfillAllForm').submit(); } }
+
+// Auto-set forward role
+$('select[name="forward_to"]').on('change', function() {
+    let v = $(this).val();
+    let opt = $('#directorData option[value="' + v + '"]');
+    $('#fwdRole').val(opt.length ? opt.data('role') : '');
+});
+
+// Order form: enable qty/price on checkbox
+$('.order-item-cb').on('change', function() {
+    $(this).closest('.d-flex').find('input[type="number"]').prop('disabled', !this.checked);
+    if (!this.checked) $(this).closest('.d-flex').find('input[type="number"]').val('');
+});
+$('#orderForm').on('submit', function(e) {
+    let checked = $('.order-item-cb:checked').length;
+    if (checked === 0) { e.preventDefault(); alert('Select at least one item.'); return; }
+    // Build hidden inputs
+    $(this).find('.dynamic-order-item').remove();
+    $('.order-item-cb:checked').each(function() {
+        let row = $(this).closest('.d-flex');
+        let qty = row.find('input[type="number"]:first').val();
+        let price = row.find('input[type="number"]:last').val();
+        let id = $(this).data('id');
+        if (parseFloat(qty) > 0) {
+            $(this).closest('form').append(
+                '<input type="hidden" class="dynamic-order-item" name="order_items[' + id + '][item_id]" value="' + id + '">',
+                '<input type="hidden" class="dynamic-order-item" name="order_items[' + id + '][quantity]" value="' + qty + '">',
+                '<input type="hidden" class="dynamic-order-item" name="order_items[' + id + '][unit_price]" value="' + (parseFloat(price) || 0) + '">'
+            );
+        }
+    });
+});
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

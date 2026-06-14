@@ -235,6 +235,11 @@ $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
         <div class="receipt-header">
             <h2><i class="fas fa-receipt me-2"></i>Receipt Printing System</h2>
             <p>Generate and print professional receipts for students</p>
+            <div class="text-center mb-3">
+                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+                <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
+            </div>
         </div>
         
         <?php if (isset($_SESSION['error'])): ?>
