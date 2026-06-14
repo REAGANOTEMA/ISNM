@@ -23,13 +23,34 @@ if (!$conn) {
 // Set charset
 $conn->set_charset("utf8mb4");
 
+// Function to get all Excel files recursively
+if (!function_exists('getExcelFiles')) {
+function getExcelFiles($dir) {
+    $files = [];
+    if (!is_dir($dir)) return $files;
+    
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+    );
+    
+    foreach ($iterator as $fileInfo) {
+        if ($fileInfo->isFile() && in_array(strtolower($fileInfo->getExtension()), ['xlsx', 'xlsm'], true)) {
+            $files[] = $fileInfo->getPathname();
+        }
+    }
+    natcasesort($files);
+    return array_values($files);
+}
+}
+
 // Function to process Excel file
+if (!function_exists('processExcelFile')) {
 function processExcelFile($filePath, $conn) {
-    require_once 'vendor/autoload.php';
+    require_once 'includes/SimpleXlsxReader.php';
     
     try {
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = SimpleXlsxReader::read($filePath);
+        if (empty($rows)) return ['imported' => 0, 'skipped' => 0, 'errors' => []];
         
         $imported = 0;
         $skipped = 0;
@@ -37,25 +58,20 @@ function processExcelFile($filePath, $conn) {
         
         // Get headers
         $headers = [];
-        foreach ($worksheet->getRowIterator() as $rowIndex => $row) {
-            if ($rowIndex === 1) {
-                foreach ($row as $cell) {
-                    if ($cell !== null) {
-                        $headers[] = strtolower(str_replace([' ', '-', '/', '(', ')'], '_', $cell->getValue()));
-                    }
+        if (isset($rows[0])) {
+            foreach ($rows[0] as $cell) {
+                if ($cell !== null) {
+                    $headers[] = strtolower(str_replace([' ', '-', '/', '(', ')'], '_', $cell));
                 }
-                continue;
             }
-            break;
         }
         
         // Process data rows
-        foreach ($worksheet->getRowIterator() as $rowIndex => $row) {
-            if ($rowIndex <= 1) continue; // Skip header row
-            
+        for ($rowIndex = 1; $rowIndex < count($rows); $rowIndex++) {
+            $row = $rows[$rowIndex];
             $data = [];
             foreach ($row as $cellIndex => $cell) {
-                $value = $cell ? trim($cell->getValue()) : '';
+                $value = $cell ? trim($cell) : '';
                 $headerKey = $headers[$cellIndex] ?? 'column_' . $cellIndex;
                 $data[$headerKey] = $value;
             }
@@ -138,19 +154,6 @@ function processExcelFile($filePath, $conn) {
         ];
     }
 }
-
-// Function to get all Excel files
-function getExcelFiles($directory) {
-    $files = [];
-    $iterator = new DirectoryIterator($directory);
-    
-    foreach ($iterator as $fileInfo) {
-        if ($fileInfo->isFile() && $fileInfo->getExtension() === 'xlsx') {
-            $files[] = $fileInfo->getPathname();
-        }
-    }
-    
-    return $files;
 }
 
 // Main processing
@@ -326,10 +329,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
                 </div>
                 <div class="stat-item">
                     <div class="stat-number"><?php 
+                        require_once 'includes/SimpleXlsxReader.php';
                         $totalStudents = 0;
                         foreach ($excelFiles as $file) {
-                            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
-                            $totalStudents += $spreadsheet->getActiveSheet()->getHighestRow() - 1;
+                            try {
+                                $rows = SimpleXlsxReader::read($file);
+                                $totalStudents += max(0, count($rows) - 1);
+                            } catch (Exception $e) {
+                                // Ignore errors
+                            }
                         }
                         echo $totalStudents;
                     ?></div>

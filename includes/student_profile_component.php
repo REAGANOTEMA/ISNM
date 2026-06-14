@@ -1,643 +1,559 @@
 <?php
-// Universal Student Profile Component
-// This component can be included in any dashboard to display student profiles consistently
+/**
+ * Professional Student Profile Component
+ * Complete with:
+ * - Full student details display
+ * - Perfect print functionality
+ * - No external dependencies
+ * - Fallbacks for missing data
+ */
 
-function displayStudentProfileCard($student_id, $view_mode = 'compact') {
-    // If student_id is empty, return empty content instead of error
+if (!function_exists('displayStudentProfileCard')) {
+function displayStudentProfileCard($student_id = null, $view_mode = 'compact') {
+    // Load connections (fallback if not already loaded)
+    if (!function_exists('getStudentsConnection')) {
+        require_once __DIR__ . '/../config/database.php';
+    }
+    
+    // If no student ID, return compact placeholder
     if (empty($student_id)) {
-        return '<div class="alert alert-info">Select a student to view their profile</div>';
+        if ($view_mode === 'modal') {
+            return '<div class="alert alert-info">Select a student to view their profile</div>';
+        }
+        return '<div class="card p-3 text-center text-muted small"><i class="fas fa-user-graduate fa-2x mb-2"></i><div>Select Student</div></div>';
     }
     
-    global $conn;
-    
-    // Get student data - fallback to simpler query if executeQuery is not available
+    $conn = getStudentsConnection();
     $student = null;
-    if (function_exists('getStudentsConnection')) {
-        $db = getStudentsConnection();
-        if ($db) {
-            $stmt = $db->prepare("SELECT * FROM students WHERE student_id = ?");
-            if ($stmt) {
-                $stmt->bind_param("s", $student_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($result && $result->num_rows > 0) {
-                    $student = $result->fetch_assoc();
-                }
-                $stmt->close();
+    
+    // Try to find student by various IDs
+    if ($conn) {
+        // Build search query for multiple ID types
+        $stmt = $conn->prepare("
+            SELECT s.* 
+            FROM students s 
+            WHERE s.student_id = ? 
+               OR s.index_number = ? 
+               OR s.registration_number = ?
+               OR s.national_student_id_number = ?
+               OR s.student_number = ?
+            LIMIT 1
+        ");
+        
+        if ($stmt) {
+            $stmt->bind_param("sssss", $student_id, $student_id, $student_id, $student_id, $student_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result && $result->num_rows > 0) {
+                $student = $result->fetch_assoc();
+            }
+            $stmt->close();
+        }
+    }
+    
+    // Fallback to StudentDataLoader if DB doesn't have it
+    if (!$student && class_exists('StudentDataLoader')) {
+        $loader = new StudentDataLoader();
+        $allStudents = $loader->loadAllStudents();
+        
+        foreach ($allStudents as $s) {
+            if (
+                ($s['index_number'] ?? '') == $student_id ||
+                ($s['student_number'] ?? '') == $student_id ||
+                ($s['national_id'] ?? '') == $student_id ||
+                ($s['student_id'] ?? '') == $student_id
+            ) {
+                $student = $s;
+                break;
             }
         }
     }
     
+    // Still no student? Show not found
     if (!$student) {
-        return '<div class="alert alert-warning">Student not found</div>';
+        return '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Student not found (ID: ' . htmlspecialchars($student_id) . ')</div>';
     }
     
-    // Get academic records
-    $academic_records = [];
-    if (function_exists('getStudentsConnection')) {
-        $db = getStudentsConnection();
-        if ($db) {
-            $stmt = $db->prepare("SELECT * FROM academic_records WHERE student_id = ? ORDER BY academic_year DESC, semester DESC LIMIT 3");
-            if ($stmt) {
-                $stmt->bind_param("s", $student_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($result) {
-                    while ($row = $result->fetch_assoc()) {
-                        $academic_records[] = $row;
-                    }
-                }
-                $stmt->close();
-            }
-        }
-    }
+    // Normalize student data fields (handle both DB and Excel formats)
+    $student = normalizeStudentData($student);
     
-    // Get fee information
-    $current_fees = null;
-    if (function_exists('getStudentsConnection')) {
-        $db = getStudentsConnection();
-        if ($db) {
-            $stmt = $db->prepare("SELECT * FROM student_fee_accounts WHERE student_id = ? ORDER BY academic_year DESC LIMIT 1");
-            if ($stmt) {
-                $stmt->bind_param("s", $student_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                if ($result && $result->num_rows > 0) {
-                    $current_fees = $result->fetch_assoc();
-                }
-                $stmt->close();
-            }
-        }
-    }
-    
-    // Calculate age (simplified fallback)
-    $age = 'N/A';
-    if (function_exists('calculateAge')) {
-        $age = calculateAge($student['date_of_birth']);
-    }
-    
-    // Get profile photo URL (simplified fallback)
-    $photo_url = 'https://coresg-normal.trae.ai/api/v1/text_to_image?prompt=professional%20school%20portrait%20placeholder&image_size=square';
-    if (function_exists('getPassportPhotoUrl')) {
-        $photo_url = getPassportPhotoUrl($student['profile_image']);
-    }
-    
-    ob_start(); // Start output buffering
+    // Build the UI
+    ob_start();
     
     if ($view_mode === 'compact') {
-        // Compact card view for lists and grids
         ?>
-        <div class="student-profile-card compact" data-student-id="<?php echo $student_id; ?>">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-start">
-                        <div class="profile-avatar me-3">
-                            <img src="<?php echo $photo_url; ?>" alt="<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?>" 
-                                 class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #1a237e;">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="text-center">
+                        <div class="rounded-circle bg-primary bg-gradient d-flex align-items-center justify-content-center text-white" style="width:60px;height:60px;font-size:24px;">
+                            <i class="fas fa-user-graduate"></i>
                         </div>
-                        <div class="profile-info flex-grow-1">
-                            <h6 class="mb-1 fw-bold"><?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name']); ?></h6>
-                            <p class="text-muted small mb-1"><?php echo htmlspecialchars($student['student_id']); ?></p>
-                            <div class="badge-container mb-2">
-                                <span class="badge bg-primary me-1"><?php echo htmlspecialchars($student['program']); ?></span>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($student['level']); ?></span>
-                                <?php if ($student['status'] !== 'active'): ?>
-                                <span class="badge bg-warning"><?php echo ucfirst($student['status']); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="contact-info small text-muted">
-                                <i class="fas fa-phone me-1"></i> <?php echo htmlspecialchars($student['phone']); ?>
-                                <i class="fas fa-envelope ms-2 me-1"></i> <?php echo htmlspecialchars($student['email']); ?>
-                            </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-bold"><?= htmlspecialchars($student['full_name'] ?? $student['name'] ?? 'Unknown Name') ?></h6>
+                        <div class="text-muted small">
+                            <i class="fas fa-id-card me-1"></i><?= htmlspecialchars($student['student_id'] ?? $student['index_number'] ?? 'N/A') ?>
                         </div>
-                        <div class="profile-actions">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="viewFullProfile('<?php echo $student_id; ?>')">
-                                        <i class="fas fa-eye me-2"></i>View Full Profile
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="editStudent('<?php echo $student_id; ?>')">
-                                        <i class="fas fa-edit me-2"></i>Edit Student
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="viewAcademic('<?php echo $student_id; ?>')">
-                                        <i class="fas fa-graduation-cap me-2"></i>Academic Records
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="viewFees('<?php echo $student_id; ?>')">
-                                        <i class="fas fa-money-bill me-2"></i>Fee Information
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#" onclick="sendMessage('<?php echo $student_id; ?>')">
-                                        <i class="fas fa-envelope me-2"></i>Send Message
-                                    </a></li>
-                                </ul>
-                            </div>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            <span class="badge bg-primary"><?= htmlspecialchars($student['program'] ?? $student['course'] ?? 'N/A') ?></span>
+                            <span class="badge bg-secondary"><?= htmlspecialchars($student['level'] ?? 'N/A') ?></span>
+                            <?php if (isset($student['status']) && $student['status'] !== 'Active'): ?>
+                                <span class="badge bg-warning text-dark"><?= htmlspecialchars($student['status']) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="small mt-1 text-muted">
+                            <i class="fas fa-phone me-1"></i><?= htmlspecialchars($student['phone'] ?? $student['mobile_number'] ?? 'N/A') ?>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <?php
-    } elseif ($view_mode === 'detailed') {
-        // Detailed view for individual student pages
+    } else if ($view_mode === 'detailed' || $view_mode === 'modal') {
         ?>
-        <div class="student-profile-detailed" data-student-id="<?php echo $student_id; ?>">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #1a237e, #3949ab);">
-                    <div class="row align-items-center">
-                        <div class="col-md-2 text-center">
-                            <img src="<?php echo $photo_url; ?>" alt="Profile Photo" 
-                                 class="rounded-circle border-3 border-white" 
-                                 style="width: 100px; height: 100px; object-fit: cover;">
+        <div class="student-profile-detailed">
+            <div class="card border-0 shadow">
+                <!-- Header -->
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                    <div class="row align-items-center g-3">
+                        <div class="col-auto text-center">
+                            <div class="rounded-circle border-3 border-white bg-white bg-opacity-20 d-flex align-items-center justify-content-center text-white" style="width:100px;height:100px;font-size:42px;">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
                         </div>
-                        <div class="col-md-10">
-                            <h3 class="mb-1"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?></h3>
-                            <p class="mb-2 opacity-90"><?php echo htmlspecialchars($student['student_id']); ?></p>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-light text-dark"><?php echo htmlspecialchars($student['program']); ?></span>
-                                <span class="badge bg-light text-dark"><?php echo htmlspecialchars($student['level']); ?></span>
-                                <span class="badge bg-<?php echo $student['status'] === 'active' ? 'success' : 'warning'; ?>">
-                                    <?php echo ucfirst($student['status']); ?>
+                        <div class="col">
+                            <h3 class="mb-1 fw-bold"><?= htmlspecialchars($student['full_name'] ?? $student['name'] ?? 'Unknown Name') ?></h3>
+                            <p class="mb-0 opacity-90"><?= htmlspecialchars($student['student_id'] ?? $student['index_number'] ?? $student['national_student_id_number'] ?? $student['nsin'] ?? 'N/A') ?></p>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <span class="badge bg-light text-dark"><?= htmlspecialchars($student['program'] ?? $student['course'] ?? 'N/A') ?></span>
+                                <span class="badge bg-light text-dark"><?= htmlspecialchars($student['level'] ?? 'N/A') ?></span>
+                                <?php if (isset($student['set'])): ?>
+                                    <span class="badge bg-light text-dark"><?= htmlspecialchars($student['set']) ?></span>
+                                <?php endif; ?>
+                                <span class="badge bg-<?= (isset($student['status']) && $student['status'] === 'Active') ? 'success' : 'warning text-dark' ?>">
+                                    <?= ucwords(htmlspecialchars($student['status'] ?? 'Active')) ?>
                                 </span>
                             </div>
                         </div>
+                        <?php if ($view_mode === 'detailed'): ?>
+                            <div class="col-auto">
+                                <button class="btn btn-light btn-sm text-primary no-print" onclick="window.print()">
+                                    <i class="fas fa-print me-1"></i>Print Profile
+                                </button>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+                
+                <!-- Body -->
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Personal Information</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Date of Birth:</strong></td>
-                                    <td><?php echo formatDate($student['date_of_birth']); ?> (<?php echo $age; ?> years)</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Gender:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['gender']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nationality:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['nationality']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Address:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['address'] ?? 'Not provided'); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Phone:</strong></td>
-                                    <td><a href="tel:<?php echo htmlspecialchars($student['phone']); ?>"><?php echo htmlspecialchars($student['phone']); ?></a></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Email:</strong></td>
-                                    <td><a href="mailto:<?php echo htmlspecialchars($student['email']); ?>"><?php echo htmlspecialchars($student['email']); ?></a></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Emergency Contact:</strong></td>
-                                    <td>
-                                        <?php if ($student['emergency_contact_name']): ?>
-                                            <?php echo htmlspecialchars($student['emergency_contact_name']); ?> - 
-                                            <a href="tel:<?php echo htmlspecialchars($student['emergency_contact_phone']); ?>">
-                                                <?php echo htmlspecialchars($student['emergency_contact_phone']); ?>
-                                            </a>
-                                        <?php else: ?>
-                                            Not provided
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3"><i class="fas fa-graduation-cap me-2"></i>Academic Information</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Program:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['program']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Level:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['level']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Intake Year:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['intake_year']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Intake Period:</strong></td>
-                                    <td><?php echo htmlspecialchars($student['intake_period'] ?? 'Not specified'); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Current Year:</strong></td>
-                                    <td>Year <?php echo htmlspecialchars($student['current_year'] ?? '1'); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Current Semester:</strong></td>
-                                    <td>Semester <?php echo htmlspecialchars($student['current_semester'] ?? '1'); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Enrollment Date:</strong></td>
-                                    <td><?php echo formatDate($student['enrollment_date']); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Expected Graduation:</strong></td>
-                                    <td><?php echo formatDate($student['expected_graduation_date'] ?? 'Not set'); ?></td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <?php if ($current_fees): ?>
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3"><i class="fas fa-money-bill me-2"></i>Current Fee Status</h5>
-                            <div class="alert alert-<?php echo $current_fees['balance'] > 0 ? 'warning' : 'success'; ?>">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <strong>Total Fees:</strong><br>
-                                        <?php echo formatCurrency($current_fees['total_fees']); ?>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Amount Paid:</strong><br>
-                                        <?php echo formatCurrency($current_fees['amount_paid']); ?>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Balance:</strong><br>
-                                        <?php echo formatCurrency($current_fees['balance']); ?>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Status:</strong><br>
-                                        <span class="badge bg-<?php echo $current_fees['status'] === 'fully_paid' ? 'success' : 'warning'; ?>">
-                                            <?php echo ucfirst(str_replace('_', ' ', $current_fees['status'])); ?>
-                                        </span>
-                                    </div>
-                                </div>
+                    <div class="row g-4">
+                        <!-- Personal Information -->
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tbody>
+                                        <tr><td class="text-muted w-50">First Name</td><td class="fw-semibold"><?= htmlspecialchars($student['first_name'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Middle Name</td><td class="fw-semibold"><?= htmlspecialchars($student['middle_name'] ?? $student['other_name'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Last Name</td><td class="fw-semibold"><?= htmlspecialchars($student['surname'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Date of Birth</td><td class="fw-semibold"><?= formatDate($student['date_of_birth'] ?? $student['dob'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Gender</td><td class="fw-semibold"><?= htmlspecialchars($student['gender'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Nationality</td><td class="fw-semibold"><?= htmlspecialchars($student['nationality'] ?? 'Uganda') ?></td></tr>
+                                        <tr><td class="text-muted">District</td><td class="fw-semibold"><?= htmlspecialchars($student['district'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Address</td><td class="fw-semibold"><?= htmlspecialchars($student['address'] ?? 'N/A') ?></td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?php if (!empty($academic_records)): ?>
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3"><i class="fas fa-chart-line me-2"></i>Recent Academic Performance</h5>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Academic Year</th>
-                                            <th>Semester</th>
-                                            <th>GPA</th>
-                                            <th>Position</th>
-                                            <th>Attendance</th>
-                                        </tr>
-                                    </thead>
+                        
+                        <!-- Contact Information -->
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-phone-volume me-2"></i>Contact Information</h6>
+                                <table class="table table-sm table-borderless mb-0">
                                     <tbody>
-                                        <?php foreach ($academic_records as $record): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($record['academic_year']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['semester']); ?></td>
-                                            <td>
-                                                <?php if ($record['gpa']): ?>
-                                                    <span class="badge bg-success"><?php echo number_format($record['gpa'], 2); ?></span>
-                                                <?php else: ?>
-                                                    <span class="text-muted">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($record['class_position']): ?>
-                                                    <?php echo htmlspecialchars($record['class_position']); ?>/<?php echo htmlspecialchars($record['total_students']); ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($record['attendance_percentage']): ?>
-                                                    <?php echo number_format($record['attendance_percentage'], 1); ?>%
-                                                <?php else: ?>
-                                                    <span class="text-muted">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
+                                        <tr><td class="text-muted w-50">Phone Number</td><td class="fw-semibold"><?= htmlspecialchars($student['phone'] ?? $student['mobile_number'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Email</td><td class="fw-semibold"><?= htmlspecialchars($student['email'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Emergency Contact</td><td class="fw-semibold"><?= htmlspecialchars($student['emergency_contact_name'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Emergency Phone</td><td class="fw-semibold"><?= htmlspecialchars($student['emergency_contact_phone'] ?? 'N/A') ?></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Academic Information -->
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-graduation-cap me-2"></i>Academic Information</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tbody>
+                                        <tr><td class="text-muted w-50">Index Number</td><td class="fw-semibold"><code><?= htmlspecialchars($student['index_number'] ?? $student['registration_number'] ?? $student['student_number'] ?? 'N/A') ?></code></td></tr>
+                                        <tr><td class="text-muted">Student ID</td><td class="fw-semibold"><code><?= htmlspecialchars($student['student_id'] ?? 'N/A') ?></code></td></tr>
+                                        <tr><td class="text-muted">Program</td><td class="fw-semibold"><?= htmlspecialchars($student['program'] ?? $student['course'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Level</td><td class="fw-semibold"><?= htmlspecialchars($student['level'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Set</td><td class="fw-semibold"><?= htmlspecialchars($student['set'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Intake Year</td><td class="fw-semibold"><?= htmlspecialchars($student['intake_year'] ?? $student['year'] ?? 'N/A') ?></td></tr>
+                                        <tr><td class="text-muted">Intake Period</td><td class="fw-semibold"><?= htmlspecialchars($student['intake_period'] ?? 'N/A') ?></td></tr>
+                                        <?php if (isset($student['enrollment_date'])): ?>
+                                            <tr><td class="text-muted">Enrollment Date</td><td class="fw-semibold"><?= formatDate($student['enrollment_date'] ?? 'N/A') ?></td></tr>
+                                        <?php endif; ?>
+                                        <?php if (isset($student['expected_graduation_date'])): ?>
+                                            <tr><td class="text-muted">Expected Graduation</td><td class="fw-semibold"><?= formatDate($student['expected_graduation_date'] ?? 'N/A') ?></td></tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Other Info -->
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-info-circle me-2"></i>Additional Information</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tbody>
+                                        <tr><td class="text-muted w-50">NSIN</td><td class="fw-semibold"><code><?= htmlspecialchars($student['national_student_id_number'] ?? $student['nsin'] ?? $student['national_id'] ?? 'N/A') ?></code></td></tr>
+                                        <tr><td class="text-muted">Source File</td><td class="fw-semibold"><small class="text-muted"><?= htmlspecialchars($student['source_file'] ?? 'Database') ?></small></td></tr>
+                                        <tr><td class="text-muted">Status</td><td class="fw-semibold">
+                                            <span class="badge bg-<?= (isset($student['status']) && $student['status'] === 'Active') ? 'success' : 'warning text-dark' ?>">
+                                                <?= ucwords(htmlspecialchars($student['status'] ?? 'Active')) ?>
+                                            </span>
+                                        </td></tr>
+                                        <?php if (isset($student['course_codes'])): ?>
+                                            <tr><td class="text-muted">Course Codes</td><td class="fw-semibold"><small><?= htmlspecialchars($student['course_codes'] ?? 'N/A') ?></small></td></tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                    <?php endif; ?>
                 </div>
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <button class="btn btn-primary" onclick="editStudent('<?php echo $student_id; ?>')">
-                                <i class="fas fa-edit me-2"></i>Edit Student
-                            </button>
-                            <button class="btn btn-info" onclick="viewAcademic('<?php echo $student_id; ?>')">
-                                <i class="fas fa-graduation-cap me-2"></i>Academic Records
-                            </button>
-                            <button class="btn btn-success" onclick="viewFees('<?php echo $student_id; ?>')">
-                                <i class="fas fa-money-bill me-2"></i>Fee Details
-                            </button>
-                        </div>
-                        <div>
-                            <button class="btn btn-outline-secondary" onclick="sendMessage('<?php echo $student_id; ?>')">
-                                <i class="fas fa-envelope me-2"></i>Send Message
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="printProfile('<?php echo $student_id; ?>')">
-                                <i class="fas fa-print me-2"></i>Print
-                            </button>
-                        </div>
+                
+                <!-- Footer -->
+                <div class="card-footer bg-light border-0 d-flex flex-wrap justify-content-between gap-2">
+                    <div class="no-print">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.close()">
+                            <i class="fas fa-times me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i>Print Profile
+                        </button>
+                    </div>
+                    <div class="text-muted small">
+                        ISNM Student Profile • Generated: <?= date('d M Y H:i') ?>
                     </div>
                 </div>
             </div>
-        </div>
-        <?php
-    } elseif ($view_mode === 'minimal') {
-        // Minimal view for dropdowns and quick references
-        ?>
-        <div class="student-profile-minimal d-flex align-items-center p-2 border-bottom" data-student-id="<?php echo $student_id; ?>">
-            <img src="<?php echo $photo_url; ?>" alt="Profile" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
-            <div class="flex-grow-1">
-                <div class="fw-bold"><?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name']); ?></div>
-                <small class="text-muted"><?php echo htmlspecialchars($student['student_id']); ?></small>
-            </div>
-            <div class="text-end">
-                <span class="badge bg-primary small"><?php echo htmlspecialchars($student['program']); ?></span>
-            </div>
+            
+            <!-- Print Styles -->
+            <style>
+            @media print {
+                body { background: white; }
+                .no-print { display: none !important; }
+                .student-profile-detailed .card { box-shadow: none; border: 1px solid #ddd; }
+                .student-profile-detailed .card-header { background: #e9ecef !important; color: #212529 !important; }
+                .bg-light { background: #f8f9fa !important; }
+                .border { border: 1px solid #dee2e6 !important; }
+                .badge { border: 1px solid #dee2e6; }
+            }
+            </style>
         </div>
         <?php
     }
     
     return ob_get_clean();
 }
+}
 
-function displayStudentSearchBox($placeholder = 'Search students...', $container_id = 'studentSearchResults') {
+// Helper: Normalize student data from various sources
+if (!function_exists('normalizeStudentData')) {
+function normalizeStudentData($student) {
+    $normalized = [];
+    
+    // Map common field names
+    $field_map = [
+        'full_name' => ['full_name', 'name', 'student_name'],
+        'first_name' => ['first_name', 'firstname', 'first'],
+        'middle_name' => ['middle_name', 'other_name', 'middlename', 'middle'],
+        'surname' => ['surname', 'last_name', 'lastname', 'last'],
+        'student_id' => ['student_id', 'id'],
+        'index_number' => ['index_number', 'index_no', 'index'],
+        'registration_number' => ['registration_number', 'reg_no', 'reg'],
+        'student_number' => ['student_number', 'student_no'],
+        'national_id' => ['national_id', 'national_student_id_number', 'nsin'],
+        'phone' => ['phone', 'phone_number', 'phone_no', 'mobile_number', 'mobile'],
+        'email' => ['email', 'e_mail'],
+        'program' => ['program', 'course', 'programme'],
+        'level' => ['level', 'award'],
+        'set' => ['set', 'class_set', 'intake_set'],
+        'intake_year' => ['intake_year', 'year'],
+        'intake_period' => ['intake_period', 'semester', 'trial'],
+        'date_of_birth' => ['date_of_birth', 'dob'],
+        'district' => ['district', 'location'],
+        'nationality' => ['nationality', 'country'],
+        'address' => ['address', 'physical_address'],
+        'gender' => ['gender', 'sex'],
+        'status' => ['status', 'student_status'],
+        'enrollment_date' => ['enrollment_date', 'registration_date'],
+        'source_file' => ['source_file', 'source'],
+    ];
+    
+    foreach ($field_map as $target => $sources) {
+        foreach ($sources as $source) {
+            if (isset($student[$source]) && trim($student[$source]) !== '') {
+                $normalized[$target] = $student[$source];
+                break;
+            }
+        }
+        if (!isset($normalized[$target])) {
+            $normalized[$target] = null;
+        }
+    }
+    
+    // Also keep all original fields
+    return array_merge($student, $normalized);
+}
+}
+
+// Helper: Format dates (with safety check)
+if (!function_exists('formatDate')) {
+    function formatDate($date_str) {
+        if (empty($date_str) || $date_str === 'N/A') return 'N/A';
+        $timestamp = strtotime($date_str);
+        if (!$timestamp) return htmlspecialchars($date_str);
+        return date('d M Y', $timestamp);
+    }
+}
+
+// Display student search box with results
+if (!function_exists('displayStudentSearchBox')) {
+function displayStudentSearchBox($placeholder = 'Search students...', $container_id = 'student_search_container') {
     ob_start();
     ?>
-    <div class="student-search-container">
-        <div class="input-group mb-3">
-            <span class="input-group-text">
-                <i class="fas fa-search"></i>
-            </span>
-            <?php $input_id = 'studentSearchInput_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $container_id); ?>
-            <input type="text" class="form-control" id="<?php echo $input_id; ?>" placeholder="<?php echo htmlspecialchars($placeholder); ?>" 
-                   onkeyup="searchStudents('<?php echo $container_id; ?>')">
-            <button class="btn btn-outline-secondary" type="button" onclick="clearStudentSearch('<?php echo $container_id; ?>')">
+    <div class="student-search-container" id="<?= $container_id ?>">
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" class="form-control" id="student_search_input_<?= $container_id ?>" 
+                   placeholder="<?= htmlspecialchars($placeholder) ?>"
+                   onkeyup="searchStudents_<?= $container_id ?>()">
+            <button class="btn btn-outline-secondary" type="button" onclick="clearStudentSearch_<?= $container_id ?>()">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div id="<?php echo $container_id; ?>" class="student-search-results"></div>
+        <div id="student_search_results_<?= $container_id ?>" class="mt-2"></div>
     </div>
     
     <script>
-    function searchStudents(containerId) {
-        const inputId = 'studentSearchInput_' + containerId;
-        const searchTerm = document.getElementById(inputId).value;
-        const container = document.getElementById(containerId);
+    // Universal search using StudentDataLoader data embedded in page
+    function searchStudents_<?= $container_id ?>() {
+        const input = document.getElementById('student_search_input_<?= $container_id ?>');
+        const resultsDiv = document.getElementById('student_search_results_<?= $container_id ?>');
+        const searchTerm = input.value.toLowerCase().trim();
         
         if (searchTerm.length < 2) {
-            container.innerHTML = '';
+            resultsDiv.innerHTML = '';
             return;
         }
         
-        // Show loading
-        container.innerHTML = '<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+        // Get all students (data should be defined in page context)
+        const allStudents = window.allStudents || [];
+        const filtered = allStudents.filter(student => {
+            const searchableFields = [
+                student.full_name || '', student.first_name || '', student.surname || '',
+                student.index_number || '', student.student_number || '', student.nsin || '',
+                student.national_id || '', student.phone || '', student.email || '',
+                student.program || '', student.course || '', student.department || '',
+                student.level || '', student.set || '', student.source_file || ''
+            ].join(' ').toLowerCase();
+            return searchableFields.includes(searchTerm);
+        }).slice(0, 20);
         
-        // Make AJAX request
-        // Ajax endpoint - use absolute path to ensure correct resolution from dashboards
-        fetch('../includes/ajax_student_search.php?term=' + encodeURIComponent(searchTerm))
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    displaySearchResults(data.students, containerId);
-                } else {
-                    container.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
-                }
-            })
-            .catch(error => {
-                container.innerHTML = '<div class="alert alert-danger">Search failed. Please try again.</div>';
-                console.error('Search error:', error);
-            });
-    }
-    
-    function displaySearchResults(students, containerId) {
-        const container = document.getElementById(containerId);
-        
-        if (students.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No students found</div>';
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = '<div class="alert alert-info small"><i class="fas fa-info-circle me-2"></i>No students found</div>';
             return;
         }
         
         let html = '<div class="list-group">';
-        students.forEach(student => {
+        filtered.forEach(student => {
+            const name = student.full_name || (student.first_name + ' ' + student.surname) || 'Unknown';
+            const id = student.index_number || student.student_number || student.national_id || 'N/A';
+            const program = student.program || student.course || 'N/A';
+            
             html += `
-                <div class="list-group-item list-group-item-action" onclick="selectStudent('${student.student_id}', '${student.first_name} ${student.surname}')">
-                    <div class="d-flex align-items-center">
-                        <img src="${student.photo_url}" alt="${student.first_name} ${student.surname}" 
-                             class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
-                        <div class="flex-grow-1">
-                            <div class="fw-bold">${student.surname}, ${student.first_name}</div>
-                            <small class="text-muted">${student.student_id} - ${student.program}</small>
-                        </div>
-                        <div>
-                            <span class="badge bg-primary">${student.level}</span>
-                        </div>
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                     onclick="selectStudent_<?= $container_id ?>('${escapeHtml(id)}')">
+                    <div>
+                        <div class="fw-bold">${escapeHtml(name)}</div>
+                        <small class="text-muted">${escapeHtml(id)} • ${escapeHtml(program)}</small>
                     </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
                 </div>
             `;
         });
         html += '</div>';
-        
-        container.innerHTML = html;
+        resultsDiv.innerHTML = html;
     }
     
-    function clearStudentSearch(containerId) {
-        const inputId = 'studentSearchInput_' + containerId;
-        const input = document.getElementById(inputId);
-        if (input) input.value = '';
-        const container = document.getElementById(containerId);
-        if (container) container.innerHTML = '';
+    function clearStudentSearch_<?= $container_id ?>() {
+        const input = document.getElementById('student_search_input_<?= $container_id ?>');
+        const resultsDiv = document.getElementById('student_search_results_<?= $container_id ?>');
+        input.value = '';
+        resultsDiv.innerHTML = '';
     }
     
-    function selectStudent(studentId, studentName) {
-        // Prefer modal if available
+    function selectStudent_<?= $container_id ?>(studentId) {
         if (typeof showStudentProfileModal === 'function') {
             showStudentProfileModal(studentId);
-            return;
         }
-
-        // Fallback to profile page
-        window.location.href = '/ISNM/student_profile.php?student_id=' + encodeURIComponent(studentId);
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     </script>
     <?php
     return ob_get_clean();
 }
+}
 
-function displayStudentProfileModal($student_id) {
-    $profile_html = displayStudentProfileCard($student_id, 'detailed');
-    
+// Display student profile modal
+if (!function_exists('displayStudentProfileModal')) {
+function displayStudentProfileModal($modal_id = 'student_profile_modal') {
     ob_start();
     ?>
-    <div class="modal fade" id="studentProfileModal" tabindex="-1">
+    <div class="modal fade" id="<?= $modal_id ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #1a237e, #3949ab);">
-                    <h5 class="modal-title">
-                        <i class="fas fa-user-graduate me-2"></i>Student Profile
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <?php echo $profile_html; ?>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="editStudent('<?php echo $student_id; ?>')">
-                        <i class="fas fa-edit me-2"></i>Edit Student
-                    </button>
-                    <button type="button" class="btn btn-info" onclick="printProfile('<?php echo $student_id; ?>')">
-                        <i class="fas fa-print me-2"></i>Print Profile
-                    </button>
+            <div class="modal-content" id="<?= $modal_id ?>_content">
+                <div class="modal-body p-4 text-center text-muted">
+                    <i class="fas fa-user-graduate fa-2x mb-2"></i>
+                    <div>Select a student to view profile</div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
     function showStudentProfileModal(studentId) {
-        // Load the profile content dynamically
-        fetch('includes/ajax_student_profile.php?student_id=' + studentId)
-            .then(response => response.text())
-            .then(html => {
-                document.querySelector('#studentProfileModal .modal-body').innerHTML = html;
-                const modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
-                modal.show();
-            })
-            .catch(error => {
-                console.error('Error loading profile:', error);
-                alert('Error loading student profile');
-            });
-    }
-    
-    function editStudent(studentId) {
-        // Close modal and redirect to edit page
-        bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide();
-        window.location.href = 'student_accounts_management.php?action=edit&student_id=' + studentId;
-    }
-    
-    function viewAcademic(studentId) {
-        bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide();
-        window.location.href = 'academic_records.php?student_id=' + studentId;
-    }
-    
-    function viewFees(studentId) {
-        bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide();
-        window.location.href = 'fee_management.php?student_id=' + studentId;
-    }
-    
-    function sendMessage(studentId) {
-        const message = prompt('Enter message to send to this student:');
-        if (!message) return;
+        const modal = document.getElementById('<?= $modal_id ?>');
+        const contentDiv = document.getElementById('<?= $modal_id ?>_content');
 
-        fetch('/ISNM/includes/ajax_send_message.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'student_id=' + encodeURIComponent(studentId) + '&message=' + encodeURIComponent(message)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Message sent successfully');
-                try { bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide(); } catch(e){}
-            } else {
-                alert('Failed to send message: ' + (data.message || 'unknown error'));
+        contentDiv.innerHTML = '<div class="modal-body p-4 text-center"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><div>Loading student profile...</div></div>';
+
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+
+        if (window.allStudents && studentId) {
+            const student = window.allStudents.find(s => 
+                String(s.index_number || '').toLowerCase() === String(studentId).toLowerCase() || 
+                String(s.student_number || '').toLowerCase() === String(studentId).toLowerCase() || 
+                String(s.national_id || '').toLowerCase() === String(studentId).toLowerCase() ||
+                String(s.student_id || '').toLowerCase() === String(studentId).toLowerCase()
+            );
+
+            if (student) {
+                renderStudentProfile(student, contentDiv, bsModal);
+                return;
             }
-        })
-        .catch(err => {
-            console.error('Send message error', err);
-            alert('Error sending message');
-        });
+        }
+
+        contentDiv.innerHTML = '<div class="modal-body p-4"><div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Student profile not found (ID: ' + escapeHtml(studentId) + ')</div></div>';
     }
-    
-    function printProfile(studentId) {
-        window.print();
+
+    function renderStudentProfile(student, container, modal) {
+        const name = student.full_name || (student.first_name + ' ' + student.surname) || 'Unknown';
+        const id = student.index_number || student.student_number || student.national_id || student.student_id || 'N/A';
+        const program = student.program || student.course || 'N/A';
+        const level = student.level || 'N/A';
+        const set = student.set || 'N/A';
+        const status = student.status || 'Active';
+        const statusBadge = status.toLowerCase() === 'active' ? 'bg-success' : 'bg-warning text-dark';
+        
+        const html = `
+            <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #0f766e, #14b8a6)">
+                <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr><td class="text-muted w-50">First Name</td><td class="fw-semibold">${escapeHtml(student.first_name || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Middle Name</td><td class="fw-semibold">${escapeHtml(student.middle_name || student.other_name || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Last Name</td><td class="fw-semibold">${escapeHtml(student.surname || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Date of Birth</td><td class="fw-semibold">${escapeHtml(student.date_of_birth || student.dob || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Gender</td><td class="fw-semibold">${escapeHtml(student.gender || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Nationality</td><td class="fw-semibold">${escapeHtml(student.nationality || 'Uganda')}</td></tr>
+                                <tr><td class="text-muted">District</td><td class="fw-semibold">${escapeHtml(student.district || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Address</td><td class="fw-semibold">${escapeHtml(student.address || 'N/A')}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-phone-volume me-2"></i>Contact Information</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr><td class="text-muted w-50">Phone Number</td><td class="fw-semibold">${escapeHtml(student.phone || student.mobile_number || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Email</td><td class="fw-semibold">${escapeHtml(student.email || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Emergency Contact</td><td class="fw-semibold">${escapeHtml(student.emergency_contact_name || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Emergency Phone</td><td class="fw-semibold">${escapeHtml(student.emergency_contact_phone || 'N/A')}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-graduation-cap me-2"></i>Academic Information</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr><td class="text-muted w-50">Index Number</td><td class="fw-semibold"><code>${escapeHtml(student.index_number || student.registration_number || student.student_number || 'N/A')}</code></td></tr>
+                                <tr><td class="text-muted">Student ID</td><td class="fw-semibold"><code>${escapeHtml(student.student_id || 'N/A')}</code></td></tr>
+                                <tr><td class="text-muted">Program</td><td class="fw-semibold">${escapeHtml(program)}</td></tr>
+                                <tr><td class="text-muted">Level</td><td class="fw-semibold">${escapeHtml(level)}</td></tr>
+                                <tr><td class="text-muted">Set</td><td class="fw-semibold">${escapeHtml(set)}</td></tr>
+                                <tr><td class="text-muted">Intake Year</td><td class="fw-semibold">${escapeHtml(student.intake_year || student.year || 'N/A')}</td></tr>
+                                <tr><td class="text-muted">Intake Period</td><td class="fw-semibold">${escapeHtml(student.intake_period || 'N/A')}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-info-circle me-2"></i>Additional Information</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr><td class="text-muted w-50">NSIN</td><td class="fw-semibold"><code>${escapeHtml(student.national_student_id_number || student.nsin || student.national_id || 'N/A')}</code></td></tr>
+                                <tr><td class="text-muted">Source File</td><td class="fw-semibold"><small class="text-muted">${escapeHtml(student.source_file || 'Database')}</small></td></tr>
+                                <tr><td class="text-muted">Status</td><td class="fw-semibold"><span class="badge ${statusBadge}">${escapeHtml(status)}</span></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 d-flex flex-wrap justify-content-between gap-2">
+                <div class="no-print">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print Profile
+                    </button>
+                </div>
+                <div class="text-muted small">
+                    ISNM Student Profile • Generated: ${new Date().toLocaleString()}
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     </script>
     <?php
     return ob_get_clean();
 }
-
-// CSS styles for the profile components
-function getStudentProfileStyles() {
-    return '
-    <style>
-    .student-profile-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .student-profile-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    
-    .profile-avatar img {
-        transition: transform 0.3s ease;
-    }
-    
-    .profile-avatar img:hover {
-        transform: scale(1.1);
-    }
-    
-    .badge-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-    }
-    
-    .student-search-results {
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 0.375rem;
-        margin-top: 0.5rem;
-    }
-    
-    .student-search-results .list-group-item {
-        border-left: none;
-        border-right: none;
-        border-radius: 0;
-    }
-    
-    .student-search-results .list-group-item:first-child {
-        border-top: none;
-        border-radius: 0.375rem 0.375rem 0 0;
-    }
-    
-    .student-search-results .list-group-item:last-child {
-        border-bottom: none;
-        border-radius: 0 0 0.375rem 0.375rem;
-    }
-    
-    .student-profile-minimal {
-        transition: background-color 0.3s ease;
-    }
-    
-    .student-profile-minimal:hover {
-        background-color: #f8f9fa;
-    }
-    
-    @media (max-width: 768px) {
-        .student-profile-card .contact-info {
-            font-size: 0.75rem;
-        }
-        
-        .badge-container {
-            margin-bottom: 0.5rem;
-        }
-    }
-    </style>';
-    }
+}
 ?>

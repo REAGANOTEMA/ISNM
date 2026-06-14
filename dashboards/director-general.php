@@ -4,6 +4,10 @@ require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
+// Load all students for search functionality
+$loader = new StudentDataLoader();
+$allStudentsData = $loader->loadAllStudents();
+
 // DG has full access - no role restriction
 $ctx          = bootstrapStaffDashboard([]);
 $auth_service = $ctx['auth'];
@@ -177,6 +181,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
             color: white;
             border-color: #ef5350;
         }
+        .cursor-pointer { cursor: pointer; }
 
         @media print {
             .sidebar, .top-bar, .no-print {
@@ -300,17 +305,22 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
         </button>
       </div>
 
-      <!-- UNIVERSAL STUDENT SEARCH -->
-      <div class="mb-4">
-        <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Search for any student across all Excel files and database:</label>
-        <div class="input-group mb-3">
-          <span class="input-group-text"><i class="fas fa-search"></i></span>
-          <input type="text" id="universalStudentSearch" class="form-control" placeholder="Search by name, index number, NSIN, etc...">
-          <button class="btn btn-outline-secondary" type="button" id="clearStudentSearch"><i class="fas fa-times"></i></button>
+      <!-- Universal Student Search Component -->
+      <?= displayStudentSearchBox('Search for any student across all Excel files and database', 'dg_search') ?>
+
+      <!-- Recent Students Grid - Click to view profile -->
+      <div class="row g-3 mt-3">
+        <?php 
+        $recentStudents = array_slice($allStudentsData, 0, 6);
+        foreach ($recentStudents as $student): 
+            $studentId = $student['index_number'] ?? $student['student_number'] ?? $student['national_id'] ?? '';
+        ?>
+        <div class="col-md-4 col-lg-2">
+          <div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($studentId) ?>')">
+            <?= displayStudentProfileCard($studentId, 'compact') ?>
+          </div>
         </div>
-        <div id="universalSearchResults" class="border rounded p-3" style="min-height: 100px;">
-          <p class="text-muted small mb-0">Start typing to search for students...</p>
-        </div>
+        <?php endforeach; ?>
       </div>
     </div>
 
@@ -508,100 +518,15 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
   </div>
 </div>
 
-<?php echo displayStudentProfileModal(''); ?>
-<?php echo getStudentProfileStyles(); ?>
+<?php echo displayStudentProfileModal('student_profile_modal'); ?>
+
+<!-- Make allStudents available globally -->
+<script>
+window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 1000)); ?>;
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Universal student search from all loaded Excel files
-const allStudents = <?php
-try {
-    if (isset($loader)) {
-        $allStudents = $loader->loadAllStudents();
-        echo json_encode(array_slice($allStudents, 0, 500));
-    } else {
-        echo "[]";
-    }
-} catch (Exception $e) {
-    echo "[]";
-}
-?>;
-
-const searchInput = document.getElementById('universalStudentSearch');
-const clearBtn = document.getElementById('clearStudentSearch');
-const resultsDiv = document.getElementById('universalSearchResults');
-
-searchInput.addEventListener('input', debounce(performSearch, 300));
-clearBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    resultsDiv.innerHTML = '<p class="text-muted small mb-0">Start typing to search for students...</p>';
-});
-
-function debounce(func, delay) {
-    let timer;
-    return function() {
-        clearTimeout(timer);
-        timer = setTimeout(func, delay);
-    };
-}
-
-function performSearch() {
-    const query = searchInput.value.toLowerCase().trim();
-    if (query.length < 2) {
-        resultsDiv.innerHTML = '<p class="text-muted small mb-0">Start typing to search for students...</p>';
-        return;
-    }
-
-    const filteredStudents = allStudents.filter(student => {
-        const searchableFields = [
-            student.full_name || '', student.first_name || '', student.surname || '',
-            student.index_number || '', student.student_number || '', student.nsin || '',
-            student.national_id || '', student.phone || '', student.email || '',
-            student.program || '', student.course || '', student.department || '',
-            student.level || '', student.set || '', student.source_file || ''
-        ].join(' ').toLowerCase();
-        return searchableFields.includes(query);
-    }).slice(0, 20);
-
-    if (filteredStudents.length === 0) {
-        resultsDiv.innerHTML = '<p class="text-muted small mb-0">No students found matching "' + query + '"</p>';
-    } else {
-        let html = '<div class="list-group">';
-        filteredStudents.forEach(student => {
-            const name = student.full_name || (student.first_name + ' ' + student.surname) || 'Unnamed Student';
-            const id = student.index_number || student.student_number || student.nsin || '';
-            const program = student.program || student.course || '';
-            const sourceFile = student.source_file || '';
-
-            html += `
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="fw-bold">${escapeHtml(name)}</div>
-                        <div class="small text-muted">${escapeHtml(id)} • ${escapeHtml(program)}${sourceFile ? ' • <code>' + escapeHtml(sourceFile) + '</code>' : ''}</div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="openStudentProfile('${id}', '${name}')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            `;
-        });
-        html += '</div>';
-        resultsDiv.innerHTML = html;
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function openStudentProfile(id, name) {
-    if (id) {
-        showStudentProfileModal(id);
-    }
-}
-
 function viewFullProfile(id){ showStudentProfileModal(id); }
 function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }
 function viewAcademic(id){ window.location.href='../academic_records_management.php?student_id='+id; }

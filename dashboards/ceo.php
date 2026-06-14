@@ -13,29 +13,50 @@ $user_name = $user['full_name'] ?? '';
 // Connect to staff database for dashboard statistics
 // Uses shared bootstrap staff connection
 
-// Get CEO dashboard statistics using stored procedure
-$stats_query = "CALL get_dashboard_statistics(?, ?)";
-$stats_stmt = $conn->prepare($stats_query);
-$stats_stmt->bind_param("is", $user_id, $user_role);
-$stats_stmt->execute();
-$stats_result = $stats_stmt->get_result();
-$stats = $stats_result->fetch_assoc();
+// Get CEO dashboard statistics - use simple queries and fallbacks
+$total_students = 0;
+$total_staff = 0;
+$total_applications = 0;
+$active_programs = 2;
+$total_revenue = 0;
 
-// Set statistics from database or fallback values
-$total_students      = $stats['total_students'] ?? 0;
-$total_staff         = $stats['total_staff'] ?? 0;
-$total_applications  = $stats['pending_applications'] ?? 0;
-$recent_applications = $total_applications;
-$active_programs     = 2;
-$total_revenue       = 0;
+// Try to get real stats from database (fallback to defaults if fails)
+try {
+    // Try to count students from students database
+    require_once __DIR__ . '/../config/database.php';
+    $students_conn = getStudentsConnection();
+    if ($students_conn) {
+        $student_result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
+        if ($student_result) {
+            $row = $student_result->fetch_assoc();
+            $total_students = $row['cnt'] ?? 0;
+        }
+    }
+    
+    // Count staff from staff database
+    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+    if ($staff_result) {
+        $row = $staff_result->fetch_assoc();
+        $total_staff = $row['cnt'] ?? 0;
+    }
+} catch (Exception $e) {
+    // Use defaults if any error
+}
 
-// Get recent activities from database
-$recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
-$recent_activities_result = $conn->query($recent_activities_sql);
-$recent_activities = $recent_activities_result ? $recent_activities_result->fetch_all(MYSQLI_ASSOC) : [
+// Get recent activities from database (fallback to defaults)
+$recent_activities = [
     ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
     ['activity' => 'Executive meeting conducted', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 hour'))]
 ];
+try {
+    $recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
+    $recent_activities_result = $conn->query($recent_activities_sql);
+    if ($recent_activities_result && $recent_activities_result->num_rows > 0) {
+        $recent_activities = $recent_activities_result->fetch_all(MYSQLI_ASSOC);
+    }
+} catch (Exception $e) {
+    // Use fallback activities
+}
 ?>
 
 <!DOCTYPE html>
