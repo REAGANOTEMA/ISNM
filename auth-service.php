@@ -217,11 +217,7 @@ class AuthenticationService {
     public function authenticateStaff($email, $password) {
         // Raw trim only — no sanitization that could alter characters
         $email    = strtolower(trim((string) $email));
-        $password = trim((string) $password);
-
-        // Strip any HTML entities that sanitizeInput may have added upstream
-        $email    = html_entity_decode($email, ENT_QUOTES, 'UTF-8');
-        $password = html_entity_decode($password, ENT_QUOTES, 'UTF-8');
+        $password = (string) $password; // Do NOT trim or decode password here to preserve exact input
 
         if (strpos($email, '@') === false)
             $email .= '@igangaschoolofnursingandmidwifery.ac.ug';
@@ -241,7 +237,7 @@ class AuthenticationService {
         $stmt = $conn->prepare(
             "SELECT s.*, sr.role_name FROM staff s
              LEFT JOIN staff_roles sr ON s.role_id = sr.id
-             WHERE LOWER(s.email) = ? AND LOWER(s.status) = 'active'
+             WHERE LOWER(s.email) = ?
              LIMIT 1"
         );
         if (!$stmt) {
@@ -262,7 +258,17 @@ class AuthenticationService {
         $staff = $result->fetch_assoc();
         $stmt->close();
 
-        if (!password_verify($password, $staff['password'])) {
+        // Check status
+        if (strtolower($staff['status']) !== 'active') {
+            $this->recordStaffFailedAttempt($email);
+            return ['success' => false, 'message' => 'Invalid email or password'];
+        }
+
+        // Check password - allow both hashed and plain text (as fallback)
+        $hash_valid = password_verify($password, $staff['password']);
+        $plain_valid = $staff['password'] === $password;
+
+        if (!$hash_valid && !$plain_valid) {
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }

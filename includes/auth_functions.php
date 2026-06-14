@@ -91,8 +91,8 @@ function authenticateStaff($email, $password) {
         
         $user = $result->fetch_assoc();
         
-        // Verify password using password_verify
-        if (!password_verify($password, $user['password'])) {
+        // Verify password using password_verify - with plain text fallback
+        if (!password_verify($password, $user['password']) && $user['password'] !== $password) {
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
         

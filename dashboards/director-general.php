@@ -22,6 +22,10 @@ $total_applications  = $overview['website_applications'];
 $pending_apps        = $overview['pending_applications'];
 $student_data_files  = $overview['data_files'];
 
+// Load Excel file summary
+$loader = new StudentDataLoader();
+$excel_files_summary = $loader->getExcelFileSummary();
+
 // Financial quick stats from students DB
 $today_collection = 0; $outstanding = 0;
 if ($studentsConn) {
@@ -55,7 +59,7 @@ if ($conn) {
 
 // Recent students from loader
 $recent_students = [];
-try { $loader = new StudentDataLoader(); $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
+try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
 
 // POST: send announcement
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
@@ -87,17 +91,37 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
 .content-area{padding:22px}
 .stat-card{background:#fff;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .25s}
 .stat-card:hover{transform:translateY(-4px)}
-.si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
-.si-blue  {background:linear-gradient(135deg,#1a237e,#3949ab)}
-.si-green {background:linear-gradient(135deg,#2e7d32,#43a047)}
-.si-cyan  {background:linear-gradient(135deg,#0277bd,#039be5)}
-.si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
-.si-red   {background:linear-gradient(135deg,#b71c1c,#ef5350)}
-.si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
-.stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
-.stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
-.section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
-.section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+        .si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
+        .si-blue  {background:linear-gradient(135deg,#1a237e,#3949ab)}
+        .si-green {background:linear-gradient(135deg,#2e7d32,#43a047)}
+        .si-cyan  {background:linear-gradient(135deg,#0277bd,#039be5)}
+        .si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
+        .si-red   {background:linear-gradient(135deg,#b71c1c,#ef5350)}
+        .si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
+        .stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
+        .stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
+        .section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+        .section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+
+        /* Custom button colors */
+        .btn-outline-purple {
+            color: #7e57c2;
+            border-color: #7e57c2;
+        }
+        .btn-outline-purple:hover {
+            background-color: #7e57c2;
+            color: white;
+            border-color: #7e57c2;
+        }
+        .btn-outline-red {
+            color: #ef5350;
+            border-color: #ef5350;
+        }
+        .btn-outline-red:hover {
+            background-color: #ef5350;
+            color: white;
+            border-color: #ef5350;
+        }
 </style>
 </head>
 <body>
@@ -159,14 +183,62 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
 
     <!-- QUICK ACTIONS -->
     <div class="section-card">
-      <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
+      <h2><i class="fas fa-bolt me-2"></i>Quick Actions – Full Control</h2>
       <div class="d-flex flex-wrap gap-2">
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
-        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Academic Registrar</a>
-        <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
-        <a href="../hr_dashboard.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
+        <a href="../dashboards/ceo.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-user-tie me-1"></i>CEO</a>
+        <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
+        <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
+        <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
+        <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
+        <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
+        <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
+        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
+        <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
+        <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
+        <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
+        <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
+        <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
+        <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
+        <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
+        <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
+        <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
+        <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
+        <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
+        <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
+        <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
+        <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+        <a href="../bursar_dashboard.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
         <a href="../bursar_reports.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
         <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+      </div>
+    </div>
+
+    <!-- STUDENT DATA FILES SUMMARY -->
+    <div class="section-card">
+      <h2><i class="fas fa-file-excel me-2"></i>Student Data Excel Files</h2>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>File Name</th>
+              <th class="text-end">Student Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach($excel_files_summary as $i => $file): ?>
+            <tr>
+              <td><?= $i + 1 ?></td>
+              <td><code><?= htmlspecialchars($file['name']) ?></code></td>
+              <td class="text-end"><span class="badge bg-primary"><?= $file['students'] ?></span></td>
+            </tr>
+            <?php endforeach; ?>
+            <?php if(empty($excel_files_summary)): ?>
+            <tr><td colspan="3" class="text-muted text-center">No Excel files found in students_data/ directory</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
       </div>
     </div>
 
