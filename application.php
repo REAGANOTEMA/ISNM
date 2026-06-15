@@ -886,7 +886,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(45deg, rgba(30, 60, 114, 0.8), rgba(126, 34, 206, 0.6));
+      background: linear-gradient(135deg, rgba(26, 35, 126, 0.85), rgba(57, 73, 171, 0.7));
     }
 
     .hero-content {
@@ -935,7 +935,7 @@
       right: -50%;
       width: 200%;
       height: 200%;
-      background: radial-gradient(circle, rgba(126, 34, 206, 0.05) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(26, 35, 126, 0.05) 0%, transparent 70%);
       animation: rotate 30s linear infinite;
     }
 
@@ -964,7 +964,7 @@
     }
 
     .school-details i {
-      color: #7e22ce;
+      color: #1a237e;
       font-size: 1rem;
     }
 
@@ -1051,7 +1051,7 @@
 
     .card-header i {
       font-size: 2rem;
-      color: #7e22ce;
+      color: #1a237e;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
       width: 60px;
       height: 60px;
@@ -1081,7 +1081,7 @@
 
     .section-header i {
       font-size: 1.2rem;
-      color: #7e22ce;
+      color: #1a237e;
     }
 
     .section-header h5 {
@@ -1108,7 +1108,7 @@
       content: '▸';
       position: absolute;
       left: -1rem;
-      color: #7e22ce;
+      color: #1a237e;
       font-weight: bold;
     }
 
@@ -1160,7 +1160,7 @@
     .detail-icon {
       width: 50px;
       height: 50px;
-      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -1316,7 +1316,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+      background: linear-gradient(90deg, #1a237e, #3949ab, #5c6bc0, #3949ab, #1a237e);
       background-size: 200% 100%;
       animation: shimmer 3s ease-in-out infinite;
     }
@@ -1330,13 +1330,13 @@
     .form-logo {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
       position: relative;
     }
 
@@ -1347,7 +1347,7 @@
       left: -5px;
       right: -5px;
       bottom: -5px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 25px;
       z-index: -1;
       opacity: 0.3;
@@ -1419,7 +1419,7 @@
 
     .form-section h4 i {
       font-size: 1.2rem;
-      color: #7e22ce;
+      color: #1a237e;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
       width: 40px;
       height: 40px;
@@ -1445,8 +1445,8 @@
     }
 
     .form-control:focus {
-      border-color: #7e22ce;
-      box-shadow: 0 0 0 0.2rem rgba(126, 34, 206, 0.15);
+      border-color: #1a237e;
+      box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.15);
       outline: none;
     }
 

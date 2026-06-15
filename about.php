@@ -596,12 +596,6 @@
     .vmv-icon i {
       font-size: 2rem;
       color: white;
-      animation: iconRotate 8s linear infinite;
-    }
-
-    @keyframes iconRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
 
     .vmv-card h3 {
@@ -800,18 +794,8 @@
     .governance-chair::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" font-size="100" fill="rgba(255,255,255,0.05)">👔</text></svg>');
-      background-size: 100px 100px;
-      animation: chairmanPattern 20s linear infinite;
-    }
-
-    @keyframes chairmanPattern {
-      0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(-100px) translateY(-100px); }
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(255,215,0,0.08) 0%, transparent 50%);
     }
 
     .chairman-image {
@@ -827,8 +811,8 @@
     }
 
     @keyframes chairmanImageEntrance {
-      from { opacity: 0; transform: scale(0.8) rotate(-180deg); }
-      to { opacity: 1; transform: scale(1) rotate(0deg); }
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
     }
 
     .chairman-image img {
@@ -950,12 +934,6 @@
     .program-icon i {
       font-size: 2rem;
       color: white;
-      animation: programIconRotate 8s linear infinite;
-    }
-
-    @keyframes programIconRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
 
     .program-details h3 {

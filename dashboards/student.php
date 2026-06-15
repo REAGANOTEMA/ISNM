@@ -113,6 +113,37 @@ $timetable = [];
 if (!empty($student_info['student_id']) && !empty($student_info['current_semester'])) {
     $timetable = getStudentTimetable($student_info['student_id'], $student_info['current_semester']);
 }
+
+// Handle profile photo upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_photo') {
+    if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === 0) {
+        $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $max_size = 5 * 1024 * 1024;
+        if (!in_array($_FILES['profile_photo']['type'], $allowed)) {
+            $_SESSION['error_msg'] = 'Invalid file type. Allowed: JPG, PNG, GIF, WebP.';
+        } elseif ($_FILES['profile_photo']['size'] > $max_size) {
+            $_SESSION['error_msg'] = 'File too large. Maximum is 5MB.';
+        } else {
+            $upload_dir = '../studentUploads/profile_images/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            $ext = strtolower(pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION));
+            $filename = 'student_' . $student_id . '_' . time() . '.' . $ext;
+            $filepath = $upload_dir . $filename;
+            if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $filepath)) {
+                $stmt = $students_conn->prepare("UPDATE students SET profile_picture = ? WHERE id = ?");
+                $stmt->bind_param("si", $filename, $student_id);
+                if ($stmt->execute()) {
+                    $_SESSION['success_msg'] = 'Profile photo updated successfully!';
+                }
+                $stmt->close();
+            }
+        }
+    } else {
+        $_SESSION['error_msg'] = 'Please select a file to upload.';
+    }
+    header('Location: student.php#profile');
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -590,13 +621,26 @@ if (!empty($student_info['student_id']) && !empty($student_info['current_semeste
                 <!-- Profile Section -->
                 <section id="profile" class="content-section">
                     <h2>My Profile</h2>
+                    <?php if (isset($_SESSION['success_msg'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success_msg']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    <?php unset($_SESSION['success_msg']); endif; ?>
+                    <?php if (isset($_SESSION['error_msg'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show"><?= htmlspecialchars($_SESSION['error_msg']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    <?php unset($_SESSION['error_msg']); endif; ?>
                     <div class="profile-section">
                         <div class="profile-header">
                             <div class="profile-avatar">
-                                <img src="../images/default-avatar.png" alt="Profile" class="avatar-img" id="studentProfileImage">
-                                <button class="btn btn-sm btn-primary" onclick="openCommunicationCenter()">
-                                    <i class="fas fa-camera"></i> Request Photo Update
-                                </button>
+                                <?php
+                                $photo = !empty($student_info['profile_picture']) ? '../studentUploads/profile_images/' . htmlspecialchars($student_info['profile_picture']) : '../images/default-avatar.png';
+                                ?>
+                                <img src="<?= $photo ?>" alt="Profile" class="avatar-img" id="studentProfileImage">
+                                <label for="profilePhotoInput" class="btn btn-sm btn-primary" style="cursor:pointer">
+                                    <i class="fas fa-camera"></i> Change Photo
+                                </label>
+                                <form id="profilePhotoForm" method="POST" enctype="multipart/form-data" style="display:none">
+                                    <input type="hidden" name="action" value="upload_photo">
+                                    <input type="file" id="profilePhotoInput" name="profile_photo" accept="image/*" onchange="document.getElementById('profilePhotoForm').submit()">
+                                </form>
                             </div>
                             <div class="profile-info">
                                 <h3><?php echo $student_info['first_name'] . ' ' . $student_info['surname'] . ' ' . $student_info['other_name']; ?></h3>

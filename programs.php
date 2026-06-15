@@ -489,9 +489,9 @@
       margin: 0;
       font-size: 1rem;
       font-weight: 600;
-      font-family: 'Haettenschweiler', sans-serif;
+      font-family: 'Inter', 'Poppins', sans-serif;
       color: #ffffff;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
       line-height: 1.2;
     }
 
@@ -516,13 +516,12 @@
       color: #1e3a8a !important;
       margin: 0.8rem 0 0.5rem;
       font-size: 0.95rem;
-      font-weight: 600;
-      font-family: 'Cooper Black', sans-serif;
+      font-weight: 700;
+      font-family: 'Playfair Display', Georgia, serif;
       position: relative;
       z-index: 20;
       visibility: visible !important;
       opacity: 1 !important;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
     }
 
     .program-content h4:first-child {
@@ -530,13 +529,12 @@
     }
 
     .program-content p {
-      color: #000000 !important;
-      line-height: 1.5;
+      color: #1e293b !important;
+      line-height: 1.7;
       margin-bottom: 1rem;
-      font-family: 'Bodoni MT Poster Compressed', serif;
-      font-size: 1.01rem;
-      font-weight: 600;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.9);
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
       position: relative;
       z-index: 15;
       visibility: visible !important;
@@ -553,18 +551,17 @@
     .requirements-list li,
     .course-content li {
       padding: 0.5rem 0.75rem;
-      color: #000000 !important;
+      color: #1e293b !important;
       position: relative;
       padding-left: 1.5rem;
       margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
       border-radius: 8px;
       transition: all 0.3s ease;
-      border: 2px solid rgba(144, 238, 144, 0.6);
-      font-family: 'Bodoni MT Poster Compressed', serif;
-      font-size: 1.01rem;
-      font-weight: 600;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(26, 35, 126, 0.1);
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
       z-index: 10;
       visibility: visible !important;
       opacity: 1 !important;
@@ -600,160 +597,43 @@
       z-index: 20;
     }
 
-    .btn {
+    .program-actions .btn {
       padding: 12px 28px;
-      border-radius: 25px;
+      border-radius: 10px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
       display: inline-block;
-      font-family: 'Cooper Black', sans-serif;
-      font-size: 0.9rem;
-      position: relative;
-      z-index: 25;
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 2px solid transparent;
       transform-style: preserve-3d;
       perspective: 1000px;
-      cursor: pointer;
-      border: none;
-      outline: none;
     }
 
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: inherit;
-      z-index: -1;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .btn::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      right: 2px;
-      bottom: 2px;
-      border-radius: inherit;
-      z-index: -1;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .btn-primary {
+    .program-actions .btn-primary {
       color: #ffffff;
-      background: linear-gradient(145deg, #4a2c2a 0%, #6b4423 25%, #8b5a3c 50%, #6b4423 75%, #4a2c2a 100%);
-      box-shadow: 
-        0 8px 15px rgba(74, 44, 42, 0.4),
-        0 4px 8px rgba(107, 68, 35, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-      border: 2px solid #3d2422;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
+      box-shadow: 0 4px 15px rgba(26,35,126,0.3);
     }
 
-    .btn-primary::before {
-      background: linear-gradient(145deg, #3d2422 0%, #5c3a28 25%, #7a4e35 50%, #5c3a28 75%, #3d2422 100%);
-      box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    .program-actions .btn-primary:hover {
+      transform: perspective(1000px) translateY(-3px) translateZ(6px);
+      box-shadow: 0 8px 25px rgba(26,35,126,0.4);
+      background: linear-gradient(135deg, #0d1442, #1a237e);
     }
 
-    .btn-primary::after {
-      background: linear-gradient(145deg, #6b4423 0%, #8b5a3c 50%, #6b4423 100%);
-      opacity: 0.3;
+    .program-actions .btn-outline-primary {
+      color: #1a237e;
+      background: transparent;
+      border-color: #1a237e;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-3px) rotateX(5deg) scale(1.02);
-      box-shadow: 
-        0 12px 20px rgba(74, 44, 42, 0.5),
-        0 6px 12px rgba(107, 68, 35, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.4);
-      background: linear-gradient(145deg, #5c3a28 0%, #7a4e35 25%, #9b6a4a 50%, #7a4e35 75%, #5c3a28 100%);
-    }
-
-    .btn-primary:hover::before {
-      transform: translateZ(-2px);
-      background: linear-gradient(145deg, #4a2c2a 0%, #6b4423 25%, #8b5a3c 50%, #6b4423 75%, #4a2c2a 100%);
-      box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
-    .btn-primary:hover::after {
-      transform: translateZ(-1px);
-      opacity: 0.4;
-    }
-
-    .btn-primary:active {
-      transform: translateY(-1px) rotateX(2deg) scale(0.98);
-      box-shadow: 
-        0 4px 8px rgba(74, 44, 42, 0.4),
-        0 2px 4px rgba(107, 68, 35, 0.3),
-        inset 0 1px 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-outline-primary {
-      color: #1e3a8a;
-      background: linear-gradient(145deg, #f8f4f1 0%, #e8dfd8 50%, #f8f4f1 100%);
-      box-shadow: 
-        0 8px 15px rgba(74, 44, 42, 0.3),
-        0 4px 8px rgba(107, 68, 35, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-      border: 2px solid #6b4423;
-      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
-    }
-
-    .btn-outline-primary::before {
-      background: linear-gradient(145deg, #e8dfd8 0%, #d8cfc6 50%, #e8dfd8 100%);
-      box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    }
-
-    .btn-outline-primary::after {
-      background: linear-gradient(145deg, #6b4423 0%, #8b5a3c 50%, #6b4423 100%);
-      opacity: 0.1;
-    }
-
-    .btn-outline-primary:hover {
-      transform: translateY(-3px) rotateX(5deg) scale(1.02);
-      color: #1e3a8a;
-      background: linear-gradient(145deg, #fff8f0 0%, #f5e6d8 50%, #fff8f0 100%);
-      box-shadow: 
-        0 12px 20px rgba(74, 44, 42, 0.4),
-        0 6px 12px rgba(107, 68, 35, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-      border-color: #8b5a3c;
-    }
-
-    .btn-outline-primary:hover::before {
-      transform: translateZ(-2px);
-      background: linear-gradient(145deg, #f5e6d8 0%, #ead4c2 50%, #f5e6d8 100%);
-      box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7);
-    }
-
-    .btn-outline-primary:hover::after {
-      transform: translateZ(-1px);
-      opacity: 0.2;
-    }
-
-    .btn-outline-primary:active {
-      transform: translateY(-1px) rotateX(2deg) scale(0.98);
-      box-shadow: 
-        0 4px 8px rgba(74, 44, 42, 0.3),
-        0 2px 4px rgba(107, 68, 35, 0.2),
-        inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    .program-actions .btn-outline-primary:hover {
+      background: #1a237e;
+      color: #fff;
+      transform: perspective(1000px) translateY(-3px) translateZ(6px);
     }
 
     /* Clean Hospitals Grid */
@@ -803,17 +683,16 @@
       margin: 0 0 0.4rem;
       font-size: 1rem;
       font-weight: 700;
-      font-family: 'Cooper Black', sans-serif;
+      font-family: 'Inter', 'Poppins', sans-serif;
     }
 
     .hospital-info p {
-      color: #1a1a1a;
+      color: #475569;
       margin: 0;
       font-size: 0.85rem;
       line-height: 1.4;
-      font-family: 'Bodoni MT Poster Compressed', serif;
-      font-weight: 500;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-weight: 400;
     }
 
     .practicum-details {
@@ -830,17 +709,16 @@
       margin-bottom: 1rem;
       font-size: 1.3rem;
       font-weight: 700;
-      font-family: 'Haettenschweiler', sans-serif;
+      font-family: 'Playfair Display', Georgia, serif;
     }
 
     .practicum-info p {
-      color: #1a1a1a;
-      line-height: 1.6;
+      color: #475569;
+      line-height: 1.7;
       margin-bottom: 1.5rem;
-      font-family: 'Bodoni MT Poster Compressed', serif;
-      font-size: 1rem;
-      font-weight: 500;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
     }
 
     .training-structure {
@@ -851,18 +729,17 @@
 
     .training-structure li {
       padding: 0.6rem 0.75rem;
-      color: #1a1a1a;
+      color: #1e293b;
       position: relative;
       padding-left: 2rem;
       margin-bottom: 0.6rem;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
       border-radius: 8px;
       transition: all 0.3s ease;
-      border-left: 3px solid rgba(144, 238, 144, 0.5);
-      font-family: 'Bodoni MT Poster Compressed', serif;
+      border-left: 3px solid rgba(26, 35, 126, 0.2);
+      font-family: 'Inter', 'Poppins', sans-serif;
       font-size: 0.9rem;
-      font-weight: 500;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
+      font-weight: 400;
     }
 
     .training-structure li:hover {
@@ -940,7 +817,7 @@
       margin-right: 1.5rem;
       box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
       animation: markerPulse 2s ease-in-out infinite;
-      font-family: 'Cooper Black', sans-serif;
+      font-family: 'Inter', 'Poppins', sans-serif;
     }
 
     @keyframes markerPulse {
@@ -968,17 +845,16 @@
       margin: 0 0 0.6rem;
       font-size: 1.1rem;
       font-weight: 700;
-      font-family: 'Cooper Black', sans-serif;
+      font-family: 'Playfair Display', Georgia, serif;
     }
 
     .timeline-content p {
-      color: #1a1a1a;
+      color: #475569;
       margin: 0;
-      line-height: 1.5;
-      font-family: 'Bodoni MT Poster Compressed', serif;
-      font-size: 0.95rem;
-      font-weight: 500;
-      text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      font-family: 'Inter', 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
     }
 
     /* Enhanced Responsive Design */

@@ -398,8 +398,8 @@ include_once 'shared/_header.php'; ?>
 
 <style>
     :root {
-        --primary-color: #3E2723;
-        --secondary-color: #1A237E;
+        --primary-color: #1a237e;
+        --secondary-color: #3949ab;
         --accent-color: #FFD700;
         --success-color: #28a745;
         --danger-color: #dc3545;
@@ -414,7 +414,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     body {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
         margin: 0;
         padding: 0;
         overflow-x: hidden;
@@ -558,7 +558,7 @@ include_once 'shared/_header.php'; ?>
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
       position: relative;
     }
 
@@ -634,8 +634,8 @@ include_once 'shared/_header.php'; ?>
     }
 
     .contact-card:hover {
-      transform: translateY(-15px);
-      box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+      transform: perspective(1000px) translateY(-6px) translateZ(8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
     }
 
     .contact-icon {
@@ -647,7 +647,7 @@ include_once 'shared/_header.php'; ?>
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
     }
 
     .contact-icon i {
@@ -779,7 +779,7 @@ include_once 'shared/_header.php'; ?>
 
     .form-control:focus {
       border-color: #1a237e;
-      box-shadow: 0 0 0 0.2rem rgba(126, 34, 206, 0.15);
+      box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.15);
       outline: none;
     }
 
@@ -800,13 +800,13 @@ include_once 'shared/_header.php'; ?>
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
     }
 
     .submit-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(126, 34, 206, 0.4);
-      background: linear-gradient(135deg, #3949ab, #581c87);
+      transform: perspective(1000px) translateY(-4px) translateZ(6px);
+      box-shadow: 0 15px 40px rgba(26, 35, 126, 0.4);
+      background: linear-gradient(135deg, #0d1442, #1a237e);
     }
 
     .submit-btn i {

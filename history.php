@@ -457,7 +457,7 @@
       left: 0;
       right: 0;
       height: 100%;
-      background: radial-gradient(circle at 10% 20%, rgba(126, 34, 206, 0.03) 0%, transparent 50%);
+      background: radial-gradient(circle at 10% 20%, rgba(26, 35, 126, 0.03) 0%, transparent 50%);
       pointer-events: none;
     }
     
@@ -533,7 +533,7 @@
        align-items: center;
        justify-content: center;
        margin-bottom: 1rem;
-       box-shadow: 0 6px 20px rgba(126, 34, 206, 0.25);
+       box-shadow: 0 6px 20px rgba(26, 35, 126, 0.25);
        flex-shrink: 0;
      }
 
@@ -610,7 +610,7 @@
       font-weight: 700;
       font-size: 1.1rem;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.4);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.4);
       margin: 0 2rem;
     }
 

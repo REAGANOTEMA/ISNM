@@ -623,6 +623,30 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
                 </div>
             </section>
 
+            <!-- Fee Statement Lookup -->
+            <section class="content-section">
+                <h2 class="section-title"><i class="fas fa-file-invoice"></i> Print Fee Statement</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <form class="row g-2 align-items-end" method="GET" action="../sql/staffs/view-fees.php">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Enter Student ID (database ID)</label>
+                                <input type="number" name="id" class="form-control" placeholder="Student database ID..." required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-file-invoice me-1"></i> View Statement
+                                </button>
+                            </div>
+                        </form>
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Statement includes school logo, invoice ledger, payment history, and print/PDF options.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Recent Payments Section -->
             <section id="payments" class="content-section">
                 <div class="section-header">

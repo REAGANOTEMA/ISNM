@@ -7,6 +7,7 @@
 $pageTitle = $pageTitle ?? 'Dashboard';
 $rootPath  = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
 if ($rootPath === '') $rootPath = '.';
+// Also provide as JS global
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -36,7 +37,7 @@ if ($rootPath === '') $rootPath = '.';
 <!-- Font Awesome 6 -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Dashboard base styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-style.css" rel="stylesheet">
 <!-- Mobile dashboard styles -->

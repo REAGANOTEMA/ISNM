@@ -169,13 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'upload_photo':
                 // Handle photo upload
-                if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) {
+                if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === 0) {
                     $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
                     $max_size = 5 * 1024 * 1024; // 5MB
                     
-                    if (!in_array($_FILES['profile_image']['type'], $allowed_types)) {
+                    if (!in_array($_FILES['profile_photo']['type'], $allowed_types)) {
                         $_SESSION['error'] = "Invalid file type. Please upload JPG, PNG, or GIF.";
-                    } elseif ($_FILES['profile_image']['size'] > $max_size) {
+                    } elseif ($_FILES['profile_photo']['size'] > $max_size) {
                         $_SESSION['error'] = "File too large. Maximum size is 5MB.";
                     } else {
                         $upload_dir = 'studentUploads/profile_images/';
@@ -183,11 +183,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             mkdir($upload_dir, 0755, true);
                         }
                         
-                        $filename = $student_id . '_' . time() . '.' . pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
+                        $filename = $student_id . '_' . time() . '.' . pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
                         $filepath = $upload_dir . $filename;
                         
-                        if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $filepath)) {
-                            $update_photo_sql = "UPDATE students SET profile_image = ? WHERE student_id = ?";
+                        if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $filepath)) {
+                            $update_photo_sql = "UPDATE students SET profile_picture = ? WHERE student_id = ?";
                             $stmt = $conn->prepare($update_photo_sql);
                             $stmt->bind_param("ss", $filename, $student_id);
                             

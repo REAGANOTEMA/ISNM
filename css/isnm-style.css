@@ -230,32 +230,34 @@ h1, h2, h3, h4 {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
-  border: 2px solid rgba(15, 76, 58, 0.2);
+  border: 2px solid rgba(26, 35, 126, 0.15);
   position: relative;
   z-index: 5;
+  transform-style: preserve-3d;
 }
 
 .intro-content {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  border: 2px solid rgba(15, 76, 58, 0.2);
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(26, 35, 126, 0.15);
   position: relative;
   z-index: 5;
+  transform-style: preserve-3d;
 }
 
 .program-card:hover,
 .intro-content:hover,
 .contact-grid:hover,
 .section-header:hover {
-  transform: translateY(-3px);
-  border-color: var(--isnm-dark-green);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  transform: perspective(1000px) translateY(-4px) translateZ(8px);
+  border-color: var(--isnm-blue);
+  box-shadow: 0 12px 40px rgba(26,35,126,0.15);
 }
 
 .program-icon {
@@ -349,10 +351,18 @@ h3 {
   padding: 1.5rem;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  border: 2px solid rgba(15, 76, 58, 0.2);
+  box-shadow: var(--shadow-md);
+  border: 2px solid rgba(26, 35, 126, 0.15);
   position: relative;
   z-index: 5;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.vm-item:hover {
+  transform: perspective(1000px) translateY(-4px) translateZ(8px);
+  box-shadow: 0 12px 40px rgba(26,35,126,0.15);
+  border-color: var(--isnm-blue);
 }
 
 .vm-item h4,
@@ -382,19 +392,21 @@ h4 {
   padding: 2rem;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
-  border: 2px solid rgba(15, 76, 58, 0.2);
+  border: 2px solid rgba(26, 35, 126, 0.15);
   position: relative;
   z-index: 5;
+  transform-style: preserve-3d;
 }
 
 .facility-card:hover,
 .program-header:hover,
 .program-content:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  transform: perspective(1000px) translateY(-4px) translateZ(8px);
+  box-shadow: 0 12px 40px rgba(26,35,126,0.15);
+  border-color: var(--isnm-blue);
 }
 
 .facility-card h4,
@@ -892,6 +904,65 @@ h4 {
 }
 .news-card-body h5 a:hover { color: #1a237e; }
 .news-card-body .excerpt { color: #64748b; font-size: .88rem; line-height: 1.6; }
+
+/* === Hero Override — reduced cinematic title === */
+.hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
+  font-size: 3rem !important;
+}
+@media (max-width: 768px) {
+  .hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
+    font-size: 2.2rem !important;
+  }
+}
+@media (max-width: 480px) {
+  .hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
+    font-size: 1.7rem !important;
+  }
+}
+
+/* === Enhanced Apply Now Button === */
+.hero-content .cta-buttons .btn-cinematic.btn-primary {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%) !important;
+  color: #0d1442 !important;
+  font-size: 1.25rem !important;
+  padding: 20px 42px !important;
+  box-shadow: 0 8px 30px rgba(255, 165, 0, 0.5) !important;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+.hero-content .cta-buttons .btn-cinematic.btn-primary i {
+  font-size: 1.5rem;
+}
+.hero-content .cta-buttons .btn-cinematic.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 53px;
+  background: linear-gradient(135deg, #FFD700, #FF8C00, #FFD700);
+  z-index: -1;
+  opacity: 0.6;
+  animation: btnBorderPulse 2s ease-in-out infinite;
+}
+@keyframes btnBorderPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.03); }
+}
+.hero-content .cta-buttons .btn-cinematic.btn-primary:hover {
+  transform: perspective(1000px) translateY(-4px) translateZ(12px) scale(1.05) !important;
+  box-shadow: 0 15px 45px rgba(255, 165, 0, 0.6) !important;
+}
+
+/* === Hero Stats Enhancement === */
+.hero-content .hero-stats .stat-item {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hero-content .hero-stats .stat-item:hover {
+  transform: perspective(1000px) translateY(-4px) translateZ(8px);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+}
 
 /* === Modern Polish === */
 .section-title {

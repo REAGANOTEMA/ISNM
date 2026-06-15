@@ -221,297 +221,12 @@ if ($view === 'single' && $slug) {
         while ($row = $result->fetch_assoc()) $newsList[] = $row;
     }
 }
+
+$pageTitle = $singleNews ? htmlspecialchars($singleNews['title']) . ' - ISNM News' : 'News - ISNM';
+include 'shared/_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $singleNews ? htmlspecialchars($singleNews['title']) . ' - ' : '' ?>News - ISNM</title>
-<?php include_once __DIR__ . '/includes/_favicon.php'; ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="css/news.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
-<style>
-:root {
-    --primary: #1a237e;
-    --primary-light: #3949ab;
-    --primary-dark: #0d1442;
-    --accent: #ffd700;
-    --accent-light: #fff3b0;
-    --success: #2e7d32;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
-}
-body {
-    font-family: var(--font-body);
-    background: #f8fafc;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    color: #1e293b;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-.navbar-isnm {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--primary-light));
-    box-shadow: 0 2px 20px rgba(26,35,126,0.2);
-    padding: 12px 0;
-}
-.navbar-isnm .navbar-brand {
-    color: #fff;
-    font-weight: 800;
-    font-size: 1.3rem;
-    letter-spacing: -0.5px;
-}
-.navbar-isnm .nav-link {
-    color: rgba(255,255,255,0.88);
-    font-weight: 500;
-    font-size: 0.88rem;
-    padding: 8px 16px !important;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-.navbar-isnm .nav-link:hover,
-.navbar-isnm .nav-link.active {
-    color: #fff;
-    background: rgba(255,255,255,0.12);
-}
-.hero-section {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
-    color: #fff;
-    padding: 60px 0 50px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at 30% 50%, rgba(255,215,0,0.06) 0%, transparent 50%);
-    animation: heroGlow 8s ease-in-out infinite;
-}
-@keyframes heroGlow {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-5%, 5%); }
-}
-.hero-section h1 {
-    font-family: var(--font-heading);
-    font-size: 2.25rem;
-    font-weight: 900;
-    position: relative;
-}
-.hero-section h1 i { color: var(--accent); }
-.hero-section p {
-    color: rgba(255,255,255,0.85);
-    font-size: 1.05rem;
-    max-width: 600px;
-    margin: 8px auto 0;
-    position: relative;
-}
-.news-card {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(226,232,240,0.6);
-}
-.news-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-    border-color: var(--primary-light);
-}
-.news-card-img {
-    width: 100%;
-    height: 210px;
-    object-fit: cover;
-    transition: transform 0.4s;
-}
-.news-card:hover .news-card-img { transform: scale(1.03); }
-.news-card-img-placeholder {
-    width: 100%;
-    height: 210px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
-    color: #94a3b8;
-    font-size: 2.5rem;
-}
-.news-card-body {
-    padding: 20px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-.news-card-body .date {
-    font-size: .78rem;
-    color: #94a3b8;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-.news-card-body h5 {
-    font-weight: 700;
-    margin: 8px 0 6px;
-    line-height: 1.35;
-}
-.news-card-body h5 a {
-    color: #0f172a;
-    transition: color 0.2s;
-}
-.news-card-body h5 a:hover { color: var(--primary); }
-.news-card-body .excerpt { color: #64748b; font-size: .88rem; line-height: 1.6; }
-.news-card-body .author { font-size: .82rem; color: var(--primary-light); font-weight: 500; }
-.news-card-body .card-footer-links {
-    margin-top: auto;
-    padding-top: 12px;
-}
-
-.single-article {
-    background: #fff;
-    border-radius: 16px;
-    padding: 40px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    max-width: 900px;
-    margin: 0 auto;
-}
-.single-article h1 {
-    font-family: var(--font-heading);
-    font-weight: 900;
-    font-size: 2rem;
-    line-height: 1.25;
-    color: #0f172a;
-}
-.single-article .meta {
-    color: #94a3b8;
-    font-size: .9rem;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e2e8f0;
-}
-.single-article .featured-img {
-    width: 100%;
-    max-height: 450px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-.single-article .content {
-    line-height: 1.85;
-    font-size: 1.05rem;
-    color: #334155;
-}
-.single-article .content img { max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; }
-.single-article .content h2,
-.single-article .content h3 { font-family: var(--font-heading); color: #0f172a; margin-top: 28px; }
-
-.admin-bar {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    color: #fff;
-    padding: 12px 0;
-    font-size: .85rem;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-}
-.admin-bar a {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.2s;
-}
-.admin-bar a:hover { opacity: 0.8; }
-
-.empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    color: #94a3b8;
-}
-.empty-state i { font-size: 3.5rem; margin-bottom: 16px; opacity: 0.5; }
-.empty-state h4 { font-weight: 700; color: #64748b; }
-
-.btn-isnm {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: #fff;
-    border: none;
-    padding: 10px 24px;
-    font-weight: 600;
-    border-radius: 10px;
-    transition: all 0.25s;
-}
-.btn-isnm:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26,35,126,0.3);
-}
-.btn-outline-isnm {
-    color: var(--primary);
-    border: 2px solid var(--primary);
-    background: transparent;
-    font-weight: 600;
-    border-radius: 10px;
-    transition: all 0.25s;
-}
-.btn-outline-isnm:hover {
-    background: var(--primary);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26,35,126,0.2);
-}
-
-.badge-status { font-weight: 600; padding: 4px 12px; border-radius: 20px; font-size: .72rem; letter-spacing: 0.3px; text-transform: uppercase; }
-
-.form-control, .form-select {
-    border-radius: 10px;
-    border: 2px solid #e2e8f0;
-    padding: 10px 14px;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(57,73,171,0.12);
-}
-
-.card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-
-footer {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    color: rgba(255,255,255,0.8);
-    text-align: center;
-    padding: 20px;
-    margin-top: auto;
-    font-size: .85rem;
-}
-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
-
-@media (max-width: 768px) {
-    .hero-section h1 { font-size: 1.6rem; }
-    .hero-section { padding: 40px 0 30px; }
-    .single-article { padding: 20px; border-radius: 12px; }
-    .single-article h1 { font-size: 1.4rem; }
-    .news-card-img, .news-card-img-placeholder { height: 170px; }
-}
-</style>
-</head>
-<body>
 
 <?php if ($is_admin): ?>
 <div class="admin-bar">
@@ -525,39 +240,6 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
     </div>
 </div>
 <?php endif; ?>
-
-<nav class="navbar navbar-expand-lg navbar-isnm">
-    <div class="container">
-        <a class="navbar-brand" href="index.php"><i class="fas fa-school me-2"></i>ISNM</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="about.php">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="programs.php">Programs</a></li>
-                <li class="nav-item"><a class="nav-link active" href="news.php">News</a></li>
-                <li class="nav-item"><a class="nav-link" href="contact.php">Contact</a></li>
-                <?php if ($is_admin): ?>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-1"></i><?= htmlspecialchars(explode(' ', $user['full_name'] ?? 'Admin')[0]) ?>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="news.php"><i class="fas fa-newspaper me-2"></i>Manage News</a></li>
-                        <li><a class="dropdown-item" href="dashboards/<?= basename($user['role'] ?? 'director-general') ?>.php"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                    </ul>
-                </li>
-                <?php else: ?>
-                <li class="nav-item"><a class="nav-link" href="staff-login.php"><i class="fas fa-sign-in-alt me-1"></i>Staff Login</a></li>
-                <?php endif; ?>
-            </ul>
-        </div>
-    </div>
-</nav>
 
 <?php if ($view === 'single' && $singleNews): ?>
     <!-- Single Article View -->
@@ -591,7 +273,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
     </div>
 <?php else: ?>
     <!-- News Listing / Admin View -->
-    <div class="hero-section">
+    <div class="hero-section-news">
         <div class="container">
             <h1><i class="fas fa-newspaper me-2"></i>ISNM News</h1>
             <p>Latest updates, announcements, and stories from Iganga School of Nursing &amp; Midwifery</p>
@@ -734,16 +416,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
     </div>
 <?php endif; ?>
 
-<footer>
-    <div class="container">
-        <a href="index.php"><i class="fas fa-home me-1"></i>Back to Homepage</a>
-        <span class="mx-2">|</span>
-        <span>&copy; <?= date('Y') ?> Iganga School of Nursing &amp; Midwifery</span>
-    </div>
-</footer>
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
 <script>
 let newsData = <?= json_encode($newsList) ?>;
@@ -790,7 +463,7 @@ function uploadEditorImage(file) {
 }
 
 function showCreateForm() {
-    $('#formTitle').html('<i class=\"fas fa-plus-circle me-2\"></i>Create News Article');
+    $('#formTitle').html('<i class="fas fa-plus-circle me-2"></i>Create News Article');
     $('#formAction').val('create');
     $('#newsId').val(0);
     $('#newsTitle').val('');
@@ -808,7 +481,7 @@ function hideForm() {
 function editNews(id) {
     let article = newsData.find(n => n.id == id);
     if (!article) return;
-    $('#formTitle').html('<i class=\"fas fa-edit me-2\"></i>Edit News Article');
+    $('#formTitle').html('<i class="fas fa-edit me-2"></i>Edit News Article');
     $('#formAction').val('update');
     $('#newsId').val(article.id);
     $('#newsTitle').val(article.title);
@@ -834,5 +507,4 @@ function deleteNews(id) {
     form.submit();
 }
 </script>
-</body>
-</html>
+<?php include 'shared/_footer.php'; ?>

@@ -1,19 +1,19 @@
 /* ISNM Animations CSS - Professional Design Without Glow Effects */
 
 :root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --accent-color: #e74c3c;
-    --success-color: #27ae60;
+    --primary-color: #1a237e;
+    --secondary-color: #3949ab;
+    --accent-color: #ffd700;
+    --success-color: #2e7d32;
     --warning-color: #f39c12;
     --info-color: #3498db;
-    --light-bg: #f8f9fa;
-    --dark-text: #2c3e50;
-    --border-color: #dee2e6;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
-    --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
-    --transition: all 0.3s ease;
+    --light-bg: #f8fafc;
+    --dark-text: #1e293b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Smooth Transitions */

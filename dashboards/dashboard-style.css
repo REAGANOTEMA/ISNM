@@ -1,8 +1,8 @@
 /* Financial Dashboard Styles */
 
 :root {
-    --isnm-blue: #1e3a8a;
-    --isnm-light-blue: #3b82f6;
+    --isnm-blue: #1a237e;
+    --isnm-light-blue: #3949ab;
     --isnm-green: #059669;
     --isnm-gold: #d97706;
     --isnm-dark-green: #0f4c3a;
@@ -15,7 +15,7 @@
 
 .dashboard-sidebar {
     width: 260px;
-    background: linear-gradient(180deg, var(--isnm-blue) 0%, var(--isnm-dark-green) 100%);
+    background: linear-gradient(180deg, #1a237e 0%, #0d47a1 100%);
     color: white;
     min-height: 100vh;
     position: fixed;
@@ -27,7 +27,7 @@
 /* Sidebar wrapper (alias for .dashboard-sidebar used by director-finance) */
 .sidebar {
     width: 260px;
-    background: linear-gradient(180deg, var(--isnm-blue) 0%, var(--isnm-dark-green) 100%);
+    background: linear-gradient(180deg, #1a237e 0%, #0d47a1 100%);
     color: white;
     min-height: 100vh;
     position: fixed;
