@@ -1,26 +1,7 @@
 <?php include('shared/_header.php');?>
 
   <style>
-    /* Enhanced Donation Page Styles */
-    :root {
-      --isnm-yellow: #FFD700;
-      --isnm-cream: #FFF8DC;
-      --isnm-chocolate: #3E2723;
-      --isnm-dark-blue: #1A237E;
-      --isnm-light-blue: #3949AB;
-      --isnm-gold: #FFA000;
-      --isnm-beige: #F5F5DC;
-      --gradient-primary: linear-gradient(135deg, var(--isnm-dark-blue), var(--isnm-light-blue));
-      --gradient-secondary: linear-gradient(135deg, var(--isnm-yellow), var(--isnm-gold));
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      line-height: 1.6;
-      color: #000000;
-    }
-
-    /* Enhanced Page Header */
+    /* Enhanced Donation Page Styles
     .page-header {
       background: var(--gradient-primary);
       color: white;
@@ -61,7 +42,6 @@
 
     /* Enhanced Donation Overview */
     .donation-overview {
-      background: linear-gradient(135deg, #FFF8DC 0%, #F5F5DC 100%); /* Warm professional cream */
       position: relative;
     }
 
@@ -77,12 +57,7 @@
     }
 
     .section-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: #0f172a;
       margin-bottom: 0.75rem;
-      position: relative;
     }
 
     .section-title::after {
@@ -93,42 +68,19 @@
       transform: translateX(-50%);
       width: 80px;
       height: 4px;
-      background: var(--gradient-secondary);
+      background: linear-gradient(135deg, #FFD700, #FFA000);
       border-radius: 2px;
     }
 
     .section-subtitle {
-      font-size: 1.1rem;
-      color: #000000;
       max-width: 600px;
       margin: 0 auto;
     }
 
     /* Enhanced Donation Content */
     .donation-content {
-      background: white;
       padding: 3rem;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.1);
       position: relative;
-      overflow: hidden;
-    }
-
-    .donation-content::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 5px;
-      background: var(--gradient-secondary);
-    }
-
-    .donation-content h3 {
-      color: var(--isnm-dark-blue);
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-      font-weight: 700;
     }
 
     /* Enhanced Impact Items */
@@ -205,15 +157,12 @@
     }
 
     .impact-text h4 {
-      color: #000000;
       margin: 0 0 0.5rem;
-      font-size: 1.2rem;
       font-weight: 600;
     }
 
     .impact-text p {
       margin: 0;
-      color: #000000;
       line-height: 1.6;
     }
 
@@ -274,7 +223,6 @@
 
     /* Enhanced Donation Options */
     .donation-options {
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
       position: relative;
     }
 
@@ -292,7 +240,6 @@
     .donation-card {
       text-align: center;
       height: 100%;
-      position: relative;
     }
 
     .donation-icon {
@@ -320,14 +267,11 @@
     }
 
     .donation-card h3 {
-      color: #000000;
       margin-bottom: 1.5rem;
-      font-size: 1.5rem;
       font-weight: 700;
     }
 
     .donation-card p {
-      color: #000000;
       margin-bottom: 2rem;
       line-height: 1.7;
     }
@@ -342,34 +286,30 @@
     .donation-amounts li {
       padding: 0.8rem 1rem;
       margin-bottom: 0.5rem;
-      color: #000000;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      background: rgba(0,0,0,0.02);
       border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.05);
       transition: all 0.3s ease;
     }
 
     .donation-amounts li:hover {
-      background: linear-gradient(135deg, #fff8dc 0%, #ffffff 100%);
-      border-color: var(--isnm-yellow);
+      background: rgba(255,215,0,0.08);
       transform: translateX(5px);
     }
 
     .donation-amounts .amount {
       font-weight: 700;
-      color: #000000;
       font-size: 1.1rem;
     }
 
     .project-card {
-      overflow: hidden;
+      overflow: visible;
       height: 100%;
-      position: relative;
+      display: flex;
+      flex-direction: column;
     }
-
 
     .project-image {
       height: 250px;
@@ -400,17 +340,17 @@
 
     .project-content {
       padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .project-content h3 {
-      color: #000000;
       margin-bottom: 1rem;
-      font-size: 1.4rem;
       font-weight: 700;
     }
 
     .project-content p {
-      color: #000000;
       margin-bottom: 1.5rem;
       line-height: 1.7;
     }
@@ -431,12 +371,10 @@
     }
 
     .progress-info span:first-child {
-      color: #000000;
       font-weight: 500;
     }
 
     .progress-info span:last-child {
-      color: #000000;
       font-weight: 700;
     }
 
@@ -473,73 +411,11 @@
 
     .progress-percentage {
       font-size: 0.85rem;
-      color: #000000;
       font-weight: 600;
       margin-top: 0.5rem;
     }
 
-    /* Ensure project buttons are visible */
-    .project-card .btn {
-      display: inline-block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: relative !important;
-      z-index: 10 !important;
-      width: auto !important;
-      min-width: 200px !important;
-      margin-top: 1rem !important;
-    }
-
-    /* Enhanced Buttons */
-    .btn {
-      padding: 12px 30px;
-      border-radius: 50px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      border: none;
-      font-size: 0.9rem;
-    }
-
-    .btn-primary {
-      background: var(--gradient-secondary);
-      color: var(--isnm-chocolate);
-      box-shadow: 0 5px 15px rgba(255,215,0,0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255,215,0,0.4);
-    }
-
-    .btn-outline-primary {
-      background: transparent;
-      color: var(--isnm-dark-blue);
-      border: 2px solid var(--isnm-dark-blue);
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      text-align: center !important;
-    }
-
-    .btn-outline-primary:hover {
-      background: var(--isnm-dark-blue);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(26,35,126,0.3);
-    }
-
     /* Additional button visibility fixes */
-    .project-card {
-      position: relative;
-      overflow: visible;
-      display: flex;
-      flex-direction: column;
-    }
-
     .project-card .btn-outline-primary {
       display: inline-flex !important;
       visibility: visible !important;
@@ -559,21 +435,6 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-    }
-
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .btn:hover::before {
-      left: 100%;
     }
 
     /* Enhanced Modal */
@@ -696,8 +557,6 @@
     }
 
     .payment-method-card {
-      padding: 1.5rem;
-      border: 2px solid #e9ecef;
       text-align: center;
       cursor: pointer;
     }
@@ -707,8 +566,7 @@
     }
 
     .payment-method-card.selected {
-      border-color: var(--isnm-yellow);
-      background: linear-gradient(135deg, #fff8dc 0%, #ffffff 100%);
+      border: 2px solid var(--isnm-yellow) !important;
       box-shadow: 0 5px 20px rgba(255,215,0,0.2);
     }
 
@@ -800,7 +658,7 @@
         
         <div class="row align-items-center">
           <div class="col-lg-6">
-            <div class="donation-content">
+            <div class="donation-content content-section">
               <h3>Why Support ISNM?</h3>
               <p>Iganga School of Nursing and Midwifery is committed to producing world-class healthcare professionals who serve communities across Uganda and beyond. Your donation helps us:</p>
               
@@ -858,7 +716,7 @@
     </section>
 
     <!-- Donation Options -->
-    <section class="donation-options py-5 bg-light">
+    <section class="donation-options py-5">
       <div class="container">
         <div class="row">
           <div class="col-lg-12 text-center mb-5">

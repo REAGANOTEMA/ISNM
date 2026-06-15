@@ -186,26 +186,25 @@
           <h2 class="section-title">Leadership Through the Years</h2>
         </div>
         <div class="leadership-content">
-          <div class="current-leadership animate-fade-in">
+          <div class="current-leadership content-section animate-fade-in">
             <div class="leadership-header">
               <div class="leadership-icon">
                 <i class="fas fa-crown"></i>
               </div>
-              <h3>Current Leadership</h3>
             </div>
             <div class="leader-profile">
               <div class="leader-avatar">
-                <i class="fas fa-user-graduate"></i>
+                <img src="images/principal-old-and-current.jpg" alt="Sr. Joyce C. Zirabamuzale">
               </div>
               <div class="leader-info">
                 <h4>Sr. Joyce C. Zirabamuzale</h4>
                 <p class="leader-title">Former Principal of the School</p>
-                <p class="leader-description">A dedicated and transformative leader who joined ISNM when the school had only <strong>180 students</strong>. Through her tireless efforts, unwavering commitment, and exceptional leadership, she oversaw remarkable growth — leaving the institution with over <strong>1,400 students</strong>. Her legacy of dedication to academic excellence and student welfare continues to inspire.</p>
+                <p class="leader-description">Joined ISNM when it had only <strong>180 students</strong>. Through tireless dedication, she grew the student body to over <strong>1,400 students</strong> before stepping down. Her legacy continues to inspire.</p>
               </div>
             </div>
           </div>
           
-          <div class="leadership-philosophy animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="leadership-philosophy content-section animate-slide-up" style="animation-delay: 0.3s;">
             <div class="philosophy-header">
               <div class="philosophy-icon">
                 <i class="fas fa-lightbulb"></i>
@@ -691,23 +690,11 @@
     }
 
     /* Leadership Section */
-    .leadership-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    }
-
     .leadership-content {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 3rem;
       align-items: start;
-    }
-
-    .current-leadership {
-      background: white;
-      border-radius: 25px;
-      padding: 2.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
     }
 
     .leadership-header {
@@ -747,20 +734,20 @@
     }
 
     .leader-avatar {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(135deg, #1a237e, #3949ab);
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       flex-shrink: 0;
+      border: 3px solid var(--isnm-yellow, #f59e0b);
     }
 
-    .leader-avatar i {
-      font-size: 3rem;
-      color: white;
+    .leader-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .leader-info h4 {
@@ -780,14 +767,6 @@
       color: #495057;
       line-height: 1.6;
       margin: 0;
-    }
-
-    .leadership-philosophy {
-      background: white;
-      border-radius: 25px;
-      padding: 2.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
     }
 
     .philosophy-header {
@@ -827,9 +806,6 @@
     }
 
     /* Future Vision Section */
-    .future-section {
-      background: white;
-    }
 
     .future-content {
       display: grid;
