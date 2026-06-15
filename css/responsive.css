@@ -1130,7 +1130,7 @@ body {
 }
 
 .cinematic-title {
-    font-family: 'Colonna MT', serif;
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 3.15rem;
     font-weight: 400;
     color: #ffffff;
@@ -1231,7 +1231,7 @@ body {
 }
 
 .navbar-nav .nav-link {
-    font-family: 'Rockwell', sans-serif;
+    font-family: 'Inter', 'Poppins', sans-serif;
     font-weight: 700;
     font-size: 0.9rem;
     color: #1a1a1a;

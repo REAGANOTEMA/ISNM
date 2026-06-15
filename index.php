@@ -277,6 +277,70 @@ include_once 'shared/_header.php';
       </div>
     </section>
 
+    <!-- Latest News Section -->
+    <section class="news-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12 text-center mb-5">
+            <h2 class="section-title">Latest News</h2>
+            <p class="section-subtitle">Stay updated with the latest happenings at ISNM</p>
+          </div>
+        </div>
+        <div class="row g-4">
+          <?php
+          $newsItems = [];
+          try {
+            $websiteDB = getDatabaseConnection('website');
+            if ($websiteDB) {
+              $newsResult = $websiteDB->query("SELECT id, title, slug, excerpt, featured_image, author_name, published_at FROM news WHERE status = 'published' ORDER BY published_at DESC LIMIT 3");
+              if ($newsResult) {
+                $newsItems = $newsResult->fetch_all(MYSQLI_ASSOC);
+              }
+            }
+          } catch (Exception $e) {
+            error_log("Error fetching news: " . $e->getMessage());
+          }
+          if (!empty($newsItems)):
+            foreach ($newsItems as $item):
+          ?>
+          <div class="col-lg-4 col-md-6">
+            <div class="news-card">
+              <?php if (!empty($item['featured_image'])): ?>
+              <img src="<?= htmlspecialchars($item['featured_image']) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="news-card-img" loading="lazy">
+              <?php else: ?>
+              <div class="news-card-img-placeholder">
+                <i class="fas fa-newspaper"></i>
+              </div>
+              <?php endif; ?>
+              <div class="news-card-body">
+                <span class="date"><i class="far fa-calendar-alt me-1"></i><?= date('F j, Y', strtotime($item['published_at'])) ?></span>
+                <h5><a href="news.php?id=<?= (int)$item['id'] ?>"><?= htmlspecialchars($item['title']) ?></a></h5>
+                <p class="excerpt"><?= htmlspecialchars(mb_strimwidth(strip_tags($item['excerpt'] ?? ''), 0, 120, '...')) ?></p>
+                <div class="mt-2">
+                  <a href="news.php?id=<?= (int)$item['id'] ?>" class="btn btn-sm btn-outline-primary">Read More</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <?php
+            endforeach;
+          else:
+          ?>
+          <div class="col-12">
+            <div class="empty-state">
+              <i class="fas fa-newspaper"></i>
+              <h4>No News Yet</h4>
+              <p>Check back soon for updates and announcements from ISNM.</p>
+            </div>
+          </div>
+          <?php endif; ?>
+        </div>
+        <div class="text-center mt-4">
+          <a href="news.php" class="btn btn-primary btn-lg"><i class="fas fa-newspaper me-2"></i>View All News</a>
+        </div>
+      </div>
+    </section>
+
     <!-- Call to Action Section -->
     <section class="cta-section py-5 bg-primary text-white">
       <div class="container text-center">

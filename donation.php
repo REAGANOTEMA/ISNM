@@ -48,20 +48,13 @@
 
     .page-title {
       font-family: 'Playfair Display', serif;
-      font-size: 3.5rem;
-      font-weight: 900;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      animation: titleGlow 3s ease-in-out infinite alternate;
-    }
-
-    @keyframes titleGlow {
-      0% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.3); }
-      100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 30px rgba(255,215,0,0.5); }
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
     }
 
     .page-subtitle {
-      font-size: 1.3rem;
+      font-size: 1.05rem;
       opacity: 0.9;
       margin-bottom: 0;
     }
@@ -84,11 +77,11 @@
     }
 
     .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.5rem;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
       font-weight: 800;
-      color: var(--isnm-dark-blue);
-      margin-bottom: 1rem;
+      color: #0f172a;
+      margin-bottom: 0.75rem;
       position: relative;
     }
 
@@ -777,7 +770,7 @@
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .page-title {
-        font-size: 2.5rem;
+        font-size: 1.75rem;
       }
       
       .donation-content {

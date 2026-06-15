@@ -425,7 +425,7 @@ include_once 'shared/_header.php'; ?>
     /* Mobile-Friendly Hero Header Styles */
     .hero-header {
       position: relative;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      background: var(--gradient-primary);
       color: white;
       padding: 80px 0 60px;
       overflow: hidden;
@@ -434,21 +434,12 @@ include_once 'shared/_header.php'; ?>
     .hero-header::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      opacity: 0.3;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 70% 30%, rgba(255,215,0,0.08) 0%, transparent 50%);
     }
 
     .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, rgba(62, 39, 35, 0.8), rgba(26, 35, 126, 0.6));
+      display: none;
     }
 
     /* Mobile Responsive Styles */
@@ -528,17 +519,15 @@ include_once 'shared/_header.php'; ?>
     }
 
     .hero-title {
-      font-size: 3.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      letter-spacing: 2px;
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
     }
 
     .hero-subtitle {
-      font-size: 1.5rem;
-      font-weight: 300;
-      margin-bottom: 2rem;
+      font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
       opacity: 0.9;
     }
 
@@ -563,7 +552,7 @@ include_once 'shared/_header.php'; ?>
     .header-icon {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 20px;
       display: flex;
       align-items: center;
@@ -580,7 +569,7 @@ include_once 'shared/_header.php'; ?>
       left: -5px;
       right: -5px;
       bottom: -5px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 25px;
       z-index: -1;
       opacity: 0.3;
@@ -593,9 +582,10 @@ include_once 'shared/_header.php'; ?>
     }
 
     .section-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1e3c72;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
       margin-bottom: 0.5rem;
     }
 
@@ -638,7 +628,7 @@ include_once 'shared/_header.php'; ?>
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+      background: linear-gradient(90deg, #1a237e, #3949ab, #ffd700, #10b981, #1a237e);
       background-size: 200% 100%;
       animation: shimmer 3s ease-in-out infinite;
     }
@@ -651,7 +641,7 @@ include_once 'shared/_header.php'; ?>
     .contact-icon {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -686,7 +676,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .contact-details i {
-      color: #7e22ce;
+      color: #1a237e;
       font-size: 1rem;
       width: 20px;
       flex-shrink: 0;
@@ -717,7 +707,7 @@ include_once 'shared/_header.php'; ?>
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+      background: linear-gradient(90deg, #1a237e, #3949ab, #ffd700, #10b981, #1a237e);
       background-size: 200% 100%;
       animation: shimmer 3s ease-in-out infinite;
     }
@@ -748,7 +738,7 @@ include_once 'shared/_header.php'; ?>
     .section-title i {
       width: 40px;
       height: 40px;
-      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 10px;
       display: flex;
       align-items: center;
@@ -774,7 +764,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .form-label i {
-      color: #7e22ce;
+      color: #1a237e;
       font-size: 0.9rem;
     }
 
@@ -788,7 +778,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .form-control:focus {
-      border-color: #7e22ce;
+      border-color: #1a237e;
       box-shadow: 0 0 0 0.2rem rgba(126, 34, 206, 0.15);
       outline: none;
     }
@@ -798,7 +788,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .submit-btn {
-      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       color: white;
       border: none;
       padding: 1rem 3rem;
@@ -816,7 +806,7 @@ include_once 'shared/_header.php'; ?>
     .submit-btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 15px 40px rgba(126, 34, 206, 0.4);
-      background: linear-gradient(135deg, #6b21a8, #581c87);
+      background: linear-gradient(135deg, #3949ab, #581c87);
     }
 
     .submit-btn i {
@@ -913,7 +903,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .day-info i {
-      color: #7e22ce;
+      color: #1a237e;
       font-size: 1rem;
       width: 20px;
     }
@@ -985,7 +975,7 @@ include_once 'shared/_header.php'; ?>
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #f59e0b, #d97706, #10b981, #3b82f6, #7e22ce, #f59e0b);
+      background: linear-gradient(90deg, #f59e0b, #d97706, #10b981, #3949ab, #1a237e, #f59e0b);
       background-size: 200% 100%;
       animation: shimmer 3s ease-in-out infinite;
     }
@@ -1162,7 +1152,7 @@ include_once 'shared/_header.php'; ?>
       display: flex;
       align-items: center;
       gap: 1rem;
-      border-left: 4px solid #7e22ce;
+      border-left: 4px solid #1a237e;
     }
 
     .notification.error .notification-content {
@@ -1218,11 +1208,11 @@ include_once 'shared/_header.php'; ?>
     /* Responsive Design */
     @media (max-width: 768px) {
       .hero-title {
-        font-size: 2.5rem;
+        font-size: 1.75rem;
       }
       
       .hero-subtitle {
-        font-size: 1.2rem;
+        font-size: 1rem;
       }
       
       .section-title {

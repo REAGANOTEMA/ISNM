@@ -314,42 +314,25 @@
 /* Hero Header Styles */
      .hero-header {
        position: relative;
-       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+       background: var(--gradient-primary);
        color: white;
-       padding: 5rem 0 3rem;
+       padding: 3.5rem 0;
        overflow: hidden;
      }
 
      .hero-header::before {
        content: '';
        position: absolute;
-       top: 0;
-       left: 0;
-       right: 0;
-       bottom: 0;
-       background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-       opacity: 0.3;
+       top: 0; left: 0; right: 0; bottom: 0;
+       background: radial-gradient(circle at 50% 50%, rgba(255,215,0,0.08) 0%, transparent 50%);
      }
 
     .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, rgba(30, 60, 114, 0.8), rgba(126, 34, 206, 0.6));
+      display: none;
     }
 
     .hero-particles {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-      animation: float 6s ease-in-out infinite;
+      display: none;
     }
 
     .hero-content {
@@ -359,17 +342,15 @@
     }
 
 .hero-title {
-       font-size: 3rem;
-       font-weight: 700;
-       margin-bottom: 1rem;
-       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-       letter-spacing: 2px;
+       font-size: 2.25rem;
+       font-weight: 800;
+       margin-bottom: 0.75rem;
      }
 
      .hero-subtitle {
-       font-size: 1.3rem;
-       font-weight: 300;
-       margin-bottom: 2rem;
+       font-size: 1.05rem;
+       font-weight: 400;
+       margin-bottom: 1.5rem;
        opacity: 0.9;
      }
 
@@ -426,13 +407,13 @@
     .header-icon {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: var(--gradient-primary);
       border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(126, 34, 206, 0.3);
+      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
       position: relative;
     }
 
@@ -443,7 +424,7 @@
       left: -5px;
       right: -5px;
       bottom: -5px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: var(--gradient-primary);
       border-radius: 25px;
       z-index: -1;
       opacity: 0.3;
@@ -456,9 +437,10 @@
     }
 
 .section-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #1e3c72;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
       margin-bottom: 0.5rem;
     }
     
@@ -497,7 +479,7 @@
        left: 0;
        right: 0;
        height: 4px;
-       background: linear-gradient(90deg, #7e22ce, #ec4899, #f59e0b, #10b981, #3b82f6, #7e22ce);
+       background: linear-gradient(90deg, #1a237e, #3949ab, #ffd700, #10b981, #1a237e);
        background-size: 200% 100%;
        animation: shimmer 3s ease-in-out infinite;
      }
@@ -545,7 +527,7 @@
      .highlight-icon {
        width: 60px;
        height: 60px;
-       background: linear-gradient(135deg, #7e22ce, #6b21a8);
+       background: linear-gradient(135deg, #1a237e, #3949ab);
        border-radius: 50%;
        display: flex;
        align-items: center;
@@ -595,7 +577,7 @@
       top: 0;
       bottom: 0;
       width: 4px;
-      background: linear-gradient(180deg, #7e22ce, #ec4899, #f59e0b, #10b981);
+      background: linear-gradient(180deg, #1a237e, #3949ab, #ffd700, #10b981);
       transform: translateX(-50%);
     }
 
@@ -619,7 +601,7 @@
     .timeline-year {
       width: 120px;
       height: 120px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -689,7 +671,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #7e22ce, #ec4899);
+      background: linear-gradient(90deg, #1a237e, #3949ab);
       transform: scaleX(0);
       transition: transform 0.3s ease;
     }
@@ -793,7 +775,7 @@
     .leader-avatar {
       width: 100px;
       height: 100px;
-      background: linear-gradient(135deg, #7e22ce, #ec4899);
+      background: linear-gradient(135deg, #1a237e, #3949ab);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -815,7 +797,7 @@
     }
 
     .leader-title {
-      color: #7e22ce;
+      color: #1a237e;
       font-weight: 600;
       margin-bottom: 1rem;
     }
@@ -904,7 +886,7 @@
     .plan-icon {
       width: 60px;
       height: 60px;
-      background: linear-gradient(135deg, #ec4899, #db2777);
+      background: linear-gradient(135deg, #3949ab, #1a237e);
       border-radius: 15px;
       display: flex;
       align-items: center;
@@ -943,7 +925,7 @@
       content: '▸';
       position: absolute;
       left: 0;
-      color: #7e22ce;
+      color: #1a237e;
       font-weight: bold;
     }
 
@@ -1004,7 +986,7 @@
     .stat-number::after {
       content: attr(data-suffix);
       font-size: 1.5rem;
-      color: #7e22ce;
+      color: #1a237e;
     }
 
     .stat-label {

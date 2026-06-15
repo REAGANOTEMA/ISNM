@@ -52,7 +52,7 @@
             <div class="contact-info">
               <p><i class="fab fa-whatsapp me-2"></i> MTN WhatsApp: <a href="https://wa.me/256772514889" target="_blank">+256772514889</a></p>
               <p><i class="fab fa-whatsapp me-2"></i> Airtel WhatsApp: <a href="https://wa.me/256730314979" target="_blank">+256730314979</a></p>
-              <p><i class="fas fa-envelope me-2"></i> Email: <a href="mailto:rotema@byupathway.edu">rotema@byupathway.edu</a></p>
+              <p><i class="fas fa-envelope me-2"></i> Email: <a href="mailto:softwareengineer@igangaschoolofnursingandmidwifery.ac.ug">softwareengineer@igangaschoolofnursingandmidwifery.ac.ug</a></p>
             </div>
             <div class="developer-note">
               <p><i class="fas fa-tools me-2"></i> For system errors, contact via WhatsApp</p>

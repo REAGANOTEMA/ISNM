@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISNM Management Systems - Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,10 +14,11 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
             min-height: 100vh;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
         }
         
         .container {
@@ -42,21 +44,18 @@
         }
         
         .header h1 {
-            font-size: 48px;
-            color: #333;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #e74c3c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .header p {
-            font-size: 18px;
-            color: #666;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.25rem;
+            color: #0f172a;
             margin-bottom: 10px;
         }
-        
+
+        .header p {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
         .header .subtitle {
             font-size: 14px;
             color: #999;

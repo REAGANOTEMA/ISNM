@@ -33,8 +33,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Rockwell:wght@700;800;900&family=Haettenschweiler&family=Elephant&family=Cooper+Black&family=Bodoni+MT+Poster+Compressed&family=Colonna+MT&display=swap" rel="stylesheet">
+  <!-- Google Fonts - Professional & Clean -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="shared/style.css" />
@@ -2048,9 +2048,14 @@ include_once 'includes/functions.php'; ?>
             <i class="fas fa-history"></i> History
           </a>
         </li>
-        <li class="nav-item">
+         <li class="nav-item">
           <a class="nav-link" href="programs.php">
             <i class="fas fa-graduation-cap"></i> Programs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="news.php">
+            <i class="fas fa-newspaper"></i> News
           </a>
         </li>
         <li class="nav-item">

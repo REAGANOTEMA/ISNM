@@ -865,19 +865,17 @@
     /* Hero Header Styles */
     .hero-header {
       position: relative;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+      background: var(--gradient-primary);
       color: white;
-      padding: 6rem 0 4rem;
+      padding: 4rem 0 3rem;
       overflow: hidden;
     }
 
     .hero-header::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 30% 70%, rgba(255,215,0,0.08) 0%, transparent 50%);
       background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.15"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.15"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
       opacity: 0.3;
     }
@@ -898,17 +896,15 @@
     }
 
     .hero-title {
-      font-size: 3.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      letter-spacing: 2px;
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
     }
 
     .hero-subtitle {
-      font-size: 1.5rem;
-      font-weight: 300;
-      margin-bottom: 2rem;
+      font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
       opacity: 0.9;
     }
 
@@ -944,10 +940,11 @@
     }
 
     .school-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 1.5rem;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1rem;
       position: relative;
     }
 
@@ -1363,10 +1360,11 @@
     }
 
     .form-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 0.5rem;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
     }
 
     .form-subtitle {
@@ -1502,11 +1500,11 @@
     /* Responsive Design */
     @media (max-width: 768px) {
       .hero-title {
-        font-size: 2.5rem;
+        font-size: 1.75rem;
       }
       
       .hero-subtitle {
-        font-size: 1.2rem;
+        font-size: 1rem;
       }
       
       .school-title {

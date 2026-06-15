@@ -21,8 +21,8 @@ include('shared/_header.php');
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-primary);
             min-height: 100vh;
             color: var(--dark-text);
         }
@@ -40,14 +40,13 @@ include('shared/_header.php');
         }
 
         .page-header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 10px;
         }
 
         .page-header p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
 

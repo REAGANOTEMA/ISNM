@@ -448,9 +448,9 @@
   <style>
     /* Enhanced Page Header */
     .page-header {
-      background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #1a237e 100%);
+      background: var(--gradient-primary);
       color: white;
-      padding: 4rem 0;
+      padding: 3.5rem 0;
       margin-bottom: 2rem;
       position: relative;
       overflow: hidden;
@@ -459,41 +459,31 @@
     .page-header::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" font-size="100" fill="rgba(255,255,255,0.03)">🏥</text></svg>');
-      background-size: 150px 150px;
-      animation: floatPattern 30s linear infinite;
-    }
-
-    @keyframes floatPattern {
-      0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(-150px) translateY(-150px); }
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(255,215,0,0.08) 0%, transparent 50%);
     }
 
     .page-title {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      animation: titleEntrance 1s ease-out;
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      animation: fadeInDown 0.8s ease-out;
     }
 
-    @keyframes titleEntrance {
-      from { opacity: 0; transform: translateY(-20px); }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-15px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .page-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.05rem;
       opacity: 0.9;
-      animation: subtitleEntrance 1.2s ease-out;
+      animation: fadeInUp 1s ease-out;
     }
 
-    @keyframes subtitleEntrance {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 0.9; transform: translateY(0); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* Enhanced Introduction Section */
