@@ -108,6 +108,7 @@ try {
                 <a href="#activity" class="nav-link">
                     <i class="fas fa-history"></i> Activity Log
                 </a>
+                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
             </nav>
             
             <div class="sidebar-footer">

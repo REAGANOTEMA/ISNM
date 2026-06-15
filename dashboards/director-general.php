@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 // Load all students for search functionality
@@ -372,6 +373,16 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
       </div>
     </div>
     <?php endif; ?>
+
+    <!-- STUDENT RECORDS BY SET – Full Institution View -->
+    <div class="section-card">
+      <?php renderStudentSetViewer($studentsConn, [
+          'title'       => 'All Student Records – Full Institution View',
+          'icon'        => 'fa-users-gear',
+          'super_admin' => true,
+          'show_all'    => true,
+      ]); ?>
+    </div>
 
     <!-- DEPARTMENTS -->
     <?php if(!empty($dept_list)): ?>

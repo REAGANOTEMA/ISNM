@@ -469,6 +469,7 @@ $appointments = [
                 <a href="#applications" class="nav-link">
                     <i class="fas fa-file-alt"></i> Applications
                 </a>
+                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
             </nav>
             
             <div class="mt-auto">

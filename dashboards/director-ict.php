@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'ict']);
 $staff_conn = $ctx['staff'];
@@ -418,31 +419,29 @@ if ($search_term && $students_conn) {
                 <!-- ═══ STUDENT MANAGEMENT ═══ -->
                 <section id="students" class="content-section">
                     <h2><i class="fas fa-user-graduate" style="color:var(--isnm-blue)"></i> Student Management</h2>
-                    <div class="search-bar">
-                        <form method="GET" class="row g-2 align-items-end">
-                            <div class="col-md-8">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                                    <input type="text" name="student_search" class="form-control" placeholder="Search by name, ID, phone, email..." value="<?= htmlspecialchars($search_term) ?>">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-light w-100"><i class="fas fa-search me-1"></i> Search</button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-ict w-100" type="button" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i> Add Student</button>
-                            </div>
+
+                    <!-- Quick Add + Search row -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i> Add Student</button>
+                        </div>
+                        <form method="GET" class="d-flex gap-2">
+                            <input type="text" name="student_search" class="form-control form-control-sm" placeholder="Quick search by name, ID, phone..." value="<?= htmlspecialchars($search_term) ?>" style="min-width:250px">
+                            <button type="submit" class="btn btn-ict-outline btn-sm"><i class="fas fa-search"></i></button>
                         </form>
                     </div>
-                    <div class="section-card">
-                        <div class="card-header"><h5><i class="fas fa-users"></i> Students <?= $search_term ? "- Results for \"$search_term\"" : '' ?></h5></div>
+
+                    <!-- Search Results (if any) -->
+                    <?php if ($search_term): ?>
+                    <div class="section-card mb-3">
+                        <div class="card-header"><h5><i class="fas fa-search"></i> Search Results for "<?= htmlspecialchars($search_term) ?>"</h5></div>
                         <div class="card-body p-0">
-                            <?php if ($search_term && empty($found_students)): ?>
-                                <div class="no-data"><i class="fas fa-search"></i><p>No students found matching "<strong><?= htmlspecialchars($search_term) ?></strong>"</p></div>
-                            <?php elseif ($search_term && !empty($found_students)): ?>
+                            <?php if (empty($found_students)): ?>
+                                <div class="no-data"><i class="fas fa-search"></i><p>No students found</p></div>
+                            <?php else: ?>
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
-                                    <thead><tr><th>Student ID</th><th>Name</th><th>Index Number</th><th>Program</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead>
+                                    <thead><tr><th>ID</th><th>Name</th><th>Index</th><th>Program</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead>
                                     <tbody>
                                         <?php foreach ($found_students as $s): ?>
                                         <tr>
@@ -458,10 +457,14 @@ if ($search_term && $students_conn) {
                                     </tbody>
                                 </table>
                             </div>
-                            <?php else: ?>
-                            <div class="no-data"><i class="fas fa-search"></i><p>Use the search bar above to find students or click <strong>Add Student</strong> to create a new one</p></div>
                             <?php endif; ?>
                         </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Full Student Set Viewer -->
+                    <div class="section-card">
+                        <?php renderStudentSetViewer($students_conn); ?>
                     </div>
                 </section>
 

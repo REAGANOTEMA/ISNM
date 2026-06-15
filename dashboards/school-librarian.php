@@ -86,6 +86,9 @@ $recent_activities = [
                             <i class="fas fa-chart-bar"></i> Library Reports
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
+                    </li>
                 </ul>
             </nav>
             

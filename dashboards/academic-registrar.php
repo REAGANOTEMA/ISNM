@@ -249,6 +249,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
       <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
       <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
     </div>
+    <a href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
     <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </nav>
 </div>

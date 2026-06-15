@@ -90,6 +90,9 @@ $recent_activities = [
                             <i class="fas fa-flask"></i> Research Activities
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
+                    </li>
                 </ul>
             </nav>
             

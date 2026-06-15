@@ -187,6 +187,14 @@ if ($user_type === 'staff') {
         'active' => false
     ];
 
+    // Student Records by Set link
+    $menu_items[] = [
+        'icon' => 'fas fa-users-gear',
+        'title' => 'Student Records',
+        'link' => '../dashboards/student-records.php',
+        'active' => false
+    ];
+
     // Staff tools based on role
     $menu_items[] = [
         'icon' => 'fas fa-tools',

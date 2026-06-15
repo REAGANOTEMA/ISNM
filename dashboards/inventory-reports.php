@@ -76,6 +76,7 @@ foreach ($reports as $report) {
                     <li class="nav-item"><a class="nav-link active" href="inventory-reports.php"><i class="fas fa-clipboard-list"></i> Reports</a></li>
                     <li class="nav-item"><a class="nav-link" href="../dashboards/storekeeper.php"><i class="fas fa-warehouse"></i> Store Inventory</a></li>
                     <li class="nav-item"><a class="nav-link" href="../dashboards/hr-manager.php"><i class="fas fa-user-shield"></i> HR Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a></li>
                     <li class="nav-item"><a class="nav-link" href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
