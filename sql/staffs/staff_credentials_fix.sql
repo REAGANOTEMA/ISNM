@@ -1,8 +1,5 @@
--- ============================================================
--- ISNM STAFF CREDENTIALS FIX
--- Sets correct bcrypt password hashes for all staff accounts
--- Run this in phpMyAdmin on igangaschoolofl_staffs_db
--- ============================================================
+-- ISNM STAFF CREDENTIALS FIX — CLEAN (25 accounts only)
+-- Run in: igangaschoolofl_staffs_db
 
 USE `igangaschoolofl_staffs_db`;
 
@@ -33,138 +30,31 @@ FROM staff s
 JOIN staff_roles sr ON s.role_id = sr.id;
 
 -- Update all staff passwords to correct bcrypt hashes
--- Each staff can login with their email and specified password
 
--- Director General: DorisJoy2026
-UPDATE staff SET password = '$2y$10$4zBecmIG2/ll1OuUq3oQr.6JRQ3gWZA8OhCYhsHnbGuVUTVLZ2IGq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$RU6PrzIHTgggFW3sUy.e8eYEvlvzikGAU6RRa8pgv9c/x647piOqK', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$rBRqOoVh5m0Igx4kdXtpfOFwPIDweterjIksjISwN4FCu..HteWam', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'ceo@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$l6XsX6XqY.Pbcd7XDzGjxeOufB1j9XfcNlv3kJGs3.MX79JWKs4ti', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'principal@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$m3Fosy0PWOX2NDhe.H83bOrdOamiuFvKjjv3gmL591/c/f7UU6Utm', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'secretary@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$Cbs9kpWc7uh2KbzRTr9qNuKUmKBAG7UDxb7SE4TbebziRQRlSy8YW', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$0z4Ii3PfeqVdR3uul1iczO5YJ2NjVg49Qla8PQ0GpUufYd0v5saXS', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$hesFYTZgh9X4Q2FyXU/4neiB7vkoIr15zwMa.R17g4DhWx2umLk22', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$HbQJxmFSl2mCzxW83atloemF/UBA7sg9RKA6TqN7Mb9iKTrTdACtm', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$5BFMhfh8zO9myR6Ha8w.g.UL0PCEIcIWXGeTbPmOF1lQizIU0Wsm2', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'dannybict@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$uZQlJ0YNKT7FzCD7cjEVNOaXDD7xnPbqT.2Nv6qBO5O5KgaMx7NBC', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'finance@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$3E1cG3FKr.3hRqZr.9a.j.ljYkuj/zAl376Gb8oakdPHw0nLrCqgu', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'library@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$C6xhOfyPi4nj/kwaZfmoWeExbQHfnbceO7enAKt/oqs9jrdD4e7JK', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$LHAORiiXnly8kcd1sCJOP.r9/kJAq65lvEszWfk7DWcTeYPnNqYIO', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$dqYUVn3eri6frqS.fmqeGuvSyQ1jXZGcGoOTgqmSi0ccxuAkejS/S', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'lecturers@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$Z7GAj95kaxlSA1vf3ebGG.fg8uNhH0dce8FtksFqTUbk6/tRS5yAW', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$RR6yvXWHLGgbWPpQN09Jv.LX9PvVfqnBvSTIz1gP6CsH4qMNkGxyO', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'sickbay@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$BC8eNBiywm3cjp1CrGNNqefq28VFu5/ww6ZK73C7QYs8VarKkcwea', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'matron@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$X9ngKJfjBhCXBlHYUEaZcuTRE60vcbKyyYRZJEPNZXAEeYrUUGYZO', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'security@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$cogVgG3L7gIkPuGxrxzKm.kCRxTq9HnffahEUnSPACv.s8JBAsNeK', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'drivers@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$FxhwWDM4Xp0bDs5WRAxbyObpbvZDvOOHf52yiamFGTmdGUQpdAUcK', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'warden@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$9fOKtTQAgB/elswK9HgmE.BwFEvqipIFnSmcvJPeXpEgb3KXa8D.m', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$M6cl6Y9PoVugM6mlWnyEBeGOChjv8fsi3tDMFMqP43bOG6TGELDje', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'store@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$RLKRWsU8ITHZ9MEhARDfieO.bJc7S7RsV5uoX51kn0PSK79mnYcEa', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$wLikyrgK4SzFsYDJ5BpOnOUXG9/qOh2DuoT6ud/jVVF/eQxfEKxDC', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug';
+UPDATE staff SET password = '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', password_changed = FALSE, is_first_login = TRUE, status = 'Active' WHERE email = 'admissions@igangaschoolofnursingandmidwifery.ac.ug';
 
--- CEO: Lovely2God
-UPDATE staff SET password = '$2y$10$SVxP6T3Btn2EeOu.EQNER.js2Q97GgwlGoHVmg1/gOeepSOi9Xliq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'ceo@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Director Academics: Stephen123
-UPDATE staff SET password = '$2y$10$PZKaqoRDclIhO1cFUcdf7Op5cFWWcIwTraMhWoqOjkkjjidM2R9A2', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Director Finance: DorisJoy2026
-UPDATE staff SET password = '$2y$10$4zBecmIG2/ll1OuUq3oQr.6JRQ3gWZA8OhCYhsHnbGuVUTVLZ2IGq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'finance@igangaschoolofnursingandmidwifery.ac.ug';
-
--- School Principal: isnm2026
-UPDATE staff SET password = '$2y$10$i9ncKkYwDhg67aiRyJ.IcuIokjymvzpIHiJai6TCc8qAXvyMcbpKy', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'principal@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Deputy Principal: Isnm2026
-UPDATE staff SET password = '$2y$10$qa/ObsOT45vtaXBzpM8kZ.WKRZ8ZDpeg/TD9j7Fa223v0B2wVUykC', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Academic Registrar: Lovely2God
-UPDATE staff SET password = '$2y$10$SVxP6T3Btn2EeOu.EQNER.js2Q97GgwlGoHVmg1/gOeepSOi9Xliq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug';
-
--- HR Manager: Alexis2026
-UPDATE staff SET password = '$2y$10$jCjDrn245Sdk0I3dD0GsXuS52TRH4bFZtxmwygreuq2D0JU5LpDuG', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug';
-
--- School Secretary: Lovely2God
-UPDATE staff SET password = '$2y$10$SVxP6T3Btn2EeOu.EQNER.js2Q97GgwlGoHVmg1/gOeepSOi9Xliq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'secretary@igangaschoolofnursingandmidwifery.ac.ug';
-
--- School Librarian: isnm2026
-UPDATE staff SET password = '$2y$10$i9ncKkYwDhg67aiRyJ.IcuIokjymvzpIHiJai6TCc8qAXvyMcbpKy', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'library@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Head Nursing: isnm4life
-UPDATE staff SET password = '$2y$10$2.SAjVhZ2FNMyERyUKVimOrTDI7UNRuaD8i57Jjoc1QVt9MX/mYRq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Head Midwifery: Life2save
-UPDATE staff SET password = '$2y$10$sNkPyOEVDL8v88B04VI8xuWtFALPzN/cM4nSc1WTCvzAwT8/YKzaS', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Senior Lecturers: isnm2026
-UPDATE staff SET password = '$2y$10$i9ncKkYwDhg67aiRyJ.IcuIokjymvzpIHiJai6TCc8qAXvyMcbpKy', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Lecturers: Isnm4life
-UPDATE staff SET password = '$2y$10$57g9UBif6t1rMsY.lsW4EOnlgt/qF66l0vnWeg0kvgSbubL483kZm', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'lecturers@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Matrons: Isnm2026
-UPDATE staff SET password = '$2y$10$qa/ObsOT45vtaXBzpM8kZ.WKRZ8ZDpeg/TD9j7Fa223v0B2wVUykC', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'matron@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Wardens: Lovely2God
-UPDATE staff SET password = '$2y$10$SVxP6T3Btn2EeOu.EQNER.js2Q97GgwlGoHVmg1/gOeepSOi9Xliq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'warden@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Sickbay: isnm2026
-UPDATE staff SET password = '$2y$10$i9ncKkYwDhg67aiRyJ.IcuIokjymvzpIHiJai6TCc8qAXvyMcbpKy', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'sickbay@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Drivers: isnm4life
-UPDATE staff SET password = '$2y$10$2.SAjVhZ2FNMyERyUKVimOrTDI7UNRuaD8i57Jjoc1QVt9MX/mYRq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'drivers@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Security: safty1st
-UPDATE staff SET password = '$2y$10$UMJk5E2utanLv26Ed02LUuORWRKDLlYlW7Sk0BkhTI3ucV3etUusu', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'security@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Store Keeper: Isnm4life
-UPDATE staff SET password = '$2y$10$57g9UBif6t1rMsY.lsW4EOnlgt/qF66l0vnWeg0kvgSbubL483kZm', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'store@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Guild President: isnm4life
-UPDATE staff SET password = '$2y$10$2.SAjVhZ2FNMyERyUKVimOrTDI7UNRuaD8i57Jjoc1QVt9MX/mYRq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Admissions: 2268926931
-UPDATE staff SET password = '$2y$10$5Vqu4b.bnLGkrgc.4eXAa.qzeJEF.I6BVu7MTewaHTPnH2gFxe0QS', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'admissions@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Director ICT (dannybict): Lovely2God
-UPDATE staff SET password = '$2y$10$SVxP6T3Btn2EeOu.EQNER.js2Q97GgwlGoHVmg1/gOeepSOi9Xliq', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'dannybict@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Computer Lab: Techno123
-UPDATE staff SET password = '$2y$10$m3WByCY455mVgUO/yTPsluFctG9YG7HVC5aon15hmXpKHizE5MKG6', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug';
-
--- School Bursar: bursar@isnm
-UPDATE staff SET password = '$2y$10$hBMO1ckSzBXfFRE9sYUuAeeJwEp03Vhtrr37j75JOGhoxB8aH3CZ2', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-
--- Non-Teaching Staff: staff@123
-UPDATE staff SET password = '$2y$10$WXIF1wpBChjduRdL/fDluu56hSxymIeZpJiYiJrdXh7nz0quaODW6', password_changed = FALSE, is_first_login = TRUE, status = 'Active'
-WHERE email = 'nonteaching@isnm.ac.ug';
-
-SELECT 'Staff credentials updated successfully' AS status;
-SELECT email, position, 'Password updated' AS password_status FROM staff WHERE email IN (
-    'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug',
-    'ceo@igangaschoolofnursingandmidwifery.ac.ug',
-    'directoracademic@igangaschoolofnursingandmidwifery.ac.ug',
-    'finance@igangaschoolofnursingandmidwifery.ac.ug',
-    'principal@igangaschoolofnursingandmidwifery.ac.ug',
-    'dep-principal@igangaschoolofnursingandmidwifery.ac.ug',
-    'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug',
-    'hr-manager@igangaschoolofnursingandmidwifery.ac.ug',
-    'secretary@igangaschoolofnursingandmidwifery.ac.ug',
-    'library@igangaschoolofnursingandmidwifery.ac.ug',
-    'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',
-    'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',
-    'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug',
-    'lecturers@igangaschoolofnursingandmidwifery.ac.ug',
-    'matron@igangaschoolofnursingandmidwifery.ac.ug',
-    'warden@igangaschoolofnursingandmidwifery.ac.ug',
-    'sickbay@igangaschoolofnursingandmidwifery.ac.ug',
-    'drivers@igangaschoolofnursingandmidwifery.ac.ug',
-    'security@igangaschoolofnursingandmidwifery.ac.ug',
-    'store@igangaschoolofnursingandmidwifery.ac.ug',
-    'guildpresident@igangaschoolofnursingandmidwifery.ac.ug',
-    'admissions@igangaschoolofnursingandmidwifery.ac.ug',
-    'dannybict@igangaschoolofnursingandmidwifery.ac.ug',
-    'computer-lab@igangaschoolofnursingandmidwifery.ac.ug',
-    'bursar@igangaschoolofnursingandmidwifery.ac.ug',
-    'nonteaching@isnm.ac.ug'
-);
+SELECT 'All 25 staff credentials updated successfully' AS status;
