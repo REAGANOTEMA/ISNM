@@ -376,16 +376,8 @@ function includeCommonStyles() {
         }
 
         .stat-card {
-            background: white;
-            border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary-color);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
         }
 
         .stat-icon {

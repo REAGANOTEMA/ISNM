@@ -87,27 +87,18 @@ $role = $_SESSION['role'] ?? '';
         }
 
         .welcome-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             padding: 30px;
             margin-bottom: 30px;
             border-left: 5px solid var(--accent-color);
         }
 
         .stat-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             padding: 25px;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
             border-left: 4px solid var(--primary-color);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .stat-number {
@@ -124,19 +115,11 @@ $role = $_SESSION['role'] ?? '';
         }
 
         .action-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             padding: 25px;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
             text-align: center;
         }
 
-        .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
 
         .action-icon {
             font-size: 3rem;

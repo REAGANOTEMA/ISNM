@@ -552,18 +552,10 @@ $conn->close();
         }
         
         .stat-card {
-            background: white;
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             border-top: 4px solid;
-            transition: all 0.3s ease;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
+
         
         .stat-card.primary {
             border-top-color: var(--primary);

@@ -968,28 +968,11 @@
       font-size: 1rem;
     }
 
-    /* Announcement Card */
     .announcement-card {
-      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-      border-radius: 20px;
-      padding: 2.5rem;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(255, 193, 7, 0.15);
-      border: 2px solid #ffc107;
+      padding: 2.5rem;
       position: relative;
       overflow: hidden;
-    }
-
-    .announcement-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #ffc107, #ff6b6b, #4ecdc4, #ffc107);
-      background-size: 200% 100%;
-      animation: shimmer 3s ease-in-out infinite;
     }
 
     .announcement-icon {

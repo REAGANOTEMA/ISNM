@@ -290,32 +290,9 @@
     }
 
     .donation-card {
-      background: white;
-      padding: 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       text-align: center;
       height: 100%;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
-      overflow: hidden;
-      border: 2px solid transparent;
-    }
-
-    .donation-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 5px;
-      background: var(--gradient-secondary);
-    }
-
-    .donation-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-      border-color: var(--isnm-yellow);
     }
 
     .donation-icon {
@@ -387,21 +364,12 @@
       font-size: 1.1rem;
     }
 
-    /* Enhanced Project Cards */
     .project-card {
-      background: white;
-      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       height: 100%;
       position: relative;
     }
 
-    .project-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    }
 
     .project-image {
       height: 250px;
@@ -730,17 +698,12 @@
     .payment-method-card {
       padding: 1.5rem;
       border: 2px solid #e9ecef;
-      border-radius: 15px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s ease;
-      background: white;
     }
 
     .payment-method-card:hover {
       border-color: var(--isnm-yellow);
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     .payment-method-card.selected {

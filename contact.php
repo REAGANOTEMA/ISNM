@@ -610,32 +610,10 @@ include_once 'shared/_header.php'; ?>
     }
 
     .contact-card {
-      background: white;
-      border-radius: 25px;
-      padding: 2.5rem;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
-      transition: all 0.3s ease;
+      padding: 2.5rem;
       position: relative;
       overflow: hidden;
-    }
-
-    .contact-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #1a237e, #3949ab, #ffd700, #10b981, #1a237e);
-      background-size: 200% 100%;
-      animation: shimmer 3s ease-in-out infinite;
-    }
-
-    .contact-card:hover {
-      transform: perspective(1000px) translateY(-6px) translateZ(8px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
     }
 
     .contact-icon {
@@ -825,17 +803,7 @@ include_once 'shared/_header.php'; ?>
     }
 
     .hours-card {
-      background: white;
-      border-radius: 25px;
       padding: 2.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
-      transition: all 0.3s ease;
-    }
-
-    .hours-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
     }
 
     .card-header {

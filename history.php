@@ -199,8 +199,8 @@
               </div>
               <div class="leader-info">
                 <h4>Sr. Joyce C. Zirabamuzale</h4>
-                <p class="leader-title">Principal of the School</p>
-                <p class="leader-description">Leading the day-to-day operations with dedication to academic excellence and student welfare.</p>
+                <p class="leader-title">Former Principal of the School</p>
+                <p class="leader-description">A dedicated and transformative leader who joined ISNM when the school had only <strong>180 students</strong>. Through her tireless efforts, unwavering commitment, and exceptional leadership, she oversaw remarkable growth — leaving the institution with over <strong>1,400 students</strong>. Her legacy of dedication to academic excellence and student welfare continues to inspire.</p>
               </div>
             </div>
           </div>
@@ -654,36 +654,10 @@
     }
 
     .achievement-card {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      border-radius: 20px;
-      padding: 2.5rem;
       text-align: center;
-      transition: all 0.3s ease;
-      border: 1px solid #dee2e6;
+      padding: 2.5rem;
       position: relative;
       overflow: hidden;
-    }
-
-    .achievement-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #1a237e, #3949ab);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-
-    .achievement-card:hover::before {
-      transform: scaleX(1);
-    }
-
-    .achievement-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.15);
-      background: linear-gradient(135deg, #e9ecef, #dee2e6);
     }
 
     .achievement-icon {

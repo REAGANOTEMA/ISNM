@@ -558,22 +558,7 @@
     .vmv-card {
       text-align: center;
       padding: 2rem;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       height: 100%;
-      transition: all 0.3s ease;
-      animation: cardEntrance 0.8s ease-out;
-    }
-
-    @keyframes cardEntrance {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .vmv-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .vmv-icon {
@@ -710,24 +695,12 @@
     }
 
     .member-card {
-      background: white;
       padding: 2rem;
-      border-radius: 15px;
       text-align: center;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.12);
-      transition: all 0.3s ease;
-      animation: memberCardEntrance 0.8s ease-out;
       border-left: 4px solid #1a237e;
     }
 
-    @keyframes memberCardEntrance {
-      from { opacity: 0; transform: translateY(30px) scale(0.9); }
       to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .member-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .member-image {

@@ -124,7 +124,7 @@ body { font-family:'Segoe UI',sans-serif; background:#f0f2f5; min-height:100vh; 
 .badge-urgency-high { background:#ffebee; color:#c62828; }
 .badge-urgency-urgent { background:#fce4ec; color:#b71c1c; animation:pulse 1.5s infinite; }
 @keyframes pulse { 0%{opacity:1} 50%{opacity:.6} 100%{opacity:1} }
-.stat-card { background:#fff; border-radius:12px; padding:15px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.stat-card { padding:15px; text-align:center; }
 .stat-card .num { font-size:1.8rem; font-weight:800; color:var(--primary); }
 .stat-card .label { font-size:.8rem; color:#888; }
 footer { background:var(--primary); color:rgba(255,255,255,.8); text-align:center; padding:15px; margin-top:auto; font-size:.85rem; }

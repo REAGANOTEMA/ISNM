@@ -38,8 +38,7 @@
             <li><a href="contact.php"><i class="fas fa-envelope me-2"></i>Contact</a></li>
             <li><a href="organogram.php"><i class="fas fa-sitemap me-2"></i>Organogram</a></li>
             <li><a href="staff-login.php"><i class="fas fa-sign-in-alt me-2"></i>Staff Login</a></li>
-          <li><a href="student-login.php"><i class="fas fa-graduation-cap me-2"></i>Student Login</a></li>
-          <li><a href="student-directory.php"><i class="fas fa-address-book me-2"></i>Student Directory</a></li>
+            <li><a href="student-login.php"><i class="fas fa-graduation-cap me-2"></i>Student Login</a></li>
           </ul>
         </div>
       </div>
@@ -85,17 +84,18 @@
 
 <!-- Enhanced Footer CSS -->
 <style>
-  /* Footer Stripes Design */
+  /* Footer Design */
   .isnm-footer {
     background: linear-gradient(135deg, var(--isnm-chocolate) 0%, #2E1A17 100%);
     position: relative;
     overflow: hidden;
     color: var(--isnm-cream);
     padding: 0;
+    border-top: 3px solid var(--isnm-yellow);
   }
   
   .footer-stripes-top {
-    height: 8px;
+    height: 6px;
     background: repeating-linear-gradient(
       90deg,
       var(--isnm-yellow) 0px,
@@ -105,11 +105,10 @@
       var(--isnm-dark-blue) 40px,
       var(--isnm-dark-blue) 60px
     );
-    animation: stripeMove 3s linear infinite;
   }
   
   .footer-stripes-bottom {
-    height: 6px;
+    height: 4px;
     background: repeating-linear-gradient(
       90deg,
       var(--isnm-dark-blue) 0px,
@@ -119,7 +118,6 @@
       var(--isnm-cream) 30px,
       var(--isnm-cream) 45px
     );
-    animation: stripeMoveReverse 4s linear infinite;
   }
   
   .isnm-footer .container {
@@ -130,38 +128,40 @@
   .isnm-footer h5,
   .isnm-footer h6 {
     color: var(--isnm-yellow);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     font-weight: 600;
   }
   
   .isnm-footer p,
   .isnm-footer a {
     color: var(--isnm-cream);
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 0.9rem;
+    line-height: 1.7;
   }
   
   .isnm-footer a:hover {
     color: var(--isnm-yellow);
     text-decoration: none;
-    transform: translateX(5px);
-    transition: all 0.3s ease;
+    transition: color 0.3s ease;
+  }
+  
+  .isnm-footer .footer-links a:hover {
+    padding-left: 4px;
   }
   
   .footer-logo-img {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    border: 4px solid var(--isnm-yellow);
+    border: 3px solid var(--isnm-yellow);
     margin-bottom: 15px;
-    animation: logoRotate 20s linear infinite;
     transition: all 0.3s ease;
   }
   
   .footer-logo-img:hover {
-    transform: scale(1.1);
     border-color: var(--isnm-gold);
-    box-shadow: 0 12px 35px rgba(255, 215, 0, 0.4);
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
   }
   
   .social-links {
@@ -171,45 +171,59 @@
   }
   
   .social-btn {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: var(--isnm-yellow);
-    color: var(--isnm-chocolate);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--isnm-cream);
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     transition: all 0.3s ease;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
   
   .social-btn:hover {
-    background: var(--isnm-gold);
-    color: var(--isnm-cream);
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+    background: var(--isnm-yellow);
+    color: var(--isnm-chocolate);
+    transform: translateY(-3px);
   }
   
   .footer-bottom {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 20px 0;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 18px 0;
     text-align: center;
   }
   
   .footer-bottom p {
-    margin: 5px 0;
-    font-size: 0.85rem;
+    margin: 4px 0;
+    font-size: 0.82rem;
+    opacity: 0.9;
   }
   
   .footer-bottom .motto {
     font-style: italic;
     color: var(--isnm-yellow);
     font-weight: 500;
+    opacity: 1;
   }
   
   .btn-sm {
     padding: 8px 20px;
+    font-size: 0.85rem;
+  }
+  
+  .developer-info .contact-info p {
+    margin-bottom: 6px;
+  }
+  
+  .developer-note {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
     font-size: 0.85rem;
   }
   

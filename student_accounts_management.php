@@ -445,11 +445,7 @@ function generateStudentId() {
         }
 
         .stats-card {
-            background: white;
-            border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
             border-left: 4px solid var(--primary-color);
         }
 

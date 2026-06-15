@@ -119,10 +119,7 @@ $students = executeQuery($students_sql);
         }
 
         .upload-card {
-            background: white;
-            border-radius: 15px;
             padding: 2rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
 

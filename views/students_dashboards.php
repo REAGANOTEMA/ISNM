@@ -59,28 +59,19 @@ $flashMessages = getFlashMessages();
             border: none;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-        }
         .stats-card .card-body {
             padding: 1.5rem;
         }
         .stats-card h3 {
             font-size: 2.5rem;
             font-weight: bold;
+            color: #0d1442;
         }
-        .welcome-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
+        .welcome-card .card-body {
+            padding: 1.5rem;
         }
         .quick-action-card {
-            transition: transform 0.2s;
             cursor: pointer;
-        }
-        .quick-action-card:hover {
-            transform: translateY(-5px);
         }
         .quick-action-card .card-body {
             text-align: center;

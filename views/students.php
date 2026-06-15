@@ -103,9 +103,9 @@ $flashMessages = getFlashMessages();
             object-fit: cover;
             border-radius: 50%;
         }
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .stats-card h5.card-title {
+            color: #0d1442;
+            font-weight: 700;
         }
         .form-section {
             background-color: #f8f9fa;

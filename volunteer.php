@@ -557,18 +557,10 @@
     }
 
     .opportunity-card {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       overflow: hidden;
-      transition: all 0.3s ease;
       height: 100%;
     }
 
-    .opportunity-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    }
 
     .opportunity-header {
       background: var(--gradient-primary);
@@ -653,17 +645,7 @@
 
     .benefit-card {
       text-align: center;
-      padding: 2rem;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       height: 100%;
-      transition: all 0.3s ease;
-    }
-
-    .benefit-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .benefit-card-icon {

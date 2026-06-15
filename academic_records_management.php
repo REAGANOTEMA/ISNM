@@ -405,11 +405,8 @@ $programs = executeQuery($programs_sql);
         }
 
         .stat-card {
-            background: white;
-            border-radius: 10px;
             padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary-color);
         }
 

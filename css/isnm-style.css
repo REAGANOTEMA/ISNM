@@ -512,16 +512,33 @@ h4 {
 .program-card,
 .facility-card,
 .vm-item,
+.vmv-card,
+.success-card,
+.opportunity-card,
+.project-card,
 .news-card,
 .stat-card,
 .report-card,
+.benefit-card,
+.achievement-card,
+.contact-card,
+.announcement-card,
+.action-card,
+.stats-card,
+.payment-method-card,
 .intro-content,
 .contact-grid,
 .requirements-card,
 .interview-card,
 .form-container,
 .content-section,
-.section-card {
+.section-card,
+.donation-card,
+.hours-card,
+.member-card,
+.welcome-card,
+.quick-action-card,
+.upload-card {
   position: relative;
   border-radius: var(--card-radius);
   padding: 2rem;
@@ -535,80 +552,106 @@ h4 {
 }
 
 /* Colored top accent strip using background gradient */
-.program-card { background: linear-gradient(to bottom, var(--card-green-accent) 0%, var(--card-green-accent) 5px, var(--card-green) 5px, var(--card-green) 100%); }
-.facility-card { background: linear-gradient(to bottom, var(--card-green-accent) 0%, var(--card-green-accent) 5px, var(--card-green) 5px, var(--card-green) 100%); }
-.vm-item { background: linear-gradient(to bottom, var(--card-green-accent) 0%, var(--card-green-accent) 5px, var(--card-green) 5px, var(--card-green) 100%); }
-
-.news-card { background: linear-gradient(to bottom, var(--card-yellow-accent) 0%, var(--card-yellow-accent) 5px, var(--card-yellow) 5px, var(--card-yellow) 100%); }
-.stat-card { background: linear-gradient(to bottom, var(--card-yellow-accent) 0%, var(--card-yellow-accent) 5px, var(--card-yellow) 5px, var(--card-yellow) 100%); }
-.report-card { background: linear-gradient(to bottom, var(--card-yellow-accent) 0%, var(--card-yellow-accent) 5px, var(--card-yellow) 5px, var(--card-yellow) 100%); }
-
-.intro-content { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.contact-grid { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.requirements-card { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.interview-card { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.form-container { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.content-section { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
-.section-card { background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%); }
+.program-card, .facility-card, .vm-item, .vmv-card, .success-card, .opportunity-card, .project-card {
+  background: linear-gradient(to bottom, var(--card-green-accent) 0%, var(--card-green-accent) 5px, var(--card-green) 5px, var(--card-green) 100%);
+}
+.news-card, .stat-card, .report-card, .benefit-card, .achievement-card, .contact-card, .announcement-card, .action-card, .stats-card, .payment-method-card {
+  background: linear-gradient(to bottom, var(--card-yellow-accent) 0%, var(--card-yellow-accent) 5px, var(--card-yellow) 5px, var(--card-yellow) 100%);
+}
+.intro-content, .contact-grid, .requirements-card, .interview-card, .form-container, .content-section, .section-card,
+.donation-card, .hours-card, .member-card, .welcome-card, .quick-action-card, .upload-card {
+  background: linear-gradient(to bottom, var(--card-chocolate-accent) 0%, var(--card-chocolate-accent) 5px, var(--card-chocolate) 5px, var(--card-chocolate) 100%);
+}
 
 /* Card hover: lift + deepen shadow */
 @media (hover: hover) {
-  .program-card:hover,
-  .facility-card:hover,
-  .vm-item:hover,
-  .news-card:hover,
-  .stat-card:hover,
-  .report-card:hover,
-  .intro-content:hover,
-  .contact-grid:hover,
-  .requirements-card:hover,
-  .interview-card:hover,
-  .form-container:hover,
-  .content-section:hover,
-  .section-card:hover {
+  .program-card:hover, .facility-card:hover, .vm-item:hover,
+  .vmv-card:hover, .success-card:hover, .opportunity-card:hover, .project-card:hover,
+  .news-card:hover, .stat-card:hover, .report-card:hover,
+  .benefit-card:hover, .achievement-card:hover, .contact-card:hover,
+  .announcement-card:hover, .action-card:hover, .stats-card:hover, .payment-method-card:hover,
+  .intro-content:hover, .contact-grid:hover, .requirements-card:hover,
+  .interview-card:hover, .form-container:hover, .content-section:hover, .section-card:hover,
+  .donation-card:hover, .hours-card:hover, .member-card:hover,
+  .welcome-card:hover, .quick-action-card:hover, .upload-card:hover {
     transform: perspective(1200px) translateY(-6px) translateZ(16px) rotateX(1.5deg);
     box-shadow: var(--card-shadow-hover);
   }
 }
 
 /* Card color-specific hover accent glow */
-.program-card:hover, .facility-card:hover, .vm-item:hover {
+.program-card:hover, .facility-card:hover, .vm-item:hover,
+.vmv-card:hover, .success-card:hover, .opportunity-card:hover, .project-card:hover {
   box-shadow: var(--card-shadow-hover), 0 0 30px var(--card-green-shadow);
 }
-.news-card:hover, .stat-card:hover, .report-card:hover {
+.news-card:hover, .stat-card:hover, .report-card:hover,
+.benefit-card:hover, .achievement-card:hover, .contact-card:hover,
+.announcement-card:hover, .action-card:hover, .stats-card:hover, .payment-method-card:hover {
   box-shadow: var(--card-shadow-hover), 0 0 30px var(--card-yellow-shadow);
 }
 .intro-content:hover, .contact-grid:hover, .requirements-card:hover,
-.interview-card:hover, .form-container:hover, .content-section:hover, .section-card:hover {
+.interview-card:hover, .form-container:hover, .content-section:hover, .section-card:hover,
+.donation-card:hover, .hours-card:hover, .member-card:hover,
+.welcome-card:hover, .quick-action-card:hover, .upload-card:hover {
   box-shadow: var(--card-shadow-hover), 0 0 30px var(--card-chocolate-shadow);
 }
 
 /* Card stagger entrance delays */
-.program-card:nth-child(1), .facility-card:nth-child(1), .news-card:nth-child(1) { animation-delay: 0s; }
-.program-card:nth-child(2), .facility-card:nth-child(2), .news-card:nth-child(2) { animation-delay: 0.1s; }
-.program-card:nth-child(3), .facility-card:nth-child(3), .news-card:nth-child(3) { animation-delay: 0.2s; }
-.program-card:nth-child(4), .news-card:nth-child(4) { animation-delay: 0.3s; }
-.program-card:nth-child(5), .news-card:nth-child(5) { animation-delay: 0.4s; }
-.program-card:nth-child(6), .news-card:nth-child(6) { animation-delay: 0.5s; }
-.program-card:nth-child(7), .news-card:nth-child(7) { animation-delay: 0.6s; }
-.program-card:nth-child(8), .news-card:nth-child(8) { animation-delay: 0.7s; }
-.program-card:nth-child(9), .news-card:nth-child(9) { animation-delay: 0.8s; }
+.program-card:nth-child(1), .facility-card:nth-child(1), .news-card:nth-child(1),
+.opportunity-card:nth-child(1), .benefit-card:nth-child(1), .achievement-card:nth-child(1),
+.contact-card:nth-child(1), .vmv-card:nth-child(1), .member-card:nth-child(1),
+.project-card:nth-child(1), .donation-card:nth-child(1), .stats-card:nth-child(1) { animation-delay: 0s; }
+.program-card:nth-child(2), .facility-card:nth-child(2), .news-card:nth-child(2),
+.opportunity-card:nth-child(2), .benefit-card:nth-child(2), .achievement-card:nth-child(2),
+.contact-card:nth-child(2), .vmv-card:nth-child(2), .member-card:nth-child(2),
+.project-card:nth-child(2), .donation-card:nth-child(2), .stats-card:nth-child(2) { animation-delay: 0.1s; }
+.program-card:nth-child(3), .facility-card:nth-child(3), .news-card:nth-child(3),
+.opportunity-card:nth-child(3), .benefit-card:nth-child(3), .achievement-card:nth-child(3),
+.contact-card:nth-child(3), .vmv-card:nth-child(3), .member-card:nth-child(3),
+.project-card:nth-child(3), .donation-card:nth-child(3), .stats-card:nth-child(3) { animation-delay: 0.2s; }
+.program-card:nth-child(4), .news-card:nth-child(4),
+.opportunity-card:nth-child(4), .achievement-card:nth-child(4),
+.contact-card:nth-child(4), .member-card:nth-child(4),
+.project-card:nth-child(4), .stats-card:nth-child(4) { animation-delay: 0.3s; }
+.program-card:nth-child(5), .news-card:nth-child(5),
+.opportunity-card:nth-child(5), .achievement-card:nth-child(5),
+.project-card:nth-child(5), .stats-card:nth-child(5) { animation-delay: 0.4s; }
+.program-card:nth-child(6), .news-card:nth-child(6),
+.opportunity-card:nth-child(6), .stats-card:nth-child(6) { animation-delay: 0.5s; }
 
 /* Gold card buttons */
 .program-card .btn-primary, .facility-card .btn-primary,
-.vm-item .btn-primary, .news-card .btn-primary,
-.stat-card .btn-primary, .report-card .btn-primary,
+.vm-item .btn-primary, .vmv-card .btn-primary,
+.opportunity-card .btn-primary, .project-card .btn-primary,
+.success-card .btn-primary,
+.news-card .btn-primary, .stat-card .btn-primary,
+.report-card .btn-primary, .benefit-card .btn-primary,
+.achievement-card .btn-primary, .contact-card .btn-primary,
+.announcement-card .btn-primary, .action-card .btn-primary,
+.stats-card .btn-primary,
 .intro-content .btn-primary, .contact-grid .btn-primary,
 .requirements-card .btn-primary, .interview-card .btn-primary,
 .form-container .btn-primary, .content-section .btn-primary,
-.section-card .btn-primary,
+.section-card .btn-primary, .donation-card .btn-primary,
+.hours-card .btn-primary, .member-card .btn-primary,
+.welcome-card .btn-primary, .quick-action-card .btn-primary,
+.upload-card .btn-primary,
 .program-card .btn-outline-primary, .facility-card .btn-outline-primary,
-.vm-item .btn-outline-primary, .news-card .btn-outline-primary,
-.stat-card .btn-outline-primary, .report-card .btn-outline-primary,
+.vm-item .btn-outline-primary, .vmv-card .btn-outline-primary,
+.opportunity-card .btn-outline-primary, .project-card .btn-outline-primary,
+.success-card .btn-outline-primary,
+.news-card .btn-outline-primary, .stat-card .btn-outline-primary,
+.report-card .btn-outline-primary, .benefit-card .btn-outline-primary,
+.achievement-card .btn-outline-primary, .contact-card .btn-outline-primary,
+.announcement-card .btn-outline-primary, .action-card .btn-outline-primary,
+.stats-card .btn-outline-primary,
 .intro-content .btn-outline-primary, .contact-grid .btn-outline-primary,
 .requirements-card .btn-outline-primary, .interview-card .btn-outline-primary,
 .form-container .btn-outline-primary, .content-section .btn-outline-primary,
-.section-card .btn-outline-primary {
+.section-card .btn-outline-primary, .donation-card .btn-outline-primary,
+.hours-card .btn-outline-primary, .member-card .btn-outline-primary,
+.welcome-card .btn-outline-primary, .quick-action-card .btn-outline-primary,
+.upload-card .btn-outline-primary {
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%) !important;
   border: 1px solid #E6A100 !important;
   color: #0d1442 !important;
@@ -620,19 +663,37 @@ h4 {
 }
 
 .program-card .btn-primary:hover, .facility-card .btn-primary:hover,
-.vm-item .btn-primary:hover, .news-card .btn-primary:hover,
-.stat-card .btn-primary:hover, .report-card .btn-primary:hover,
+.vm-item .btn-primary:hover, .vmv-card .btn-primary:hover,
+.opportunity-card .btn-primary:hover, .project-card .btn-primary:hover,
+.success-card .btn-primary:hover,
+.news-card .btn-primary:hover, .stat-card .btn-primary:hover,
+.report-card .btn-primary:hover, .benefit-card .btn-primary:hover,
+.achievement-card .btn-primary:hover, .contact-card .btn-primary:hover,
+.announcement-card .btn-primary:hover, .action-card .btn-primary:hover,
+.stats-card .btn-primary:hover,
 .intro-content .btn-primary:hover, .contact-grid .btn-primary:hover,
 .requirements-card .btn-primary:hover, .interview-card .btn-primary:hover,
 .form-container .btn-primary:hover, .content-section .btn-primary:hover,
-.section-card .btn-primary:hover,
+.section-card .btn-primary:hover, .donation-card .btn-primary:hover,
+.hours-card .btn-primary:hover, .member-card .btn-primary:hover,
+.welcome-card .btn-primary:hover, .quick-action-card .btn-primary:hover,
+.upload-card .btn-primary:hover,
 .program-card .btn-outline-primary:hover, .facility-card .btn-outline-primary:hover,
-.vm-item .btn-outline-primary:hover, .news-card .btn-outline-primary:hover,
-.stat-card .btn-outline-primary:hover, .report-card .btn-outline-primary:hover,
+.vm-item .btn-outline-primary:hover, .vmv-card .btn-outline-primary:hover,
+.opportunity-card .btn-outline-primary:hover, .project-card .btn-outline-primary:hover,
+.success-card .btn-outline-primary:hover,
+.news-card .btn-outline-primary:hover, .stat-card .btn-outline-primary:hover,
+.report-card .btn-outline-primary:hover, .benefit-card .btn-outline-primary:hover,
+.achievement-card .btn-outline-primary:hover, .contact-card .btn-outline-primary:hover,
+.announcement-card .btn-outline-primary:hover, .action-card .btn-outline-primary:hover,
+.stats-card .btn-outline-primary:hover,
 .intro-content .btn-outline-primary:hover, .contact-grid .btn-outline-primary:hover,
 .requirements-card .btn-outline-primary:hover, .interview-card .btn-outline-primary:hover,
 .form-container .btn-outline-primary:hover, .content-section .btn-outline-primary:hover,
-.section-card .btn-outline-primary:hover {
+.section-card .btn-outline-primary:hover, .donation-card .btn-outline-primary:hover,
+.hours-card .btn-outline-primary:hover, .member-card .btn-outline-primary:hover,
+.welcome-card .btn-outline-primary:hover, .quick-action-card .btn-outline-primary:hover,
+.upload-card .btn-outline-primary:hover {
   transform: scale(1.05) !important;
   box-shadow: 0 6px 25px rgba(255, 165, 0, 0.5) !important;
 }

@@ -14,10 +14,9 @@
       <div class="links">
         <ul>
           <li><a href="./index.php">Home</a></li>
-          <li><a href="./about-us.php">About-us</a></li>
+          <li><a href="./about.php">About Us</a></li>
           <li><a href="./history.php">History</a></li>
           <li><a href="./programs.php">Programs</a></li>
-          <li><a href="./student-directory.php">Student Directory</a></li>
           <li><a href="./application.php">Apply Now</a></li>
           <li><a href="./donation.php">Donate</a></li>
           <li><a href="./volunteer.php">Volunteer</a></li>
