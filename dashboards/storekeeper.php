@@ -209,13 +209,13 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); margin:0; min-he
 .top-bar { background:#fff; padding:12px 22px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,.07); position:sticky; top:0; z-index:100; }
 .content-area { padding:22px; }
 
-.stat-card { background:#fff; border-radius:14px; padding:18px; display:flex; align-items:center; gap:14px; box-shadow:var(--card-shadow); transition:transform .25s; }
+.stat-card { background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%); border-radius:14px; padding:18px; display:flex; align-items:center; gap:14px; transition:transform .25s; }
 .stat-card:hover { transform:translateY(-3px); }
 .stat-icon { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0; }
 .stat-info h3 { font-size:1.5rem;font-weight:700;margin:0;line-height:1.2; }
 .stat-info p { font-size:.78rem;color:#666;margin:2px 0 0; }
 
-.section-card { background:#fff; border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:var(--card-shadow); }
+.section-card { background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%); border-radius:14px; padding:20px; margin-bottom:20px; }
 .section-card h2 { font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5; }
 
 .tab-nav { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; background:#fff; border-radius:12px; padding:6px; box-shadow:var(--card-shadow); }

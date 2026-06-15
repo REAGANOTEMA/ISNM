@@ -219,7 +219,7 @@ if ($search_term && $students_conn) {
         .content-section:first-of-type { display: block; }
         .content-section h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 4px solid #3b82f6; transition: all 0.25s; }
+        .stat-card { background: linear-gradient(to bottom, #ffe082 0%, #ffe082 5px, #fef9e7 5px, #fef9e7 100%); border-radius: 14px; padding: 20px; transition: all 0.25s; }
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
         .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; color: white; }
         .stat-card h3 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
@@ -232,7 +232,7 @@ if ($search_term && $students_conn) {
         .card-teal .stat-icon { background: linear-gradient(135deg, #0d9488, #14b8a6); }
         .card-cyan .stat-icon { background: linear-gradient(135deg, #0891b2, #22d3ee); }
         .card-slate .stat-icon { background: linear-gradient(135deg, #475569, #94a3b8); }
-        .section-card { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; overflow: hidden; }
+        .section-card { background: linear-gradient(to bottom, #d7ccc8 0%, #d7ccc8 5px, #f0dcc8 5px, #f0dcc8 100%); border-radius: 14px; margin-bottom: 24px; overflow: hidden; }
         .section-card .card-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .section-card .card-header h5 { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; }
         .section-card .card-body { padding: 16px 20px; }

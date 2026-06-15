@@ -788,25 +788,25 @@ include_once 'shared/_header.php'; ?>
     }
 
     .submit-btn {
-      background: linear-gradient(135deg, #1a237e, #3949ab);
-      color: white;
-      border: none;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+      color: #0d1442;
+      border: 2px solid #E6A100;
       padding: 1rem 3rem;
       border-radius: 50px;
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.3s ease;
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
-      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
+      box-shadow: 0 10px 30px rgba(255, 165, 0, 0.3);
     }
 
     .submit-btn:hover {
       transform: perspective(1000px) translateY(-4px) translateZ(6px);
-      box-shadow: 0 15px 40px rgba(26, 35, 126, 0.4);
-      background: linear-gradient(135deg, #0d1442, #1a237e);
+      box-shadow: 0 15px 40px rgba(255, 165, 0, 0.45);
+      background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%);
     }
 
     .submit-btn i {

@@ -149,7 +149,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
 @media(max-width:768px){.page-content{margin-left:0}}
 .top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
 .content-area{padding:22px}
-.stat-card{background:#fff;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .25s}
+.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;transition:transform .25s}
 .stat-card:hover{transform:translateY(-4px)}
         .si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
         .si-blue  {background:linear-gradient(135deg,#1a237e,#3949ab)}
@@ -160,7 +160,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
         .si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
         .stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
         .stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
-        .section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+        .section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:14px;padding:20px;margin-bottom:22px}
         .section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
 
         /* Custom button colors */

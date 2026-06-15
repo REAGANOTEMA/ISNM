@@ -202,11 +202,11 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
 .sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.15);color:#fff;border-left:3px solid var(--accent)}
 .sidebar nav a i{width:18px;text-align:center}
 .main{margin-left:var(--sidebar-w);padding:24px;min-height:100vh}
-.stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid var(--accent);transition:.2s}
+.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;border-left:4px solid var(--accent);transition:.2s}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
 .stat-card .num{font-size:1.9rem;font-weight:700;color:var(--primary)}
 .stat-card .lbl{font-size:.78rem;color:#6c757d;text-transform:uppercase;letter-spacing:.5px}
-.section-card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:24px}
+.section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:12px;padding:22px;margin-bottom:24px}
 .section-card h5{color:var(--primary);font-weight:600;border-bottom:2px solid #e9ecef;padding-bottom:10px;margin-bottom:16px}
 .badge-active{background:#d1fae5;color:#065f46}
 .badge-inactive{background:#fee2e2;color:#991b1b}

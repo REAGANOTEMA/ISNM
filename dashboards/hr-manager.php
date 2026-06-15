@@ -111,7 +111,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
 @media(max-width:768px){.page-wrap{margin-left:0}}
 .top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
 .content{padding:22px}
-.stat-card{background:#fff;border-radius:12px;padding:18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;display:flex;align-items:center;gap:12px}
 .si{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#fff;flex-shrink:0}
 .si-blue{background:linear-gradient(135deg,#1a237e,#3949ab)}
 .si-green{background:linear-gradient(135deg,#2e7d32,#43a047)}

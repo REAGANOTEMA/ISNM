@@ -918,7 +918,7 @@
 
     /* School Banner Styles */
     .school-banner {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: linear-gradient(135deg, #f0dcc8 0%, #e8d0b8 100%);
       border-radius: 20px;
       padding: 3rem;
       text-align: center;
@@ -1026,7 +1026,7 @@
 
     /* Requirements Card */
     .requirements-card {
-      background: white;
+      background: #f0dcc8;
       border-radius: 20px;
       padding: 2.5rem;
       box-shadow: 0 15px 35px rgba(0,0,0,0.08);
@@ -1114,7 +1114,7 @@
 
     /* Interview Card */
     .interview-card {
-      background: white;
+      background: #f0dcc8;
       border-radius: 20px;
       padding: 2.5rem;
       box-shadow: 0 15px 35px rgba(0,0,0,0.08);
@@ -1300,7 +1300,7 @@
 
     /* Form Container */
     .form-container {
-      background: white;
+      background: #f0dcc8;
       border-radius: 25px;
       padding: 3rem;
       box-shadow: 0 20px 60px rgba(0,0,0,0.1);
@@ -1395,9 +1395,9 @@
     .form-section {
       margin-bottom: 3rem;
       padding: 2rem;
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: linear-gradient(135deg, #f0dcc8, #e8d0b8);
       border-radius: 20px;
-      border: 1px solid #dee2e6;
+      border: 1px solid #e8dcc8;
       position: relative;
       transition: all 0.3s ease;
     }

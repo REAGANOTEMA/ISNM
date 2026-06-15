@@ -44,10 +44,9 @@ $recent_incidents = [
             margin-bottom: 2rem;
         }
         .stat-card {
-            background: white;
+            background: linear-gradient(to bottom, #ffe082 0%, #ffe082 5px, #fef9e7 5px, #fef9e7 100%);
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
             border-left: 4px solid #dc3545;
         }

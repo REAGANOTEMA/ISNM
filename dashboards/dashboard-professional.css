@@ -136,19 +136,21 @@ body {
 .metric-card,
 .dashboard-kpi-card,
 .professional-summary-card {
-  background: #fff;
+  background: linear-gradient(to bottom, var(--card-chocolate-accent, #d7ccc8) 0%, var(--card-chocolate-accent, #d7ccc8) 5px, var(--card-chocolate, #f0dcc8) 5px, var(--card-chocolate, #f0dcc8) 100%);
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 18px;
-  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.07);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  perspective: 1200px;
 }
 
 .quick-action-card:hover,
 .metric-card:hover,
 .dashboard-kpi-card:hover,
 .professional-summary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.11);
+  transform: perspective(1200px) translateY(-6px) translateZ(16px) rotateX(1.5deg);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(183, 149, 128, 0.2);
 }
 
 .empty-state {
@@ -168,12 +170,20 @@ body {
 }
 
 .page-title-card {
-  background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 20px;
-  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(to bottom, var(--isnm-blue, #1a237e) 0%, var(--isnm-blue, #1a237e) 5px, #f0dcc8 5px, #f0dcc8 100%);
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
   padding: 22px;
   margin-bottom: 22px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
+
+.page-title-card:hover {
+  transform: perspective(1200px) translateY(-4px) translateZ(12px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .page-title-card h1,
@@ -197,4 +207,53 @@ body {
   .report-card {
     box-shadow: none !important;
   }
+}
+
+/* === Gold Buttons Inside Dashboard Cards === */
+.content-section .btn-primary,
+.section-card .btn-primary,
+.report-card .btn-primary,
+.card .btn-primary,
+.welcome-card .btn-primary,
+.action-card .btn-primary {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%) !important;
+  border: 2px solid #E6A100 !important;
+  color: #0d1442 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3) !important;
+}
+
+.content-section .btn-primary:hover,
+.section-card .btn-primary:hover,
+.report-card .btn-primary:hover,
+.card .btn-primary:hover,
+.welcome-card .btn-primary:hover,
+.action-card .btn-primary:hover {
+  transform: perspective(1000px) translateY(-3px) translateZ(6px) !important;
+  box-shadow: 0 8px 25px rgba(255, 165, 0, 0.45) !important;
+  background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%) !important;
+}
+
+.content-section .btn-outline-primary,
+.section-card .btn-outline-primary,
+.report-card .btn-outline-primary,
+.card .btn-outline-primary,
+.welcome-card .btn-outline-primary,
+.action-card .btn-outline-primary {
+  border: 2px solid #FFA500 !important;
+  background: transparent !important;
+  color: #0d1442 !important;
+  font-weight: 700 !important;
+}
+
+.content-section .btn-outline-primary:hover,
+.section-card .btn-outline-primary:hover,
+.report-card .btn-outline-primary:hover,
+.card .btn-outline-primary:hover,
+.welcome-card .btn-outline-primary:hover,
+.action-card .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%) !important;
+  border-color: #E6A100 !important;
+  color: #0d1442 !important;
+  transform: perspective(1000px) translateY(-3px) translateZ(6px) !important;
 }

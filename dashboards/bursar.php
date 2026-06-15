@@ -363,10 +363,9 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
         }
 
         .stat-card {
-            background: white;
+            background: linear-gradient(to bottom, #ffe082 0%, #ffe082 5px, #fef9e7 5px, #fef9e7 100%);
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary-color);
             transition: transform 0.3s ease;
         }
@@ -401,11 +400,10 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
         }
 
         .content-section {
-            background: white;
+            background: linear-gradient(to bottom, #d7ccc8 0%, #d7ccc8 5px, #f0dcc8 5px, #f0dcc8 100%);
             border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
 
         .section-header {

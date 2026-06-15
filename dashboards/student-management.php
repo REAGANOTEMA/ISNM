@@ -120,9 +120,9 @@ body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
 .sidebar nav a{display:flex;align-items:center;gap:9px;padding:11px 18px;color:rgba(255,255,255,.82);text-decoration:none;font-size:.86rem;transition:.2s}
 .sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.15);color:#fff;border-left:3px solid #99f6e4}
 .main{margin-left:var(--sidebar-w);padding:22px;min-height:100vh}
-.stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:4px solid var(--accent);transition:.2s}
+.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;border-left:4px solid var(--accent);transition:.2s}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
-.section-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:22px}
+.section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:12px;padding:20px;margin-bottom:22px}
 .section-card h5{color:var(--primary);font-weight:700;border-bottom:2px solid #e9ecef;padding-bottom:8px;margin-bottom:14px}
 @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}}
 </style>

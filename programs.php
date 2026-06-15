@@ -613,28 +613,30 @@
     }
 
     .program-actions .btn-primary {
-      color: #ffffff;
-      background: linear-gradient(135deg, #1a237e, #3949ab);
-      box-shadow: 0 4px 15px rgba(26,35,126,0.3);
-    }
-
+        color: #0d1442;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+        border-color: #E6A100;
+        box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+      }
+  
     .program-actions .btn-primary:hover {
-      transform: perspective(1000px) translateY(-3px) translateZ(6px);
-      box-shadow: 0 8px 25px rgba(26,35,126,0.4);
-      background: linear-gradient(135deg, #0d1442, #1a237e);
-    }
-
+        transform: perspective(1000px) translateY(-3px) translateZ(6px);
+        box-shadow: 0 8px 25px rgba(255, 165, 0, 0.45);
+        background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%);
+      }
+  
     .program-actions .btn-outline-primary {
-      color: #1a237e;
-      background: transparent;
-      border-color: #1a237e;
-    }
-
+        color: #0d1442;
+        background: transparent;
+        border-color: #FFA500;
+      }
+  
     .program-actions .btn-outline-primary:hover {
-      background: #1a237e;
-      color: #fff;
-      transform: perspective(1000px) translateY(-3px) translateZ(6px);
-    }
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+        color: #0d1442;
+        border-color: #E6A100;
+        transform: perspective(1000px) translateY(-3px) translateZ(6px);
+      }
 
     /* Clean Hospitals Grid */
     .hospitals-grid {
