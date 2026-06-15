@@ -220,6 +220,101 @@ try {
 error_log('Maintenance computers error: ' . $e->getMessage());
 }
 
+// Get students connection for student ID generation and search
+$students_conn = null;
+try {
+    $students_conn = getStudentsConnection();
+} catch (Exception $e) {
+    $students_conn = null;
+}
+
+// Generate student ID
+function generateStudentIdLab() {
+    global $students_conn;
+    if (!$students_conn) return 'ISNM/' . date('Y') . '/' . mt_rand(1000, 9999);
+    do {
+        $year = date('Y');
+        $random = mt_rand(1000, 9999);
+        $student_id = "ISNM/$year/$random";
+        $check = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE student_id = '$student_id'");
+        $row = $check ? $check->fetch_assoc() : ['cnt' => 1];
+    } while ($row['cnt'] > 0);
+    return $student_id;
+}
+
+// Handle POST actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    // ── Add Student ──
+    if ($action === 'add_student' && $students_conn) {
+        $student_id = generateStudentIdLab();
+        $fn = $students_conn->real_escape_string($_POST['full_name']);
+        $parts = explode(' ', trim($fn), 2);
+        $first = $parts[0];
+        $surname = $parts[1] ?? '';
+        $phone = $students_conn->real_escape_string($_POST['phone'] ?? '');
+        $email = $students_conn->real_escape_string($_POST['email'] ?? '');
+        $prog = $students_conn->real_escape_string($_POST['program'] ?? '');
+        $gender = $students_conn->real_escape_string($_POST['gender'] ?? '');
+        $set = $students_conn->real_escape_string($_POST['set_name'] ?? date('Y'));
+        $dob = $_POST['date_of_birth'] ? "'" . $students_conn->real_escape_string($_POST['date_of_birth']) . "'" : 'NULL';
+        $sql = "INSERT INTO students (student_id, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, status, created_at)
+                VALUES ('$student_id', '$first', '$surname', '$fn', '$phone', '$email', '$prog', '$gender', '$set', $dob, '" . date('Y') . "', 'Active', NOW())";
+        if ($students_conn->query($sql)) {
+            $_SESSION['success'] = "Student $fn added. Student ID: $student_id";
+        } else {
+            $_SESSION['error'] = "Error adding student: " . $students_conn->error;
+        }
+        header('Location: computer_lab.php');
+        exit;
+    }
+
+    // ── Add Computer ──
+    if ($action === 'add_computer' && $conn) {
+        $cid = $conn->real_escape_string($_POST['computer_id']);
+        $name = $conn->real_escape_string($_POST['computer_name']);
+        $loc = $conn->real_escape_string($_POST['location']);
+        $ip = $conn->real_escape_string($_POST['ip_address'] ?? '');
+        $mac = $conn->real_escape_string($_POST['mac_address'] ?? '');
+        $specs = $conn->real_escape_string($_POST['specifications'] ?? '');
+        $os = $conn->real_escape_string($_POST['os_installed'] ?? '');
+        $conn->query("INSERT IGNORE INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed) VALUES ('$cid', '$name', '$loc', 'online', '$ip', '$mac', '$specs', '$os')");
+        $_SESSION['success'] = "Computer $cid added successfully.";
+        header('Location: computer_lab.php');
+        exit;
+    }
+
+    // ── Create Support Ticket ──
+    if ($action === 'create_ticket' && $conn) {
+        $tn = 'TKT-' . date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $rn = $conn->real_escape_string($_POST['requester_name']);
+        $re = $conn->real_escape_string($_POST['requester_email'] ?? '');
+        $rt = $conn->real_escape_string($_POST['requester_type']);
+        $it = $conn->real_escape_string($_POST['issue_type']);
+        $pr = $conn->real_escape_string($_POST['priority']);
+        $desc = $conn->real_escape_string($_POST['description']);
+        $conn->query("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES ('$tn', '$rn', '$re', '$rt', '$it', '$pr', '$desc')");
+        $_SESSION['success'] = "Support ticket $tn created.";
+        header('Location: computer_lab.php');
+        exit;
+    }
+
+    // ── Resolve Ticket ──
+    if ($action === 'resolve_ticket' && $conn) {
+        $id = intval($_POST['ticket_id']);
+        $notes = $conn->real_escape_string($_POST['resolution_notes'] ?? '');
+        $uname = $_SESSION['full_name'] ?? 'ICT Staff';
+        $conn->query("UPDATE it_support_tickets SET status = 'resolved', resolution_notes = CONCAT(resolution_notes, '\n[$uname] $notes'), resolved_at = NOW() WHERE id = $id");
+        $_SESSION['success'] = "Ticket #$id resolved.";
+        header('Location: computer_lab.php');
+        exit;
+    }
+
+    header('Location: computer_lab.php');
+    exit;
+}
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -867,6 +962,19 @@ $conn->close();
     </style>
 </head>
 <body>
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-4" style="z-index: 9999; min-width: 300px;">
+            <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 m-4" style="z-index: 9999; min-width: 300px;">
+            <i class="fas fa-exclamation-circle me-2"></i><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <button class="mobile-menu-toggle" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </button>
@@ -882,15 +990,17 @@ $conn->close();
             
             <nav class="sidebar-menu">
                 <li><a href="computer_lab.php" class="active"><i class="fas fa-th-large"></i> Dashboard</a></li>
+                <li><a href="#students"><i class="fas fa-user-graduate"></i> Students</a></li>
                 <li><a href="#computers"><i class="fas fa-desktop"></i> Lab Computers</a></li>
                 <li><a href="#bookings"><i class="fas fa-calendar-alt"></i> Lab Bookings</a></li>
                 <li><a href="#tickets"><i class="fas fa-ticket-alt"></i> IT Support</a></li>
                 <li><a href="#maintenance"><i class="fas fa-tools"></i> Maintenance</a></li>
                 <li><a href="#software"><i class="fas fa-download"></i> Software</a></li>
                 <li><a href="#network"><i class="fas fa-network-wired"></i> Network</a></li>
-                <li><a href="#inventory"><i class="fas fa-boxes"></i> Inventory</a></li>
                 <li><a href="#reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
-                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="../news.php"><i class="fas fa-newspaper"></i> News</a></li>
+                <li><a href="../store_request.php"><i class="fas fa-shopping-cart"></i> Store</a></li>
+                <li><a href="../student-directory.php"><i class="fas fa-address-book"></i> Directory</a></li>
             </nav>
             
             <div class="sidebar-footer">
@@ -912,11 +1022,14 @@ $conn->close();
             <div class="top-bar">
                 <h1><i class="fas fa-laptop-code" style="color: var(--primary);"></i> Computer Lab Dashboard</h1>
                 <div class="top-bar-right">
-                    <button class="btn-secondary" onclick="showNetworkStatus()">
-                        <i class="fas fa-wifi"></i> Network Status
+                    <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentLabModal">
+                        <i class="fas fa-user-plus"></i> Add Student
                     </button>
-                    <button class="btn-primary" onclick="createNewTicket()">
-                        <i class="fas fa-plus"></i> New Support Ticket
+                    <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#addComputerLabModal">
+                        <i class="fas fa-plus"></i> Add Computer
+                    </button>
+                    <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#ticketLabModal">
+                        <i class="fas fa-plus"></i> New Ticket
                     </button>
                 </div>
             </div>
@@ -938,6 +1051,56 @@ $conn->close();
             </div>
             <?php endif; ?>
             
+            <!-- Students Section -->
+            <div id="students" style="display:none;">
+                <h2 class="section-title"><i class="fas fa-user-graduate"></i> Student Management</h2>
+                <div class="table-container">
+                    <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#f8fafc;border-bottom:1px solid #e5e7eb;">
+                        <form method="GET" action="computer_lab.php" class="d-flex gap-2 flex-grow-1">
+                            <input type="text" name="student_search" class="form-control form-control-sm" placeholder="Search by name, ID, phone..." style="max-width:400px;" value="<?= htmlspecialchars($_GET['student_search'] ?? '') ?>">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+                        </form>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentLabModal"><i class="fas fa-user-plus me-1"></i>Add Student</button>
+                    </div>
+                    <?php
+                    $found_students = [];
+                    $search_st = trim($_GET['student_search'] ?? '');
+                    if ($search_st && $students_conn) {
+                        $like = '%' . $students_conn->real_escape_string($search_st) . '%';
+                        try {
+                            $r = $students_conn->query("SELECT student_id, full_name, index_number, program, phone, email, status FROM students WHERE full_name LIKE '$like' OR student_id LIKE '$like' OR index_number LIKE '$like' OR phone LIKE '$like' LIMIT 30");
+                            if ($r) $found_students = $r->fetch_all(MYSQLI_ASSOC);
+                        } catch (Exception $e) {}
+                    }
+                    ?>
+                    <div class="p-0">
+                        <?php if ($search_st && empty($found_students)): ?>
+                            <div class="no-data"><i class="fas fa-search"></i><p>No students matching "<?= htmlspecialchars($search_st) ?>"</p></div>
+                        <?php elseif (!empty($found_students)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="font-size:0.9rem;">
+                                <thead><tr><th>Student ID</th><th>Name</th><th>Index Number</th><th>Program</th><th>Phone</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <?php foreach ($found_students as $s): ?>
+                                    <tr>
+                                        <td><code><?= htmlspecialchars($s['student_id']) ?></code></td>
+                                        <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
+                                        <td><?= htmlspecialchars($s['index_number'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($s['program'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($s['phone'] ?? '—') ?></td>
+                                        <td><span class="badge bg-<?= $s['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php else: ?>
+                            <div class="no-data"><i class="fas fa-user-graduate"></i><p>Search for students or add a new one</p></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Network Status -->
             <div class="network-status">
                 <div class="status-dot <?php echo ($stats['network_devices_offline'] == 0) ? 'online' : 'offline'; ?>"></div>
@@ -1125,7 +1288,7 @@ $conn->close();
                                 <a href="#" style="color: var(--primary); text-decoration: none;" title="View Ticket">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="#" style="color: var(--success); text-decoration: none; margin-left: 8px;" title="Resolve">
+                                <a href="#" style="color: var(--success); text-decoration: none; margin-left: 8px;" title="Resolve" onclick="event.preventDefault(); resolveTicketLab(<?= $ticket['id'] ?>)">
                                     <i class="fas fa-check"></i>
                                 </a>
                             </td>
@@ -1194,31 +1357,178 @@ $conn->close();
         </main>
     </div>
     
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentLabModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="add_student">
+                <div class="modal-header" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Student</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label fw-semibold">Full Name *</label><input type="text" class="form-control" name="full_name" required></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input type="text" class="form-control" name="phone"></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" name="email"></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">Program *</label>
+                            <select class="form-select" name="program" required>
+                                <option value="">Select</option>
+                                <option>Certificate in Nursing</option>
+                                <option>Certificate in Midwifery</option>
+                                <option>Diploma in Nursing</option>
+                                <option>Diploma in Midwifery</option>
+                                <option>Enrolled Comprehensive Nursing</option>
+                                <option>Enrolled Psychiatric Nursing</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3"><label class="form-label fw-semibold">Gender</label>
+                            <select class="form-select" name="gender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+                        </div>
+                        <div class="col-md-3"><label class="form-label fw-semibold">DOB</label><input type="date" class="form-control" name="date_of_birth"></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">Set / Year</label><input type="text" class="form-control" name="set_name" value="<?= date('Y') ?>"></div>
+                    </div>
+                    <div class="mt-3 p-3 bg-light rounded"><small class="text-muted"><i class="fas fa-info-circle me-1"></i> A unique Student ID will be auto-generated (<code>ISNM/YYYY/RANDOM</code>)</small></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Computer Modal -->
+    <div class="modal fade" id="addComputerLabModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="add_computer">
+                <div class="modal-header" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Lab Computer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-semibold">Computer ID *</label><input type="text" class="form-control" name="computer_id" required placeholder="e.g. LAB-C-001"></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">Name *</label><input type="text" class="form-control" name="computer_name" required></div>
+                        <div class="col-12"><label class="form-label fw-semibold">Location *</label><input type="text" class="form-control" name="location" required></div>
+                        <div class="col-md-6"><label class="form-label">IP Address</label><input type="text" class="form-control" name="ip_address"></div>
+                        <div class="col-md-6"><label class="form-label">MAC Address</label><input type="text" class="form-control" name="mac_address"></div>
+                        <div class="col-md-6"><label class="form-label">Specifications</label><input type="text" class="form-control" name="specifications"></div>
+                        <div class="col-md-6"><label class="form-label">OS</label><input type="text" class="form-control" name="os_installed"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Ticket Modal -->
+    <div class="modal fade" id="ticketLabModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="create_ticket">
+                <div class="modal-header" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>New Support Ticket</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-semibold">Requester Name *</label><input type="text" class="form-control" name="requester_name" required></div>
+                        <div class="col-md-6"><label class="form-label">Requester Email</label><input type="email" class="form-control" name="requester_email"></div>
+                        <div class="col-md-4"><label class="form-label fw-semibold">Type *</label>
+                            <select class="form-select" name="requester_type" required>
+                                <option value="staff">Staff</option>
+                                <option value="student">Student</option>
+                                <option value="faculty">Faculty</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label fw-semibold">Issue Type *</label>
+                            <select class="form-select" name="issue_type" required>
+                                <option value="hardware">Hardware</option>
+                                <option value="software">Software</option>
+                                <option value="network">Network</option>
+                                <option value="account">Account</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label fw-semibold">Priority *</label>
+                            <select class="form-select" name="priority" required>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-12"><label class="form-label fw-semibold">Description *</label><textarea class="form-control" name="description" rows="4" required></textarea></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resolve Ticket Modal -->
+    <div class="modal fade" id="resolveTicketLabModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="resolve_ticket">
+                <input type="hidden" name="ticket_id" id="resolveTicketLabId">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Resolve Ticket</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-semibold">Resolution Notes</label><textarea class="form-control" name="resolution_notes" rows="3"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Mark Resolved</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('active');
         }
-        
-        function createNewTicket() {
-            alert('Opening new support ticket form...');
-            // In production, this would open a modal or redirect to a ticket creation page
+
+        function resolveTicketLab(id) {
+            document.getElementById('resolveTicketLabId').value = id;
+            new bootstrap.Modal(document.getElementById('resolveTicketLabModal')).show();
         }
-        
-        function showNetworkStatus() {
-            alert('Network monitoring dashboard coming soon!');
-            // In production, this would open a detailed network status page
-        }
-        
-        function viewComputerDetails(computerId) {
-            alert('Viewing details for computer: ' + computerId);
-            // In production, this would open a detailed view of the computer
-        }
-        
-        // Auto-refresh stats every 5 minutes
-        setInterval(function() {
-            location.reload();
-        }, 300000);
+
+        // Sidebar navigation toggle for students section
+        document.querySelectorAll('.sidebar-menu a[href^="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                const targetId = this.getAttribute('href').substring(1);
+                const studentsSection = document.getElementById('students');
+                if (studentsSection) {
+                    studentsSection.style.display = targetId === 'students' ? 'block' : 'none';
+                }
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.classList.contains('active')) sidebar.classList.remove('active');
+            });
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => {
+                try { const bs = new bootstrap.Alert(a); bs.close(); } catch(e) {}
+            });
+        }, 5000);
     </script>
 </body>
 </html>
