@@ -11,20 +11,42 @@ require_once 'auth-service.php';
 $allowedRoles = ['Director ICT', 'IT Manager', 'Lab Technician', 'Computer Lab Manager'];
 $allowedPositions = ['Director ICT', 'Computer Lab Manager', 'IT Manager', 'Lab Technician'];
 
-$hasAccess = in_array($_SESSION['role'] ?? '', $allowedRoles);
-if (!$hasAccess && isset($_SESSION['position'])) {
-    foreach ($allowedPositions as $pos) {
-        if (stripos($_SESSION['position'], $pos) !== false) {
+$sessionRole = $_SESSION['role'] ?? '';
+$sessionPos  = $_SESSION['position'] ?? '';
+
+$hasAccess = false;
+$roleNorm = strtolower(trim((string)$sessionRole));
+$posNorm  = strtolower(trim((string)$sessionPos));
+
+foreach ($allowedRoles as $r) {
+    $rNorm = strtolower(trim((string)$r));
+    if ($rNorm !== '' && ($roleNorm === $rNorm || ($roleNorm !== '' && strpos($roleNorm, $rNorm) !== false) || ($rNorm !== '' && strpos($rNorm, $roleNorm) !== false))) {
+        $hasAccess = true;
+        break;
+    }
+}
+
+if (!$hasAccess) {
+    foreach ($allowedPositions as $p) {
+        $pNorm = strtolower(trim((string)$p));
+        if ($pNorm !== '' && ($posNorm === $pNorm || ($posNorm !== '' && strpos($posNorm, $pNorm) !== false) || ($pNorm !== '' && strpos($pNorm, $posNorm) !== false))) {
             $hasAccess = true;
             break;
         }
     }
 }
 
-if (!$auth_service->isAuthenticated() || $_SESSION['type'] !== 'staff' || !$hasAccess) {
+if (
+    !$auth_service->isAuthenticated()
+    || (($_SESSION['type'] ?? '') !== 'staff')
+    || !$hasAccess
+) {
     $_SESSION['error'] = "Access denied. ICT department privileges required.";
-    header('Location: staff-login.php?position=Computer%20Lab%20Manager');
-    exit;
+    // Avoid redirect loops: if already on staff-login, don't bounce back again.
+    if (basename($_SERVER['PHP_SELF']) !== 'staff-login.php') {
+        header('Location: staff-login.php?position=Computer%20Lab%20Manager');
+        exit;
+    }
 }
 
 require_once 'config/database.php';
@@ -43,6 +65,13 @@ try {
         header('Location: staff-login.php');
         exit;
     }
+}
+
+// Guard: prevent null->query() fatals if both connection attempts failed
+if (!$conn) {
+    $_SESSION['error'] = "Database connection error. Please contact administrator.";
+    header('Location: staff-login.php');
+    exit;
 }
 
 $user_id = $_SESSION['user_id'];
@@ -315,7 +344,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$conn->close();
+if ($conn) {
+    $conn->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
