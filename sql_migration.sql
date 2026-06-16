@@ -553,3 +553,169 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.notification_reads (
     FOREIGN KEY (notification_id) REFERENCES igangaschoolofl_website_db.notifications(id) ON DELETE CASCADE,
     INDEX idx_user (user_id, user_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- Skills Lab — Staff Role Registration (staffs_db)
+-- ==============================================================================
+
+INSERT IGNORE INTO igangaschoolofl_staffs_db.staff_roles
+    (`id`, `role_name`, `role_description`, `role_level`, `dashboard_path`, `permissions`, `created_at`, `updated_at`)
+VALUES
+    (53, 'Skills Lab Manager', 'Skills laboratory management including equipment, practical sessions, skills demonstrations, and consumables', 'Support', 'dashboards/skills-lab.php', '{"equipment": true, "checkout": true, "sessions": true, "skills": true, "consumables": true, "attendance": true, "incidents": true}', NOW(), NOW());
+
+-- ==============================================================================
+-- SKILLS LAB TABLES (students_db)
+-- ==============================================================================
+
+-- 1. Lab Equipment Inventory
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_equipment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipment_code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category ENUM('mannequin','model','instrument','furniture','consumable','other') NOT NULL DEFAULT 'other',
+    quantity INT NOT NULL DEFAULT 1,
+    available_quantity INT NOT NULL DEFAULT 1,
+    condition_status ENUM('excellent','good','fair','poor') DEFAULT 'good',
+    location VARCHAR(255),
+    serial_number VARCHAR(100),
+    purchase_date DATE,
+    purchase_cost DECIMAL(12,2),
+    supplier VARCHAR(255),
+    last_maintenance_date DATE,
+    next_maintenance_date DATE,
+    status ENUM('active','maintenance','retired') DEFAULT 'active',
+    image_url VARCHAR(500),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 2. Equipment Checkouts
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_equipment_checkouts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipment_id INT NOT NULL,
+    student_id VARCHAR(50) NOT NULL,
+    checked_out_by INT NOT NULL COMMENT 'staff_id',
+    checkout_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expected_return_date DATE NOT NULL,
+    actual_return_date DATETIME,
+    quantity_checked_out INT NOT NULL DEFAULT 1,
+    quantity_returned INT DEFAULT 0,
+    purpose VARCHAR(255),
+    notes TEXT,
+    status ENUM('checked_out','returned','overdue','lost_damaged') DEFAULT 'checked_out',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (equipment_id) REFERENCES igangaschoolofl_students_db.lab_equipment(id) ON DELETE CASCADE,
+    INDEX idx_student (student_id),
+    INDEX idx_status (status),
+    INDEX idx_expected_return (expected_return_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Practical Sessions
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_practical_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_code VARCHAR(50) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    instructor VARCHAR(255),
+    program VARCHAR(255),
+    year_level VARCHAR(50),
+    semester VARCHAR(20),
+    session_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    location VARCHAR(255),
+    max_students INT DEFAULT 30,
+    status ENUM('scheduled','ongoing','completed','cancelled') DEFAULT 'scheduled',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_date (session_date),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. Skills Demonstrations
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_skills_demonstrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50) NOT NULL,
+    skill_name VARCHAR(255) NOT NULL,
+    skill_category VARCHAR(100),
+    instructor VARCHAR(255),
+    date_demonstrated DATE NOT NULL DEFAULT (CURRENT_DATE),
+    competency ENUM('exceeds_expectations','meets_expectations','needs_improvement','unsatisfactory') DEFAULT 'meets_expectations',
+    attempt_number INT DEFAULT 1,
+    notes TEXT,
+    next_review_date DATE,
+    verified_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_student (student_id),
+    INDEX idx_skill (skill_name),
+    INDEX idx_competency (competency)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. Consumables
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_consumables (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    item_name VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    quantity DECIMAL(10,2) NOT NULL DEFAULT 0,
+    unit VARCHAR(50) NOT NULL DEFAULT 'pieces',
+    min_stock_level DECIMAL(10,2) DEFAULT 10,
+    unit_cost DECIMAL(10,2) DEFAULT 0,
+    supplier VARCHAR(255),
+    last_ordered_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_stock (quantity)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 6. Lab Attendance
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id INT NOT NULL,
+    student_id VARCHAR(50) NOT NULL,
+    attendance_status ENUM('present','absent','late','excused') DEFAULT 'present',
+    check_in_time TIME,
+    check_out_time TIME,
+    marked_by INT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES igangaschoolofl_students_db.lab_practical_sessions(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_session_student (session_id, student_id),
+    INDEX idx_student (student_id),
+    INDEX idx_status (attendance_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 7. Lab Incidents
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.lab_incidents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    incident_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    incident_time TIME,
+    reported_by INT,
+    incident_type ENUM('injury','equipment_damage','safety_hazard','near_miss','other') NOT NULL DEFAULT 'other',
+    severity ENUM('minor','moderate','serious','critical') DEFAULT 'minor',
+    description TEXT NOT NULL,
+    equipment_involved VARCHAR(255),
+    student_involved VARCHAR(255),
+    action_taken TEXT,
+    status ENUM('open','investigating','resolved','closed') DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_date (incident_date),
+    INDEX idx_type (incident_type),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- Skills Lab Manager User Account (staffs_db)
+-- ==============================================================================
+
+INSERT IGNORE INTO igangaschoolofl_staffs_db.staff
+    (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`, `position`, `department`, `role_id`, `status`, `hire_date`, `salary`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `is_first_login`, `created_at`, `updated_at`)
+VALUES
+    (75, 'SKL001', 'Skills Lab Manager', 'skills-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VlgcTKefl1ANCgn87eD2we4/dnTWCxgtH9PqB7tNKqhrYfQO1vJmW', NULL, 'Skills Lab Manager', 'Skills Laboratory', 53, 'Active', CURDATE(), NULL, NULL, NULL, NULL, 1, NOW(), NOW());

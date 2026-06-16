@@ -160,6 +160,7 @@ function getModuleConfig(): array {
             'roles'    => '*',
             'children' => [
                 ['title' => 'Computer Lab',        'route' => '../computer_lab.php',               'roles' => ['director','ict','it','lab']],
+                ['title' => 'Skills Lab',          'route' => '../dashboards/skills-lab.php',      'roles' => ['skills lab','lab','director','principal']],
             ],
         ],
         [

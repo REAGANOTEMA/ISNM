@@ -452,6 +452,8 @@ class AuthenticationService {
             'director admissions'             => 'dashboards/director-admissions.php',
             'store keeper'                    => 'dashboards/storekeeper.php',
             'guild president'                 => 'dashboards/guild-president.php',
+            'skills lab manager'              => 'dashboards/skills-lab.php',
+            'skills lab'                      => 'dashboards/skills-lab.php',
         ];
         return $map[$key] ?? null;
     }
@@ -486,7 +488,7 @@ class AuthenticationService {
     public function canSearchStudentProfiles($role) {
         if ($this->hasFullInstitutionAccess($role)) return true;
         $r = $this->normalizeRoleKey($role);
-        $allowed = ['director academics','director finance','director ict','computer department','ict officer','computer lab manager','school principal','deputy principal','academic registrar','hr manager','school secretary','school bursar','bursar','head nursing','head midwifery','head of nursing','head of midwifery','senior lecturers','lecturers','school librarian','matrons','wardens','sickbay','non teaching staff'];
+        $allowed = ['director academics','director finance','director ict','computer department','ict officer','computer lab manager','skills lab manager','skills lab','school principal','deputy principal','academic registrar','hr manager','school secretary','school bursar','bursar','head nursing','head midwifery','head of nursing','head of midwifery','senior lecturers','lecturers','school librarian','matrons','wardens','sickbay','non teaching staff'];
         return in_array($r, $allowed, true) || strpos($r, 'director') !== false || strpos($r, 'lecturer') !== false || strpos($r, 'registrar') !== false;
     }
 

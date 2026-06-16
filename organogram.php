@@ -849,10 +849,28 @@ include('shared/_header.php');
                              </button>
                          </div>
                      </div>
-                 </div>
-             </div>
+                  </div>
+                  <div class="org-branch">
+                      <div class="org-node support">
+                          <i class="fas fa-flask org-icon"></i>
+                          <div class="org-title">Skills Lab Manager</div>
+                          <div class="org-subtitle">Skills Laboratory Management</div>
+                          <a href="staff-login.php?position=Skills%20Lab%20Manager" class="org-link">
+                              <i class="fas fa-sign-in-alt"></i> Login
+                          </a>
+                          <div class="org-actions">
+                              <button class="btn-3d" onclick="window.location.href='staff-login.php?position=Skills%20Lab%20Manager'">
+                                  <i class="fas fa-user-shield me-2"></i>Staff Login
+                              </button>
+                              <button class="btn-3d" style="background:linear-gradient(135deg,#0d6efd,#0a58ca);border-color:#0a58ca" onclick="window.location.href='dashboards/skills-lab.php'">
+                                  <i class="fas fa-flask me-2"></i>Lab Dashboard
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
 
-              <!-- ICT Department - Independent Authority Section -->
+               <!-- ICT Department - Independent Authority Section -->
               <div class="page-header" style="margin-top: 20px; margin-bottom: 15px;">
                   <h2 style="font-size: 1.5rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
                       <i class="fas fa-laptop-code"></i> ICT Department
