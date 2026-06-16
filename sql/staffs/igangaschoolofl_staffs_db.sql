@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 07:28 PM
+-- Generation Time: Jun 16, 2026 at 08:30 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -5179,9 +5179,10 @@ INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`
 (69, 'WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$FxhwWDM4Xp0bDs5WRAxbyObpbvZDvOOHf52yiamFGTmdGUQpdAUcK', NULL, 'Wardens', 'Student Affairs', 20, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:43:52', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:43:52'),
 (70, 'DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$9fOKtTQAgB/elswK9HgmE.BwFEvqipIFnSmcvJPeXpEgb3KXa8D.m', NULL, 'Deputy Principal', 'Academic Affairs', 22, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:09:19', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:09:19'),
 (71, 'STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$M6cl6Y9PoVugM6mlWnyEBeGOChjv8fsi3tDMFMqP43bOG6TGELDje', NULL, 'Store Keeper', 'Facilities Management', 25, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:54:55', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:54:55'),
-(72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3zCBO5fnyXjlBI6Oaee6iO.Nznb4rpZs7dBQBTE2Z6PTNq38eCMym', NULL, 'Computer Lab Manager', 'Information Technology', 52, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 16:29:12', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 16:29:12'),
+(72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3zCBO5fnyXjlBI6Oaee6iO.Nznb4rpZs7dBQBTE2Z6PTNq38eCMym', NULL, 'Computer Lab Manager', 'Information Technology', 52, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 16:29:12', 1, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 18:23:50'),
 (73, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$wLikyrgK4SzFsYDJ5BpOnOUXG9/qOh2DuoT6ud/jVVF/eQxfEKxDC', NULL, 'Guild President', 'Student Affairs', 26, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:19:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:19:20');
+(74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:19:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:19:20'),
+(75, 'SKL001', 'Skills Lab Manager', 'skills-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VlgcTKefl1ANCgn87eD2we4/dnTWCxgtH9PqB7tNKqhrYfQO1vJmW', NULL, 'Skills Lab Manager', 'Skills Laboratory', 53, 'Active', '2026-06-16', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-16 18:28:40', '2026-06-16 18:28:40');
 
 -- --------------------------------------------------------
 
@@ -5946,7 +5947,8 @@ INSERT INTO `staff_roles` (`id`, `role_name`, `role_description`, `role_level`, 
 (25, 'Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{\"store\": true, \"inventory\": true, \"can_manage_store\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
 (26, 'Guild President', 'Student guild', 'Support', 'dashboards/guild-president.php', '{\"student_affairs\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
 (27, 'Director Admissions & Requirements', 'Admissions management', 'Management', 'dashboards/director-admissions.php', '{\"admissions\": true, \"requirements\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
-(52, 'Computer Lab Manager', 'Computer lab operations and IT support', 'Support', 'computer_lab.php', '{\"ict\": true, \"it_support\": true, \"lab_management\": true}', '2026-06-15 04:24:02', '2026-06-15 04:24:02');
+(52, 'Computer Lab Manager', 'Computer lab operations and IT support', 'Support', 'computer_lab.php', '{\"ict\": true, \"it_support\": true, \"lab_management\": true}', '2026-06-15 04:24:02', '2026-06-15 04:24:02'),
+(53, 'Skills Lab Manager', 'Skills laboratory management including equipment, practical sessions, skills demonstrations, and consumables', 'Support', 'dashboards/skills-lab.php', '{\"skills\": true, \"checkout\": true, \"sessions\": true, \"equipment\": true, \"incidents\": true, \"attendance\": true, \"consumables\": true}', '2026-06-16 18:28:38', '2026-06-16 18:28:38');
 
 -- --------------------------------------------------------
 

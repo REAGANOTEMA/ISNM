@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 07:28 PM
+-- Generation Time: Jun 16, 2026 at 08:30 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -486,6 +486,165 @@ CREATE TABLE `hostel_rooms` (
   `occupancy` int NOT NULL DEFAULT '0',
   `fee_per_semester` decimal(12,2) DEFAULT '0.00',
   `status` enum('Available','Full','Maintenance') DEFAULT 'Available',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_attendance`
+--
+
+CREATE TABLE `lab_attendance` (
+  `id` int NOT NULL,
+  `session_id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `attendance_status` enum('present','absent','late','excused') DEFAULT 'present',
+  `check_in_time` time DEFAULT NULL,
+  `check_out_time` time DEFAULT NULL,
+  `marked_by` int DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_consumables`
+--
+
+CREATE TABLE `lab_consumables` (
+  `id` int NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `quantity` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `unit` varchar(50) NOT NULL DEFAULT 'pieces',
+  `min_stock_level` decimal(10,2) DEFAULT '10.00',
+  `unit_cost` decimal(10,2) DEFAULT '0.00',
+  `supplier` varchar(255) DEFAULT NULL,
+  `last_ordered_date` date DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_equipment`
+--
+
+CREATE TABLE `lab_equipment` (
+  `id` int NOT NULL,
+  `equipment_code` varchar(50) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `category` enum('mannequin','model','instrument','furniture','consumable','other') NOT NULL DEFAULT 'other',
+  `quantity` int NOT NULL DEFAULT '1',
+  `available_quantity` int NOT NULL DEFAULT '1',
+  `condition_status` enum('excellent','good','fair','poor') DEFAULT 'good',
+  `location` varchar(255) DEFAULT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `purchase_cost` decimal(12,2) DEFAULT NULL,
+  `supplier` varchar(255) DEFAULT NULL,
+  `last_maintenance_date` date DEFAULT NULL,
+  `next_maintenance_date` date DEFAULT NULL,
+  `status` enum('active','maintenance','retired') DEFAULT 'active',
+  `image_url` varchar(500) DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_equipment_checkouts`
+--
+
+CREATE TABLE `lab_equipment_checkouts` (
+  `id` int NOT NULL,
+  `equipment_id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `checked_out_by` int NOT NULL COMMENT 'staff_id',
+  `checkout_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `expected_return_date` date NOT NULL,
+  `actual_return_date` datetime DEFAULT NULL,
+  `quantity_checked_out` int NOT NULL DEFAULT '1',
+  `quantity_returned` int DEFAULT '0',
+  `purpose` varchar(255) DEFAULT NULL,
+  `notes` text,
+  `status` enum('checked_out','returned','overdue','lost_damaged') DEFAULT 'checked_out',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_incidents`
+--
+
+CREATE TABLE `lab_incidents` (
+  `id` int NOT NULL,
+  `incident_date` date NOT NULL DEFAULT (curdate()),
+  `incident_time` time DEFAULT NULL,
+  `reported_by` int DEFAULT NULL,
+  `incident_type` enum('injury','equipment_damage','safety_hazard','near_miss','other') NOT NULL DEFAULT 'other',
+  `severity` enum('minor','moderate','serious','critical') DEFAULT 'minor',
+  `description` text NOT NULL,
+  `equipment_involved` varchar(255) DEFAULT NULL,
+  `student_involved` varchar(255) DEFAULT NULL,
+  `action_taken` text,
+  `status` enum('open','investigating','resolved','closed') DEFAULT 'open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_practical_sessions`
+--
+
+CREATE TABLE `lab_practical_sessions` (
+  `id` int NOT NULL,
+  `session_code` varchar(50) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text,
+  `instructor` varchar(255) DEFAULT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `year_level` varchar(50) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `session_date` date NOT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `max_students` int DEFAULT '30',
+  `status` enum('scheduled','ongoing','completed','cancelled') DEFAULT 'scheduled',
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_skills_demonstrations`
+--
+
+CREATE TABLE `lab_skills_demonstrations` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `skill_name` varchar(255) NOT NULL,
+  `skill_category` varchar(100) DEFAULT NULL,
+  `instructor` varchar(255) DEFAULT NULL,
+  `date_demonstrated` date NOT NULL DEFAULT (curdate()),
+  `competency` enum('exceeds_expectations','meets_expectations','needs_improvement','unsatisfactory') DEFAULT 'meets_expectations',
+  `attempt_number` int DEFAULT '1',
+  `notes` text,
+  `next_review_date` date DEFAULT NULL,
+  `verified_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -1555,6 +1714,69 @@ ALTER TABLE `hostel_rooms`
   ADD UNIQUE KEY `room_number` (`room_number`);
 
 --
+-- Indexes for table `lab_attendance`
+--
+ALTER TABLE `lab_attendance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_session_student` (`session_id`,`student_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`attendance_status`);
+
+--
+-- Indexes for table `lab_consumables`
+--
+ALTER TABLE `lab_consumables`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_stock` (`quantity`);
+
+--
+-- Indexes for table `lab_equipment`
+--
+ALTER TABLE `lab_equipment`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `equipment_code` (`equipment_code`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `lab_equipment_checkouts`
+--
+ALTER TABLE `lab_equipment_checkouts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `equipment_id` (`equipment_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_expected_return` (`expected_return_date`);
+
+--
+-- Indexes for table `lab_incidents`
+--
+ALTER TABLE `lab_incidents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_date` (`incident_date`),
+  ADD KEY `idx_type` (`incident_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `lab_practical_sessions`
+--
+ALTER TABLE `lab_practical_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `session_code` (`session_code`),
+  ADD KEY `idx_date` (`session_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `lab_skills_demonstrations`
+--
+ALTER TABLE `lab_skills_demonstrations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_skill` (`skill_name`),
+  ADD KEY `idx_competency` (`competency`);
+
+--
 -- Indexes for table `library_books`
 --
 ALTER TABLE `library_books`
@@ -2011,6 +2233,48 @@ ALTER TABLE `hostel_rooms`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_attendance`
+--
+ALTER TABLE `lab_attendance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_consumables`
+--
+ALTER TABLE `lab_consumables`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_equipment`
+--
+ALTER TABLE `lab_equipment`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_equipment_checkouts`
+--
+ALTER TABLE `lab_equipment_checkouts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_incidents`
+--
+ALTER TABLE `lab_incidents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_practical_sessions`
+--
+ALTER TABLE `lab_practical_sessions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_skills_demonstrations`
+--
+ALTER TABLE `lab_skills_demonstrations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `library_books`
 --
 ALTER TABLE `library_books`
@@ -2289,6 +2553,18 @@ ALTER TABLE `general_ledger`
   ADD CONSTRAINT `general_ledger_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `chart_of_accounts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `general_ledger_ibfk_2` FOREIGN KEY (`cost_center_id`) REFERENCES `cost_centers` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `general_ledger_ibfk_3` FOREIGN KEY (`posted_by`) REFERENCES `igangaschoolofl_staffs_db`.`staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `lab_attendance`
+--
+ALTER TABLE `lab_attendance`
+  ADD CONSTRAINT `lab_attendance_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `lab_practical_sessions` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `lab_equipment_checkouts`
+--
+ALTER TABLE `lab_equipment_checkouts`
+  ADD CONSTRAINT `lab_equipment_checkouts_ibfk_1` FOREIGN KEY (`equipment_id`) REFERENCES `lab_equipment` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `payments`
