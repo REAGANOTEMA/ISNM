@@ -107,8 +107,10 @@
         ORDER BY p.payment_date DESC 
         LIMIT 10
     ");
-    while ($row = $payments_stmt->fetch_assoc()) {
-        $recent_payments[] = $row;
+    if ($payments_stmt) {
+        while ($row = $payments_stmt->fetch_assoc()) {
+            $recent_payments[] = $row;
+        }
     }
     ?>
     

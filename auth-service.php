@@ -448,7 +448,10 @@ class AuthenticationService {
             'head of nursing'         => 'dashboards/head-nursing.php',
             'head midwifery'          => 'dashboards/head-midwifery.php',
             'head of midwifery'       => 'dashboards/head-midwifery.php',
-            'guild president'         => 'dashboards/guild-president.php',
+            'director admissions requirements' => 'dashboards/director-admissions.php',
+            'director admissions'             => 'dashboards/director-admissions.php',
+            'store keeper'                    => 'dashboards/storekeeper.php',
+            'guild president'                 => 'dashboards/guild-president.php',
         ];
         return $map[$key] ?? null;
     }

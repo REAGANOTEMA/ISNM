@@ -53,74 +53,49 @@ $recent_activities = [
     <title>Lecturer Dashboard - ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard-style.css" rel="stylesheet">
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
     
-    <!-- Responsive Dashboard CSS -->
     <style>
-        /* Responsive Dashboard Container */
-        .dashboard-container {
-            min-height: 100vh;
-            background: #f8f9fa;
-            transition: margin-left 0.3s ease;
-        }
-        
-        .dashboard-main {
-            padding: 20px;
-            max-width: 100%;
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-container {
-                margin-left: 0 !important;
-            }
-            
-            .dashboard-main {
-                padding: 15px;
-                padding-top: 80px; /* Space for mobile menu */
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .dashboard-container.sidebar-collapsed {
-                margin-left: 0 !important;
-            }
-        }
+        body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
+        .page-content{margin-left:280px;flex:1;min-height:100vh}
+        @media(max-width:768px){.page-content{margin-left:0}}
+        .top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
+        .content-area{padding:22px}
+        .stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;transition:transform .25s}
+        .stat-card:hover{transform:translateY(-4px)}
+        .si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
+        .si-blue{background:linear-gradient(135deg,#1a237e,#3949ab)}
+        .si-green{background:linear-gradient(135deg,#2e7d32,#43a047)}
+        .si-cyan{background:linear-gradient(135deg,#0277bd,#039be5)}
+        .si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
+        .si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
+        .si-red{background:linear-gradient(135deg,#b71c1c,#ef5350)}
+        .stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
+        .stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
+        .section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+        .section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+        .stat-icon{background:linear-gradient(135deg,#1a237e,#3949ab);width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0}
     </style>
 </head>
 <body>
-    <!-- Include Responsive Navigation -->
     <?php include_once '../includes/sidebar.php'; ?>
     
-    <div class="dashboard-container">
-        <!-- Main Content Area -->
-        <div class="dashboard-main">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Lecturer Dashboard</h1>
-                    <p>Classroom Teaching & Student Development</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo htmlspecialchars($user_name); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    <div class="page-content">
+      <div class="top-bar">
+        <div>
+          <strong><i class="fas fa-chalkboard me-2 text-primary"></i>Lecturer Dashboard</strong>
+          <div class="text-muted small">Classroom Teaching &amp; Student Development | <?php echo htmlspecialchars($user_name); ?></div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-muted small d-none d-md-block" id="currentDate"></span>
+          <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+        </div>
+      </div>
 
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
+      <div class="content-area">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Teaching Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="section-card">
                     <h2>Teaching Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -166,7 +141,7 @@ $recent_activities = [
                 </section>
 
                 <!-- My Courses -->
-                <section id="courses" class="content-section">
+                <section id="courses" class="section-card">
                     <h2>My Courses</h2>
                     <div class="course-actions">
                         <button class="btn btn-primary" onclick="openModal('courseMaterials')">
@@ -248,7 +223,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Teaching Schedule -->
-                <section id="schedule" class="content-section">
+                <section id="schedule" class="section-card">
                     <h2>Teaching Schedule</h2>
                     <div class="schedule-actions">
                         <button class="btn btn-primary" onclick="openModal('addLecture')">
@@ -322,7 +297,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Student Management -->
-                <section id="students" class="content-section">
+                <section id="students" class="section-card">
                     <h2>Student Management</h2>
                     <div class="student-actions">
                         <button class="btn btn-primary" onclick="openModal('studentList')">
@@ -412,7 +387,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Assessments -->
-                <section id="assessments" class="content-section">
+                <section id="assessments" class="section-card">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
                         <button class="btn btn-primary" onclick="openModal('createAssessment')">
@@ -486,7 +461,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Grade Management -->
-                <section id="grades" class="content-section">
+                <section id="grades" class="section-card">
                     <h2>Grade Management</h2>
                     <div class="grade-actions">
                         <button class="btn btn-primary" onclick="openModal('gradebook')">
@@ -539,7 +514,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Teaching Resources -->
-                <section id="resources" class="content-section">
+                <section id="resources" class="section-card">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadResource')">
@@ -589,7 +564,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="content-section">
+                <section id="communications" class="section-card">
                     <h2>Student Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('sendMessage')">
@@ -685,7 +660,7 @@ $recent_activities = [
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
+                document.querySelectorAll('.section-card').forEach(section => {
                     section.style.display = 'none';
                 });
                 const targetSection = document.getElementById(targetId);
@@ -891,6 +866,8 @@ $recent_activities = [
             });
         });
     </script>
+    </div><!-- /content-area -->
+</div><!-- /page-content -->
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

@@ -37,20 +37,28 @@ $_SESSION['requested_position']  = $requested_position;
 if ($auth_service->isAuthenticated()) {
     if (($_SESSION['type'] ?? '') === 'staff') {
         $sessionRole = $_SESSION['role'] ?? '';
-        $dashboard   = $auth_service->getDashboardRoute($sessionRole);
         $requestedPositionFromSession = $_SESSION['requested_position'] ?? '';
+
+        // If the clicked position doesn't match the logged-in role,
+        // log out so the user can re-authenticate as the correct position.
         if (!empty($requestedPositionFromSession)
-            && $auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
+            && !$auth_service->positionMatchesRole($requestedPositionFromSession, $sessionRole)
         ) {
-            $resolvedPosition = $auth_service->resolveOrganogramPosition($requestedPositionFromSession);
-            $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolvedPosition);
-            if ($requestedDashboard) {
-                $dashboard = $requestedDashboard;
+            $auth_service->logout();
+            // Fall through to show the login form
+        } else {
+            $dashboard = $auth_service->getDashboardRoute($sessionRole);
+            if (!empty($requestedPositionFromSession)) {
+                $resolvedPosition = $auth_service->resolveOrganogramPosition($requestedPositionFromSession);
+                $requestedDashboard = $auth_service->getDashboardRouteFromKey($resolvedPosition);
+                if ($requestedDashboard) {
+                    $dashboard = $requestedDashboard;
+                }
+                unset($_SESSION['requested_position']);
             }
-            unset($_SESSION['requested_position']);
+            header("Location: $dashboard");
+            exit();
         }
-        header("Location: $dashboard");
-        exit();
     }
     if (($_SESSION['type'] ?? '') === 'student') {
         header('Location: dashboards/student.php');

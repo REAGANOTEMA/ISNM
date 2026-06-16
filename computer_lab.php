@@ -11,6 +11,8 @@ error_reporting(E_ALL);
 
 require_once 'auth-service.php';
 
+if (session_status() === PHP_SESSION_NONE) session_start();
+
 // Check authentication - allow Computer Lab Manager and Director ICT access
 $allowedRoles = ['Director ICT', 'IT Manager', 'Lab Technician', 'Computer Lab Manager'];
 $allowedPositions = ['Director ICT', 'Computer Lab Manager', 'IT Manager', 'Lab Technician'];
@@ -46,7 +48,6 @@ if (
     || !$hasAccess
 ) {
     $_SESSION['error'] = "Access denied. ICT department privileges required.";
-    // Avoid redirect loops: if already on staff-login, don't bounce back again.
     if (basename($_SERVER['PHP_SELF']) !== 'staff-login.php') {
         header('Location: staff-login.php?position=Computer%20Lab%20Manager');
         exit;

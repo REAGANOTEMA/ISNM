@@ -42,41 +42,48 @@ $recent_activities = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/isnm-style.css">
-    <link rel="stylesheet" href="dashboard-style.css">
     <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
+        .page-content{margin-left:280px;flex:1;min-height:100vh}
+        @media(max-width:768px){.page-content{margin-left:0}}
+        .top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
+        .content-area{padding:22px}
+        .stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;transition:transform .25s}
+        .stat-card:hover{transform:translateY(-4px)}
+        .si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
+        .si-blue{background:linear-gradient(135deg,#1a237e,#3949ab)}
+        .si-green{background:linear-gradient(135deg,#2e7d32,#43a047)}
+        .si-cyan{background:linear-gradient(135deg,#0277bd,#039be5)}
+        .si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
+        .si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
+        .si-red{background:linear-gradient(135deg,#b71c1c,#ef5350)}
+        .stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
+        .stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
+        .section-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+        .section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+        .stat-icon{background:linear-gradient(135deg,#1a237e,#3949ab)}
+    </style>
 </head>
 <body>
     <?php include_once '../includes/sidebar.php'; ?>
     
-    <div class="dashboard-container">
-        <div class="dashboard-main">
-        <div class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>School Secretary Dashboard</h1>
-                    <p>Administrative Support & Office Management</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo htmlspecialchars($user_name); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    <div class="page-content">
+      <div class="top-bar">
+        <div>
+          <strong><i class="fas fa-user-tie me-2 text-primary"></i>School Secretary Dashboard</strong>
+          <div class="text-muted small">Administrative Support &amp; Office Management | <?php echo htmlspecialchars($user_name); ?></div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-muted small d-none d-md-block" id="currentDate"></span>
+          <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+        </div>
+      </div>
 
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
+      <div class="content-area">
                 <!-- Office Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="section-card">
                     <h2>Office Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -122,7 +129,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Correspondence -->
-                <section id="correspondence" class="content-section">
+                <section id="correspondence" class="section-card">
                     <h2>Correspondence Management</h2>
                     <div class="correspondence-actions">
                         <button class="btn btn-primary" onclick="openModal('newLetter')">
@@ -196,7 +203,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Appointments -->
-                <section id="appointments" class="content-section">
+                <section id="appointments" class="section-card">
                     <h2>Appointment Management</h2>
                     <div class="appointment-actions">
                         <button class="btn btn-primary" onclick="openModal('scheduleAppointment')">
@@ -270,7 +277,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Meetings -->
-                <section id="meetings" class="content-section">
+                <section id="meetings" class="section-card">
                     <h2>Meeting Management</h2>
                     <div class="meeting-actions">
                         <button class="btn btn-primary" onclick="openModal('scheduleMeeting')">
@@ -344,7 +351,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Document Management -->
-                <section id="documents" class="content-section">
+                <section id="documents" class="section-card">
                     <h2>Document Management</h2>
                     <div class="document-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadDocument')">
@@ -420,7 +427,7 @@ $recent_activities = [
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="content-section">
+                <section id="communications" class="section-card">
                     <h2>School Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('announcement')">
@@ -553,7 +560,7 @@ $recent_activities = [
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
+                document.querySelectorAll('.section-card').forEach(section => {
                     section.style.display = 'none';
                 });
                 const targetSection = document.getElementById(targetId);
@@ -807,6 +814,8 @@ $recent_activities = [
             });
         });
     </script>
+    </div><!-- /content-area -->
+</div><!-- /page-content -->
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
