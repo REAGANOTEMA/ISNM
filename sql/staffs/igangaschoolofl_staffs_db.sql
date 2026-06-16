@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 08:30 PM
+-- Generation Time: Jun 16, 2026 at 09:07 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -5182,7 +5182,7 @@ INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`
 (72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3zCBO5fnyXjlBI6Oaee6iO.Nznb4rpZs7dBQBTE2Z6PTNq38eCMym', NULL, 'Computer Lab Manager', 'Information Technology', 52, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 16:29:12', 1, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 18:23:50'),
 (73, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$wLikyrgK4SzFsYDJ5BpOnOUXG9/qOh2DuoT6ud/jVVF/eQxfEKxDC', NULL, 'Guild President', 'Student Affairs', 26, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
 (74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:19:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:19:20'),
-(75, 'SKL001', 'Skills Lab Manager', 'skills-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VlgcTKefl1ANCgn87eD2we4/dnTWCxgtH9PqB7tNKqhrYfQO1vJmW', NULL, 'Skills Lab Manager', 'Skills Laboratory', 53, 'Active', '2026-06-16', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-16 18:28:40', '2026-06-16 18:28:40');
+(75, 'SKL001', 'Skills Lab Manager', 'skills-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VlgcTKefl1ANCgn87eD2we4/dnTWCxgtH9PqB7tNKqhrYfQO1vJmW', NULL, 'Skills Lab Manager', 'Skills Laboratory', 53, 'Active', '2026-06-16', NULL, NULL, NULL, NULL, '2026-06-16 18:33:28', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-16 18:28:40', '2026-06-16 18:33:28');
 
 -- --------------------------------------------------------
 
@@ -5303,7 +5303,9 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (78, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
 (79, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:06'),
 (80, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
-(81, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12');
+(81, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
+(82, 75, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28'),
+(83, 75, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28');
 
 -- --------------------------------------------------------
 
@@ -5644,7 +5646,8 @@ INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `device_i
 (34, 72, '9n4e019vlehlapjnb01odvp01n', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:44:53', '2026-06-16 14:44:53', '2026-06-16 15:14:53'),
 (35, 55, 'hqlrfgmu4t286im6o7mp2fubv7', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:45:06', '2026-06-16 14:45:06', '2026-06-16 15:15:06'),
 (36, 50, 'lcvpjihg2uj2ssnh7288acb3hq', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 15:41:49', '2026-06-16 15:41:49', '2026-06-16 16:11:49'),
-(37, 72, 'fl4de4pel0moq2n53arqu8sqfd', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 16:29:12', '2026-06-16 16:29:12', '2026-06-16 16:59:12');
+(37, 72, 'fl4de4pel0moq2n53arqu8sqfd', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 16:29:12', '2026-06-16 16:29:12', '2026-06-16 16:59:12'),
+(38, 75, 'c04nvtio6gmqr2r83731epuvpt', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 18:33:28', '2026-06-16 18:33:28', '2026-06-16 19:03:28');
 
 --
 -- Triggers `staff_login_sessions`
@@ -10737,7 +10740,7 @@ ALTER TABLE `staff_access_control`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT for table `staff_announcements`
@@ -10815,7 +10818,7 @@ ALTER TABLE `staff_login_attempts`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `staff_notifications`
