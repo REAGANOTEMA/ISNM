@@ -231,7 +231,8 @@ $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
-    <div class="receipt-container">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="receipt-container" style="margin-left:260px">
         <div class="receipt-header">
             <h2><i class="fas fa-receipt me-2"></i>Receipt Printing System</h2>
             <p>Generate and print professional receipts for students</p>

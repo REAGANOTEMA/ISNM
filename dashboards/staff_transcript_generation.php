@@ -357,7 +357,8 @@ function getSemesters() {
     </style>
 </head>
 <body>
-    <div class="transcript-container">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="transcript-container" style="margin-left:260px">
         <div class="transcript-header">
             <h2><i class="fas fa-graduation-cap me-2"></i>Transcript Generation</h2>
             <p>Generate official academic transcripts for students</p>

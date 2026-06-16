@@ -128,30 +128,9 @@ body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
 </style>
 </head>
 <body>
-<div class="sidebar" id="sidebar">
-  <div class="brand"><img src="../images/school-logo.png" alt="ISNM"><h6>Academic Portal</h6><small><?= htmlspecialchars($uname) ?></small></div>
-  <nav>
-    <a href="#overview" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    <a href="#admissions"><i class="fas fa-user-plus"></i> Admission</a>
-    <a href="#students"><i class="fas fa-users"></i> Student Records</a>
-    <a href="#courses"><i class="fas fa-book"></i> Course Registration</a>
-    <a href="#exams"><i class="fas fa-clipboard-list"></i> Exams & Results</a>
-    <a href="#attendance"><i class="fas fa-calendar-check"></i> Attendance</a>
-    <a href="#clinical"><i class="fas fa-hospital-user"></i> Clinical Placement</a>
-    <a href="#discipline"><i class="fas fa-gavel"></i> Discipline</a>
-    <a href="#finance-link"><i class="fas fa-file-invoice-dollar"></i> Fees Link</a>
-    <a href="#communications"><i class="fas fa-bullhorn"></i> Communications</a>
-    <a href="#hostel-library"><i class="fas fa-bed"></i> Hostel & Library</a>
-    <a href="#self-service"><i class="fas fa-user-graduate"></i> Self-Service</a>
-    <a href="../student-directory.php"><i class="fas fa-address-book"></i> Student Directory</a>
-    <a href="../store_request.php"><i class="fas fa-shopping-cart"></i> Store Request</a>
-    <a href="../news.php"><i class="fas fa-newspaper"></i> News</a>
-    <a href="#reports"><i class="fas fa-chart-bar"></i> Reports</a>
-    <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-  </nav>
-</div>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="main">
+<div class="main" style="margin-left:260px">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <button class="btn btn-sm btn-outline-secondary d-md-none me-2" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>

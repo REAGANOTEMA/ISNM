@@ -346,7 +346,8 @@ $payroll_data = $payroll_result->fetch_assoc();
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="dashboard-container" style="margin-left:260px">
         <!-- School Header with Logo -->
         <div class="school-header">
             <img src="../images/school-logo.png" alt="ISNM Logo" class="school-logo">

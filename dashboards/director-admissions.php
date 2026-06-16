@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['admissions', 'director']);
 $students_conn = $ctx['students'];
 $staff_conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Admissions User';
+$website_conn = $ctx['website'];
 
 $loader = new StudentDataLoader();
 $all_students = $loader->loadAllStudents();
@@ -110,19 +112,33 @@ if (file_exists($new_students_file)) {
     }
 }
 
-// Dashboard statistics with fallbacks
+// Dashboard statistics from database
 $total_applications = 0;
-$pending_applications = 8;
+$pending_applications = 0;
 $admitted_students = 0;
-$enrolled_students = 150;
+$enrolled_students = 0;
 $active_students = 0;
 
 try {
     if ($students_conn) {
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $enrolled_students = (int)$result->fetch_assoc()['cnt'];
+
         $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'Active'");
-        if ($result) {
-            $active_students = $result->fetch_assoc()['cnt'] ?? 0;
-        }
+        if ($result) $active_students = (int)$result->fetch_assoc()['cnt'];
+    }
+
+    if ($staff_conn) {
+        $result = $staff_conn->query("SELECT COUNT(*) as cnt FROM student_admissions WHERE admission_status = 'Pending'");
+        if ($result) $pending_applications = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $staff_conn->query("SELECT COUNT(*) as cnt FROM student_admissions WHERE admission_status = 'Approved'");
+        if ($result) $admitted_students = (int)$result->fetch_assoc()['cnt'];
+    }
+
+    if ($website_conn) {
+        $result = $website_conn->query("SELECT COUNT(*) as cnt FROM applications");
+        if ($result) $total_applications = (int)$result->fetch_assoc()['cnt'];
     }
 } catch (Exception $e) {}
 
@@ -296,37 +312,7 @@ try {
     <?php endif; ?>
 
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo htmlspecialchars($user_name); ?></small>
-                <span class="badge bg-info">Director Admissions</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-chart-pie"></i> Overview
-                </a>
-                <a href="#requirements" class="nav-link">
-                    <i class="fas fa-clipboard-check"></i> Requirements Portal
-                </a>
-                <a href="#applications" class="nav-link">
-                    <i class="fas fa-file-alt"></i> Applications
-                </a>
-                <a href="#activity" class="nav-link">
-                    <i class="fas fa-history"></i> Activity Log
-                </a>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
         
         <!-- Main Content -->
         <div class="dashboard-main">
@@ -552,6 +538,12 @@ try {
                     </div>
                 </section>
                 
+                <!-- News Section -->
+                <section id="news" class="content-section">
+                    <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
+                    <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user_name, $user['role'] ?? 'Director Admissions', 5); ?>
+                </section>
+
                 <!-- Activity Section -->
                 <section id="activity" class="content-section">
                     <h2><i class="fas fa-history me-2"></i>Recent Admissions Activity</h2>

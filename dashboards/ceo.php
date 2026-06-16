@@ -1,28 +1,40 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['ceo']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'CEO';
+$website_conn = $ctx['website'];
 
-// Set dashboard statistics - use fallbacks
+// Set dashboard statistics from database
 $total_applications = 0;
-$pending_applications = 8;
+$pending_applications = 0;
 $admitted_students = 0;
-$enrolled_students = 150;
+$enrolled_students = 0;
 $active_students = 0;
 
-// Try to get real stats
 try {
-    require_once __DIR__ . '/../config/database.php';
-    $students_conn = getStudentsConnection();
+    $students_conn = $ctx['students'] ?? null;
     if ($students_conn) {
-        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'Active'");
-        if ($result) $active_students = $result->fetch_assoc()['cnt'] ?? 0;
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $enrolled_students = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'active'");
+        if ($result) $active_students = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM student_admissions WHERE admission_status = 'Approved'");
+        if ($result) $admitted_students = (int)$result->fetch_assoc()['cnt'];
     }
-    
-    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+
+    if ($website_conn) {
+        $result = $website_conn->query("SELECT COUNT(*) as cnt FROM applications");
+        if ($result) $total_applications = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $website_conn->query("SELECT COUNT(*) as cnt FROM applications WHERE status IN ('New','Submitted','Under Review')");
+        if ($result) $pending_applications = (int)$result->fetch_assoc()['cnt'];
+    }
 } catch (Exception $e) {}
 
 // Get recent activities with fallback
@@ -86,37 +98,7 @@ try {
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo htmlspecialchars($user_name); ?></small>
-                <span class="badge bg-info">CEO</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Institutional Overview
-                </a>
-                <a href="#applications" class="nav-link">
-                    <i class="fas fa-file-signature"></i> Applications
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Institutional Reports
-                </a>
-                <a href="#activity" class="nav-link">
-                    <i class="fas fa-history"></i> Activity Log
-                </a>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="dashboard-main">
@@ -256,6 +238,12 @@ try {
                             <button class="btn btn-primary">Generate</button>
                         </div>
                     </div>
+                </section>
+
+                <!-- News Management -->
+                <section id="news" class="content-section">
+                    <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
+                    <?php renderNewsWidget($conn, $website_conn, $ctx['user']['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'CEO', 5); ?>
                 </section>
 
                 <!-- Recent Activities -->

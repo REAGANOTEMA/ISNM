@@ -10,12 +10,13 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Get security statistics (using fallback data only)
-$total_incidents_today = 3; // Fallback value
-$security_patrols = 12; // Fallback value
-$access_control_checks = 45; // Fallback value
-$emergency_alerts = 1; // Fallback value
-$cctv_cameras_active = 24; // Fallback value
+// Get security statistics from database
+$total_incidents_today = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE DATE(incident_date) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$security_patrols = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status IN ('Scheduled','In Progress')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$access_control_checks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM access_control_logs WHERE DATE(access_time) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$emergency_alerts = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_incidents WHERE severity = 'Critical' AND DATE(incident_date) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$cctv_cameras_active = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_equipment WHERE equipment_type = 'CCTV Camera' AND status = 'Operational'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_guards = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
 // Get recent security incidents (using fallback data)
 $recent_incidents = [
@@ -106,6 +107,8 @@ $recent_incidents = [
     </style>
 </head>
 <body>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div style="margin-left:260px">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="container">
@@ -136,28 +139,28 @@ $recent_incidents = [
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-users"></i> Guards</h3>
-                    <div class="stat-number">12</div>
+                    <div class="stat-number"><?php echo $total_guards; ?></div>
                     <p class="text-muted mb-0">On Duty Today</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-exclamation-triangle"></i> Incidents</h3>
-                    <div class="stat-number">3</div>
+                    <div class="stat-number"><?php echo $total_incidents_today; ?></div>
                     <p class="text-muted mb-0">Reported Today</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-video"></i> Cameras</h3>
-                    <div class="stat-number">24</div>
+                    <div class="stat-number"><?php echo $cctv_cameras_active; ?></div>
                     <p class="text-muted mb-0">Active Monitoring</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-door-open"></i> Access</h3>
-                    <div class="stat-number">847</div>
+                    <div class="stat-number"><?php echo $access_control_checks; ?></div>
                     <p class="text-muted mb-0">Entries Today</p>
                 </div>
             </div>
@@ -291,6 +294,7 @@ $recent_incidents = [
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</div>
 </body>
 </html>
 

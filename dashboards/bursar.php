@@ -28,17 +28,24 @@ $user_email = $_SESSION['email'] ?? '';
 $user_name = $_SESSION['full_name'] ?? '';
 $user_role = $_SESSION['role'] ?? '';
 
-// Set Bursar statistics with fallback values
-$today_collections = 5000000;
-$week_collections = 35000000;
-$month_collections = 45000000;
-$outstanding_fees = 12000000;
-$total_students = 150;
+// Set Bursar statistics from database
+$total_students = 0;
+$today_collections = 0;
+$week_collections = 0;
+$month_collections = 0;
+$outstanding_fees = 0;
 
-// Try to get real total students
 try {
     $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-    if ($result) $total_students = $result->fetch_assoc()['cnt'] ?? 150;
+    if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+    $today = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE DATE(payment_date)=CURDATE() AND status='verified'");
+    if ($today) $today_collections = (int)$today->fetch_assoc()['total'];
+    $week = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status='verified'");
+    if ($week) $week_collections = (int)$week->fetch_assoc()['total'];
+    $month = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='verified'");
+    if ($month) $month_collections = (int)$month->fetch_assoc()['total'];
+    $out = $finance_conn->query("SELECT COALESCE(SUM(balance),0) as total FROM student_fee_accounts WHERE status NOT IN ('fully_paid','cancelled')");
+    if ($out) $outstanding_fees = (int)$out->fetch_assoc()['total'];
 } catch (Exception $e) {
     error_log('bursar stats: ' . $e->getMessage());
 }
@@ -97,10 +104,10 @@ try {
 // Get recent payments
 $recent_payments = [];
 try {
-    $fp_sql = "SELECT fp.*, s.first_name, s.surname FROM fee_payments fp
-               JOIN students s ON fp.student_id = s.id
-               ORDER BY fp.payment_date DESC LIMIT 10";
-    $fp_result = $staff_conn->query($fp_sql);
+    $fp_sql = "SELECT p.id, p.student_id, p.invoice_id AS fee_account_id, p.amount_received AS amount_paid, p.payment_method, p.payment_reference AS receipt_number, p.status, p.payment_date, p.notes, s.first_name, s.surname FROM payments p
+               JOIN students s ON p.student_id = s.id
+               ORDER BY p.payment_date DESC LIMIT 10";
+    $fp_result = $students_conn->query($fp_sql);
     if ($fp_result) {
         while ($row = $fp_result->fetch_assoc()) {
             $recent_payments[] = $row;
@@ -270,19 +277,19 @@ $user_name = $user['full_name'] ?? 'Bursar';
 
 // Get additional stats
 $active_students = 0;
-$total_collections_raw = 0;
+$total_collections = 0;
 try {
-    $active_stmt = $staff_conn->prepare("SELECT COUNT(*) as c FROM students WHERE status = 'Active'");
-    if ($active_stmt) { $active_stmt->execute(); $active_students = (int)($active_stmt->get_result()->fetch_assoc()['c'] ?? 0); }
-    $coll_stmt = $staff_conn->prepare("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE status = 'verified'");
-    if ($coll_stmt) { $coll_stmt->execute(); $total_collections_raw = (int)($coll_stmt->get_result()->fetch_assoc()['total'] ?? 0); }
+    $active_result = $students_conn->query("SELECT COUNT(*) as c FROM students WHERE status='Active'");
+    if ($active_result) $active_students = (int)$active_result->fetch_assoc()['c'];
+    $coll_result = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE status='verified'");
+    if ($coll_result) $total_collections = (int)$coll_result->fetch_assoc()['total'];
 } catch (Exception $e) { error_log('bursar extra stats: ' . $e->getMessage()); }
 
 if (empty($recent_students)) { $recent_students = []; }
 if (empty($recent_payments)) { $recent_payments = []; }
 if (!isset($total_students)) { $total_students = 0; }
 if (!isset($active_students)) { $active_students = 0; }
-if (!isset($total_collections_raw)) { $total_collections_raw = 0; }
+if (!isset($total_collections)) { $total_collections = 0; }
 if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
 ?>
 
@@ -317,28 +324,7 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
             min-height: 100vh;
         }
 
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 2rem;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
 
-        .sidebar-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .sidebar-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin-bottom: 1rem;
-            border: 3px solid var(--accent-color);
-        }
 
         .main-content {
             flex: 1;
@@ -422,24 +408,6 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
             margin: 0;
         }
 
-        .nav-link {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            display: block;
-            margin-bottom: 0.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        .nav-link i {
-            margin-right: 0.5rem;
-        }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -488,44 +456,7 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Bursar Dashboard</h4>
-                <p><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Overview
-                </a>
-                <a href="#students" class="nav-link">
-                    <i class="fas fa-users"></i> Student Management
-                </a>
-                <a href="#fees" class="nav-link">
-                    <i class="fas fa-money-bill"></i> Fee Management
-                </a>
-                <a href="#payments" class="nav-link">
-                    <i class="fas fa-receipt"></i> Payments
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Financial Reports
-                </a>
-            </nav>
-            
-            <div class="mt-auto">
-                <div class="d-flex justify-content-center flex-wrap mb-2">
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                </div>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm w-100">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -865,12 +796,12 @@ if (!isset($outstanding_fees)) { $outstanding_fees = 0; }
         setInterval(updateDateTime, 60000);
 
         // Navigation handling
-        document.querySelectorAll('.nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 
                 // Remove active class from all links
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 
                 // Add active class to clicked link
                 this.classList.add('active');

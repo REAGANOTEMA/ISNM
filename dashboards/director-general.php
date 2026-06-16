@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 // Load all students for search functionality
@@ -14,6 +15,7 @@ $ctx          = bootstrapStaffDashboard([]);
 $auth_service = $ctx['auth'];
 $conn         = $ctx['staff'];
 $studentsConn = $ctx['students'];
+$websiteConn  = $ctx['website'];
 $user         = $ctx['user'];
 
 $user_id   = (int)($user['id'] ?? 0);
@@ -296,6 +298,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
         <a href="../dashboards/school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
         <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
       </div>
+    </div>
+
+    <!-- NEWS MANAGEMENT -->
+    <div class="section-card">
+      <?php renderNewsWidget($conn, $websiteConn, $user_id, $user_name, $user_role, 5); ?>
     </div>
 
     <!-- STUDENT MANAGEMENT -->

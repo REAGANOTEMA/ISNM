@@ -43,7 +43,8 @@ body { background: #f0f4f8; font-family: 'Inter', 'Segoe UI', sans-serif; }
 </style>
 </head>
 <body>
-<div class="page-wrapper">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="page-wrapper" style="margin-left:260px">
     <div class="top-bar no-print">
         <div>
             <h1><i class="fas fa-users-gear"></i>Student Records</h1>

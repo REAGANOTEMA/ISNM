@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'ict']);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'ICT Director';
+$website_conn = $ctx['website'];
 
 // Connect to ICT database alongside others
 $ict_conn = null;
@@ -286,36 +288,7 @@ if ($search_term && $students_conn) {
         </div>
     <?php endif; ?>
 
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="dashboard-sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM">
-                <h4>ISNM ICT</h4>
-                <small><?= htmlspecialchars($user_name) ?></small>
-                <div><span class="badge bg-info mt-2">Director ICT</span></div>
-            </div>
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Overview</a>
-                <a href="#students" class="nav-link"><i class="fas fa-user-graduate"></i> Student Management</a>
-                <a href="#computers" class="nav-link"><i class="fas fa-desktop"></i> Lab Computers</a>
-                <a href="#tickets" class="nav-link"><i class="fas fa-headset"></i> IT Support</a>
-                <a href="#bookings" class="nav-link"><i class="fas fa-calendar-alt"></i> Lab Bookings</a>
-                <a href="#network" class="nav-link"><i class="fas fa-network-wired"></i> Network</a>
-                <a href="#software" class="nav-link"><i class="fas fa-download"></i> Software</a>
-                <a href="#maintenance" class="nav-link"><i class="fas fa-tools"></i> Maintenance</a>
-                <a href="#reports" class="nav-link"><i class="fas fa-chart-bar"></i> Reports</a>
-                <a href="../news.php" class="nav-link"><i class="fas fa-newspaper"></i> Manage News</a>
-                <a href="../store_request.php" class="nav-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
-                <a href="../student-directory.php" class="nav-link"><i class="fas fa-address-book"></i> Student Directory</a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="d-flex gap-2">
-                    <a href="../index.php" class="btn btn-sm btn-outline-light flex-grow-1"><i class="fas fa-home"></i></a>
-                    <a href="../logout.php" class="btn btn-sm btn-danger flex-grow-1"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
-        </aside>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <main class="dashboard-main">
@@ -660,6 +633,14 @@ if ($search_term && $students_conn) {
                             </div>
                             <?php endif; ?>
                         </div>
+                    </div>
+                </section>
+
+                <!-- ═══ NEWS ═══ -->
+                <section id="news" class="content-section">
+                    <h2><i class="fas fa-newspaper" style="color:var(--isnm-blue)"></i> News &amp; Announcements</h2>
+                    <div class="section-card">
+                        <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'ICT Director', 5); ?>
                     </div>
                 </section>
 

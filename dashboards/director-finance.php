@@ -1,29 +1,40 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'finance']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Finance Director';
+$website_conn = $ctx['website'];
 
-// Set dashboard statistics - use fallbacks
-$total_students = 150;
-$total_staff = 2;
-$total_revenue = 250000000;
-$total_expenses = 150000000;
-$outstanding_fees = 50000000;
+// Set dashboard statistics from database
+$total_students = 0;
+$total_staff = 0;
+$total_revenue = 0;
+$total_expenses = 0;
+$outstanding_fees = 0;
 
-// Try to get real stats
 try {
-    require_once __DIR__ . '/../config/database.php';
-    $students_conn = getStudentsConnection();
+    $students_conn = $ctx['students'] ?? null;
     if ($students_conn) {
         $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $total_students = $result->fetch_assoc()['cnt'] ?? 150;
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $students_conn->query("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments WHERE status = 'Completed'");
+        if ($result) $total_revenue = (float)$result->fetch_assoc()['total'];
+
+        $result = $students_conn->query("SELECT COALESCE(SUM(balance), 0) as total FROM student_invoices WHERE status IN ('Pending','Partially Paid','Overdue')");
+        if ($result) $outstanding_fees = (float)$result->fetch_assoc()['total'];
     }
-    
-    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
-    if ($staff_result) $total_staff = $staff_result->fetch_assoc()['cnt'] ?? 2;
+
+    if ($conn) {
+        $result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+        if ($result) $total_staff = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $conn->query("SELECT COALESCE(SUM(amount), 0) as total FROM expenses");
+        if ($result) $total_expenses = (float)$result->fetch_assoc()['total'];
+    }
 } catch (Exception $e) {}
 
 // Get recent activities with fallback
@@ -113,43 +124,7 @@ try {
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo htmlspecialchars($user_name); ?></small>
-                <span class="badge bg-info">Director Finance</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Financial Overview
-                </a>
-                <a href="#revenue" class="nav-link">
-                    <i class="fas fa-money-bill-wave"></i> Revenue Management
-                </a>
-                <a href="#expenses" class="nav-link">
-                    <i class="fas fa-receipt"></i> Expense Management
-                </a>
-                <a href="#budget" class="nav-link">
-                    <i class="fas fa-calculator"></i> Budget Planning
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Financial Reports
-                </a>
-                <a href="#activity" class="nav-link">
-                    <i class="fas fa-history"></i> Activity Log
-                </a>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="dashboard-main">
@@ -391,6 +366,12 @@ try {
                             <button class="btn btn-primary">Generate</button>
                         </div>
                     </div>
+                </section>
+
+                <!-- News Management -->
+                <section id="news" class="content-section">
+                    <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
+                    <?php renderNewsWidget($conn, $website_conn, $ctx['user']['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'Director Finance', 5); ?>
                 </section>
 
                 <!-- Recent Activities -->

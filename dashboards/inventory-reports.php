@@ -64,23 +64,7 @@ foreach ($reports as $report) {
 </head>
 <body class="inventory-reports-page">
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Inventory Reports</h4>
-                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
-            </div>
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item"><a class="nav-link active" href="inventory-reports.php"><i class="fas fa-clipboard-list"></i> Reports</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../dashboards/storekeeper.php"><i class="fas fa-warehouse"></i> Store Inventory</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../dashboards/hr-manager.php"><i class="fas fa-user-shield"></i> HR Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-                </ul>
-            </nav>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <div class="main-content">
             <header class="dashboard-header">

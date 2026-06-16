@@ -1,9 +1,11 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 $ctx = bootstrapStaffDashboard(['registrar']);
 $user = $ctx['user'];
 $students_conn = getStudentsConnection();
 $staff_conn    = getStaffConnection();
+$website_conn  = $ctx['website'];
 
 // Helper
 function safeCount($conn, $sql) {
@@ -220,41 +222,9 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-  <div class="brand">
-    <img src="../images/school-logo.png" alt="ISNM">
-    <h6>Academic Registrar</h6>
-    <small><?= htmlspecialchars($user['full_name'] ?? 'Registrar') ?></small>
-  </div>
-  <nav>
-    <a href="#overview"    class="active"><i class="fas fa-tachometer-alt"></i> Overview</a>
-    <a href="#students">            <i class="fas fa-users"></i> Students</a>
-    <a href="#register">            <i class="fas fa-user-plus"></i> Register Student</a>
-    <a href="#admissions">          <i class="fas fa-file-alt"></i> Admissions</a>
-    <a href="#course-reg">          <i class="fas fa-book-open"></i> Course Registration</a>
-    <a href="#exams">               <i class="fas fa-pen-nib"></i> Examinations</a>
-    <a href="#results">             <i class="fas fa-chart-bar"></i> Results &amp; Transcripts</a>
-    <a href="#graduation">          <i class="fas fa-graduation-cap"></i> Graduation</a>
-    <a href="#calendar">            <i class="fas fa-calendar-alt"></i> Academic Calendar</a>
-    <a href="#timetable">           <i class="fas fa-clock"></i> Timetable</a>
-    <a href="#clinical">            <i class="fas fa-hospital"></i> Clinical Placements</a>
-    <a href="#attendance">          <i class="fas fa-check-square"></i> Attendance</a>
-    <a href="#announcements">       <i class="fas fa-bullhorn"></i> Announcements</a>
-    <a href="#trash">               <i class="fas fa-trash-alt"></i> Trash Bin
-      <?php if($trash_count>0): ?><span class="badge bg-danger ms-1"><?=$trash_count?></span><?php endif; ?>
-    </a>
-    <div class="d-flex justify-content-center flex-wrap mb-2 px-3">
-      <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-      <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-      <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-    </div>
-    <a href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
-    <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-  </nav>
-</div>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="main">
+<div class="main" style="margin-left:260px">
   <!-- Topbar -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
@@ -458,6 +428,12 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
       </table>
     </div>
     <?php endif; ?>
+  </section>
+
+  <!-- NEWS MANAGEMENT -->
+  <section class="section-card">
+    <h5><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h5>
+    <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user['full_name'] ?? 'Registrar', $user['role'] ?? 'Academic Registrar', 5); ?>
   </section>
 
 </div><!-- /main -->

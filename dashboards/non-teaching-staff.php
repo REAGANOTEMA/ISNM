@@ -10,15 +10,27 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Get staff statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_staff = 6; // Fallback value
-$recent_applications = 8; // Fallback value
-$active_programs = 2; // Fallback value
-$pending_tasks = 8; // Fallback value
-$completed_tasks = 3; // Fallback value
-$leave_balance = 15; // Fallback value
-$attendance_rate = 0.95; // Fallback value
+// Get staff statistics from database
+$students_db = $ctx['students'];
+$total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$pending_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = $user_id AND status IN ('draft','submitted')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$completed_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = $user_id AND status = 'finalized' AND DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$leave_balance = ($conn && ($q = $conn->query("SELECT COALESCE(SUM(remaining_days),0) FROM leave_balance WHERE staff_id = $user_id")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$attendance_rate = 0.0;
+if ($conn) {
+    $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = $user_id AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
+    if ($q && $r = $q->fetch_row()) {
+        $total = (int) $r[0];
+        $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = $user_id AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = 'Present'");
+        if ($q && $r = $q->fetch_row()) {
+            $present = (int) $r[0];
+            $attendance_rate = $total > 0 ? round($present / $total, 2) : 0.0;
+        }
+    }
+}
 
 // Get recent activities (using a simple approach)
 $recent_activities = [
@@ -41,71 +53,7 @@ $recent_activities = [
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Non-Teaching Staff Dashboard</h4>
-                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Staff Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#tasks">
-                            <i class="fas fa-tasks"></i> Task Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#attendance">
-                            <i class="fas fa-user-check"></i> Attendance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#leave">
-                            <i class="fas fa-calendar-alt"></i> Leave Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#documents">
-                            <i class="fas fa-file-alt"></i> Documents
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#training">
-                            <i class="fas fa-graduation-cap"></i> Training & Development
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#communications">
-                            <i class="fas fa-envelope"></i> Communications
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#reports">
-                            <i class="fas fa-chart-bar"></i> Staff Reports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-<a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-<a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -562,10 +510,10 @@ $recent_activities = [
         setInterval(updateDateTime, 60000);
 
         // Navigation
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);

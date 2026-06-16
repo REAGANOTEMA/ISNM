@@ -16,23 +16,38 @@ $user_name = $_SESSION['full_name'] ?? '';
 
 // User data already available from bootstrapStaffDashboard session
 
-// Set statistics with fallback values
-$total_students = 150;
-$total_staff = 12;
-$total_applications = 8;
-$active_programs = 2;
-$assigned_courses = 5;
-$lectures_this_week = 8;
-$pending_grades = 3;
-$total_students_taught = 45;
-$average_grade = 82;
+// Set statistics from database
+$total_students = 0;
+$total_staff = 0;
+$total_applications = 0;
+$active_programs = 0;
+$assigned_courses = 0;
+$lectures_this_week = 0;
+$pending_grades = 0;
+$total_students_taught = 0;
+$average_grade = 0;
 
-// Try to get real stats
 try {
     if ($studentsConn) {
         $result = $studentsConn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $total_students = $result->fetch_assoc()['cnt'] ?? 150;
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+        $app_result = $studentsConn->query("SELECT COUNT(*) as cnt FROM applications");
+        if ($app_result) $total_applications = (int)$app_result->fetch_assoc()['cnt'];
     }
+    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+    if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
+    $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status='Active'");
+    if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
+    $ca_result = $conn->query("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=" . (int)$user_id . " AND status='Active'");
+    if ($ca_result) $assigned_courses = (int)$ca_result->fetch_assoc()['cnt'];
+    $tt_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=" . (int)$user_id . " AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
+    if ($tt_result) $lectures_this_week = (int)$tt_result->fetch_assoc()['cnt'];
+    $ar_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND grade IS NULL");
+    if ($ar_result) $pending_grades = (int)$ar_result->fetch_assoc()['cnt'];
+    $stu_result = $conn->query("SELECT COUNT(DISTINCT student_id) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id);
+    if ($stu_result) $total_students_taught = (int)$stu_result->fetch_assoc()['cnt'];
+    $avg_result = $conn->query("SELECT AVG(marks) as avg FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND marks IS NOT NULL");
+    if ($avg_result) $average_grade = (int)round($avg_result->fetch_assoc()['avg'] ?? 0);
 } catch (Exception $e) {
     error_log('lecturers stats: ' . $e->getMessage());
 }

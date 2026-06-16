@@ -41,7 +41,8 @@ $conn = getStudentsConnection();
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
-    <div class="dashboard-container">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="dashboard-container" style="margin-left:260px">
         <h1><i class="fas fa-crown"></i> Guild President Dashboard</h1>
         <p>Welcome, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?></p>
         

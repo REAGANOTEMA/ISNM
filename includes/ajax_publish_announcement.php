@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 // Only allow specific roles to publish
-$allowed_roles = ['Director General', 'Director', 'CEO', 'Principal', 'Director Admissions', 'Administrator'];
+$allowed_roles = ['Director General', 'Director', 'CEO', 'Principal', 'Director Admissions', 'Administrator', 'Secretary', 'School Secretary', 'HR Manager'];
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['user'] ?? 'Staff');
 

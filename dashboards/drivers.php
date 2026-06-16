@@ -10,12 +10,14 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Get driver statistics (using fallback data only)
-$total_trips_today = 8; // Fallback value
-$students_transport = 25; // Fallback value
-$fuel_consumption = 45; // Fallback value (liters)
-$vehicle_maintenance = 2; // Fallback value
-$upcoming_trips = 5; // Fallback value
+// Get driver statistics from database
+$total_trips_today = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM trip_logs WHERE trip_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$students_transport = ($conn && ($q = $conn->query("SELECT COALESCE(SUM(passengers_count),0) FROM trip_logs WHERE trip_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$fuel_consumption = ($conn && ($q = $conn->query("SELECT COALESCE(SUM(fuel_quantity),0) FROM fuel_management WHERE fueling_date = CURDATE()")) && ($r = $q->fetch_row())) ? (float) $r[0] : 0;
+$vehicle_maintenance = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM vehicles WHERE status = 'Maintenance'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$upcoming_trips = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM trip_logs WHERE trip_date >= CURDATE() AND status = 'Scheduled'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_vehicles = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM vehicles")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$active_routes = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM route_schedules WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
 // Get recent trips (using fallback data)
 $recent_trips = [
@@ -94,6 +96,8 @@ $recent_trips = [
     </style>
 </head>
 <body>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div style="margin-left:260px">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="container">
@@ -124,28 +128,28 @@ $recent_trips = [
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-route"></i> Routes</h3>
-                    <div class="stat-number">8</div>
+                    <div class="stat-number"><?php echo $active_routes; ?></div>
                     <p class="text-muted mb-0">Active Routes</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-bus"></i> Vehicles</h3>
-                    <div class="stat-number">5</div>
+                    <div class="stat-number"><?php echo $total_vehicles; ?></div>
                     <p class="text-muted mb-0">Total Vehicles</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-users"></i> Students</h3>
-                    <div class="stat-number">245</div>
+                    <div class="stat-number"><?php echo $students_transport; ?></div>
                     <p class="text-muted mb-0">Transported Today</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3><i class="fas fa-clock"></i> Trips</h3>
-                    <div class="stat-number">16</div>
+                    <div class="stat-number"><?php echo $total_trips_today; ?></div>
                     <p class="text-muted mb-0">Completed Today</p>
                 </div>
             </div>
@@ -265,6 +269,7 @@ $recent_trips = [
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</div>
 </body>
 </html>
 

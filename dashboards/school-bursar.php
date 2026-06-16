@@ -1,3 +1,16 @@
+<?php
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/financial_functions.php';
+
+$ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant']);
+$auth_service = $ctx['auth'];
+$user = $ctx['user'];
+$user_name = $user['full_name'] ?? '';
+$role = $user['role_name'] ?? $user['role'] ?? 'School Bursar';
+$staff = $ctx['staff'];
+$students = $ctx['students'];
+$website = $ctx['website'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,14 +83,6 @@
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
-    <?php
-    require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-    require_once __DIR__ . '/../includes/financial_functions.php';
-    
-    $ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant']);
-    $auth_service = $ctx['auth'];
-    $user = $ctx['user'];
-    $user_name = $user['full_name'] ?? '';
     $staff_conn = $ctx['staff'];
     $students_conn = getStudentsConnection();
     
@@ -115,63 +120,7 @@
     ?>
     
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Financial System</h4>
-                <small><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></small>
-                <span class="badge bg-success">School Bursar</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
-                </a>
-                <a href="#billing" class="nav-link">
-                    <i class="fas fa-file-invoice"></i> Student Billing
-                </a>
-                <a href="#payments" class="nav-link">
-                    <i class="fas fa-money-bill-wave"></i> Payment Processing
-                </a>
-                <a href="#receipts" class="nav-link">
-                    <i class="fas fa-receipt"></i> Receipts & Invoices
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Financial Reports
-                </a>
-                <a href="#budget" class="nav-link">
-                    <i class="fas fa-wallet"></i> Budget Management
-                </a>
-                <a href="#expenses" class="nav-link">
-                    <i class="fas fa-receipt"></i> Expenditure
-                </a>
-                <a href="#accounts" class="nav-link">
-                    <i class="fas fa-book"></i> Accounts & Ledger
-                </a>
-                <a href="#payroll" class="nav-link">
-                    <i class="fas fa-users"></i> Payroll Management
-                </a>
-                <a href="#inventory" class="nav-link">
-                    <i class="fas fa-boxes"></i> Asset Tracking
-                </a>
-                <a href="#ura" class="nav-link">
-                    <i class="fas fa-file-invoice-dollar"></i> URA Reporting
-                </a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="d-flex justify-content-center flex-wrap mb-2">
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                </div>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
         
         <!-- Main Content -->
         <div class="dashboard-main">

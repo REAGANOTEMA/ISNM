@@ -10,14 +10,37 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Get lecturer statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$total_staff = 8; // Fallback value
-$total_applications = 8; // Fallback value
-$active_programs = 2; // Fallback value
-$assigned_courses = 6; // Fallback value for courses
-$lectures_this_week = 8; // Fallback value
-$pending_grades = 3; // Fallback value
+$studentsConn = getStudentsConnection();
+
+// Get lecturer statistics from database
+$total_students = 0;
+$total_staff = 0;
+$total_applications = 0;
+$active_programs = 0;
+$assigned_courses = 0;
+$lectures_this_week = 0;
+$pending_grades = 0;
+
+try {
+    if ($studentsConn) {
+        $result = $studentsConn->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+        $app_result = $studentsConn->query("SELECT COUNT(*) as cnt FROM applications");
+        if ($app_result) $total_applications = (int)$app_result->fetch_assoc()['cnt'];
+    }
+    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+    if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
+    $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status='Active'");
+    if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
+    $ca_result = $conn->query("SELECT COUNT(*) as cnt FROM course_assignments WHERE lecturer_id=" . (int)$user_id . " AND status='Active'");
+    if ($ca_result) $assigned_courses = (int)$ca_result->fetch_assoc()['cnt'];
+    $tt_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_timetable WHERE lecturer_id=" . (int)$user_id . " AND day_of_week=DAYNAME(CURDATE()) AND timetable_status='Published'");
+    if ($tt_result) $lectures_this_week = (int)$tt_result->fetch_assoc()['cnt'];
+    $ar_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_records WHERE lecturer_id=" . (int)$user_id . " AND grade IS NULL");
+    if ($ar_result) $pending_grades = (int)$ar_result->fetch_assoc()['cnt'];
+} catch (Exception $e) {
+    error_log('senior-lecturers stats: ' . $e->getMessage());
+}
 
 // Get recent activities (using a simple approach)
 $recent_activities = [
@@ -40,73 +63,7 @@ $recent_activities = [
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Senior Lecturer Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Teaching Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#courses">
-                            <i class="fas fa-book"></i> My Courses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#schedule">
-                            <i class="fas fa-calendar"></i> Teaching Schedule
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#students">
-                            <i class="fas fa-user-graduate"></i> Student Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#assessments">
-                            <i class="fas fa-clipboard-check"></i> Assessments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#grades">
-                            <i class="fas fa-chart-bar"></i> Grade Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#resources">
-                            <i class="fas fa-folder"></i> Teaching Resources
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#research">
-                            <i class="fas fa-flask"></i> Research Activities
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="d-flex justify-content-center flex-wrap mb-2">
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                </div>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -703,10 +660,10 @@ $recent_activities = [
         setInterval(updateDateTime, 60000);
 
         // Navigation
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);

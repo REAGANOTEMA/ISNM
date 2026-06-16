@@ -6,24 +6,26 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Head of Nursing';
 
-// Set dashboard statistics - use fallbacks
-$total_students = 150;
-$total_staff = 2;
-$active_programs = 2;
-$nursing_courses = 8;
+// Set dashboard statistics from database
+$total_students = 0;
+$total_staff = 0;
+$active_programs = 0;
+$nursing_courses = 0;
 
-// Try to get real stats
 try {
-    require_once __DIR__ . '/../config/database.php';
-    $students_conn = getStudentsConnection();
-    if ($students_conn) {
-        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $total_students = $result->fetch_assoc()['cnt'] ?? 150;
+    if ($ctx['students']) {
+        $result = $ctx['students']->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
     }
-    
     $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
-    if ($staff_result) $total_staff = $staff_result->fetch_assoc()['cnt'] ?? 2;
-} catch (Exception $e) {}
+    if ($staff_result) $total_staff = (int)$staff_result->fetch_assoc()['cnt'];
+    $prog_result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE department LIKE '%Nursing%' AND status='Active'");
+    if ($prog_result) $active_programs = (int)$prog_result->fetch_assoc()['cnt'];
+    $course_result = $conn->query("SELECT COUNT(DISTINCT course_code) as cnt FROM course_assignments WHERE course_name LIKE '%Nursing%' AND status='Active'");
+    if ($course_result) $nursing_courses = (int)$course_result->fetch_assoc()['cnt'];
+} catch (Exception $e) {
+    error_log('head-nursing stats: ' . $e->getMessage());
+}
 
 // Get recent activities with fallback
 $recent_activities = [
@@ -86,48 +88,7 @@ try {
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo htmlspecialchars($user_name); ?></small>
-                <span class="badge bg-info">Head of Nursing</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Department Overview
-                </a>
-                <a href="#students" class="nav-link">
-                    <i class="fas fa-user-graduate"></i> Student Management
-                </a>
-                <a href="#programs" class="nav-link">
-                    <i class="fas fa-book"></i> Program Management
-                </a>
-                <a href="#faculty" class="nav-link">
-                    <i class="fas fa-chalkboard-teacher"></i> Faculty Management
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
-                <a href="#activity" class="nav-link">
-                    <i class="fas fa-history"></i> Activity Log
-                </a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="d-flex justify-content-center flex-wrap mb-2">
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                </div>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="dashboard-main">

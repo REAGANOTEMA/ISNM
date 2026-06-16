@@ -18,6 +18,33 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['type']) && $_SESSION['type']
 
 $staffConn = getStaffConnection();
 $websiteConn = getWebsiteConnection();
+
+// Ensure the news table exists in website DB
+if (!function_exists('ensureNewsTable')) {
+    function ensureNewsTable($conn) {
+        if (!$conn) return false;
+        $r = $conn->query("SHOW TABLES LIKE 'news'");
+        if ($r && $r->num_rows > 0) return true;
+        $conn->query("CREATE TABLE IF NOT EXISTS news (
+            id INT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            content LONGTEXT,
+            excerpt TEXT,
+            featured_image VARCHAR(500),
+            author_id INT,
+            author_name VARCHAR(255),
+            author_role VARCHAR(255),
+            status ENUM('draft','published','archived') DEFAULT 'draft',
+            published_at DATETIME NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        return true;
+    }
+}
+ensureNewsTable($websiteConn);
+
 $errors = [];
 $success = '';
 
@@ -90,10 +117,11 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     $newsId = $stmt->insert_id;
                     // Also insert into website DB for public display
-                    $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
-                    $ws->execute();
-                    $ws->close();
+                    if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
+                        $ws->execute();
+                        $ws->close();
+                    }
                     $_SESSION['news_success'] = 'News article created successfully.';
                 } else {
                     $errors[] = 'Database error: ' . $stmt->error;
@@ -110,15 +138,15 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if ($stmt->execute()) {
                     // Also update website DB
-                    if ($featuredImage) {
-                        $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                        $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id);
-                    } else {
-                        $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
-                        $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id);
+                    if ($websiteConn) {
+                        if ($featuredImage) {
+                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, featured_image=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
+                            if ($ws) { $ws->bind_param("ssssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $authorName, $authorRole, $news_id); $ws->execute(); $ws->close(); }
+                        } else {
+                            $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
+                            if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id); $ws->execute(); $ws->close(); }
+                        }
                     }
-                    $ws->execute();
-                    $ws->close();
                     $_SESSION['news_success'] = 'News article updated successfully.';
                 } else {
                     $errors[] = 'Database error: ' . $stmt->error;
@@ -137,10 +165,11 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $staffConn->prepare("DELETE FROM director_news WHERE id=?");
             $stmt->bind_param("i", $news_id);
             if ($stmt->execute()) {
-                $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?");
-                $ws->bind_param("i", $news_id);
-                $ws->execute();
-                $ws->close();
+                if ($websiteConn && $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?")) {
+                    $ws->bind_param("i", $news_id);
+                    $ws->execute();
+                    $ws->close();
+                }
                 $_SESSION['news_success'] = 'News article deleted.';
             }
             $stmt->close();
@@ -157,10 +186,11 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $staffConn->prepare("UPDATE director_news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?");
             $stmt->bind_param("ssi", $newStatus, $pubAt, $news_id);
             if ($stmt->execute()) {
-                $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?");
-                $ws->bind_param("ssi", $newStatus, $pubAt, $news_id);
-                $ws->execute();
-                $ws->close();
+                if ($websiteConn && $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?")) {
+                    $ws->bind_param("ssi", $newStatus, $pubAt, $news_id);
+                    $ws->execute();
+                    $ws->close();
+                }
                 $_SESSION['news_success'] = 'News status updated to ' . $newStatus . '.';
             }
             $stmt->close();

@@ -1,257 +1,35 @@
 <?php
 /**
- * Responsive Dashboard Navigation System
- * Mobile Slider Menu + Desktop Sidebar for ISNM School Management System
+ * Hierarchical Dashboard Sidebar Navigation
+ * Collapsible parent/child modules with role-based filtering.
  */
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Start session if not started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Check if user is authenticated
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
-    header('Location: ../index.php');
-    exit();
+    header('Location: ../index.php'); exit();
 }
 
 $user_role = $_SESSION['role'];
 $user_type = $_SESSION['type'];
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
-$user_id = $_SESSION['user_id'];
+$user_id   = $_SESSION['user_id'];
 
-// Determine menu items based on user role and type
-$menu_items = [];
+require_once __DIR__ . '/module_config.php';
 
-// Common menu items for all users
-$menu_items[] = [
-    'icon' => 'fas fa-tachometer-alt',
-    'title' => 'Dashboard',
-    'link' => '#dashboard-home',
-    'active' => true
-];
+$modules = getFilteredModules($user_role);
 
-$menu_items[] = [
-    'icon' => 'fas fa-user',
-    'title' => 'Profile',
-    'link' => '#profile',
-    'active' => false
-];
-
-// Messages for all users
-$menu_items[] = [
-    'icon' => 'fas fa-envelope',
-    'title' => 'Messages',
-    'link' => '#messages',
-    'active' => false,
-    'badge' => '5' // This should be dynamic based on unread messages
-];
-
-// Student-specific menu items
-if ($user_type === 'student') {
-    $menu_items[] = [
-        'icon' => 'fas fa-book',
-        'title' => 'Academics',
-        'link' => '#academics',
-        'active' => false
-    ];
-    
-    $menu_items[] = [
-        'icon' => 'fas fa-money-bill',
-        'title' => 'Fees',
-        'link' => '#fees',
-        'active' => false
-    ];
-    
-    $menu_items[] = [
-        'icon' => 'fas fa-calendar',
-        'title' => 'Schedule',
-        'link' => '#schedule',
-        'active' => false
-    ];
-
-    // Store Request link for students
-    $menu_items[] = [
-        'icon' => 'fas fa-shopping-cart',
-        'title' => 'Store Request',
-        'link' => '../store_request.php',
-        'active' => false
-    ];
-
-    // News link for students
-    $menu_items[] = [
-        'icon' => 'fas fa-newspaper',
-        'title' => 'News',
-        'link' => '../news.php',
-        'active' => false
-    ];
-
-    // Student Directory link for students
-    $menu_items[] = [
-        'icon' => 'fas fa-address-book',
-        'title' => 'Student Directory',
-        'link' => '../student-directory.php',
-        'active' => false
-    ];
-}
-
-// Staff-specific menu items
-if ($user_type === 'staff') {
-    // Check if user can create students
-    $can_create_students = (
-        strpos(strtolower($user_role), 'director') !== false ||
-        in_array(strtolower($user_role), ['secretary', 'principal', 'accountant', 'school secretary', 'school principal', 'school bursar'])
-    );
-    
-    if ($can_create_students) {
-        $menu_items[] = [
-            'icon' => 'fas fa-user-plus',
-            'title' => 'Students',
-            'link' => '../student_accounts_management.php',
-            'active' => false
-        ];
-    }
-    
-    // Grading management for Academic Registrar and Principal
-    if (strpos(strtolower($user_role), 'academic registrar') !== false || strpos(strtolower($user_role), 'principal') !== false) {
-        $menu_items[] = [
-            'icon' => 'fas fa-graduation-cap',
-            'title' => 'Grading Management',
-            'link' => '#grading',
-            'active' => false
-        ];
-        
-        $menu_items[] = [
-            'icon' => 'fas fa-check-double',
-            'title' => 'Grade Approval',
-            'link' => '#grade-approval',
-            'active' => false
-        ];
-    }
-    
-    // Principal-specific grading features
-    if (strpos(strtolower($user_role), 'principal') !== false) {
-        $menu_items[] = [
-            'icon' => 'fas fa-user-graduate',
-            'title' => 'Student Academic',
-            'link' => '#student-academic',
-            'active' => false
-        ];
-        
-        $menu_items[] = [
-            'icon' => 'fas fa-award',
-            'title' => 'Graduation',
-            'link' => '#graduation',
-            'active' => false
-        ];
-    }
-    
-    // Academic calendar for Academic Registrar
-    if (strpos(strtolower($user_role), 'academic registrar') !== false) {
-        $menu_items[] = [
-            'icon' => 'fas fa-calendar-alt',
-            'title' => 'Academic Calendar',
-            'link' => '#academic-calendar',
-            'active' => false
-        ];
-        
-        $menu_items[] = [
-            'icon' => 'fas fa-bullhorn',
-            'title' => 'Result Publication',
-            'link' => '#result-publication',
-            'active' => false
-        ];
-    }
-    
-    // Store Request link
-    $menu_items[] = [
-        'icon' => 'fas fa-shopping-cart',
-        'title' => 'Store Request',
-        'link' => '../store_request.php',
-        'active' => false
-    ];
-
-    // News Management link
-    $menu_items[] = [
-        'icon' => 'fas fa-newspaper',
-        'title' => 'News',
-        'link' => '../news.php',
-        'active' => false
-    ];
-
-    // Student Directory link
-    $menu_items[] = [
-        'icon' => 'fas fa-address-book',
-        'title' => 'Student Directory',
-        'link' => '../student-directory.php',
-        'active' => false
-    ];
-
-    // Student Records by Set link
-    $menu_items[] = [
-        'icon' => 'fas fa-users-gear',
-        'title' => 'Student Records',
-        'link' => '../dashboards/student-records.php',
-        'active' => false
-    ];
-
-    // Staff tools based on role
-    $menu_items[] = [
-        'icon' => 'fas fa-tools',
-        'title' => 'Staff Tools',
-        'link' => '#staff-tools',
-        'active' => false
-    ];
-    
-    // Communication system
-    $menu_items[] = [
-        'icon' => 'fas fa-comments',
-        'title' => 'Communication',
-        'link' => '../student_communication_system.php',
-        'active' => false
-    ];
-    
-    // Reports for admin roles
-    if (strpos(strtolower($user_role), 'director') !== false || 
-        in_array(strtolower($user_role), ['principal', 'secretary', 'accountant'])) {
-        $menu_items[] = [
-            'icon' => 'fas fa-chart-bar',
-            'title' => 'Reports',
-            'link' => '#reports',
-            'active' => false
-        ];
-    }
-}
-
-// Settings menu item for all users
-$menu_items[] = [
-    'icon' => 'fas fa-cog',
-    'title' => 'Settings',
-    'link' => '#settings',
-    'active' => false
-];
-
-// Logout menu item
-$menu_items[] = [
-    'icon' => 'fas fa-sign-out-alt',
-    'title' => 'Logout',
-    'link' => '../auth-handler.php?action=logout',
-    'active' => false
-];
+// Detect current page for active highlighting
+$currentPage = basename($_SERVER['PHP_SELF']);
 ?>
-
 <!-- Responsive Dashboard Navigation -->
 <div class="dashboard-nav-container">
-    <!-- Mobile Hamburger Menu -->
     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
     </button>
 
-    <!-- Sidebar Navigation -->
     <nav class="dashboard-sidebar" id="dashboardSidebar">
-        <!-- Sidebar Header -->
         <div class="sidebar-header">
             <div class="sidebar-logo">
                 <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo-img">
@@ -260,16 +38,14 @@ $menu_items[] = [
                     <span class="sidebar-subtitle">Management System</span>
                 </div>
             </div>
-            
-            <!-- User Profile Section -->
             <div class="sidebar-user">
                 <div class="user-avatar">
                     <img src="../images/default-avatar.png" alt="User Avatar" class="user-avatar-img">
                     <span class="user-status online"></span>
                 </div>
                 <div class="user-info">
-                    <div class="user-name"><?php echo htmlspecialchars($user_name); ?></div>
-                    <div class="user-role"><?php echo htmlspecialchars($user_role); ?></div>
+                    <div class="user-name"><?= htmlspecialchars($user_name) ?></div>
+                    <div class="user-role"><?= htmlspecialchars($user_role) ?></div>
                 </div>
                 <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
                     <i class="fas fa-times"></i>
@@ -277,437 +53,218 @@ $menu_items[] = [
             </div>
         </div>
 
-        <!-- Navigation Menu -->
         <div class="sidebar-nav">
             <ul class="nav-list">
-                <?php foreach ($menu_items as $index => $item): ?>
-                    <li class="nav-item">
-                        <a href="<?php echo htmlspecialchars($item['link']); ?>" 
-                           class="nav-link <?php echo $item['active'] ? 'active' : ''; ?>"
-                           data-section="<?php echo htmlspecialchars($item['link']); ?>">
-                            <div class="nav-icon">
-                                <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
-                            </div>
-                            <span class="nav-text"><?php echo htmlspecialchars($item['title']); ?></span>
-                            <?php if (isset($item['badge']) && $item['badge']): ?>
-                                <span class="nav-badge"><?php echo htmlspecialchars($item['badge']); ?></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
+                <!-- Dashboard Home -->
+                <li class="nav-item">
+                    <a href="index.php" class="nav-link <?= ($currentPage === 'index.php' || $currentPage === '') ? 'active' : '' ?>" data-route="index">
+                        <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <?php foreach ($modules as $parent): ?>
+                <?php
+                    $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
+                    $hasChildren = !empty($parent['children']);
+                    $hasActiveChild = false;
+                    if ($hasChildren) {
+                        foreach ($parent['children'] as $child) {
+                            if (basename($child['route']) === $currentPage) {
+                                $hasActiveChild = true;
+                                break;
+                            }
+                        }
+                    }
+                    $expanded = $hasActiveChild ? 'expanded' : '';
+                ?>
+                <li class="nav-item nav-parent <?= $expanded ?>">
+                    <a href="#" class="nav-link parent-toggle" data-parent="<?= $parentId ?>" onclick="return false;">
+                        <div class="nav-icon"><i class="<?= $parent['icon'] ?>"></i></div>
+                        <span class="nav-text"><?= htmlspecialchars($parent['title']) ?></span>
+                        <?php if ($hasChildren): ?>
+                        <i class="fas fa-chevron-down nav-arrow"></i>
+                        <?php endif; ?>
+                    </a>
+                    <?php if ($hasChildren): ?>
+                    <ul class="nav-children" id="children-<?= $parentId ?>" style="<?= $expanded ? '' : 'display:none;' ?>">
+                        <?php foreach ($parent['children'] as $child): ?>
+                        <?php
+                            $childPage = basename($child['route']);
+                            $isActive = ($childPage === $currentPage);
+                        ?>
+                        <li class="nav-item nav-child-item <?= $isActive ? 'active' : '' ?>">
+                            <a href="<?= htmlspecialchars($child['route']) ?>" class="nav-link child-link <?= $isActive ? 'active' : '' ?>">
+                                <div class="nav-icon"><i class="fas fa-circle" style="font-size:6px;"></i></div>
+                                <span class="nav-text"><?= htmlspecialchars($child['title']) ?></span>
+                            </a>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php endif; ?>
+                </li>
                 <?php endforeach; ?>
             </ul>
         </div>
 
-        <!-- Sidebar Footer -->
         <div class="sidebar-footer">
+            <div class="d-flex justify-content-center flex-wrap mb-2">
+                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
+                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+            </div>
             <div class="footer-info">
                 <div class="version">v2.0.1</div>
-                <div class="copyright">© 2026 ISNM</div>
+                <div class="copyright">&copy; 2026 ISNM</div>
+                <a href="../auth-handler.php?action=logout" class="btn btn-danger btn-sm mt-2 w-100">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Overlay for mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 </div>
 
-<!-- Navigation CSS -->
 <style>
-/* Dashboard Navigation System */
-.dashboard-nav-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-}
-
-/* Mobile Hamburger Menu */
+.dashboard-nav-container { position: fixed; top: 0; left: 0; z-index: 1000; }
 .mobile-menu-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1001;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border: none;
-    border-radius: 8px;
-    padding: 12px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
+    display: none; position: fixed; top: 20px; left: 20px; z-index: 1001;
+    background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 8px;
+    padding: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+.mobile-menu-toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.hamburger-line { display: block; width: 24px; height: 3px; background: white; margin: 5px 0; border-radius: 2px; }
+.mobile-menu-toggle.active .hamburger-line:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+.mobile-menu-toggle.active .hamburger-line:nth-child(2) { opacity: 0; }
+.mobile-menu-toggle.active .hamburger-line:nth-child(3) { transform: rotate(-45deg) translate(7px,-6px); }
 
-.mobile-menu-toggle:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.mobile-menu-toggle:active {
-    transform: translateY(0);
-}
-
-.hamburger-line {
-    display: block;
-    width: 24px;
-    height: 3px;
-    background: white;
-    margin: 5px 0;
-    transition: all 0.3s ease;
-    border-radius: 2px;
-}
-
-.mobile-menu-toggle.active .hamburger-line:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
-}
-
-.mobile-menu-toggle.active .hamburger-line:nth-child(2) {
-    opacity: 0;
-}
-
-.mobile-menu-toggle.active .hamburger-line:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px);
-}
-
-/* Sidebar Navigation */
 .dashboard-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    height: 100vh;
-    background: linear-gradient(135deg, #1a237e, #3949ab);
-    color: white;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: transform 0.3s ease;
-    z-index: 1000;
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    position: fixed; top: 0; left: 0;     width: 260px; height: 100vh;
+    background: linear-gradient(180deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+    color: white; overflow-y: auto; overflow-x: hidden;
+    transition: transform 0.3s ease; z-index: 1000;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
 }
+.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo { display: flex; align-items: center; margin-bottom: 20px; }
+.sidebar-logo-img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; border: 2px solid rgba(255,255,255,0.2); }
+.sidebar-title h3 { margin: 0; font-size: 24px; font-weight: 600; color: white; }
+.sidebar-subtitle { font-size: 12px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
+.sidebar-user { display: flex; align-items: center; position: relative; }
+.user-avatar { position: relative; margin-right: 15px; }
+.user-avatar-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
+.user-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1a237e; }
+.user-status.online { background: #4caf50; }
+.user-info { flex: 1; }
+.user-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.user-role { font-size: 12px; color: rgba(255,255,255,0.7); text-transform: capitalize; }
+.sidebar-close { display: none; background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 5px; border-radius: 4px; }
+.sidebar-close:hover { background: rgba(255,255,255,0.1); }
 
-/* Sidebar Header */
-.sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.sidebar-logo-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 15px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-title h3 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: white;
-}
-
-.sidebar-subtitle {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* User Profile Section */
-.sidebar-user {
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.user-avatar {
-    position: relative;
-    margin-right: 15px;
-}
-
-.user-avatar-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.user-status {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid #1a237e;
-}
-
-.user-status.online {
-    background: #4caf50;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-name {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 2px;
-}
-
-.user-role {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    text-transform: capitalize;
-}
-
-.sidebar-close {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.sidebar-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* Navigation Menu */
-.sidebar-nav {
-    padding: 20px 0;
-}
-
-.nav-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.nav-item {
-    margin-bottom: 2px;
-}
+.sidebar-nav { padding: 10px 0; overflow-y: auto; flex: 1; }
+.nav-list { list-style: none; margin: 0; padding: 0; }
+.nav-item { margin-bottom: 1px; }
 
 .nav-link {
-    display: flex;
-    align-items: center;
-    padding: 15px 25px;
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
-    position: relative;
-}
-
-.nav-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-left-color: #ffd700;
-    transform: translateX(5px);
-}
-
-.nav-link.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-left-color: #ffd700;
-}
-
-.nav-icon {
-    width: 24px;
-    margin-right: 15px;
-    text-align: center;
-    font-size: 16px;
-}
-
-.nav-text {
-    flex: 1;
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.nav-badge {
-    background: #ff5252;
-    color: white;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 18px;
-    text-align: center;
-    font-weight: 600;
-}
-
-/* Sidebar Footer */
-.sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: auto;
-}
-
-.footer-info {
-    text-align: center;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.version {
-    margin-bottom: 5px;
-}
-
-/* Overlay */
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: block;
-    }
-    
-    .dashboard-sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .dashboard-sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .sidebar-close {
-        display: block;
-    }
-    
-    .sidebar-overlay {
-        display: block;
-    }
-    
-    .sidebar-overlay.active {
-        opacity: 1;
-    }
-}
-
-@media (min-width: 769px) {
-    .dashboard-sidebar {
-        transform: translateX(0);
-    }
-
-    .dashboard-sidebar.collapsed {
-        width: 70px;
-    }
-
-    .dashboard-sidebar.collapsed .nav-text,
-    .dashboard-sidebar.collapsed .sidebar-title,
-    .dashboard-sidebar.collapsed .user-info,
-    .dashboard-sidebar.collapsed .sidebar-footer { display: none; }
-
-    .dashboard-sidebar.collapsed .nav-link { justify-content: center; padding: 15px; }
-    .dashboard-sidebar.collapsed .nav-icon  { margin-right: 0; }
-
-    /* Always show nav text and user info when NOT collapsed */
-    .sidebar-title { display: block; }
-    .user-info     { display: block; }
-    .nav-text      { display: inline; }
-    .nav-link      { justify-content: flex-start; padding: 15px 25px; }
-    .nav-icon      { margin-right: 15px; }
-    .sidebar-footer { display: block; }
-
-    .sidebar-close { display: none; }
-}
-
-/* Collapsed Sidebar Toggle (Desktop) */
-.sidebar-toggle {
-    position: absolute;
-    top: 20px;
-    right: -15px;
-    background: #3949ab;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; padding: 12px 20px;
+    color: rgba(255,255,255,0.8); text-decoration: none;
+    transition: all 0.2s ease; border-left: 3px solid transparent;
     cursor: pointer;
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    z-index: 1001;
+}
+.nav-link:hover {
+    background: rgba(255,255,255,0.1); color: white;
+    border-left-color: #ffd700; padding-left: 25px;
+}
+.nav-link.active {
+    background: rgba(255,255,255,0.15); color: white;
+    border-left-color: #ffd700;
+}
+.nav-icon { width: 24px; margin-right: 12px; text-align: center; font-size: 16px; flex-shrink: 0; }
+.nav-text { flex: 1; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-arrow { font-size: 12px; transition: transform 0.3s ease; margin-left: 8px; }
+.nav-parent.expanded .nav-arrow { transform: rotate(180deg); }
+
+/* Child nav items */
+.nav-children { background: rgba(0,0,0,0.15); border-left: 2px solid rgba(255,215,0,0.3); margin-left: 20px; }
+.nav-child-item { }
+.nav-child-item .nav-link { padding: 10px 20px; font-size: 13px; border-left: 2px solid transparent; }
+.nav-child-item .nav-link:hover { border-left-color: #ffd700; background: rgba(255,255,255,0.08); }
+.nav-child-item.active .nav-link { color: #ffd700; border-left-color: #ffd700; background: rgba(255,215,0,0.1); }
+.nav-child-item .nav-icon { width: 16px; margin-right: 10px; display: flex; align-items: center; justify-content: center; }
+
+.sidebar-footer {
+    padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;
+}
+.footer-info { text-align: center; font-size: 12px; color: rgba(255,255,255,0.6); }
+
+.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+.sidebar-overlay.active { display: block; }
+
+@media (max-width: 768px) {
+    .mobile-menu-toggle { display: block; }
+    .dashboard-sidebar { transform: translateX(-100%); }
+    .dashboard-sidebar.active { transform: translateX(0); }
+    .sidebar-close { display: block; }
+    .sidebar-overlay.active { display: block; }
+}
+@media (min-width: 769px) {
+    .dashboard-sidebar { transform: translateX(0); }
 }
 
-.sidebar-toggle:hover {
-    background: #5c6bc0;
-    transform: scale(1.1);
-}
+.nav-link:focus { outline: 2px solid #ffd700; outline-offset: 2px; }
 
-/* Animation Classes */
-.slide-in {
-    animation: slideIn 0.3s ease;
-}
-
-.slide-out {
-    animation: slideOut 0.3s ease;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideOut {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(-100%);
-    }
-}
-
-/* Accessibility */
-.nav-link:focus {
-    outline: 2px solid #ffd700;
-    outline-offset: 2px;
-}
-
-.mobile-menu-toggle:focus,
-.sidebar-close:focus,
-.sidebar-toggle:focus {
-    outline: 2px solid #ffd700;
-    outline-offset: 2px;
-}
+/* Scrollbar styling */
+.dashboard-sidebar::-webkit-scrollbar { width: 4px; }
+.dashboard-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+.dashboard-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 </style>
 
-<!-- Navigation JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebar = document.getElementById('dashboardSidebar');
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebarClose = document.getElementById('sidebarClose');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const navLinks = document.querySelectorAll('.nav-link');
-    const dashboardContainer = document.querySelector('.dashboard-container');
-    
+
+    // Restore sidebar expanded state from localStorage
+    const savedState = localStorage.getItem('isnm_sidebar_state');
+    if (savedState) {
+        try {
+            const expanded = JSON.parse(savedState);
+            document.querySelectorAll('.nav-parent').forEach(el => {
+                const toggle = el.querySelector('.parent-toggle');
+                if (toggle) {
+                    const id = toggle.dataset.parent;
+                    if (expanded[id]) {
+                        el.classList.add('expanded');
+                        const children = document.getElementById('children-' + id);
+                        if (children) children.style.display = '';
+                    }
+                }
+            });
+        } catch(e) {}
+    }
+
+    // Parent toggle with arrow rotation
+    document.querySelectorAll('.parent-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const parent = this.closest('.nav-parent');
+            const id = this.dataset.parent;
+            const children = document.getElementById('children-' + id);
+            if (!children) return;
+
+            const isExpanding = children.style.display === 'none' || !children.style.display;
+            children.style.display = isExpanding ? '' : 'none';
+            parent.classList.toggle('expanded', isExpanding);
+
+            // Save state to localStorage
+            const saved = JSON.parse(localStorage.getItem('isnm_sidebar_state') || '{}');
+            saved[id] = isExpanding;
+            localStorage.setItem('isnm_sidebar_state', JSON.stringify(saved));
+        });
+    });
+
     // Mobile menu toggle
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', function() {
@@ -717,158 +274,30 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
         });
     }
-    
-    // Close sidebar
+
     function closeSidebar() {
         sidebar.classList.remove('active');
         sidebarOverlay.classList.remove('active');
-        if (mobileMenuToggle) {
-            mobileMenuToggle.classList.remove('active');
-        }
+        if (mobileMenuToggle) mobileMenuToggle.classList.remove('active');
         document.body.style.overflow = '';
     }
-    
-    if (sidebarClose) {
-        sidebarClose.addEventListener('click', closeSidebar);
-    }
-    
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-    
-    // Handle navigation clicks
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Remove active class from all links
-            navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
-            this.classList.add('active');
-            
-            // Close mobile sidebar after navigation
-            if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
-            
-            // Handle section navigation for hash links
-            const href = this.getAttribute('href');
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                const targetSection = document.querySelector(href);
-                if (targetSection) {
-                    targetSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            }
-        });
-    });
-    
-    // Handle window resize
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            if (window.innerWidth > 768) {
-                closeSidebar();
-                // Adjust dashboard container margin for desktop
-                if (dashboardContainer) {
-                    if (sidebar.classList.contains('collapsed')) {
-                        dashboardContainer.style.marginLeft = '0';
-                    } else {
-                        dashboardContainer.style.marginLeft = '280px';
-                    }
-                }
-            } else {
-                // Reset for mobile
-                if (dashboardContainer) {
-                    dashboardContainer.style.marginLeft = '0';
-                }
-            }
-        }, 250);
-    });
-    
-    // Add desktop sidebar toggle functionality
-    function toggleDesktopSidebar() {
-        if (window.innerWidth > 768 && dashboardContainer) {
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                dashboardContainer.style.marginLeft = '0';
-                dashboardContainer.classList.add('sidebar-collapsed');
-            } else {
-                dashboardContainer.style.marginLeft = '280px';
-                dashboardContainer.classList.remove('sidebar-collapsed');
-            }
-        }
-    }
-    
-    // Create and add sidebar toggle button
-    if (window.innerWidth > 768) {
-        const toggleButton = document.createElement('button');
-        toggleButton.className = 'sidebar-toggle';
-        toggleButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
-        toggleButton.setAttribute('aria-label', 'Toggle sidebar');
-        toggleButton.addEventListener('click', toggleDesktopSidebar);
-        sidebar.appendChild(toggleButton);
-        
-        // Update toggle button icon when sidebar state changes
-        const updateToggleButton = () => {
-            const icon = toggleButton.querySelector('i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.className = 'fas fa-chevron-right';
-            } else {
-                icon.className = 'fas fa-chevron-left';
-            }
-        };
-        
-        // Update icon on toggle
-        toggleButton.addEventListener('click', updateToggleButton);
-        
-        // Set initial state
-        if (dashboardContainer) {
-            dashboardContainer.style.marginLeft = '280px';
-        }
-    }
-    
-    // Add touch support for mobile swipe
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    sidebar.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-    
-    sidebar.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-    
-    function handleSwipe() {
-        const swipeThreshold = 50;
-        const diff = touchStartX - touchEndX;
-        
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0) {
-                // Swipe left - close sidebar
-                closeSidebar();
-            } else {
-                // Swipe right - open sidebar (only if closed)
-                if (!sidebar.classList.contains('active') && window.innerWidth <= 768) {
-                    sidebar.classList.add('active');
-                    sidebarOverlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
-            }
-        }
-    }
-    
-    // Keyboard navigation
+
+    if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Keyboard: Escape closes sidebar
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && sidebar.classList.contains('active')) {
-            closeSidebar();
-        }
+        if (e.key === 'Escape' && sidebar.classList.contains('active')) closeSidebar();
+    });
+
+    // Close mobile sidebar on child link click
+    document.querySelectorAll('.child-link').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) closeSidebar();
+        });
     });
 });
 </script>
+<?php
+// Forgot: include direct links for Directory, Store, Logout
+?>

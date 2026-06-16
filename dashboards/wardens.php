@@ -10,15 +10,16 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-// Get warden statistics (using fallback data only)
-$total_students = 150; // Fallback value
-$active_programs = 2; // Fallback value
-$total_staff = 4; // Fallback value
-$recent_applications = 8; // Fallback value
-$assigned_students = 75; // Fallback value
-$welfare_cases = 12; // Fallback value
-$counseling_sessions = 3; // Fallback value
-$discipline_cases = 2; // Fallback value
+// Get warden statistics from database
+$students_db = $ctx['students'];
+$total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$assigned_students = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM hostel_allocations WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$welfare_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_welfare_cases WHERE status NOT IN ('Resolved','Closed')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$counseling_sessions = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_counseling_sessions WHERE session_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$discipline_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
 // Get recent activities (using a simple approach)
 $recent_activities = [
@@ -41,71 +42,7 @@ $recent_activities = [
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Wardens Dashboard</h4>
-                <p><?php echo htmlspecialchars($user_name ?? $user['full_name'] ?? 'User'); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Welfare Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#students">
-                            <i class="fas fa-users"></i> Student Welfare
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#counseling">
-                            <i class="fas fa-comments"></i> Counseling Services
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#discipline">
-                            <i class="fas fa-gavel"></i> Student Discipline
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#accommodation">
-                            <i class="fas fa-bed"></i> Accommodation
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#activities">
-                            <i class="fas fa-calendar-alt"></i> Student Activities
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#security">
-                            <i class="fas fa-shield-alt"></i> Security & Safety
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#reports">
-                            <i class="fas fa-chart-bar"></i> Welfare Reports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-<a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-<a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -566,10 +503,10 @@ $recent_activities = [
         setInterval(updateDateTime, 60000);
 
         // Navigation
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);

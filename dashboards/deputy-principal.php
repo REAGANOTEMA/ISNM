@@ -3,11 +3,13 @@ include_once '../includes/config.php';
 include_once '../includes/functions.php';
 include_once '../includes/photo_upload.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['deputy', 'principal']);
 $auth_service = $ctx['auth'];
 $conn = $ctx['staff'];
 $user = $ctx['user'];
+$website_conn = $ctx['website'];
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
@@ -19,17 +21,60 @@ $name_parts = explode(' ', trim($display_name), 2);
 $first_name = $name_parts[0] ?? 'User';
 $last_name = $name_parts[1] ?? '';
 
-// Get academic statistics using stored procedure
-$total_students = 150; // Fallback value
-$total_staff = 2; // Fallback value
-$recent_applications = 8; // Fallback value
-$active_programs = 2; // Fallback value
+// Get academic statistics from database
+$total_students = 0;
+$total_staff = 0;
+$total_lecturers = 0;
+$active_courses = 0;
+$active_programs = 0;
+$recent_applications = 0;
+$average_attendance = 0;
 
-// Get recent activities (using a simple approach)
-$recent_activities = [
-    ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
-    ['activity' => 'Academic meeting conducted', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))]
-];
+try {
+    $students_conn = $ctx['students'] ?? null;
+    if ($students_conn) {
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+    }
+
+    if ($conn) {
+        $result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+        if ($result) $total_staff = (int)$result->fetch_assoc()['cnt'];
+        $total_lecturers = $total_staff;
+
+        $result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status = 'Active'");
+        if ($result) $active_programs = (int)$result->fetch_assoc()['cnt'];
+        $active_courses = $active_programs == 0 ? 0 : $active_programs;
+    }
+
+    if ($website_conn) {
+        $result = $website_conn->query("SELECT COUNT(*) as cnt FROM applications");
+        if ($result) $recent_applications = (int)$result->fetch_assoc()['cnt'];
+    }
+
+    // Attendance approximation from students database
+    if ($students_conn) {
+        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'active'");
+        $active = $result ? (int)$result->fetch_assoc()['cnt'] : 0;
+        $average_attendance = $total_students > 0 ? round(($active / $total_students) * 100, 1) : 0;
+    }
+} catch (Exception $e) {}
+
+// Get recent activities
+$recent_activities = [];
+try {
+    $activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
+    $activities_result = $conn->query($activities_sql);
+    if ($activities_result && $activities_result->num_rows > 0) {
+        $recent_activities = $activities_result->fetch_all(MYSQLI_ASSOC);
+    }
+} catch (Exception $e) {}
+if (empty($recent_activities)) {
+    $recent_activities = [
+        ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
+        ['activity' => 'Academic meeting conducted', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))]
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -46,68 +91,7 @@ $recent_activities = [
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Deputy Principal Dashboard</h4>
-                <p><?php echo htmlspecialchars($display_name); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Academic Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#teaching">
-                            <i class="fas fa-chalkboard-teacher"></i> Teaching & Learning
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#students">
-                            <i class="fas fa-user-graduate"></i> Student Affairs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#examinations">
-                            <i class="fas fa-file-alt"></i> Examinations
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#clinical">
-                            <i class="fas fa-hospital"></i> Clinical Training
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#discipline">
-                            <i class="fas fa-gavel"></i> Student Discipline
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#reports">
-                            <i class="fas fa-chart-bar"></i> Academic Reports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="student-records.php"><i class="fas fa-users-gear"></i> Student Records</a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="d-flex justify-content-center flex-wrap mb-2">
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                </div>
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -528,6 +512,12 @@ $recent_activities = [
                     </div>
                 </section>
 
+                <!-- News Management -->
+                <section class="activities-section">
+                    <h2><i class="fas fa-newspaper me-2"></i>News Management</h2>
+                    <?php renderNewsWidget($conn, $website_conn, $user['id'] ?? 0, $user['full_name'] ?? 'Deputy Principal', $user['role'] ?? 'Deputy Principal', 5); ?>
+                </section>
+
                 <!-- Recent Activities -->
                 <section class="activities-section">
                     <h2>Recent Academic Activities</h2>
@@ -580,10 +570,10 @@ $recent_activities = [
         setInterval(updateDateTime, 60000);
 
         // Navigation
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
                 const targetId = this.getAttribute('href').substring(1);

@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx          = bootstrapStaffDashboard(['school principal', 'principal']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
 $staff_conn   = $ctx['staff'];
 $students_conn = $ctx['students'];
+$website_conn  = $ctx['website'];
 
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 $user_role = $_SESSION['role'] ?? '';
@@ -245,6 +247,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
         <a href="../dashboards/director-academics.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Director Academics</a>
         <a href="../import_students_excel.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
       </div>
+    </div>
+
+    <!-- NEWS MANAGEMENT -->
+    <div class="card-section">
+      <?php renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $user_role, 5); ?>
     </div>
 
     <!-- Recent Activities -->

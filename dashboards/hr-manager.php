@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx          = bootstrapStaffDashboard(['hr', 'manager']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
 $staff_conn   = $ctx['staff'];
 $students_conn = $ctx['students'];
+$website_conn  = $ctx['website'];
 
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 $user_name = $_SESSION['full_name'] ?? 'HR Manager';
@@ -202,6 +204,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
         <a href="../hr_performance.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-line me-1"></i>Performance</a>
         <a href="../hr_reports.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-file-alt me-1"></i>Reports</a>
       </div>
+    </div>
+
+    <!-- NEWS MANAGEMENT -->
+    <div class="card-section">
+      <?php renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $_SESSION['role'] ?? 'HR Manager', 5); ?>
     </div>
 
     <!-- Staff Directory -->

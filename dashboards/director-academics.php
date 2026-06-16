@@ -1,28 +1,36 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'academics']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Director of Academics';
+$website_conn = $ctx['website'];
 
-// Set dashboard statistics - use fallbacks
-$total_students = 150;
-$total_lecturers = 20;
-$active_courses = 8;
-$avg_gpa = 3.4;
+// Set dashboard statistics from database
+$total_students = 0;
+$total_lecturers = 0;
+$active_courses = 0;
+$avg_gpa = 0;
 
-// Try to get real stats
 try {
-    require_once __DIR__ . '/../config/database.php';
-    $students_conn = getStudentsConnection();
+    $students_conn = $ctx['students'] ?? null;
     if ($students_conn) {
         $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $total_students = $result->fetch_assoc()['cnt'] ?? 150;
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
     }
-    
-    $staff_result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
-    if ($staff_result) $total_lecturers = $staff_result->fetch_assoc()['cnt'] ?? 20;
+
+    if ($conn) {
+        $result = $conn->query("SELECT COUNT(*) as cnt FROM staff");
+        if ($result) $total_lecturers = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $conn->query("SELECT COUNT(*) as cnt FROM academic_programs WHERE status = 'Active'");
+        if ($result) $active_courses = (int)$result->fetch_assoc()['cnt'];
+
+        $result = $conn->query("SELECT AVG(marks) as avg_gpa FROM academic_records");
+        if ($result) $avg_gpa = round((float)$result->fetch_assoc()['avg_gpa'], 1);
+    }
 } catch (Exception $e) {}
 
 // Get recent activities with fallback
@@ -86,46 +94,7 @@ try {
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>ISNM Management</h4>
-                <small><?php echo htmlspecialchars($user_name); ?></small>
-                <span class="badge bg-info">Director of Academics</span>
-            </div>
-            
-            <nav class="sidebar-menu">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Academic Overview
-                </a>
-                <a href="#programs" class="nav-link">
-                    <i class="fas fa-book"></i> Program Management
-                </a>
-                <a href="#curriculum" class="nav-link">
-                    <i class="fas fa-book-open"></i> Curriculum Development
-                </a>
-                <a href="#faculty" class="nav-link">
-                    <i class="fas fa-chalkboard-teacher"></i> Faculty Management
-                </a>
-                <a href="#exams" class="nav-link">
-                    <i class="fas fa-clipboard-list"></i> Examinations & Assessment
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Academic Reports
-                </a>
-                <a href="#activity" class="nav-link">
-                    <i class="fas fa-history"></i> Activity Log
-                </a>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <a href="../logout.php" class="btn btn-danger btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="dashboard-main">
@@ -310,6 +279,12 @@ try {
                             <button class="btn btn-primary">Generate</button>
                         </div>
                     </div>
+                </section>
+
+                <!-- News Management -->
+                <section id="news" class="content-section">
+                    <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
+                    <?php renderNewsWidget($conn, $website_conn, $ctx['user']['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'Director Academics', 5); ?>
                 </section>
 
                 <!-- Recent Activities -->

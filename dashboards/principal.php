@@ -289,38 +289,7 @@ $pending_applications = executeQuery($pending_applications_sql);
             min-height: 100vh;
         }
 
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 2rem;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
 
-        .sidebar-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .sidebar-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin-bottom: 1rem;
-            border: 3px solid var(--accent-color);
-        }
-
-        .sidebar h4 {
-            margin: 0.5rem 0;
-            font-weight: bold;
-        }
-
-        .sidebar p {
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
 
         .main-content {
             flex: 1;
@@ -404,24 +373,6 @@ $pending_applications = executeQuery($pending_applications_sql);
             margin: 0;
         }
 
-        .nav-link {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            display: block;
-            margin-bottom: 0.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        .nav-link i {
-            margin-right: 0.5rem;
-        }
 
         .activity-item {
             padding: 1rem;
@@ -468,45 +419,7 @@ $pending_applications = executeQuery($pending_applications_sql);
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo">
-                <h4>Principal Dashboard</h4>
-                <p><?php echo ($user['first_name'] ?? 'User') . ' ' . ($user['surname'] ?? $user['last_name'] ?? ''); ?></p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <a href="#overview" class="nav-link active">
-                    <i class="fas fa-tachometer-alt"></i> Overview
-                </a>
-                <a href="#students" class="nav-link">
-                    <i class="fas fa-users"></i> Student Profiles
-                </a>
-                <a href="#academics" class="nav-link">
-                    <i class="fas fa-graduation-cap"></i> Academic Overview
-                </a>
-                <a href="#staff" class="nav-link">
-                    <i class="fas fa-user-tie"></i> Staff Management
-                </a>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
-                <a href="#settings" class="nav-link">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </nav>
-            
-            <div class="mt-auto">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-<a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-<a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                <a href="student-records.php" class="nav-link"><i class="fas fa-users-gear"></i> Student Records</a>
-                <a href="../logout.php" class="btn btn-danger btn-sm w-100">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -700,12 +613,12 @@ $pending_applications = executeQuery($pending_applications_sql);
         setInterval(updateDateTime, 60000); // Update every minute
 
         // Navigation handling
-        document.querySelectorAll('.nav-link').forEach(link => {
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 
                 // Remove active class from all links
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
                 
                 // Add active class to clicked link
                 this.classList.add('active');
