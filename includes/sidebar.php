@@ -12,7 +12,19 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSIO
 $user_role = $_SESSION['role'];
 $user_type = $_SESSION['type'];
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
-$user_id   = $_SESSION['user_id'];
+$user_id   = (int)($_SESSION['user_id'] ?? 0);
+
+// Load profile image from staff_profiles
+$profileImage = '../images/default-avatar.png';
+if ($user_id) {
+    $profileFile = __DIR__ . '/profile_settings.php';
+    if (file_exists($profileFile)) {
+        include_once $profileFile;
+        if (function_exists('getStaffProfileImageUrl')) {
+            $profileImage = getStaffProfileImageUrl($user_id);
+        }
+    }
+}
 
 require_once __DIR__ . '/module_config.php';
 
@@ -37,9 +49,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         </div>
     </div>
 
-    <div class="sidebar-user">
+    <div class="sidebar-user" onclick="if(typeof openProfileModal==='function')openProfileModal();" style="cursor:pointer" title="Click to update profile">
         <div class="user-avatar-wrap">
-            <img src="../images/default-avatar.png" alt="" class="user-avatar">
+            <img src="<?= $profileImage ?>" alt="" class="user-avatar">
             <span class="user-dot"></span>
         </div>
         <div class="user-meta">

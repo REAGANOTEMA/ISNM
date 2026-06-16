@@ -5,6 +5,14 @@ if ($rootPath === '') $rootPath = '.';
 // Cache-busting version — bump on every deploy
 $v = '2.0.1';
 
+// Profile Settings — universal staff profile image upload
+$profileSettingsFile = __DIR__ . '/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    try {
+        include_once $profileSettingsFile;
+    } catch (Exception $e) {}
+}
+
 // Universal student quick-search on every dashboard
 if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABLED')) {
     $sqsFile = __DIR__ . '/student_quick_search.php';
@@ -15,12 +23,15 @@ if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABL
     }
 }
 ?>
+<?php if (function_exists('renderProfileStyles')) renderProfileStyles(); ?>
 <!-- Dashboard professional styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-professional.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Bootstrap 5.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Font Awesome JS (icons) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" defer></script>
+<?php if (function_exists('renderProfileButton')) renderProfileButton(); ?>
+<?php if (function_exists('renderProfileModal')) renderProfileModal(); ?>
 
 <script>
 // Cache-busting version constant
@@ -230,6 +241,7 @@ var ISNM_VERSION = '<?= $v ?>';
     registerSW();
     detectPWA();
     initNotificationBell();
+    <?php if (function_exists('renderProfileScripts')): ?>try { <?php renderProfileScripts(); ?> } catch(e){}<?php endif; ?>
   });
 })();
 </script>
