@@ -42,7 +42,7 @@ $conn = getStudentsConnection();
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="dashboard-container" style="margin-left:260px">
+    <div class="dashboard-container" style="margin-left:270px">
         <h1><i class="fas fa-crown"></i> Guild President Dashboard</h1>
         <p>Welcome, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?></p>
         

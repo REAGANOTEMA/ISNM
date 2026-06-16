@@ -83,8 +83,8 @@ $website = $ctx['website'];
     <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
-    $staff_conn = $ctx['staff'];
-    $students_conn = getStudentsConnection();
+<?php
+    $students_conn = $students;
     
     // Get financial statistics
     $today_collections = getTotalCollections('today');
@@ -215,11 +215,11 @@ $website = $ctx['website'];
                             <div class="fee-stat">
                                 <div class="fee-stat-header">
                                     <span>Cleared Students</span>
-                                    <h4><?php echo number_format($cleared_students); ?></h4>
+                                    <h4><?php echo number_format($students_cleared); ?></h4>
                                 </div>
                                 <div class="fee-stat-bar">
                                     <div class="progress">
-                                        <div class="progress-bar bg-success" style="width: <?php echo $total_students > 0 ? ($cleared_students / $total_students) * 100 : 0; ?>%"></div>
+                                        <div class="progress-bar bg-success" style="width: <?php echo $total_students > 0 ? ($students_cleared / $total_students) * 100 : 0; ?>%"></div>
                                     </div>
                                 </div>
                             </div>

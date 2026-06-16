@@ -36,31 +36,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $json_vars = json_encode(array_filter(array_map('trim', explode(',', $template_variables))));
             
+            $stmt = false;
             if ($id) {
                 if ($table === 'document_templates') {
                     $sql = "UPDATE $table SET template_name = ?, template_type = ?, template_content = ?, template_variables = ?, is_default = ?, updated_at = NOW() WHERE id = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_default, $id);
+                    if ($stmt) $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_default, $id);
                 } else {
                     $sql = "UPDATE $table SET template_name = ?, template_type = ?, template_content = ?, template_variables = ?, is_active = ?, updated_at = NOW() WHERE id = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_active, $id);
+                    if ($stmt) $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_active, $id);
                 }
-                $_SESSION['success'] = 'Template updated successfully.';
             } else {
                 if ($table === 'document_templates') {
                     $sql = "INSERT INTO $table (template_name, template_type, template_content, template_variables, is_default, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_default, $staff_id);
+                    if ($stmt) $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_default, $staff_id);
                 } else {
                     $sql = "INSERT INTO $table (template_name, template_type, template_content, template_variables, is_active, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_active, $staff_id);
+                    if ($stmt) $stmt->bind_param('sssssi', $template_name, $template_type, $template_content, $json_vars, $is_active, $staff_id);
                 }
-                $_SESSION['success'] = 'Template created successfully.';
             }
             
-            if ($stmt->execute()) {
+            if ($stmt && $stmt->execute()) {
+                $_SESSION['success'] = $id ? 'Template updated successfully.' : 'Template created successfully.';
                 header("Location: document_management.php?table=$table");
                 exit();
             } else {
@@ -75,11 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM $table WHERE id = ?");
-            $stmt->bind_param('i', $id);
-            if ($stmt->execute()) {
-                $_SESSION['success'] = 'Template deleted successfully.';
-            } else {
-                $_SESSION['error'] = 'Failed to delete template: ' . $conn->error;
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                if ($stmt->execute()) {
+                    $_SESSION['success'] = 'Template deleted successfully.';
+                } else {
+                    $_SESSION['error'] = 'Failed to delete template: ' . $conn->error;
+                }
+                $stmt->close();
             }
         }
         header("Location: document_management.php?table=$table");
@@ -102,9 +105,13 @@ if (!in_array($current_table, ['receipt_templates', 'document_templates'])) {
 $editing = null;
 if ($action === 'edit' && $template_id) {
     $stmt = $conn->prepare("SELECT * FROM $current_table WHERE id = ?");
-    $stmt->bind_param('i', $template_id);
-    $stmt->execute();
-    $editing = $stmt->get_result()->fetch_assoc();
+    if ($stmt) {
+        $stmt->bind_param('i', $template_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $editing = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+    }
     if (!$editing) {
         $_SESSION['error'] = 'Template not found.';
         header("Location: document_management.php?table=$current_table");
@@ -117,28 +124,36 @@ $search = $_GET['search'] ?? '';
 if ($current_table === 'receipt_templates') {
     if ($template_type_filter) {
         $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE rt.template_type = ? ORDER BY rt.is_active DESC, rt.template_name ASC");
-        $stmt->bind_param('s', $template_type_filter);
+        if ($stmt) $stmt->bind_param('s', $template_type_filter);
     } elseif ($search) {
         $like = "%$search%";
         $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE rt.template_name LIKE ? OR rt.template_type LIKE ? OR rt.template_content LIKE ? ORDER BY rt.is_active DESC, rt.template_name ASC");
-        $stmt->bind_param('sss', $like, $like, $like);
+        if ($stmt) $stmt->bind_param('sss', $like, $like, $like);
     } else {
         $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id ORDER BY rt.is_active DESC, rt.template_name ASC");
     }
-    $stmt->execute();
-    $templates = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->close();
+    }
 } else {
     if ($search) {
         $like = "%$search%";
         $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id WHERE dt.template_name LIKE ? OR dt.template_type LIKE ? OR dt.template_content LIKE ? ORDER BY dt.is_default DESC, dt.template_name ASC");
-        $stmt->bind_param('sss', $like, $like, $like);
+        if ($stmt) $stmt->bind_param('sss', $like, $like, $like);
     } else {
         $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id ORDER BY dt.is_default DESC, dt.template_name ASC");
     }
-    $stmt->execute();
-    $templates = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $templates = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->close();
+    }
 }
-$conn->close();
+if ($conn) $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -175,7 +190,7 @@ $conn->close();
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="container" style="margin-left:260px">
+<div class="container" style="margin-left:270px">
     <div class="header d-flex justify-content-between align-items-center">
         <div>
             <h2><i class="fas fa-file-alt me-2"></i>Document Template Management</h2>

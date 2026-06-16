@@ -1,13 +1,11 @@
 <?php
-require_once __DIR__ . '/../auth-service.php';
-
-if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
-    header('Location: ../staff-login.php'); exit;
-}
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard([]);
+$user = $ctx['user'];
 
 $role = $_SESSION['role'] ?? '';
 $allowed = ['School Secretary','Director ICT','Academic Registrar','Registrar','Director General','CEO','School Principal','Principal','HOD','Lecturer'];
-if (!in_array($role, $allowed) && !$auth_service->hasFullInstitutionAccess($role)) {
+if (!in_array($role, $allowed) && !$ctx['auth']->hasFullInstitutionAccess($role)) {
     header('Location: ../staff-login.php?error=unauthorized'); exit;
 }
 
@@ -80,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['success'] = 'Score saved.';
         }
     }
-    header('Location: dashboards/student-management.php'); exit;
+    header('Location: student-management.php'); exit;
 }
 
 $courses = [];
@@ -130,7 +128,7 @@ body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="main" style="margin-left:260px">
+<div class="main" style="margin-left:270px">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <button class="btn btn-sm btn-outline-secondary d-md-none me-2" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>

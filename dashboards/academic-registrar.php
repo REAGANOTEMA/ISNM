@@ -224,7 +224,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="main" style="margin-left:260px">
+<div class="main" style="margin-left:270px">
   <!-- Topbar -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>

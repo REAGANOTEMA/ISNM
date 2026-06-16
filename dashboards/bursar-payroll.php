@@ -12,19 +12,8 @@ $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-// Database connections
-$staff_conn = getStaffConnection();
-$students_conn = getStudentsConnection();
-
-if ($staff_conn->connect_error) {
-    die("Staff DB connection failed: " . $staff_conn->connect_error);
-}
-
-if ($students_conn->connect_error) {
-    die("Students DB connection failed: " . $students_conn->connect_error);
-}
-
-// Set charset
+$staff_conn = $ctx['staff'];
+$students_conn = $ctx['students'];
 $staff_conn->set_charset("utf8mb4");
 $students_conn->set_charset("utf8mb4");
 
@@ -53,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Function to add staff salary
 function handleAddStaffSalary() {
-    global $staff_conn;
+    global $ctx;
     
     $staff_id = $_POST['staff_id'];
     $basic_salary = $_POST['basic_salary'];
@@ -64,10 +53,11 @@ function handleAddStaffSalary() {
     $effective_date = $_POST['effective_date'];
     
     $sql = "INSERT INTO staff_salaries (staff_id, basic_salary, allowances, overtime_rate, nssf_tax, paye_tax, effective_date, created_by) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     
-    $stmt = $staff_conn->prepare($sql);
-    $stmt->bind_param("iddddddss", $staff_id, $basic_salary, $allowances, $overtime_rate, $nssf_tax, $paye_tax, $effective_date, $_SESSION['user_id']);
+    $stmt = $ctx['staff']->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $ctx['staff']->error; header("Location: bursar-payroll.php"); exit(); }
+    $stmt->bind_param("idddddss", $staff_id, $basic_salary, $allowances, $overtime_rate, $nssf_tax, $paye_tax, $effective_date, $_SESSION['user_id']);
     
     if ($stmt->execute()) {
         $_SESSION['success'] = "Staff salary added successfully!";
@@ -81,7 +71,7 @@ function handleAddStaffSalary() {
 
 // Function to update staff salary
 function handleUpdateStaffSalary() {
-    global $staff_conn;
+    global $ctx;
     
     $salary_id = $_POST['salary_id'];
     $basic_salary = $_POST['basic_salary'];
@@ -91,10 +81,11 @@ function handleUpdateStaffSalary() {
     $paye_tax = $_POST['paye_tax'] ?? 0;
     $effective_date = $_POST['effective_date'];
     
-    $sql = "UPDATE staff_salaries SET basic_salary = ?, allowances = ?, overtime_rate = ?, nssf_tax = ?, paye_tax = ?, effective_date = ?, updated_by = NOW() WHERE id = ?";
+    $sql = "UPDATE staff_salaries SET basic_salary = ?, allowances = ?, overtime_rate = ?, nssf_tax = ?, paye_tax = ?, effective_date = ?, updated_by = ? WHERE id = ?";
     
-    $stmt = $staff_conn->prepare($sql);
-    $stmt->bind_param("iddddddss", $basic_salary, $allowances, $overtime_rate, $nssf_tax, $paye_tax, $effective_date, $salary_id, $_SESSION['user_id']);
+    $stmt = $ctx['staff']->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $ctx['staff']->error; header("Location: bursar-payroll.php"); exit(); }
+    $stmt->bind_param("dddddssi", $basic_salary, $allowances, $overtime_rate, $nssf_tax, $paye_tax, $effective_date, $_SESSION['user_id'], $salary_id);
     
     if ($stmt->execute()) {
         $_SESSION['success'] = "Staff salary updated successfully!";
@@ -108,7 +99,7 @@ function handleUpdateStaffSalary() {
 
 // Function to process payroll
 function handleProcessPayroll() {
-    global $staff_conn, $students_conn;
+    global $ctx;
     
     $month = $_POST['month'];
     $year = $_POST['year'];
@@ -119,15 +110,16 @@ function handleProcessPayroll() {
                      LEFT JOIN staff_salaries ss ON s.id = ss.staff_id 
                      WHERE s.status = 'Active'";
     
-    $salaries_result = $staff_conn->query($salaries_sql);
+    $salaries_result = $ctx['staff']->query($salaries_sql);
+    if (!$salaries_result) { $_SESSION['error'] = 'Query failed'; header("Location: bursar-payroll.php"); exit(); }
     $salaries = $salaries_result->fetch_all(MYSQLI_ASSOC);
     
     $total_payroll = 0;
     $processed_count = 0;
     
     foreach ($salaries as $salary) {
-        // Calculate net salary
-        $net_salary = $salary['basic_salary'] + $salary['allowances'] - $salary['nssf_tax'] - $salary['paye_tax'];
+        $gross_salary = ($salary['basic_salary'] ?? 0) + ($salary['allowances'] ?? 0);
+        $net_salary = $gross_salary - ($salary['nssf_tax'] ?? 0) - ($salary['paye_tax'] ?? 0);
         
         // Get student fees for this staff member's department
         $fees_sql = "SELECT SUM(fr.amount) as total_fees 
@@ -135,16 +127,18 @@ function handleProcessPayroll() {
                      JOIN students st ON fr.student_id = st.id 
                      WHERE fr.status = 'Unpaid'";
         
-        $fees_result = $students_conn->query($fees_sql);
+        $fees_result = $ctx['students']->query($fees_sql);
+        if (!$fees_result) continue;
         $fees_data = $fees_result->fetch_assoc();
         $total_fees = $fees_data['total_fees'] ?? 0;
         
         // Insert payroll record
         $payroll_sql = "INSERT INTO payroll_records (staff_id, month, year, gross_salary, net_salary, total_fees_collected, net_payment, processed_by, processing_date) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         
-        $payroll_stmt = $students_conn->prepare($payroll_sql);
-        $payroll_stmt->bind_param("iiddddds", $salary['id'], $month, $year, $net_salary, $total_fees, $net_salary, $total_fees, $_SESSION['user_id']);
+        $payroll_stmt = $ctx['staff']->prepare($payroll_sql);
+        if (!$payroll_stmt) continue;
+        $payroll_stmt->bind_param("issdddds", $salary['id'], $month, $year, $gross_salary, $net_salary, $total_fees, $net_salary, $_SESSION['user_id']);
         
         if ($payroll_stmt->execute()) {
             $processed_count++;
@@ -158,7 +152,7 @@ function handleProcessPayroll() {
 
 // Function to generate payslips
 function handleGeneratePayslips() {
-    global $staff_conn;
+    global $ctx;
     
     $month = $_POST['month'];
     $year = $_POST['year'];
@@ -170,7 +164,8 @@ function handleGeneratePayslips() {
                     WHERE pr.month = ? AND pr.year = ? 
                     ORDER BY s.full_name";
     
-    $payroll_stmt = $staff_conn->prepare($payroll_sql);
+    $payroll_stmt = $ctx['staff']->prepare($payroll_sql);
+    if (!$payroll_stmt) { $_SESSION['error'] = 'Prepare failed'; header("Location: bursar-payroll.php"); exit(); }
     $payroll_stmt->bind_param("ss", $month, $year);
     $payroll_stmt->execute();
     $payroll_result = $payroll_stmt->get_result();
@@ -188,8 +183,9 @@ function handleGeneratePayslips() {
         $save_sql = "INSERT INTO generated_documents (document_type, staff_id, document_title, document_content, access_code, generation_date) 
                          VALUES (?, ?, ?, ?, ?, NOW())";
         
-        $save_stmt = $students_conn->prepare($save_sql);
-        $save_stmt->bind_param("sissss", 'Payslip', $payroll['staff_id'], 'Monthly Payslip - ' . $payroll['full_name'], $payslip_content, $access_code);
+        $save_stmt = $ctx['staff']->prepare($save_sql);
+        if (!$save_stmt) continue;
+        $save_stmt->bind_param("sisss", 'Payslip', $payroll['staff_id'], 'Monthly Payslip - ' . $payroll['full_name'], $payslip_content, $access_code);
         
         if ($save_stmt->execute()) {
             $payslips_generated++;
@@ -325,13 +321,16 @@ function generatePayslipContent($payroll) {
 </html>';
 }
 
-// Get current payroll data
+$current_month = date('m');
+$current_year = date('Y');
 $payroll_sql = "SELECT COUNT(*) as total FROM payroll_records WHERE month = ? AND year = ?";
 $payroll_stmt = $staff_conn->prepare($payroll_sql);
-$payroll_stmt->bind_param("ss", date('m'), date('Y'));
-$payroll_stmt->execute();
-$payroll_result = $payroll_stmt->get_result();
-$payroll_data = $payroll_result->fetch_assoc();
+if ($payroll_stmt) {
+    $payroll_stmt->bind_param("ss", $current_month, $current_year);
+    $payroll_stmt->execute();
+    $payroll_result = $payroll_stmt->get_result();
+    $payroll_data = $payroll_result->fetch_assoc();
+}
 ?>
 
 <!DOCTYPE html>
@@ -347,7 +346,7 @@ $payroll_data = $payroll_result->fetch_assoc();
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="dashboard-container" style="margin-left:260px">
+    <div class="dashboard-container" style="margin-left:270px">
         <!-- School Header with Logo -->
         <div class="school-header">
             <img src="../images/school-logo.png" alt="ISNM Logo" class="school-logo">

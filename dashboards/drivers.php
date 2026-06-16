@@ -97,7 +97,7 @@ $recent_trips = [
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div style="margin-left:260px">
+<div style="margin-left:270px">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="container">

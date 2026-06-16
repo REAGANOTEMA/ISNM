@@ -113,30 +113,35 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($action === 'create') {
                 // Insert into staff DB
                 $stmt = $staffConn->prepare("INSERT INTO director_news (title, slug, content, excerpt, featured_image, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssiss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $status, $published_at);
-                if ($stmt->execute()) {
-                    $newsId = $stmt->insert_id;
-                    // Also insert into website DB for public display
-                    if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                        $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
-                        $ws->execute();
-                        $ws->close();
+                if ($stmt) {
+                    $stmt->bind_param("sssssiss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $status, $published_at);
+                    if ($stmt->execute()) {
+                        $newsId = $stmt->insert_id;
+                        // Also insert into website DB for public display
+                        if ($websiteConn && $ws = $websiteConn->prepare("INSERT INTO news (title, slug, content, excerpt, featured_image, author_id, author_name, author_role, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                            $ws->bind_param("sssssissss", $title, $slug, $allContent, $excerpt, $featuredImage, $_SESSION['user_id'], $authorName, $authorRole, $status, $published_at);
+                            $ws->execute();
+                            $ws->close();
+                        }
+                        $_SESSION['news_success'] = 'News article created successfully.';
+                    } else {
+                        $errors[] = 'Database error: ' . $stmt->error;
                     }
-                    $_SESSION['news_success'] = 'News article created successfully.';
+                    $stmt->close();
                 } else {
-                    $errors[] = 'Database error: ' . $stmt->error;
+                    $errors[] = 'Database error: ' . $staffConn->error;
                 }
-                $stmt->close();
             } else {
                 // Update in staff DB
+                $stmt = false;
                 if ($featuredImage) {
                     $stmt = $staffConn->prepare("UPDATE director_news SET title=?, content=?, excerpt=?, featured_image=?, status=?, published_at=COALESCE(?, published_at) WHERE id=?");
-                    $stmt->bind_param("ssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $news_id);
+                    if ($stmt) $stmt->bind_param("ssssssi", $title, $allContent, $excerpt, $featuredImage, $status, $published_at, $news_id);
                 } else {
                     $stmt = $staffConn->prepare("UPDATE director_news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at) WHERE id=?");
-                    $stmt->bind_param("sssssi", $title, $allContent, $excerpt, $status, $published_at, $news_id);
+                    if ($stmt) $stmt->bind_param("sssssi", $title, $allContent, $excerpt, $status, $published_at, $news_id);
                 }
-                if ($stmt->execute()) {
+                if ($stmt && $stmt->execute()) {
                     // Also update website DB
                     if ($websiteConn) {
                         if ($featuredImage) {
@@ -148,10 +153,10 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                     $_SESSION['news_success'] = 'News article updated successfully.';
-                } else {
+                } elseif ($stmt) {
                     $errors[] = 'Database error: ' . $stmt->error;
                 }
-                $stmt->close();
+                if ($stmt) $stmt->close();
             }
 
             header('Location: news.php');
@@ -163,16 +168,18 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $news_id = (int)($_POST['news_id'] ?? 0);
         if ($news_id) {
             $stmt = $staffConn->prepare("DELETE FROM director_news WHERE id=?");
-            $stmt->bind_param("i", $news_id);
-            if ($stmt->execute()) {
-                if ($websiteConn && $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?")) {
-                    $ws->bind_param("i", $news_id);
-                    $ws->execute();
-                    $ws->close();
+            if ($stmt) {
+                $stmt->bind_param("i", $news_id);
+                if ($stmt->execute()) {
+                    if ($websiteConn && $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?")) {
+                        $ws->bind_param("i", $news_id);
+                        $ws->execute();
+                        $ws->close();
+                    }
+                    $_SESSION['news_success'] = 'News article deleted.';
                 }
-                $_SESSION['news_success'] = 'News article deleted.';
+                $stmt->close();
             }
-            $stmt->close();
         }
         header('Location: news.php');
         exit;
@@ -184,16 +191,18 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($news_id && in_array($newStatus, ['draft', 'published', 'archived'])) {
             $pubAt = ($newStatus === 'published') ? date('Y-m-d H:i:s') : null;
             $stmt = $staffConn->prepare("UPDATE director_news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?");
-            $stmt->bind_param("ssi", $newStatus, $pubAt, $news_id);
-            if ($stmt->execute()) {
-                if ($websiteConn && $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?")) {
-                    $ws->bind_param("ssi", $newStatus, $pubAt, $news_id);
-                    $ws->execute();
-                    $ws->close();
+            if ($stmt) {
+                $stmt->bind_param("ssi", $newStatus, $pubAt, $news_id);
+                if ($stmt->execute()) {
+                    if ($websiteConn && $ws = $websiteConn->prepare("UPDATE news SET status=?, published_at=COALESCE(?, published_at) WHERE id=?")) {
+                        $ws->bind_param("ssi", $newStatus, $pubAt, $news_id);
+                        $ws->execute();
+                        $ws->close();
+                    }
+                    $_SESSION['news_success'] = 'News status updated to ' . $newStatus . '.';
                 }
-                $_SESSION['news_success'] = 'News status updated to ' . $newStatus . '.';
+                $stmt->close();
             }
-            $stmt->close();
         }
         header('Location: news.php');
         exit;
@@ -232,13 +241,15 @@ if ($view === 'single' && $slug) {
     if (!$s) {
         $s = $staffConn->prepare("SELECT * FROM director_news WHERE slug=? AND status='published' LIMIT 1");
     }
-    $s->bind_param("s", $slug);
-    $s->execute();
-    $result = $s->get_result();
-    if ($result && $result->num_rows > 0) {
-        $singleNews = $result->fetch_assoc();
+    if ($s) {
+        $s->bind_param("s", $slug);
+        $s->execute();
+        $result = $s->get_result();
+        if ($result && $result->num_rows > 0) {
+            $singleNews = $result->fetch_assoc();
+        }
+        $s->close();
     }
-    $s->close();
 } elseif ($view === 'list') {
     if ($is_admin) {
         // Admin sees all
@@ -252,7 +263,7 @@ if ($view === 'single' && $slug) {
     }
 }
 
-$pageTitle = $singleNews ? htmlspecialchars($singleNews['title']) . ' - ISNM News' : 'News - ISNM';
+$pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' - ISNM News' : 'News - ISNM');
 include 'shared/_header.php';
 ?>
 <link href="css/news.css" rel="stylesheet">

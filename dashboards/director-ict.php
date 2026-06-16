@@ -209,7 +209,7 @@ if ($search_term && $students_conn) {
         .sidebar-menu .nav-link.active { background: rgba(59,130,246,0.15); color: #60a5fa; border-left-color: #3b82f6; }
         .sidebar-menu .nav-link i { width: 20px; text-align: center; font-size: 1rem; }
         .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; }
-        .dashboard-main { margin-left: 260px; flex: 1; min-height: 100vh; }
+        .dashboard-main { margin-left: 270px; flex: 1; min-height: 100vh; }
         .dashboard-header { background: white; padding: 20px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .dashboard-header h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; }
         .dashboard-header p { margin: 2px 0 0; color: #64748b; font-size: 0.88rem; }

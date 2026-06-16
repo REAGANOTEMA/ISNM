@@ -2,33 +2,16 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../auth-service.php';
-
-// Database connections using standard functions
-$students_conn = getStudentsConnection();
-$staff_conn = getStaffConnection();
-
-// Start secure session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Global authentication service
-$auth_service = new AuthenticationService();
-
-// Check authentication
-if (!$auth_service->isAuthenticated()) {
-    header('Location: staff-login.php');
-    exit();
-}
-
-// Get user information
-$staff_id = $_SESSION['user_id'] ?? 0;
-$staff_email = $_SESSION['email'] ?? '';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard([]);
+$students_conn = $ctx['students'];
+$staff_conn = $ctx['staff'];
 
 // Check if user has permission to generate transcripts
-$staff_role = $_SESSION['role'] ?? '';
+$staff_role = $ctx['user']['role'] ?? '';
+$staff_id = $ctx['user']['id'] ?? 0;
+$staff_email = $ctx['user']['email'] ?? '';
+
 $can_generate_transcripts = false;
 
 if (stripos($staff_role, 'Academic Registrar') !== false ||
@@ -40,7 +23,7 @@ if (stripos($staff_role, 'Academic Registrar') !== false ||
 
 if (!$can_generate_transcripts) {
     $_SESSION['error'] = "You don't have permission to generate transcripts.";
-    header("Location: staff_transcript_generation.php");
+    header("Location: staff-login.php");
     exit();
 }
 
@@ -62,10 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
                    WHERE s.id = ? AND s.status = 'Active'";
     
     $student_stmt = $students_conn->prepare($student_sql);
+    if (!$student_stmt) {
+        $_SESSION['error'] = 'Database error: student query prepare failed.';
+        header("Location: staff_transcript_generation.php");
+        exit();
+    }
     $student_stmt->bind_param("i", $student_id);
     $student_stmt->execute();
     $student_result = $student_stmt->get_result();
-    $student = $student_result->fetch_assoc();
+    $student = $student_result ? $student_result->fetch_assoc() : null;
     
     if (!$student) {
         $_SESSION['error'] = "Student not found.";
@@ -84,10 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
                   ORDER BY ar.academic_year DESC, ar.semester DESC, ar.grading_date DESC";
     
     $records_stmt = $students_conn->prepare($records_sql);
+    if (!$records_stmt) {
+        $_SESSION['error'] = 'Database error: records query prepare failed.';
+        header("Location: staff_transcript_generation.php");
+        exit();
+    }
     $records_stmt->bind_param("i", $student_id);
     $records_stmt->execute();
     $records_result = $records_stmt->get_result();
-    $academic_records = $records_result->fetch_all(MYSQLI_ASSOC);
+    $academic_records = $records_result ? $records_result->fetch_all(MYSQLI_ASSOC) : [];
     
     // Generate transcript content
     $transcript_content = generateTranscriptContent($student, $academic_records, $transcript_type, $academic_year, $semester);
@@ -100,6 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
                      VALUES (?, ?, ?, ?, ?, ?, NOW())";
     
     $save_stmt = $students_conn->prepare($save_sql);
+    if (!$save_stmt) {
+        $_SESSION['error'] = 'Database error: save prepare failed.';
+        header("Location: staff_transcript_generation.php");
+        exit();
+    }
     $save_stmt->bind_param("sissss", 'Transcript', $student_id, $staff_id, 'Academic Transcript', $transcript_content, $access_code);
     
     if ($save_stmt->execute()) {
@@ -257,33 +255,33 @@ function generateTranscriptContent($student, $academic_records, $transcript_type
 
 // Get students for dropdown
 function getStudentsForDropdown() {
-    global $students_conn;
+    global $ctx;
     
     $sql = "SELECT id, full_name, registration_number, course, year, status 
              FROM students 
              WHERE status = 'Active' 
              ORDER BY full_name";
     
-    $result = $students_conn->query($sql);
-    return $result->fetch_all(MYSQLI_ASSOC);
+    $result = $ctx['students']->query($sql);
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 // Get academic years for dropdown
 function getAcademicYears() {
-    global $students_conn;
+    global $ctx;
     
     $sql = "SELECT DISTINCT academic_year FROM academic_records ORDER BY academic_year DESC";
-    $result = $students_conn->query($sql);
-    return $result->fetch_all(MYSQLI_ASSOC);
+    $result = $ctx['students']->query($sql);
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 // Get semesters for dropdown
 function getSemesters() {
-    global $students_conn;
+    global $ctx;
     
     $sql = "SELECT DISTINCT semester FROM academic_records ORDER BY semester";
-    $result = $students_conn->query($sql);
-    return $result->fetch_all(MYSQLI_ASSOC);
+    $result = $ctx['students']->query($sql);
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 ?>
 
@@ -358,7 +356,7 @@ function getSemesters() {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="transcript-container" style="margin-left:260px">
+    <div class="transcript-container" style="margin-left:270px">
         <div class="transcript-header">
             <h2><i class="fas fa-graduation-cap me-2"></i>Transcript Generation</h2>
             <p>Generate official academic transcripts for students</p>

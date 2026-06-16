@@ -1,7 +1,7 @@
 <?php
 /**
- * Hierarchical Dashboard Sidebar Navigation
- * Collapsible parent/child modules with role-based filtering.
+ * Professional Hierarchical Sidebar Navigation
+ * Collapsible accordion, smooth animations, role-filtered, auto-expand active.
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -18,286 +18,619 @@ require_once __DIR__ . '/module_config.php';
 
 $modules = getFilteredModules($user_role);
 
+// Config: set to true to allow only one parent open at a time
+$accordionMode = true;
+
 // Detect current page for active highlighting
 $currentPage = basename($_SERVER['PHP_SELF']);
+$currentDir  = dirname($_SERVER['PHP_SELF']);
 ?>
-<!-- Responsive Dashboard Navigation -->
-<div class="dashboard-nav-container">
-    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-    </button>
+<nav class="isnm-sidebar" id="isnmSidebar">
+    <div class="sidebar-brand">
+        <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <img src="../images/school-logo.png" alt="ISNM" class="brand-logo">
+        <div class="brand-text">
+            <span class="brand-name">ISNM</span>
+            <span class="brand-sub">Management System</span>
+        </div>
+    </div>
 
-    <nav class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <img src="../images/school-logo.png" alt="ISNM Logo" class="sidebar-logo-img">
-                <div class="sidebar-title">
-                    <h3>ISNM</h3>
-                    <span class="sidebar-subtitle">Management System</span>
-                </div>
-            </div>
-            <div class="sidebar-user">
-                <div class="user-avatar">
-                    <img src="../images/default-avatar.png" alt="User Avatar" class="user-avatar-img">
-                    <span class="user-status online"></span>
-                </div>
-                <div class="user-info">
-                    <div class="user-name"><?= htmlspecialchars($user_name) ?></div>
-                    <div class="user-role"><?= htmlspecialchars($user_role) ?></div>
-                </div>
-                <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+    <div class="sidebar-user">
+        <div class="user-avatar-wrap">
+            <img src="../images/default-avatar.png" alt="" class="user-avatar">
+            <span class="user-dot"></span>
+        </div>
+        <div class="user-meta">
+            <div class="user-fullname"><?= htmlspecialchars($user_name) ?></div>
+            <div class="user-rolename"><?= htmlspecialchars($user_role) ?></div>
+        </div>
+    </div>
+
+    <div class="sidebar-menu" id="sidebarMenu">
+        <!-- Dashboard Home -->
+        <div class="menu-item">
+            <a href="index.php" class="menu-link <?= $currentPage === 'index.php' || $currentPage === '' ? 'active' : '' ?>" data-route="index">
+                <span class="menu-icon"><i class="fas fa-th-large"></i></span>
+                <span class="menu-label">Dashboard</span>
+            </a>
         </div>
 
-        <div class="sidebar-nav">
-            <ul class="nav-list">
-                <!-- Dashboard Home -->
-                <li class="nav-item">
-                    <a href="index.php" class="nav-link <?= ($currentPage === 'index.php' || $currentPage === '') ? 'active' : '' ?>" data-route="index">
-                        <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
+        <div class="menu-divider"><span>Modules</span></div>
 
-                <?php foreach ($modules as $parent): ?>
-                <?php
-                    $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
-                    $hasChildren = !empty($parent['children']);
-                    $hasActiveChild = false;
-                    if ($hasChildren) {
-                        foreach ($parent['children'] as $child) {
-                            if (basename($child['route']) === $currentPage) {
-                                $hasActiveChild = true;
-                                break;
-                            }
-                        }
+        <?php foreach ($modules as $parent):
+            $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
+            $hasChildren = !empty($parent['children']);
+            $hasActiveChild = false;
+            if ($hasChildren) {
+                foreach ($parent['children'] as $child) {
+                    if (basename($child['route']) === $currentPage) {
+                        $hasActiveChild = true;
+                        break;
                     }
-                    $expanded = $hasActiveChild ? 'expanded' : '';
-                ?>
-                <li class="nav-item nav-parent <?= $expanded ?>">
-                    <a href="#" class="nav-link parent-toggle" data-parent="<?= $parentId ?>" onclick="return false;">
-                        <div class="nav-icon"><i class="<?= $parent['icon'] ?>"></i></div>
-                        <span class="nav-text"><?= htmlspecialchars($parent['title']) ?></span>
-                        <?php if ($hasChildren): ?>
-                        <i class="fas fa-chevron-down nav-arrow"></i>
-                        <?php endif; ?>
+                }
+            }
+        ?>
+        <div class="menu-group <?= $hasActiveChild ? 'expanded' : '' ?>" data-group="<?= $parentId ?>">
+            <div class="menu-group-header" data-target="<?= $parentId ?>">
+                <span class="menu-icon"><i class="<?= $parent['icon'] ?>"></i></span>
+                <span class="menu-label"><?= htmlspecialchars($parent['title']) ?></span>
+                <?php if ($hasChildren): ?>
+                <span class="menu-chevron"><i class="fas fa-chevron-down"></i></span>
+                <?php endif; ?>
+            </div>
+            <?php if ($hasChildren): ?>
+            <div class="menu-children" id="childGroup-<?= $parentId ?>" style="<?= $hasActiveChild ? '' : 'max-height:0;' ?>">
+                <div class="menu-children-inner">
+                    <?php foreach ($parent['children'] as $child):
+                        $childPage = basename($child['route']);
+                        $isActive = ($childPage === $currentPage);
+                    ?>
+                    <a href="<?= htmlspecialchars($child['route']) ?>" class="child-link <?= $isActive ? 'active' : '' ?>">
+                        <span class="child-bullet"></span>
+                        <span class="child-label"><?= htmlspecialchars($child['title']) ?></span>
                     </a>
-                    <?php if ($hasChildren): ?>
-                    <ul class="nav-children" id="children-<?= $parentId ?>" style="<?= $expanded ? '' : 'display:none;' ?>">
-                        <?php foreach ($parent['children'] as $child): ?>
-                        <?php
-                            $childPage = basename($child['route']);
-                            $isActive = ($childPage === $currentPage);
-                        ?>
-                        <li class="nav-item nav-child-item <?= $isActive ? 'active' : '' ?>">
-                            <a href="<?= htmlspecialchars($child['route']) ?>" class="nav-link child-link <?= $isActive ? 'active' : '' ?>">
-                                <div class="nav-icon"><i class="fas fa-circle" style="font-size:6px;"></i></div>
-                                <span class="nav-text"><?= htmlspecialchars($child['title']) ?></span>
-                            </a>
-                        </li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <?php endif; ?>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-
-        <div class="sidebar-footer">
-            <div class="d-flex justify-content-center flex-wrap mb-2">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
+                    <?php endforeach; ?>
+                </div>
             </div>
-            <div class="footer-info">
-                <div class="version">v2.0.1</div>
-                <div class="copyright">&copy; 2026 ISNM</div>
-                <a href="../auth-handler.php?action=logout" class="btn btn-danger btn-sm mt-2 w-100">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
+            <?php endif; ?>
         </div>
-    </nav>
+        <?php endforeach; ?>
+    </div>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-</div>
+    <div class="sidebar-extra">
+        <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
+        <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="../auth-handler.php?action=logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+        <div class="footer-meta">
+            <span>v2.1.0</span>
+            <span>&copy; 2026 ISNM</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile overlay + toggle -->
+<div class="isnm-overlay" id="isnmOverlay"></div>
+<button class="isnm-mobile-toggle" id="isnmMobileToggle" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+</button>
 
 <style>
-.dashboard-nav-container { position: fixed; top: 0; left: 0; z-index: 1000; }
-.mobile-menu-toggle {
-    display: none; position: fixed; top: 20px; left: 20px; z-index: 1001;
-    background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 8px;
-    padding: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+/* ── Reset & Variables ── */
+:root {
+    --sidebar-w: 270px;
+    --sidebar-bg: #0f172a;
+    --sidebar-hover: #1e293b;
+    --sidebar-active: #2563eb;
+    --sidebar-text: #94a3b8;
+    --sidebar-text-active: #ffffff;
+    --sidebar-accent: #3b82f6;
+    --sidebar-border: #1e293b;
+    --sidebar-radius: 8px;
+    --sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.mobile-menu-toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-.hamburger-line { display: block; width: 24px; height: 3px; background: white; margin: 5px 0; border-radius: 2px; }
-.mobile-menu-toggle.active .hamburger-line:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
-.mobile-menu-toggle.active .hamburger-line:nth-child(2) { opacity: 0; }
-.mobile-menu-toggle.active .hamburger-line:nth-child(3) { transform: rotate(-45deg) translate(7px,-6px); }
 
-.dashboard-sidebar {
-    position: fixed; top: 0; left: 0;     width: 260px; height: 100vh;
-    background: linear-gradient(180deg, #1a237e 0%, #283593 50%, #3949ab 100%);
-    color: white; overflow-y: auto; overflow-x: hidden;
-    transition: transform 0.3s ease; z-index: 1000;
-    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+/* ── Sidebar Base ── */
+.isnm-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0,0,0,0.3);
+    transition: transform var(--sidebar-transition);
 }
-.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.sidebar-logo { display: flex; align-items: center; margin-bottom: 20px; }
-.sidebar-logo-img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; border: 2px solid rgba(255,255,255,0.2); }
-.sidebar-title h3 { margin: 0; font-size: 24px; font-weight: 600; color: white; }
-.sidebar-subtitle { font-size: 12px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
-.sidebar-user { display: flex; align-items: center; position: relative; }
-.user-avatar { position: relative; margin-right: 15px; }
-.user-avatar-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
-.user-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1a237e; }
-.user-status.online { background: #4caf50; }
-.user-info { flex: 1; }
-.user-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.user-role { font-size: 12px; color: rgba(255,255,255,0.7); text-transform: capitalize; }
-.sidebar-close { display: none; background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 5px; border-radius: 4px; }
-.sidebar-close:hover { background: rgba(255,255,255,0.1); }
 
-.sidebar-nav { padding: 10px 0; overflow-y: auto; flex: 1; }
-.nav-list { list-style: none; margin: 0; padding: 0; }
-.nav-item { margin-bottom: 1px; }
+/* ── Brand ── */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+}
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.brand-name { font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
+.brand-sub { font-size: 11px; color: var(--sidebar-text); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-collapse-btn {
+    background: none; border: none; color: var(--sidebar-text); font-size: 16px;
+    cursor: pointer; padding: 4px 6px; border-radius: 6px; display: none;
+}
+.sidebar-collapse-btn:hover { background: var(--sidebar-hover); color: #fff; }
 
-.nav-link {
-    display: flex; align-items: center; padding: 12px 20px;
-    color: rgba(255,255,255,0.8); text-decoration: none;
-    transition: all 0.2s ease; border-left: 3px solid transparent;
+/* ── User ── */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+}
+.user-avatar-wrap { position: relative; flex-shrink: 0; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
+.user-dot {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #22c55e; border: 2px solid var(--sidebar-bg);
+}
+.user-meta { min-width: 0; }
+.user-fullname { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-rolename { font-size: 11px; color: var(--sidebar-text); text-transform: capitalize; }
+
+/* ── Scrollable Menu ── */
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+}
+.sidebar-menu::-webkit-scrollbar { width: 3px; }
+.sidebar-menu::-webkit-scrollbar-track { background: transparent; }
+.sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+/* ── Divider ── */
+.menu-divider {
+    padding: 16px 20px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.25);
+}
+.menu-divider span { display: block; }
+
+/* ── Menu Items ── */
+.menu-item { padding: 0 8px; margin-bottom: 1px; }
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: var(--sidebar-radius);
+    font-size: 14px;
+    font-weight: 450;
+    transition: all var(--sidebar-transition);
     cursor: pointer;
 }
-.nav-link:hover {
-    background: rgba(255,255,255,0.1); color: white;
-    border-left-color: #ffd700; padding-left: 25px;
+.menu-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
 }
-.nav-link.active {
-    background: rgba(255,255,255,0.15); color: white;
-    border-left-color: #ffd700;
+.menu-link.active {
+    background: var(--sidebar-active);
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
-.nav-icon { width: 24px; margin-right: 12px; text-align: center; font-size: 16px; flex-shrink: 0; }
-.nav-text { flex: 1; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nav-arrow { font-size: 12px; transition: transform 0.3s ease; margin-left: 8px; }
-.nav-parent.expanded .nav-arrow { transform: rotate(180deg); }
+.menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.menu-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-/* Child nav items */
-.nav-children { background: rgba(0,0,0,0.15); border-left: 2px solid rgba(255,215,0,0.3); margin-left: 20px; }
-.nav-child-item { }
-.nav-child-item .nav-link { padding: 10px 20px; font-size: 13px; border-left: 2px solid transparent; }
-.nav-child-item .nav-link:hover { border-left-color: #ffd700; background: rgba(255,255,255,0.08); }
-.nav-child-item.active .nav-link { color: #ffd700; border-left-color: #ffd700; background: rgba(255,215,0,0.1); }
-.nav-child-item .nav-icon { width: 16px; margin-right: 10px; display: flex; align-items: center; justify-content: center; }
+/* ── Parent Group Header ── */
+.menu-group { padding: 0 8px; margin-bottom: 1px; }
+.menu-group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: var(--sidebar-text);
+    border-radius: var(--sidebar-radius);
+    font-size: 14px;
+    font-weight: 450;
+    cursor: pointer;
+    transition: all var(--sidebar-transition);
+    user-select: none;
+}
+.menu-group-header:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
+}
+.menu-group.expanded > .menu-group-header {
+    color: var(--sidebar-text-active);
+    background: rgba(255,255,255,0.04);
+}
+.menu-chevron {
+    font-size: 11px;
+    transition: transform var(--sidebar-transition);
+    flex-shrink: 0;
+}
+.menu-group.expanded .menu-chevron {
+    transform: rotate(180deg);
+}
 
+/* ── Children (animated) ── */
+.menu-children {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.menu-children-inner {
+    padding: 2px 0 4px 32px;
+}
+.child-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    transition: all var(--sidebar-transition);
+    position: relative;
+}
+.child-link:hover {
+    color: var(--sidebar-text-active);
+    background: rgba(255,255,255,0.05);
+}
+.child-link.active {
+    color: var(--sidebar-text-active);
+    background: rgba(59,130,246,0.15);
+    font-weight: 500;
+}
+.child-link.active::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 18px;
+    background: var(--sidebar-accent);
+    border-radius: 3px;
+}
+.child-bullet {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.4;
+    flex-shrink: 0;
+    transition: all var(--sidebar-transition);
+}
+.child-link.active .child-bullet {
+    opacity: 1;
+    background: var(--sidebar-accent);
+    box-shadow: 0 0 6px rgba(59,130,246,0.5);
+}
+.child-link:hover .child-bullet {
+    opacity: 0.7;
+}
+.child-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Extra Links ── */
+.sidebar-extra {
+    padding: 8px;
+    border-top: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.extra-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: var(--sidebar-radius);
+    font-size: 13px;
+    transition: all var(--sidebar-transition);
+}
+.extra-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
+}
+.extra-link i { width: 18px; text-align: center; font-size: 13px; }
+
+/* ── Footer ── */
 .sidebar-footer {
-    padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
 }
-.footer-info { text-align: center; font-size: 12px; color: rgba(255,255,255,0.6); }
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    color: #f87171;
+    text-decoration: none;
+    border-radius: var(--sidebar-radius);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all var(--sidebar-transition);
+    border: 1px solid rgba(248,113,113,0.15);
+}
+.logout-btn:hover {
+    background: rgba(248,113,113,0.1);
+    border-color: rgba(248,113,113,0.3);
+}
+.footer-meta {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 4px 0;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+}
 
-.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
-.sidebar-overlay.active { display: block; }
+/* ── Mobile Overlay ── */
+.isnm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+    backdrop-filter: blur(2px);
+}
 
+/* ── Mobile Toggle ── */
+.isnm-mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1060;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 10px;
+    padding: 10px 11px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    flex-direction: column;
+    gap: 4px;
+}
+.isnm-mobile-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+.isnm-mobile-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+.isnm-mobile-toggle.active span:nth-child(2) { opacity: 0; }
+.isnm-mobile-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
-    .mobile-menu-toggle { display: block; }
-    .dashboard-sidebar { transform: translateX(-100%); }
-    .dashboard-sidebar.active { transform: translateX(0); }
-    .sidebar-close { display: block; }
-    .sidebar-overlay.active { display: block; }
+    .isnm-sidebar {
+        transform: translateX(-100%);
+    }
+    .isnm-sidebar.open {
+        transform: translateX(0);
+    }
+    .isnm-mobile-toggle {
+        display: flex;
+    }
+    .isnm-overlay.active {
+        display: block;
+    }
+    .sidebar-collapse-btn { display: none; }
 }
 @media (min-width: 769px) {
-    .dashboard-sidebar { transform: translateX(0); }
+    .isnm-sidebar { transform: translateX(0); }
+    .isnm-sidebar.collapsed { width: 64px; }
+    .isnm-sidebar.collapsed .brand-text,
+    .isnm-sidebar.collapsed .user-meta,
+    .isnm-sidebar.collapsed .menu-label,
+    .isnm-sidebar.collapsed .menu-chevron,
+    .isnm-sidebar.collapsed .menu-divider span,
+    .isnm-sidebar.collapsed .menu-children,
+    .isnm-sidebar.collapsed .extra-link span,
+    .isnm-sidebar.collapsed .logout-btn span,
+    .isnm-sidebar.collapsed .footer-meta,
+    .isnm-sidebar.collapsed .sidebar-extra { display: none; }
+    .isnm-sidebar.collapsed .menu-group-header,
+    .isnm-sidebar.collapsed .menu-link { justify-content: center; padding: 10px 0; }
+    .isnm-sidebar.collapsed .menu-icon,
+    .isnm-sidebar.collapsed .extra-link i { width: auto; font-size: 16px; margin: 0; }
+    .isnm-sidebar.collapsed .extra-link { justify-content: center; padding: 10px 0; }
+    .isnm-sidebar.collapsed .logout-btn { justify-content: center; }
+    .isnm-sidebar.collapsed .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
+    .isnm-sidebar.collapsed .sidebar-user { justify-content: center; padding: 14px 8px; }
+    .isnm-sidebar.collapsed .brand-logo { margin: 0; }
+    .sidebar-collapse-btn { display: block; }
 }
-
-.nav-link:focus { outline: 2px solid #ffd700; outline-offset: 2px; }
-
-/* Scrollbar styling */
-.dashboard-sidebar::-webkit-scrollbar { width: 4px; }
-.dashboard-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-.dashboard-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.getElementById('dashboardSidebar');
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    const sidebarClose = document.getElementById('sidebarClose');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+(function() {
+    const SIDEBAR = document.getElementById('isnmSidebar');
+    const OVERLAY = document.getElementById('isnmOverlay');
+    const MOBILE_TOGGLE = document.getElementById('isnmMobileToggle');
+    const ACCORDION_MODE = <?= $accordionMode ? 'true' : 'false' ?>;
+    const STORAGE_KEY = 'isnm_sidebar_v2';
 
-    // Restore sidebar expanded state from localStorage
-    const savedState = localStorage.getItem('isnm_sidebar_state');
-    if (savedState) {
+    // ── Restore expanded state ──
+    function restoreState() {
         try {
-            const expanded = JSON.parse(savedState);
-            document.querySelectorAll('.nav-parent').forEach(el => {
-                const toggle = el.querySelector('.parent-toggle');
-                if (toggle) {
-                    const id = toggle.dataset.parent;
-                    if (expanded[id]) {
-                        el.classList.add('expanded');
-                        const children = document.getElementById('children-' + id);
-                        if (children) children.style.display = '';
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            if (saved.expanded) {
+                saved.expanded.forEach(function(id) {
+                    const group = document.querySelector('.menu-group[data-group="' + id + '"]');
+                    const children = document.getElementById('childGroup-' + id);
+                    if (group && children) {
+                        group.classList.add('expanded');
+                        children.style.maxHeight = children.scrollHeight + 'px';
                     }
-                }
-            });
+                });
+            }
+        } catch(e) {}
+    }
+    restoreState();
+
+    // ── Save expanded state ──
+    function saveState() {
+        var expanded = [];
+        document.querySelectorAll('.menu-group.expanded').forEach(function(g) {
+            expanded.push(g.dataset.group);
+        });
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ expanded: expanded }));
         } catch(e) {}
     }
 
-    // Parent toggle with arrow rotation
-    document.querySelectorAll('.parent-toggle').forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
+    // ── Toggle children with smooth animation ──
+    function toggleGroup(header) {
+        var group = header.closest('.menu-group');
+        if (!group) return;
+        var targetId = header.dataset.target;
+        var children = document.getElementById('childGroup-' + targetId);
+        if (!children) return;
+
+        var isExpanding = !group.classList.contains('expanded');
+
+        // Accordion: close other groups
+        if (isExpanding && ACCORDION_MODE) {
+            document.querySelectorAll('.menu-group.expanded').forEach(function(other) {
+                if (other !== group) {
+                    var otherChildren = document.getElementById('childGroup-' + other.dataset.group);
+                    other.classList.remove('expanded');
+                    if (otherChildren) otherChildren.style.maxHeight = '0';
+                }
+            });
+        }
+
+        if (isExpanding) {
+            group.classList.add('expanded');
+            children.style.maxHeight = children.scrollHeight + 'px';
+        } else {
+            group.classList.remove('expanded');
+            children.style.maxHeight = '0';
+        }
+
+        saveState();
+    }
+
+    // ── Attach click listeners to group headers ──
+    document.querySelectorAll('.menu-group-header').forEach(function(header) {
+        header.addEventListener('click', function(e) {
             e.preventDefault();
-            const parent = this.closest('.nav-parent');
-            const id = this.dataset.parent;
-            const children = document.getElementById('children-' + id);
-            if (!children) return;
-
-            const isExpanding = children.style.display === 'none' || !children.style.display;
-            children.style.display = isExpanding ? '' : 'none';
-            parent.classList.toggle('expanded', isExpanding);
-
-            // Save state to localStorage
-            const saved = JSON.parse(localStorage.getItem('isnm_sidebar_state') || '{}');
-            saved[id] = isExpanding;
-            localStorage.setItem('isnm_sidebar_state', JSON.stringify(saved));
+            toggleGroup(this);
         });
     });
 
-    // Mobile menu toggle
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
+    // ── Desktop collapse toggle ──
+    document.getElementById('sidebarCollapse').addEventListener('click', function() {
+        SIDEBAR.classList.toggle('collapsed');
+        try {
+            localStorage.setItem(STORAGE_KEY + '_collapsed', SIDEBAR.classList.contains('collapsed'));
+        } catch(e) {}
+    });
+    // Restore collapsed state
+    try {
+        if (localStorage.getItem(STORAGE_KEY + '_collapsed') === 'true' && window.innerWidth > 768) {
+            SIDEBAR.classList.add('collapsed');
+        }
+    } catch(e) {}
+
+    // ── Mobile toggle ──
+    if (MOBILE_TOGGLE) {
+        MOBILE_TOGGLE.addEventListener('click', function() {
+            SIDEBAR.classList.toggle('open');
+            OVERLAY.classList.toggle('active');
             this.classList.toggle('active');
-            document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            document.body.style.overflow = SIDEBAR.classList.contains('open') ? 'hidden' : '';
         });
     }
 
-    function closeSidebar() {
-        sidebar.classList.remove('active');
-        sidebarOverlay.classList.remove('active');
-        if (mobileMenuToggle) mobileMenuToggle.classList.remove('active');
+    function closeMobile() {
+        SIDEBAR.classList.remove('open');
+        OVERLAY.classList.remove('active');
+        if (MOBILE_TOGGLE) MOBILE_TOGGLE.classList.remove('active');
         document.body.style.overflow = '';
     }
 
-    if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+    if (OVERLAY) OVERLAY.addEventListener('click', closeMobile);
 
-    // Keyboard: Escape closes sidebar
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && sidebar.classList.contains('active')) closeSidebar();
+        if (e.key === 'Escape' && SIDEBAR.classList.contains('open')) closeMobile();
     });
 
-    // Close mobile sidebar on child link click
-    document.querySelectorAll('.child-link').forEach(link => {
+    // ── Close mobile on child link click ──
+    document.querySelectorAll('.child-link').forEach(function(link) {
         link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) closeSidebar();
+            if (window.innerWidth <= 768) closeMobile();
         });
     });
-});
+
+    // ── Re-calculate max-height on window resize (for open groups) ──
+    var resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            document.querySelectorAll('.menu-group.expanded').forEach(function(g) {
+                var children = document.getElementById('childGroup-' + g.dataset.group);
+                if (children) children.style.maxHeight = children.scrollHeight + 'px';
+            });
+        }, 200);
+    });
+})();
 </script>
 <?php
-// Forgot: include direct links for Directory, Store, Logout
+$sidebarRendered = true;
 ?>

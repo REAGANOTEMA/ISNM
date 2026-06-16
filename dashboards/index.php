@@ -54,7 +54,7 @@ $modules = getFilteredModules($user_role);
     <link rel="stylesheet" href="dashboard-style.css">
     <style>
         body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .dashboard-main { margin-left: 260px; padding: 20px; min-height: 100vh; }
+        .dashboard-main { margin-left: 270px; padding: 20px; min-height: 100vh; }
         .page-title { margin-bottom: 24px; }
         .page-title h1 { font-size: 24px; font-weight: 700; color: #1a237e; margin: 0; }
         .page-title p { color: #666; margin: 4px 0 0 0; font-size: 14px; }

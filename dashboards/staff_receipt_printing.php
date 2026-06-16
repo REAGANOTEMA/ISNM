@@ -2,30 +2,14 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../auth-service.php';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard([]);
+$conn = $ctx['staff'];
+$user = $ctx['user'];
 
-// Database connection
-$conn = getStaffConnection();
-
-// Start secure session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Global authentication service
-$auth_service = new AuthenticationService();
-
-// Check authentication
-if (!$auth_service->isAuthenticated()) {
-    header('Location: staff-login.php');
-    exit();
-}
-
-// Get user information
-$staff_id = $_SESSION['user_id'] ?? 0;
-$staff_email = $_SESSION['email'] ?? '';
-$staff_role = $_SESSION['role'] ?? '';
+$staff_id = $user['id'] ?? 0;
+$staff_email = $user['email'] ?? '';
+$staff_role = $user['role'] ?? '';
 
 // Check if user has permission to generate receipts
 $can_generate_receipts = false;
@@ -56,10 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) 
     // Get template
     $template_sql = "SELECT template_content FROM receipt_templates WHERE template_type = ? AND is_active = TRUE LIMIT 1";
     $template_stmt = $conn->prepare($template_sql);
+    if (!$template_stmt) {
+        $_SESSION['error'] = 'Database error: template prepare failed.';
+        header("Location: staff_receipt_printing.php");
+        exit();
+    }
     $template_stmt->bind_param("s", $receipt_type);
     $template_stmt->execute();
     $template_result = $template_stmt->get_result();
-    $template = $template_result->fetch_assoc();
+    $template = ($template_result) ? $template_result->fetch_assoc() : null;
     
     if ($template) {
         // Replace template variables
@@ -75,6 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) 
         $save_sql = "INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date, access_code) 
                         VALUES (?, ?, ?, ?, ?, NOW(), ?)";
         $save_stmt = $conn->prepare($save_sql);
+        if (!$save_stmt) {
+            $_SESSION['error'] = 'Database error: save prepare failed.';
+            header("Location: staff_receipt_printing.php");
+            exit();
+        }
         $access_code = 'REC_' . uniqid();
         $save_stmt->bind_param("sissss", $receipt_type, $student_id, $staff_id, 'Receipt #' . $receipt_number, $content, $access_code);
         
@@ -92,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_receipt'])) 
 // Get receipt templates
 $templates_sql = "SELECT * FROM receipt_templates WHERE is_active = TRUE ORDER BY template_name";
 $templates_result = $conn->query($templates_sql);
-$templates = $templates_result->fetch_all(MYSQLI_ASSOC);
+$templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : [];
 
 // Get recent receipts
 $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
@@ -103,7 +97,7 @@ $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as 
                  ORDER BY gd.generation_date DESC 
                  LIMIT 10";
 $receipts_result = $conn->query($receipts_sql);
-$receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
+$receipts = ($receipts_result) ? $receipts_result->fetch_all(MYSQLI_ASSOC) : [];
 ?>
 
 <!DOCTYPE html>
@@ -232,7 +226,7 @@ $receipts = $receipts_result->fetch_all(MYSQLI_ASSOC);
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="receipt-container" style="margin-left:260px">
+    <div class="receipt-container" style="margin-left:270px">
         <div class="receipt-header">
             <h2><i class="fas fa-receipt me-2"></i>Receipt Printing System</h2>
             <p>Generate and print professional receipts for students</p>

@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sec_ann_title'])) {
     $body     = trim($_POST['sec_ann_body'] ?? '');
     $target   = $_POST['sec_ann_target'] ?? 'All';
     $priority = $_POST['sec_ann_priority'] ?? 'Normal';
-    if ($title && $body && $students_conn) {
+    if ($title && $body && $students_conn && $staff_conn) {
         $t = $staff_conn->real_escape_string($title);
         $b = $staff_conn->real_escape_string($body);
         $students_conn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$t','$b','$target','$priority',$user_id,1,NOW())");

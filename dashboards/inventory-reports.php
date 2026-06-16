@@ -18,9 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_update_status) {
 
     if ($report_id > 0 && in_array($new_status, $valid_status, true)) {
         $update_stmt = $conn->prepare("UPDATE inventory_reports SET request_status = ?, updated_at = NOW() WHERE id = ?");
-        $update_stmt->bind_param('si', $new_status, $report_id);
-        $update_stmt->execute();
-        $update_stmt->close();
+        if ($update_stmt) {
+            $update_stmt->bind_param('si', $new_status, $report_id);
+            $update_stmt->execute();
+            $update_stmt->close();
+        }
     }
 }
 
@@ -34,13 +36,18 @@ if ($show_all) {
 } else {
     $report_query = "SELECT ir.*, i.item_name, i.item_category, i.location, i.department AS inventory_department FROM inventory_reports ir LEFT JOIN inventory i ON i.id = ir.inventory_id WHERE ir.department = ? ORDER BY ir.created_at DESC";
     $report_stmt = $conn->prepare($report_query);
-    $report_stmt->bind_param('s', $department_filter);
+    if ($report_stmt) {
+        $report_stmt->bind_param('s', $department_filter);
+    }
 }
 
-$report_stmt->execute();
-$report_result = $report_stmt->get_result();
-$reports = $report_result ? $report_result->fetch_all(MYSQLI_ASSOC) : [];
-$report_stmt->close();
+$reports = [];
+if ($report_stmt) {
+    $report_stmt->execute();
+    $report_result = $report_stmt->get_result();
+    $reports = $report_result ? $report_result->fetch_all(MYSQLI_ASSOC) : [];
+    $report_stmt->close();
+}
 
 $status_counts = ['Open' => 0, 'In Review' => 0, 'Resolved' => 0, 'Closed' => 0];
 foreach ($reports as $report) {

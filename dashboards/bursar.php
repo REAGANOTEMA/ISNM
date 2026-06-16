@@ -1,32 +1,23 @@
 <?php
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/student_profile_component.php';
+require_once __DIR__ . '/../views/student_data_loader.php';
 
 $ctx = bootstrapStaffDashboard(['bursar', 'finance']);
+$staffDb = $ctx['staff'];
+$studentsDb = $ctx['students'];
+$websiteDb = $ctx['website'];
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-// Enhanced database connections
-$students_conn = getStudentsConnection();
-$finance_conn = getStaffConnection();
-
-if ($students_conn->connect_error) {
-    die("Students DB connection failed: " . $students_conn->connect_error);
-}
-
-if ($finance_conn->connect_error) {
-    die("Finance DB connection failed: " . $finance_conn->connect_error);
-}
-
-// Set charset
-$students_conn->set_charset("utf8mb4");
-$finance_conn->set_charset("utf8mb4");
-
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
-$user_role = $_SESSION['role'] ?? '';
+// Get user information from bootstrap
+$user_id = (int) ($user['id'] ?? 0);
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
+$user_role = $user['role'] ?? '';
 
 // Set Bursar statistics from database
 $total_students = 0;
@@ -36,16 +27,20 @@ $month_collections = 0;
 $outstanding_fees = 0;
 
 try {
-    $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-    if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
-    $today = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE DATE(payment_date)=CURDATE() AND status='verified'");
-    if ($today) $today_collections = (int)$today->fetch_assoc()['total'];
-    $week = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status='verified'");
-    if ($week) $week_collections = (int)$week->fetch_assoc()['total'];
-    $month = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='verified'");
-    if ($month) $month_collections = (int)$month->fetch_assoc()['total'];
-    $out = $finance_conn->query("SELECT COALESCE(SUM(balance),0) as total FROM student_fee_accounts WHERE status NOT IN ('fully_paid','cancelled')");
-    if ($out) $outstanding_fees = (int)$out->fetch_assoc()['total'];
+    if ($studentsDb) {
+        $result = $studentsDb->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+    }
+    if ($staffDb) {
+        $today = $staffDb->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE DATE(payment_date)=CURDATE() AND status='verified'");
+        if ($today) $today_collections = (int)$today->fetch_assoc()['total'];
+        $week = $staffDb->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status='verified'");
+        if ($week) $week_collections = (int)$week->fetch_assoc()['total'];
+        $month = $staffDb->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='verified'");
+        if ($month) $month_collections = (int)$month->fetch_assoc()['total'];
+        $out = $staffDb->query("SELECT COALESCE(SUM(balance),0) as total FROM student_fee_accounts WHERE status NOT IN ('fully_paid','cancelled')");
+        if ($out) $outstanding_fees = (int)$out->fetch_assoc()['total'];
+    }
 } catch (Exception $e) {
     error_log('bursar stats: ' . $e->getMessage());
 }
@@ -107,7 +102,7 @@ try {
     $fp_sql = "SELECT p.id, p.student_id, p.invoice_id AS fee_account_id, p.amount_received AS amount_paid, p.payment_method, p.payment_reference AS receipt_number, p.status, p.payment_date, p.notes, s.first_name, s.surname FROM payments p
                JOIN students s ON p.student_id = s.id
                ORDER BY p.payment_date DESC LIMIT 10";
-    $fp_result = $students_conn->query($fp_sql);
+    $fp_result = $studentsDb->query($fp_sql);
     if ($fp_result) {
         while ($row = $fp_result->fetch_assoc()) {
             $recent_payments[] = $row;
@@ -117,9 +112,137 @@ try {
     error_log('bursar payments: ' . $e->getMessage());
 }
 
+// Handle student addition
+function handleAddStudent() {
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
+    
+    $student_id = generateStudentId();
+    $first_name = sanitizeInput($_POST['first_name']);
+    $surname = sanitizeInput($_POST['surname']);
+    $other_name = sanitizeInput($_POST['other_name']);
+    $date_of_birth = sanitizeInput($_POST['date_of_birth']);
+    $gender = sanitizeInput($_POST['gender']);
+    $phone = sanitizeInput($_POST['phone']);
+    $email = sanitizeInput($_POST['email']);
+    $program = sanitizeInput($_POST['program']);
+    $level = sanitizeInput($_POST['level']);
+    $intake_year = sanitizeInput($_POST['intake_year']);
+    
+    $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, phone, email, program, level, intake_year, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'Active')";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
+    $stmt->bind_param("sssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $phone, $email, $program, $level, $intake_year);
+    
+    if ($stmt->execute()) {
+        $total_fees = (float)($_POST['total_fees'] ?? 0);
+        if ($total_fees > 0) {
+            $stmt->close();
+            $finance = getStaffConnection();
+            if ($finance) {
+                $academic_year = $intake_year . '/' . ($intake_year + 1);
+                $fee_sql = "INSERT INTO student_fee_accounts (student_id, academic_year, program, level, year, semester, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, ?, '1', ?, 0, ?, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'unpaid')";
+                $fee_stmt = $finance->prepare($fee_sql);
+                if ($fee_stmt) {
+                    $fee_stmt->bind_param("ssssidd", $student_id, $academic_year, $program, $level, $intake_year, $total_fees, $total_fees);
+                    $fee_stmt->execute();
+                    $fee_stmt->close();
+                }
+            }
+        }
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
+        $_SESSION['success'] = "Student added successfully!";
+    } else {
+        $_SESSION['error'] = "Error adding student: " . $conn->error;
+    }
+    
+    header("Location: bursar.php");
+    exit();
+}
+
+// Handle fee account update
+function handleUpdateFeeAccount() {
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
+    
+    $fee_account_id = (int)($_POST['fee_account_id'] ?? 0);
+    $total_fees = (float)($_POST['total_fees'] ?? 0);
+    $due_date = sanitizeInput($_POST['due_date'] ?? '');
+    $status = sanitizeInput($_POST['status'] ?? '');
+    
+    $sql = "UPDATE student_fee_accounts SET total_fees = ?, due_date = ?, status = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
+    $stmt->bind_param("dssi", $total_fees, $due_date, $status, $fee_account_id);
+    
+    if ($stmt->execute()) {
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Fee Account Updated', "Updated fee account: $fee_account_id", 'fees', $fee_account_id);
+        $_SESSION['success'] = "Fee account updated successfully!";
+    } else {
+        $_SESSION['error'] = "Error updating fee account: " . $conn->error;
+    }
+    
+    header("Location: bursar.php");
+    exit();
+}
+
+// Handle invoice generation
+function handleGenerateInvoice() {
+    $_SESSION['error'] = "Invoice generation feature is under development.";
+    header("Location: bursar.php");
+    exit();
+}
+
+// Handle receipt generation
+function handleGenerateReceipt() {
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
+    
+    $payment_id = sanitizeInput($_POST['payment_id'] ?? '');
+    if (empty($payment_id)) {
+        $_SESSION['error'] = "Payment ID is required.";
+        header("Location: bursar.php");
+        exit();
+    }
+    
+    $sql = "SELECT * FROM fee_payments WHERE payment_id = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed'; header("Location: bursar.php"); exit(); }
+    $stmt->bind_param("s", $payment_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $payment = $result->fetch_assoc();
+    $stmt->close();
+    
+    if ($payment) {
+        $_SESSION['success'] = "Receipt generated for payment: $payment_id";
+    } else {
+        $_SESSION['error'] = "Payment not found.";
+    }
+    
+    header("Location: bursar.php");
+    exit();
+}
+
+// Handle bulk payment
+function handleBulkPayment() {
+    $_SESSION['error'] = "Bulk payment feature is under development.";
+    header("Location: bursar.php");
+    exit();
+}
+
+// Handle financial report generation
+function handleGenerateFinancialReport() {
+    $_SESSION['error'] = "Financial report generation feature is under development.";
+    header("Location: bursar.php");
+    exit();
+}
+
 // Handle student update
 function handleUpdateStudent() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
     
     $student_id = sanitizeInput($_POST['student_id']);
     $first_name = sanitizeInput($_POST['first_name']);
@@ -138,10 +261,11 @@ function handleUpdateStudent() {
     $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, phone = ?, email = ?, address = ?, guardian_name = ?, guardian_phone = ?, guardian_email = ?, emergency_contact_name = ?, emergency_contact_phone = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE student_id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
+    $stmt->bind_param("sssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
     
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
         $_SESSION['success'] = "Student updated successfully!";
     } else {
         $_SESSION['error'] = "Error updating student: " . $conn->error;
@@ -153,23 +277,32 @@ function handleUpdateStudent() {
 
 // Handle student deletion
 function handleDeleteStudent() {
-    global $conn;
-    
     $student_id = sanitizeInput($_POST['student_id']);
     
-    // Check if student has fee payments
-    $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
-    $check_result = executeQuery($check_sql, [$student_id], 's');
+    // Check if student has fee payments (finance DB)
+    $finance = getStaffConnection();
+    if (!$finance) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
     
-    if ($check_result[0]['count'] > 0) {
+    $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
+    $check_stmt = $finance->prepare($check_sql);
+    if (!$check_stmt) { $_SESSION['error'] = 'Prepare failed'; header("Location: bursar.php"); exit(); }
+    $check_stmt->bind_param("s", $student_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result()->fetch_assoc();
+    $check_stmt->close();
+    
+    if ($check_result && $check_result['count'] > 0) {
         $_SESSION['error'] = "Cannot delete student with payment records. Please archive instead.";
     } else {
+        $conn = getStudentsConnection();
+        if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
         $sql = "DELETE FROM students WHERE student_id = ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
         $stmt->bind_param("s", $student_id);
         
         if ($stmt->execute()) {
-            logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Deleted', "Deleted student: $student_id", 'students', $student_id);
+            logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Deleted', "Deleted student: $student_id", 'students', $student_id);
             $_SESSION['success'] = "Student deleted successfully!";
         } else {
             $_SESSION['error'] = "Error deleting student: " . $conn->error;
@@ -182,7 +315,8 @@ function handleDeleteStudent() {
 
 // Handle fee account addition
 function handleAddFeeAccount() {
-    global $conn;
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
     
     $student_id = sanitizeInput($_POST['student_id']);
     $academic_year = sanitizeInput($_POST['academic_year']);
@@ -196,10 +330,11 @@ function handleAddFeeAccount() {
     $sql = "INSERT INTO student_fee_accounts (student_id, academic_year, program, level, year, semester, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'unpaid')";
     
     $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
     $stmt->bind_param("ssssssdds", $student_id, $academic_year, $program, $level, $year, $semester, $total_fees, $total_fees, $due_date);
     
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Fee Account Added', "Added fee account for: $student_id", 'fees', $student_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Fee Account Added', "Added fee account for: $student_id", 'fees', $student_id);
         $_SESSION['success'] = "Fee account added successfully!";
     } else {
         $_SESSION['error'] = "Error adding fee account: " . $conn->error;
@@ -211,7 +346,8 @@ function handleAddFeeAccount() {
 
 // Handle payment recording
 function handleRecordPayment() {
-    global $conn;
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: bursar.php"); exit(); }
     
     $student_id = sanitizeInput($_POST['student_id']);
     $fee_account_id = sanitizeInput($_POST['fee_account_id']);
@@ -225,17 +361,21 @@ function handleRecordPayment() {
     $payment_sql = "INSERT INTO fee_payments (payment_id, student_id, fee_account_id, amount_paid, payment_method, payment_reference, bank_name, receipt_number, payment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'verified')";
     
     $stmt = $conn->prepare($payment_sql);
-    $stmt->bind_param("ssdssssss", $receipt_number, $student_id, $fee_account_id, $amount_paid, $payment_method, $payment_reference, $bank_name, $receipt_number);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: bursar.php"); exit(); }
+    $stmt->bind_param("ssdsssss", $receipt_number, $student_id, $fee_account_id, $amount_paid, $payment_method, $payment_reference, $bank_name, $receipt_number);
     
     if ($stmt->execute()) {
         // Update fee account
-        $update_sql = "UPDATE student_fee_accounts SET amount_paid = amount_paid + ?, balance = balance - ?, last_payment_date = CURDATE(), status = CASE WHEN (balance - ?) <= 0 THEN 'fully_paid' ELSE CASE WHEN amount_paid > 0 THEN 'partially_paid' ELSE 'unpaid' END WHERE id = ?";
+        $update_sql = "UPDATE student_fee_accounts SET amount_paid = amount_paid + ?, balance = balance - ?, last_payment_date = CURDATE(), status = CASE WHEN (balance - ?) <= 0 THEN 'fully_paid' WHEN amount_paid > 0 THEN 'partially_paid' ELSE 'unpaid' END WHERE id = ?";
         
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("dddi", $amount_paid, $amount_paid, $amount_paid, $fee_account_id);
-        $update_stmt->execute();
+        if ($update_stmt) {
+            $update_stmt->bind_param("dddi", $amount_paid, $amount_paid, $amount_paid, $fee_account_id);
+            $update_stmt->execute();
+            $update_stmt->close();
+        }
         
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Payment Recorded', "Recorded payment of $amount_paid for: $student_id", 'fees', $student_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Payment Recorded', "Recorded payment of $amount_paid for: $student_id", 'fees', $student_id);
         $_SESSION['success'] = "Payment recorded successfully! Receipt: $receipt_number";
     } else {
         $_SESSION['error'] = "Error recording payment: " . $conn->error;
@@ -247,7 +387,8 @@ function handleRecordPayment() {
 
 // Generate student ID
 function generateStudentId() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) { return 'ISNM/' . date('Y') . '/' . mt_rand(1000, 9999); }
     
     do {
         $year = date('Y');
@@ -255,19 +396,35 @@ function generateStudentId() {
         $student_id = "ISNM/$year/$random";
         
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
-        $check_result = executeQuery($check_sql, [$student_id], 's');
-    } while ($check_result[0]['count'] > 0);
+        $check_stmt = $conn->prepare($check_sql);
+        if (!$check_stmt) break;
+        $check_stmt->bind_param("s", $student_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result()->fetch_assoc();
+        $check_stmt->close();
+        $count = $check_result ? (int)$check_result['count'] : 0;
+    } while ($count > 0);
     
     return $student_id;
 }
 
 // Generate receipt number
 function generateReceiptNumber() {
+    $conn = getStaffConnection();
+    
     do {
         $receipt_no = 'RCP' . date('Y') . mt_rand(100000, 999999);
+        if (!$conn) break;
+        
         $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE receipt_number = ?";
-        $check_result = executeQuery($check_sql, [$receipt_no], 's');
-    } while ($check_result[0]['count'] > 0);
+        $check_stmt = $conn->prepare($check_sql);
+        if (!$check_stmt) break;
+        $check_stmt->bind_param("s", $receipt_no);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result()->fetch_assoc();
+        $check_stmt->close();
+        $count = $check_result ? (int)$check_result['count'] : 0;
+    } while ($count > 0);
     
     return $receipt_no;
 }
@@ -279,10 +436,14 @@ $user_name = $user['full_name'] ?? 'Bursar';
 $active_students = 0;
 $total_collections = 0;
 try {
-    $active_result = $students_conn->query("SELECT COUNT(*) as c FROM students WHERE status='Active'");
-    if ($active_result) $active_students = (int)$active_result->fetch_assoc()['c'];
-    $coll_result = $finance_conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE status='verified'");
-    if ($coll_result) $total_collections = (int)$coll_result->fetch_assoc()['total'];
+    if ($studentsDb) {
+        $active_result = $studentsDb->query("SELECT COUNT(*) as c FROM students WHERE status='Active'");
+        if ($active_result) $active_students = (int)$active_result->fetch_assoc()['c'];
+    }
+    if ($staffDb) {
+        $coll_result = $staffDb->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM fee_payments WHERE status='verified'");
+        if ($coll_result) $total_collections = (int)$coll_result->fetch_assoc()['total'];
+    }
 } catch (Exception $e) { error_log('bursar extra stats: ' . $e->getMessage()); }
 
 if (empty($recent_students)) { $recent_students = []; }

@@ -50,23 +50,27 @@ function tableExists($conn, $tableName) {
 
         // Get student information
         $student_id = $_SESSION['user_id'];
-        $student_info = $students_conn->query("SELECT * FROM students WHERE id = $student_id LIMIT 1")->fetch_assoc();
+        $student_result = $students_conn->query("SELECT * FROM students WHERE id = $student_id LIMIT 1");
+        $student_info = ($student_result) ? $student_result->fetch_assoc() : [];
 
         // Get student academic profile
-        $academic_profile = $students_conn->query("SELECT * FROM student_academic_records WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY semester DESC, academic_year DESC LIMIT 1")->fetch_assoc();
+        $academic_result = $students_conn->query("SELECT * FROM student_academic_records WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY semester DESC, academic_year DESC LIMIT 1");
+        $academic_profile = ($academic_result) ? $academic_result->fetch_assoc() : [];
 
         // Get examination records (grades)
-        $examination_records = $students_conn->query("SELECT *, 
-                                                            NULL as current_stage, 
-                                                            NULL as registrar_status, 
-                                                            NULL as principal_status 
-                                                    FROM student_academic_records 
-                                                    WHERE student_id = " . ($student_info['id'] ?? 0) . " 
-                                                    ORDER BY created_at DESC LIMIT 20")->fetch_all(MYSQLI_ASSOC);
+        $exam_result = $students_conn->query("SELECT *, 
+                                                    NULL as current_stage, 
+                                                    NULL as registrar_status, 
+                                                    NULL as principal_status 
+                                            FROM student_academic_records 
+                                            WHERE student_id = " . ($student_info['id'] ?? 0) . " 
+                                            ORDER BY created_at DESC LIMIT 20");
+        $examination_records = ($exam_result) ? $exam_result->fetch_all(MYSQLI_ASSOC) : [];
 
 // Get fee/invoice summary information
 if (tableExists($students_conn, 'student_fee_accounts')) {
-    $fee_account = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC")->fetch_all(MYSQLI_ASSOC);
+    $fee_result = $students_conn->query("SELECT * FROM student_fee_accounts WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY academic_year DESC, semester DESC");
+    $fee_account = ($fee_result) ? $fee_result->fetch_all(MYSQLI_ASSOC) : [];
     $invoice_summary = [
         'total_fees' => $fee_account[0]['total_fees'] ?? 0,
         'amount_paid' => $fee_account[0]['amount_paid'] ?? 0,
@@ -75,22 +79,29 @@ if (tableExists($students_conn, 'student_fee_accounts')) {
     $pending_invoices = [];
     $next_invoice = $fee_account[0] ?? [];
 } else {
-    $invoice_summary = $students_conn->query("SELECT COALESCE(SUM(total_amount), 0) as total_fees, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(balance), 0) as balance FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_assoc();
-    $pending_invoices = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC")->fetch_all(MYSQLI_ASSOC);
-    $next_invoice = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC LIMIT 1")->fetch_assoc();
+    $fee_account = [];
+    $inv_result = $students_conn->query("SELECT COALESCE(SUM(total_amount), 0) as total_fees, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(balance), 0) as balance FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0));
+    $invoice_summary = ($inv_result) ? $inv_result->fetch_assoc() : ['total_fees' => 0, 'amount_paid' => 0, 'balance' => 0];
+    $pending_result = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC");
+    $pending_invoices = ($pending_result) ? $pending_result->fetch_all(MYSQLI_ASSOC) : [];
+    $next_result = $students_conn->query("SELECT id, invoice_number, academic_year, semester, total_amount, amount_paid, balance, due_date FROM student_invoices WHERE student_id = " . ($student_info['id'] ?? 0) . " AND status IN ('pending', 'partial', 'overdue') ORDER BY due_date ASC LIMIT 1");
+    $next_invoice = ($next_result) ? $next_result->fetch_assoc() : [];
 }
 
 // Get recent staff messages
 $messages = [];
 if (tableExists($students_conn, 'messages')) {
-    $messages = $students_conn->query("SELECT * FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $msg_result = $students_conn->query("SELECT * FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " ORDER BY sent_date DESC LIMIT 5");
+    $messages = ($msg_result) ? $msg_result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 // Get payment history
 if (tableExists($students_conn, 'payments')) {
-    $payment_history = $students_conn->query("SELECT * FROM payments WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $pay_result = $students_conn->query("SELECT * FROM payments WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY payment_date DESC LIMIT 5");
+    $payment_history = ($pay_result) ? $pay_result->fetch_all(MYSQLI_ASSOC) : [];
 } elseif (tableExists($students_conn, 'fee_payments')) {
-    $payment_history = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $pay_result = $students_conn->query("SELECT fp.* FROM fee_payments fp JOIN student_fee_accounts sfa ON fp.fee_account_id = sfa.id WHERE sfa.student_id = " . ($student_info['id'] ?? 0) . " ORDER BY fp.payment_date DESC LIMIT 5");
+    $payment_history = ($pay_result) ? $pay_result->fetch_all(MYSQLI_ASSOC) : [];
 } else {
     $payment_history = [];
 }
@@ -98,15 +109,19 @@ if (tableExists($students_conn, 'payments')) {
 // Get live announcements for students
 $announcements = [];
 if (tableExists($students_conn, 'announcements')) {
-    $announcements = $students_conn->query("SELECT a.*, COALESCE(u.full_name, CONCAT(u.first_name, ' ', u.surname)) AS posted_by_name FROM announcements a LEFT JOIN users u ON a.posted_by = u.id WHERE a.status = 'published' AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expiry_date IS NULL OR a.expiry_date >= CURDATE()) ORDER BY a.priority DESC, a.posted_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $ann_result = $students_conn->query("SELECT a.*, COALESCE(u.full_name, CONCAT(u.first_name, ' ', u.surname)) AS posted_by_name FROM announcements a LEFT JOIN users u ON a.posted_by = u.id WHERE a.status = 'published' AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expiry_date IS NULL OR a.expiry_date >= CURDATE()) ORDER BY a.priority DESC, a.posted_date DESC LIMIT 5");
+    $announcements = ($ann_result) ? $ann_result->fetch_all(MYSQLI_ASSOC) : [];
 } elseif (tableExists($students_conn, 'student_notifications')) {
-    $announcements = $students_conn->query("SELECT id, title AS title, message AS content, type AS announcement_type, priority, created_at AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM student_notifications WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY created_at DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $ann_result = $students_conn->query("SELECT id, title AS title, message AS content, type AS announcement_type, priority, created_at AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM student_notifications WHERE student_id = " . ($student_info['id'] ?? 0) . " ORDER BY created_at DESC LIMIT 5");
+    $announcements = ($ann_result) ? $ann_result->fetch_all(MYSQLI_ASSOC) : [];
 } elseif (tableExists($students_conn, 'messages')) {
-    $announcements = $students_conn->query("SELECT id, subject AS title, message AS content, message_type AS announcement_type, priority, sent_date AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " AND message_type = 'announcement' ORDER BY sent_date DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+    $ann_result = $students_conn->query("SELECT id, subject AS title, message AS content, message_type AS announcement_type, priority, sent_date AS posted_date, 'staff' AS posted_by_name, 'students' AS target_audience FROM messages WHERE receiver_id = " . ($student_info['id'] ?? 0) . " AND message_type = 'announcement' ORDER BY sent_date DESC LIMIT 5");
+    $announcements = ($ann_result) ? $ann_result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 // Get academic records for transcript
-$academic_records = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0))->fetch_all(MYSQLI_ASSOC);
+$acad_result = $students_conn->query("SELECT * FROM student_academic_profiles WHERE student_id = " . ($student_info['id'] ?? 0));
+$academic_records = ($acad_result) ? $acad_result->fetch_all(MYSQLI_ASSOC) : [];
 
 // Get current timetable for the student
 $timetable = [];
@@ -131,11 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $filepath = $upload_dir . $filename;
             if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $filepath)) {
                 $stmt = $students_conn->prepare("UPDATE students SET profile_picture = ? WHERE id = ?");
-                $stmt->bind_param("si", $filename, $student_id);
-                if ($stmt->execute()) {
-                    $_SESSION['success_msg'] = 'Profile photo updated successfully!';
+                if ($stmt) {
+                    $stmt->bind_param("si", $filename, $student_id);
+                    if ($stmt->execute()) {
+                        $_SESSION['success_msg'] = 'Profile photo updated successfully!';
+                    }
+                    $stmt->close();
                 }
-                $stmt->close();
             }
         }
     } else {

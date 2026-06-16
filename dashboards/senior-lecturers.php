@@ -10,7 +10,7 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-$studentsConn = getStudentsConnection();
+$studentsConn = $ctx['students'];
 
 // Get lecturer statistics from database
 $total_students = 0;

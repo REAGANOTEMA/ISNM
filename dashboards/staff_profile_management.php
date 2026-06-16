@@ -256,7 +256,7 @@ $access_list = $access_stmt->get_result();
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="profile-container" style="margin-left:260px">
+    <div class="profile-container" style="margin-left:270px">
         <div class="profile-header">
             <h2><i class="fas fa-user-circle me-2"></i>Staff Profile Management</h2>
             <p>Manage your profile picture and access control</p>

@@ -8,14 +8,14 @@ $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-$conn = getStaffConnection();
+$conn = $ctx['staff'];
 
 $user_id    = $_SESSION['user_id'] ?? 0;
 $user_role  = $_SESSION['role']    ?? '';
 $user_email = $_SESSION['email']   ?? '';
 $user_name  = $_SESSION['full_name'] ?? '';
 
-$students_conn = getStudentsConnection();
+$students_conn = $ctx['students'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -52,6 +52,7 @@ function handleAddStudent() {
     $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
     $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Database error preparing statement'; header("Location: secretary.php"); exit(); }
     $stmt->bind_param("ssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
@@ -79,7 +80,8 @@ function handleUpdateStudent() {
     $status = sanitizeInput($_POST['status']);
     $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, phone = ?, email = ?, address = ?, guardian_name = ?, guardian_phone = ?, guardian_email = ?, emergency_contact_name = ?, emergency_contact_phone = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE student_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
+    if (!$stmt) { $_SESSION['error'] = 'Database error preparing statement'; header("Location: secretary.php"); exit(); }
+    $stmt->bind_param("sssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
         $_SESSION['success'] = "Student updated successfully!";
@@ -94,11 +96,13 @@ function handleDeleteStudent() {
     $student_id = sanitizeInput($_POST['student_id']);
     $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
     $check_result = executeQuery($check_sql, [$student_id], 's');
-    if ($check_result[0]['count'] > 0) {
+    $payment_count = (int)($check_result[0]['count'] ?? 0);
+    if ($payment_count > 0) {
         $_SESSION['error'] = "Cannot delete student with payment records. Please archive instead.";
     } else {
         $sql = "DELETE FROM students WHERE student_id = ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) { $_SESSION['error'] = 'Database error preparing statement'; header("Location: secretary.php"); exit(); }
         $stmt->bind_param("s", $student_id);
         if ($stmt->execute()) {
             logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Deleted', "Deleted student: $student_id", 'students', $student_id);
@@ -117,6 +121,7 @@ function handleSendMessage() {
     $message_type = sanitizeInput($_POST['message_type']);
     $sql = "INSERT INTO messages (student_id, sender_id, message_type, message_content, sent_date, status) VALUES (?, ?, ?, ?, CURDATE(), 'sent')";
     $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Database error preparing statement'; header("Location: secretary.php"); exit(); }
     $stmt->bind_param("ssss", $student_id, $_SESSION['user_id'], $message_type, $message);
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Message Sent', "Sent $message_type message to: $student_id", 'messages', $student_id);
@@ -136,6 +141,7 @@ function handleScheduleAppointment() {
     $notes = sanitizeInput($_POST['notes']);
     $sql = "INSERT INTO appointments (student_id, staff_id, appointment_date, appointment_time, purpose, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'scheduled', CURDATE())";
     $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Database error preparing statement'; header("Location: secretary.php"); exit(); }
     $stmt->bind_param("ssssss", $student_id, $_SESSION['user_id'], $appointment_date, $appointment_time, $purpose, $notes);
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Appointment Scheduled', "Scheduled appointment for: $student_id", 'appointments', $student_id);
@@ -154,7 +160,8 @@ function generateStudentId() {
         $student_id = "ISNM/$year/$random";
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
         $check_result = executeQuery($check_sql, [$student_id], 's');
-    } while ($check_result[0]['count'] > 0);
+        $count = (int)($check_result[0]['count'] ?? 0);
+    } while ($count > 0);
     return $student_id;
 }
 

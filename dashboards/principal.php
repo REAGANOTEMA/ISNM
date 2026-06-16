@@ -1,34 +1,42 @@
 <?php
+include_once __DIR__ . '/../includes/config.php';
+include_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/student_profile_component.php';
 
 $ctx = bootstrapStaffDashboard(['principal']);
+$staffDb = $ctx['staff'];
+$studentsDb = $ctx['students'];
+$websiteDb = $ctx['website'];
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-// Enhanced database connections
-$students_conn = getStudentsConnection();
-$staff_conn = getStaffConnection();
-$exams_conn = getStaffConnection();
+$user_id = (int) ($user['id'] ?? 0);
+$user_email = $user['email'] ?? '';
+$user_name = $user['full_name'] ?? '';
 
-// Set charset
-$students_conn->set_charset("utf8mb4");
-$staff_conn->set_charset("utf8mb4");
-$exams_conn->set_charset("utf8mb4");
-
-// Get user information from session
-$user_id = $_SESSION['user_id'] ?? 0;
-$user_email = $_SESSION['email'] ?? '';
-$user_name = $_SESSION['full_name'] ?? '';
-
-// Handle search and filter functionality
 $search_term = $_GET['search'] ?? '';
 $filter_program = $_GET['program'] ?? '';
 $filter_year = $_GET['year'] ?? '';
 $filter_semester = $_GET['semester'] ?? '';
 $filter_status = $_GET['status'] ?? '';
 
-// Handle form submissions
+$total_students = 0;
+$active_students = 0;
+$programs_count = 0;
+
+if ($studentsDb) {
+    try {
+        $result = $studentsDb->query("SELECT COUNT(*) as cnt FROM students");
+        if ($result) $total_students = (int)$result->fetch_assoc()['cnt'];
+        $result = $studentsDb->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'Active'");
+        if ($result) $active_students = (int)$result->fetch_assoc()['cnt'];
+        $result = $studentsDb->query("SELECT COUNT(DISTINCT program) as cnt FROM students");
+        if ($result) $programs_count = (int)$result->fetch_assoc()['cnt'];
+    } catch (Exception $e) {}
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     switch ($_POST['action']) {
         case 'add_student':
@@ -43,70 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         case 'approve_application':
             handleApproveApplication();
             break;
-        case 'generate_report':
-            handleGenerateReport();
-            break;
-        case 'create_exam':
-            handleCreateExam();
-            break;
-        case 'schedule_exam':
-            handleScheduleExam();
-            break;
-        case 'manage_timetable':
-            handleManageTimetable();
-            break;
-        case 'generate_certificates':
-            handleGenerateCertificates();
-            break;
-        case 'bulk_operations':
-            handleBulkOperations();
-            break;
     }
 }
 
-// Get real principal statistics from database
-$stats_sql = "SELECT 
-    COUNT(CASE WHEN s.status = 'Active' THEN 1 ELSE 0 END) as total_students,
-    COUNT(CASE WHEN s.status = 'Active' THEN 1 ELSE 0 END) as active_students,
-    COUNT(DISTINCT s.program) as total_programs,
-    COUNT(CASE WHEN s.status = 'Graduated' THEN 1 ELSE 0 END) as graduates_this_year,
-    AVG(s.gpa) as avg_gpa,
-    COUNT(CASE WHEN st.status = 'Pending' THEN 1 ELSE 0 END) as pending_applications,
-    COUNT(CASE WHEN e.exam_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_exams
-FROM students s 
-LEFT JOIN student_applications st ON s.student_id = st.student_id 
-LEFT JOIN exams e ON s.student_id = e.student_id 
-WHERE YEAR(s.enrollment_date) = YEAR(CURRENT_DATE())";
-$stats_result = $students_conn->query($stats_sql);
-$stats = $stats_result->fetch_assoc();
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'add_student':
-                handleAddStudent();
-                break;
-            case 'update_student':
-                handleUpdateStudent();
-                break;
-            case 'delete_student':
-                handleDeleteStudent();
-                break;
-            case 'approve_application':
-                handleApproveApplication();
-                break;
-            case 'generate_report':
-                handleGenerateReport();
-                break;
-        }
-    }
-}
-
-// Handle student addition
 function handleAddStudent() {
-    global $conn;
-    
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
+
     $student_id = generateStudentId();
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
@@ -126,27 +77,28 @@ function handleAddStudent() {
     $guardian_email = sanitizeInput($_POST['guardian_email']);
     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
     $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
-    
+
     $sql = "INSERT INTO students (student_id, first_name, surname, other_name, date_of_birth, gender, nationality, address, phone, email, program, level, intake_year, intake_period, enrollment_date, guardian_name, guardian_phone, guardian_email, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?)";
-    
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
-    
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: principal.php"); exit(); }
+    $stmt->bind_param("sssssssssssssssssss", $student_id, $first_name, $surname, $other_name, $date_of_birth, $gender, $nationality, $address, $phone, $email, $program, $level, $intake_year, $intake_period, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone);
+
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Added', "Added new student: $student_id - $first_name $surname", 'students', $student_id);
         $_SESSION['success'] = "Student added successfully!";
     } else {
         $_SESSION['error'] = "Error adding student: " . $conn->error;
     }
-    
+
     header("Location: principal.php");
     exit();
 }
 
-// Handle student update
 function handleUpdateStudent() {
-    global $conn;
-    
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
+
     $student_id = sanitizeInput($_POST['student_id']);
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
@@ -160,103 +112,128 @@ function handleUpdateStudent() {
     $emergency_contact_name = sanitizeInput($_POST['emergency_contact_name']);
     $emergency_contact_phone = sanitizeInput($_POST['emergency_contact_phone']);
     $status = sanitizeInput($_POST['status']);
-    
+
     $sql = "UPDATE students SET first_name = ?, surname = ?, other_name = ?, phone = ?, email = ?, address = ?, guardian_name = ?, guardian_phone = ?, guardian_email = ?, emergency_contact_name = ?, emergency_contact_phone = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE student_id = ?";
-    
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
-    
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: principal.php"); exit(); }
+    $stmt->bind_param("sssssssssssss", $first_name, $surname, $other_name, $phone, $email, $address, $guardian_name, $guardian_phone, $guardian_email, $emergency_contact_name, $emergency_contact_phone, $status, $student_id);
+
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Updated', "Updated student: $student_id - $first_name $surname", 'students', $student_id);
         $_SESSION['success'] = "Student updated successfully!";
     } else {
         $_SESSION['error'] = "Error updating student: " . $conn->error;
     }
-    
+
     header("Location: principal.php");
     exit();
 }
 
-// Handle student deletion
 function handleDeleteStudent() {
-    global $conn;
-    
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
+
     $student_id = sanitizeInput($_POST['student_id']);
-    
-    // Check if student has dependencies
+
     $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
-    $check_result = executeQuery($check_sql, [$student_id], 's');
-    
-    if ($check_result[0]['count'] > 0) {
+    $check_stmt = $conn->prepare($check_sql);
+    if (!$check_stmt) { $_SESSION['error'] = 'Prepare failed'; header("Location: principal.php"); exit(); }
+    $check_stmt->bind_param("s", $student_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result()->fetch_assoc();
+
+    if ($check_result && $check_result['count'] > 0) {
         $_SESSION['error'] = "Cannot delete student with payment records. Please archive instead.";
     } else {
         $sql = "DELETE FROM students WHERE student_id = ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: principal.php"); exit(); }
         $stmt->bind_param("s", $student_id);
-        
+
         if ($stmt->execute()) {
-            logActivity($_SESSION['user_id'], $_SESSION['role'], 'Student Deleted', "Deleted student: $student_id", 'students', $student_id);
+            logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Student Deleted', "Deleted student: $student_id", 'students', $student_id);
             $_SESSION['success'] = "Student deleted successfully!";
         } else {
             $_SESSION['error'] = "Error deleting student: " . $conn->error;
         }
     }
-    
+
     header("Location: principal.php");
     exit();
 }
 
-// Handle application approval
 function handleApproveApplication() {
-    global $conn;
-    
+    $conn = getWebsiteConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
+
     $application_id = sanitizeInput($_POST['application_id']);
     $approval_status = sanitizeInput($_POST['approval_status']);
     $comments = sanitizeInput($_POST['comments']);
-    
+
     $sql = "UPDATE applications SET status = ?, principal_comments = ?, reviewed_by = ?, reviewed_date = CURDATE() WHERE application_id = ?";
-    
+
     $stmt = $conn->prepare($sql);
+    if (!$stmt) { $_SESSION['error'] = 'Prepare failed: ' . $conn->error; header("Location: principal.php"); exit(); }
     $stmt->bind_param("ssss", $approval_status, $comments, $_SESSION['user_id'], $application_id);
-    
+
     if ($stmt->execute()) {
-        logActivity($_SESSION['user_id'], $_SESSION['role'], 'Application Reviewed', "Reviewed application: $application_id - Status: $approval_status", 'applications', $application_id);
+        logActivity($_SESSION['user_id'] ?? 0, $_SESSION['role'] ?? '', 'Application Reviewed', "Reviewed application: $application_id - Status: $approval_status", 'applications', $application_id);
         $_SESSION['success'] = "Application reviewed successfully!";
     } else {
         $_SESSION['error'] = "Error reviewing application: " . $conn->error;
     }
-    
+
     header("Location: principal.php");
     exit();
 }
 
-// Generate student ID
 function generateStudentId() {
-    global $conn;
-    
+    $conn = getStudentsConnection();
+    if (!$conn) return 'ISNM/' . date('Y') . '/' . mt_rand(1000, 9999);
+
     do {
         $year = date('Y');
         $random = mt_rand(1000, 9999);
         $student_id = "ISNM/$year/$random";
-        
+
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
-        $check_result = executeQuery($check_sql, [$student_id], 's');
-    } while ($check_result[0]['count'] > 0);
-    
+        $stmt = $conn->prepare($check_sql);
+        if (!$stmt) break;
+        $stmt->bind_param("s", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $count = $row ? (int)$row['count'] : 0;
+        $stmt->close();
+    } while ($count > 0);
+
     return $student_id;
 }
 
-// Get recent students for profile display
-$recent_students_sql = "SELECT * FROM students ORDER BY created_at DESC LIMIT 9";
-$recent_students = executeQuery($recent_students_sql);
+$recent_students = [];
+if ($studentsDb) {
+    try {
+        $result = $studentsDb->query("SELECT * FROM students ORDER BY created_at DESC LIMIT 9");
+        if ($result) $recent_students = $result->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
 
-// Get activity logs
-$recent_activities_sql = "SELECT * FROM activity_logs ORDER BY activity_date DESC LIMIT 8";
-$recent_activities = executeQuery($recent_activities_sql);
+$recent_activities = [];
+if ($staffDb) {
+    try {
+        $result = $staffDb->query("SELECT * FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
+        if ($result) $recent_activities = $result->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
 
-// Get pending applications
-$pending_applications_sql = "SELECT * FROM applications WHERE status = 'pending' ORDER BY application_date DESC LIMIT 5";
-$pending_applications = executeQuery($pending_applications_sql);
+$pending_applications = [];
+if ($websiteDb) {
+    try {
+        $result = $websiteDb->query("SELECT * FROM applications WHERE status = 'pending' ORDER BY application_date DESC LIMIT 5");
+        if ($result) $pending_applications = $result->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
 ?>
 
 <!DOCTYPE html>
