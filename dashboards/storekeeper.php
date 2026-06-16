@@ -189,71 +189,7 @@ $statsOrders = count($orders);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Store Keeper - ISNM Management</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<style>
-* { box-sizing:border-box; }
-:root {
-    --primary:#1a237e; --primary-lt:#3949ab; --accent:#ffd700;
-    --success:#2e7d32; --danger:#c62828; --warning:#e65100;
-    --bg:#f0f2f5; --card-shadow:0 2px 12px rgba(0,0,0,.07);
-}
-body { font-family:'Segoe UI',sans-serif; background:var(--bg); margin:0; min-height:100vh; display:flex; flex-direction:column; }
-.page-content { margin-left:280px; flex:1; min-height:100vh; }
-@media(max-width:768px) { .page-content { margin-left:0; } }
-
-.top-bar { background:#fff; padding:12px 22px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,.07); position:sticky; top:0; z-index:100; }
-.content-area { padding:22px; }
-
-.stat-card { background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%); border-radius:14px; padding:18px; display:flex; align-items:center; gap:14px; transition:transform .25s; }
-.stat-card:hover { transform:translateY(-3px); }
-.stat-icon { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;flex-shrink:0; }
-.stat-info h3 { font-size:1.5rem;font-weight:700;margin:0;line-height:1.2; }
-.stat-info p { font-size:.78rem;color:#666;margin:2px 0 0; }
-
-.section-card { background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%); border-radius:14px; padding:20px; margin-bottom:20px; }
-.section-card h2 { font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5; }
-
-.tab-nav { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; background:#fff; border-radius:12px; padding:6px; box-shadow:var(--card-shadow); }
-.tab-nav a { padding:8px 18px; border-radius:8px; text-decoration:none; font-size:.85rem; font-weight:600; color:#555; transition:all .2s; }
-.tab-nav a:hover { background:#e8eaf6; color:var(--primary); }
-.tab-nav a.active { background:var(--primary); color:#fff; }
-
-.badge-success { background:#e8f5e9; color:#2e7d32; }
-.badge-warning { background:#fff3e0; color:#e65100; }
-.badge-danger { background:#ffebee; color:#c62828; }
-.badge-info { background:#e3f2fd; color:#1565c0; }
-
-.request-card { background:#fff; border-radius:12px; padding:16px; margin-bottom:10px; border:1px solid #e8e8e8; transition:box-shadow .2s; }
-.request-card:hover { box-shadow:0 4px 15px rgba(0,0,0,.1); }
-.request-card .req-num { font-weight:700; color:var(--primary); }
-.request-card .req-meta { font-size:.82rem; color:#888; }
-.request-card .req-actions { display:flex; gap:6px; flex-wrap:wrap; }
-
-.item-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f0f0f0; }
-.item-row:last-child { border-bottom:none; }
-.item-row .item-name { flex:1; font-weight:600; }
-.item-row .item-qty { min-width:60px; text-align:center; }
-.item-row .item-unit { color:#888; font-size:.85rem; min-width:40px; }
-
-.qty-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.8rem; font-weight:600; }
-.qty-ok { background:#e8f5e9; color:#2e7d32; }
-.qty-warn { background:#fff3e0; color:#e65100; }
-.qty-bad { background:#ffebee; color:#c62828; }
-
-footer { background:var(--primary); color:rgba(255,255,255,.8); text-align:center; padding:15px; margin-top:auto; font-size:.85rem; }
-footer a { color:var(--accent); text-decoration:none; }
-
-@media(max-width:768px) {
-    .tab-nav a { padding:6px 12px; font-size:.78rem; }
-    .content-area { padding:12px; }
-    .request-card .req-actions { flex-direction:column; }
-}
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 

@@ -102,28 +102,7 @@ if ($conn) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Student Management – ISNM</title>
-<link rel="icon" href="../images/school-logo.png">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="dashboard-professional.css" rel="stylesheet">
-<style>
-:root{--primary:#0f766e;--accent:#14b8a6;--sidebar-w:260px}
-body{background:#eef7f5;font-family:'Segoe UI',sans-serif;margin:0}
-.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#064e3b,var(--primary));position:fixed;height:100vh;overflow-y:auto;z-index:100;color:#fff}
-.sidebar .brand{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center}
-.sidebar .brand img{width:50px;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
-.sidebar nav a{display:flex;align-items:center;gap:9px;padding:11px 18px;color:rgba(255,255,255,.82);text-decoration:none;font-size:.86rem;transition:.2s}
-.sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.15);color:#fff;border-left:3px solid #99f6e4}
-.main{margin-left:var(--sidebar-w);padding:22px;min-height:100vh}
-.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;border-left:4px solid var(--accent);transition:.2s}
-.stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
-.section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:12px;padding:20px;margin-bottom:22px}
-.section-card h5{color:var(--primary);font-weight:700;border-bottom:2px solid #e9ecef;padding-bottom:8px;margin-bottom:14px}
-@media(max-width:768px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}}
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

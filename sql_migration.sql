@@ -403,6 +403,74 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.portal_messages (
 );
 
 -- ==============================================================================
+-- DATABASE 3 (continued): Website public submissions
+-- ==============================================================================
+
+-- Contact form submissions
+CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.contact_submissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    subject VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    status ENUM('unread','read','replied') DEFAULT 'unread',
+    notified TINYINT(1) DEFAULT 0,
+    replied_at DATETIME,
+    replied_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created (created_at)
+);
+
+-- Volunteer applications
+CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.volunteer_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    profession VARCHAR(100) NOT NULL,
+    experience INT NOT NULL DEFAULT 0,
+    opportunity VARCHAR(100) NOT NULL,
+    availability VARCHAR(50) NOT NULL,
+    duration VARCHAR(50) NOT NULL,
+    skills TEXT NOT NULL,
+    motivation TEXT NOT NULL,
+    comments TEXT,
+    status ENUM('pending','reviewed','contacted','accepted','declined') DEFAULT 'pending',
+    notified TINYINT(1) DEFAULT 0,
+    reviewed_at DATETIME,
+    reviewed_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created (created_at)
+);
+
+-- Donation records
+CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.donations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    donor_name VARCHAR(200) NOT NULL,
+    donor_email VARCHAR(255) NOT NULL,
+    donor_phone VARCHAR(50) NOT NULL,
+    donor_address VARCHAR(500),
+    amount DECIMAL(12,2) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_provider VARCHAR(50),
+    transaction_reference VARCHAR(100),
+    purpose VARCHAR(200) DEFAULT 'General Donation',
+    notes TEXT,
+    status ENUM('pending','completed','failed','refunded') DEFAULT 'pending',
+    notified TINYINT(1) DEFAULT 0,
+    acknowledged_at DATETIME,
+    acknowledged_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created (created_at)
+);
+
+-- ==============================================================================
 -- DATABASE 1 (continued): Auto-Deduction / Subscription Payment System
 -- ==============================================================================
 

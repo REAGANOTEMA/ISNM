@@ -158,35 +158,7 @@ if ($conn) $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Document Management - ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
-        .container { max-width: 1200px; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; }
-        .card { border: none; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        .card-header { background: white; border-bottom: 1px solid #eee; font-weight: 600; }
-        .btn-primary { background: #667eea; border: none; }
-        .btn-primary:hover { background: #5a67d8; }
-        .btn-success { background: #48bb78; border: none; }
-        .btn-success:hover { background: #38a169; }
-        .btn-danger { background: #f56565; border: none; }
-        .btn-danger:hover { background: #e53e3e; }
-        .btn-sm { padding: 4px 12px; font-size: 0.85rem; margin: 1px; }
-        .table th { background: #f7fafc; font-weight: 600; font-size: 0.9rem; }
-        .badge-active { background: #c6f6d5; color: #22543d; }
-        .badge-inactive { background: #fed7d7; color: #742a2a; }
-        .nav-tabs .nav-link { color: #555; }
-        .nav-tabs .nav-link.active { color: #667eea; font-weight: 600; }
-        .template-preview { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px; max-height: 300px; overflow-y: auto; font-size: 0.85rem; }
-        .action-btns { white-space: nowrap; }
-    </style>
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

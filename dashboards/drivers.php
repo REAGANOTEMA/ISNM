@@ -35,71 +35,7 @@ if ($conn) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Drivers Dashboard - ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
-    <link href="dashboard-style.css" rel="stylesheet">
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
-    <style>
-        .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: linear-gradient(to bottom, #ffe082 0%, #ffe082 5px, #fef9e7 5px, #fef9e7 100%);
-            border-radius: 15px;
-            padding: 1.5rem;
-            transition: transform 0.3s ease;
-            border-left: 4px solid #667eea;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        .transport-schedule {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        .route-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid #28a745;
-        }
-        .vehicle-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .status-available {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-busy {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .status-maintenance {
-            background: #f8d7da;
-            color: #721c24;
-        }
-    </style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

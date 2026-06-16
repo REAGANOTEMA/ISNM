@@ -2159,3 +2159,22 @@ include_once 'includes/functions.php'; ?>
     </div>
   </div>
 </nav>
+<?php if (session_status() === PHP_SESSION_NONE) @session_start(); ?>
+<?php if (isset($_SESSION['success_message'])): ?>
+<div class="container mt-3">
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3" role="alert">
+        <i class="fas fa-check-circle fs-5"></i>
+        <span><?= htmlspecialchars($_SESSION['success_message']) ?></span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+<?php unset($_SESSION['success_message']); endif; ?>
+<?php if (isset($_SESSION['error_message'])): ?>
+<div class="container mt-3">
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3" role="alert">
+        <i class="fas fa-exclamation-circle fs-5"></i>
+        <span><?= htmlspecialchars($_SESSION['error_message']) ?></span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+<?php unset($_SESSION['error_message']); endif; ?>

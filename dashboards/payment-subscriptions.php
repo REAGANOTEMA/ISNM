@@ -40,23 +40,7 @@ if ($action === 'run_auto' && in_array(strtolower($userRole), ['director general
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Payment Subscriptions - ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<style>
-:root { --primary: #1e3a8a; }
-body { background: #f0f4f8; font-family: 'Inter','Segoe UI',sans-serif; }
-.card-section { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-.page-header { border-bottom: 2px solid #e9ecef; padding-bottom: 12px; margin-bottom: 20px; }
-.status-active { color: #16a34a; }
-.status-paused { color: #ca8a04; }
-.status-completed { color: #2563eb; }
-.status-cancelled { color: #dc2626; }
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

@@ -186,40 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Academic Registrar – ISNM</title>
-<?php include_once __DIR__.'/../includes/_favicon.php'; ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="dashboard-professional.css" rel="stylesheet">
-<link href="dashboard-mobile.css" rel="stylesheet">
-<style>
-:root{--primary:#2c5f8a;--accent:#1a9e6e;--sidebar-w:260px}
-body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
-.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--primary),#1a3d5c);position:fixed;height:100vh;overflow-y:auto;z-index:100;color:#fff}
-.sidebar .brand{padding:20px;border-bottom:1px solid rgba(255,255,255,.1);text-align:center}
-.sidebar .brand img{width:55px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
-.sidebar .brand h6{margin:8px 0 2px;font-size:.85rem}
-.sidebar nav a{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,.8);text-decoration:none;font-size:.88rem;transition:.2s}
-.sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.15);color:#fff;border-left:3px solid var(--accent)}
-.sidebar nav a i{width:18px;text-align:center}
-.main{margin-left:var(--sidebar-w);padding:24px;min-height:100vh}
-.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;border-left:4px solid var(--accent);transition:.2s}
-.stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.1)}
-.stat-card .num{font-size:1.9rem;font-weight:700;color:var(--primary)}
-.stat-card .lbl{font-size:.78rem;color:#6c757d;text-transform:uppercase;letter-spacing:.5px}
-.section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:12px;padding:22px;margin-bottom:24px}
-.section-card h5{color:var(--primary);font-weight:600;border-bottom:2px solid #e9ecef;padding-bottom:10px;margin-bottom:16px}
-.badge-active{background:#d1fae5;color:#065f46}
-.badge-inactive{background:#fee2e2;color:#991b1b}
-.badge-graduated{background:#dbeafe;color:#1e40af}
-.badge-suspended{background:#fef3c7;color:#92400e}
-.badge-deleted{background:#f3f4f6;color:#374151}
-.table-hover tbody tr:hover{background:#f8fafc}
-.btn-tbl{font-size:.78rem;padding:3px 8px}
-@media(max-width:768px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}}
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 

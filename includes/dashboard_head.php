@@ -7,10 +7,12 @@
 $pageTitle = $pageTitle ?? 'Dashboard';
 $rootPath  = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
 if ($rootPath === '') $rootPath = '.';
-// Also provide as JS global
+
+// Cache-busting version — bump on every deploy
+$v = '2.0.1';
 ?>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,27 +20,32 @@ if ($rootPath === '') $rootPath = '.';
 <meta name="theme-color" content="#1a237e">
 <meta name="msapplication-TileColor" content="#1a237e">
 <meta name="msapplication-TileImage" content="<?= $rootPath ?>/images/school-logo.png">
+<meta name="application-name" content="ISNM">
+<meta name="description" content="Iganga School of Nursing &amp; Midwifery — School Management System">
+<meta name="keywords" content="ISNM, Iganga, Nursing, Midwifery, School, Management, ERP">
+<meta name="author" content="ISNM">
+<meta name="robots" content="noindex, nofollow">
 <title><?= htmlspecialchars($pageTitle) ?> — ISNM</title>
 
-<!-- Favicon — all sizes, all browsers, using school-logo.png -->
-<link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="shortcut icon"         type="image/png" href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon"                       href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="57x57"         href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="72x72"         href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="114x114"       href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="144x144"       href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="152x152"       href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="apple-touch-icon" sizes="180x180"       href="<?= $rootPath ?>/images/school-logo.png">
-<link rel="manifest"                               href="/ISNM/manifest.json">
+<!-- Favicon — all sizes, all devices -->
+<link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="shortcut icon"         type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon"                       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="57x57"         href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="72x72"         href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="114x114"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="144x144"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="152x152"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="apple-touch-icon" sizes="180x180"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
+<link rel="manifest"                               href="/ISNM/manifest.json?v=<?= $v ?>">
 
 <!-- Bootstrap 5.3 -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Font Awesome 6 -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Dashboard base styles -->
-<link href="<?= $rootPath ?>/dashboards/dashboard-style.css" rel="stylesheet">
+<link href="<?= $rootPath ?>/dashboards/dashboard-style.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Mobile dashboard styles -->
-<link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css" rel="stylesheet">
+<link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">

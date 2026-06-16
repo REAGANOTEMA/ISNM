@@ -208,36 +208,7 @@ if ($rs_stmt) { while ($row = $rs_stmt->fetch_assoc()) { $recent_students[] = $r
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Secretary Dashboard – ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<style>
-body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
-.page-content{margin-left:280px;flex:1;min-height:100vh}
-@media(max-width:768px){.page-content{margin-left:0}}
-.top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
-.content-area{padding:22px}
-.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;transition:transform .25s}
-.stat-card:hover{transform:translateY(-4px)}
-.si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
-.si-blue{background:linear-gradient(135deg,#1a237e,#3949ab)}
-.si-green{background:linear-gradient(135deg,#2e7d32,#43a047)}
-.si-cyan{background:linear-gradient(135deg,#0277bd,#039be5)}
-.si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
-.si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
-.si-red{background:linear-gradient(135deg,#b71c1c,#ef5350)}
-.stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
-.stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
-.section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:14px;padding:20px;margin-bottom:22px}
-.section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
-.student-item{border:1px solid #e8e8e8;border-radius:10px;padding:12px 14px;margin-bottom:10px;transition:box-shadow .2s}
-.student-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
-@media print{.sidebar,.top-bar,.no-print{display:none!important}.page-content{margin-left:0!important;padding:20px!important}.section-card{box-shadow:none!important;border:1px solid #ddd;page-break-inside:avoid}body{background:#fff!important}}
-</style>
-<link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 

@@ -356,61 +356,7 @@ $pageTitle = 'Bursar Dashboard';
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $pageTitle ?> - ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
-<style>
-:root{--bp:#1a237e;--bs:#3949ab}
-*{box-sizing:border-box}
-body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:0;min-height:100vh}
-.ma{margin-left:270px;padding:24px 28px;min-height:100vh}
-.ph{background:#fff;border-radius:16px;padding:20px 28px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.ph h1{margin:0;font-size:22px;font-weight:700;color:var(--bp)}
-.ph p{margin:2px 0 0;font-size:13px;color:#64748b}
-.sc{background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 1px 4px rgba(0,0,0,.06);height:100%;transition:transform .15s;border-left:4px solid var(--bp)}
-.sc:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
-.sc .si{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;background:linear-gradient(135deg,var(--bp),var(--bs));margin-bottom:10px}
-.sc .sv{font-size:26px;font-weight:700;color:#0f172a;margin:0}
-.sc .sl{font-size:13px;color:#64748b;margin:2px 0 0}
-.ag{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.ab{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s;text-decoration:none;color:#334155;display:flex;flex-direction:column;align-items:center;gap:6px}
-.ab:hover{border-color:var(--bp);color:var(--bp);box-shadow:0 2px 8px rgba(26,35,126,.1)}
-.ab i{font-size:22px;color:var(--bp)}
-.ab span{font-size:12px;font-weight:500}
-.cc{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:none;margin-bottom:20px}
-.cc .ch{background:0 0;border-bottom:1px solid #f1f5f9;padding:16px 22px;font-weight:600;font-size:15px;color:#0f172a}
-.cc .cb{padding:20px 22px}
-.st{font-size:16px;font-weight:600;color:#0f172a;margin:0 0 16px}
-.bb{background:linear-gradient(135deg,var(--bp),var(--bs));color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500}
-.bb:hover{color:#fff;box-shadow:0 4px 12px rgba(26,35,126,.25)}
-.bo{border:1px solid var(--bp);color:var(--bp);background:0 0;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500}
-.bo:hover{background:var(--bp);color:#fff}
-.tb{font-size:13px;margin:0}
-.tb thead th{background:#f8fafc;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #e2e8f0;padding:10px 12px}
-.tb td{padding:10px 12px;vertical-align:middle;border-bottom:1px solid #f1f5f9}
-.tb tr:hover td{background:#f8fafc}
-.fl{font-size:13px;font-weight:500;color:#334155;margin-bottom:4px}
-.fc,.fs{border-radius:8px;border:1px solid #e2e8f0;font-size:13px;padding:8px 12px}
-.fc:focus,.fs:focus{border-color:var(--bp);box-shadow:0 0 0 3px rgba(26,35,126,.1)}
-.sri{padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .1s}
-.sri:hover{border-color:var(--bp);background:#f8fafc}
-.sri.active{border-color:var(--bp);background:#eef2ff}
-.pr{max-width:700px;margin:0 auto;background:#fff;padding:30px 35px;border-radius:12px}
-.rh{text-align:center;margin-bottom:24px;border-bottom:2px dashed #e2e8f0;padding-bottom:20px}
-.rh h3{font-weight:700;color:#0f172a;margin:0 0 4px}
-.rh p{margin:0;color:#64748b;font-size:13px}
-.rb .rl{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px dotted #e2e8f0}
-.rb .rl strong{color:#334155}
-.rtot{font-size:18px;font-weight:700;color:var(--bp);text-align:right;padding-top:12px}
-.attoast{position:fixed;top:20px;right:20px;z-index:9999;min-width:300px}
-@media print{body{background:#fff!important}.ma{margin-left:0!important;padding:0!important}.no-print,.ph,.ag,.ch,.bb,.bo,.attoast{display:none!important}.cc{box-shadow:none!important;border:1px solid #ddd!important;border-radius:0!important}.tb td,.tb th{border-color:#bbb!important}.pr{padding:0!important;border-radius:0!important;box-shadow:none!important}}
-@media(max-width:768px){.ma{margin-left:0;padding:16px}.ag{grid-template-columns:repeat(2,1fr)}}
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 
@@ -917,7 +863,7 @@ function generateReport(){
 function exportReportExcel(){
     var tbl = document.getElementById('rptTable');
     if(!tbl) return;
-    var html = '<html><head><meta charset="UTF-8"><title>Financial Report</title></head><body>'+tbl.outerHTML+'</body></html>';
+    var html = '<html><head><meta charset="UTF-8"><title>Financial Report - ISNM</title><style>td,th{border:1px solid #ccc;padding:6px 10px}th{background:#1a237e;color:#fff;font-weight:600}</style></head><body>'+tbl.outerHTML+'</body></html>';
     var blob = new Blob([html], {type:'application/vnd.ms-excel'});
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'financial_report_'+new Date().toISOString().slice(0,10)+'.xls'; a.click();

@@ -99,32 +99,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>HR Manager Dashboard – ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link href="dashboard-style.css" rel="stylesheet">
-<link href="dashboard-mobile.css" rel="stylesheet">
-<style>
-body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
-.page-wrap{margin-left:280px;min-height:100vh}
-@media(max-width:768px){.page-wrap{margin-left:0}}
-.top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
-.content{padding:22px}
-.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:12px;padding:18px;display:flex;align-items:center;gap:12px}
-.si{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#fff;flex-shrink:0}
-.si-blue{background:linear-gradient(135deg,#1a237e,#3949ab)}
-.si-green{background:linear-gradient(135deg,#2e7d32,#43a047)}
-.si-cyan{background:linear-gradient(135deg,#0277bd,#039be5)}
-.si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
-.si-red{background:linear-gradient(135deg,#b71c1c,#ef5350)}
-.stat-content h3{font-size:1.5rem;font-weight:700;margin:0}
-.stat-content p{font-size:.78rem;color:#666;margin:0}
-.card-section{background:#fff;border-radius:12px;padding:20px;margin-bottom:22px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
-.card-section h2{font-size:1rem;font-weight:700;padding-bottom:10px;border-bottom:2px solid #f0f2f5;margin-bottom:14px}
-</style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 

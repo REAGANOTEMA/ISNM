@@ -895,7 +895,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <form id="donationForm">
+            <form id="donationForm" method="POST" action="process-donation.php">
               <!-- Personal Information -->
               <div class="row mb-4">
                 <div class="col-12">
@@ -903,19 +903,19 @@
                 </div>
                 <div class="col-md-6">
                   <label for="donorName" class="form-label">Full Name *</label>
-                  <input type="text" class="form-control" id="donorName" placeholder="Enter your full name" required>
+                  <input type="text" class="form-control" id="donorName" name="donorName" placeholder="Enter your full name" required>
                 </div>
                 <div class="col-md-6">
                   <label for="donorEmail" class="form-label">Email Address *</label>
-                  <input type="email" class="form-control" id="donorEmail" placeholder="your.email@example.com" required>
+                  <input type="email" class="form-control" id="donorEmail" name="donorEmail" placeholder="your.email@example.com" required>
                 </div>
                 <div class="col-md-6">
                   <label for="donorPhone" class="form-label">Phone Number *</label>
-                  <input type="tel" class="form-control" id="donorPhone" placeholder="+256 7XX XXX XXX" required>
+                  <input type="tel" class="form-control" id="donorPhone" name="donorPhone" placeholder="+256 7XX XXX XXX" required>
                 </div>
                 <div class="col-md-6">
                   <label for="donorAddress" class="form-label">Address (Optional)</label>
-                  <input type="text" class="form-control" id="donorAddress" placeholder="Your address">
+                  <input type="text" class="form-control" id="donorAddress" name="donorAddress" placeholder="Your address">
                 </div>
               </div>
 
@@ -926,7 +926,7 @@
                 </div>
                 <div class="col-md-6">
                   <label for="donationType" class="form-label">Donation Type *</label>
-                  <select class="form-control" id="donationType" required>
+                  <select class="form-control" id="donationType" name="donationType" required>
                     <option value="">Select Type</option>
                     <option value="one-time">One-Time Donation</option>
                     <option value="monthly">Monthly Giving</option>
@@ -936,11 +936,11 @@
                 </div>
                 <div class="col-md-6">
                   <label for="donationAmount" class="form-label">Amount (UGX) *</label>
-                  <input type="number" class="form-control" id="donationAmount" min="10000" placeholder="Enter amount in UGX" required>
+                  <input type="number" class="form-control" id="donationAmount" name="amount" min="10000" placeholder="Enter amount in UGX" required>
                 </div>
                 <div class="col-12">
                   <label for="donationPurpose" class="form-label">Purpose (Optional)</label>
-                  <select class="form-control" id="donationPurpose">
+                  <select class="form-control" id="donationPurpose" name="purpose">
                     <option value="">General Support</option>
                     <option value="library">Library Development</option>
                     <option value="computer-lab">Computer Lab Enhancement</option>
@@ -952,7 +952,7 @@
                 </div>
                 <div class="col-12">
                   <label for="donorMessage" class="form-label">Message (Optional)</label>
-                  <textarea class="form-control" id="donorMessage" rows="3" placeholder="Any message or special instructions..."></textarea>
+                  <textarea class="form-control" id="donorMessage" name="notes" rows="3" placeholder="Any message or special instructions..."></textarea>
                 </div>
                 <div class="col-12">
                   <div class="form-check">
@@ -997,7 +997,7 @@
                       <span>Bank Transfer</span>
                     </div>
                   </div>
-                  <input type="hidden" id="selectedPaymentMethod" required>
+                  <input type="hidden" id="selectedPaymentMethod" name="paymentMethod" required>
                 </div>
               </div>
 

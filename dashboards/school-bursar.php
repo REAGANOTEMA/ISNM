@@ -15,73 +15,7 @@ $website = $ctx['website'];
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>School Bursar Dashboard - ISNM Financial Management System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/isnm-style.css">
-    <link rel="stylesheet" href="dashboard-style.css">
-    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
-    <style>
-        :root {
-            --isnm-blue: #1e3a8a;
-            --isnm-light-blue: #3b82f6;
-            --isnm-green: #059669;
-            --isnm-gold: #d97706;
-            --isnm-dark-green: #0f4c3a;
-        }
-        
-        .payment-method-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .payment-logo {
-            height: 24px;
-            width: auto;
-        }
-        
-        .stat-card {
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .badge-status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-        
-        .badge-paid { background: #198754; }
-        .badge-pending { background: #ffc107; color: #000; }
-        .badge-approved { background: #0dcaf0; }
-        .badge-overdue { background: #dc3545; }
-        
-        .receipt-preview {
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-        
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-    </style>
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 <?php
@@ -568,8 +502,7 @@ $website = $ctx['website'];
             const printContent = document.getElementById('receiptTemplate').cloneNode(true);
             printContent.style.display = 'block';
             const printWindow = window.open('', '_blank');
-            printWindow.document.write('<html><head><title>Print Receipt</title></head><body>' + printContent.innerHTML + '<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-</body></html>');
+            printWindow.document.write('<html><head><meta charset="UTF-8"><title>Receipt - ISNM</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{padding:40px;font-family:"Inter",sans-serif}</style></head><body>' + printContent.innerHTML + '</body></html>');
             printWindow.document.close();
             printWindow.print();
         }

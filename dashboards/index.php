@@ -45,46 +45,7 @@ $modules = getFilteredModules($user_role);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - ISNM Management System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="dashboard-style.css">
-    <style>
-        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .dashboard-main { margin-left: 270px; padding: 20px; min-height: 100vh; }
-        .page-title { margin-bottom: 24px; }
-        .page-title h1 { font-size: 24px; font-weight: 700; color: #1a237e; margin: 0; }
-        .page-title p { color: #666; margin: 4px 0 0 0; font-size: 14px; }
-        .stat-card {
-            background: white; border-radius: 12px; padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;
-            display: flex; align-items: center; gap: 16px; height: 100%;
-        }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .stat-icon {
-            width: 56px; height: 56px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
-        }
-        .stat-info h3 { font-size: 28px; font-weight: 700; margin: 0; color: #1a237e; }
-        .stat-info p { margin: 2px 0 0 0; color: #666; font-size: 13px; }
-        .card-section { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .card-section h5 { font-size: 16px; font-weight: 600; color: #1a237e; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #f0f2f5; }
-        .quick-module {
-            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-            background: #f8f9ff; border-radius: 8px; text-decoration: none; color: #333;
-            transition: all 0.2s; border: 1px solid #eee;
-        }
-        .quick-module:hover { background: #e8eaff; border-color: #c5cae9; transform: translateX(4px); color: #1a237e; }
-        .activity-item { padding: 10px 0; border-bottom: 1px solid #f0f2f5; font-size: 13px; }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-time { color: #999; font-size: 12px; }
-        @media (max-width: 768px) {
-            .dashboard-main { margin-left: 0; padding: 70px 12px 12px; }
-        }
-    </style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>

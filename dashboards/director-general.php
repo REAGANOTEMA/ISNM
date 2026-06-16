@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/email_notifications.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 // Load all students for search functionality
@@ -139,71 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Director General – Doris Joy – ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<style>
-body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
-.page-content{margin-left:280px;flex:1;min-height:100vh}
-@media(max-width:768px){.page-content{margin-left:0}}
-.top-bar{background:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:100}
-.content-area{padding:22px}
-.stat-card{background:linear-gradient(to bottom,#ffe082 0%,#ffe082 5px,#fef9e7 5px,#fef9e7 100%);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;transition:transform .25s}
-.stat-card:hover{transform:translateY(-4px)}
-        .si{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0}
-        .si-blue  {background:linear-gradient(135deg,#1a237e,#3949ab)}
-        .si-green {background:linear-gradient(135deg,#2e7d32,#43a047)}
-        .si-cyan  {background:linear-gradient(135deg,#0277bd,#039be5)}
-        .si-orange{background:linear-gradient(135deg,#e65100,#fb8c00)}
-        .si-red   {background:linear-gradient(135deg,#b71c1c,#ef5350)}
-        .si-purple{background:linear-gradient(135deg,#4a148c,#8e24aa)}
-        .stat-content h3{font-size:1.6rem;font-weight:700;margin:0;line-height:1}
-        .stat-content p{font-size:.77rem;color:#666;margin:2px 0 0}
-        .section-card{background:linear-gradient(to bottom,#d7ccc8 0%,#d7ccc8 5px,#f0dcc8 5px,#f0dcc8 100%);border-radius:14px;padding:20px;margin-bottom:22px}
-        .section-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
-
-        /* Custom button colors */
-        .btn-outline-purple {
-            color: #7e57c2;
-            border-color: #7e57c2;
-        }
-        .btn-outline-purple:hover {
-            background-color: #7e57c2;
-            color: white;
-            border-color: #7e57c2;
-        }
-        .btn-outline-red {
-            color: #ef5350;
-            border-color: #ef5350;
-        }
-        .btn-outline-red:hover {
-            background-color: #ef5350;
-            color: white;
-            border-color: #ef5350;
-        }
-        .cursor-pointer { cursor: pointer; }
-
-        @media print {
-            .sidebar, .top-bar, .no-print {
-                display: none !important;
-            }
-            .page-content {
-                margin-left: 0 !important;
-                padding: 20px !important;
-            }
-            .section-card {
-                box-shadow: none !important;
-                border: 1px solid #ddd;
-                page-break-inside: avoid;
-            }
-            body {
-                background: white !important;
-            }
-        }
-    </style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
 
@@ -255,6 +192,93 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0}
       </div>
       <?php endforeach; ?>
     </div>
+
+    <!-- PENDING SUBMISSIONS INBOX -->
+    <?php
+    $pendingContacts = 0; $pendingVolunteers = 0; $pendingDonations = 0; $pendingApplications = 0;
+    $recentSubmissions = [];
+    if ($websiteConn) {
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM contact_submissions WHERE status='unread'");
+        if ($r) $pendingContacts = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM volunteer_applications WHERE status='pending'");
+        if ($r) $pendingVolunteers = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM donations WHERE status='pending'");
+        if ($r) $pendingDonations = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'");
+        if ($r) $pendingApplications = (int)$r->fetch_assoc()['c'];
+
+        // Fetch latest 5 submissions across all types
+        $union = $websiteConn->query("
+            (SELECT 'contact' as type, id, CONCAT(first_name,' ',last_name) as name, subject as title, created_at FROM contact_submissions WHERE status='unread')
+            UNION ALL
+            (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
+            UNION ALL
+            (SELECT 'donation', id, donor_name, CONCAT('UGX ',FORMAT(amount,0)), created_at FROM donations WHERE status='pending')
+            UNION ALL
+            (SELECT 'application', id, CONCAT(first_name,' ',surname), program_applied, submitted_at FROM student_applications WHERE status='Pending')
+            ORDER BY created_at DESC LIMIT 8
+        ");
+        if ($union) while ($row = $union->fetch_assoc()) $recentSubmissions[] = $row;
+    }
+    $totalPending = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
+    ?>
+    <?php if ($totalPending > 0): ?>
+    <div class="section-card mb-4" style="border-left:4px solid #dc2626">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="mb-0"><i class="fas fa-bell me-2" style="color:#dc2626"></i>Pending Submissions</h2>
+            <span class="badge bg-danger rounded-pill fs-6"><?= $totalPending ?> New</span>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-3 col-md-3">
+                <div class="p-3 rounded text-center" style="background:#fee2e2">
+                    <div class="fs-3 fw-bold" style="color:#991b1b"><?= $pendingContacts ?></div>
+                    <small style="color:#7f1d1d">Messages</small>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-3 rounded text-center" style="background:#fef3c7">
+                    <div class="fs-3 fw-bold" style="color:#92400e"><?= $pendingVolunteers ?></div>
+                    <small style="color:#78350f">Volunteers</small>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-3 rounded text-center" style="background:#dbeafe">
+                    <div class="fs-3 fw-bold" style="color:#1e40af"><?= $pendingDonations ?></div>
+                    <small style="color:#1e3a8a">Donations</small>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-3 rounded text-center" style="background:#dcfce7">
+                    <div class="fs-3 fw-bold" style="color:#166534"><?= $pendingApplications ?></div>
+                    <small style="color:#14532d">Applications</small>
+                </div>
+            </div>
+        </div>
+        <?php if (!empty($recentSubmissions)): ?>
+        <div class="list-group list-group-flush">
+            <?php foreach ($recentSubmissions as $sub): 
+                $icons = ['contact' => 'fa-envelope','volunteer' => 'fa-hands-helping','donation' => 'fa-hand-holding-heart','application' => 'fa-file-alt'];
+                $colors = ['contact' => '#dc2626','volunteer' => '#d97706','donation' => '#2563eb','application' => '#16a34a'];
+                $labels = ['contact' => 'Contact','volunteer' => 'Volunteer','donation' => 'Donation','application' => 'Application'];
+                $ic = $icons[$sub['type']] ?? 'fa-bell';
+                $cl = $colors[$sub['type']] ?? '#6b7280';
+                $lb = $labels[$sub['type']] ?? 'Submission';
+            ?>
+            <div class="list-group-item border-0 ps-0 d-flex align-items-center gap-3">
+                <div style="width:36px;height:36px;border-radius:50%;background:<?= $cl ?>15;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <i class="fas <?= $ic ?>" style="color:<?= $cl ?>;font-size:14px"></i>
+                </div>
+                <div class="flex-grow-1 min-width-0">
+                    <div class="fw-semibold" style="font-size:14px"><?= htmlspecialchars($sub['name']) ?></div>
+                    <div style="font-size:12px;color:#64748b"><?= htmlspecialchars($sub['title']) ?> <span class="badge bg-light text-dark ms-1"><?= $lb ?></span></div>
+                </div>
+                <small style="color:#94a3b8;flex-shrink:0"><?= date('d M H:i', strtotime($sub['created_at'])) ?></small>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- STUDENT SEARCH -->
     <div class="section-card">

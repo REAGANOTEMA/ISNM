@@ -46,47 +46,7 @@ if ($conn) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Head of Midwifery Dashboard - ISNM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/isnm-style.css">
-    <link rel="stylesheet" href="dashboard-style.css">
-    <link rel="stylesheet" href="dashboard-professional.css">
-    <link rel="stylesheet" href="dashboard-mobile.css">
-    <link rel="icon" type="image/x-icon" href="../images/school-logo.png">
-    <style>
-        :root {
-            --isnm-blue: #1e3a8a;
-            --isnm-light-blue: #3b82f6;
-            --isnm-green: #059669;
-            --isnm-gold: #d97706;
-            --isnm-dark-green: #0f4c3a;
-        }
-        
-        .activity-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--isnm-blue), var(--isnm-light-blue));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            flex-shrink: 0;
-        }
-    </style>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
     <div class="dashboard-container">

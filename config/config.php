@@ -9,7 +9,7 @@ session_start();
 // Application settings
 define('APP_NAME', 'ISNM Student Management System');
 define('APP_VERSION', '1.0.0');
-define('APP_URL', 'http://localhost/ISNM');
+define('APP_URL', 'https://isnm.ac.ug');
 define('APP_EMAIL_DOMAIN', 'igangaschoolofnursingandmidwifery.ac.ug');
 
 // Department Email Contacts (for student messaging)
