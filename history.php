@@ -194,7 +194,7 @@
             </div>
             <div class="leader-profile">
               <div class="leader-avatar">
-                <img src="images/principal-old-and-current.jpg" alt="Sr. Joyce C. Zirabamuzale">
+                <img src="images/principal-old-and-current.JPG" alt="Sr. Joyce C. Zirabamuzale">
               </div>
               <div class="leader-info">
                 <h4>Sr. Joyce C. Zirabamuzale</h4>
