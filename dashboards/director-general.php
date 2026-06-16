@@ -5,6 +5,7 @@ require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/email_notifications.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
 
 // Load all students for search functionality
@@ -78,6 +79,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     if ($title && $body && $studentsConn) {
         $studentsConn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$title','$body','$target','$priority',$user_id,1,NOW())");
         $_SESSION['success'] = "Announcement published to all $target.";
+        // Create notification for all staff
+        $nid = createNotification('New Announcement: ' . $title, $body, 'director-general.php', 'announcement', 'fas fa-bullhorn');
+        if ($nid) {
+            notifyAllStaff($nid);
+            // Send email notification using existing system
+            if (function_exists('notifyDirectorGeneral')) {
+                notifyDirectorGeneral("New Announcement: $title", "The DG posted a new announcement targeting $target.\n\n$body\n\nPriority: $priority");
+            }
+        }
     }
     header('Location: director-general.php'); exit;
 }
@@ -318,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
         <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
         <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
         <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
-        <a href="../dashboards/bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
+        <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
         <a href="../dashboards/school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
         <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
       </div>

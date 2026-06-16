@@ -56,7 +56,7 @@ function getModuleConfig(): array {
             'icon'     => 'fas fa-chart-line',
             'roles'    => '*',
             'children' => [
-                ['title' => 'Bursar Dashboard',   'route' => 'bursar.php',                        'roles' => ['bursar','finance','accountant']],
+                ['title' => 'Bursar Dashboard',   'route' => 'school-bursar.php',                 'roles' => ['bursar','finance','accountant']],
                 ['title' => 'School Bursar',       'route' => 'school-bursar.php',                 'roles' => ['school bursar','bursar','accountant']],
                 ['title' => 'Finance Director',    'route' => 'director-finance.php',              'roles' => ['director','finance','ceo']],
                 ['title' => 'Fee Structure',       'route' => 'fee-structure.php',                 'roles' => ['bursar','finance','director','accountant']],

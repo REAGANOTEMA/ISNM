@@ -420,7 +420,7 @@ class AuthenticationService {
             'chief executive officer' => 'dashboards/ceo.php',
             'ceo'                     => 'dashboards/ceo.php',
             'hr manager'              => 'dashboards/hr-manager.php',
-            'bursar'                  => 'dashboards/bursar.php',
+            'bursar'                  => 'dashboards/school-bursar.php',
             'school bursar'           => 'dashboards/school-bursar.php',
             'academic registrar'      => 'dashboards/academic-registrar.php',
             'school principal'        => 'dashboards/school-principal.php',

@@ -738,7 +738,7 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
             <a href="?" class="btn btn-outline-secondary btn-sm d-print-none"><i class="fas fa-arrow-left me-1"></i> Back to Student List</a>
             <button class="btn btn-outline-success btn-sm d-print-none ms-2" onclick="window.print()"><i class="fas fa-print me-1"></i> Print Profile</button>
             <?php if ($showStatementLink && !empty($stu['student_id'])): ?>
-                <a href="bursar.php?view=student_statement&student_id=<?= htmlspecialchars($stu['student_id']) ?>" class="btn btn-outline-warning btn-sm d-print-none ms-2"><i class="fas fa-receipt me-1"></i> Print Statement</a>
+                <a href="school-bursar.php?view=student_statement&student_id=<?= htmlspecialchars($stu['student_id']) ?>" class="btn btn-outline-warning btn-sm d-print-none ms-2"><i class="fas fa-receipt me-1"></i> Print Statement</a>
             <?php endif; ?>
         </div>
 

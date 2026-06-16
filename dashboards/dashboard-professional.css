@@ -257,3 +257,53 @@ body {
   color: #0d1442 !important;
   transform: perspective(1000px) translateY(-3px) translateZ(6px) !important;
 }
+
+/* ── Notification Badge ─────────────────────────────────────────── */
+.notification-badge {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: #fff;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  animation: badgePulse 2s infinite;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  line-height: 1.4;
+  min-width: 20px;
+  text-align: center;
+}
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ── Glass & 3D Effects ─────────────────────────────────────────── */
+.glass-effect {
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 14px;
+}
+.hover-lift {
+  transition: all .25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(15,23,42,.1);
+}
+
+/* ── Receipt Print Styles ───────────────────────────────────────── */
+.pr { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; }
+.pr .rh { text-align: center; border-bottom: 2px solid #1a237e; padding-bottom: 16px; margin-bottom: 20px; }
+.pr .rh h3 { color: #1a237e; font-weight: 800; margin-bottom: 4px; }
+.pr .rh p { color: #64748b; font-size: 13px; }
+.pr .rh h4 { color: #1a237e; font-weight: 700; }
+.pr .rb { margin-bottom: 20px; }
+.pr .rl { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+.pr .rl strong { color: #334155; }
+.pr .rl span { color: #0f172a; }
+.pr .rtot { text-align: center; font-size: 28px; font-weight: 800; color: #1a237e; }
+.no-print { }
+@media print { .no-print { display: none !important; } body { background: #fff !important; } }

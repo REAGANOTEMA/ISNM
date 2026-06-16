@@ -525,3 +525,31 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.subscription_deductions (
     INDEX idx_student (student_id),
     INDEX idx_status (status)
 );
+
+-- ==============================================================================
+-- DATABASE 4: igangaschoolofl_website_db — Notifications System
+-- ==============================================================================
+
+-- Notifications: one row per notification event
+CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    url VARCHAR(500) DEFAULT '' COMMENT 'Link to click when notification is opened',
+    type ENUM('info','warning','success','danger','announcement') NOT NULL DEFAULT 'info',
+    icon VARCHAR(50) DEFAULT 'fas fa-bell',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Notification reads: tracks per-user read status
+CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.notification_reads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    notification_id INT NOT NULL,
+    user_id INT NOT NULL COMMENT 'FK to staffs_db.staff.id or students_db.students.id',
+    user_type ENUM('staff','student') NOT NULL DEFAULT 'staff',
+    read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_notif_user (notification_id, user_id, user_type),
+    FOREIGN KEY (notification_id) REFERENCES igangaschoolofl_website_db.notifications(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id, user_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -298,7 +298,7 @@ function getUserDashboard($role) {
         // Additional roles
         'principal' => 'principal.php',
         'secretary' => 'secretary.php',
-        'bursar' => 'bursar.php'
+        'bursar' => 'school-bursar.php'
     ];
     
     // Check if role has exact mapping
