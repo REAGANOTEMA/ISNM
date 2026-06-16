@@ -232,3 +232,11 @@
     .single-article h1 { font-size: 1.4rem; }
     .news-card-img, .news-card-img-placeholder { height: 170px; }
 }
+
+@media (max-width: 480px) {
+    .hero-section-news h1 { font-size: 1.3rem; }
+    .hero-section-news { padding: 30px 0 20px; }
+    .single-article { padding: 15px; }
+    .single-article h1 { font-size: 1.2rem; }
+    .news-card-img, .news-card-img-placeholder { height: 140px; }
+}

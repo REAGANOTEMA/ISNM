@@ -1251,15 +1251,25 @@
       }
       
       .slide-caption {
-        padding: 1.5rem;
+        padding: 1.2rem;
       }
       
       .slide-caption h4 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
       }
       
       .slide-caption p {
-        font-size: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .slider-indicators {
+        bottom: 10px;
+        gap: 8px;
+      }
+
+      .indicator {
+        width: 10px;
+        height: 10px;
       }
       
       .program-item {
@@ -1285,11 +1295,11 @@
 
     @media (max-width: 576px) {
       .page-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
       }
       
       .intro-content {
-        padding: 0 1rem;
+        padding: 0 0.5rem;
       }
       
       .vmv-card {
@@ -1419,6 +1429,35 @@
         font-size: 1.2rem;
       }
     }
+
+    @media (max-width: 400px) {
+      .slider-wrapper {
+        height: 260px;
+      }
+
+      .slide-caption h4 {
+        font-size: 1.1rem;
+      }
+
+      .slide-caption p {
+        font-size: 0.8rem;
+      }
+
+      .slider-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+      }
+
+      .slider-indicators {
+        gap: 6px;
+      }
+
+      .indicator {
+        width: 8px;
+        height: 8px;
+      }
+    }
   </style>
 
   <script>
@@ -1543,5 +1582,21 @@
       }
     });
   </script>
+
+  <!-- Apply Now & Donate CTA Section -->
+  <section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+      <h2 class="mb-4">Start Your Healthcare Journey Today</h2>
+      <p class="lead mb-4">Join Iganga School of Nursing and Midwifery and become a healthcare professional</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="application.php" class="btn btn-light btn-lg px-5">
+          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        </a>
+        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
+        </a>
+      </div>
+    </div>
+  </section>
 
   <?php include('shared/_footer.php'); ?>

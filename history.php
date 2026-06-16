@@ -305,6 +305,22 @@
       </div>
     </section>
 
+    <!-- Apply Now & Donate CTA Section -->
+    <section class="cta-section py-5 bg-primary text-white">
+      <div class="container text-center">
+        <h2 class="mb-4">Be Part of Our Legacy</h2>
+        <p class="lead mb-4">Join thousands of successful healthcare professionals who started their careers at ISNM</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="application.php" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-paper-plane me-2"></i> Apply Now
+          </a>
+          <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+            <i class="fas fa-hand-holding-heart me-2"></i> Support Our Mission
+          </a>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 <?php include('shared/_footer.php');?>
@@ -1078,6 +1094,15 @@
         text-align: center;
         gap: 1.5rem;
       }
+
+      .leader-avatar {
+        width: 120px;
+        height: 120px;
+      }
+
+      .leader-info h4 {
+        font-size: 1.2rem;
+      }
       
       .plan-header,
       .leadership-header,
@@ -1085,6 +1110,25 @@
         flex-direction: column;
         text-align: center;
         gap: 0.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .leader-avatar {
+        width: 100px;
+        height: 100px;
+      }
+
+      .leader-info h4 {
+        font-size: 1.1rem;
+      }
+
+      .leader-title {
+        font-size: 0.9rem;
+      }
+
+      .leader-description {
+        font-size: 0.9rem;
       }
     }
 

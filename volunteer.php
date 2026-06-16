@@ -709,4 +709,20 @@
     }
   </style>
 
+  <!-- Support CTA Section -->
+  <section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+      <h2 class="mb-4">Support Our Mission</h2>
+      <p class="lead mb-4">Your contribution helps us train the next generation of healthcare professionals</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="donation.php" class="btn btn-light btn-lg px-5">
+          <i class="fas fa-hand-holding-heart me-2"></i> Make a Donation
+        </a>
+        <a href="application.php" class="btn btn-outline-light btn-lg px-5">
+          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        </a>
+      </div>
+    </div>
+  </section>
+
   <?php include('shared/_footer.php'); ?>

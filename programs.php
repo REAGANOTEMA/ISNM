@@ -1084,4 +1084,20 @@
     }
   </style>
 
+  <!-- Apply Now & Donate CTA Section -->
+  <section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+      <h2 class="mb-4">Take the Next Step in Your Healthcare Career</h2>
+      <p class="lead mb-4">Apply now or support our mission to train healthcare professionals</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="application.php" class="btn btn-light btn-lg px-5">
+          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        </a>
+        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
+        </a>
+      </div>
+    </div>
+  </section>
+
   <?php include('shared/_footer.php'); ?>

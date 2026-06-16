@@ -583,10 +583,12 @@
       position: relative;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 500px;
     }
     
     .hero-background {
@@ -846,38 +848,64 @@
       left: 100%;
     }
     
-    /* Mobile Responsive */
+    /* Mobile Responsive - Hero Section */
     @media (max-width: 768px) {
+      .hero-section {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 450px;
+      }
+
+      .hero-content {
+        padding: 0 15px;
+      }
+
       .cinematic-title {
-        font-size: 2.8rem;
-        padding-right: 100px;
-        letter-spacing: 3px;
+        font-size: 2.2rem;
+        padding-right: 60px;
+        letter-spacing: 2px;
       }
       
+      .hero-subtitle {
+        margin-bottom: 20px;
+      }
+
       .hero-subtitle p {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        padding: 0 10px;
       }
       
       .hero-stats {
-        gap: 30px;
-        margin-bottom: 40px;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
       }
       
       .stat-number {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
       }
       
       .stat-label {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
       }
       
+      .stat-item {
+        padding: 12px 10px;
+        min-width: 80px;
+      }
+
       .cta-buttons {
-        gap: 15px;
+        gap: 10px;
+        flex-direction: column;
+        align-items: center;
       }
       
       .btn-cinematic {
-        padding: 15px 25px;
-        font-size: 0.95rem;
+        padding: 14px 28px;
+        font-size: 0.9rem;
+        width: auto;
+        min-width: 200px;
+        justify-content: center;
       }
       
       .about-image {
@@ -885,20 +913,46 @@
       }
       
       .about-image img {
-        min-height: 350px;
+        min-height: 250px;
       }
-      
-      .stat-item {
-        padding: 20px 15px;
+    }
+
+    @media (max-width: 480px) {
+      .hero-section {
+        min-height: 400px;
       }
-      
-      .stat-number {
-        font-size: 2.2rem;
+
+      .cinematic-title {
+        font-size: 1.6rem;
+        padding-right: 40px;
+        letter-spacing: 1px;
       }
-      
-      .stat-label {
+
+      .hero-subtitle p {
         font-size: 0.9rem;
-        letter-spacing: 0.3px;
+      }
+
+      .hero-stats {
+        gap: 10px;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+      }
+
+      .stat-item {
+        padding: 10px 8px;
+        min-width: 70px;
+      }
+
+      .btn-cinematic {
+        padding: 12px 24px;
+        font-size: 0.85rem;
+        min-width: 180px;
       }
     }
     
