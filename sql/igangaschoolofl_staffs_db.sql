@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 15, 2026 at 09:04 AM
+-- Generation Time: Jun 16, 2026 at 06:01 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -1305,6 +1305,26 @@ CREATE TABLE `bank_accounts` (
   `account_type` varchar(50) DEFAULT NULL,
   `current_balance` decimal(15,2) DEFAULT '0.00',
   `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bank_reconciliation`
+--
+
+CREATE TABLE `bank_reconciliation` (
+  `id` int NOT NULL,
+  `bank_account_name` varchar(255) NOT NULL,
+  `statement_date` date NOT NULL,
+  `opening_balance` decimal(14,2) DEFAULT '0.00',
+  `closing_balance` decimal(14,2) DEFAULT '0.00',
+  `total_deposits` decimal(14,2) DEFAULT '0.00',
+  `total_withdrawals` decimal(14,2) DEFAULT '0.00',
+  `reconciled` tinyint(1) DEFAULT '0',
+  `reconciliation_date` datetime DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -5137,31 +5157,31 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`, `position`, `department`, `role_id`, `status`, `hire_date`, `salary`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `last_login`, `login_attempts`, `locked_until`, `last_failed_attempt`, `password_changed`, `is_first_login`, `two_factor_enabled`, `two_factor_secret`, `created_at`, `updated_at`) VALUES
-(50, 'DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RU6PrzIHTgggFW3sUy.e8eYEvlvzikGAU6RRa8pgv9c/x647piOqK', NULL, 'Director General', 'Executive Office', 1, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-15 04:56:44', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:56:44'),
-(51, 'CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$rBRqOoVh5m0Igx4kdXtpfOFwPIDweterjIksjISwN4FCu..HteWam', NULL, 'Chief Executive Officer', 'Executive Office', 3, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(52, 'SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$l6XsX6XqY.Pbcd7XDzGjxeOufB1j9XfcNlv3kJGs3.MX79JWKs4ti', NULL, 'School Principal', 'Academic Affairs', 2, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(53, 'SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$m3Fosy0PWOX2NDhe.H83bOrdOamiuFvKjjv3gmL591/c/f7UU6Utm', NULL, 'School Secretary', 'Administrative Office', 21, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(54, 'AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Cbs9kpWc7uh2KbzRTr9qNuKUmKBAG7UDxb7SE4TbebziRQRlSy8YW', NULL, 'Academic Registrar', 'Academic Affairs', 8, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(55, 'BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$0z4Ii3PfeqVdR3uul1iczO5YJ2NjVg49Qla8PQ0GpUufYd0v5saXS', NULL, 'School Bursar', 'Finance Department', 9, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(56, 'HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$hesFYTZgh9X4Q2FyXU/4neiB7vkoIr15zwMa.R17g4DhWx2umLk22', NULL, 'HR Manager', 'Human Resources', 7, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(57, 'DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$HbQJxmFSl2mCzxW83atloemF/UBA7sg9RKA6TqN7Mb9iKTrTdACtm', NULL, 'Director Academics', 'Academic Affairs', 4, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(58, 'DI001', 'Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$5BFMhfh8zO9myR6Ha8w.g.UL0PCEIcIWXGeTbPmOF1lQizIU0Wsm2', NULL, 'Director ICT', 'Information Technology', 6, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(59, 'DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$uZQlJ0YNKT7FzCD7cjEVNOaXDD7xnPbqT.2Nv6qBO5O5KgaMx7NBC', NULL, 'Director Finance', 'Finance Department', 5, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(60, 'LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3E1cG3FKr.3hRqZr.9a.j.ljYkuj/zAl376Gb8oakdPHw0nLrCqgu', NULL, 'School Librarian', 'Library Services', 10, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(61, 'HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$C6xhOfyPi4nj/kwaZfmoWeExbQHfnbceO7enAKt/oqs9jrdD4e7JK', NULL, 'Head Nursing', 'Nursing Department', 11, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(62, 'HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$LHAORiiXnly8kcd1sCJOP.r9/kJAq65lvEszWfk7DWcTeYPnNqYIO', NULL, 'Head Midwifery', 'Midwifery Department', 12, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(63, 'LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$dqYUVn3eri6frqS.fmqeGuvSyQ1jXZGcGoOTgqmSi0ccxuAkejS/S', NULL, 'Lecturer', 'Academic Affairs', 13, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(64, 'SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Z7GAj95kaxlSA1vf3ebGG.fg8uNhH0dce8FtksFqTUbk6/tRS5yAW', NULL, 'Senior Lecturer', 'Academic Affairs', 14, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(65, 'LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RR6yvXWHLGgbWPpQN09Jv.LX9PvVfqnBvSTIz1gP6CsH4qMNkGxyO', NULL, 'Sickbay', 'Support', 16, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(66, 'MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$BC8eNBiywm3cjp1CrGNNqefq28VFu5/ww6ZK73C7QYs8VarKkcwea', NULL, 'Matrons', 'Student Affairs', 17, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(67, 'SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$X9ngKJfjBhCXBlHYUEaZcuTRE60vcbKyyYRZJEPNZXAEeYrUUGYZO', NULL, 'Security', 'Security Services', 18, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(68, 'DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$cogVgG3L7gIkPuGxrxzKm.kCRxTq9HnffahEUnSPACv.s8JBAsNeK', NULL, 'Drivers', 'Transport', 19, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(69, 'WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$FxhwWDM4Xp0bDs5WRAxbyObpbvZDvOOHf52yiamFGTmdGUQpdAUcK', NULL, 'Wardens', 'Student Affairs', 20, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(70, 'DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$9fOKtTQAgB/elswK9HgmE.BwFEvqipIFnSmcvJPeXpEgb3KXa8D.m', NULL, 'Deputy Principal', 'Academic Affairs', 22, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(71, 'STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$M6cl6Y9PoVugM6mlWnyEBeGOChjv8fsi3tDMFMqP43bOG6TGELDje', NULL, 'Store Keeper', 'Facilities Management', 25, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, 'Computer Lab Manager', 'Information Technology', 6, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:27:20'),
+(50, 'DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RU6PrzIHTgggFW3sUy.e8eYEvlvzikGAU6RRa8pgv9c/x647piOqK', NULL, 'Director General', 'Executive Office', 1, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 15:41:47', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 15:41:47'),
+(51, 'CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$rBRqOoVh5m0Igx4kdXtpfOFwPIDweterjIksjISwN4FCu..HteWam', NULL, 'Chief Executive Officer', 'Executive Office', 3, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:02:44', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:02:44'),
+(52, 'SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$l6XsX6XqY.Pbcd7XDzGjxeOufB1j9XfcNlv3kJGs3.MX79JWKs4ti', NULL, 'School Principal', 'Academic Affairs', 2, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:07:28', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:07:28'),
+(53, 'SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$m3Fosy0PWOX2NDhe.H83bOrdOamiuFvKjjv3gmL591/c/f7UU6Utm', NULL, 'School Secretary', 'Administrative Office', 21, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:25:16', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:25:16'),
+(54, 'AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Cbs9kpWc7uh2KbzRTr9qNuKUmKBAG7UDxb7SE4TbebziRQRlSy8YW', NULL, 'Academic Registrar', 'Academic Affairs', 8, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:21:23', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:21:23'),
+(55, 'BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$0z4Ii3PfeqVdR3uul1iczO5YJ2NjVg49Qla8PQ0GpUufYd0v5saXS', NULL, 'School Bursar', 'Finance Department', 9, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 14:45:06', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 14:45:06'),
+(56, 'HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$hesFYTZgh9X4Q2FyXU/4neiB7vkoIr15zwMa.R17g4DhWx2umLk22', NULL, 'HR Manager', 'Human Resources', 7, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:23:27', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:23:27'),
+(57, 'DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$HbQJxmFSl2mCzxW83atloemF/UBA7sg9RKA6TqN7Mb9iKTrTdACtm', NULL, 'Director Academics', 'Academic Affairs', 4, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:05:15', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:05:15'),
+(58, 'DI001', 'Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$5BFMhfh8zO9myR6Ha8w.g.UL0PCEIcIWXGeTbPmOF1lQizIU0Wsm2', NULL, 'Director ICT', 'Information Technology', 6, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:56:10', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:56:10'),
+(59, 'DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$uZQlJ0YNKT7FzCD7cjEVNOaXDD7xnPbqT.2Nv6qBO5O5KgaMx7NBC', NULL, 'Director Finance', 'Finance Department', 5, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:06:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:06:20'),
+(60, 'LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3E1cG3FKr.3hRqZr.9a.j.ljYkuj/zAl376Gb8oakdPHw0nLrCqgu', NULL, 'School Librarian', 'Library Services', 10, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:49:17', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:49:17'),
+(61, 'HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$C6xhOfyPi4nj/kwaZfmoWeExbQHfnbceO7enAKt/oqs9jrdD4e7JK', NULL, 'Head Nursing', 'Nursing Department', 11, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:50:43', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:50:43'),
+(62, 'HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$LHAORiiXnly8kcd1sCJOP.r9/kJAq65lvEszWfk7DWcTeYPnNqYIO', NULL, 'Head Midwifery', 'Midwifery Department', 12, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:51:24', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:51:24'),
+(63, 'LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$dqYUVn3eri6frqS.fmqeGuvSyQ1jXZGcGoOTgqmSi0ccxuAkejS/S', NULL, 'Lecturer', 'Academic Affairs', 13, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:53:29', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:53:29'),
+(64, 'SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Z7GAj95kaxlSA1vf3ebGG.fg8uNhH0dce8FtksFqTUbk6/tRS5yAW', NULL, 'Senior Lecturer', 'Academic Affairs', 14, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:52:48', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:52:48'),
+(65, 'LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RR6yvXWHLGgbWPpQN09Jv.LX9PvVfqnBvSTIz1gP6CsH4qMNkGxyO', NULL, 'Sickbay', 'Support', 16, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:45:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:45:20'),
+(66, 'MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$BC8eNBiywm3cjp1CrGNNqefq28VFu5/ww6ZK73C7QYs8VarKkcwea', NULL, 'Matrons', 'Student Affairs', 17, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:56:12', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:56:12'),
+(67, 'SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$X9ngKJfjBhCXBlHYUEaZcuTRE60vcbKyyYRZJEPNZXAEeYrUUGYZO', NULL, 'Security', 'Security Services', 18, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:53:02', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:53:02'),
+(68, 'DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$cogVgG3L7gIkPuGxrxzKm.kCRxTq9HnffahEUnSPACv.s8JBAsNeK', NULL, 'Drivers', 'Transport', 19, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:52:01', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:52:01'),
+(69, 'WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$FxhwWDM4Xp0bDs5WRAxbyObpbvZDvOOHf52yiamFGTmdGUQpdAUcK', NULL, 'Wardens', 'Student Affairs', 20, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:43:52', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:43:52'),
+(70, 'DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$9fOKtTQAgB/elswK9HgmE.BwFEvqipIFnSmcvJPeXpEgb3KXa8D.m', NULL, 'Deputy Principal', 'Academic Affairs', 22, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:09:19', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:09:19'),
+(71, 'STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$M6cl6Y9PoVugM6mlWnyEBeGOChjv8fsi3tDMFMqP43bOG6TGELDje', NULL, 'Store Keeper', 'Facilities Management', 25, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:54:55', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:54:55'),
+(72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3zCBO5fnyXjlBI6Oaee6iO.Nznb4rpZs7dBQBTE2Z6PTNq38eCMym', NULL, 'Computer Lab Manager', 'Information Technology', 52, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 14:44:53', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 14:44:53'),
 (73, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$wLikyrgK4SzFsYDJ5BpOnOUXG9/qOh2DuoT6ud/jVVF/eQxfEKxDC', NULL, 'Guild President', 'Student Affairs', 26, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
-(74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49');
+(74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:19:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:19:20');
 
 -- --------------------------------------------------------
 
@@ -5209,7 +5229,77 @@ INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_d
 (5, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:24:32'),
 (6, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:25:07'),
 (7, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
-(8, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44');
+(8, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
+(9, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(10, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(11, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(12, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(13, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(14, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(15, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(16, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(17, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(18, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(19, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:00:03'),
+(20, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(21, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(22, 51, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(23, 51, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(24, 57, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(25, 57, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(26, 59, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(27, 59, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(28, 52, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(29, 52, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(30, 70, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(31, 70, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(32, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(33, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(34, 74, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(35, 74, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(36, 54, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(37, 54, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(38, 56, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:32'),
+(39, 56, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:48'),
+(40, 53, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(41, 53, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(42, 60, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(43, 60, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(44, 61, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(45, 61, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(46, 62, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(47, 62, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(48, 64, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(49, 64, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(50, 63, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(51, 63, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(52, 66, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(53, 66, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(54, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(55, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(56, 69, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(57, 69, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(58, 65, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(59, 65, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(60, 68, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(61, 68, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(62, 67, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(63, 67, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(64, 71, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(65, 71, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(66, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(67, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(68, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(69, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(70, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:49'),
+(71, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(72, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(73, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:03'),
+(74, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(75, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(76, 55, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:42'),
+(77, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
+(78, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49');
 
 -- --------------------------------------------------------
 
@@ -5436,6 +5526,25 @@ CREATE TABLE `staff_documents` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `staff_leave_records`
+--
+
+CREATE TABLE `staff_leave_records` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `leave_type` enum('annual','sick','maternity','paternity','study','compassionate','other') NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `total_days` int GENERATED ALWAYS AS (((to_days(`end_date`) - to_days(`start_date`)) + 1)) STORED,
+  `reason` text,
+  `status` enum('Pending','Approved','Rejected','Cancelled') DEFAULT 'Pending',
+  `approved_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `staff_leave_requests`
 --
 
@@ -5497,7 +5606,40 @@ CREATE TABLE `staff_login_sessions` (
 --
 
 INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `device_info`, `browser_info`, `ip_address`, `user_agent`, `is_active`, `created_at`, `last_activity`, `expires_at`) VALUES
-(3, 50, 'os4h7bo4283hnll87ubnlap28t', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 04:56:44', '2026-06-15 04:56:44', '2026-06-15 05:26:44');
+(3, 50, 'os4h7bo4283hnll87ubnlap28t', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 04:56:44', '2026-06-15 04:56:44', '2026-06-15 05:26:44'),
+(4, 72, '63vqlfhebkncagpqqa0060nv65', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:21:43', '2026-06-15 08:21:43', '2026-06-15 08:51:43'),
+(5, 58, 'c4qv0qe44gou7111oc26408762', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:33:23', '2026-06-15 08:33:23', '2026-06-15 09:03:23'),
+(6, 72, 'pe2qda7hn0ljeegvgii1bj86gh', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:35:44', '2026-06-15 08:35:44', '2026-06-15 09:05:44'),
+(7, 72, 'pe7q2h34t34u1cfsunn0q6tqhp', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:52:53', '2026-06-15 08:52:53', '2026-06-15 09:22:53'),
+(8, 72, 'ophkcr14u73rps2p0cv42gi8tm', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 04:41:54', '2026-06-16 04:41:54', '2026-06-16 05:11:54'),
+(9, 50, '71bc7tm3anosuga7ftcjma7bii', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:01:14', '2026-06-16 05:01:14', '2026-06-16 05:31:14'),
+(10, 51, '2a78l1oj0pt4kd9d6ktn4t1be0', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:02:44', '2026-06-16 05:02:44', '2026-06-16 05:32:44'),
+(11, 57, 'u4lmhm93gek7nvm7bm0hosqpep', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:05:15', '2026-06-16 05:05:15', '2026-06-16 05:35:15'),
+(12, 59, 'fb983ub5bihv8etar2dgb0bfoj', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:06:20', '2026-06-16 05:06:20', '2026-06-16 05:36:20'),
+(13, 52, 'dr6gjkckuutkei3edd9pk6m8us', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:07:28', '2026-06-16 05:07:28', '2026-06-16 05:37:28'),
+(14, 70, 'fo0rfoabbe47udgnrpmra1osgg', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:09:20', '2026-06-16 05:09:20', '2026-06-16 05:39:20'),
+(15, 55, '1s7ulcnj63u4e44bunstvl5mpi', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:10:17', '2026-06-16 05:10:17', '2026-06-16 05:40:17'),
+(16, 74, 'b8u4m66imeq8hct40h3ac3suuv', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:19:25', '2026-06-16 05:19:25', '2026-06-16 05:49:25'),
+(17, 54, 'ee8f8mjieivt20jli5v04j8fhh', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:21:24', '2026-06-16 05:21:24', '2026-06-16 05:51:24'),
+(18, 56, '643dp5igtukce6nnba8l74pu5c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:23:32', '2026-06-16 05:23:32', '2026-06-16 05:53:32'),
+(19, 53, 'i2hm8s4r9agfb7557188ugis5c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:25:17', '2026-06-16 05:25:17', '2026-06-16 05:55:17'),
+(20, 60, 'rh1p6028iq8l0r2lbec0jv9bp1', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:49:17', '2026-06-16 05:49:17', '2026-06-16 06:19:17'),
+(21, 61, '9j28f91h6ik9emvvk72cd85k9j', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:50:43', '2026-06-16 05:50:43', '2026-06-16 06:20:43'),
+(22, 62, 'fgq5rmfaq0s08ebn1beg2c7qfp', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:51:24', '2026-06-16 05:51:24', '2026-06-16 06:21:24'),
+(23, 64, 'd2fvsje83pqnphhrpndcnrh4eo', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:52:48', '2026-06-16 05:52:48', '2026-06-16 06:22:48'),
+(24, 63, 'rgdkuo18k2b59itjh3rkfjmhhq', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:53:29', '2026-06-16 05:53:29', '2026-06-16 06:23:29'),
+(25, 66, 'ffoielbnhd86mu2cgsufl3ga87', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:56:12', '2026-06-16 05:56:12', '2026-06-16 06:26:12'),
+(26, 72, 'pch15h8l06qub0oa42gantc7ra', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:57:03', '2026-06-16 05:57:03', '2026-06-16 06:27:03'),
+(27, 69, 'n63qg8lljasqcv5hhljul41i1c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:43:52', '2026-06-16 13:43:52', '2026-06-16 14:13:52'),
+(28, 65, 'v2umasvp9ih0u9emlhr4oudq0j', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:45:20', '2026-06-16 13:45:20', '2026-06-16 14:15:20'),
+(29, 68, '1d1l2f29a5t7g2ug5uukpusdh2', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:52:01', '2026-06-16 13:52:01', '2026-06-16 14:22:01'),
+(30, 67, 's65eelepdorelhujveu0i8hbos', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:53:02', '2026-06-16 13:53:02', '2026-06-16 14:23:02'),
+(31, 71, 'c0uft4a70rt0eu5up2ngnkjg34', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:54:55', '2026-06-16 13:54:55', '2026-06-16 14:24:55'),
+(32, 58, 'io7shnp09m3tfcjpvmclj9352m', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:56:10', '2026-06-16 13:56:10', '2026-06-16 14:26:10'),
+(33, 50, 'n45spgrtb6tnq198trmaj8ukbu', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:43:18', '2026-06-16 14:43:18', '2026-06-16 15:13:18'),
+(34, 72, '9n4e019vlehlapjnb01odvp01n', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:44:53', '2026-06-16 14:44:53', '2026-06-16 15:14:53'),
+(35, 55, 'hqlrfgmu4t286im6o7mp2fubv7', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:45:06', '2026-06-16 14:45:06', '2026-06-16 15:15:06'),
+(36, 50, 'lcvpjihg2uj2ssnh7288acb3hq', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 15:41:49', '2026-06-16 15:41:49', '2026-06-16 16:11:49');
 
 --
 -- Triggers `staff_login_sessions`
@@ -5903,7 +6045,7 @@ CREATE TABLE `store_inventory` (
 --
 
 INSERT INTO `store_inventory` (`id`, `category_id`, `item_name`, `description`, `quantity`, `unit`, `reorder_level`, `unit_price`, `location`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Surgical Gloves', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(1, 1, 'Surgical Gloves', NULL, 0.100, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-16 13:55:17'),
 (2, 1, 'Binding Tape', NULL, 0.000, 'rolls', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
 (3, 1, 'Examination Gloves', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
 (4, 1, 'Masking Tape', NULL, 0.000, 'rolls', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
@@ -6144,6 +6286,13 @@ CREATE TABLE `store_inventory_transactions` (
   `created_by` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `store_inventory_transactions`
+--
+
+INSERT INTO `store_inventory_transactions` (`id`, `item_id`, `transaction_type`, `quantity`, `quantity_before`, `quantity_after`, `reference_type`, `reference_id`, `reason`, `created_by`, `created_at`) VALUES
+(1, 1, 'add', 0.100, 0.000, 0.100, NULL, NULL, 'new', 71, '2026-06-16 13:55:17');
 
 -- --------------------------------------------------------
 
@@ -7380,6 +7529,12 @@ ALTER TABLE `backup_management`
 -- Indexes for table `bank_accounts`
 --
 ALTER TABLE `bank_accounts`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `bank_reconciliation`
+--
+ALTER TABLE `bank_reconciliation`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -8981,6 +9136,12 @@ ALTER TABLE `staff_documents`
   ADD KEY `idx_upload_date` (`upload_date`);
 
 --
+-- Indexes for table `staff_leave_records`
+--
+ALTER TABLE `staff_leave_records`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `staff_leave_requests`
 --
 ALTER TABLE `staff_leave_requests`
@@ -9664,6 +9825,12 @@ ALTER TABLE `backup_management`
 -- AUTO_INCREMENT for table `bank_accounts`
 --
 ALTER TABLE `bank_accounts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bank_reconciliation`
+--
+ALTER TABLE `bank_reconciliation`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -10564,7 +10731,7 @@ ALTER TABLE `staff_access_control`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `staff_announcements`
@@ -10621,6 +10788,12 @@ ALTER TABLE `staff_documents`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `staff_leave_records`
+--
+ALTER TABLE `staff_leave_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `staff_leave_requests`
 --
 ALTER TABLE `staff_leave_requests`
@@ -10636,7 +10809,7 @@ ALTER TABLE `staff_login_attempts`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `staff_notifications`
@@ -10726,7 +10899,7 @@ ALTER TABLE `store_inventory`
 -- AUTO_INCREMENT for table `store_inventory_transactions`
 --
 ALTER TABLE `store_inventory_transactions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `store_orders`

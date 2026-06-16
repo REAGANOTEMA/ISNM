@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 15, 2026 at 09:04 AM
+-- Generation Time: Jun 16, 2026 at 06:01 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -208,6 +208,26 @@ INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_
 (12, '5100', 'Administrative Expenses', 'Expense', NULL, 'Office and administrative costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (13, '5200', 'Operational Expenses', 'Expense', NULL, 'Day-to-day operational costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (14, '5300', 'Maintenance Expenses', 'Expense', NULL, 'Facility maintenance costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clinical_placements`
+--
+
+CREATE TABLE `clinical_placements` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `facility_name` varchar(255) NOT NULL,
+  `facility_location` varchar(255) DEFAULT NULL,
+  `supervisor_name` varchar(255) DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `hours_completed` int DEFAULT '0',
+  `skills_assessment` text,
+  `status` enum('Active','Completed','Cancelled') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -433,6 +453,80 @@ CREATE TABLE `graduation_candidates` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_allocations`
+--
+
+CREATE TABLE `hostel_allocations` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `room_id` int NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(20) NOT NULL,
+  `check_in_date` date DEFAULT (curdate()),
+  `check_out_date` date DEFAULT NULL,
+  `status` enum('Active','Checked Out','Cancelled') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_rooms`
+--
+
+CREATE TABLE `hostel_rooms` (
+  `id` int NOT NULL,
+  `room_number` varchar(20) NOT NULL,
+  `hostel_name` varchar(100) NOT NULL,
+  `capacity` int NOT NULL DEFAULT '4',
+  `occupancy` int NOT NULL DEFAULT '0',
+  `fee_per_semester` decimal(12,2) DEFAULT '0.00',
+  `status` enum('Available','Full','Maintenance') DEFAULT 'Available',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_books`
+--
+
+CREATE TABLE `library_books` (
+  `id` int NOT NULL,
+  `book_title` varchar(255) NOT NULL,
+  `author` varchar(255) DEFAULT NULL,
+  `isbn` varchar(50) DEFAULT NULL,
+  `publisher` varchar(255) DEFAULT NULL,
+  `publication_year` year DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `total_copies` int DEFAULT '1',
+  `available_copies` int DEFAULT '1',
+  `shelf_location` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_borrowing`
+--
+
+CREATE TABLE `library_borrowing` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `book_id` int NOT NULL,
+  `borrow_date` date DEFAULT (curdate()),
+  `due_date` date NOT NULL,
+  `return_date` date DEFAULT NULL,
+  `fine_amount` decimal(10,2) DEFAULT '0.00',
+  `fine_paid` tinyint(1) DEFAULT '0',
+  `status` enum('Borrowed','Returned','Overdue','Lost') DEFAULT 'Borrowed',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -834,6 +928,23 @@ CREATE TABLE `student_attendance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_course_registrations`
+--
+
+CREATE TABLE `student_course_registrations` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `course_id` int NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(20) NOT NULL,
+  `registration_date` date DEFAULT (curdate()),
+  `status` enum('Registered','Dropped','Completed') DEFAULT 'Registered',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `student_dashboard_view`
 -- (See below for the actual view)
 --
@@ -850,6 +961,25 @@ CREATE TABLE `student_dashboard_view` (
 ,`fee_balance` decimal(32,2)
 ,`attendance_rate` decimal(31,5)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_discipline`
+--
+
+CREATE TABLE `student_discipline` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `incident_date` date NOT NULL,
+  `incident_type` varchar(100) NOT NULL,
+  `description` text,
+  `action_taken` varchar(255) DEFAULT NULL,
+  `action_date` date DEFAULT NULL,
+  `reported_by` int DEFAULT NULL,
+  `status` enum('Open','Resolved','Appealed') DEFAULT 'Open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1251,6 +1381,12 @@ ALTER TABLE `chart_of_accounts`
   ADD KEY `idx_account_type` (`account_type`);
 
 --
+-- Indexes for table `clinical_placements`
+--
+ALTER TABLE `clinical_placements`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `clinical_placements_students`
 --
 ALTER TABLE `clinical_placements_students`
@@ -1348,6 +1484,31 @@ ALTER TABLE `graduation_candidates`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `hostel_allocations`
+--
+ALTER TABLE `hostel_allocations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hostel_rooms`
+--
+ALTER TABLE `hostel_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `room_number` (`room_number`);
+
+--
+-- Indexes for table `library_books`
+--
+ALTER TABLE `library_books`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `library_borrowing`
+--
+ALTER TABLE `library_borrowing`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `library_fines`
@@ -1496,6 +1657,18 @@ ALTER TABLE `student_attendance`
   ADD KEY `idx_date` (`date`),
   ADD KEY `idx_subject` (`subject`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `student_course_registrations`
+--
+ALTER TABLE `student_course_registrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_discipline`
+--
+ALTER TABLE `student_discipline`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `student_discipline_records`
@@ -1686,6 +1859,12 @@ ALTER TABLE `chart_of_accounts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
+-- AUTO_INCREMENT for table `clinical_placements`
+--
+ALTER TABLE `clinical_placements`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `clinical_placements_students`
 --
 ALTER TABLE `clinical_placements_students`
@@ -1743,6 +1922,30 @@ ALTER TABLE `general_ledger`
 -- AUTO_INCREMENT for table `graduation_candidates`
 --
 ALTER TABLE `graduation_candidates`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_allocations`
+--
+ALTER TABLE `hostel_allocations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_rooms`
+--
+ALTER TABLE `hostel_rooms`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_books`
+--
+ALTER TABLE `library_books`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_borrowing`
+--
+ALTER TABLE `library_borrowing`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -1827,6 +2030,18 @@ ALTER TABLE `student_academic_records`
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_course_registrations`
+--
+ALTER TABLE `student_course_registrations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_discipline`
+--
+ALTER TABLE `student_discipline`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
