@@ -1,400 +1,550 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../auth-service.php';
+$ctx = bootstrapStaffDashboard([]);
+$staffDb   = $ctx['staff'];
+$studentsDb = $ctx['students'];
+$websiteDb = $ctx['website'];
+$user      = $ctx['user'];
 
-// Database connection
-$conn = getStaffConnection();
+$staff_id    = (int)($user['id'] ?? $_SESSION['user_id'] ?? 0);
+$staff_email = $user['email'] ?? $_SESSION['email'] ?? '';
+$staff_role  = $user['role'] ?? $_SESSION['role'] ?? '';
 
-// Start secure session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// ── Fetch staff record ──────────────────────────────────────────
+$staff = null;
+$stmt = $staffDb->prepare("SELECT * FROM staff WHERE id = ?");
+if ($stmt) {
+    $stmt->bind_param("i", $staff_id);
+    $stmt->execute();
+    $staff = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 }
 
-// Global authentication service
-$auth_service = new AuthenticationService();
-
-// Check authentication
-if (!$auth_service->isAuthenticated()) {
-    header('Location: staff-login.php');
-    exit();
+// ── Fetch staff profile (extended) ──────────────────────────────
+$profile = null;
+$stmt = $staffDb->prepare("SELECT * FROM staff_profiles WHERE staff_id = ?");
+if ($stmt) {
+    $stmt->bind_param("i", $staff_id);
+    $stmt->execute();
+    $profile = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 }
 
-// Get user information
-$staff_id = $_SESSION['user_id'] ?? 0;
-$staff_email = $_SESSION['email'] ?? '';
-
-// Handle profile picture upload
+// ── Handle Profile Photo Upload ─────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) {
-    $upload_dir = 'uploads/staff_profiles/';
-    
-    // Create directory if it doesn't exist
-    if (!file_exists($upload_dir)) {
+    $upload_dir = __DIR__ . '/../uploads/staff_profiles/';
+    if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
     }
-    
-    $file = $_FILES['profile_picture'];
+
+    $file      = $_FILES['profile_picture'];
     $file_name = $file['name'];
     $file_size = $file['size'];
-    $file_tmp = $file['tmp_name'];
-    $file_type = $file['type'];
-    
-    // Validate file
-    $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
-    $max_size = 5 * 1024 * 1024; // 5MB
-    
-    if (!in_array($file_type, $allowed_types)) {
-        $_SESSION['error'] = "Invalid file type. Only JPEG and PNG files are allowed.";
-        header("Location: staff_profile_management.php");
-        exit();
-    }
-    
-    if ($file_size > $max_size) {
-        $_SESSION['error'] = "File size too large. Maximum size is 5MB.";
-        header("Location: staff_profile_management.php");
-        exit();
-    }
-    
-    // Generate unique filename
-    $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
-    $new_file_name = 'staff_' . $staff_id . '_' . time() . '.' . $file_extension;
-    $upload_path = $upload_dir . $new_file_name;
-    
-    // Upload file
-    if (move_uploaded_file($file_tmp, $upload_path)) {
-        // Update database with new profile picture
-        $sql = "UPDATE staff_profiles SET profile_picture = ? WHERE staff_id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $upload_path, $staff_id);
-        $stmt->execute();
-        
-        $_SESSION['success'] = "Profile picture uploaded successfully!";
+    $file_tmp  = $file['tmp_name'];
+    $file_ext  = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+    $allowed    = ['jpg', 'jpeg', 'png'];
+    $max_size   = 5 * 1024 * 1024; // 5 MB
+
+    if (!in_array($file_ext, $allowed)) {
+        $_SESSION['error'] = "Invalid file type. Only JPG, JPEG & PNG allowed.";
+    } elseif ($file_size > $max_size) {
+        $_SESSION['error'] = "File too large. Maximum size is 5 MB.";
+    } elseif ($file_tmp && is_uploaded_file($file_tmp)) {
+        // Delete old photo if exists
+        $old_photo = null;
+        if ($profile && !empty($profile['profile_picture'])) {
+            $old_photo = $profile['profile_picture'];
+        }
+
+        $new_name = 'staff_' . $staff_id . '_' . time() . '.' . $file_ext;
+        $dest     = $upload_dir . $new_name;
+
+        if (move_uploaded_file($file_tmp, $dest)) {
+            $relative_path = 'uploads/staff_profiles/' . $new_name;
+
+            // Upsert into staff_profiles
+            if ($profile) {
+                $u = $staffDb->prepare("UPDATE staff_profiles SET profile_picture = ?, updated_at = NOW() WHERE staff_id = ?");
+                $u->bind_param("si", $relative_path, $staff_id);
+                $u->execute();
+                $u->close();
+            } else {
+                $i = $staffDb->prepare("INSERT INTO staff_profiles (staff_id, profile_picture, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
+                $i->bind_param("is", $staff_id, $relative_path);
+                $i->execute();
+                $i->close();
+            }
+
+            // Delete old photo file
+            if ($old_photo && file_exists(__DIR__ . '/../' . $old_photo) && $old_photo !== $relative_path) {
+                @unlink(__DIR__ . '/../' . $old_photo);
+            }
+
+            // Refresh profile data
+            $stmt = $staffDb->prepare("SELECT * FROM staff_profiles WHERE staff_id = ?");
+            $stmt->bind_param("i", $staff_id);
+            $stmt->execute();
+            $profile = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            $_SESSION['success'] = "Profile picture updated successfully!";
+        } else {
+            $_SESSION['error'] = "Failed to upload profile picture.";
+        }
     } else {
-        $_SESSION['error'] = "Failed to upload profile picture.";
+        $_SESSION['error'] = "Upload failed. Please try again.";
     }
-    
+
     header("Location: staff_profile_management.php");
-    exit();
+    exit;
 }
 
-// Handle access control management
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['manage_access'])) {
-    $target_staff_id = $_POST['target_staff_id'];
-    $module_name = $_POST['module_name'];
-    $access_level = $_POST['access_level'];
-    $access_reason = $_POST['access_reason'] ?? '';
-    
-    // Check if current user can manage access for this module
-    $current_user_role = $_SESSION['role'] ?? '';
-    $can_manage = false;
-    
-    if (stripos($current_user_role, 'Director') !== false || 
-        stripos($current_user_role, 'General') !== false ||
-        stripos($current_user_role, 'Principal') !== false ||
-        stripos($current_user_role, 'CEO') !== false) {
-        $can_manage = true;
+// ── Handle Profile Update ───────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    $full_name  = trim($_POST['full_name'] ?? '');
+    $email      = trim($_POST['email'] ?? '');
+    $phone      = trim($_POST['phone'] ?? '');
+    $address    = trim($_POST['address'] ?? '');
+    $department = trim($_POST['department'] ?? '');
+    $position   = trim($_POST['position'] ?? '');
+
+    if (empty($full_name)) {
+        $_SESSION['error'] = "Full name is required.";
+    } else {
+        $u = $staffDb->prepare("UPDATE staff SET full_name=?, email=?, phone=?, address=?, department=?, position=? WHERE id=?");
+        $u->bind_param("ssssssi", $full_name, $email, $phone, $address, $department, $position, $staff_id);
+        if ($u->execute()) {
+            $_SESSION['success'] = "Profile updated successfully!";
+
+            // Refresh staff data
+            $stmt = $staffDb->prepare("SELECT * FROM staff WHERE id = ?");
+            $stmt->bind_param("i", $staff_id);
+            $stmt->execute();
+            $staff = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+        } else {
+            $_SESSION['error'] = "Failed to update profile.";
+        }
+        $u->close();
     }
-    
-    if (!$can_manage) {
-        $_SESSION['error'] = "You don't have permission to manage access control.";
-        header("Location: staff_profile_management.php");
-        exit();
-    }
-    
-    // Insert or update access control
-    $sql = "INSERT INTO staff_access_control (staff_id, module_name, access_level, granted_by, access_reason) 
-             VALUES (?, ?, ?, ?, ?) 
-             ON DUPLICATE KEY UPDATE 
-             access_level = VALUES(access_level), 
-             granted_by = VALUES(granted_by), 
-             access_reason = VALUES(access_reason), 
-             granted_at = NOW()";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("issss", $target_staff_id, $module_name, $access_level, $staff_id, $access_reason);
-    $stmt->execute();
-    
-    $_SESSION['success'] = "Access control updated successfully!";
+
     header("Location: staff_profile_management.php");
-    exit();
+    exit;
 }
 
-// Get current staff profile
-$sql = "SELECT sp.*, s.full_name, s.email, s.position, s.department 
-          FROM staff_profiles sp 
-          JOIN staff s ON sp.staff_id = s.id 
-          WHERE sp.staff_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $staff_id);
-$stmt->execute();
-$profile = $stmt->get_result()->fetch_assoc();
-
-// Get access control list for current user
-$access_sql = "SELECT sac.*, s.full_name as granted_by_name, s.position as granted_by_position 
-                FROM staff_access_control sac 
-                JOIN staff s ON sac.granted_by = s.id 
-                WHERE sac.staff_id = ? 
-                ORDER BY sac.granted_at DESC";
-$access_stmt = $conn->prepare($access_sql);
-$access_stmt->bind_param("i", $staff_id);
-$access_stmt->execute();
-$access_list = $access_stmt->get_result();
+// ── Derived values ──────────────────────────────────────────────
+$photo_path = ($profile && !empty($profile['profile_picture']))
+    ? '../' . htmlspecialchars($profile['profile_picture'])
+    : null;
+$full_name_val  = htmlspecialchars($staff['full_name'] ?? '');
+$email_val      = htmlspecialchars($staff['email'] ?? '');
+$phone_val      = htmlspecialchars($staff['phone'] ?? '');
+$address_val    = htmlspecialchars($staff['address'] ?? '');
+$department_val = htmlspecialchars($staff['department'] ?? '');
+$position_val   = htmlspecialchars($staff['position'] ?? '');
+$status_val     = htmlspecialchars($staff['status'] ?? '');
+$staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/_favicon.php'; ?>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Staff Profile Management - ISNM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - ISNM Staff</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link href="dashboard-mobile.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #1a237e;
+            --primary-light: #3949ab;
+            --accent: #ffd600;
+            --bg: #f0f2f5;
+            --card-shadow: 0 2px 12px rgba(0,0,0,.08);
+            --radius: 14px;
+        }
         body {
+            background: var(--bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
         }
-        
-        .profile-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
+        .profile-page {
+            margin-left: 270px;
+            padding: 28px;
+            min-height: 100vh;
         }
-        
-        .profile-header {
-            text-align: center;
-            margin-bottom: 30px;
+        .profile-card {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(148,163,184,.18);
+            overflow: hidden;
         }
-        
-        .profile-picture {
-            width: 150px;
-            height: 150px;
+        .profile-card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #0d47a1 100%);
+            color: #fff;
+            padding: 20px 28px;
+        }
+        .profile-card-header h4 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+        .profile-card-body {
+            padding: 28px;
+        }
+        .avatar-wrap {
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #007bff;
-            margin-bottom: 20px;
+            overflow: hidden;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 16px rgba(0,0,0,.12);
+            margin: 0 auto 12px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
-        
-        .profile-info {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .upload-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .access-control {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .btn-primary {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-        
-        .table {
+        .avatar-wrap img {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            height: 100%;
+            object-fit: cover;
         }
-        
-        .table th, .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
+        .avatar-wrap .no-photo {
+            font-size: 3.5rem;
+            color: #adb5bd;
         }
-        
-        .table th {
-            background: #f8f9fa;
-            font-weight: bold;
+        .photo-section {
+            text-align: center;
+            padding: 20px;
         }
-        
-        .alert {
-            padding: 15px;
+        .photo-section .staff-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a237e;
+            margin: 8px 0 2px;
+        }
+        .photo-section .staff-role {
+            color: #6c757d;
+            font-size: .9rem;
+        }
+        .photo-section .staff-dept {
+            color: #6c757d;
+            font-size: .85rem;
+        }
+        .photo-section .staff-status {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: .78rem;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .staff-status.active { background: #d4edda; color: #155724; }
+        .staff-status.inactive { background: #f8d7da; color: #721c24; }
+        .staff-status.on-leave { background: #fff3cd; color: #856404; }
+        .staff-status.suspended { background: #f8d7da; color: #721c24; }
+        .detail-label {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+        .detail-value {
+            font-size: .95rem;
+            color: #212529;
+            margin-bottom: 14px;
+        }
+        .upload-area {
+            border: 2px dashed #d0d5dd;
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .25s;
+            background: #fafbfc;
+        }
+        .upload-area:hover {
+            border-color: var(--primary-light);
+            background: #f0f2ff;
+        }
+        .upload-area i {
+            font-size: 2rem;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+        .upload-area p {
+            margin: 0;
+            font-size: .85rem;
+            color: #6c757d;
+        }
+        .upload-area .small {
+            font-size: .75rem;
+            color: #adb5bd;
+        }
+        .form-control, .form-select {
             border-radius: 8px;
-            margin-bottom: 20px;
+            border: 1.5px solid #e2e8f0;
+            padding: 10px 14px;
+            font-size: .9rem;
+            transition: border-color .2s;
         }
-        
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(57,73,171,.12);
         }
-        
-        .alert-danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: .9rem;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(26,35,126,.3);
+            color: #fff;
+        }
+        .btn-outline-pdf {
+            border: 2px solid #dc3545;
+            color: #dc3545;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+        .btn-outline-pdf:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-outline-secondary-custom {
+            border: 2px solid #6c757d;
+            color: #6c757d;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+        .btn-outline-secondary-custom:hover {
+            background: #6c757d;
+            color: #fff;
+        }
+        .alert-floating {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.12);
+            animation: slideInRight .4s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+        @media (max-width: 992px) {
+            .profile-page { margin-left: 0; padding: 20px 16px; }
+            .avatar-wrap { width: 140px; height: 140px; }
+        }
+        @media print {
+            body { background: #fff !important; }
+            .profile-page { margin-left: 0 !important; padding: 20px !important; }
+            .sidebar, .isnm-sidebar, .sidebar-collapse-btn, .btn-outline-pdf,
+            .upload-area, .btn-save, .btn-outline-secondary-custom, .alert-floating,
+            form, #sidebarCollapse, .sidebar-toggle, .sidebar-overlay { display: none !important; }
+            .profile-card { box-shadow: none !important; border: 1px solid #ddd !important; }
+            .profile-card-header { background: #1a237e !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #fff !important; }
+            .avatar-wrap { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .staff-status.active { background: #d4edda !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .profile-page { position: static !important; }
         }
     </style>
-    <link href="../dashboards/dashboard-mobile.css" rel="stylesheet">
 </head>
 <body>
-<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="profile-container" style="margin-left:270px">
-        <div class="profile-header">
-            <h2><i class="fas fa-user-circle me-2"></i>Staff Profile Management</h2>
-            <p>Manage your profile picture and access control</p>
-            <div class="text-center mb-3">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-            </div>
-        </div>
-        
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger">
-                <?php 
-                    echo htmlspecialchars($_SESSION['error']);
-                    unset($_SESSION['error']);
-                    ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success">
-                <?php 
-                    echo htmlspecialchars($_SESSION['success']);
-                    unset($_SESSION['success']);
-                    ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="profile-info">
-            <div>
-                <h4>Profile Picture</h4>
-                <?php if (!empty($profile['profile_picture'])): ?>
-                    <img src="<?php echo htmlspecialchars($profile['profile_picture']); ?>" alt="Profile Picture" class="profile-picture">
-                <?php else: ?>
-                    <div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user fa-3x" style="color: #6c757d;"></i>
-                    </div>
-                <?php endif; ?>
-            </div>
-            
-            <div>
-                <h4>Personal Information</h4>
-                <p><strong>Name:</strong> <?php echo htmlspecialchars($profile['full_name'] ?? ''); ?></p>
-                <p><strong>Email:</strong> <?php echo htmlspecialchars($profile['email'] ?? ''); ?></p>
-                <p><strong>Position:</strong> <?php echo htmlspecialchars($profile['position'] ?? ''); ?></p>
-                <p><strong>Department:</strong> <?php echo htmlspecialchars($profile['department'] ?? ''); ?></p>
-            </div>
-        </div>
-        
-        <div class="upload-section">
-            <h4>Upload Profile Picture</h4>
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="profile_picture" class="form-label">Choose Profile Picture:</label>
-                    <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*" required>
-                    <small class="form-text">Allowed: JPEG, PNG. Maximum size: 5MB</small>
-                </div>
-                <button type="submit" class="btn-primary">Upload Picture</button>
-            </form>
-        </div>
-        
-        <?php if (stripos($_SESSION['role'] ?? '', 'Director') !== false || 
-                  stripos($_SESSION['role'] ?? '', 'General') !== false ||
-                  stripos($_SESSION['role'] ?? '', 'Principal') !== false ||
-                  stripos($_SESSION['role'] ?? '', 'CEO') !== false): ?>
-            <div class="access-control">
-                <h4>Access Control Management</h4>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="target_staff_id" class="form-label">Staff Member:</label>
-                        <select class="form-control" id="target_staff_id" name="target_staff_id" required>
-                            <option value="">Select Staff Member</option>
-                            <?php
-                            $staff_sql = "SELECT id, full_name, position FROM staff WHERE status = 'Active' AND id != ?";
-                            $staff_stmt = $conn->prepare($staff_sql);
-                            $staff_stmt->bind_param("i", $staff_id);
-                            $staff_stmt->execute();
-                            $staff_result = $staff_stmt->get_result();
-                            
-                            while ($staff = $staff_result->fetch_assoc()) {
-                                echo '<option value="' . $staff['id'] . '">' . htmlspecialchars($staff['full_name']) . ' - ' . htmlspecialchars($staff['position']) . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="module_name" class="form-label">Module:</label>
-                        <input type="text" class="form-control" id="module_name" name="module_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="access_level" class="form-label">Access Level:</label>
-                        <select class="form-control" id="access_level" name="access_level" required>
-                            <option value="None">None</option>
-                            <option value="Read">Read Only</option>
-                            <option value="Write">Write</option>
-                            <option value="Delete">Delete</option>
-                            <option value="Admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="access_reason" class="form-label">Reason:</label>
-                        <textarea class="form-control" id="access_reason" name="access_reason" rows="3"></textarea>
-                    </div>
-                    <button type="submit" name="manage_access" class="btn-primary">Grant/Update Access</button>
-                </form>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($access_list->num_rows > 0): ?>
-            <div class="access-control">
-                <h4>Access Control History</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Staff Member</th>
-                            <th>Module</th>
-                            <th>Access Level</th>
-                            <th>Granted By</th>
-                            <th>Granted At</th>
-                            <th>Reason</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while ($access = $access_list->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($access['module_name']); ?></td>
-                                <td><?php echo htmlspecialchars($access['access_level']); ?></td>
-                                <td><?php echo htmlspecialchars($access['granted_by_name']); ?></td>
-                                <td><?php echo htmlspecialchars($access['granted_at']); ?></td>
-                                <td><?php echo htmlspecialchars($access['access_reason'] ?? ''); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
+
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show alert-floating">
+        <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+<?php endif; ?>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show alert-floating">
+        <i class="fas fa-exclamation-circle me-2"></i><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+
+<main class="profile-page">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1" style="color:var(--primary);"><i class="fas fa-user-circle me-2"></i>My Profile</h4>
+            <p class="text-muted mb-0" style="font-size:.9rem;">Manage your personal information and profile picture</p>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <button onclick="window.print()" class="btn btn-outline-pdf">
+                <i class="fas fa-file-pdf me-1"></i> Download My Info (PDF)
+            </button>
+            <a href="../index.php" class="btn btn-outline-secondary-custom">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ═══ LEFT COLUMN: PHOTO ═══ -->
+        <div class="col-lg-4">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <h4><i class="fas fa-camera me-2"></i>Profile Photo</h4>
+                </div>
+                <div class="profile-card-body">
+                    <div class="photo-section">
+                        <div class="avatar-wrap">
+                            <?php if ($photo_path): ?>
+                                <img src="<?= $photo_path ?>" alt="Profile Photo">
+                            <?php else: ?>
+                                <i class="fas fa-user no-photo"></i>
+                            <?php endif; ?>
+                        </div>
+                        <div class="staff-name"><?= $full_name_val ?: 'Staff Member' ?></div>
+                        <div class="staff-role"><i class="fas fa-briefcase me-1"></i><?= $position_val ?: 'N/A' ?></div>
+                        <?php if ($department_val): ?>
+                            <div class="staff-dept"><i class="fas fa-building me-1"></i><?= $department_val ?></div>
+                        <?php endif; ?>
+                        <div>
+                            <span class="staff-status <?= strtolower(str_replace(' ', '-', $status_val)) ?>">
+                                <?= $status_val ?: 'Active' ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <form method="POST" enctype="multipart/form-data" id="photoForm">
+                        <label class="upload-area" for="profile_picture">
+                            <div>
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p><strong>Click to upload</strong> or drag and drop</p>
+                                <p class="small">JPEG, PNG &bull; Max 5 MB</p>
+                            </div>
+                        </label>
+                        <input type="file" id="profile_picture" name="profile_picture" accept=".jpg,.jpeg,.png" class="d-none" onchange="document.getElementById('photoForm').submit();">
+                        <button type="submit" class="btn btn-save w-100 mt-3">
+                            <i class="fas fa-upload me-1"></i> Upload New Photo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ RIGHT COLUMN: EDIT FORM ═══ -->
+        <div class="col-lg-8">
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <h4><i class="fas fa-edit me-2"></i>Personal Information</h4>
+                </div>
+                <div class="profile-card-body">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Staff ID</label>
+                                <input type="text" class="form-control" value="<?= $staff_id_disp ?: $staff_id ?>" readonly disabled style="background:#f8f9fa;cursor:not-allowed;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status</label>
+                                <input type="text" class="form-control" value="<?= $status_val ?: 'Active' ?>" readonly disabled style="background:#f8f9fa;cursor:not-allowed;">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" value="<?= $full_name_val ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" value="<?= $email_val ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                                <input type="text" class="form-control" id="phone" name="phone" value="<?= $phone_val ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="department" class="form-label fw-semibold">Department</label>
+                                <input type="text" class="form-control" id="department" name="department" value="<?= $department_val ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="position" class="form-label fw-semibold">Position / Job Title</label>
+                                <input type="text" class="form-control" id="position" name="position" value="<?= $position_val ?>">
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label fw-semibold">Physical Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3"><?= $address_val ?></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="reset" class="btn btn-outline-secondary-custom">
+                                <i class="fas fa-undo me-1"></i> Reset
+                            </button>
+                            <button type="submit" name="update_profile" class="btn btn-save">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Info Summary -->
+            <div class="profile-card mt-4">
+                <div class="profile-card-header">
+                    <h4><i class="fas fa-info-circle me-2"></i>Account Summary</h4>
+                </div>
+                <div class="profile-card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value"><?= $email_val ?: '<span class="text-muted fst-italic">Not set</span>' ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value"><?= $phone_val ?: '<span class="text-muted fst-italic">Not set</span>' ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-label">Department</div>
+                            <div class="detail-value"><?= $department_val ?: '<span class="text-muted fst-italic">Not set</span>' ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-label">Position</div>
+                            <div class="detail-value"><?= $position_val ?: '<span class="text-muted fst-italic">Not set</span>' ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-label">Address</div>
+                            <div class="detail-value"><?= $address_val ?: '<span class="text-muted fst-italic">Not set</span>' ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-label">Role</div>
+                            <div class="detail-value"><?= htmlspecialchars($staff_role) ?: 'Staff' ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
-

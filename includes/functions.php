@@ -177,6 +177,7 @@ function checkFeeStatus($student_id, $academic_year) {
 }
 
 // Generate receipt number
+if (!function_exists('generateReceiptNumber')) {
 function generateReceiptNumber() {
     do {
         $receipt_no = 'RCP' . date('Y') . mt_rand(100000, 999999);
@@ -185,6 +186,7 @@ function generateReceiptNumber() {
     } while ($check_result[0]['count'] > 0);
     
     return $receipt_no;
+}
 }
 
 // Format currency

@@ -20,17 +20,23 @@ function renderStudentSetViewer($conn, array $options = []) {
     $selectedSet     = $_GET['set_name'] ?? '';
     $selectedProgram = $_GET['program']  ?? '';
     $selectedLevel   = $_GET['level']    ?? '';
-    $title           = $options['title'] ?? 'Student Records by Set';
-    $icon            = $options['icon']  ?? 'fa-users';
-    $showAllOption   = $options['show_all'] ?? false;
-    $isSuperAdmin    = $options['super_admin'] ?? false;
+    $search          = trim($_GET['search'] ?? '');
+    $page            = max(1, intval($_GET['page'] ?? 1));
 
-    // Fetch distinct filter options
+    $title          = $options['title'] ?? 'Student Records by Set';
+    $icon           = $options['icon']  ?? 'fa-users';
+    $showAllOption  = $options['show_all'] ?? false;
+    $isSuperAdmin   = $options['super_admin'] ?? false;
+    $perPage        = max(1, intval($options['per_page'] ?? 50));
+    $showStatement  = $options['show_statement_link'] ?? false;
+
+    $canShowAll = $showAllOption || $isSuperAdmin;
+    $hasFilters = $selectedSet || $selectedProgram || $selectedLevel || $search !== '';
+
+    // ── Fetch distinct filter options ──
     $sets     = [];
     $programs = [];
     $levels   = [];
-    $students = [];
-    $totalFiltered = 0;
 
     if ($conn) {
         try {
@@ -45,53 +51,94 @@ function renderStudentSetViewer($conn, array $options = []) {
         } catch (Exception $e) {}
     }
 
-    // Build query
-    $where = ['1=1'];
-    $params = [];
+    // ── Build WHERE clause ──
+    $conditions = ['1=1'];
+    $bindParams = [];
+    $bindTypes  = '';
+
     if ($selectedSet) {
-        $where[] = 'set_name = ?';
-        $params[] = $selectedSet;
+        $conditions[] = 'set_name = ?';
+        $bindParams[] = $selectedSet;
+        $bindTypes   .= 's';
     }
     if ($selectedProgram) {
-        $where[] = 'program = ?';
-        $params[] = $selectedProgram;
+        $conditions[] = 'program = ?';
+        $bindParams[] = $selectedProgram;
+        $bindTypes   .= 's';
     }
     if ($selectedLevel) {
-        $where[] = 'level = ?';
-        $params[] = $selectedLevel;
+        $conditions[] = 'level = ?';
+        $bindParams[] = $selectedLevel;
+        $bindTypes   .= 's';
+    }
+    if ($search !== '') {
+        $conditions[] = '(full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR index_number LIKE ? OR phone LIKE ? OR mobile_number LIKE ?)';
+        $like = '%' . $search . '%';
+        for ($i = 0; $i < 9; $i++) {
+            $bindParams[] = $like;
+            $bindTypes   .= 's';
+        }
     }
 
-    $sql = "SELECT * FROM students WHERE " . implode(' AND ', $where) . " ORDER BY set_name DESC, program, level, surname, first_name";
+    $whereSQL = implode(' AND ', $conditions);
 
-    if ($conn && $params) {
+    // ── Query data (count + paginated result) ──
+    $students      = [];
+    $totalFiltered = 0;
+
+    if ($conn && ($hasFilters || $canShowAll)) {
         try {
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $types = str_repeat('s', count($params));
-                $stmt->bind_param($types, ...$params);
-                $stmt->execute();
-                $res = $stmt->get_result();
-                if ($res) {
-                    while ($row = $res->fetch_assoc()) $students[] = $row;
+            // COUNT
+            $countSQL = "SELECT COUNT(*) FROM students WHERE $whereSQL";
+            if (!empty($bindParams)) {
+                $stmt = $conn->prepare($countSQL);
+                if ($stmt) {
+                    $stmt->bind_param($bindTypes, ...$bindParams);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    if ($res) $totalFiltered = intval($res->fetch_row()[0]);
+                    $stmt->close();
                 }
-                $totalFiltered = count($students);
-                $stmt->close();
+            } else {
+                $r = $conn->query($countSQL);
+                if ($r) $totalFiltered = intval($r->fetch_row()[0]);
+            }
+
+            // DATA
+            $totalPages  = max(1, intval(ceil($totalFiltered / $perPage)));
+            $page        = min($page, $totalPages);
+            $offset      = ($page - 1) * $perPage;
+
+            $dataSQL = "SELECT * FROM students WHERE $whereSQL ORDER BY set_name DESC, program, level, surname, first_name LIMIT ?, ?";
+
+            if (!empty($bindParams)) {
+                $dataParams = array_merge($bindParams, [$offset, $perPage]);
+                $dataTypes  = $bindTypes . 'ii';
+                $stmt = $conn->prepare($dataSQL);
+                if ($stmt) {
+                    $stmt->bind_param($dataTypes, ...$dataParams);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    if ($res) {
+                        while ($row = $res->fetch_assoc()) $students[] = $row;
+                    }
+                    $stmt->close();
+                }
+            } else {
+                $safeSQL = "SELECT * FROM students WHERE $whereSQL ORDER BY set_name DESC, program, level, surname, first_name LIMIT $offset, $perPage";
+                $r = $conn->query($safeSQL);
+                if ($r) {
+                    while ($row = $r->fetch_assoc()) $students[] = $row;
+                }
             }
         } catch (Exception $e) {}
-    } elseif ($conn && empty($params) && $showAllOption) {
-        // Only if explicitly allowed (super admin mode)
-        try {
-            $r = $conn->query("SELECT * FROM students ORDER BY set_name DESC, program, level, surname, first_name LIMIT 200");
-            if ($r) {
-                while ($row = $r->fetch_assoc()) $students[] = $row;
-                $totalFiltered = $r->num_rows;
-            }
-        } catch (Exception $e) {}
+    } else {
+        $totalPages = 1;
     }
 
-    // Check if a specific student is requested for profile view
+    // ── Check if a specific student is requested for profile view ──
     $viewStudentId = $_GET['view_student'] ?? '';
-    $viewStudent = null;
+    $viewStudent   = null;
     if ($viewStudentId && $conn) {
         try {
             $sid = $conn->real_escape_string($viewStudentId);
@@ -100,21 +147,29 @@ function renderStudentSetViewer($conn, array $options = []) {
         } catch (Exception $e) {}
     }
 
-    // ─── Print support ──────────────────────────────────────────
+    $totalPages   = max(1, intval(ceil($totalFiltered / $perPage)));
+    $currentPage  = min($page, $totalPages);
+    $offset       = max(0, ($currentPage - 1) * $perPage);
+    $useTable     = $totalFiltered > 30;
+
+    // ── Print support ──
     $isPrint = isset($_GET['print']) && $_GET['print'] === 'set';
+
+    // ── Build pagination / action query string helper ──
+    $listQuery = array_diff_key($_GET, array_flip(['view_student', 'print']));
     ?>
     <div class="student-set-viewer">
         <?php if ($viewStudent): ?>
             <!-- ── SINGLE STUDENT FULL PROFILE ── -->
-            <?php renderFullStudentProfile($viewStudent, $conn); ?>
+            <?php renderFullStudentProfile($viewStudent, $conn, $showStatement); ?>
         <?php else: ?>
 
         <!-- ── HEADER ── -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0" style="color:#0f172a">
                 <i class="fas <?= $icon ?> me-2" style="color:var(--isnm-blue, #1e3a8a)"></i><?= $title ?>
-                <?php if ($students): ?>
-                    <span class="badge bg-primary ms-2 fs-6"><?= count($students) ?> student<?= count($students) !== 1 ? 's' : '' ?></span>
+                <?php if ($totalFiltered > 0): ?>
+                    <span class="badge bg-primary ms-2 fs-6"><?= $totalFiltered ?> student<?= $totalFiltered !== 1 ? 's' : '' ?></span>
                 <?php endif; ?>
             </h4>
             <div class="d-flex gap-2 flex-wrap">
@@ -126,15 +181,14 @@ function renderStudentSetViewer($conn, array $options = []) {
 
         <!-- ── FILTER BAR ── -->
         <form method="GET" class="row g-2 mb-4 p-3 rounded-3" style="background:linear-gradient(135deg,#1e3a8a,#0f4c3a);">
-            <?php if (count($_GET) > 0): ?>
-                <?php foreach ($_GET as $gk => $gv): ?>
-                    <?php if (!in_array($gk, ['set_name','program','level','print','view_student'])): ?>
-                        <input type="hidden" name="<?= htmlspecialchars($gk) ?>" value="<?= htmlspecialchars($gv) ?>">
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            <?php endif; ?>
+            <?php foreach ($_GET as $gk => $gv): ?>
+                <?php if (!in_array($gk, ['set_name','program','level','search','page','print','view_student','sort_by','sort_order'])): ?>
+                    <input type="hidden" name="<?= htmlspecialchars($gk) ?>" value="<?= htmlspecialchars($gv) ?>">
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <input type="hidden" name="page" value="1">
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-layer-group me-1"></i>Set / Intake</label>
                 <select name="set_name" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">— All Sets —</option>
@@ -143,7 +197,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-graduation-cap me-1"></i>Program</label>
                 <select name="program" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">— All Programs —</option>
@@ -161,36 +215,111 @@ function renderStudentSetViewer($conn, array $options = []) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-light btn-sm flex-grow-1"><i class="fas fa-search me-1"></i> Filter</button>
-                <?php if ($selectedSet || $selectedProgram || $selectedLevel): ?>
-                    <a href="?<?= http_build_query(array_diff_key($_GET, array_flip(['set_name','program','level']))) ?>" class="btn btn-outline-light btn-sm"><i class="fas fa-times"></i></a>
+            <div class="col-md-3">
+                <label class="text-white small fw-semibold mb-1"><i class="fas fa-search me-1"></i>Search</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Name, ID, phone..." value="<?= htmlspecialchars($search) ?>">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-light btn-sm flex-grow-1"><i class="fas fa-filter me-1"></i> Filter</button>
+                <?php if ($hasFilters): ?>
+                    <a href="?<?= http_build_query(array_diff_key($_GET, array_flip(['set_name','program','level','search','page']))) ?>" class="btn btn-outline-light btn-sm"><i class="fas fa-times"></i></a>
                 <?php endif; ?>
             </div>
         </form>
 
         <?php if ($isPrint): ?>
-        <!-- ── PRINT HEADER ── -->
         <div class="print-header d-none d-print-block text-center mb-4">
             <h2 style="color:#1a237e;">IGANGA SCHOOL OF NURSING & MIDWIFERY</h2>
-            <h4>Student Records – <?= htmlspecialchars($selectedSet ?: 'All Sets') ?></h4>
-            <p class="text-muted">Generated: <?= date('l, F j, Y') ?></p>
+            <h4>Student Records – <?= htmlspecialchars($selectedSet ?: 'All Sets') ?><?= $search !== '' ? ' (Search: ' . htmlspecialchars($search) . ')' : '' ?></h4>
+            <p class="text-muted">Generated: <?= date('l, F j, Y') . ' | Page ' . $currentPage . ' of ' . $totalPages ?></p>
             <hr>
         </div>
         <?php endif; ?>
 
-        <?php if (empty($students)): ?>
+        <?php if (empty($students) && ($hasFilters || $canShowAll)): ?>
+            <div class="text-center py-5">
+                <i class="fas fa-search" style="font-size:3rem;color:#cbd5e1"></i>
+                <p class="text-muted mt-3 fs-5">No students found matching your criteria</p>
+            </div>
+        <?php elseif (empty($students)): ?>
             <div class="text-center py-5">
                 <i class="fas fa-users" style="font-size:3rem;color:#cbd5e1"></i>
                 <p class="text-muted mt-3 fs-5">Select a Set above to view students</p>
             </div>
         <?php else: ?>
-            <!-- ── STUDENT CARDS ── -->
+
+            <?php if ($useTable): ?>
+            <!-- ── TABLE VIEW (fast, scrollable) ── -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0 student-records-table" id="studentRecordsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="sortable" data-col="0" style="width:40px">#</th>
+                            <th class="sortable" data-col="1" style="width:60px">Photo</th>
+                            <th class="sortable" data-col="2">Name</th>
+                            <th class="sortable" data-col="3">Student ID</th>
+                            <th class="sortable" data-col="4">Program</th>
+                            <th class="sortable" data-col="5">Level</th>
+                            <th class="sortable" data-col="6">Phone / Mobile</th>
+                            <th class="sortable" data-col="7">Status</th>
+                            <th style="width:80px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $rn = $offset + 1; foreach ($students as $stu): ?>
+                        <tr>
+                            <td><?= $rn++ ?></td>
+                            <td>
+                                <?php if (!empty($stu['passport_photo']) || !empty($stu['profile_picture'])): ?>
+                                    <img src="<?= htmlspecialchars($stu['passport_photo'] ?: $stu['profile_picture']) ?>" alt="" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
+                                <?php else: ?>
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;font-size:0.85rem;font-weight:700;">
+                                        <?= strtoupper(substr($stu['first_name'] ?? 'S', 0, 1) . substr($stu['surname'] ?? 'T', 0, 1)) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <strong><?= htmlspecialchars($stu['full_name'] ?: trim($stu['first_name'] . ' ' . ($stu['other_name'] ?? '') . ' ' . $stu['surname'])) ?></strong>
+                                <?php if (!empty($stu['index_number'])): ?>
+                                    <br><small class="text-muted">Index: <?= htmlspecialchars($stu['index_number']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td><code><?= htmlspecialchars($stu['student_id'] ?? $stu['student_number'] ?? '—') ?></code></td>
+                            <td><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></td>
+                            <td><?= htmlspecialchars($stu['level'] ?? '—') ?></td>
+                            <td class="phone-cell">
+                                <?php if (!empty($stu['phone'])): ?>
+                                    <a href="tel:<?= htmlspecialchars($stu['phone']) ?>" class="text-decoration-none"><i class="fas fa-phone-alt me-1"></i><?= htmlspecialchars($stu['phone']) ?></a>
+                                <?php endif; ?>
+                                <?php if (!empty($stu['mobile_number'])): ?>
+                                    <?php if (!empty($stu['phone'])): ?><br><?php endif; ?>
+                                    <a href="tel:<?= htmlspecialchars($stu['mobile_number']) ?>" class="badge bg-info text-dark text-decoration-none mt-1"><i class="fas fa-mobile-alt me-1"></i><?= htmlspecialchars($stu['mobile_number']) ?></a>
+                                <?php endif; ?>
+                                <?php if (empty($stu['phone']) && empty($stu['mobile_number'])): ?>
+                                    <span class="text-muted">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="badge bg-<?= ($stu['status'] ?? 'Active') === 'Active' ? 'success' : (($stu['status'] ?? '') === 'Graduated' ? 'primary' : 'secondary') ?>">
+                                    <?= htmlspecialchars($stu['status'] ?? 'Active') ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php $profileLink = '?' . http_build_query(array_merge($listQuery, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id'], 'page' => $currentPage])); ?>
+                                <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-primary" title="Full Profile"><i class="fas fa-eye"></i></a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <!-- ── CARD VIEW (prettier, for small sets) ── -->
             <div class="student-cards-container" id="studentSetCards">
-                <?php 
+                <?php
                 $currentSet = '';
                 $cardIndex = 0;
-                foreach ($students as $stu): 
+                foreach ($students as $stu):
                     $cardIndex++;
                     $setDisplay = $stu['set_name'] ?? 'Unknown Set';
                     $showSetHeader = ($setDisplay !== $currentSet);
@@ -205,7 +334,6 @@ function renderStudentSetViewer($conn, array $options = []) {
 
                     <div class="student-word-card" id="student-card-<?= $cardIndex ?>">
                         <div class="row g-0">
-                            <!-- Photo column -->
                             <div class="col-md-2 d-flex flex-column align-items-center justify-content-center p-3 bg-light rounded-start">
                                 <div class="student-avatar-lg">
                                     <?php if (!empty($stu['passport_photo']) || !empty($stu['profile_picture'])): ?>
@@ -221,7 +349,6 @@ function renderStudentSetViewer($conn, array $options = []) {
                                 </span>
                             </div>
 
-                            <!-- Info columns -->
                             <div class="col-md-10">
                                 <div class="card-body p-3">
                                     <div class="d-flex flex-wrap justify-content-between align-items-start mb-2">
@@ -244,16 +371,14 @@ function renderStudentSetViewer($conn, array $options = []) {
                                         </div>
                                         <div class="text-end">
                                             <small class="text-muted">Student ID: <strong><?= htmlspecialchars($stu['student_id'] ?? $stu['student_number']) ?></strong></small>
-                                            <?php if ($isSuperAdmin || true): ?>
-                                                <div class="mt-1">
-                                                    <a href="?<?= http_build_query(array_merge($_GET, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id']])) ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i> Full Profile</a>
-                                                </div>
-                                            <?php endif; ?>
+                                            <div class="mt-1">
+                                                <?php $profileLink = '?' . http_build_query(array_merge($listQuery, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id'], 'page' => $currentPage])); ?>
+                                                <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i> Full Profile</a>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div class="row g-2 mt-2">
-                                        <!-- Personal Info -->
                                         <div class="col-md-4">
                                             <div class="info-block">
                                                 <div class="info-label"><i class="fas fa-user me-1 text-primary"></i>Personal</div>
@@ -264,7 +389,6 @@ function renderStudentSetViewer($conn, array $options = []) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Academic Info -->
                                         <div class="col-md-4">
                                             <div class="info-block">
                                                 <div class="info-label"><i class="fas fa-graduation-cap me-1 text-success"></i>Academic</div>
@@ -275,18 +399,27 @@ function renderStudentSetViewer($conn, array $options = []) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Contact Info -->
                                         <div class="col-md-4">
                                             <div class="info-block">
                                                 <div class="info-label"><i class="fas fa-phone me-1 text-warning"></i>Contact</div>
                                                 <div class="info-value">
-                                                    <?php if (!empty($stu['phone'])): ?><div><i class="fas fa-phone-alt me-1 small"></i><?= htmlspecialchars($stu['phone']) ?></div><?php endif; ?>
+                                                    <?php
+                                                    $phones = [];
+                                                    if (!empty($stu['phone'])) $phones[] = $stu['phone'];
+                                                    if (!empty($stu['mobile_number'])) $phones[] = $stu['mobile_number'];
+                                                    if ($phones):
+                                                    ?>
+                                                        <div class="mb-1">
+                                                            <?php foreach ($phones as $p): ?>
+                                                                <a href="tel:<?= htmlspecialchars($p) ?>" class="badge bg-warning text-dark text-decoration-none me-1 mb-1"><i class="fas fa-phone-alt me-1"></i><?= htmlspecialchars($p) ?></a>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                     <?php if (!empty($stu['email'])): ?><div><i class="fas fa-envelope me-1 small"></i><?= htmlspecialchars($stu['email']) ?></div><?php endif; ?>
                                                     <?php if (!empty($stu['address'])): ?><div><small><?= htmlspecialchars(substr($stu['address'], 0, 50)) ?></small></div><?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Emergency / Guardian -->
                                         <div class="col-md-6">
                                             <div class="info-block">
                                                 <div class="info-label"><i class="fas fa-ambulance me-1 text-danger"></i>Emergency Contact</div>
@@ -324,7 +457,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                             <?php if (!empty($stu['intake_date'])): ?> | Intake: <?= date('d M Y', strtotime($stu['intake_date'])) ?><?php endif; ?>
                                         </small>
                                         <div class="d-flex gap-1">
-                                            <a href="?<?= http_build_query(array_merge($_GET, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id']])) ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-file-alt"></i></a>
+                                            <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-file-alt"></i></a>
                                         </div>
                                     </div>
                                 </div>
@@ -333,12 +466,52 @@ function renderStudentSetViewer($conn, array $options = []) {
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
 
-            <!-- ── PRINT SUMMARY ── -->
+            <!-- ── PAGINATION ── -->
+            <?php if ($totalPages > 1): ?>
+            <nav class="mt-3 d-print-none" aria-label="Student pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0 flex-wrap">
+                    <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => 1])) ?>" aria-label="First"><i class="fas fa-angle-double-left"></i></a>
+                    </li>
+                    <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => $currentPage - 1])) ?>" aria-label="Previous"><i class="fas fa-angle-left"></i></a>
+                    </li>
+                    <?php
+                    $range = 2;
+                    $startPage = max(1, $currentPage - $range);
+                    $endPage   = min($totalPages, $currentPage + $range);
+                    if ($startPage > 1): ?>
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    <?php endif;
+                    for ($i = $startPage; $i <= $endPage; $i++):
+                    ?>
+                    <li class="page-item <?= $i === $currentPage ? 'active' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => $i])) ?>"><?= $i ?></a>
+                    </li>
+                    <?php endfor;
+                    if ($endPage < $totalPages): ?>
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    <?php endif; ?>
+                    <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => $currentPage + 1])) ?>" aria-label="Next"><i class="fas fa-angle-right"></i></a>
+                    </li>
+                    <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($listQuery, ['page' => $totalPages])) ?>" aria-label="Last"><i class="fas fa-angle-double-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center text-muted small mt-1 d-print-none">
+                Showing <?= $offset + 1 ?>–<?= min($offset + $perPage, $totalFiltered) ?> of <?= $totalFiltered ?> students
+            </div>
+            <?php endif; ?>
+
+            <!-- ── SUMMARY ── -->
             <div class="mt-4 p-3 bg-light rounded d-print-none">
                 <div class="row g-2 text-center">
                     <div class="col-md-3">
-                        <div class="fw-bold fs-5"><?= count($students) ?></div>
+                        <div class="fw-bold fs-5"><?= $totalFiltered ?></div>
                         <small class="text-muted">Total Students</small>
                     </div>
                     <div class="col-md-3">
@@ -399,6 +572,45 @@ function renderStudentSetViewer($conn, array $options = []) {
             padding: 8px 20px !important;
             border-radius: 30px !important;
         }
+        .student-records-table th.sortable {
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .student-records-table th.sortable:hover {
+            background: #2c3e50;
+        }
+        .student-records-table th.sortable::after {
+            content: '\f0dc';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: 6px;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+        .student-records-table th.sortable.sort-asc::after {
+            content: '\f0de';
+            opacity: 1;
+        }
+        .student-records-table th.sortable.sort-desc::after {
+            content: '\f0dd';
+            opacity: 1;
+        }
+        .student-records-table td.phone-cell {
+            white-space: nowrap;
+        }
+        .pagination {
+            gap: 2px;
+        }
+        .pagination .page-link {
+            border-radius: 6px !important;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+        .pagination .page-item.active .page-link {
+            background: #1e3a8a;
+            border-color: #1e3a8a;
+        }
         @media print {
             .student-set-viewer .filter-bar,
             .student-set-viewer form,
@@ -424,7 +636,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .badge {
+            .badge, .table-dark {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -456,6 +668,13 @@ function renderStudentSetViewer($conn, array $options = []) {
             .col-md-2, .col-md-4, .col-md-6, .col-md-10 {
                 width: auto !important;
             }
+            .student-records-table {
+                font-size: 9pt;
+            }
+            .student-records-table th {
+                background: #1a237e !important;
+                color: white !important;
+            }
             @page {
                 margin: 15mm;
                 size: A4 portrait;
@@ -469,6 +688,41 @@ function renderStudentSetViewer($conn, array $options = []) {
         url.searchParams.set('print', 'set');
         window.open(url.toString(), '_blank');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('studentRecordsTable');
+        if (table) {
+            const headers = table.querySelectorAll('th.sortable');
+            headers.forEach(function(header) {
+                header.addEventListener('click', function() {
+                    const col = parseInt(this.dataset.col);
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+                    const isAsc = this.classList.contains('sort-asc');
+
+                    headers.forEach(function(h) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    this.classList.add(isAsc ? 'sort-desc' : 'sort-asc');
+
+                    rows.sort(function(a, b) {
+                        let aVal = a.cells[col] ? a.cells[col].innerText.trim() : '';
+                        let bVal = b.cells[col] ? b.cells[col].innerText.trim() : '';
+                        let aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
+                        let bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            return isAsc ? bNum - aNum : aNum - bNum;
+                        }
+                        return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+                    });
+
+                    rows.forEach(function(row) {
+                        tbody.appendChild(row);
+                    });
+                });
+            });
+        }
+    });
     </script>
     <?php
 }
@@ -476,13 +730,16 @@ function renderStudentSetViewer($conn, array $options = []) {
 /**
  * Render a single student's full profile (Word-format detail view)
  */
-function renderFullStudentProfile($stu, $conn) {
+function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
     ?>
     <div class="student-full-profile">
         <!-- Back button -->
         <div class="mb-3">
             <a href="?" class="btn btn-outline-secondary btn-sm d-print-none"><i class="fas fa-arrow-left me-1"></i> Back to Student List</a>
             <button class="btn btn-outline-success btn-sm d-print-none ms-2" onclick="window.print()"><i class="fas fa-print me-1"></i> Print Profile</button>
+            <?php if ($showStatementLink && !empty($stu['student_id'])): ?>
+                <a href="bursar.php?view=student_statement&student_id=<?= htmlspecialchars($stu['student_id']) ?>" class="btn btn-outline-warning btn-sm d-print-none ms-2"><i class="fas fa-receipt me-1"></i> Print Statement</a>
+            <?php endif; ?>
         </div>
 
         <!-- Print header -->
@@ -516,6 +773,12 @@ function renderFullStudentProfile($stu, $conn) {
                             <?php endif; ?>
                             <?php if (!empty($stu['national_student_id_number'])): ?>
                                 <span class="badge bg-secondary fs-6">NSIN: <?= htmlspecialchars($stu['national_student_id_number']) ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($stu['phone'])): ?>
+                                <a href="tel:<?= htmlspecialchars($stu['phone']) ?>" class="badge bg-warning text-dark fs-6 text-decoration-none"><i class="fas fa-phone-alt me-1"></i><?= htmlspecialchars($stu['phone']) ?></a>
+                            <?php endif; ?>
+                            <?php if (!empty($stu['mobile_number'])): ?>
+                                <a href="tel:<?= htmlspecialchars($stu['mobile_number']) ?>" class="badge bg-info text-dark fs-6 text-decoration-none"><i class="fas fa-mobile-alt me-1"></i><?= htmlspecialchars($stu['mobile_number']) ?></a>
                             <?php endif; ?>
                         </div>
                         <p class="mb-1"><strong>Program:</strong> <?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></p>
