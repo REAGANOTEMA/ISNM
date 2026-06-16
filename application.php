@@ -267,12 +267,14 @@
                     <div class="row g-3">
                       <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="disability" class="form-label">Do you have any disability? *</label>
-                        <select class="form-control" id="disability" name="disability" required>
+                        <select class="form-control" id="disability" name="disability" required onchange="toggleDisabilityDetails()">
                           <option value="">Select Option</option>
                           <option value="No">No</option>
                           <option value="Yes">Yes</option>
                         </select>
                       </div>
+                    </div>
+                    <div id="disabilityDetails" class="row g-3 mt-3" style="display: none;">
                       <div class="col-lg-6 col-md-6 col-sm-12">
                         <label for="disabilityType" class="form-label">If yes, state the type of disability</label>
                         <select class="form-control" id="disabilityType" name="disabilityType">
@@ -375,6 +377,12 @@
                           <option value="January">January</option>
                           <option value="July">July</option>
                         </select>
+                      </div>
+                    </div>
+                    <div class="row g-3 mt-3">
+                      <div class="col-lg-12">
+                        <label for="previousSchool" class="form-label">PREVIOUS SCHOOL ATTENDED</label>
+                        <input type="text" class="form-control" id="previousSchool" name="previousSchool" placeholder="Name of your most recent school">
                       </div>
                     </div>
                   </div>
@@ -491,66 +499,116 @@
                   </div>
                 </div>
 
-                <!-- Mobile-Friendly UACE Results (Optional) -->
-                <div class="form-section">
+                <!-- UACE Results (Optional, for Certificate Applicants) -->
+                <div class="form-section" id="uaceSection">
                   <h4><i class="fas fa-book me-2"></i> UGANDA ADVANCED CERTIFICATE OF EDUCATION (UACE) - OPTIONAL</h4>
                   <div class="row g-3">
-                    <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="col-lg-4 col-md-6 col-sm-12">
                       <label for="uaceIndexNumber" class="form-label">INDEX NUMBER</label>
                       <input type="text" class="form-control" id="uaceIndexNumber" name="uaceIndexNumber">
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSchoolName" class="form-label">SCHOOL</label>
+                      <input type="text" class="form-control" id="uaceSchoolName" name="uaceSchoolName">
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-12">
                       <label for="uaceYear" class="form-label">YEAR OF COMPLETION</label>
                       <input type="number" class="form-control" id="uaceYear" name="uaceYear" min="2010" max="2026">
                     </div>
                   </div>
-                  
-                  <div class="alert alert-info">
-                    <strong>Note:</strong> Attach a photocopy of the UACE Certificate or equivalent. This is optional but recommended.
-                  </div>
-                </div>
-                        <option value="P8">P8</option>
-                        <option value="F9">F9</option>
-                      </select>
+                  <div class="row g-3 mt-3">
+                    <h5 class="fw-bold">PRINCIPAL SUBJECTS</h5>
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSubject1" class="form-label">SUBJECT 1</label>
+                      <input type="text" class="form-control" id="uaceSubject1" name="uaceSubject1" placeholder="e.g. Biology">
                     </div>
-                    <div class="col-md-2">
-                      <label for="ucePhysics" class="form-label">Physics Grade</label>
-                      <select class="form-control" id="ucePhysics" name="ucePhysics">
+                    <div class="col-lg-2 col-md-6 col-sm-12">
+                      <label for="uaceGrade1" class="form-label">GRADE</label>
+                      <select class="form-control" id="uaceGrade1" name="uaceGrade1">
                         <option value="">Grade</option>
-                        <option value="D1">D1</option>
-                        <option value="D2">D2</option>
-                        <option value="C3">C3</option>
-                        <option value="C4">C4</option>
-                        <option value="C5">C5</option>
-                        <option value="C6">C6</option>
-                        <option value="P7">P7</option>
-                        <option value="P8">P8</option>
-                        <option value="F9">F9</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="O">O</option>
+                        <option value="F">F</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSubject2" class="form-label">SUBJECT 2</label>
+                      <input type="text" class="form-control" id="uaceSubject2" name="uaceSubject2" placeholder="e.g. Chemistry">
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-sm-12">
+                      <label for="uaceGrade2" class="form-label">GRADE</label>
+                      <select class="form-control" id="uaceGrade2" name="uaceGrade2">
+                        <option value="">Grade</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="O">O</option>
+                        <option value="F">F</option>
+                      </select>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSubject3" class="form-label">SUBJECT 3</label>
+                      <input type="text" class="form-control" id="uaceSubject3" name="uaceSubject3" placeholder="e.g. Physics">
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-sm-12">
+                      <label for="uaceGrade3" class="form-label">GRADE</label>
+                      <select class="form-control" id="uaceGrade3" name="uaceGrade3">
+                        <option value="">Grade</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="O">O</option>
+                        <option value="F">F</option>
                       </select>
                     </div>
                   </div>
-                </div>
-
-                <!-- Mobile-Friendly Diploma Extension Information -->
-                <div class="form-section" id="diplomaSection" style="display: none;">
-                  <h4><i class="fas fa-certificate me-2"></i> Diploma Extension Information</h4>
-                  <div class="row g-3">
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                      <label for="diplomaExamNumber" class="form-label">Diploma Exam Number</label>
-                      <input type="text" class="form-control" id="diplomaExamNumber" name="diplomaExamNumber">
+                  <div class="row g-3 mt-3">
+                    <h5 class="fw-bold">SUBSIDIARY SUBJECTS</h5>
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSubsidiary1" class="form-label">SUBJECT 1</label>
+                      <input type="text" class="form-control" id="uaceSubsidiary1" name="uaceSubsidiary1" placeholder="e.g. Subsidiary Math">
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                      <label for="diplomaYearCompletion" class="form-label">Year of Completion</label>
-                      <input type="number" class="form-control" id="diplomaYearCompletion" name="diplomaYearCompletion" min="2000" max="2026">
+                    <div class="col-lg-2 col-md-6 col-sm-12">
+                      <label for="uaceSubGrade1" class="form-label">GRADE</label>
+                      <select class="form-control" id="uaceSubGrade1" name="uaceSubGrade1">
+                        <option value="">Grade</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="O">O</option>
+                        <option value="F">F</option>
+                      </select>
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                      <label for="diplomaYearEntry" class="form-label">Year of Entry</label>
-                      <input type="number" class="form-control" id="diplomaYearEntry" name="diplomaYearEntry" min="2000" max="2026">
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                      <label for="uaceSubsidiary2" class="form-label">SUBJECT 2</label>
+                      <input type="text" class="form-control" id="uaceSubsidiary2" name="uaceSubsidiary2" placeholder="e.g. General Paper">
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                      <label for="practicingLicense" class="form-label">Practicing License Number</label>
-                      <input type="text" class="form-control" id="practicingLicense" name="practicingLicense">
+                    <div class="col-lg-2 col-md-6 col-sm-12">
+                      <label for="uaceSubGrade2" class="form-label">GRADE</label>
+                      <select class="form-control" id="uaceSubGrade2" name="uaceSubGrade2">
+                        <option value="">Grade</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="O">O</option>
+                        <option value="F">F</option>
+                      </select>
                     </div>
+                  </div>
+                  <div class="alert alert-info mt-3">
+                    <strong>Note:</strong> Attach a photocopy of the UACE Certificate or equivalent. This is optional but recommended.
                   </div>
                 </div>
 
@@ -684,52 +742,70 @@
                 <!-- Document Uploads -->
                 <div class="form-section">
                   <h4><i class="fas fa-upload"></i> DOCUMENT UPLOADS</h4>
+                  <div class="alert alert-info">
+                    <strong>Ensure all uploaded documents are clear scanned copies (PDF, JPEG, or PNG format).</strong>
+                  </div>
                   <div class="row g-3">
                     <div class="col-md-6">
-                      <label for="academicDocument" class="form-label">Upload Academic Document (PDF, JPEG, PNG, DOC) *</label>
-                      <input type="file" class="form-control" id="academicDocument" name="academicDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
-                      <small class="text-muted">Maximum file size: 5MB</small>
+                      <label for="photo" class="form-label">Passport Photo *</label>
+                      <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                      <small class="text-muted">Passport-sized photo, max 2MB (JPEG/PNG/GIF)</small>
                     </div>
                     <div class="col-md-6">
-                      <label for="photo" class="form-label">Upload Your Photo *</label>
-                      <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
-                      <small class="text-muted">Passport-sized photo, maximum file size: 2MB</small>
+                      <label for="academicDocument" class="form-label">Academic Document (Certificates/Transcripts) *</label>
+                      <input type="file" class="form-control" id="academicDocument" name="academicDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                      <small class="text-muted">Max 5MB (PDF, JPEG, PNG, DOC, DOCX)</small>
                     </div>
                   </div>
-                </div>
-
-                <!-- Additional Information -->
-                <div class="form-section">
-                  <h3><i class="fas fa-info-circle"></i> Additional Information</h3>
-                  <div class="row g-3">
-                    <div class="col-12">
-                      <label for="motivation" class="form-label">Why do you want to undertake this course? (Maximum 100 words)</label>
-                      <textarea class="form-control" id="motivation" name="motivation" rows="4" maxlength="500" required placeholder="State your motivation, relevant experience, skills, attributes, and long-term goals..."></textarea>
-                      <small class="text-muted"><span id="charCount">0</span>/500 characters</small>
-                    </div>
-                    <div class="col-12">
-                      <label for="disability" class="form-label">Do you have any disability?</label>
-                      <select class="form-control" id="disability" name="disability" onchange="toggleDisabilityDetails()">
-                        <option value="No">No</option>
-                        <option value="Yes">Yes</option>
-                      </select>
-                    </div>
-                    <div id="disabilityDetails" style="display: none;">
+                  <!-- Certificate-level specific documents -->
+                  <div id="certDocuments" style="display: none;">
+                    <hr>
+                    <h5 class="fw-bold mb-3">CERTIFICATE APPLICANTS DOCUMENTS</h5>
+                    <div class="row g-3">
                       <div class="col-md-6">
-                        <label for="disabilityType" class="form-label">Type of Disability</label>
-                        <select class="form-control" id="disabilityType" name="disabilityType">
-                          <option value="">Select Type</option>
-                          <option value="Physical disability">Physical disability</option>
-                          <option value="Chronic illness">Chronic illness</option>
-                          <option value="Hearing impairment">Hearing impairment</option>
-                          <option value="Visual impairment">Visual impairment</option>
-                          <option value="Speech impairment">Speech impairment</option>
-                          <option value="Other">Other</option>
-                        </select>
+                        <label for="uceCertificateDoc" class="form-label">UCE Certificate (Photocopy)</label>
+                        <input type="file" class="form-control" id="uceCertificateDoc" name="uceCertificateDoc" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Scanned copy of UCE certificate</small>
                       </div>
-                      <div class="col-12">
-                        <label for="disabilityDescription" class="form-label">Brief description of disability</label>
-                        <textarea class="form-control" id="disabilityDescription" name="disabilityDescription" rows="3"></textarea>
+                      <div class="col-md-6">
+                        <label for="uaceCertificateDoc" class="form-label">UACE Certificate (if applicable)</label>
+                        <input type="file" class="form-control" id="uaceCertificateDoc" name="uaceCertificateDoc" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Optional but recommended</small>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Diploma-level specific documents -->
+                  <div id="diplomaDocuments" style="display: none;">
+                    <hr>
+                    <h5 class="fw-bold mb-3">DIPLOMA EXTENSION APPLICANTS DOCUMENTS</h5>
+                    <div class="alert alert-warning">
+                      <strong>You must attach ALL of the following documents for your application to be considered:</strong>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="unmebResultSlip" class="form-label">UNMEB Result Slip *</label>
+                        <input type="file" class="form-control" id="unmebResultSlip" name="unmebResultSlip" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Result slip from Uganda Nurses and Midwives Examinations Board</small>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="unmebCertificate" class="form-label">UNMEB Certificate *</label>
+                        <input type="file" class="form-control" id="unmebCertificate" name="unmebCertificate" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Certificate of completion from UNMEB</small>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="enrolmentCertificate" class="form-label">Certificate of Enrolment (UNMC) *</label>
+                        <input type="file" class="form-control" id="enrolmentCertificate" name="enrolmentCertificate" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Certificate of Enrolment from Uganda Nurses and Midwives Council</small>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="practicingLicenseDoc" class="form-label">Valid Practicing License *</label>
+                        <input type="file" class="form-control" id="practicingLicenseDoc" name="practicingLicenseDoc" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Valid practicing license from UNMC</small>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="academicTranscript" class="form-label">Academic Transcript *</label>
+                        <input type="file" class="form-control" id="academicTranscript" name="academicTranscript" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Transcript from your training institution</small>
                       </div>
                     </div>
                   </div>
@@ -791,26 +867,37 @@
       const level = document.getElementById('levelApplying').value;
       const uceSection = document.getElementById('uceSection');
       const diplomaSection = document.getElementById('diplomaSection');
+      const certDocuments = document.getElementById('certDocuments');
+      const diplomaDocuments = document.getElementById('diplomaDocuments');
       
       if (level === 'Certificate') {
         uceSection.style.display = 'block';
         diplomaSection.style.display = 'none';
+        if (certDocuments) certDocuments.style.display = 'block';
+        if (diplomaDocuments) diplomaDocuments.style.display = 'none';
       } else if (level === 'Diploma Extension') {
         uceSection.style.display = 'none';
         diplomaSection.style.display = 'block';
+        if (certDocuments) certDocuments.style.display = 'none';
+        if (diplomaDocuments) diplomaDocuments.style.display = 'block';
       } else {
         uceSection.style.display = 'none';
         diplomaSection.style.display = 'none';
+        if (certDocuments) certDocuments.style.display = 'none';
+        if (diplomaDocuments) diplomaDocuments.style.display = 'none';
       }
     }
 
     // Form validation
     document.getElementById('applicationForm').addEventListener('submit', function(e) {
+      const level = document.getElementById('levelApplying').value;
+      
       // Basic validation
       const requiredFields = this.querySelectorAll('[required]');
       let isValid = true;
       
       requiredFields.forEach(field => {
+        if (field.offsetParent === null || field.closest('[style*="display: none"]')) return;
         if (!field.value.trim()) {
           isValid = false;
           field.classList.add('is-invalid');
@@ -819,26 +906,35 @@
         }
       });
       
+      // Validate diploma document uploads if Diploma Extension is selected
+      if (level === 'Diploma Extension') {
+        const diplomaUploads = ['unmebResultSlip', 'unmebCertificate', 'enrolmentCertificate', 'practicingLicenseDoc', 'academicTranscript'];
+        for (const id of diplomaUploads) {
+          const input = document.getElementById(id);
+          if (input && !input.files.length) {
+            isValid = false;
+            input.classList.add('is-invalid');
+          } else if (input) {
+            input.classList.remove('is-invalid');
+          }
+        }
+      }
+      
       if (!isValid) {
         e.preventDefault();
-        alert('Please fill in all required fields');
+        alert('Please fill in all required fields and upload all required documents');
         return;
       }
       
       // Check file sizes
-      const academicDoc = document.getElementById('academicDocument').files[0];
-      const photo = document.getElementById('photo').files[0];
-      
-      if (academicDoc && academicDoc.size > 5 * 1024 * 1024) {
-        e.preventDefault();
-        alert('Academic document must be less than 5MB');
-        return;
-      }
-      
-      if (photo && photo.size > 2 * 1024 * 1024) {
-        e.preventDefault();
-        alert('Photo must be less than 2MB');
-        return;
+      const maxSize = 5 * 1024 * 1024;
+      const fileInputs = this.querySelectorAll('input[type="file"]');
+      for (const input of fileInputs) {
+        if (input.files.length && input.files[0].size > maxSize) {
+          e.preventDefault();
+          alert('File ' + input.files[0].name + ' exceeds the 5MB limit');
+          return;
+        }
       }
       
       // Show loading state

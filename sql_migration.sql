@@ -372,7 +372,17 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.student_applications (
     status ENUM('Pending','Shortlisted','Admitted','Rejected','Withdrawn') DEFAULT 'Pending',
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reviewed_by INT,
-    reviewed_at DATETIME
+    reviewed_at DATETIME,
+    additional_data TEXT COMMENT 'JSON-encoded additional form fields',
+    academic_document_path VARCHAR(255),
+    photo_path VARCHAR(255),
+    uce_certificate_path VARCHAR(255),
+    uace_certificate_path VARCHAR(255),
+    unmeb_result_slip_path VARCHAR(255),
+    unmeb_certificate_path VARCHAR(255),
+    enrolment_certificate_path VARCHAR(255),
+    practicing_license_path VARCHAR(255),
+    academic_transcript_path VARCHAR(255)
 );
 
 -- SMS/email notifications
