@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-building"></i></div>
-            <h5>Hostel Management</h5>
-            <p class="text-muted">This module is under development. Room allocation, hostel assignments, occupancy tracking, maintenance requests, and hostel fee management coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-door-open fa-2x text-primary mb-2"></i><br><small>Rooms</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-user-check fa-2x text-primary mb-2"></i><br><small>Allocations</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-wrench fa-2x text-primary mb-2"></i><br><small>Maintenance</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Hostel Management', 'fas fa-bed', [
+            ['icon'=>'fas fa-building', 'label'=>'Room Allocation', 'note'=>'Assign rooms'],
+            ['icon'=>'fas fa-door-open', 'label'=>'Room Inventory', 'note'=>'Bed availability'],
+            ['icon'=>'fas fa-money-bill', 'label'=>'Hostel Fees', 'note'=>'Fee collection'],
+            ['icon'=>'fas fa-exclamation-triangle', 'label'=>'Maintenance', 'note'=>'Report issues'],
+            ['icon'=>'fas fa-clipboard-check', 'label'=>'Check-in/out', 'note'=>'Move in/out'],
+            ['icon'=>'fas fa-chart-pie', 'label'=>'Occupancy', 'note'=>'Usage analytics'],
+        ], 'Planned'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

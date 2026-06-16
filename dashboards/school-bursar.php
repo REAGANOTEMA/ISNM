@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
+require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
 $ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant']);
 $auth_service = $ctx['auth'];
@@ -252,6 +253,9 @@ $website = $ctx['website'];
                         <button class="btn btn-info" onclick="generateReceipt()">
                             <i class="fas fa-receipt"></i> Generate Receipt
                         </button>
+                        <a href="payment-subscriptions.php" class="btn btn-outline-primary">
+                            <i class="fas fa-sync"></i> Auto-Deductions
+                        </a>
                         <button class="btn btn-warning" onclick="exportPayments()">
                             <i class="fas fa-file-export"></i> Export to Excel
                         </button>
@@ -260,27 +264,13 @@ $website = $ctx['website'];
                     <!-- Payment Method Logos -->
                     <div class="payment-providers mb-3">
                         <h5>Supported Payment Methods:</h5>
-                        <div class="d-flex gap-3 align-items-center">
+                        <div class="d-flex gap-3 align-items-center flex-wrap">
+                            <?php $providers = getPaymentProviders(); foreach ($providers as $key => $p): ?>
                             <div class="text-center">
-                                <img src="../images/mtn-logo.svg" alt="MTN Mobile Money" class="payment-logo" style="height: 32px; background: #FFCC00; border-radius: 6px; padding: 4px;">
-                                <div><small>MTN Mobile Money</small></div>
+                                <img src="<?= htmlspecialchars($p['logo']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="payment-logo" style="height: 32px; background: #fff; border-radius: 6px; padding: 4px; object-fit: contain;">
+                                <div><small><?= htmlspecialchars($p['name']) ?></small></div>
                             </div>
-                            <div class="text-center">
-                                <img src="../images/airtel-logo.svg" alt="Airtel Money" class="payment-logo" style="height: 32px; background: #ED1C24; border-radius: 6px; padding: 4px;">
-                                <div><small>Airtel Money</small></div>
-                            </div>
-                            <div class="text-center">
-                                <img src="../images/stanbic-logo.svg" alt="Stanbic Bank" class="payment-logo" style="height: 32px; background: #005DAA; border-radius: 6px; padding: 4px;">
-                                <div><small>Stanbic Bank</small></div>
-                            </div>
-                            <div class="text-center">
-                                <img src="../images/equity-logo.svg" alt="Equity Bank" class="payment-logo" style="height: 32px; background: #C8102E; border-radius: 6px; padding: 4px;">
-                                <div><small>Equity Bank</small></div>
-                            </div>
-                            <div class="text-center">
-                                <img src="../images/centenary-logo.svg" alt="Centenary Bank" class="payment-logo" style="height: 32px; background: #00843D; border-radius: 6px; padding: 4px;">
-                                <div><small>Centenary Bank</small></div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     

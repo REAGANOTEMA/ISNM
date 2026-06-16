@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-file-alt"></i></div>
-            <h5>Exams & Results</h5>
-            <p class="text-muted">This module is under development. Exam scheduling, grade entry, result processing, transcripts, and performance analytics coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-calendar-check fa-2x text-primary mb-2"></i><br><small>Exam Schedule</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-edit fa-2x text-primary mb-2"></i><br><small>Grade Entry</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-chart-line fa-2x text-primary mb-2"></i><br><small>Analytics</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Exams & Results Management', 'fas fa-file-alt', [
+            ['icon'=>'fas fa-calendar-check', 'label'=>'Exam Scheduling', 'note'=>'Create & manage exams'],
+            ['icon'=>'fas fa-edit', 'label'=>'Grade Entry', 'note'=>'Enter student marks'],
+            ['icon'=>'fas fa-scroll', 'label'=>'Transcripts', 'note'=>'Generate transcripts'],
+            ['icon'=>'fas fa-chart-line', 'label'=>'Analytics', 'note'=>'Performance charts'],
+            ['icon'=>'fas fa-clipboard-list', 'label'=>'Continuous Assessment', 'note'=>'CA scores'],
+            ['icon'=>'fas fa-certificate', 'label'=>'Certificates', 'note'=>'Print certificates'],
+        ], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

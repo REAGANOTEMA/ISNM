@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard(['hr', 'admin', 'principal']);
 $user = $ctx['user'];
 ?><!DOCTYPE html>
@@ -30,32 +31,14 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 <div class="main" style="margin-left:270px;padding:40px 32px">
   <div class="row justify-content-center">
     <div class="col-lg-8">
-      <div class="card dev-card">
-        <div class="card-header text-white">
-          <div class="d-flex align-items-center gap-3 mb-1">
-            <i class="fas fa-clipboard-user fa-3x"></i>
-            <div>
-              <h2 class="mb-1">Staff Attendance</h2>
-              <p class="mb-0 opacity-75">Track staff clock-in/out, leave balances, and attendance reports</p>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-clock text-primary"></i> Daily clock-in and clock-out tracking</li>
-            <li><i class="fas fa-calendar-check text-success"></i> Monthly attendance summaries and analytics</li>
-            <li><i class="fas fa-umbrella-beach text-warning"></i> Leave requests, approvals, and balance tracking</li>
-            <li><i class="fas fa-file-csv text-info"></i> Export attendance data for payroll integration</li>
-            <li><i class="fas fa-map-pin text-secondary"></i> Geo-fenced check-in via mobile app</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
-        </div>
-      </div>
+      <?php renderComingSoon('Staff Attendance', 'fas fa-clipboard-check', [
+            ['icon'=>'fas fa-fingerprint', 'label'=>'Check In/Out', 'note'=>'Daily attendance'],
+            ['icon'=>'fas fa-calendar-alt', 'label'=>'Monthly Logs', 'note'=>'Attendance records'],
+            ['icon'=>'fas fa-clock', 'label'=>'Late Tracking', 'note'=>'Late arrivals'],
+            ['icon'=>'fas fa-calendar-week', 'label'=>'Leave Calendar', 'note'=>'Absence mgmt'],
+            ['icon'=>'fas fa-file-export', 'label'=>'Reports', 'note'=>'Export attendance'],
+            ['icon'=>'fas fa-chart-bar', 'label'=>'Analytics', 'note'=>'Attendance stats'],
+        ], 'Under Development'); ?>
     </div>
   </div>
 </div>

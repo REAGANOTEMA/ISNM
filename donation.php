@@ -1059,15 +1059,31 @@
                 <div class="col-12">
                   <h4 class="mb-3"><i class="fas fa-university me-2"></i>Bank Transfer Information</h4>
                 </div>
+                <?php
+                $bankAccounts = [
+                    'stanbic' => ['name' => 'Stanbic Bank Uganda', 'logo' => '../images/stanbic-logo.jpg', 'account' => '9030001234567', 'swift' => 'SBICUGKX'],
+                    'centenary' => ['name' => 'Centenary Bank', 'logo' => '../images/centenary-logo.jpg', 'account' => '3210009876', 'swift' => 'CERBUGKA'],
+                    'equity' => ['name' => 'Equity Bank', 'logo' => '../images/equity_logo.png', 'account' => '5010004567', 'swift' => 'EQBLUGKA'],
+                    'pearl' => ['name' => 'Pearl Bank', 'logo' => '../images/pearl-logo.png', 'account' => '7120003456', 'swift' => 'PRBLUGKA'],
+                    'uba' => ['name' => 'UBA Bank', 'logo' => '../images/uba-bank-logo.png', 'account' => '6010002345', 'swift' => 'UBAFUGKA'],
+                ];
+                foreach ($bankAccounts as $key => $bank): ?>
+                <div class="col-md-6 mb-3">
+                  <div class="card border h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                      <img src="<?= htmlspecialchars($bank['logo']) ?>" alt="<?= htmlspecialchars($bank['name']) ?>" style="height: 40px; width: auto; object-fit: contain; border-radius: 4px;">
+                      <div>
+                        <h6 class="fw-bold mb-1"><?= htmlspecialchars($bank['name']) ?></h6>
+                        <small class="text-muted d-block">Account: <?= htmlspecialchars($bank['account']) ?></small>
+                        <small class="text-muted d-block">SWIFT: <?= htmlspecialchars($bank['swift']) ?></small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <?php endforeach; ?>
                 <div class="col-12">
-                  <div class="alert alert-info">
-                    <h5>Bank Details:</h5>
-                    <p><strong>Bank:</strong> Stanbic Bank Uganda<br>
-                    <strong>Account Name:</strong> Iganga School of Nursing and Midwifery<br>
-                    <strong>Account Number:</strong> 9030001234567<br>
-                    <strong>Branch:</strong> Iganga Branch<br>
-                    <strong>SWIFT Code:</strong> SBICUGKX</p>
-                    <p class="mb-0">Please use your donation reference and visit <a href="https://igangaschoolofnursingandmidwifery.ac.ug">our portal</a> to confirm.</p>
+                  <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-1"></i> Please use your donation reference as the payment narrative. After transfer, visit <a href="https://igangaschoolofnursingandmidwifery.ac.ug">our portal</a> to confirm.
                   </div>
                 </div>
               </div>

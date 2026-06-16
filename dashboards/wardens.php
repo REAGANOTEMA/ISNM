@@ -21,6 +21,51 @@ $welfare_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_welf
 $counseling_sessions = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_counseling_sessions WHERE session_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $discipline_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
+// Get welfare cases
+$welfare_cases_list = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_welfare_cases wc LEFT JOIN students s ON wc.student_id=s.student_id ORDER BY wc.created_at DESC LIMIT 5");
+        if ($r) $welfare_cases_list = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get today's counseling sessions
+$today_counseling = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN students s ON cs.student_id=s.student_id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
+        if ($r) $today_counseling = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get discipline cases
+$discipline_cases_list = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN students s ON sd.student_id=s.student_id ORDER BY sd.created_at DESC LIMIT 5");
+        if ($r) $discipline_cases_list = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get hostel stats
+$hostel_stats = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT hr.hostel_name, hr.total_beds, (SELECT COUNT(*) FROM hostel_allocations ha WHERE ha.hostel_room_id=hr.id AND ha.status='Active') as occupied FROM hostel_rooms hr GROUP BY hr.hostel_name");
+        if ($r) $hostel_stats = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get upcoming activities
+$upcoming_activities = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM student_activities WHERE activity_date >= CURDATE() ORDER BY activity_date LIMIT 3");
+        if ($r) $upcoming_activities = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -143,55 +188,27 @@ if ($conn) {
                     <div class="welfare-overview">
                         <h3>Recent Welfare Cases</h3>
                         <div class="welfare-cases">
+                            <?php if (empty($welfare_cases_list)): ?>
+                            <div class="text-center text-muted py-4">No welfare cases recorded</div>
+                            <?php else: ?>
+                            <?php foreach ($welfare_cases_list as $wc): ?>
                             <div class="case-card">
                                 <div class="case-header">
-                                    <h4>Student Michael - Academic Stress</h4>
-                                    <span class="case-date">Apr 22, 2026</span>
+                                    <h4><?= htmlspecialchars($wc['student_name'] ?? 'Student') ?> - <?= htmlspecialchars($wc['case_type'] ?? 'General') ?></h4>
+                                    <span class="case-date"><?= !empty($wc['created_at']) ? date('M j, Y', strtotime($wc['created_at'])) : '—' ?></span>
                                 </div>
                                 <div class="case-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Academic Support</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-warning">In Progress</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Actions Taken:</span>
-                                        <strong>Counseling session, academic support</strong>
-                                    </div>
+                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($wc['case_type'] ?? 'General') ?></strong></div>
+                                    <div class="detail"><span>Status:</span><strong class="text-<?= ($wc['status']??'Open')==='Resolved'?'success':'warning' ?>"><?= htmlspecialchars($wc['status'] ?? 'Open') ?></strong></div>
+                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['actions'] ?? $wc['description'] ?? '—', 0, 60)) ?></strong></div>
                                 </div>
                                 <div class="case-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
                                     <button class="btn btn-sm btn-outline-success">Update Case</button>
                                 </div>
                             </div>
-                            
-                            <div class="case-card">
-                                <div class="case-header">
-                                    <h4>Student David - Personal Issues</h4>
-                                    <span class="case-date">Apr 20, 2026</span>
-                                </div>
-                                <div class="case-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Personal Counseling</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-info">Under Review</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Actions Taken:</strong>
-                                        <strong>Initial counseling, follow-up scheduled</strong>
-                                    </div>
-                                </div>
-                                <div class="case-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Details</button>
-                                    <button class="btn btn-sm btn-outline-success">Update Case</button>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -217,55 +234,29 @@ if ($conn) {
                     <div class="counseling-overview">
                         <h3>Today's Counseling Schedule</h3>
                         <div class="counseling-schedule">
+                            <?php if (empty($today_counseling)): ?>
+                            <div class="text-center text-muted py-4">No counseling sessions scheduled for today</div>
+                            <?php else: ?>
+                            <?php foreach ($today_counseling as $cs): ?>
                             <div class="session-item">
                                 <div class="session-header">
-                                    <h4>Individual Counseling - Michael Student</h4>
-                                    <span class="session-time">9:00 AM - 10:00 AM</span>
+                                    <h4><?= htmlspecialchars($cs['session_type'] ?? 'Counseling') ?> - <?= htmlspecialchars($cs['student_name'] ?? 'Student') ?></h4>
+                                    <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '—') ?></span>
                                 </div>
                                 <div class="session-details">
-                                    <div class="detail">
-                                        <span>Topic:</span>
-                                        <strong>Academic Stress Management</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Individual Session</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Location:</span>
-                                        <strong>Counseling Room B</strong>
-                                    </div>
+                                    <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['topic'] ?? $cs['reason'] ?? 'General') ?></strong></div>
+                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($cs['session_type'] ?? 'Individual') ?></strong></div>
+                                    <?php if (!empty($cs['location'])): ?>
+                                    <div class="detail"><span>Location:</span><strong><?= htmlspecialchars($cs['location']) ?></strong></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="session-actions">
                                     <button class="btn btn-sm btn-outline-primary">Start Session</button>
                                     <button class="btn btn-sm btn-outline-info">Reschedule</button>
                                 </div>
                             </div>
-                            
-                            <div class="session-item">
-                                <div class="session-header">
-                                    <h4>Group Counseling - Second Year Boys</h4>
-                                    <span class="session-time">2:00 PM - 3:30 PM</span>
-                                </div>
-                                <div class="session-details">
-                                    <div class="detail">
-                                        <span>Topic:</span>
-                                        <strong>Time Management & Study Skills</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Group Session</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Location:</span>
-                                        <strong>Conference Room</strong>
-                                    </div>
-                                </div>
-                                <div class="session-actions">
-                                    <button class="btn btn-sm btn-outline-primary">Start Session</button>
-                                    <button class="btn btn-sm btn-outline-info">View Participants</button>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -291,30 +282,27 @@ if ($conn) {
                     <div class="discipline-overview">
                         <h3>Recent Discipline Cases</h3>
                         <div class="discipline-cases">
+                            <?php if (empty($discipline_cases_list)): ?>
+                            <div class="text-center text-muted py-4">No discipline cases recorded</div>
+                            <?php else: ?>
+                            <?php foreach ($discipline_cases_list as $dc): ?>
                             <div class="discipline-item">
                                 <div class="discipline-header">
-                                    <h4>Student James - Unauthorized Absence</h4>
-                                    <span class="discipline-date">Apr 21, 2026</span>
+                                    <h4><?= htmlspecialchars($dc['student_name'] ?? 'Student') ?> - <?= htmlspecialchars($dc['incident_type'] ?? $dc['offense'] ?? 'Case') ?></h4>
+                                    <span class="discipline-date"><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '—' ?></span>
                                 </div>
                                 <div class="discipline-details">
-                                    <div class="detail">
-                                        <span>Incident:</span>
-                                        <strong>Missed classes without permission</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Action:</span>
-                                        <strong>Warning issued, parents notified</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-success">Resolved</strong>
-                                    </div>
+                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars(substr($dc['description'] ?? $dc['incident_description'] ?? '—', 0, 50)) ?></strong></div>
+                                    <div class="detail"><span>Action:</span><strong><?= htmlspecialchars($dc['action_taken'] ?? $dc['resolution'] ?? 'Pending') ?></strong></div>
+                                    <div class="detail"><span>Status:</span><strong class="text-<?= ($dc['status']??'Pending')==='Resolved'?'success':'danger' ?>"><?= htmlspecialchars($dc['status'] ?? 'Pending') ?></strong></div>
                                 </div>
                                 <div class="discipline-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
                                     <button class="btn btn-sm btn-outline-info">Follow Up</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -340,24 +328,27 @@ if ($conn) {
                     <div class="accommodation-overview">
                         <h3>Hostel Overview</h3>
                         <div class="hostel-stats">
+                            <?php if (empty($hostel_stats)): ?>
+                            <div class="text-center text-muted py-4 col-12">No hostel data available</div>
+                            <?php else: ?>
+                            <?php foreach ($hostel_stats as $hs): $occ = (int)($hs['occupied']??0); $total = (int)($hs['total_beds']??1); $pct = $total > 0 ? round($occ/$total*100,1) : 0; ?>
                             <div class="hostel-stat">
-                                <h4>Boys Hostel A</h4>
-                                <div class="occupancy">35/40 beds occupied</div>
-                                <small>87.5% occupancy</small>
+                                <h4><?= htmlspecialchars($hs['hostel_name'] ?? 'Hostel') ?></h4>
+                                <div class="occupancy"><?= $occ ?>/<?= $total ?> beds occupied</div>
+                                <small><?= $pct ?>% occupancy</small>
                             </div>
-                            <div class="hostel-stat">
-                                <h4>Boys Hostel B</h4>
-                                <div class="occupancy">42/50 beds occupied</div>
-                                <small>84% occupancy</small>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                            <?php $maintenance_count = 0; if ($conn) { try { $r = $conn->query("SELECT COUNT(*) as c FROM hostel_maintenance_requests WHERE status NOT IN ('Completed','Closed')"); if ($r) $maintenance_count = (int)$r->fetch_assoc()['c']; } catch(Exception $e){} } ?>
                             <div class="hostel-stat">
                                 <h4>Maintenance Issues</h4>
-                                <div class="issues-count">2 pending</div>
+                                <div class="issues-count"><?= $maintenance_count ?> pending</div>
                                 <small>Requires attention</small>
                             </div>
+                            <?php $inspection_rate = 0; if ($conn) { try { $r = $conn->query("SELECT ROUND(COUNT(CASE WHEN status='Completed' THEN 1 END)/COUNT(*)*100,1) as rate FROM hostel_inspections WHERE MONTH(inspection_date)=MONTH(CURDATE()) AND YEAR(inspection_date)=YEAR(CURDATE())"); if ($r) $inspection_rate = (float)($r->fetch_assoc()['rate']??0); } catch(Exception $e){} } ?>
                             <div class="hostel-stat">
                                 <h4>Room Inspections</h4>
-                                <div class="inspection-rate">90%</div>
+                                <div class="inspection-rate"><?= $inspection_rate ?>%</div>
                                 <small>Completed this month</small>
                             </div>
                         </div>
@@ -385,30 +376,31 @@ if ($conn) {
                     <div class="activities-overview">
                         <h3>Upcoming Activities</h3>
                         <div class="activity-list">
+                            <?php if (empty($upcoming_activities)): ?>
+                            <div class="text-center text-muted py-4">No upcoming activities</div>
+                            <?php else: ?>
+                            <?php foreach ($upcoming_activities as $act): ?>
                             <div class="activity-item">
                                 <div class="activity-header">
-                                    <h4>Sports Competition - Football</h4>
-                                    <span class="activity-date">Apr 26, 2026</span>
+                                    <h4><?= htmlspecialchars($act['title'] ?? $act['activity_name'] ?? 'Activity') ?></h4>
+                                    <span class="activity-date"><?= !empty($act['activity_date']) ? date('M j, Y', strtotime($act['activity_date'])) : '—' ?></span>
                                 </div>
                                 <div class="activity-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Sports</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Participants:</span>
-                                        <strong>30 registered</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Location:</span>
-                                        <strong>Sports Field</strong>
-                                    </div>
+                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($act['activity_type'] ?? 'General') ?></strong></div>
+                                    <?php if (!empty($act['expected_participants'])): ?>
+                                    <div class="detail"><span>Participants:</span><strong><?= (int)$act['expected_participants'] ?> registered</strong></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($act['location'])): ?>
+                                    <div class="detail"><span>Location:</span><strong><?= htmlspecialchars($act['location']) ?></strong></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="activity-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
                                     <button class="btn btn-sm btn-outline-info">Manage Registration</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>

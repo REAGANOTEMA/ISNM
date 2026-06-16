@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-scale-balanced"></i></div>
-            <h5>Student Discipline</h5>
-            <p class="text-muted">This module is under development. Discipline case management, violation tracking, committee hearings, sanctions, and conduct records coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-folder-open fa-2x text-primary mb-2"></i><br><small>Case Files</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-gavel fa-2x text-primary mb-2"></i><br><small>Hearings</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-file-alt fa-2x text-primary mb-2"></i><br><small>Reports</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Student Discipline', 'fas fa-gavel', [
+    ['icon'=>'fas fa-exclamation-triangle', 'label'=>'Report Incident', 'note'=>'File a report'],
+    ['icon'=>'fas fa-clipboard-list', 'label'=>'Case Tracking', 'note'=>'Follow cases'],
+    ['icon'=>'fas fa-file-alt', 'label'=>'Statements', 'note'=>'Submit statements'],
+    ['icon'=>'fas fa-balance-scale', 'label'=>'Hearings', 'note'=>'Case review'],
+    ['icon'=>'fas fa-stamp', 'label'=>'Outcomes', 'note'=>'View decisions'],
+    ['icon'=>'fas fa-chart-bar', 'label'=>'Statistics', 'note'=>'Discipline stats'],
+], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

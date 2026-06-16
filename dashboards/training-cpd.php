@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-graduation-cap"></i></div>
-            <h5>Training & Continuing Professional Development</h5>
-            <p class="text-muted">This module is under development. Training programs, CPD tracking, workshop management, certifications, and professional development records coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-book-open fa-2x text-primary mb-2"></i><br><small>Programs</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-certificate fa-2x text-primary mb-2"></i><br><small>Certifications</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-clock fa-2x text-primary mb-2"></i><br><small>CPD Hours</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Training & CPD', 'fas fa-graduation-cap', [
+            ['icon'=>'fas fa-book', 'label'=>'Courses', 'note'=>'CPD programs'],
+            ['icon'=>'fas fa-calendar-alt', 'label'=>'Workshops', 'note'=>'Schedule events'],
+            ['icon'=>'fas fa-certificate', 'label'=>'Certifications', 'note'=>'Track certificates'],
+            ['icon'=>'fas fa-chart-bar', 'label'=>'Progress', 'note'=>'Staff development'],
+            ['icon'=>'fas fa-file-export', 'label'=>'Reports', 'note'=>'Training reports'],
+            ['icon'=>'fas fa-globe', 'label'=>'External CPD', 'note'=>'External programs'],
+        ], 'Planned'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

@@ -1,6 +1,16 @@
 <?php
 $rootPath = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
 if ($rootPath === '') $rootPath = '.';
+
+// Universal student quick-search on every dashboard
+if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABLED')) {
+    $sqsFile = __DIR__ . '/student_quick_search.php';
+    if (file_exists($sqsFile)) {
+        try {
+            include_once $sqsFile;
+        } catch (Exception $e) {}
+    }
+}
 ?>
 <!-- Dashboard professional styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-professional.css" rel="stylesheet">

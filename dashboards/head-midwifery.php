@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx = bootstrapStaffDashboard(['head', 'midwifery']);
 $conn = $ctx['staff'];
+$students_conn = $ctx['students'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'Head of Midwifery';
 
@@ -257,6 +259,17 @@ if ($conn) {
                             <button class="btn btn-primary">Generate</button>
                         </div>
                     </div>
+                </section>
+
+                <!-- Student Records -->
+                <section id="student-records" class="content-section">
+                    <?php renderStudentSetViewer($students_conn, [
+                        'title' => 'Student Records',
+                        'icon' => 'fa-user-graduate',
+                        'show_all' => true,
+                        'per_page' => 50,
+                        'show_statement_link' => false
+                    ]); ?>
                 </section>
 
                 <!-- Recent Activities -->

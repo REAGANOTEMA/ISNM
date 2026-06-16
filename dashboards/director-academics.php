@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'academics']);
 $conn = $ctx['staff'];
@@ -285,6 +286,17 @@ if ($conn) {
                 <section id="news" class="content-section">
                     <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
                     <?php renderNewsWidget($conn, $website_conn, $ctx['user']['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'Director Academics', 5); ?>
+                </section>
+
+                <!-- Student Records -->
+                <section id="student-records" class="content-section">
+                    <?php renderStudentSetViewer($students_conn, [
+                        'title' => 'Student Records',
+                        'icon' => 'fa-user-graduate',
+                        'show_all' => true,
+                        'per_page' => 50,
+                        'show_statement_link' => false
+                    ]); ?>
                 </section>
 
                 <!-- Recent Activities -->

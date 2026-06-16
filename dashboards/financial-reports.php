@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,12 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5 mb-4">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-chart-bar"></i></div>
-            <h5>Financial Reports</h5>
-            <p class="text-muted">This module is under development. Revenue analysis, expense summaries, balance sheets, profit & loss statements, and custom report generation coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-        </div>
+        <?php renderComingSoon('Financial Reports', 'fas fa-chart-pie', [
+            ['icon'=>'fas fa-file-invoice-dollar', 'label'=>'Income Reports', 'note'=>'Revenue analysis'],
+            ['icon'=>'fas fa-file-invoice', 'label'=>'Expense Reports', 'note'=>'Cost tracking'],
+            ['icon'=>'fas fa-balance-scale', 'label'=>'Budget vs Actual', 'note'=>'Variance analysis'],
+            ['icon'=>'fas fa-calendar-alt', 'label'=>'Periodic Reports', 'note'=>'Monthly/Yearly'],
+            ['icon'=>'fas fa-file-export', 'label'=>'Export', 'note'=>'PDF/Excel export'],
+            ['icon'=>'fas fa-chart-line', 'label'=>'Trend Analysis', 'note'=>'Financial trends'],
+        ], 'Under Development'); ?>
 
         <div class="card-section">
             <h5 class="fw-bold mb-3"><i class="fas fa-filter me-2"></i>Date Range Filter (Preview)</h5>

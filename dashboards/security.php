@@ -22,12 +22,30 @@ $total_guards = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patr
 $recent_incidents = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT incident_type, description, location, reported_at, status FROM security_incidents ORDER BY reported_at DESC LIMIT 10");
+        $result = $conn->query("SELECT incident_type, description, location, reported_at, status, severity FROM security_incidents ORDER BY reported_at DESC LIMIT 10");
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $recent_incidents[] = $row;
             }
         }
+    } catch (Exception $e) {}
+}
+
+// Get patrol status
+$active_patrols = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT sp.*, s.full_name as guard_name FROM security_patrols sp LEFT JOIN staff s ON sp.guard_id=s.id WHERE sp.patrol_date=CURDATE() ORDER BY sp.start_time LIMIT 10");
+        if ($r) $active_patrols = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get security tasks progress
+$security_tasks = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM security_tasks WHERE assigned_date=CURDATE() OR status='In Progress' ORDER BY priority LIMIT 5");
+        if ($r) $security_tasks = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 ?>
@@ -175,33 +193,21 @@ if ($conn) {
         <!-- Security Alerts -->
         <div class="security-alert">
             <h3><i class="fas fa-bell"></i> Recent Security Alerts</h3>
-            <div class="alert-item high">
+            <?php if (empty($recent_incidents)): ?>
+            <div class="text-center text-muted py-4"><i class="fas fa-check-circle fa-2x text-success mb-2"></i><p>No recent incidents</p></div>
+            <?php else: ?>
+            <?php foreach (array_slice($recent_incidents, 0, 5) as $inc): $sev = strtolower($inc['severity'] ?? 'low'); $sevClass = $sev === 'critical' || $sev === 'high' ? 'high' : ($sev === 'medium' ? 'medium' : 'low'); ?>
+            <div class="alert-item <?= $sevClass ?>">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6><i class="fas fa-exclamation-circle"></i> Unauthorized Access Attempt</h6>
-                        <small class="text-muted">Main Gate - 2:30 PM | Unknown individual attempted entry</small>
+                        <h6><i class="fas fa-<?= $sevClass === 'high' ? 'exclamation-circle' : ($sevClass === 'medium' ? 'exclamation-triangle' : 'info-circle') ?>"></i> <?= htmlspecialchars($inc['incident_type'] ?? 'Incident') ?></h6>
+                        <small class="text-muted"><?= htmlspecialchars($inc['location'] ?? '—') ?> - <?= !empty($inc['reported_at']) ? date('g:i A', strtotime($inc['reported_at'])) : '—' ?> | <?= htmlspecialchars(substr($inc['description'] ?? '—', 0, 80)) ?></small>
                     </div>
-                    <span class="badge bg-danger">High Priority</span>
+                    <span class="badge bg-<?= $sevClass === 'high' ? 'danger' : ($sevClass === 'medium' ? 'warning text-dark' : 'success') ?>"><?= ucfirst(htmlspecialchars($inc['severity'] ?? 'Low')) ?> Priority</span>
                 </div>
             </div>
-            <div class="alert-item medium">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6><i class="fas fa-car"></i> Parking Violation</h6>
-                        <small class="text-muted">Staff Parking - 1:15 PM | Vehicle parked in restricted area</small>
-                    </div>
-                    <span class="badge bg-warning">Medium Priority</span>
-                </div>
-            </div>
-            <div class="alert-item low">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6><i class="fas fa-lightbulb"></i> Light Malfunction</h6>
-                        <small class="text-muted">Block B - 12:45 PM | Corridor light not working</small>
-                    </div>
-                    <span class="badge bg-success">Low Priority</span>
-                </div>
-            </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <!-- Patrol Schedule -->
@@ -209,59 +215,39 @@ if ($conn) {
             <div class="col-md-6">
                 <div class="security-alert">
                     <h3><i class="fas fa-walking"></i> Current Patrol Status</h3>
+                    <?php if (empty($active_patrols)): ?>
+                    <div class="text-center text-muted py-3">No patrol records for today</div>
+                    <?php else: ?>
+                    <?php foreach ($active_patrols as $pat): $pStatus = strtolower($pat['status'] ?? 'scheduled'); ?>
                     <div class="alert-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Guard James Mukiibi</h6>
-                                <small class="text-muted">Patrolling: Academic Block | Started: 2:00 PM</small>
+                                <h6><?= htmlspecialchars($pat['guard_name'] ?? 'Guard') ?></h6>
+                                <small class="text-muted"><?= htmlspecialchars($pat['location'] ?? $pat['patrol_area'] ?? '—') ?> | Started: <?= !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '—' ?></small>
                             </div>
-                            <span class="patrol-status status-active">Active</span>
+                            <span class="patrol-status status-<?= $pStatus === 'active' ? 'active' : ($pStatus === 'break' ? 'break' : 'inactive') ?>"><?= ucfirst(htmlspecialchars($pStatus)) ?></span>
                         </div>
                     </div>
-                    <div class="alert-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Guard Sarah Namulondo</h6>
-                                <small class="text-muted">Patrolling: Hostel Area | Started: 1:30 PM</small>
-                            </div>
-                            <span class="patrol-status status-active">Active</span>
-                        </div>
-                    </div>
-                    <div class="alert-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Guard David Katumba</h6>
-                                <small class="text-muted">Break: Main Gate | Break until 3:00 PM</small>
-                            </div>
-                            <span class="patrol-status status-break">On Break</span>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="security-alert">
                     <h3><i class="fas fa-tasks"></i> Security Tasks</h3>
+                    <?php if (empty($security_tasks)): ?>
+                    <div class="text-center text-muted py-3">No tasks assigned for today</div>
+                    <?php else: ?>
+                    <?php foreach ($security_tasks as $task): $prog = min(100, max(0, (int)($task['progress'] ?? 0))); ?>
                     <div class="alert-item">
-                        <h6>Gate Access Control</h6>
-                        <small class="text-muted">Monitor and verify all campus entries</small>
+                        <h6><?= htmlspecialchars($task['title'] ?? $task['task_name'] ?? 'Task') ?></h6>
+                        <small class="text-muted"><?= htmlspecialchars($task['description'] ?? '') ?></small>
                         <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                            <div class="progress-bar bg-<?= $prog >= 80 ? 'success' : ($prog >= 40 ? 'warning' : 'info') ?>" style="width: <?= $prog ?>%"><?= $prog ?>%</div>
                         </div>
                     </div>
-                    <div class="alert-item">
-                        <h6>Vehicle Inspection</h6>
-                        <small class="text-muted">Check all incoming and outgoing vehicles</small>
-                        <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-warning" style="width: 60%"></div>
-                        </div>
-                    </div>
-                    <div class="alert-item">
-                        <h6>Campus Patrol</h6>
-                        <small class="text-muted">Regular patrol of all campus areas</small>
-                        <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-info" style="width: 40%"></div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

@@ -30,17 +30,27 @@ class ReceiptGenerator {
             'cash' => 'Cash',
             'mobile_money' => 'Mobile Money',
             'bank_deposit' => 'Bank Deposit',
-            'cheque' => 'Cheque'
+            'bank' => 'Bank Deposit',
+            'cheque' => 'Cheque',
+            'card' => 'Card Payment',
+            'online' => 'Online Payment',
         ];
         
         $provider_labels = [
             'mtn_momo' => 'MTN Mobile Money',
-            'airtel_money' => 'Airtel Money'
+            'airtel_money' => 'Airtel Money',
+            'stanbic_bank' => 'Stanbic Bank',
+            'equity_bank' => 'Equity Bank',
+            'centenary_bank' => 'Centenary Bank',
+            'pearl_bank' => 'Pearl Bank',
+            'uba_bank' => 'UBA Bank',
+            'dfcu_bank' => 'DFCU Bank',
+            'absa_bank' => 'Absa Bank',
         ];
         
         $method = $method_labels[$payment['payment_method']] ?? $payment['payment_method'];
         if ($payment['payment_provider']) {
-            $method .= ' (' . ($provider_labels[$payment['payment_provider']] ?? $payment['payment_provider']) . ')';
+            $method .= ' (' . ($provider_labels[$payment['payment_provider']] ?? getPaymentProviderName($payment['payment_provider'])) . ')';
         }
         
         return "

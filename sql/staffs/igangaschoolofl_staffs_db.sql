@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2026 at 03:55 PM
+-- Generation Time: Jun 16, 2026 at 07:28 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -132,13 +132,12 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_all_students` ()   BEGIN
     SELECT 
-        intake_set,
+        set_name as intake_set,
         COUNT(*) as total_students,
-        COUNT(CASE WHEN photo_uploaded = TRUE THEN 1 END) as students_with_photos,
-        AVG(gpa) as average_gpa
-    FROM universal_student_profiles
-    GROUP BY intake_set
-    ORDER BY intake_set DESC;
+        COUNT(CASE WHEN profile_picture IS NOT NULL THEN 1 END) as students_with_photos
+    FROM igangaschoolofl_students_db.students
+    GROUP BY set_name
+    ORDER BY set_name DESC;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_all_students_list` (IN `p_program` VARCHAR(100), IN `p_set_name` VARCHAR(50), IN `p_status` VARCHAR(50), IN `p_limit` INT)   BEGIN
@@ -175,7 +174,68 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_clinical_logbook` (IN `p_studen
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_dashboard_statistics` (IN `p_user_id` INT, IN `p_role` VARCHAR(100))   BEGIN
-    SELECT (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff, (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students;
+    -- Return statistics based on user role
+    IF p_role = 'Director General' OR p_role = 'School Principal' OR p_role = 'CEO' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM student_admissions WHERE admission_status = 'Pending') as pending_applications,
+            (SELECT COUNT(DISTINCT program) FROM students WHERE status = 'Active') as active_programs,
+            (SELECT SUM(amount) FROM financial_records WHERE record_type = 'Collection' AND transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_collections;
+    ELSEIF p_role = 'Security' THEN
+        CALL get_security_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Warden' THEN
+        CALL get_wardens_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Driver' THEN
+        CALL get_drivers_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Matron' THEN
+        CALL get_matrons_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'Sickbay' THEN
+        CALL get_sickbay_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'School Librarian' THEN
+        CALL get_school_librarian_dashboard_statistics(p_user_id);
+    ELSEIF p_role = 'HR Manager' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM recruitment_applications WHERE status = 'Received') as pending_applications,
+            (SELECT COUNT(*) FROM staff_leave_requests WHERE status = 'Pending') as pending_leaves,
+            (SELECT COUNT(*) FROM staff_training WHERE status = 'Scheduled') as upcoming_trainings;
+    ELSEIF p_role = 'School Bursar' OR p_role = 'Bursar' OR p_role = 'Director Finance' THEN
+        SELECT 
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date = CURDATE()) as today_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as week_collections,
+            (SELECT SUM(amount) FROM payment_records WHERE payment_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as month_collections,
+            (SELECT SUM(balance) FROM fee_accounts WHERE status != 'Paid') as outstanding_fees,
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students;
+    ELSEIF p_role = 'Academic Registrar' OR p_role = 'Director Academics' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE position LIKE '%Lecturer%' AND status = 'Active') as total_lecturers,
+            (SELECT COUNT(DISTINCT course_code) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT AVG(gpa) FROM student_academic_profiles WHERE academic_status = 'Good Standing') as avg_gpa;
+    ELSEIF p_role = 'Head of Nursing' OR p_role = 'Head of Midwifery' THEN
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE program LIKE CONCAT('%', p_role, '%') AND status = 'Active') as department_students,
+            (SELECT COUNT(*) FROM staff WHERE department = p_role AND status = 'Active') as department_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE status = 'Active') as active_courses,
+            (SELECT COUNT(*) FROM clinical_placements WHERE status = 'In Progress') as active_placements;
+    ELSE
+        SELECT 
+            (SELECT COUNT(*) FROM students WHERE status = 'Active') as total_students,
+            (SELECT COUNT(*) FROM staff WHERE status = 'Active') as total_staff,
+            (SELECT COUNT(*) FROM course_assignments WHERE lecturer_id = p_user_id AND status = 'Active') as assigned_courses,
+            (SELECT COUNT(*) FROM examination_records WHERE lecturer_id = p_user_id AND grade_status = 'Draft') as pending_grades;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_drivers_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM vehicles WHERE assigned_driver = p_user_id AND status = 'Available') as available_vehicles,
+        (SELECT COUNT(*) FROM trip_logs WHERE driver_id = p_user_id AND trip_date = CURDATE() AND status = 'In Transit') as active_trips,
+        (SELECT COUNT(*) FROM trip_logs WHERE driver_id = p_user_id AND trip_date = CURDATE() AND status = 'Completed') as completed_trips_today,
+        (SELECT COUNT(*) FROM route_schedules WHERE driver_id = p_user_id AND status = 'Active') as assigned_routes,
+        (SELECT SUM(fuel_quantity) FROM fuel_management WHERE filled_by = p_user_id AND fueling_date = CURDATE()) as fuel_consumed_today,
+        (SELECT COUNT(*) FROM vehicles WHERE status = 'Maintenance') as vehicles_in_maintenance;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_graduation_eligible_students` ()   BEGIN
@@ -192,6 +252,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_graduation_eligible_students` (
     WHERE sp.year_of_study >= 2 
       AND ra.cgpa >= 2.00
       AND sp.status = 'Active';
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_matrons_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM student_welfare_cases WHERE assigned_warden = p_user_id AND status IN ('Open', 'In Progress')) as open_welfare_cases,
+        (SELECT COUNT(*) FROM counseling_sessions WHERE counselor_id = p_user_id AND scheduled_date = CURDATE()) as todays_counseling_sessions,
+        (SELECT COUNT(*) FROM health_incidents WHERE reported_by = p_user_id AND DATE(incident_date) = CURDATE()) as health_incidents_today,
+        (SELECT COUNT(*) FROM health_incidents WHERE severity IN('Severe', 'Critical') AND status != 'Closed') as critical_health_cases,
+        (SELECT COUNT(*) FROM meal_tracking WHERE served_by = p_user_id AND meal_date = CURDATE()) as meals_served_today,
+        (SELECT COUNT(*) FROM room_inspections WHERE inspector_id = p_user_id AND inspection_date = CURDATE()) as todays_inspections;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_midwifery_students_by_intake` (IN `p_intake_set` VARCHAR(20))   BEGIN
@@ -256,6 +326,69 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_nursing_students_search` (IN `p
     LIMIT 100;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_school_librarian_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Available') as available_books,
+        (SELECT COUNT(*) FROM library_transactions WHERE transaction_type = 'Borrow' AND DATE(borrow_date) = CURDATE()) as books_borrowed_today,
+        (SELECT COUNT(*) FROM library_transactions WHERE transaction_type = 'Return' AND DATE(return_date) = CURDATE()) as books_returned_today,
+        (SELECT COUNT(*) FROM library_transactions WHERE status = 'Overdue') as overdue_books,
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Borrowed') as books_on_loan,
+        (SELECT COUNT(*) FROM library_management WHERE status = 'Reserved') as reserved_books;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_security_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status = 'In Progress') as active_patrols,
+        (SELECT COUNT(*) FROM security_incidents WHERE DATE(incident_date) = CURDATE()) as incidents_today,
+        (SELECT COUNT(*) FROM access_control_logs WHERE DATE(access_time) = CURDATE()) as access_entries_today,
+        (SELECT COUNT(*) FROM security_equipment WHERE status = 'Operational') as operational_equipment,
+        (SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE() AND status = 'Scheduled') as scheduled_patrols,
+        (SELECT COUNT(*) FROM security_incidents WHERE severity = 'High' AND status != 'Closed') as high_priority_incidents;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_sickbay_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM lab_equipment_maintenance WHERE technician_id = p_user_id AND status = 'Scheduled') as scheduled_maintenance,
+        (SELECT COUNT(*) FROM lab_equipment_maintenance WHERE technician_id = p_user_id AND status = 'In Progress') as maintenance_in_progress,
+        (SELECT COUNT(*) FROM lab_safety_records WHERE inspector_id = p_user_id AND inspection_date = CURDATE()) as todays_inspections,
+        (SELECT COUNT(*) FROM chemical_inventory WHERE status = 'Low Stock') as low_stock_chemicals,
+        (SELECT COUNT(*) FROM chemical_inventory WHERE expiry_date < DATE_ADD(CURDATE(), INTERVAL 30 DAY)) as expiring_soon,
+        (SELECT COUNT(*) FROM skills_lab_sessions WHERE lecturer_id = p_user_id AND session_date = CURDATE()) as todays_lab_sessions;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_staff_performance_summary` (IN `p_staff_id` INT)   BEGIN
+    SELECT 
+        s.staff_id,
+        s.full_name,
+        s.position,
+        s.department,
+        sr.role_name,
+        (SELECT AVG(performance_score) FROM staff_performance WHERE staff_id = p_staff_id) as avg_performance,
+        (SELECT COUNT(*) FROM staff_training WHERE staff_id = p_staff_id AND status = 'Completed') as completed_trainings,
+        (SELECT COUNT(*) FROM course_assignments WHERE lecturer_id = p_staff_id AND status = 'Active') as active_courses,
+        (SELECT COUNT(*) FROM staff_leave_requests WHERE staff_id = p_staff_id AND status = 'Approved' AND YEAR(start_date) = YEAR(CURDATE())) as approved_leaves
+    FROM staff s
+    JOIN staff_roles sr ON s.role_id = sr.id
+    WHERE s.id = p_staff_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_academic_summary` (IN `p_student_id` INT)   BEGIN
+    SELECT 
+        s.student_number,
+        s.first_name,
+        s.last_name,
+        s.program,
+        s.year_of_study,
+        s.semester,
+        sap.gpa,
+        sap.academic_status,
+        (SELECT COUNT(*) FROM examination_records WHERE student_id = p_student_id) as total_exams,
+        (SELECT COUNT(*) FROM course_registrations WHERE student_id = p_student_id AND status = 'Registered') as registered_courses
+    FROM students s
+    LEFT JOIN student_academic_profiles sap ON s.id = sap.student_id
+    WHERE s.id = p_student_id;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_by_number` (IN `p_student_number` VARCHAR(50))   BEGIN
     SELECT 
         id, student_number, registration_number, national_student_id_number,
@@ -268,6 +401,25 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_by_number` (IN `p_stude
         status, created_at, updated_at
     FROM igangaschoolofl_students_db.students
     WHERE student_number = p_student_number;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_fee_status` (IN `p_student_id` INT)   BEGIN
+    SELECT 
+        s.student_number,
+        s.first_name,
+        s.last_name,
+        s.program,
+        COALESCE(SUM(fa.amount), 0) as total_fees,
+        COALESCE(SUM(fa.paid_amount), 0) as total_paid,
+        COALESCE(SUM(fa.balance), 0) as outstanding_balance,
+        CASE 
+            WHEN COALESCE(SUM(fa.balance), 0) = 0 THEN 'Cleared'
+            WHEN COALESCE(SUM(fa.balance), 0) > 0 THEN 'Not Cleared'
+        END as fee_status
+    FROM students s
+    LEFT JOIN fee_accounts fa ON s.id = fa.student_id
+    WHERE s.id = p_student_id
+    GROUP BY s.id;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_registration_status` (IN `p_student_id` INT)   BEGIN
@@ -283,6 +435,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_student_registration_status` (I
     FROM universal_student_profiles sp
     LEFT JOIN registrar_student_registration rr ON sp.id = rr.student_id
     WHERE sp.id = p_student_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_wardens_dashboard_statistics` (IN `p_user_id` INT)   BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM student_welfare_cases WHERE assigned_warden = p_user_id AND status IN ('Open', 'In Progress')) as open_welfare_cases,
+        (SELECT COUNT(*) FROM counseling_sessions WHERE counselor_id = p_user_id AND scheduled_date = CURDATE()) as todays_counseling_sessions,
+        (SELECT COUNT(*) FROM room_inspections WHERE inspection_date = CURDATE()) as todays_inspections,
+        (SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending') as pending_discipline_cases,
+        (SELECT COUNT(*) FROM duty_rosters WHERE warden_id = p_user_id AND duty_date = CURDATE()) as todays_duties,
+        (SELECT COUNT(*) FROM visitor_logs WHERE visit_date = CURDATE() AND status = 'Checked In') as current_visitors;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `hr_get_staff_profile` (IN `p_staff_id` INT)   BEGIN
@@ -476,26 +638,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_password_with_token` (IN `p_r
     SELECT 'Password reset function' as message, TRUE as success;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `search_all_students` (IN `p_search_term` VARCHAR(255), IN `p_program` VARCHAR(100), IN `p_intake_set` VARCHAR(50), IN `p_status` VARCHAR(50), IN `p_limit` INT)   BEGIN
-    IF p_limit IS NULL OR p_limit <= 0 THEN
-        SET p_limit = 100;
-    END IF;
-    SELECT 
-        id, student_number, full_name, program, intake_set, 
-        year_of_study, status, gpa, photo_path
-    FROM universal_student_profiles
-    WHERE (p_search_term IS NULL OR 
-           full_name LIKE CONCAT('%', p_search_term, '%') OR
-           student_number LIKE CONCAT('%', p_search_term, '%') OR
-           index_number LIKE CONCAT('%', p_search_term, '%') OR
-           national_id LIKE CONCAT('%', p_search_term, '%'))
-      AND (p_program IS NULL OR program = p_program)
-      AND (p_intake_set IS NULL OR intake_set = p_intake_set)
-      AND (p_status IS NULL OR status = p_status)
-    ORDER BY full_name
-    LIMIT p_limit;
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `search_students` (IN `p_search_term` VARCHAR(100))   BEGIN
     SELECT 
         id, student_number, registration_number, index_number,
@@ -640,6 +782,40 @@ CREATE TABLE `academic_analytics` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `academic_calendar`
+--
+
+CREATE TABLE `academic_calendar` (
+  `id` int NOT NULL,
+  `calendar_id` varchar(50) NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(50) NOT NULL,
+  `semester_start_date` date NOT NULL,
+  `semester_end_date` date NOT NULL,
+  `exam_start_date` date NOT NULL,
+  `exam_end_date` date NOT NULL,
+  `result_publication_date` date DEFAULT NULL,
+  `registration_deadline` date DEFAULT NULL,
+  `add_drop_deadline` date DEFAULT NULL,
+  `withdrawal_deadline` date DEFAULT NULL,
+  `status` enum('Upcoming','Current','Completed','Cancelled') DEFAULT 'Upcoming',
+  `notes` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `academic_calendar`
+--
+
+INSERT INTO `academic_calendar` (`id`, `calendar_id`, `academic_year`, `semester`, `semester_start_date`, `semester_end_date`, `exam_start_date`, `exam_end_date`, `result_publication_date`, `registration_deadline`, `add_drop_deadline`, `withdrawal_deadline`, `status`, `notes`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'CAL-2024-2025-S1', '2024-2025', 'Semester 1', '2024-09-01', '2024-12-15', '2024-12-01', '2024-12-15', '2025-01-15', '2024-09-15', '2024-09-30', '2024-10-31', 'Current', NULL, NULL, '2026-06-14 19:50:49', '2026-06-14 19:50:49'),
+(2, 'CAL-2024-2025-S2', '2024-2025', 'Semester 2', '2025-02-01', '2025-05-31', '2025-05-15', '2025-05-31', '2025-06-15', '2025-02-15', '2025-02-28', '2025-03-31', 'Upcoming', NULL, NULL, '2026-06-14 19:50:49', '2026-06-14 19:50:49');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `academic_course_catalog`
 --
 
@@ -776,6 +952,51 @@ CREATE TABLE `academic_timetable` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `access_control_logs`
+--
+
+CREATE TABLE `access_control_logs` (
+  `id` int NOT NULL,
+  `log_number` varchar(50) NOT NULL,
+  `access_type` enum('Entry','Exit','Vehicle Entry','Vehicle Exit','Visitor Check-in','Visitor Check-out') NOT NULL,
+  `person_type` enum('Student','Staff','Visitor','Unknown') NOT NULL,
+  `person_id` int DEFAULT NULL,
+  `person_name` varchar(200) DEFAULT NULL,
+  `access_point` varchar(100) NOT NULL,
+  `vehicle_number` varchar(50) DEFAULT NULL,
+  `access_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `purpose` varchar(200) DEFAULT NULL,
+  `status` enum('Authorized','Unauthorized','Pending') DEFAULT 'Authorized',
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `accreditation_management`
+--
+
+CREATE TABLE `accreditation_management` (
+  `id` int NOT NULL,
+  `accreditation_code` varchar(50) NOT NULL,
+  `program_name` varchar(200) NOT NULL,
+  `accrediting_body` varchar(200) NOT NULL,
+  `accreditation_type` enum('Initial','Renewal','Re-accreditation','Special') NOT NULL,
+  `application_date` date DEFAULT NULL,
+  `site_visit_date` date DEFAULT NULL,
+  `accreditation_status` enum('Pending','Under Review','Approved','Conditional','Denied','Expired') DEFAULT 'Pending',
+  `expiry_date` date DEFAULT NULL,
+  `report_file` varchar(500) DEFAULT NULL,
+  `compliance_notes` text,
+  `responsible_person` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `activity_log`
 --
 
@@ -838,16 +1059,6 @@ CREATE TABLE `advanced_reports` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `advanced_reports`
---
-
-INSERT INTO `advanced_reports` (`id`, `report_name`, `report_type`, `report_query`, `report_parameters`, `report_template`, `is_scheduled`, `schedule_frequency`, `recipients`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Monthly Staff Performance Report', 'staff', 'SELECT s.*, sp.performance_score, sp.rating FROM staff s LEFT JOIN staff_performance sp ON s.id = sp.staff_id WHERE s.status = \"Active\" ORDER BY sp.performance_score DESC', '{\"period\": \"monthly\", \"department\": \"all\"}', '<html><body><h1>Monthly Staff Performance Report</h1><table border=\"1\">{{report_data}}</table></body></html>', 1, 'monthly', '[\"hr_manager\", \"school_principal\"]', 1, 1, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(2, 'Student Enrollment Statistics', 'student', 'SELECT program, COUNT(*) as total_students, AVG(gpa) as avg_gpa FROM students WHERE status = \"Active\" GROUP BY program', '{\"year\": \"2026\", \"semester\": \"all\"}', '<html><body><h1>Student Enrollment Statistics</h1><table border=\"1\">{{report_data}}</table></body></html>', 0, 'monthly', '[\"academic_registrar\", \"school_principal\"]', 1, 1, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(3, 'Financial Summary Report', 'financial', 'SELECT record_type, SUM(amount) as total, COUNT(*) as count FROM financial_records WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY record_type', '{\"period\": \"monthly\"}', '<html><body><h1>Financial Summary Report</h1><table border=\"1\">{{report_data}}</table></body></html>', 1, 'monthly', '[\"school_bursar\", \"director_finance\", \"ceo\"]', 1, 1, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(4, 'Academic Performance Report', 'comprehensive', 'SELECT COUNT(*) as total_students, AVG(gpa) as avg_gpa, COUNT(CASE WHEN status = \"Graduated\" THEN 1 ELSE 0 END) as graduates FROM students WHERE YEAR(enrollment_date) = YEAR(CURDATE())', '{\"year\": \"2026\"}', '<html><body><h1>Academic Performance Report</h1><table border=\"1\">{{report_data}}</table></body></html>', 0, 'yearly', '[\"academic_registrar\", \"school_principal\", \"director_academics\"]', 1, 1, '2026-06-13 13:51:57', '2026-06-13 13:51:57');
-
 -- --------------------------------------------------------
 
 --
@@ -855,55 +1066,54 @@ INSERT INTO `advanced_reports` (`id`, `report_name`, `report_type`, `report_quer
 -- (See below for the actual view)
 --
 CREATE TABLE `all_students_view` (
-`academic_standing` varchar(17)
+`id` int
+,`student_number` varchar(50)
+,`national_id` varchar(50)
+,`index_number` varchar(50)
+,`registration_number` varchar(50)
+,`first_name` varchar(100)
+,`middle_name` varchar(100)
+,`last_name` varchar(100)
+,`full_name` varchar(255)
+,`email` varchar(100)
+,`phone` varchar(20)
+,`date_of_birth` date
+,`gender` enum('Male','Female','Other')
+,`program` varchar(100)
+,`program_type` enum('Certificate','Diploma','Degree')
+,`intake_set` varchar(20)
+,`intake_date` date
+,`year_of_study` int
+,`semester` varchar(50)
 ,`academic_year` varchar(20)
 ,`address` text
-,`cgpa` decimal(3,2)
-,`county` varchar(100)
-,`created_at` timestamp
-,`created_by` int
-,`date_of_birth` date
 ,`district` varchar(100)
-,`email` varchar(100)
-,`emergency_contact_name` varchar(100)
-,`emergency_contact_phone` varchar(20)
-,`emergency_contact_relationship` varchar(50)
-,`enrollment_status` enum('Full Time','Part Time','Distance')
-,`first_name` varchar(100)
-,`full_name` varchar(255)
-,`gender` enum('Male','Female','Other')
-,`gpa` decimal(3,2)
-,`guardian_address` text
+,`county` varchar(100)
+,`sub_county` varchar(100)
+,`parish` varchar(100)
+,`village` varchar(100)
 ,`guardian_name` varchar(200)
 ,`guardian_phone` varchar(20)
 ,`guardian_relationship` varchar(50)
-,`id` int
-,`index_number` varchar(50)
-,`intake_date` date
-,`intake_set` varchar(20)
-,`last_name` varchar(100)
-,`marital_status` enum('Single','Married','Divorced','Widowed')
-,`middle_name` varchar(100)
-,`national_id` varchar(50)
+,`guardian_address` text
+,`emergency_contact_name` varchar(100)
+,`emergency_contact_phone` varchar(20)
+,`emergency_contact_relationship` varchar(50)
 ,`nationality` varchar(50)
-,`parish` varchar(100)
-,`phone` varchar(20)
-,`photo_path` varchar(500)
-,`photo_status` varchar(511)
-,`photo_upload_date` timestamp
-,`photo_uploaded` tinyint(1)
-,`program` varchar(100)
-,`program_type` enum('Certificate','Diploma','Degree')
-,`registration_number` varchar(50)
 ,`religion` varchar(50)
-,`semester` varchar(50)
+,`marital_status` enum('Single','Married','Divorced','Widowed')
+,`photo_path` varchar(500)
+,`photo_uploaded` tinyint(1)
+,`photo_upload_date` timestamp
 ,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
-,`student_number` varchar(50)
-,`sub_county` varchar(100)
-,`updated_at` timestamp
+,`enrollment_status` enum('Full Time','Part Time','Distance')
+,`gpa` decimal(3,2)
+,`cgpa` decimal(3,2)
+,`created_by` int
 ,`updated_by` int
-,`village` varchar(100)
-,`year_of_study` int
+,`created_at` timestamp
+,`updated_at` timestamp
+,`photo_status` text
 );
 
 -- --------------------------------------------------------
@@ -1095,6 +1305,26 @@ CREATE TABLE `bank_accounts` (
   `account_type` varchar(50) DEFAULT NULL,
   `current_balance` decimal(15,2) DEFAULT '0.00',
   `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bank_reconciliation`
+--
+
+CREATE TABLE `bank_reconciliation` (
+  `id` int NOT NULL,
+  `bank_account_name` varchar(255) NOT NULL,
+  `statement_date` date NOT NULL,
+  `opening_balance` decimal(14,2) DEFAULT '0.00',
+  `closing_balance` decimal(14,2) DEFAULT '0.00',
+  `total_deposits` decimal(14,2) DEFAULT '0.00',
+  `total_withdrawals` decimal(14,2) DEFAULT '0.00',
+  `reconciled` tinyint(1) DEFAULT '0',
+  `reconciliation_date` datetime DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -1349,6 +1579,32 @@ INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `chemical_inventory`
+--
+
+CREATE TABLE `chemical_inventory` (
+  `id` int NOT NULL,
+  `chemical_code` varchar(50) NOT NULL,
+  `chemical_name` varchar(200) NOT NULL,
+  `chemical_type` enum('Acid','Base','Solvent','Reagent','Indicator','Other') NOT NULL,
+  `cas_number` varchar(50) DEFAULT NULL,
+  `hazard_class` enum('Flammable','Corrosive','Toxic','Reactive','Oxidizer','Non-hazardous') DEFAULT 'Non-hazardous',
+  `storage_location` varchar(100) DEFAULT NULL,
+  `quantity_on_hand` decimal(10,2) NOT NULL,
+  `unit_of_measure` varchar(20) DEFAULT 'ml',
+  `reorder_level` decimal(10,2) DEFAULT NULL,
+  `supplier` varchar(200) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `date_received` date DEFAULT NULL,
+  `received_by` int NOT NULL,
+  `status` enum('In Stock','Low Stock','Expired','Discontinued') DEFAULT 'In Stock',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `clinical_placements`
 --
 
@@ -1456,6 +1712,31 @@ INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `depar
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `counseling_sessions`
+--
+
+CREATE TABLE `counseling_sessions` (
+  `id` int NOT NULL,
+  `session_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `counselor_id` int NOT NULL,
+  `session_type` enum('Individual','Group','Family','Crisis Intervention') NOT NULL,
+  `topic` varchar(200) NOT NULL,
+  `scheduled_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `status` enum('Scheduled','In Progress','Completed','Cancelled','Rescheduled') DEFAULT 'Scheduled',
+  `session_notes` text,
+  `action_plan` text,
+  `follow_up_required` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `course_assignments`
 --
 
@@ -1542,6 +1823,26 @@ CREATE TABLE `departmental_budgets` (
   `spent_amount` decimal(15,2) DEFAULT '0.00',
   `remaining_amount` decimal(15,2) DEFAULT '0.00',
   `status` enum('active','exhausted','closed') DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `director_news`
+--
+
+CREATE TABLE `director_news` (
+  `id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `content` longtext NOT NULL,
+  `excerpt` text,
+  `featured_image` varchar(500) DEFAULT NULL,
+  `author_id` int NOT NULL,
+  `status` enum('draft','published','archived') DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1636,13 +1937,13 @@ CREATE TABLE `document_templates` (
 --
 
 INSERT INTO `document_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_default`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border=\"1\"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(2, 'Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(3, 'Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border=\"1\"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(4, 'Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(5, 'Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style=\"border: 2px solid #000; padding: 20px; width: 300px;\"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(6, 'Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border=\"1\"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(7, 'Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56');
+(1, 'Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border=\"1\"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(2, 'Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(3, 'Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border=\"1\"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(4, 'Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(5, 'Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style=\"border: 2px solid #000; padding: 20px; width: 300px;\"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(6, 'Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border=\"1\"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(7, 'Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36');
 
 -- --------------------------------------------------------
 
@@ -1669,6 +1970,26 @@ CREATE TABLE `duty_roster` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `duty_rosters`
+--
+
+CREATE TABLE `duty_rosters` (
+  `id` int NOT NULL,
+  `roster_number` varchar(50) NOT NULL,
+  `warden_id` int NOT NULL,
+  `duty_date` date NOT NULL,
+  `shift` enum('Morning','Afternoon','Evening','Night') NOT NULL,
+  `duty_area` enum('Hostel A','Hostel B','Common Areas','Perimeter','Full Campus') NOT NULL,
+  `status` enum('Scheduled','On Duty','Completed','Absent','Replaced') DEFAULT 'Scheduled',
+  `replacement_warden` int DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `email_notifications_queue`
 --
 
@@ -1686,6 +2007,26 @@ CREATE TABLE `email_notifications_queue` (
   `sent_at` timestamp NULL DEFAULT NULL,
   `error_message` text,
   `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `emergency_contacts`
+--
+
+CREATE TABLE `emergency_contacts` (
+  `id` int NOT NULL,
+  `contact_name` varchar(200) NOT NULL,
+  `contact_type` enum('Police','Fire','Ambulance','Hospital','School Administration','Security Chief','Other') NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
+  `alternative_phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `address` text,
+  `priority` enum('Primary','Secondary','Tertiary') DEFAULT 'Primary',
+  `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1785,8 +2126,49 @@ CREATE TABLE `examination_records` (
   `marks_obtained` decimal(5,2) NOT NULL,
   `total_marks` decimal(5,2) NOT NULL,
   `grade` varchar(10) DEFAULT NULL,
+  `workflow_id` int DEFAULT NULL,
+  `continuous_assessment_marks` decimal(5,2) DEFAULT '0.00',
+  `final_exam_marks` decimal(5,2) DEFAULT '0.00',
+  `total_marks_calculated` decimal(5,2) GENERATED ALWAYS AS ((`continuous_assessment_marks` + `final_exam_marks`)) STORED,
+  `lecturer_id` int DEFAULT NULL,
+  `hod_id` int DEFAULT NULL,
+  `grade_status` enum('Draft','Submitted','Under Review','Approved','Published','Rejected') DEFAULT 'Draft',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Triggers `examination_records`
+--
+DELIMITER $$
+CREATE TRIGGER `log_grade_change_trigger` AFTER UPDATE ON `examination_records` FOR EACH ROW BEGIN
+    IF OLD.grade != NEW.grade OR OLD.continuous_assessment_marks != NEW.continuous_assessment_marks OR OLD.final_exam_marks != NEW.final_exam_marks THEN
+        INSERT INTO grade_change_history (
+            workflow_number,
+            examination_record_id,
+            changed_by,
+            previous_grade,
+            new_grade,
+            previous_ca_marks,
+            new_ca_marks,
+            previous_exam_marks,
+            new_exam_marks,
+            change_reason
+        ) VALUES (
+            (SELECT workflow_number FROM grading_approval_workflow WHERE examination_record_id = NEW.id LIMIT 1),
+            NEW.id,
+            NEW.lecturer_id,
+            OLD.grade,
+            NEW.grade,
+            OLD.continuous_assessment_marks,
+            NEW.continuous_assessment_marks,
+            OLD.final_exam_marks,
+            NEW.final_exam_marks,
+            'Grade updated via dashboard'
+        );
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2043,6 +2425,27 @@ CREATE TABLE `financial_reports` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `fuel_management`
+--
+
+CREATE TABLE `fuel_management` (
+  `id` int NOT NULL,
+  `fuel_number` varchar(50) NOT NULL,
+  `vehicle_id` int NOT NULL,
+  `fuel_type` enum('Petrol','Diesel','Electric') DEFAULT 'Diesel',
+  `fuel_quantity` decimal(10,2) NOT NULL,
+  `unit_cost` decimal(10,2) NOT NULL,
+  `total_cost` decimal(15,2) GENERATED ALWAYS AS ((`fuel_quantity` * `unit_cost`)) STORED,
+  `fueling_date` date NOT NULL,
+  `fueling_station` varchar(200) DEFAULT NULL,
+  `odometer_reading` decimal(10,2) DEFAULT NULL,
+  `filled_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `general_ledger`
 --
 
@@ -2089,12 +2492,26 @@ CREATE TABLE `generated_documents` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `generated_documents`
+-- Table structure for table `grade_change_history`
 --
 
-INSERT INTO `generated_documents` (`id`, `document_type`, `student_id`, `staff_id`, `generated_by`, `document_title`, `document_content`, `file_path`, `template_used`, `generation_date`, `expires_at`, `is_public`, `access_code`, `download_count`, `created_at`, `updated_at`) VALUES
-(1, 'Transcript', NULL, NULL, 1, 'Official Academic Transcript', '<h2>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2><h3>OFFICIAL ACADEMIC TRANSCRIPT</h3><p><strong>Student Name:</strong> {{student_name}}</p><p><strong>Registration Number:</strong> {{registration_number}}</p><p><strong>Program:</strong> {{program}}</p><p><strong>Year:</strong> {{year}}</p><p><strong>GPA:</strong> {{gpa}}</p><p><strong>Status:</strong> {{status}}</p>', NULL, NULL, '2026-06-13 13:51:57', NULL, 0, 'TRANS_20260613065157', 0, '2026-06-13 13:51:57', '2026-06-13 13:51:57');
+CREATE TABLE `grade_change_history` (
+  `id` int NOT NULL,
+  `workflow_number` varchar(50) NOT NULL,
+  `examination_record_id` int NOT NULL,
+  `changed_by` int DEFAULT NULL,
+  `previous_grade` varchar(5) DEFAULT NULL,
+  `new_grade` varchar(5) DEFAULT NULL,
+  `previous_ca_marks` decimal(5,2) DEFAULT NULL,
+  `new_ca_marks` decimal(5,2) DEFAULT NULL,
+  `previous_exam_marks` decimal(5,2) DEFAULT NULL,
+  `new_exam_marks` decimal(5,2) DEFAULT NULL,
+  `change_reason` text,
+  `change_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -2110,6 +2527,95 @@ CREATE TABLE `grade_scales` (
   `max_percentage` decimal(5,2) NOT NULL,
   `grade_description` varchar(100) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `grade_scales`
+--
+
+INSERT INTO `grade_scales` (`id`, `grade_letter`, `grade_point`, `min_percentage`, `max_percentage`, `grade_description`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'A', 4.00, 80.00, 100.00, 'Excellent', 1, '2026-06-14 19:50:48', '2026-06-14 19:50:48'),
+(2, 'B', 3.00, 70.00, 79.99, 'Very Good', 1, '2026-06-14 19:50:48', '2026-06-14 19:50:48'),
+(3, 'C', 2.00, 60.00, 69.99, 'Good', 1, '2026-06-14 19:50:48', '2026-06-14 19:50:48'),
+(4, 'D', 1.00, 50.00, 59.99, 'Satisfactory', 1, '2026-06-14 19:50:48', '2026-06-14 19:50:48'),
+(5, 'F', 0.00, 0.00, 49.99, 'Fail', 1, '2026-06-14 19:50:48', '2026-06-14 19:50:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `grading_approval_workflow`
+--
+
+CREATE TABLE `grading_approval_workflow` (
+  `id` int NOT NULL,
+  `workflow_number` varchar(50) NOT NULL,
+  `examination_record_id` int NOT NULL,
+  `current_stage` enum('Lecturer Entry','HOD Review','Registrar Approval','Principal Final Approval','Published','Rejected') DEFAULT 'Lecturer Entry',
+  `submitted_by` int DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `hod_reviewed_by` int DEFAULT NULL,
+  `hod_reviewed_at` timestamp NULL DEFAULT NULL,
+  `hod_comments` text,
+  `hod_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `registrar_approved_by` int DEFAULT NULL,
+  `registrar_approved_at` timestamp NULL DEFAULT NULL,
+  `registrar_comments` text,
+  `registrar_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `principal_approved_by` int DEFAULT NULL,
+  `principal_approved_at` timestamp NULL DEFAULT NULL,
+  `principal_comments` text,
+  `principal_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `published_at` timestamp NULL DEFAULT NULL,
+  `rejection_reason` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `grading_notifications`
+--
+
+CREATE TABLE `grading_notifications` (
+  `id` int NOT NULL,
+  `notification_id` varchar(50) NOT NULL,
+  `workflow_number` varchar(50) NOT NULL,
+  `recipient_id` int NOT NULL,
+  `sender_id` int DEFAULT NULL,
+  `notification_type` enum('Grade Submitted','HOD Review Required','Registrar Approval Required','Principal Approval Required','Grade Published','Grade Rejected','Grade Modified') NOT NULL,
+  `message` text,
+  `is_read` tinyint(1) DEFAULT '0',
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health_incidents`
+--
+
+CREATE TABLE `health_incidents` (
+  `id` int NOT NULL,
+  `incident_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `incident_type` enum('Illness','Injury','Accident','Allergic Reaction','Other') NOT NULL,
+  `symptoms` text NOT NULL,
+  `severity` enum('Minor','Moderate','Severe','Critical') DEFAULT 'Moderate',
+  `incident_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `location` varchar(200) DEFAULT NULL,
+  `action_taken` text,
+  `treatment_given` text,
+  `referred_to` varchar(200) DEFAULT NULL,
+  `parent_notified` tinyint(1) DEFAULT '0',
+  `parent_notification_time` timestamp NULL DEFAULT NULL,
+  `status` enum('Reported','Under Observation','Resolved','Referred','Closed') DEFAULT 'Reported',
+  `reported_by` int NOT NULL,
+  `follow_up_required` tinyint(1) DEFAULT '0',
+  `follow_up_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -2180,11 +2686,11 @@ CREATE TABLE `hr_activity_logs` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_leave_summary` (
-`approved` decimal(23,0)
-,`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
+`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
+,`total_requests` bigint
+,`approved` decimal(23,0)
 ,`pending` decimal(23,0)
 ,`rejected` decimal(23,0)
-,`total_requests` bigint
 );
 
 -- --------------------------------------------------------
@@ -2194,15 +2700,15 @@ CREATE TABLE `hr_leave_summary` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_performance_summary` (
-`attendance_rate` decimal(31,5)
-,`avg_performance_score` decimal(5,2)
-,`department` varchar(100)
+`staff_id` int
 ,`full_name` varchar(100)
-,`latest_rating` enum('Outstanding','Excellent','Good','Satisfactory','Needs Improvement')
 ,`position` varchar(100)
+,`department` varchar(100)
 ,`role_name` varchar(100)
-,`staff_id` int
+,`avg_performance_score` decimal(5,2)
+,`latest_rating` enum('Outstanding','Excellent','Good','Satisfactory','Needs Improvement')
 ,`total_leaves` bigint
+,`attendance_rate` decimal(31,5)
 ,`training_completed` bigint
 );
 
@@ -2266,11 +2772,11 @@ INSERT INTO `hr_settings` (`id`, `setting_key`, `setting_value`, `setting_type`,
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_by_department` (
-`active_staff` decimal(23,0)
-,`avg_years_of_service` decimal(16,8)
-,`department` varchar(100)
-,`inactive_staff` decimal(23,0)
+`department` varchar(100)
 ,`total_staff` bigint
+,`active_staff` decimal(23,0)
+,`inactive_staff` decimal(23,0)
+,`avg_years_of_service` decimal(16,8)
 );
 
 -- --------------------------------------------------------
@@ -2280,21 +2786,18 @@ CREATE TABLE `hr_staff_by_department` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_search_view` (
-`account_status` varchar(7)
-,`bio` text
-,`department` varchar(100)
-,`email` varchar(100)
+`id` int
+,`staff_id` varchar(50)
 ,`full_name` varchar(100)
-,`hire_date` date
-,`id` int
-,`last_login` timestamp
+,`email` varchar(100)
 ,`phone` varchar(20)
 ,`position` varchar(100)
-,`profile_picture` varchar(255)
-,`qualifications` text
+,`department` varchar(100)
 ,`role_name` varchar(100)
-,`staff_id` varchar(50)
 ,`status` enum('Active','Inactive','On Leave','Suspended')
+,`hire_date` date
+,`last_login` timestamp
+,`account_status` varchar(7)
 );
 
 -- --------------------------------------------------------
@@ -2402,14 +2905,14 @@ CREATE TABLE `inventory` (
 --
 
 INSERT INTO `inventory` (`id`, `item_code`, `item_name`, `item_category`, `description`, `department`, `report_to`, `unit_of_measure`, `quantity_on_hand`, `reorder_level`, `unit_cost`, `currency`, `location`, `supplier`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'NUR001', 'Surgical Masks', 'Medical Supplies', 'Disposable surgical masks for patient care', 'Nursing', 'HR Manager', 'boxes', 120, 15, 12.50, 'UGX', 'Nursing Store', 'MedSupply Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(2, 'MID001', 'Midwifery Kits', 'Medical Supplies', 'Delivery and emergency midwifery kits', 'Midwifery', 'HR Manager', 'sets', 35, 5, 105.00, 'UGX', 'Midwifery Store', 'HealthEquip Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(3, 'SCK001', 'Patient First Aid Kits', 'Medical Supplies', 'Portable first aid kits for sickbay emergencies', 'Sickbay', 'School Principal', 'kits', 18, 3, 75.00, 'UGX', 'Sickbay Storage', 'CarePlus Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(4, 'LIB001', 'Reference Books', 'Books', 'Professional reference books for library use', 'Library', 'School Librarian', 'pcs', 210, 20, 45.00, 'UGX', 'Library Shelves', 'EduBooks Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(5, 'ICT001', 'Network Switch', 'Computers', 'Managed network switch for campus ICT infrastructure', 'ICT', 'Director ICT', 'pcs', 8, 2, 420.00, 'UGX', 'ICT Server Room', 'TechNet Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(6, 'SEC001', 'Security Badges', 'Security', 'Access control badges for security staff', 'Security', 'Director General', 'pcs', 120, 20, 5.00, 'UGX', 'Security Office', 'SecureID Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(7, 'BRS001', 'Official Ledger Books', 'Office Supplies', 'Ledgers for bursar financial records', 'Bursar', 'School Bursar', 'pcs', 60, 10, 18.00, 'UGX', 'Bursar Office', 'OfficeMate Ltd', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00'),
-(8, 'HRM001', 'Employee File Folders', 'Office Supplies', 'Folders for HR employee records', 'HR', 'HR Manager', 'pcs', 220, 30, 2.20, 'UGX', 'HR Office', 'Stationery Co', 'In Stock', 1, '2026-06-13 13:52:00', '2026-06-13 13:52:00');
+(1, 'NUR001', 'Surgical Masks', 'Medical Supplies', 'Disposable surgical masks for patient care', 'Nursing', 'HR Manager', 'boxes', 120, 15, 12.50, 'UGX', 'Nursing Store', 'MedSupply Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(2, 'MID001', 'Midwifery Kits', 'Medical Supplies', 'Delivery and emergency midwifery kits', 'Midwifery', 'HR Manager', 'sets', 35, 5, 105.00, 'UGX', 'Midwifery Store', 'HealthEquip Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(3, 'SCK001', 'Patient First Aid Kits', 'Medical Supplies', 'Portable first aid kits for sickbay emergencies', 'Sickbay', 'School Principal', 'kits', 18, 3, 75.00, 'UGX', 'Sickbay Storage', 'CarePlus Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(4, 'LIB001', 'Reference Books', 'Books', 'Professional reference books for library use', 'Library', 'School Librarian', 'pcs', 210, 20, 45.00, 'UGX', 'Library Shelves', 'EduBooks Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(5, 'ICT001', 'Network Switch', 'Computers', 'Managed network switch for campus ICT infrastructure', 'ICT', 'Director ICT', 'pcs', 8, 2, 420.00, 'UGX', 'ICT Server Room', 'TechNet Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(6, 'SEC001', 'Security Badges', 'Security', 'Access control badges for security staff', 'Security', 'Director General', 'pcs', 120, 20, 5.00, 'UGX', 'Security Office', 'SecureID Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(7, 'BRS001', 'Official Ledger Books', 'Office Supplies', 'Ledgers for bursar financial records', 'Bursar', 'School Bursar', 'pcs', 60, 10, 18.00, 'UGX', 'Bursar Office', 'OfficeMate Ltd', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40'),
+(8, 'HRM001', 'Employee File Folders', 'Office Supplies', 'Folders for HR employee records', 'HR', 'HR Manager', 'pcs', 220, 30, 2.20, 'UGX', 'HR Office', 'Stationery Co', 'In Stock', NULL, '2026-06-14 19:50:40', '2026-06-14 19:50:40');
 
 -- --------------------------------------------------------
 
@@ -2495,6 +2998,29 @@ CREATE TABLE `invoice_records` (
   `payment_terms` text,
   `notes` text,
   `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `it_infrastructure`
+--
+
+CREATE TABLE `it_infrastructure` (
+  `id` int NOT NULL,
+  `asset_code` varchar(50) NOT NULL,
+  `asset_name` varchar(200) NOT NULL,
+  `asset_type` enum('Computer','Server','Network Device','Printer','Projector','Software License','Other') NOT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `specification` text,
+  `location` varchar(100) DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `status` enum('Operational','Under Maintenance','Out of Service','Retired') DEFAULT 'Operational',
+  `assigned_to` int DEFAULT NULL,
+  `maintained_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -2645,6 +3171,31 @@ CREATE TABLE `lab_equipment` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_equipment_maintenance`
+--
+
+CREATE TABLE `lab_equipment_maintenance` (
+  `id` int NOT NULL,
+  `maintenance_number` varchar(50) NOT NULL,
+  `equipment_id` int NOT NULL,
+  `equipment_name` varchar(200) NOT NULL,
+  `maintenance_type` enum('Preventive','Corrective','Calibration','Inspection','Repair') NOT NULL,
+  `scheduled_date` date NOT NULL,
+  `completed_date` date DEFAULT NULL,
+  `technician_id` int NOT NULL,
+  `maintenance_description` text,
+  `parts_used` text,
+  `cost` decimal(10,2) DEFAULT NULL,
+  `status` enum('Scheduled','In Progress','Completed','Cancelled','Overdue') DEFAULT 'Scheduled',
+  `next_maintenance_date` date DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_experiments`
 --
 
@@ -2692,6 +3243,30 @@ CREATE TABLE `lab_inventory` (
   `date_received` date DEFAULT NULL,
   `received_by` int DEFAULT NULL,
   `status` enum('In Stock','Low Stock','Out of Stock','Expired','Quarantine') DEFAULT 'In Stock',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_safety_records`
+--
+
+CREATE TABLE `lab_safety_records` (
+  `id` int NOT NULL,
+  `safety_number` varchar(50) NOT NULL,
+  `lab_id` int NOT NULL,
+  `inspection_type` enum('Safety Inspection','Equipment Check','Chemical Safety','Fire Safety','General Inspection') NOT NULL,
+  `inspection_date` date NOT NULL,
+  `inspector_id` int NOT NULL,
+  `safety_score` decimal(5,2) DEFAULT NULL,
+  `overall_status` enum('Excellent','Good','Fair','Poor','Critical') DEFAULT 'Good',
+  `findings` text,
+  `hazards_identified` text,
+  `corrective_actions` text,
+  `follow_up_required` tinyint(1) DEFAULT '0',
+  `follow_up_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -2914,6 +3489,30 @@ CREATE TABLE `library_fines` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `library_management`
+--
+
+CREATE TABLE `library_management` (
+  `id` int NOT NULL,
+  `book_id` varchar(50) NOT NULL,
+  `book_title` varchar(200) NOT NULL,
+  `author` varchar(200) DEFAULT NULL,
+  `isbn` varchar(20) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `publisher` varchar(200) DEFAULT NULL,
+  `publication_year` int DEFAULT NULL,
+  `total_copies` int DEFAULT '1',
+  `available_copies` int DEFAULT '1',
+  `shelf_location` varchar(50) DEFAULT NULL,
+  `status` enum('Available','Borrowed','Reserved','Lost','Under Repair') DEFAULT 'Available',
+  `added_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `library_members`
 --
 
@@ -2935,6 +3534,49 @@ CREATE TABLE `library_members` (
   `status` enum('Active','Inactive','Suspended','Expired') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_transactions`
+--
+
+CREATE TABLE `library_transactions` (
+  `id` int NOT NULL,
+  `transaction_number` varchar(50) NOT NULL,
+  `book_id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `staff_id` int DEFAULT NULL,
+  `transaction_type` enum('Borrow','Return','Reserve','Renew') NOT NULL,
+  `borrow_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `return_date` date DEFAULT NULL,
+  `status` enum('Active','Returned','Overdue','Lost') DEFAULT 'Active',
+  `fine_amount` decimal(10,2) DEFAULT '0.00',
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `meal_tracking`
+--
+
+CREATE TABLE `meal_tracking` (
+  `id` int NOT NULL,
+  `meal_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `meal_type` enum('Breakfast','Lunch','Dinner','Snack') NOT NULL,
+  `meal_date` date NOT NULL,
+  `meal_served` tinyint(1) DEFAULT '0',
+  `meal_skipped` tinyint(1) DEFAULT '0',
+  `skip_reason` varchar(200) DEFAULT NULL,
+  `special_dietary_requirements` text,
+  `allergies_noted` text,
+  `served_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -3099,6 +3741,21 @@ CREATE TABLE `midwifery_students` (
   `semester` varchar(50) DEFAULT 'Semester 1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `news_images`
+--
+
+CREATE TABLE `news_images` (
+  `id` int NOT NULL,
+  `news_id` int NOT NULL,
+  `image_path` varchar(500) NOT NULL,
+  `caption` varchar(255) DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -3286,6 +3943,31 @@ CREATE TABLE `onboarding_checklist` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `partnerships`
+--
+
+CREATE TABLE `partnerships` (
+  `id` int NOT NULL,
+  `partnership_code` varchar(50) NOT NULL,
+  `partner_name` varchar(200) NOT NULL,
+  `partner_type` enum('Hospital','University','NGO','Government','Industry','International') NOT NULL,
+  `partnership_type` enum('Clinical Training','Research','Funding','Exchange Program','Consultancy','Other') NOT NULL,
+  `description` text,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` enum('Active','Inactive','Pending','Terminated') DEFAULT 'Pending',
+  `mou_file` varchar(500) DEFAULT NULL,
+  `contact_person` varchar(100) DEFAULT NULL,
+  `contact_email` varchar(100) DEFAULT NULL,
+  `contact_phone` varchar(20) DEFAULT NULL,
+  `responsible_person` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `payments`
 --
 
@@ -3402,6 +4084,49 @@ CREATE TABLE `payment_records` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Triggers `payment_records`
+--
+DELIMITER $$
+CREATE TRIGGER `log_financial_transaction` AFTER INSERT ON `payment_records` FOR EACH ROW BEGIN
+    INSERT INTO financial_records (
+        record_type,
+        amount,
+        currency,
+        description,
+        reference_number,
+        payment_method,
+        recorded_by,
+        student_id,
+        transaction_date
+    ) VALUES (
+        'Collection',
+        NEW.amount,
+        NEW.currency,
+        CONCAT('Payment - ', NEW.payment_reference),
+        NEW.payment_number,
+        NEW.payment_method,
+        NEW.processed_by,
+        NEW.student_id,
+        NEW.payment_date
+    );
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `update_fee_account_balance` AFTER INSERT ON `payment_records` FOR EACH ROW BEGIN
+    UPDATE fee_accounts 
+    SET paid_amount = paid_amount + NEW.amount,
+        status = CASE 
+            WHEN amount - (paid_amount + NEW.amount) <= 0 THEN 'Paid'
+            WHEN paid_amount + NEW.amount > 0 THEN 'Partially Paid'
+            ELSE 'Unpaid'
+        END
+    WHERE student_id = NEW.student_id;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -3614,6 +4339,29 @@ CREATE TABLE `proof_of_payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `quality_assurance`
+--
+
+CREATE TABLE `quality_assurance` (
+  `id` int NOT NULL,
+  `qa_code` varchar(50) NOT NULL,
+  `assessment_type` enum('Course Review','Program Review','Department Review','Institutional Review','Student Feedback','Staff Evaluation') NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `description` text,
+  `assessment_period` varchar(50) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `assessed_by` int DEFAULT NULL,
+  `findings` text,
+  `recommendations` text,
+  `action_plan` text,
+  `status` enum('Scheduled','In Progress','Completed','Follow-up Required') DEFAULT 'Scheduled',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `real_time_updates`
 --
 
@@ -3654,7 +4402,7 @@ CREATE TABLE `receipt_templates` (
 --
 
 INSERT INTO `receipt_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{\"date\": \"date\", \"amount\": \"number\", \"student_name\": \"string\", \"payment_method\": \"string\", \"receipt_number\": \"string\"}', 1, 1, '2026-06-13 13:51:57', '2026-06-13 13:51:57');
+(1, 'Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{\"date\": \"date\", \"amount\": \"number\", \"student_name\": \"string\", \"payment_method\": \"string\", \"receipt_number\": \"string\"}', 1, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37');
 
 -- --------------------------------------------------------
 
@@ -3740,7 +4488,8 @@ CREATE TABLE `registrar_academic_calendar` (
 --
 
 INSERT INTO `registrar_academic_calendar` (`id`, `academic_year`, `semester`, `semester_start`, `semester_end`, `registration_start`, `registration_end`, `add_drop_deadline`, `withdrawal_deadline`, `exam_start`, `exam_end`, `result_publication_date`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, '2025/2026', 'Semester 1', '2025-09-01', '2025-12-15', '2025-08-15', '2025-09-15', '2025-09-30', '2025-10-31', '2025-12-01', '2025-12-15', '2026-01-15', 'Current', NULL, '2026-05-23 13:13:32', '2026-05-23 13:13:32');
+(1, '2025/2026', 'Semester 1', '2025-09-01', '2025-12-15', '2025-08-15', '2025-09-15', '2025-09-30', '2025-10-31', '2025-12-01', '2025-12-15', '2026-01-15', 'Current', NULL, '2026-05-23 13:13:32', '2026-05-23 13:13:32'),
+(2, '2025/2026', 'Semester 1', '2025-09-01', '2025-12-15', '2025-08-15', '2025-09-15', '2025-09-30', '2025-10-31', '2025-12-01', '2025-12-15', '2026-01-15', 'Current', NULL, '2026-06-14 18:43:40', '2026-06-14 18:43:40');
 
 -- --------------------------------------------------------
 
@@ -3944,6 +4693,103 @@ CREATE TABLE `requirement_messages` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `research_projects`
+--
+
+CREATE TABLE `research_projects` (
+  `id` int NOT NULL,
+  `project_code` varchar(50) NOT NULL,
+  `project_title` varchar(200) NOT NULL,
+  `project_description` text,
+  `lead_researcher` int NOT NULL,
+  `research_team` text,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `funding_source` varchar(200) DEFAULT NULL,
+  `budget` decimal(15,2) DEFAULT NULL,
+  `status` enum('Proposal','Ongoing','Completed','On Hold','Cancelled') DEFAULT 'Proposal',
+  `publication_details` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `result_publication`
+--
+
+CREATE TABLE `result_publication` (
+  `id` int NOT NULL,
+  `publication_id` varchar(50) NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(50) NOT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `course_code` varchar(20) DEFAULT NULL,
+  `publication_date` timestamp NULL DEFAULT NULL,
+  `status` enum('Draft','Scheduled','Published','Withdrawn') DEFAULT 'Draft',
+  `published_by` int DEFAULT NULL,
+  `scheduled_date` timestamp NULL DEFAULT NULL,
+  `notification_sent` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_inspections`
+--
+
+CREATE TABLE `room_inspections` (
+  `id` int NOT NULL,
+  `inspection_number` varchar(50) NOT NULL,
+  `room_id` int NOT NULL,
+  `hostel_name` varchar(100) NOT NULL,
+  `room_number` varchar(20) NOT NULL,
+  `inspection_date` date NOT NULL,
+  `inspector_id` int NOT NULL,
+  `cleanliness_score` decimal(3,2) DEFAULT NULL,
+  `condition_score` decimal(3,2) DEFAULT NULL,
+  `overall_status` enum('Excellent','Good','Fair','Poor','Critical') DEFAULT 'Good',
+  `findings` text,
+  `maintenance_required` tinyint(1) DEFAULT '0',
+  `maintenance_notes` text,
+  `follow_up_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `route_schedules`
+--
+
+CREATE TABLE `route_schedules` (
+  `id` int NOT NULL,
+  `route_code` varchar(50) NOT NULL,
+  `route_name` varchar(200) NOT NULL,
+  `route_type` enum('Morning','Evening','Both') DEFAULT 'Both',
+  `departure_time` time NOT NULL,
+  `return_time` time DEFAULT NULL,
+  `start_point` varchar(200) NOT NULL,
+  `end_point` varchar(200) NOT NULL,
+  `stops` json DEFAULT NULL,
+  `distance_km` decimal(10,2) DEFAULT NULL,
+  `estimated_duration_minutes` int DEFAULT NULL,
+  `vehicle_id` int DEFAULT NULL,
+  `driver_id` int DEFAULT NULL,
+  `days_of_operation` varchar(50) DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday',
+  `status` enum('Active','Inactive','Seasonal') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `salary_components`
 --
 
@@ -4087,6 +4933,74 @@ CREATE TABLE `security_emergency_contacts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `security_equipment`
+--
+
+CREATE TABLE `security_equipment` (
+  `id` int NOT NULL,
+  `equipment_code` varchar(50) NOT NULL,
+  `equipment_name` varchar(200) NOT NULL,
+  `equipment_type` enum('CCTV Camera','Access Control System','Metal Detector','Radio','Alarm System','Fire Extinguisher','Emergency Light','Other') NOT NULL,
+  `location` varchar(200) NOT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `status` enum('Operational','Under Maintenance','Out of Service','Retired') DEFAULT 'Operational',
+  `last_maintenance_date` date DEFAULT NULL,
+  `next_maintenance_date` date DEFAULT NULL,
+  `maintained_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_incidents`
+--
+
+CREATE TABLE `security_incidents` (
+  `id` int NOT NULL,
+  `incident_number` varchar(50) NOT NULL,
+  `incident_type` enum('Unauthorized Access','Theft','Vandalism','Assault','Parking Violation','Vehicle Entry','Visitor Check-in','Emergency','Other') NOT NULL,
+  `incident_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `location` varchar(200) NOT NULL,
+  `description` text NOT NULL,
+  `severity` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `status` enum('Reported','Under Investigation','Resolved','Closed') DEFAULT 'Reported',
+  `reported_by` int NOT NULL,
+  `assigned_to` int DEFAULT NULL,
+  `resolution_notes` text,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_patrols`
+--
+
+CREATE TABLE `security_patrols` (
+  `id` int NOT NULL,
+  `patrol_number` varchar(50) NOT NULL,
+  `guard_id` int NOT NULL,
+  `patrol_route` varchar(200) NOT NULL,
+  `patrol_area` enum('Main Gate','Academic Block','Hostel Area','Parking Lot','Library','Laboratory','Sports Field','Perimeter','Full Campus') NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `patrol_date` date NOT NULL,
+  `status` enum('Scheduled','In Progress','Completed','Cancelled','On Break') DEFAULT 'Scheduled',
+  `observations` text,
+  `incidents_found` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `security_visitors`
 --
 
@@ -4114,6 +5028,48 @@ CREATE TABLE `security_visitors` (
   `status` enum('Scheduled','Checked In','On Campus','Checked Out','No Show') DEFAULT 'Scheduled',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `skills_laboratory`
+--
+
+CREATE TABLE `skills_laboratory` (
+  `id` int NOT NULL,
+  `lab_code` varchar(50) NOT NULL,
+  `lab_name` varchar(200) NOT NULL,
+  `lab_type` enum('Nursing Skills Lab','Midwifery Skills Lab','Anatomy Lab','Physiology Lab','Other') NOT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `capacity` int DEFAULT NULL,
+  `equipment_list` text,
+  `in_charge` int DEFAULT NULL,
+  `status` enum('Active','Under Maintenance','Inactive') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `skills_lab_sessions`
+--
+
+CREATE TABLE `skills_lab_sessions` (
+  `id` int NOT NULL,
+  `session_code` varchar(50) NOT NULL,
+  `lab_id` int NOT NULL,
+  `course_code` varchar(20) DEFAULT NULL,
+  `lecturer_id` int DEFAULT NULL,
+  `session_topic` varchar(200) DEFAULT NULL,
+  `session_date` date DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `student_group` varchar(100) DEFAULT NULL,
+  `status` enum('Scheduled','In Progress','Completed','Cancelled') DEFAULT 'Scheduled',
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -4201,34 +5157,31 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`, `position`, `department`, `role_id`, `status`, `hire_date`, `salary`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `last_login`, `login_attempts`, `locked_until`, `last_failed_attempt`, `password_changed`, `is_first_login`, `two_factor_enabled`, `two_factor_secret`, `created_at`, `updated_at`) VALUES
-(1, 'DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Director General', 'Executive Office', 1, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(2, 'CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Chief Executive Officer', 'Executive Office', 3, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(3, 'SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VVoHfONmCz.Bsvn1.t1UoesLbM01KNPXKT/b/VJIzxeUq0M9LabK.', NULL, 'School Principal', 'Academic Affairs', 2, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(4, 'SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$MtVRrE2x6uXh0CwEobzG.ueN1zcL/aE541mbLWpg3e7gnX4HkUxn.', NULL, 'School Secretary', 'Administrative Office', 21, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(5, 'AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Ha21Vlb7p046OaklPLFCteb8raqKNilEWDlzq8ypXVz491hHIICXS', NULL, 'Academic Registrar', 'Academic Affairs', 8, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(6, 'BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'School Bursar', 'Finance Department', 9, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(7, 'HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$jEb8/OsV.9cydSvrBrZ1Hejase4BaTkPXT3FO/Gf9EazTrbXprKYi', NULL, 'HR Manager', 'Human Resources', 7, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(8, 'DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Director Academics', 'Academic Affairs', 4, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(9, 'DI001', 'Director ICT', 'director@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Director ICT', 'Information Technology', 6, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(10, 'DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Director Finance', 'Finance Department', 5, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(11, 'LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$GGfcvNfejW3f2fRptIUQIuK4c/W44n94twWtTAaOTqTVSuLZ52DsC', NULL, 'School Librarian', 'Library Services', 10, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(12, 'HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$YO8OuL81gpaFdgP4nJEebeXNhLeM1.hFMD5KidDV9YDGkJMdAqbgW', NULL, 'Head Nursing', 'Nursing Department', 11, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(13, 'HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$G7pMLdi2UjjmhEd8Lx0bmeaM7tGD4jrfvMsZh6HvY1Po8YqFRubRu', NULL, 'Head Midwifery', 'Midwifery Department', 12, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(14, 'LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$e52TV/DaoNDl4kjssi3Te.YHnpxHlaxatBX2wNg5yv3JkoYEEYV9i', NULL, 'Lecturer', 'Academic Affairs', 13, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(15, 'SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$1gsFX/B27b5YuIAP7D5OSO2acgrtV7RcIMeja6RblX/9e5YSFfguy', NULL, 'Senior Lecturer', 'Academic Affairs', 14, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(16, 'NTS001', 'Non-Teaching Staff', 'nonteaching@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Non-Teaching Staff', 'Administrative', 15, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(17, 'LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$kzTn6S3OUtKLmGoLNo9GOOHqIki7NwUxvZJ6pJK02Yls6eR7Bln82', NULL, 'Sickbay', 'Support', 16, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(18, 'MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Qj7feWYysqaK1INwS50PFehU09Tgf6MOUNVBJZaOw3LZW/jGHZEkO', NULL, 'Matrons', 'Student Affairs', 17, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(19, 'SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$0rLJuecuJuF6.Exxp7AQO.w0Dh0iwfwZri45gwya6OqENBJwjPA7C', NULL, 'Security', 'Security Services', 18, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(20, 'DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$HrQ6V56zJJxIz8j.2grJVOWs2DjFGzA/wxzejvE3vtkk57KFuAjge', NULL, 'Drivers', 'Transport', 19, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(21, 'WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$jCKwMrdU.s1DVuA2HHFp6eBPK05F70IUoyAvRZX6Qf3wdPsCZBXM2', NULL, 'Wardens', 'Student Affairs', 20, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(22, 'DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ANzSCNiGrURlS1ovFbQUKuK6ldOOBpiC0iW/MB7HVw/I5JC9wud.m', NULL, 'Deputy Principal', 'Academic Affairs', 22, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(23, 'STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$8qETvaYu2nreko/c/DyPROdIlMZyAciahJOVwHCV0KG4WxrcicxnS', NULL, 'Store Keeper', 'Facilities Management', 25, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(24, 'BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Bursar', 'Finance Department', 23, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(25, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Computer Lab Manager', 'Information Technology', 6, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(26, 'GP001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Guild President', 'Student Affairs', NULL, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(27, 'ADM001', 'Admissions Officer', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Admissions Officer', 'Academic Affairs', 8, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(28, 'DAN001', 'Computer Director', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$4zcQrEqXVRJuRbsabv0bu.FZ5JllaLQHcAPNPGA0.7puX3Ltmhq.K', NULL, 'Computer Director', 'Information Technology', 6, 'Active', '2026-06-13', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57');
+(50, 'DG001', 'Director General', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RU6PrzIHTgggFW3sUy.e8eYEvlvzikGAU6RRa8pgv9c/x647piOqK', NULL, 'Director General', 'Executive Office', 1, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 15:41:47', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 15:41:47'),
+(51, 'CEO001', 'CEO', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$rBRqOoVh5m0Igx4kdXtpfOFwPIDweterjIksjISwN4FCu..HteWam', NULL, 'Chief Executive Officer', 'Executive Office', 3, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:02:44', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:02:44'),
+(52, 'SP001', 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$l6XsX6XqY.Pbcd7XDzGjxeOufB1j9XfcNlv3kJGs3.MX79JWKs4ti', NULL, 'School Principal', 'Academic Affairs', 2, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:07:28', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:07:28'),
+(53, 'SEC001', 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$m3Fosy0PWOX2NDhe.H83bOrdOamiuFvKjjv3gmL591/c/f7UU6Utm', NULL, 'School Secretary', 'Administrative Office', 21, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:25:16', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:25:16'),
+(54, 'AR001', 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Cbs9kpWc7uh2KbzRTr9qNuKUmKBAG7UDxb7SE4TbebziRQRlSy8YW', NULL, 'Academic Registrar', 'Academic Affairs', 8, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:21:23', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:21:23'),
+(55, 'BUR001', 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$0z4Ii3PfeqVdR3uul1iczO5YJ2NjVg49Qla8PQ0GpUufYd0v5saXS', NULL, 'School Bursar', 'Finance Department', 9, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 14:45:06', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 14:45:06'),
+(56, 'HR001', 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$hesFYTZgh9X4Q2FyXU/4neiB7vkoIr15zwMa.R17g4DhWx2umLk22', NULL, 'HR Manager', 'Human Resources', 7, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:23:27', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:23:27'),
+(57, 'DA001', 'Director Academics', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$HbQJxmFSl2mCzxW83atloemF/UBA7sg9RKA6TqN7Mb9iKTrTdACtm', NULL, 'Director Academics', 'Academic Affairs', 4, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:05:15', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:05:15'),
+(58, 'DI001', 'Director ICT', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$5BFMhfh8zO9myR6Ha8w.g.UL0PCEIcIWXGeTbPmOF1lQizIU0Wsm2', NULL, 'Director ICT', 'Information Technology', 6, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:56:10', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:56:10'),
+(59, 'DF001', 'Director Finance', 'finance@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$uZQlJ0YNKT7FzCD7cjEVNOaXDD7xnPbqT.2Nv6qBO5O5KgaMx7NBC', NULL, 'Director Finance', 'Finance Department', 5, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:06:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:06:20'),
+(60, 'LIB001', 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3E1cG3FKr.3hRqZr.9a.j.ljYkuj/zAl376Gb8oakdPHw0nLrCqgu', NULL, 'School Librarian', 'Library Services', 10, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:49:17', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:49:17'),
+(61, 'HN001', 'Head Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$C6xhOfyPi4nj/kwaZfmoWeExbQHfnbceO7enAKt/oqs9jrdD4e7JK', NULL, 'Head Nursing', 'Nursing Department', 11, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:50:43', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:50:43'),
+(62, 'HM001', 'Head Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$LHAORiiXnly8kcd1sCJOP.r9/kJAq65lvEszWfk7DWcTeYPnNqYIO', NULL, 'Head Midwifery', 'Midwifery Department', 12, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:51:24', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:51:24'),
+(63, 'LEC001', 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$dqYUVn3eri6frqS.fmqeGuvSyQ1jXZGcGoOTgqmSi0ccxuAkejS/S', NULL, 'Lecturer', 'Academic Affairs', 13, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:53:29', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:53:29'),
+(64, 'SLE001', 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$Z7GAj95kaxlSA1vf3ebGG.fg8uNhH0dce8FtksFqTUbk6/tRS5yAW', NULL, 'Senior Lecturer', 'Academic Affairs', 14, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:52:48', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:52:48'),
+(65, 'LAB001', 'Sickbay', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$RR6yvXWHLGgbWPpQN09Jv.LX9PvVfqnBvSTIz1gP6CsH4qMNkGxyO', NULL, 'Sickbay', 'Support', 16, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:45:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:45:20'),
+(66, 'MAT001', 'Matrons', 'matron@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$BC8eNBiywm3cjp1CrGNNqefq28VFu5/ww6ZK73C7QYs8VarKkcwea', NULL, 'Matrons', 'Student Affairs', 17, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:56:12', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:56:12'),
+(67, 'SECUR001', 'Security', 'security@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$X9ngKJfjBhCXBlHYUEaZcuTRE60vcbKyyYRZJEPNZXAEeYrUUGYZO', NULL, 'Security', 'Security Services', 18, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:53:02', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:53:02'),
+(68, 'DRV001', 'Drivers', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$cogVgG3L7gIkPuGxrxzKm.kCRxTq9HnffahEUnSPACv.s8JBAsNeK', NULL, 'Drivers', 'Transport', 19, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:52:01', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:52:01'),
+(69, 'WDN001', 'Wardens', 'warden@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$FxhwWDM4Xp0bDs5WRAxbyObpbvZDvOOHf52yiamFGTmdGUQpdAUcK', NULL, 'Wardens', 'Student Affairs', 20, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:43:52', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:43:52'),
+(70, 'DP001', 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$9fOKtTQAgB/elswK9HgmE.BwFEvqipIFnSmcvJPeXpEgb3KXa8D.m', NULL, 'Deputy Principal', 'Academic Affairs', 22, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:09:19', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:09:19'),
+(71, 'STK001', 'Store Keeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$M6cl6Y9PoVugM6mlWnyEBeGOChjv8fsi3tDMFMqP43bOG6TGELDje', NULL, 'Store Keeper', 'Facilities Management', 25, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 13:54:55', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 13:54:55'),
+(72, 'CL001', 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$3zCBO5fnyXjlBI6Oaee6iO.Nznb4rpZs7dBQBTE2Z6PTNq38eCMym', NULL, 'Computer Lab Manager', 'Information Technology', 52, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 16:29:12', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 16:29:12'),
+(73, 'GUILD001', 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$wLikyrgK4SzFsYDJ5BpOnOUXG9/qOh2DuoT6ud/jVVF/eQxfEKxDC', NULL, 'Guild President', 'Student Affairs', 26, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-15 04:06:49'),
+(74, 'ADM001', 'Director Admissions', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$ObioUw9rfd59rbVBHxw60.e7n83Fmzjbtr.ZPJJgqRroTg1DI1KHy', NULL, 'Director Admissions & Requirements', 'Admissions', 27, 'Active', '2026-06-14', NULL, NULL, NULL, NULL, '2026-06-16 05:19:20', 0, NULL, NULL, 0, 1, 0, NULL, '2026-06-15 04:06:49', '2026-06-16 05:19:20');
 
 -- --------------------------------------------------------
 
@@ -4267,6 +5220,89 @@ CREATE TABLE `staff_activity_log` (
   `user_agent` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `staff_activity_log`
+--
+
+INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_description`, `module_accessed`, `record_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(5, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:24:32'),
+(6, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:25:07'),
+(7, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
+(8, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
+(9, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(10, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(11, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(12, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(13, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(14, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(15, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(16, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(17, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(18, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(19, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:00:03'),
+(20, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(21, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(22, 51, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(23, 51, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(24, 57, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(25, 57, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(26, 59, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(27, 59, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(28, 52, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(29, 52, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(30, 70, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(31, 70, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(32, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(33, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(34, 74, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(35, 74, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(36, 54, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(37, 54, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(38, 56, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:32'),
+(39, 56, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:48'),
+(40, 53, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(41, 53, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(42, 60, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(43, 60, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(44, 61, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(45, 61, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(46, 62, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(47, 62, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(48, 64, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(49, 64, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(50, 63, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(51, 63, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(52, 66, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(53, 66, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(54, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(55, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(56, 69, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(57, 69, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(58, 65, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(59, 65, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(60, 68, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(61, 68, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(62, 67, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(63, 67, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(64, 71, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(65, 71, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(66, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(67, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(68, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(69, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(70, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:49'),
+(71, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(72, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(73, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:03'),
+(74, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(75, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(76, 55, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:42'),
+(77, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
+(78, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
+(79, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:06'),
+(80, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
+(81, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12');
 
 -- --------------------------------------------------------
 
@@ -4428,39 +5464,6 @@ CREATE TABLE `staff_dashboard_access` (
   `is_active` tinyint(1) DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `staff_dashboard_access`
---
-
-INSERT INTO `staff_dashboard_access` (`id`, `staff_id`, `dashboard_path`, `access_level`, `granted_by`, `granted_at`, `expires_at`, `is_active`) VALUES
-(1, 1, 'dashboards/director-general.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(2, 3, 'dashboards/school-principal.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(3, 2, 'dashboards/ceo.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(4, 8, 'dashboards/director-academics.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(5, 10, 'dashboards/director-finance.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(6, 9, 'dashboards/director-ict.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(7, 25, 'dashboards/director-ict.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(8, 28, 'dashboards/director-ict.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(9, 7, 'dashboards/hr-manager.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(10, 5, 'dashboards/academic-registrar.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(11, 27, 'dashboards/academic-registrar.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(12, 6, 'bursar_dashboard.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(13, 11, 'dashboards/school-librarian.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(14, 12, 'dashboards/head-nursing.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(15, 13, 'dashboards/head-midwifery.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(16, 14, 'dashboards/lecturers.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(17, 15, 'dashboards/senior-lecturers.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(18, 16, 'dashboards/non-teaching-staff.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(19, 17, 'dashboards/sickbay.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(20, 18, 'dashboards/matrons.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(21, 19, 'dashboards/security.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(22, 20, 'dashboards/drivers.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(23, 21, 'dashboards/wardens.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(24, 4, 'dashboards/school-secretary.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(25, 22, 'dashboards/deputy-principal.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(26, 24, 'bursar_dashboard.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1),
-(27, 23, 'dashboards/storekeeper.php', 'Full', 1, '2026-06-13 13:51:57', NULL, 1);
-
 -- --------------------------------------------------------
 
 --
@@ -4488,18 +5491,18 @@ CREATE TABLE `staff_departments` (
 --
 
 INSERT INTO `staff_departments` (`id`, `department_name`, `department_code`, `description`, `head_of_department_id`, `parent_department_id`, `department_level`, `budget`, `location`, `contact_email`, `contact_phone`, `created_at`, `updated_at`) VALUES
-(1, 'Executive Office', 'EXEC', 'School executive management and strategic planning', NULL, NULL, 'Executive', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(2, 'Academic Affairs', 'ACAD', 'Academic programs and student services', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(3, 'Finance Department', 'FIN', 'Financial management and operations', NULL, NULL, 'Administrative', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(4, 'Human Resources', 'HR', 'Staff management and development', NULL, NULL, 'Administrative', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(5, 'Information Technology', 'ICT', 'IT infrastructure and support', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(6, 'Nursing Department', 'NUR', 'Nursing education and training', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(7, 'Midwifery Department', 'MID', 'Midwifery education and training', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(8, 'Library Services', 'LIB', 'Library and information resources', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(9, 'Student Affairs', 'STU', 'Student welfare and support services', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(10, 'Security Services', 'SEC', 'Campus security and safety', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(11, 'Facilities Management', 'FAC', 'Physical infrastructure management', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(12, 'Quality Assurance', 'QA', 'Academic quality and standards', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-13 13:51:57', '2026-06-13 13:51:57');
+(1, 'Executive Office', 'EXEC', 'School executive management and strategic planning', NULL, NULL, 'Executive', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(2, 'Academic Affairs', 'ACAD', 'Academic programs and student services', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(3, 'Finance Department', 'FIN', 'Financial management and operations', NULL, NULL, 'Administrative', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(4, 'Human Resources', 'HR', 'Staff management and development', NULL, NULL, 'Administrative', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(5, 'Information Technology', 'ICT', 'IT infrastructure and support', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(6, 'Nursing Department', 'NUR', 'Nursing education and training', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(7, 'Midwifery Department', 'MID', 'Midwifery education and training', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(8, 'Library Services', 'LIB', 'Library and information resources', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(9, 'Student Affairs', 'STU', 'Student welfare and support services', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(10, 'Security Services', 'SEC', 'Campus security and safety', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(11, 'Facilities Management', 'FAC', 'Physical infrastructure management', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(12, 'Quality Assurance', 'QA', 'Academic quality and standards', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37');
 
 -- --------------------------------------------------------
 
@@ -4521,6 +5524,25 @@ CREATE TABLE `staff_documents` (
   `uploaded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_leave_records`
+--
+
+CREATE TABLE `staff_leave_records` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `leave_type` enum('annual','sick','maternity','paternity','study','compassionate','other') NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `total_days` int GENERATED ALWAYS AS (((to_days(`end_date`) - to_days(`start_date`)) + 1)) STORED,
+  `reason` text,
+  `status` enum('Pending','Approved','Rejected','Cancelled') DEFAULT 'Pending',
+  `approved_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -4583,6 +5605,47 @@ CREATE TABLE `staff_login_sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
+-- Dumping data for table `staff_login_sessions`
+--
+
+INSERT INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `device_info`, `browser_info`, `ip_address`, `user_agent`, `is_active`, `created_at`, `last_activity`, `expires_at`) VALUES
+(3, 50, 'os4h7bo4283hnll87ubnlap28t', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 04:56:44', '2026-06-15 04:56:44', '2026-06-15 05:26:44'),
+(4, 72, '63vqlfhebkncagpqqa0060nv65', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:21:43', '2026-06-15 08:21:43', '2026-06-15 08:51:43'),
+(5, 58, 'c4qv0qe44gou7111oc26408762', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:33:23', '2026-06-15 08:33:23', '2026-06-15 09:03:23'),
+(6, 72, 'pe2qda7hn0ljeegvgii1bj86gh', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:35:44', '2026-06-15 08:35:44', '2026-06-15 09:05:44'),
+(7, 72, 'pe7q2h34t34u1cfsunn0q6tqhp', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-15 08:52:53', '2026-06-15 08:52:53', '2026-06-15 09:22:53'),
+(8, 72, 'ophkcr14u73rps2p0cv42gi8tm', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 04:41:54', '2026-06-16 04:41:54', '2026-06-16 05:11:54'),
+(9, 50, '71bc7tm3anosuga7ftcjma7bii', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:01:14', '2026-06-16 05:01:14', '2026-06-16 05:31:14'),
+(10, 51, '2a78l1oj0pt4kd9d6ktn4t1be0', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:02:44', '2026-06-16 05:02:44', '2026-06-16 05:32:44'),
+(11, 57, 'u4lmhm93gek7nvm7bm0hosqpep', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:05:15', '2026-06-16 05:05:15', '2026-06-16 05:35:15'),
+(12, 59, 'fb983ub5bihv8etar2dgb0bfoj', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:06:20', '2026-06-16 05:06:20', '2026-06-16 05:36:20'),
+(13, 52, 'dr6gjkckuutkei3edd9pk6m8us', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:07:28', '2026-06-16 05:07:28', '2026-06-16 05:37:28'),
+(14, 70, 'fo0rfoabbe47udgnrpmra1osgg', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:09:20', '2026-06-16 05:09:20', '2026-06-16 05:39:20'),
+(15, 55, '1s7ulcnj63u4e44bunstvl5mpi', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:10:17', '2026-06-16 05:10:17', '2026-06-16 05:40:17'),
+(16, 74, 'b8u4m66imeq8hct40h3ac3suuv', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:19:25', '2026-06-16 05:19:25', '2026-06-16 05:49:25'),
+(17, 54, 'ee8f8mjieivt20jli5v04j8fhh', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:21:24', '2026-06-16 05:21:24', '2026-06-16 05:51:24'),
+(18, 56, '643dp5igtukce6nnba8l74pu5c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:23:32', '2026-06-16 05:23:32', '2026-06-16 05:53:32'),
+(19, 53, 'i2hm8s4r9agfb7557188ugis5c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:25:17', '2026-06-16 05:25:17', '2026-06-16 05:55:17'),
+(20, 60, 'rh1p6028iq8l0r2lbec0jv9bp1', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:49:17', '2026-06-16 05:49:17', '2026-06-16 06:19:17'),
+(21, 61, '9j28f91h6ik9emvvk72cd85k9j', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:50:43', '2026-06-16 05:50:43', '2026-06-16 06:20:43'),
+(22, 62, 'fgq5rmfaq0s08ebn1beg2c7qfp', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:51:24', '2026-06-16 05:51:24', '2026-06-16 06:21:24'),
+(23, 64, 'd2fvsje83pqnphhrpndcnrh4eo', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:52:48', '2026-06-16 05:52:48', '2026-06-16 06:22:48'),
+(24, 63, 'rgdkuo18k2b59itjh3rkfjmhhq', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:53:29', '2026-06-16 05:53:29', '2026-06-16 06:23:29'),
+(25, 66, 'ffoielbnhd86mu2cgsufl3ga87', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:56:12', '2026-06-16 05:56:12', '2026-06-16 06:26:12'),
+(26, 72, 'pch15h8l06qub0oa42gantc7ra', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 05:57:03', '2026-06-16 05:57:03', '2026-06-16 06:27:03'),
+(27, 69, 'n63qg8lljasqcv5hhljul41i1c', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:43:52', '2026-06-16 13:43:52', '2026-06-16 14:13:52'),
+(28, 65, 'v2umasvp9ih0u9emlhr4oudq0j', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:45:20', '2026-06-16 13:45:20', '2026-06-16 14:15:20'),
+(29, 68, '1d1l2f29a5t7g2ug5uukpusdh2', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:52:01', '2026-06-16 13:52:01', '2026-06-16 14:22:01'),
+(30, 67, 's65eelepdorelhujveu0i8hbos', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:53:02', '2026-06-16 13:53:02', '2026-06-16 14:23:02'),
+(31, 71, 'c0uft4a70rt0eu5up2ngnkjg34', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:54:55', '2026-06-16 13:54:55', '2026-06-16 14:24:55'),
+(32, 58, 'io7shnp09m3tfcjpvmclj9352m', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 13:56:10', '2026-06-16 13:56:10', '2026-06-16 14:26:10'),
+(33, 50, 'n45spgrtb6tnq198trmaj8ukbu', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:43:18', '2026-06-16 14:43:18', '2026-06-16 15:13:18'),
+(34, 72, '9n4e019vlehlapjnb01odvp01n', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:44:53', '2026-06-16 14:44:53', '2026-06-16 15:14:53'),
+(35, 55, 'hqlrfgmu4t286im6o7mp2fubv7', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 14:45:06', '2026-06-16 14:45:06', '2026-06-16 15:15:06'),
+(36, 50, 'lcvpjihg2uj2ssnh7288acb3hq', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 15:41:49', '2026-06-16 15:41:49', '2026-06-16 16:11:49'),
+(37, 72, 'fl4de4pel0moq2n53arqu8sqfd', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 1, '2026-06-16 16:29:12', '2026-06-16 16:29:12', '2026-06-16 16:59:12');
+
+--
 -- Triggers `staff_login_sessions`
 --
 DELIMITER $$
@@ -4600,21 +5663,21 @@ DELIMITER ;
 -- (See below for the actual view)
 --
 CREATE TABLE `staff_login_view` (
-`account_status` varchar(7)
-,`dashboard_path` varchar(255)
-,`department` varchar(100)
-,`email` varchar(100)
-,`full_name` varchar(100)
-,`id` int
-,`is_first_login` tinyint(1)
-,`last_login` timestamp
-,`locked_until` timestamp
-,`login_attempts` int
-,`position` varchar(100)
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
-,`role_name` varchar(100)
+`id` int
 ,`staff_id` varchar(50)
+,`full_name` varchar(100)
+,`email` varchar(100)
+,`position` varchar(100)
+,`department` varchar(100)
+,`role_name` varchar(100)
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`dashboard_path` varchar(255)
 ,`status` enum('Active','Inactive','On Leave','Suspended')
+,`last_login` timestamp
+,`login_attempts` int
+,`locked_until` timestamp
+,`is_first_login` tinyint(1)
+,`account_status` varchar(7)
 );
 
 -- --------------------------------------------------------
@@ -4692,6 +5755,21 @@ CREATE TABLE `staff_permissions` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `staff_permissions`
+--
+
+INSERT INTO `staff_permissions` (`id`, `staff_id`, `module`, `permission_level`, `granted_by`, `granted_at`, `expires_at`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 72, 'computer_lab', 'Admin', 72, '2026-06-15 04:24:32', NULL, 1, '2026-06-15 04:24:32', '2026-06-15 04:24:32'),
+(2, 72, 'it_inventory', 'Admin', 72, '2026-06-15 04:24:32', NULL, 1, '2026-06-15 04:24:32', '2026-06-15 04:24:32'),
+(3, 72, 'it_support', 'Admin', 72, '2026-06-15 04:24:32', NULL, 1, '2026-06-15 04:24:32', '2026-06-15 04:24:32'),
+(4, 72, 'computer_lab', 'Admin', 72, '2026-06-15 04:25:07', NULL, 1, '2026-06-15 04:25:07', '2026-06-15 04:25:07'),
+(5, 72, 'it_inventory', 'Admin', 72, '2026-06-15 04:25:07', NULL, 1, '2026-06-15 04:25:07', '2026-06-15 04:25:07'),
+(6, 72, 'it_support', 'Admin', 72, '2026-06-15 04:25:07', NULL, 1, '2026-06-15 04:25:07', '2026-06-15 04:25:07'),
+(7, 72, 'computer_lab', 'Admin', 72, '2026-06-15 04:27:20', NULL, 1, '2026-06-15 04:27:20', '2026-06-15 04:27:20'),
+(8, 72, 'it_inventory', 'Admin', 72, '2026-06-15 04:27:20', NULL, 1, '2026-06-15 04:27:20', '2026-06-15 04:27:20'),
+(9, 72, 'it_support', 'Admin', 72, '2026-06-15 04:27:20', NULL, 1, '2026-06-15 04:27:20', '2026-06-15 04:27:20');
 
 -- --------------------------------------------------------
 
@@ -4844,31 +5922,31 @@ CREATE TABLE `staff_roles` (
 --
 
 INSERT INTO `staff_roles` (`id`, `role_name`, `role_description`, `role_level`, `dashboard_path`, `permissions`, `created_at`, `updated_at`) VALUES
-(1, 'Director General', 'Overall school administration and management with full access to all modules and departments', 'Executive', 'dashboards/director-general.php', '{\"all\": true, \"can_view_hr\": true, \"super_admin\": true, \"can_edit_all_data\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_delete_all_data\": true, \"can_manage_all_staff\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_access_all_dashboards\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(2, 'School Principal', 'School academic and administrative leadership with cross-departmental viewing access', 'Executive', 'dashboards/school-principal.php', '{\"staff\": true, \"academic\": true, \"students\": true, \"can_view_hr\": true, \"administrative\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(3, 'CEO', 'Chief Executive Officer for strategic management with cross-departmental viewing access', 'Executive', 'dashboards/ceo.php', '{\"financial\": true, \"strategic\": true, \"can_view_hr\": true, \"operational\": true, \"can_view_reports\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(4, 'Director Academics', 'Academic programs and curriculum oversight with cross-departmental viewing access', 'Management', 'dashboards/director-academics.php', '{\"faculty\": true, \"academic\": true, \"curriculum\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_manage_courses\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(5, 'Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{\"budgeting\": true, \"financial\": true, \"reporting\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_manage_finances\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(6, 'Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{\"ict\": true, \"systems\": true, \"can_view_hr\": true, \"infrastructure\": true, \"can_manage_system\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(7, 'HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{\"hr\": true, \"staff\": true, \"training\": true, \"recruitment\": true, \"can_manage_staff\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(8, 'Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{\"academic\": true, \"students\": true, \"transcripts\": true, \"certificates\": true, \"registration\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(9, 'School Bursar', 'Financial operations and fee management', 'Administrative', 'bursar_dashboard.php', '{\"fees\": true, \"financial\": true, \"collections\": true, \"can_manage_fees\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(10, 'School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{\"catalog\": true, \"library\": true, \"resources\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(11, 'Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{\"faculty\": true, \"nursing\": true, \"department\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(12, 'Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{\"faculty\": true, \"midwifery\": true, \"department\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(13, 'Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{\"courses\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(14, 'Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{\"senior\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(15, 'Non-Teaching Staff', 'Administrative and support staff', 'Administrative', 'dashboards/non-teaching-staff.php', '{\"support\": true, \"administrative\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(16, 'Sickbay', 'Medical and healthcare support services', 'Support', 'dashboards/sickbay.php', '{\"medical\": true, \"patient\": true, \"healthcare\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(17, 'Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{\"residential\": true, \"student_welfare\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(18, 'Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{\"safety\": true, \"security\": true, \"emergency\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(19, 'Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{\"vehicles\": true, \"transportation\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(20, 'Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{\"discipline\": true, \"residential\": true, \"student_welfare\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(21, 'School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{\"documentation\": true, \"administrative\": true, \"can_manage_documents\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(22, 'Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{\"academic\": true, \"administrative\": true, \"can_assist_principal\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(23, 'Bursar', 'Financial assistant', 'Administrative', 'bursar_dashboard.php', '{\"fees\": true, \"financial\": true, \"can_assist_bursar\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(24, 'Secretary', 'Administrative assistant', 'Administrative', 'dashboards/school-secretary.php', '{\"documentation\": true, \"administrative\": true, \"can_assist_secretary\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(25, 'Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{\"store\": true, \"inventory\": true, \"can_manage_store\": true}', '2026-06-13 13:51:56', '2026-06-13 13:51:56');
+(1, 'Director General', 'Overall school administration and management with full access to all modules and departments', 'Executive', 'dashboards/director-general.php', '{\"all\": true, \"can_view_hr\": true, \"super_admin\": true, \"can_edit_all_data\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_delete_all_data\": true, \"can_manage_all_staff\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_access_all_dashboards\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(2, 'School Principal', 'School academic and administrative leadership with cross-departmental viewing access', 'Executive', 'dashboards/school-principal.php', '{\"staff\": true, \"academic\": true, \"students\": true, \"can_view_hr\": true, \"administrative\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(3, 'CEO', 'Chief Executive Officer for strategic management with cross-departmental viewing access', 'Executive', 'dashboards/ceo.php', '{\"financial\": true, \"strategic\": true, \"can_view_hr\": true, \"operational\": true, \"can_view_reports\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(4, 'Director Academics', 'Academic programs and curriculum oversight with cross-departmental viewing access', 'Management', 'dashboards/director-academics.php', '{\"faculty\": true, \"academic\": true, \"curriculum\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_manage_courses\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(5, 'Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{\"budgeting\": true, \"financial\": true, \"reporting\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_manage_finances\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(6, 'Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{\"ict\": true, \"systems\": true, \"can_view_hr\": true, \"infrastructure\": true, \"can_manage_system\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(7, 'HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{\"hr\": true, \"staff\": true, \"training\": true, \"recruitment\": true, \"can_manage_staff\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(8, 'Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{\"academic\": true, \"students\": true, \"transcripts\": true, \"certificates\": true, \"registration\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(9, 'School Bursar', 'Financial operations and fee management', 'Administrative', 'bursar_dashboard.php', '{\"fees\": true, \"financial\": true, \"collections\": true, \"can_manage_fees\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(10, 'School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{\"catalog\": true, \"library\": true, \"resources\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(11, 'Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{\"faculty\": true, \"nursing\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(12, 'Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{\"faculty\": true, \"midwifery\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(13, 'Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{\"courses\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(14, 'Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{\"senior\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(16, 'Sickbay', 'Medical and healthcare support services', 'Support', 'dashboards/sickbay.php', '{\"medical\": true, \"patient\": true, \"healthcare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(17, 'Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{\"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(18, 'Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{\"safety\": true, \"security\": true, \"emergency\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(19, 'Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{\"vehicles\": true, \"transportation\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(20, 'Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{\"discipline\": true, \"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(21, 'School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{\"documentation\": true, \"administrative\": true, \"can_manage_documents\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(22, 'Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{\"academic\": true, \"administrative\": true, \"can_assist_principal\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(25, 'Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{\"store\": true, \"inventory\": true, \"can_manage_store\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(26, 'Guild President', 'Student guild', 'Support', 'dashboards/guild-president.php', '{\"student_affairs\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
+(27, 'Director Admissions & Requirements', 'Admissions management', 'Management', 'dashboards/director-admissions.php', '{\"admissions\": true, \"requirements\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
+(52, 'Computer Lab Manager', 'Computer lab operations and IT support', 'Support', 'computer_lab.php', '{\"ict\": true, \"it_support\": true, \"lab_management\": true}', '2026-06-15 04:24:02', '2026-06-15 04:24:02');
 
 -- --------------------------------------------------------
 
@@ -4916,6 +5994,396 @@ CREATE TABLE `staff_training` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `store_categories`
+--
+
+CREATE TABLE `store_categories` (
+  `id` int NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `description` text,
+  `icon` varchar(50) DEFAULT 'fas fa-box',
+  `status` enum('active','inactive') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `store_categories`
+--
+
+INSERT INTO `store_categories` (`id`, `category_name`, `description`, `icon`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'General Utilities', 'Office supplies, cleaning, electrical, and general maintenance items', 'fas fa-tools', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(2, 'Food Store Supplies', 'Food items, cooking ingredients, and kitchen supplies', 'fas fa-utensils', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(3, 'Medical Supplies', 'Medical consumables, gloves, dressings, and clinical items', 'fas fa-kit-medical', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(4, 'Cleaning & Hygiene', 'Cleaning agents, sanitizers, and hygiene products', 'fas fa-pump-soap', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(5, 'Office Stationery', 'Paper, writing materials, filing and office stationery', 'fas fa-pen-ruler', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(6, 'Electrical & Hardware', 'Electrical fittings, tools, and hardware items', 'fas fa-bolt', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(7, 'Kitchen & Dining', 'Kitchen utensils, dining items, and catering supplies', 'fas fa-kitchen-set', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(8, 'Furniture & Storage', 'Furniture, shelves, filing cabinets, and storage items', 'fas fa-couch', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(9, 'ICT Supplies', 'Computer consumables, printer supplies, and ICT accessories', 'fas fa-laptop', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(10, 'Teaching & Training', 'Teaching aids, simulation supplies, and training materials', 'fas fa-chalkboard-user', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory`
+--
+
+CREATE TABLE `store_inventory` (
+  `id` int NOT NULL,
+  `category_id` int NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `description` text,
+  `quantity` decimal(15,3) NOT NULL DEFAULT '0.000',
+  `unit` varchar(50) NOT NULL DEFAULT 'pcs',
+  `reorder_level` decimal(15,3) DEFAULT '10.000',
+  `unit_price` decimal(15,2) DEFAULT '0.00',
+  `location` varchar(100) DEFAULT 'Main Store',
+  `status` enum('active','inactive','discontinued') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `store_inventory`
+--
+
+INSERT INTO `store_inventory` (`id`, `category_id`, `item_name`, `description`, `quantity`, `unit`, `reorder_level`, `unit_price`, `location`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Surgical Gloves', NULL, 0.100, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-16 13:55:17'),
+(2, 1, 'Binding Tape', NULL, 0.000, 'rolls', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(3, 1, 'Examination Gloves', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(4, 1, 'Masking Tape', NULL, 0.000, 'rolls', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(5, 1, 'Sink Pumps', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(6, 1, 'Ruled Reams', NULL, 0.000, 'reams', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(7, 1, 'Requirements Clearance Books', NULL, 0.000, 'books', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(8, 1, 'Receipt Books', NULL, 0.000, 'books', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(9, 1, 'Photocopying Reams', NULL, 0.000, 'reams', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(10, 1, 'Payment Voucher Books', NULL, 0.000, 'books', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(11, 1, 'Binding Rings', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(12, 1, 'Ring Binder Files', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(13, 1, 'Box Files', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(14, 1, 'Counter Books', NULL, 0.000, 'books', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(15, 1, 'Layer File Trays', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(16, 1, 'Atlas Files', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(17, 1, 'Domiciliary Kit Bags', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(18, 1, 'PVC Covers', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(19, 1, 'Laminating Paper', NULL, 0.000, 'packs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(20, 1, 'Liquid Soap', NULL, 0.000, 'liters', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(21, 1, 'Toilet Papers', NULL, 0.000, 'rolls', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(22, 1, 'Insulation Tape', NULL, 0.000, 'rolls', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(23, 1, 'Carbon Papers', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(24, 1, 'Blackboard Dusters', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:34:59', '2026-06-14 18:34:59'),
+(25, 4, 'Omo (Detergent)', NULL, 0.000, 'kg', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(26, 4, 'Vim (Cleaning Powder)', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(27, 4, 'Jik (Bleach)', NULL, 0.000, 'liters', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(28, 4, 'Scrubbing Brushes', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(29, 4, 'Squeezers', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(30, 4, 'Mops', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(31, 4, 'Toilet Brushes', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(32, 4, 'Cobweb Brushes', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(33, 4, 'Soft Brooms', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(34, 4, 'Compound Brooms', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(35, 4, 'Rakes', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(36, 4, 'Stainless Steel Cleaner', NULL, 0.000, 'liters', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(37, 4, 'Floor Polish', NULL, 0.000, 'liters', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(38, 4, 'Air Freshener', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(39, 4, 'Hand Sanitizer', NULL, 0.000, 'liters', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(40, 4, 'Disposable Gloves (Cleaning)', NULL, 0.000, 'pairs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(41, 4, 'Dustbins', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(42, 4, 'Dustpans', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(43, 4, 'Buckets', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(44, 4, 'Wheelbarrows', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(45, 5, 'A3 Envelopes', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(46, 5, 'A4 Envelopes', NULL, 0.000, 'packs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(47, 5, 'A5 Envelopes', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(48, 5, 'Markers (Permanent)', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(49, 5, 'Markers (Whiteboard)', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(50, 5, 'Color Papers', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(51, 5, 'Staple Wires', NULL, 0.000, 'boxes', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(52, 5, 'Paper Clips', NULL, 0.000, 'boxes', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(53, 5, 'Chalk (White)', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(54, 5, 'Chalk (Colored)', NULL, 0.000, 'boxes', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(55, 5, 'Pens (Blue)', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(56, 5, 'Pens (Black)', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(57, 5, 'Pens (Red)', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(58, 5, 'Pencils', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(59, 5, 'Rubbers (Erasers)', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(60, 5, 'Office Glue', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(61, 5, 'Stick Glue', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(62, 5, 'Sticky Notes', NULL, 0.000, 'pads', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(63, 5, 'Stapler Machines', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(64, 5, 'Stapler Removers', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(65, 5, 'Hole Punchers', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(66, 5, 'Rulers (30cm)', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(67, 5, 'Scissors', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(68, 5, 'Calculators (Basic)', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(69, 5, 'Bulldog Clips', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(70, 5, 'Highlighter Markers', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(71, 5, 'Correction Fluid', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(72, 5, 'Correction Tape', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(73, 5, 'Manila Envelopes', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(74, 5, 'Sticker Labels', NULL, 0.000, 'sheets', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(75, 6, 'Double Gang Switches', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(76, 6, 'Single Gang Switches', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(77, 6, 'Lamp Holders', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(78, 6, 'Single Sockets', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(79, 6, 'Double Sockets', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(80, 6, 'Bulbs (LED 10W)', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(81, 6, 'Bulbs (LED 20W)', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(82, 6, 'Bulbs (LED 40W)', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(83, 6, 'Mounting Boxes', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(84, 6, 'PVC Conduit Pipes', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(85, 6, 'Electrical Cables (1.5mm)', NULL, 0.000, 'meters', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(86, 6, 'Electrical Cables (2.5mm)', NULL, 0.000, 'meters', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(87, 6, 'Socket Spanners', NULL, 0.000, 'sets', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(88, 6, 'Screwdrivers Set', NULL, 0.000, 'sets', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(89, 6, 'Hammers', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(90, 6, 'Combination Pliers', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(91, 6, 'Long Nose Pliers', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(92, 6, 'Measuring Tapes', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(93, 6, 'Padlocks', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(94, 6, 'Door Handles', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(95, 6, 'Door Hinges', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(96, 6, 'WD-40 Lubricant', NULL, 0.000, 'cans', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(97, 6, 'Painter Masking Tape', NULL, 0.000, 'rolls', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(98, 6, 'PVC Glue', NULL, 0.000, 'cans', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(99, 6, 'Super Glue', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(100, 2, 'Posho (Maize Flour)', NULL, 0.000, 'kg', 500.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(101, 2, 'Rice', NULL, 0.000, 'kg', 300.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(102, 2, 'Beans', NULL, 0.000, 'kg', 300.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(103, 2, 'Salt', NULL, 0.000, 'kg', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(104, 2, 'Cooking Oil', NULL, 0.000, 'liters', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(105, 2, 'Sugar', NULL, 0.000, 'kg', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(106, 2, 'Plates (Melamine)', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(107, 2, 'Plates (Ceramic)', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(108, 2, 'Cups (Plastic)', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(109, 2, 'Cups (Ceramic)', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(110, 2, 'Tablespoons', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(111, 2, 'Teaspoons', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(112, 2, 'Forks', NULL, 0.000, 'pcs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(113, 2, 'Kitchen Knives', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(114, 2, 'Sauce Pans', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(115, 2, 'Cooking Pots (Large)', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(116, 2, 'Cooking Pots (Medium)', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(117, 2, 'Frying Pans', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(118, 2, 'Thermos Flasks', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(119, 2, 'Water Jugs', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(120, 2, 'Charcoal', NULL, 0.000, 'bags', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(121, 2, 'Firewood', NULL, 0.000, 'bundles', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(122, 2, 'Tea Leaves', NULL, 0.000, 'kg', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(123, 2, 'Milk Powder', NULL, 0.000, 'kg', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(124, 2, 'Baking Flour', NULL, 0.000, 'kg', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(125, 2, 'Tomato Paste', NULL, 0.000, 'cans', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(126, 2, 'Onions', NULL, 0.000, 'kg', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(127, 2, 'Irish Potatoes', NULL, 0.000, 'kg', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(128, 2, 'Matooke (Green Bananas)', NULL, 0.000, 'bunches', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(129, 2, 'Cassava Flour', NULL, 0.000, 'kg', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(130, 2, 'Ghee', NULL, 0.000, 'kg', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(131, 2, 'Groundnut Paste', NULL, 0.000, 'kg', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(132, 2, 'Soy Flour', NULL, 0.000, 'kg', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(133, 2, 'Cabbage', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(134, 2, 'Dried Fish', NULL, 0.000, 'kg', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(135, 2, 'Pasta (Spaghetti/Macaroni)', NULL, 0.000, 'kg', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(136, 7, 'Chopping Boards', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(137, 7, 'Kitchen Towels', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(138, 7, 'Kitchen Aprons', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(139, 7, 'Oven Gloves', NULL, 0.000, 'pairs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(140, 7, 'Colanders', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(141, 7, 'Measuring Cups', NULL, 0.000, 'sets', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(142, 7, 'Water Dispensers', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(143, 7, 'Ice Cube Trays', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(144, 7, 'Food Storage Containers', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(145, 7, 'Serving Trays', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(146, 3, 'Sterile Surgical Gloves', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(147, 3, 'Latex Examination Gloves', NULL, 0.000, 'boxes', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(148, 3, 'Nitrile Examination Gloves', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(149, 3, 'Surgical Face Masks', NULL, 0.000, 'boxes', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(150, 3, 'N95 Face Masks', NULL, 0.000, 'boxes', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(151, 3, 'Syringes (5ml)', NULL, 0.000, 'packs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(152, 3, 'Syringes (10ml)', NULL, 0.000, 'packs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(153, 3, 'Cotton Wool', NULL, 0.000, 'rolls', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(154, 3, 'Gauze Swabs', NULL, 0.000, 'packs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(155, 3, 'Crepe Bandages', NULL, 0.000, 'rolls', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(156, 3, 'Elastic Bandages', NULL, 0.000, 'rolls', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(157, 3, 'Medical Adhesive Tape', NULL, 0.000, 'rolls', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(158, 3, 'Wound Dressings (Plaster)', NULL, 0.000, 'packs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(159, 3, 'Dettol Antiseptic', NULL, 0.000, 'liters', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(160, 3, 'Methylated Spirit', NULL, 0.000, 'liters', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(161, 3, 'Hydrogen Peroxide', NULL, 0.000, 'liters', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(162, 3, 'Betadine Solution', NULL, 0.000, 'liters', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(163, 3, 'Digital Thermometers', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(164, 3, 'Manual BP Machines', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(165, 3, 'Digital BP Machines', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(166, 3, 'Stethoscopes', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(167, 3, 'Tongue Depressors', NULL, 0.000, 'packs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(168, 3, 'Urine Test Strips', NULL, 0.000, 'packs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(169, 3, 'Specimen Containers', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(170, 3, 'Sharps Disposal Containers', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(171, 3, 'Disposable Bed Sheets', NULL, 0.000, 'packs', 50.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(172, 3, 'Disposable Protective Gowns', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(173, 3, 'Disposable Shoe Covers', NULL, 0.000, 'pairs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(174, 3, 'Disposable Hair Caps', NULL, 0.000, 'pcs', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(175, 9, 'HP Toner Cartridges', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(176, 9, 'Canon Toner Cartridges', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(177, 9, 'Epson Toner Cartridges', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(178, 9, 'A4 Printing Paper', NULL, 0.000, 'reams', 100.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(179, 9, 'A3 Printing Paper', NULL, 0.000, 'reams', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(180, 9, 'Flash Drives (16GB)', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(181, 9, 'Flash Drives (32GB)', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(182, 9, 'External Hard Drives (1TB)', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(183, 9, 'USB Keyboards', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(184, 9, 'USB Mice', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(185, 9, 'Mouse Pads', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(186, 9, 'USB Cables', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(187, 9, 'HDMI Cables', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(188, 9, 'VGA Cables', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(189, 9, 'Power Extension Strips', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(190, 9, 'UPS Batteries', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(191, 9, 'Cat6 Ethernet Cables', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(192, 9, 'Webcams', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(193, 9, 'Headphones', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(194, 9, 'Printer Label Sheets', NULL, 0.000, 'packs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:00', '2026-06-14 18:35:00'),
+(195, 8, 'Office Desks', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(196, 8, 'Office Chairs', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(197, 8, 'Visitor Chairs', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(198, 8, '4-Drawer Filing Cabinets', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(199, 8, 'Bookshelves', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(200, 8, 'Large Whiteboards', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(201, 8, 'Small Whiteboards', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(202, 8, 'Cork Notice Boards', NULL, 0.000, 'pcs', 15.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(203, 8, 'Conference Tables', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(204, 8, 'Metal Storage Shelves', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(205, 8, 'Personal Lockers', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(206, 8, 'Waste Paper Baskets', NULL, 0.000, 'pcs', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(207, 10, 'Skeleton Anatomical Models', NULL, 0.000, 'pcs', 3.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(208, 10, 'Organ Anatomical Models', NULL, 0.000, 'sets', 3.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(209, 10, 'Resuscitation Mannequins', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(210, 10, 'Injection Practice Pads', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(211, 10, 'IV Training Arms', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(212, 10, 'Catheterization Models', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(213, 10, 'Baby Delivery Simulators', NULL, 0.000, 'pcs', 3.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(214, 10, 'First Aid Kits', NULL, 0.000, 'kits', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(215, 10, 'Portable Projectors', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(216, 10, 'Projector Screens', NULL, 0.000, 'pcs', 5.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(217, 10, 'Flip Chart Stands', NULL, 0.000, 'pcs', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(218, 10, 'Flip Chart Pads', NULL, 0.000, 'pads', 30.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(219, 10, 'Nursing Wall Charts', NULL, 0.000, 'sets', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(220, 10, 'Midwifery Wall Charts', NULL, 0.000, 'sets', 10.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01'),
+(221, 10, 'Educational DVDs', NULL, 0.000, 'pcs', 20.000, 0.00, 'Main Store', 'active', '2026-06-14 18:35:01', '2026-06-14 18:35:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_inventory_transactions`
+--
+
+CREATE TABLE `store_inventory_transactions` (
+  `id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `transaction_type` enum('add','remove','adjust','request_fulfilled','order_received','returned','damaged') NOT NULL,
+  `quantity` decimal(15,3) NOT NULL,
+  `quantity_before` decimal(15,3) DEFAULT '0.000',
+  `quantity_after` decimal(15,3) DEFAULT '0.000',
+  `reference_type` varchar(50) DEFAULT NULL,
+  `reference_id` int DEFAULT NULL,
+  `reason` text,
+  `created_by` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `store_inventory_transactions`
+--
+
+INSERT INTO `store_inventory_transactions` (`id`, `item_id`, `transaction_type`, `quantity`, `quantity_before`, `quantity_after`, `reference_type`, `reference_id`, `reason`, `created_by`, `created_at`) VALUES
+(1, 1, 'add', 0.100, 0.000, 0.100, NULL, NULL, 'new', 71, '2026-06-16 13:55:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_orders`
+--
+
+CREATE TABLE `store_orders` (
+  `id` int NOT NULL,
+  `order_number` varchar(50) NOT NULL,
+  `supplier` varchar(200) DEFAULT 'Internal Requisition',
+  `notes` text,
+  `total_amount` decimal(15,2) DEFAULT '0.00',
+  `status` enum('draft','pending_approval','approved','ordered','partially_received','received','cancelled') DEFAULT 'draft',
+  `requested_by` int NOT NULL,
+  `approved_by` int DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `received_by` int DEFAULT NULL,
+  `received_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_order_items`
+--
+
+CREATE TABLE `store_order_items` (
+  `id` int NOT NULL,
+  `order_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `quantity_ordered` decimal(15,3) NOT NULL,
+  `quantity_received` decimal(15,3) DEFAULT '0.000',
+  `unit_price` decimal(15,2) DEFAULT '0.00',
+  `notes` text,
+  `status` enum('pending','received','cancelled') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_requests`
+--
+
+CREATE TABLE `store_requests` (
+  `id` int NOT NULL,
+  `request_number` varchar(50) NOT NULL,
+  `requested_by` int NOT NULL,
+  `department` varchar(200) DEFAULT NULL,
+  `notes` text,
+  `urgency` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `status` enum('pending','approved','partially_fulfilled','fulfilled','rejected','forwarded') DEFAULT 'pending',
+  `forwarded_to` int DEFAULT NULL,
+  `forwarded_to_role` varchar(100) DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `fulfilled_by` int DEFAULT NULL,
+  `fulfilled_at` datetime DEFAULT NULL,
+  `rejection_reason` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_request_items`
+--
+
+CREATE TABLE `store_request_items` (
+  `id` int NOT NULL,
+  `request_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `quantity_requested` decimal(15,3) NOT NULL,
+  `quantity_fulfilled` decimal(15,3) DEFAULT '0.000',
+  `unit_price` decimal(15,2) DEFAULT '0.00',
+  `notes` text,
+  `status` enum('pending','fulfilled','cancelled') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `students`
 --
 
@@ -4958,6 +6426,30 @@ CREATE TABLE `student_academic_profiles` (
   `gpa` decimal(3,2) DEFAULT '0.00',
   `academic_status` enum('Good Standing','Probation','Suspension') DEFAULT 'Good Standing',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_activities`
+--
+
+CREATE TABLE `student_activities` (
+  `id` int NOT NULL,
+  `activity_number` varchar(50) NOT NULL,
+  `activity_name` varchar(200) NOT NULL,
+  `activity_type` enum('Sports','Cultural','Academic','Social','Religious','Workshop','Other') NOT NULL,
+  `description` text,
+  `activity_date` date NOT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(200) DEFAULT NULL,
+  `organizer_id` int NOT NULL,
+  `max_participants` int DEFAULT NULL,
+  `current_participants` int DEFAULT '0',
+  `status` enum('Planning','Open for Registration','Registration Closed','In Progress','Completed','Cancelled') DEFAULT 'Planning',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -5129,6 +6621,31 @@ CREATE TABLE `student_health_incidents` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_health_records`
+--
+
+CREATE TABLE `student_health_records` (
+  `id` int NOT NULL,
+  `record_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `blood_type` varchar(10) DEFAULT NULL,
+  `allergies` text,
+  `chronic_conditions` text,
+  `medications` text,
+  `emergency_contact_name` varchar(200) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
+  `emergency_contact_relationship` varchar(100) DEFAULT NULL,
+  `insurance_provider` varchar(200) DEFAULT NULL,
+  `insurance_number` varchar(100) DEFAULT NULL,
+  `last_checkup_date` date DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_invoices`
 --
 
@@ -5288,31 +6805,51 @@ CREATE TABLE `student_search_index` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_search_view` (
-`academic_year` varchar(20)
-,`cgpa` decimal(3,2)
-,`current_photo` varchar(500)
-,`district` varchar(100)
-,`email` varchar(100)
-,`first_name` varchar(100)
-,`full_name` varchar(255)
-,`gpa` decimal(3,2)
-,`guardian_name` varchar(200)
-,`guardian_phone` varchar(20)
-,`has_photo` int
-,`id` int
-,`index_number` varchar(50)
-,`intake_set` varchar(20)
-,`last_name` varchar(100)
+`id` int
+,`student_number` varchar(50)
 ,`national_id` varchar(50)
+,`index_number` varchar(50)
+,`registration_number` varchar(50)
+,`full_name` varchar(255)
+,`first_name` varchar(100)
+,`last_name` varchar(100)
+,`email` varchar(100)
 ,`phone` varchar(20)
 ,`program` varchar(100)
-,`registration_number` varchar(50)
-,`semester` varchar(50)
-,`staff_dashboard` varchar(255)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
-,`student_number` varchar(50)
+,`intake_set` varchar(20)
 ,`year_of_study` int
+,`semester` varchar(50)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
+,`district` varchar(100)
+,`guardian_name` varchar(200)
+,`guardian_phone` varchar(20)
+,`current_photo` varchar(500)
+,`has_photo` int
+,`staff_dashboard` binary(0)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_welfare_cases`
+--
+
+CREATE TABLE `student_welfare_cases` (
+  `id` int NOT NULL,
+  `case_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `case_type` enum('Academic Support','Personal Counseling','Financial Support','Health Issues','Disciplinary Issues','Homesickness','Family Problems','Other') NOT NULL,
+  `priority` enum('Low','Medium','High','Urgent') DEFAULT 'Medium',
+  `case_description` text NOT NULL,
+  `immediate_actions` text,
+  `status` enum('Open','In Progress','Under Review','Resolved','Closed') DEFAULT 'Open',
+  `assigned_warden` int NOT NULL,
+  `follow_up_required` tinyint(1) DEFAULT '1',
+  `follow_up_date` date DEFAULT NULL,
+  `parent_contacted` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -5355,49 +6892,49 @@ CREATE TABLE `system_settings` (
 --
 
 INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `category`, `is_public`, `created_at`, `updated_at`) VALUES
-(1, 'school_name', 'Institute of Strategic Nursing and Midwifery', 'text', 'School name for display on documents', 'general', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(2, 'school_address', 'P.O. Box 12345, Kampala, Uganda', 'text', 'School address for documents', 'general', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(3, 'school_phone', '+256 123 456 789', 'text', 'School phone number', 'general', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(4, 'school_email', 'info@isnm.edu.ug', 'email', 'School email address', 'general', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(5, 'school_website', 'www.isnm.edu.ug', 'url', 'School website URL', 'general', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(6, 'academic_year', '2025/2026', 'text', 'Current academic year', 'academic', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(7, 'semester', 'Semester 2', 'text', 'Current semester', 'academic', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(8, 'currency', 'UGX', 'text', 'Default currency', 'financial', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(9, 'max_login_attempts', '5', 'number', 'Maximum login attempts before account lock', 'security', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(10, 'session_timeout', '30', 'number', 'Session timeout in minutes', 'security', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(11, 'password_min_length', '8', 'number', 'Minimum password length', 'security', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(12, 'enable_two_factor', 'false', 'boolean', 'Enable two-factor authentication', 'security', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(13, 'auto_backup_enabled', 'true', 'boolean', 'Enable automatic backups', 'system', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(14, 'backup_frequency', 'daily', 'text', 'Backup frequency', 'system', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(15, 'max_upload_size', '10485760', 'number', 'Maximum upload file size in bytes', 'system', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(16, 'default_language', 'en', 'text', 'Default system language', 'ui', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(17, 'timezone', 'Africa/Kampala', 'text', 'System timezone', 'ui', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(18, 'email_notifications_enabled', 'true', 'boolean', 'Enable email notifications', 'notifications', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(19, 'sms_notifications_enabled', 'false', 'boolean', 'Enable SMS notifications', 'notifications', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(20, 'dashboard_refresh_interval', '60', 'number', 'Dashboard auto-refresh interval in seconds', 'ui', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(21, 'enable_real_time_updates', 'true', 'boolean', 'Enable real-time updates', 'system', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(22, 'max_api_requests_per_hour', '1000', 'number', 'Maximum API requests per hour', 'api', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(23, 'enable_audit_logging', 'true', 'boolean', 'Enable audit logging', 'security', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(24, 'document_retention_days', '365', 'number', 'Document retention period in days', 'documents', 0, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(25, 'enable_advanced_search', 'true', 'boolean', 'Enable advanced search functionality', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(26, 'enable_smart_suggestions', 'true', 'boolean', 'Enable smart suggestions', 'ui', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(27, 'enable_performance_monitoring', 'true', 'boolean', 'Enable performance monitoring', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(28, 'enable_data_sync', 'true', 'boolean', 'Enable data synchronization', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(29, 'enable_real_time_notifications', 'true', 'boolean', 'Enable real-time notifications', 'notifications', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(30, 'enable_email_queue', 'true', 'boolean', 'Enable email notification queue', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(31, 'enable_analytics_cache', 'true', 'boolean', 'Enable analytics caching', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(32, 'enable_backup_management', 'true', 'boolean', 'Enable backup management', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(33, 'enable_api_access', 'true', 'boolean', 'Enable API access', 'api', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(34, 'enable_user_preferences', 'true', 'boolean', 'Enable user preferences', 'ui', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(35, 'enable_advanced_reports', 'true', 'boolean', 'Enable advanced reports', 'reports', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(36, 'enable_system_logging', 'true', 'boolean', 'Enable comprehensive system logging', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(37, 'enable_search_indexing', 'true', 'boolean', 'Enable search indexing', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(38, 'enable_data_sync_status', 'true', 'boolean', 'Enable data sync status tracking', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(39, 'enable_performance_metrics', 'true', 'boolean', 'Enable performance metrics', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(40, 'enable_smart_suggestions_db', 'true', 'boolean', 'Enable smart suggestions database', 'ui', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(41, 'enable_email_notifications_queue', 'true', 'boolean', 'Enable email notifications queue', 'notifications', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(42, 'enable_backup_automation', 'true', 'boolean', 'Enable backup automation', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56'),
-(43, 'enable_system_health_monitoring', 'true', 'boolean', 'Enable system health monitoring', 'system', 1, '2026-06-13 13:51:56', '2026-06-13 13:51:56');
+(1, 'school_name', 'Institute of Strategic Nursing and Midwifery', 'text', 'School name for display on documents', 'general', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(2, 'school_address', 'P.O. Box 12345, Kampala, Uganda', 'text', 'School address for documents', 'general', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(3, 'school_phone', '+256 123 456 789', 'text', 'School phone number', 'general', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(4, 'school_email', 'info@isnm.edu.ug', 'email', 'School email address', 'general', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(5, 'school_website', 'www.isnm.edu.ug', 'url', 'School website URL', 'general', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(6, 'academic_year', '2025/2026', 'text', 'Current academic year', 'academic', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(7, 'semester', 'Semester 2', 'text', 'Current semester', 'academic', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(8, 'currency', 'UGX', 'text', 'Default currency', 'financial', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(9, 'max_login_attempts', '5', 'number', 'Maximum login attempts before account lock', 'security', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(10, 'session_timeout', '30', 'number', 'Session timeout in minutes', 'security', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(11, 'password_min_length', '8', 'number', 'Minimum password length', 'security', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(12, 'enable_two_factor', 'false', 'boolean', 'Enable two-factor authentication', 'security', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(13, 'auto_backup_enabled', 'true', 'boolean', 'Enable automatic backups', 'system', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(14, 'backup_frequency', 'daily', 'text', 'Backup frequency', 'system', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(15, 'max_upload_size', '10485760', 'number', 'Maximum upload file size in bytes', 'system', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(16, 'default_language', 'en', 'text', 'Default system language', 'ui', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(17, 'timezone', 'Africa/Kampala', 'text', 'System timezone', 'ui', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(18, 'email_notifications_enabled', 'true', 'boolean', 'Enable email notifications', 'notifications', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(19, 'sms_notifications_enabled', 'false', 'boolean', 'Enable SMS notifications', 'notifications', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(20, 'dashboard_refresh_interval', '60', 'number', 'Dashboard auto-refresh interval in seconds', 'ui', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(21, 'enable_real_time_updates', 'true', 'boolean', 'Enable real-time updates', 'system', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(22, 'max_api_requests_per_hour', '1000', 'number', 'Maximum API requests per hour', 'api', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(23, 'enable_audit_logging', 'true', 'boolean', 'Enable audit logging', 'security', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(24, 'document_retention_days', '365', 'number', 'Document retention period in days', 'documents', 0, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(25, 'enable_advanced_search', 'true', 'boolean', 'Enable advanced search functionality', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(26, 'enable_smart_suggestions', 'true', 'boolean', 'Enable smart suggestions', 'ui', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(27, 'enable_performance_monitoring', 'true', 'boolean', 'Enable performance monitoring', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(28, 'enable_data_sync', 'true', 'boolean', 'Enable data synchronization', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(29, 'enable_real_time_notifications', 'true', 'boolean', 'Enable real-time notifications', 'notifications', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(30, 'enable_email_queue', 'true', 'boolean', 'Enable email notification queue', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(31, 'enable_analytics_cache', 'true', 'boolean', 'Enable analytics caching', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(32, 'enable_backup_management', 'true', 'boolean', 'Enable backup management', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(33, 'enable_api_access', 'true', 'boolean', 'Enable API access', 'api', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(34, 'enable_user_preferences', 'true', 'boolean', 'Enable user preferences', 'ui', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(35, 'enable_advanced_reports', 'true', 'boolean', 'Enable advanced reports', 'reports', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(36, 'enable_system_logging', 'true', 'boolean', 'Enable comprehensive system logging', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(37, 'enable_search_indexing', 'true', 'boolean', 'Enable search indexing', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(38, 'enable_data_sync_status', 'true', 'boolean', 'Enable data sync status tracking', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(39, 'enable_performance_metrics', 'true', 'boolean', 'Enable performance metrics', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(40, 'enable_smart_suggestions_db', 'true', 'boolean', 'Enable smart suggestions database', 'ui', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(41, 'enable_email_notifications_queue', 'true', 'boolean', 'Enable email notifications queue', 'notifications', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(42, 'enable_backup_automation', 'true', 'boolean', 'Enable backup automation', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
+(43, 'enable_system_health_monitoring', 'true', 'boolean', 'Enable system health monitoring', 'system', 1, '2026-06-14 19:50:36', '2026-06-14 19:50:36');
 
 -- --------------------------------------------------------
 
@@ -5421,6 +6958,56 @@ CREATE TABLE `training_programs` (
   `budget_required` decimal(15,2) DEFAULT NULL,
   `status` enum('planned','ongoing','completed','cancelled') DEFAULT 'planned',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `transcript_generation_log`
+--
+
+CREATE TABLE `transcript_generation_log` (
+  `id` int NOT NULL,
+  `transcript_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `requested_by` int DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `generation_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `purpose` varchar(200) DEFAULT NULL,
+  `copies` int DEFAULT '1',
+  `status` enum('Pending','Approved','Generated','Rejected','Collected') DEFAULT 'Pending',
+  `approval_comments` text,
+  `file_path` varchar(500) DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `trip_logs`
+--
+
+CREATE TABLE `trip_logs` (
+  `id` int NOT NULL,
+  `trip_number` varchar(50) NOT NULL,
+  `vehicle_id` int NOT NULL,
+  `driver_id` int NOT NULL,
+  `route_name` varchar(200) NOT NULL,
+  `trip_type` enum('Morning Route','Evening Route','Field Trip','Medical Transfer','Other') NOT NULL,
+  `departure_time` time NOT NULL,
+  `arrival_time` time DEFAULT NULL,
+  `trip_date` date NOT NULL,
+  `start_location` varchar(200) NOT NULL,
+  `end_location` varchar(200) NOT NULL,
+  `passengers_count` int DEFAULT '0',
+  `distance_km` decimal(10,2) DEFAULT NULL,
+  `fuel_consumed` decimal(10,2) DEFAULT NULL,
+  `status` enum('Scheduled','In Transit','Completed','Cancelled','Delayed') DEFAULT 'Scheduled',
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -5492,6 +7079,30 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `ura_reporting`
+--
+
+CREATE TABLE `ura_reporting` (
+  `id` int NOT NULL,
+  `report_code` varchar(50) NOT NULL,
+  `report_type` enum('VAT Return','Income Tax','Paye Tax','Withholding Tax','Customs','Other') NOT NULL,
+  `reporting_period` varchar(50) NOT NULL,
+  `tax_year` varchar(10) NOT NULL,
+  `total_amount` decimal(15,2) NOT NULL,
+  `currency` varchar(10) DEFAULT 'UGX',
+  `submission_date` date DEFAULT NULL,
+  `status` enum('Draft','Submitted','Accepted','Rejected','Amended') DEFAULT 'Draft',
+  `receipt_number` varchar(50) DEFAULT NULL,
+  `prepared_by` int DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ura_reports`
 --
 
@@ -5513,27 +7124,27 @@ CREATE TABLE `ura_reports` (
 -- (See below for the actual view)
 --
 CREATE TABLE `users` (
-`address` text
-,`created_at` timestamp
-,`dashboard_path` varchar(255)
-,`department` varchar(100)
-,`email` varchar(100)
-,`hire_date` date
-,`id` int
-,`is_first_login` tinyint(1)
-,`last_login` timestamp
-,`locked_until` timestamp
-,`login_attempts` int
-,`password` varchar(255)
-,`phone` varchar(20)
-,`position` varchar(100)
-,`role_id` int
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
-,`role_name` varchar(100)
-,`status` enum('Active','Inactive','On Leave','Suspended')
-,`updated_at` timestamp
-,`user_name` varchar(100)
+`id` int
 ,`username` varchar(50)
+,`user_name` varchar(100)
+,`email` varchar(100)
+,`password` varchar(255)
+,`position` varchar(100)
+,`department` varchar(100)
+,`role_id` int
+,`role_name` varchar(100)
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`dashboard_path` varchar(255)
+,`status` enum('Active','Inactive','On Leave','Suspended')
+,`phone` varchar(20)
+,`address` text
+,`hire_date` date
+,`last_login` timestamp
+,`login_attempts` int
+,`locked_until` timestamp
+,`is_first_login` tinyint(1)
+,`created_at` timestamp
+,`updated_at` timestamp
 );
 
 -- --------------------------------------------------------
@@ -5552,29 +7163,57 @@ CREATE TABLE `user_preferences` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `user_preferences`
+-- Table structure for table `vehicles`
 --
 
-INSERT INTO `user_preferences` (`id`, `user_id`, `preference_key`, `preference_value`, `preference_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'theme', 'dark', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(2, 1, 'language', 'en', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(3, 1, 'notifications_email', 'true', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(4, 1, 'notifications_sms', 'false', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(5, 1, 'auto_save_interval', '5', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(6, 1, 'dashboard_layout', 'grid', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(7, 2, 'theme', 'light', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(8, 2, 'language', 'en', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(9, 2, 'notifications_email', 'true', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(10, 2, 'notifications_sms', 'true', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(11, 2, 'auto_save_interval', '10', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(12, 2, 'dashboard_layout', 'list', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(13, 3, 'theme', 'dark', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(14, 3, 'language', 'en', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(15, 3, 'notifications_email', 'false', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(16, 3, 'notifications_sms', 'false', 'notifications', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(17, 3, 'auto_save_interval', '15', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57'),
-(18, 3, 'dashboard_layout', 'grid', 'ui', '2026-06-13 13:51:57', '2026-06-13 13:51:57');
+CREATE TABLE `vehicles` (
+  `id` int NOT NULL,
+  `vehicle_code` varchar(50) NOT NULL,
+  `vehicle_name` varchar(200) NOT NULL,
+  `vehicle_type` enum('Bus','Van','Car','Motorcycle','Other') NOT NULL,
+  `license_plate` varchar(20) NOT NULL,
+  `capacity` int NOT NULL,
+  `manufacturer` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `year` int DEFAULT NULL,
+  `fuel_type` enum('Petrol','Diesel','Electric','Hybrid') DEFAULT 'Diesel',
+  `status` enum('Available','In Use','Maintenance','Out of Service','Retired') DEFAULT 'Available',
+  `purchase_date` date DEFAULT NULL,
+  `last_service_date` date DEFAULT NULL,
+  `next_service_date` date DEFAULT NULL,
+  `insurance_expiry` date DEFAULT NULL,
+  `assigned_driver` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `visitor_logs`
+--
+
+CREATE TABLE `visitor_logs` (
+  `id` int NOT NULL,
+  `log_number` varchar(50) NOT NULL,
+  `visitor_name` varchar(200) NOT NULL,
+  `visitor_type` enum('Parent','Guardian','Official','Contractor','Delivery','Other') NOT NULL,
+  `visitor_id_number` varchar(100) DEFAULT NULL,
+  `visitor_phone` varchar(20) DEFAULT NULL,
+  `purpose` varchar(200) NOT NULL,
+  `person_visiting` varchar(200) NOT NULL,
+  `visit_date` date NOT NULL,
+  `check_in_time` time NOT NULL,
+  `check_out_time` time DEFAULT NULL,
+  `status` enum('Checked In','Checked Out','Overstay') DEFAULT 'Checked In',
+  `authorized_by` int NOT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -5602,7 +7241,7 @@ CREATE TABLE `work_history` (
 --
 DROP TABLE IF EXISTS `all_students_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `all_students_view`  AS SELECT `sp`.`id` AS `id`, `sp`.`student_number` AS `student_number`, `sp`.`national_id` AS `national_id`, `sp`.`index_number` AS `index_number`, `sp`.`registration_number` AS `registration_number`, `sp`.`first_name` AS `first_name`, `sp`.`middle_name` AS `middle_name`, `sp`.`last_name` AS `last_name`, `sp`.`full_name` AS `full_name`, `sp`.`email` AS `email`, `sp`.`phone` AS `phone`, `sp`.`date_of_birth` AS `date_of_birth`, `sp`.`gender` AS `gender`, `sp`.`program` AS `program`, `sp`.`program_type` AS `program_type`, `sp`.`intake_set` AS `intake_set`, `sp`.`intake_date` AS `intake_date`, `sp`.`year_of_study` AS `year_of_study`, `sp`.`semester` AS `semester`, `sp`.`academic_year` AS `academic_year`, `sp`.`address` AS `address`, `sp`.`district` AS `district`, `sp`.`county` AS `county`, `sp`.`sub_county` AS `sub_county`, `sp`.`parish` AS `parish`, `sp`.`village` AS `village`, `sp`.`guardian_name` AS `guardian_name`, `sp`.`guardian_phone` AS `guardian_phone`, `sp`.`guardian_relationship` AS `guardian_relationship`, `sp`.`guardian_address` AS `guardian_address`, `sp`.`emergency_contact_name` AS `emergency_contact_name`, `sp`.`emergency_contact_phone` AS `emergency_contact_phone`, `sp`.`emergency_contact_relationship` AS `emergency_contact_relationship`, `sp`.`nationality` AS `nationality`, `sp`.`religion` AS `religion`, `sp`.`marital_status` AS `marital_status`, `sp`.`photo_path` AS `photo_path`, `sp`.`photo_uploaded` AS `photo_uploaded`, `sp`.`photo_upload_date` AS `photo_upload_date`, `sp`.`status` AS `status`, `sp`.`enrollment_status` AS `enrollment_status`, `sp`.`gpa` AS `gpa`, `sp`.`cgpa` AS `cgpa`, `sp`.`created_by` AS `created_by`, `sp`.`updated_by` AS `updated_by`, `sp`.`created_at` AS `created_at`, `sp`.`updated_at` AS `updated_at`, (case when (`sp`.`photo_uploaded` = true) then concat('Available: ',`sp`.`photo_path`) else 'No Photo Available' end) AS `photo_status`, (case when (`sp`.`gpa` >= 3.5) then 'Excellent' when (`sp`.`gpa` >= 3.0) then 'Very Good' when (`sp`.`gpa` >= 2.5) then 'Good' when (`sp`.`gpa` >= 2.0) then 'Satisfactory' else 'Needs Improvement' end) AS `academic_standing` FROM `universal_student_profiles` AS `sp` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `all_students_view`  AS SELECT `sp`.`id` AS `id`, `sp`.`student_number` AS `student_number`, `sp`.`national_id` AS `national_id`, `sp`.`index_number` AS `index_number`, `sp`.`registration_number` AS `registration_number`, `sp`.`first_name` AS `first_name`, `sp`.`middle_name` AS `middle_name`, `sp`.`last_name` AS `last_name`, `sp`.`full_name` AS `full_name`, `sp`.`email` AS `email`, `sp`.`phone` AS `phone`, `sp`.`date_of_birth` AS `date_of_birth`, `sp`.`gender` AS `gender`, `sp`.`program` AS `program`, `sp`.`program_type` AS `program_type`, `sp`.`intake_set` AS `intake_set`, `sp`.`intake_date` AS `intake_date`, `sp`.`year_of_study` AS `year_of_study`, `sp`.`semester` AS `semester`, `sp`.`academic_year` AS `academic_year`, `sp`.`address` AS `address`, `sp`.`district` AS `district`, `sp`.`county` AS `county`, `sp`.`sub_county` AS `sub_county`, `sp`.`parish` AS `parish`, `sp`.`village` AS `village`, `sp`.`guardian_name` AS `guardian_name`, `sp`.`guardian_phone` AS `guardian_phone`, `sp`.`guardian_relationship` AS `guardian_relationship`, `sp`.`guardian_address` AS `guardian_address`, `sp`.`emergency_contact_name` AS `emergency_contact_name`, `sp`.`emergency_contact_phone` AS `emergency_contact_phone`, `sp`.`emergency_contact_relationship` AS `emergency_contact_relationship`, `sp`.`nationality` AS `nationality`, `sp`.`religion` AS `religion`, `sp`.`marital_status` AS `marital_status`, `sp`.`photo_path` AS `photo_path`, `sp`.`photo_uploaded` AS `photo_uploaded`, `sp`.`photo_upload_date` AS `photo_upload_date`, `sp`.`status` AS `status`, `sp`.`enrollment_status` AS `enrollment_status`, `sp`.`gpa` AS `gpa`, `sp`.`cgpa` AS `cgpa`, `sp`.`created_by` AS `created_by`, `sp`.`updated_by` AS `updated_by`, `sp`.`created_at` AS `created_at`, `sp`.`updated_at` AS `updated_at`, (case when (`sp`.`photo_uploaded` = true) then concat('Photo Available: ',`sp`.`photo_path`) else 'No Photo Available' end) AS `photo_status` FROM `universal_student_profiles` AS `sp` ;
 
 -- --------------------------------------------------------
 
@@ -5638,7 +7277,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `hr_staff_search_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `hr_staff_search_view`  AS SELECT `s`.`id` AS `id`, `s`.`staff_id` AS `staff_id`, `s`.`full_name` AS `full_name`, `s`.`email` AS `email`, `s`.`phone` AS `phone`, `s`.`position` AS `position`, `s`.`department` AS `department`, `sr`.`role_name` AS `role_name`, `s`.`status` AS `status`, `s`.`hire_date` AS `hire_date`, `s`.`last_login` AS `last_login`, `sp`.`profile_picture` AS `profile_picture`, `sp`.`bio` AS `bio`, `sp`.`qualifications` AS `qualifications`, (case when (`s`.`locked_until` > now()) then 'Locked' when (`s`.`login_attempts` >= 5) then 'Warning' else 'Active' end) AS `account_status` FROM ((`staff` `s` left join `staff_profiles` `sp` on((`s`.`id` = `sp`.`staff_id`))) left join `staff_roles` `sr` on((`s`.`role_id` = `sr`.`id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `hr_staff_search_view`  AS SELECT `s`.`id` AS `id`, `s`.`staff_id` AS `staff_id`, `s`.`full_name` AS `full_name`, `s`.`email` AS `email`, `s`.`phone` AS `phone`, `s`.`position` AS `position`, `s`.`department` AS `department`, `sr`.`role_name` AS `role_name`, `s`.`status` AS `status`, `s`.`hire_date` AS `hire_date`, `s`.`last_login` AS `last_login`, (case when (`s`.`locked_until` > now()) then 'Locked' when (`s`.`login_attempts` >= 5) then 'Warning' else 'Active' end) AS `account_status` FROM (`staff` `s` left join `staff_roles` `sr` on((`s`.`role_id` = `sr`.`id`))) ;
 
 -- --------------------------------------------------------
 
@@ -5656,7 +7295,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `student_search_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_search_view`  AS SELECT `sp`.`id` AS `id`, `sp`.`student_number` AS `student_number`, `sp`.`national_id` AS `national_id`, `sp`.`index_number` AS `index_number`, `sp`.`registration_number` AS `registration_number`, `sp`.`full_name` AS `full_name`, `sp`.`first_name` AS `first_name`, `sp`.`last_name` AS `last_name`, `sp`.`email` AS `email`, `sp`.`phone` AS `phone`, `sp`.`program` AS `program`, `sp`.`intake_set` AS `intake_set`, `sp`.`year_of_study` AS `year_of_study`, `sp`.`semester` AS `semester`, `sp`.`academic_year` AS `academic_year`, `sp`.`gpa` AS `gpa`, `sp`.`cgpa` AS `cgpa`, `sp`.`status` AS `status`, `sp`.`district` AS `district`, `sp`.`guardian_name` AS `guardian_name`, `sp`.`guardian_phone` AS `guardian_phone`, `sp`.`photo_path` AS `current_photo`, coalesce(`sp`.`photo_uploaded`,false) AS `has_photo`, `sr`.`dashboard_path` AS `staff_dashboard` FROM ((`universal_student_profiles` `sp` left join `staff` `s` on((`s`.`id` = `sp`.`created_by`))) left join `staff_roles` `sr` on((`s`.`role_id` = `sr`.`id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_search_view`  AS SELECT `sp`.`id` AS `id`, `sp`.`student_number` AS `student_number`, `sp`.`national_id` AS `national_id`, `sp`.`index_number` AS `index_number`, `sp`.`registration_number` AS `registration_number`, `sp`.`full_name` AS `full_name`, `sp`.`first_name` AS `first_name`, `sp`.`last_name` AS `last_name`, `sp`.`email` AS `email`, `sp`.`phone` AS `phone`, `sp`.`program` AS `program`, `sp`.`intake_set` AS `intake_set`, `sp`.`year_of_study` AS `year_of_study`, `sp`.`semester` AS `semester`, `sp`.`status` AS `status`, `sp`.`district` AS `district`, `sp`.`guardian_name` AS `guardian_name`, `sp`.`guardian_phone` AS `guardian_phone`, `sp`.`photo_path` AS `current_photo`, coalesce(`sp`.`photo_uploaded`,false) AS `has_photo`, NULL AS `staff_dashboard` FROM `universal_student_profiles` AS `sp` ;
 
 -- --------------------------------------------------------
 
@@ -5680,6 +7319,18 @@ ALTER TABLE `academic_analytics`
   ADD KEY `generated_by` (`generated_by`),
   ADD KEY `idx_academic_year` (`academic_year`),
   ADD KEY `idx_program_code` (`program_code`);
+
+--
+-- Indexes for table `academic_calendar`
+--
+ALTER TABLE `academic_calendar`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `calendar_id` (`calendar_id`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `idx_calendar_id` (`calendar_id`),
+  ADD KEY `idx_academic_year` (`academic_year`),
+  ADD KEY `idx_semester` (`semester`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `academic_course_catalog`
@@ -5742,6 +7393,29 @@ ALTER TABLE `academic_timetable`
   ADD KEY `created_by` (`created_by`),
   ADD KEY `idx_timetable_id` (`timetable_id`),
   ADD KEY `idx_program_code` (`program_code`);
+
+--
+-- Indexes for table `access_control_logs`
+--
+ALTER TABLE `access_control_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `log_number` (`log_number`),
+  ADD KEY `processed_by` (`processed_by`),
+  ADD KEY `idx_log_number` (`log_number`),
+  ADD KEY `idx_access_type` (`access_type`),
+  ADD KEY `idx_access_time` (`access_time`),
+  ADD KEY `idx_access_point` (`access_point`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `accreditation_management`
+--
+ALTER TABLE `accreditation_management`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `accreditation_code` (`accreditation_code`),
+  ADD KEY `responsible_person` (`responsible_person`),
+  ADD KEY `idx_accreditation_code` (`accreditation_code`),
+  ADD KEY `idx_status` (`accreditation_status`);
 
 --
 -- Indexes for table `activity_log`
@@ -5862,6 +7536,12 @@ ALTER TABLE `bank_accounts`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `bank_reconciliation`
+--
+ALTER TABLE `bank_reconciliation`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `bank_reconciliations`
 --
 ALTER TABLE `bank_reconciliations`
@@ -5946,6 +7626,19 @@ ALTER TABLE `chart_of_accounts`
   ADD UNIQUE KEY `account_code` (`account_code`);
 
 --
+-- Indexes for table `chemical_inventory`
+--
+ALTER TABLE `chemical_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `chemical_code` (`chemical_code`),
+  ADD KEY `received_by` (`received_by`),
+  ADD KEY `idx_chemical_code` (`chemical_code`),
+  ADD KEY `idx_chemical_type` (`chemical_type`),
+  ADD KEY `idx_hazard_class` (`hazard_class`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_expiry_date` (`expiry_date`);
+
+--
 -- Indexes for table `clinical_placements`
 --
 ALTER TABLE `clinical_placements`
@@ -5990,6 +7683,18 @@ ALTER TABLE `cost_centers`
   ADD UNIQUE KEY `cost_center_code` (`cost_center_code`);
 
 --
+-- Indexes for table `counseling_sessions`
+--
+ALTER TABLE `counseling_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `session_number` (`session_number`),
+  ADD KEY `idx_session_number` (`session_number`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_counselor_id` (`counselor_id`),
+  ADD KEY `idx_scheduled_date` (`scheduled_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `course_assignments`
 --
 ALTER TABLE `course_assignments`
@@ -6032,6 +7737,17 @@ ALTER TABLE `data_sync_status`
 ALTER TABLE `departmental_budgets`
   ADD PRIMARY KEY (`id`),
   ADD KEY `budget_id` (`budget_id`);
+
+--
+-- Indexes for table `director_news`
+--
+ALTER TABLE `director_news`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_author_id` (`author_id`),
+  ADD KEY `idx_published_at` (`published_at`);
 
 --
 -- Indexes for table `disciplinary_actions`
@@ -6086,6 +7802,18 @@ ALTER TABLE `duty_roster`
   ADD KEY `idx_department` (`department`);
 
 --
+-- Indexes for table `duty_rosters`
+--
+ALTER TABLE `duty_rosters`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `roster_number` (`roster_number`),
+  ADD KEY `replacement_warden` (`replacement_warden`),
+  ADD KEY `idx_roster_number` (`roster_number`),
+  ADD KEY `idx_warden_id` (`warden_id`),
+  ADD KEY `idx_duty_date` (`duty_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `email_notifications_queue`
 --
 ALTER TABLE `email_notifications_queue`
@@ -6096,6 +7824,15 @@ ALTER TABLE `email_notifications_queue`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_priority` (`priority`),
   ADD KEY `idx_scheduled_at` (`scheduled_at`);
+
+--
+-- Indexes for table `emergency_contacts`
+--
+ALTER TABLE `emergency_contacts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_contact_type` (`contact_type`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_is_active` (`is_active`);
 
 --
 -- Indexes for table `employment_contracts`
@@ -6132,7 +7869,10 @@ ALTER TABLE `examination_records`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `exam_number` (`exam_number`),
   ADD KEY `student_id` (`student_id`),
-  ADD KEY `idx_exam_number` (`exam_number`);
+  ADD KEY `idx_exam_number` (`exam_number`),
+  ADD KEY `workflow_id` (`workflow_id`),
+  ADD KEY `lecturer_id` (`lecturer_id`),
+  ADD KEY `hod_id` (`hod_id`);
 
 --
 -- Indexes for table `expenditures`
@@ -6244,6 +7984,17 @@ ALTER TABLE `financial_reports`
   ADD KEY `idx_generated_date` (`generated_date`);
 
 --
+-- Indexes for table `fuel_management`
+--
+ALTER TABLE `fuel_management`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `fuel_number` (`fuel_number`),
+  ADD KEY `filled_by` (`filled_by`),
+  ADD KEY `idx_fuel_number` (`fuel_number`),
+  ADD KEY `idx_vehicle_id` (`vehicle_id`),
+  ADD KEY `idx_fueling_date` (`fueling_date`);
+
+--
 -- Indexes for table `general_ledger`
 --
 ALTER TABLE `general_ledger`
@@ -6269,6 +8020,16 @@ ALTER TABLE `generated_documents`
   ADD KEY `idx_is_public` (`is_public`);
 
 --
+-- Indexes for table `grade_change_history`
+--
+ALTER TABLE `grade_change_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `changed_by` (`changed_by`),
+  ADD KEY `idx_workflow_number` (`workflow_number`),
+  ADD KEY `idx_examination_record_id` (`examination_record_id`),
+  ADD KEY `idx_change_timestamp` (`change_timestamp`);
+
+--
 -- Indexes for table `grade_scales`
 --
 ALTER TABLE `grade_scales`
@@ -6276,6 +8037,46 @@ ALTER TABLE `grade_scales`
   ADD UNIQUE KEY `grade_letter` (`grade_letter`),
   ADD KEY `idx_grade_letter` (`grade_letter`),
   ADD KEY `idx_is_active` (`is_active`);
+
+--
+-- Indexes for table `grading_approval_workflow`
+--
+ALTER TABLE `grading_approval_workflow`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `workflow_number` (`workflow_number`),
+  ADD KEY `submitted_by` (`submitted_by`),
+  ADD KEY `hod_reviewed_by` (`hod_reviewed_by`),
+  ADD KEY `registrar_approved_by` (`registrar_approved_by`),
+  ADD KEY `principal_approved_by` (`principal_approved_by`),
+  ADD KEY `idx_workflow_number` (`workflow_number`),
+  ADD KEY `idx_current_stage` (`current_stage`),
+  ADD KEY `idx_examination_record_id` (`examination_record_id`);
+
+--
+-- Indexes for table `grading_notifications`
+--
+ALTER TABLE `grading_notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `notification_id` (`notification_id`),
+  ADD KEY `workflow_number` (`workflow_number`),
+  ADD KEY `sender_id` (`sender_id`),
+  ADD KEY `idx_notification_id` (`notification_id`),
+  ADD KEY `idx_recipient_id` (`recipient_id`),
+  ADD KEY `idx_is_read` (`is_read`),
+  ADD KEY `idx_notification_type` (`notification_type`);
+
+--
+-- Indexes for table `health_incidents`
+--
+ALTER TABLE `health_incidents`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `incident_number` (`incident_number`),
+  ADD KEY `reported_by` (`reported_by`),
+  ADD KEY `idx_incident_number` (`incident_number`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_incident_date` (`incident_date`),
+  ADD KEY `idx_severity` (`severity`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `hostel_allocations`
@@ -6396,6 +8197,17 @@ ALTER TABLE `invoice_records`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `it_infrastructure`
+--
+ALTER TABLE `it_infrastructure`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `asset_code` (`asset_code`),
+  ADD KEY `assigned_to` (`assigned_to`),
+  ADD KEY `maintained_by` (`maintained_by`),
+  ADD KEY `idx_asset_code` (`asset_code`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `job_applications`
 --
 ALTER TABLE `job_applications`
@@ -6443,6 +8255,18 @@ ALTER TABLE `lab_equipment`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `lab_equipment_maintenance`
+--
+ALTER TABLE `lab_equipment_maintenance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `maintenance_number` (`maintenance_number`),
+  ADD KEY `technician_id` (`technician_id`),
+  ADD KEY `idx_maintenance_number` (`maintenance_number`),
+  ADD KEY `idx_equipment_id` (`equipment_id`),
+  ADD KEY `idx_scheduled_date` (`scheduled_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `lab_experiments`
 --
 ALTER TABLE `lab_experiments`
@@ -6465,6 +8289,18 @@ ALTER TABLE `lab_inventory`
   ADD KEY `idx_item_name` (`item_name`),
   ADD KEY `idx_category` (`item_category`),
   ADD KEY `idx_expiry_date` (`expiry_date`);
+
+--
+-- Indexes for table `lab_safety_records`
+--
+ALTER TABLE `lab_safety_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `safety_number` (`safety_number`),
+  ADD KEY `inspector_id` (`inspector_id`),
+  ADD KEY `idx_safety_number` (`safety_number`),
+  ADD KEY `idx_lab_id` (`lab_id`),
+  ADD KEY `idx_inspection_date` (`inspection_date`),
+  ADD KEY `idx_overall_status` (`overall_status`);
 
 --
 -- Indexes for table `lab_skills_sessions`
@@ -6553,6 +8389,17 @@ ALTER TABLE `library_fines`
   ADD KEY `idx_paid` (`paid`);
 
 --
+-- Indexes for table `library_management`
+--
+ALTER TABLE `library_management`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `book_id` (`book_id`),
+  ADD KEY `added_by` (`added_by`),
+  ADD KEY `idx_book_id` (`book_id`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `library_members`
 --
 ALTER TABLE `library_members`
@@ -6562,6 +8409,31 @@ ALTER TABLE `library_members`
   ADD KEY `staff_id` (`staff_id`),
   ADD KEY `idx_member_id` (`member_id`),
   ADD KEY `idx_full_name` (`full_name`);
+
+--
+-- Indexes for table `library_transactions`
+--
+ALTER TABLE `library_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transaction_number` (`transaction_number`),
+  ADD KEY `book_id` (`book_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `staff_id` (`staff_id`),
+  ADD KEY `processed_by` (`processed_by`),
+  ADD KEY `idx_transaction_number` (`transaction_number`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `meal_tracking`
+--
+ALTER TABLE `meal_tracking`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `meal_number` (`meal_number`),
+  ADD KEY `served_by` (`served_by`),
+  ADD KEY `idx_meal_number` (`meal_number`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_meal_date` (`meal_date`),
+  ADD KEY `idx_meal_type` (`meal_type`);
 
 --
 -- Indexes for table `midwifery_antenatal_care`
@@ -6612,6 +8484,13 @@ ALTER TABLE `midwifery_students`
   ADD KEY `idx_student_number` (`student_number`),
   ADD KEY `idx_full_name` (`full_name`),
   ADD KEY `idx_intake_set` (`intake_set`);
+
+--
+-- Indexes for table `news_images`
+--
+ALTER TABLE `news_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_news_id` (`news_id`);
 
 --
 -- Indexes for table `notifications`
@@ -6685,6 +8564,16 @@ ALTER TABLE `nursing_students`
 ALTER TABLE `onboarding_checklist`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_staff_id` (`staff_id`);
+
+--
+-- Indexes for table `partnerships`
+--
+ALTER TABLE `partnerships`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `partnership_code` (`partnership_code`),
+  ADD KEY `responsible_person` (`responsible_person`),
+  ADD KEY `idx_partnership_code` (`partnership_code`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `payments`
@@ -6803,6 +8692,16 @@ ALTER TABLE `programs`
 ALTER TABLE `proof_of_payments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_payment` (`payment_id`);
+
+--
+-- Indexes for table `quality_assurance`
+--
+ALTER TABLE `quality_assurance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `qa_code` (`qa_code`),
+  ADD KEY `assessed_by` (`assessed_by`),
+  ADD KEY `idx_qa_code` (`qa_code`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `real_time_updates`
@@ -6926,6 +8825,53 @@ ALTER TABLE `requirement_messages`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
+-- Indexes for table `research_projects`
+--
+ALTER TABLE `research_projects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `project_code` (`project_code`),
+  ADD KEY `lead_researcher` (`lead_researcher`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `idx_project_code` (`project_code`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `result_publication`
+--
+ALTER TABLE `result_publication`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `publication_id` (`publication_id`),
+  ADD KEY `published_by` (`published_by`),
+  ADD KEY `idx_publication_id` (`publication_id`),
+  ADD KEY `idx_academic_year` (`academic_year`),
+  ADD KEY `idx_semester` (`semester`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `room_inspections`
+--
+ALTER TABLE `room_inspections`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `inspection_number` (`inspection_number`),
+  ADD KEY `inspector_id` (`inspector_id`),
+  ADD KEY `idx_inspection_number` (`inspection_number`),
+  ADD KEY `idx_room_id` (`room_id`),
+  ADD KEY `idx_inspection_date` (`inspection_date`),
+  ADD KEY `idx_overall_status` (`overall_status`);
+
+--
+-- Indexes for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `route_code` (`route_code`),
+  ADD KEY `vehicle_id` (`vehicle_id`),
+  ADD KEY `driver_id` (`driver_id`),
+  ADD KEY `idx_route_code` (`route_code`),
+  ADD KEY `idx_route_type` (`route_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `salary_components`
 --
 ALTER TABLE `salary_components`
@@ -6979,6 +8925,43 @@ ALTER TABLE `security_emergency_contacts`
   ADD KEY `idx_is_active` (`is_active`);
 
 --
+-- Indexes for table `security_equipment`
+--
+ALTER TABLE `security_equipment`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `equipment_code` (`equipment_code`),
+  ADD KEY `maintained_by` (`maintained_by`),
+  ADD KEY `idx_equipment_code` (`equipment_code`),
+  ADD KEY `idx_equipment_type` (`equipment_type`),
+  ADD KEY `idx_location` (`location`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `security_incidents`
+--
+ALTER TABLE `security_incidents`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `incident_number` (`incident_number`),
+  ADD KEY `reported_by` (`reported_by`),
+  ADD KEY `assigned_to` (`assigned_to`),
+  ADD KEY `idx_incident_number` (`incident_number`),
+  ADD KEY `idx_incident_type` (`incident_type`),
+  ADD KEY `idx_incident_date` (`incident_date`),
+  ADD KEY `idx_severity` (`severity`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `security_patrols`
+--
+ALTER TABLE `security_patrols`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `patrol_number` (`patrol_number`),
+  ADD KEY `idx_patrol_number` (`patrol_number`),
+  ADD KEY `idx_guard_id` (`guard_id`),
+  ADD KEY `idx_patrol_date` (`patrol_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `security_visitors`
 --
 ALTER TABLE `security_visitors`
@@ -6989,6 +8972,27 @@ ALTER TABLE `security_visitors`
   ADD KEY `check_out_by` (`check_out_by`),
   ADD KEY `idx_visitor_id` (`visitor_id`),
   ADD KEY `idx_visit_date` (`visit_date`);
+
+--
+-- Indexes for table `skills_laboratory`
+--
+ALTER TABLE `skills_laboratory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `lab_code` (`lab_code`),
+  ADD KEY `in_charge` (`in_charge`),
+  ADD KEY `idx_lab_code` (`lab_code`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `skills_lab_sessions`
+--
+ALTER TABLE `skills_lab_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `session_code` (`session_code`),
+  ADD KEY `lab_id` (`lab_id`),
+  ADD KEY `lecturer_id` (`lecturer_id`),
+  ADD KEY `idx_session_code` (`session_code`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `smart_suggestions`
@@ -7136,6 +9140,12 @@ ALTER TABLE `staff_documents`
   ADD KEY `idx_upload_date` (`upload_date`);
 
 --
+-- Indexes for table `staff_leave_records`
+--
+ALTER TABLE `staff_leave_records`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `staff_leave_requests`
 --
 ALTER TABLE `staff_leave_requests`
@@ -7281,6 +9291,72 @@ ALTER TABLE `staff_training`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_name` (`category_name`),
+  ADD KEY `idx_category_name` (`category_name`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category_id` (`category_id`),
+  ADD KEY `idx_item_name` (`item_name`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_item_id` (`item_id`),
+  ADD KEY `idx_transaction_type` (`transaction_type`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_reference` (`reference_type`,`reference_id`);
+
+--
+-- Indexes for table `store_orders`
+--
+ALTER TABLE `store_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `order_number` (`order_number`),
+  ADD KEY `idx_order_number` (`order_number`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_requested_by` (`requested_by`);
+
+--
+-- Indexes for table `store_order_items`
+--
+ALTER TABLE `store_order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_order_id` (`order_id`),
+  ADD KEY `idx_item_id` (`item_id`);
+
+--
+-- Indexes for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `request_number` (`request_number`),
+  ADD KEY `idx_request_number` (`request_number`),
+  ADD KEY `idx_requested_by` (`requested_by`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_forwarded_to` (`forwarded_to`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_request_id` (`request_id`),
+  ADD KEY `idx_item_id` (`item_id`);
+
+--
 -- Indexes for table `students`
 --
 ALTER TABLE `students`
@@ -7298,6 +9374,18 @@ ALTER TABLE `students`
 ALTER TABLE `student_academic_profiles`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student_id` (`student_id`);
+
+--
+-- Indexes for table `student_activities`
+--
+ALTER TABLE `student_activities`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `activity_number` (`activity_number`),
+  ADD KEY `organizer_id` (`organizer_id`),
+  ADD KEY `idx_activity_number` (`activity_number`),
+  ADD KEY `idx_activity_date` (`activity_date`),
+  ADD KEY `idx_activity_type` (`activity_type`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `student_admissions`
@@ -7377,6 +9465,15 @@ ALTER TABLE `student_health_incidents`
   ADD KEY `idx_incident_date` (`incident_date`);
 
 --
+-- Indexes for table `student_health_records`
+--
+ALTER TABLE `student_health_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `record_number` (`record_number`),
+  ADD KEY `idx_record_number` (`record_number`),
+  ADD KEY `idx_student_id` (`student_id`);
+
+--
 -- Indexes for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
@@ -7449,6 +9546,19 @@ ALTER TABLE `student_search_index`
 ALTER TABLE `student_search_index` ADD FULLTEXT KEY `idx_search_full` (`search_value`);
 
 --
+-- Indexes for table `student_welfare_cases`
+--
+ALTER TABLE `student_welfare_cases`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `case_number` (`case_number`),
+  ADD KEY `idx_case_number` (`case_number`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_case_type` (`case_type`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_assigned_warden` (`assigned_warden`);
+
+--
 -- Indexes for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -7478,6 +9588,30 @@ ALTER TABLE `training_programs`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `transcript_generation_log`
+--
+ALTER TABLE `transcript_generation_log`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transcript_number` (`transcript_number`),
+  ADD KEY `requested_by` (`requested_by`),
+  ADD KEY `approved_by` (`approved_by`),
+  ADD KEY `idx_transcript_number` (`transcript_number`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `trip_logs`
+--
+ALTER TABLE `trip_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `trip_number` (`trip_number`),
+  ADD KEY `idx_trip_number` (`trip_number`),
+  ADD KEY `idx_vehicle_id` (`vehicle_id`),
+  ADD KEY `idx_driver_id` (`driver_id`),
+  ADD KEY `idx_trip_date` (`trip_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `universal_student_profiles`
 --
 ALTER TABLE `universal_student_profiles`
@@ -7494,6 +9628,17 @@ ALTER TABLE `universal_student_profiles`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_intake_set` (`intake_set`),
   ADD KEY `idx_academic_year` (`academic_year`);
+
+--
+-- Indexes for table `ura_reporting`
+--
+ALTER TABLE `ura_reporting`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `report_code` (`report_code`),
+  ADD KEY `prepared_by` (`prepared_by`),
+  ADD KEY `approved_by` (`approved_by`),
+  ADD KEY `idx_report_code` (`report_code`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `ura_reports`
@@ -7514,6 +9659,30 @@ ALTER TABLE `user_preferences`
   ADD KEY `idx_preference_type` (`preference_type`);
 
 --
+-- Indexes for table `vehicles`
+--
+ALTER TABLE `vehicles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `vehicle_code` (`vehicle_code`),
+  ADD UNIQUE KEY `license_plate` (`license_plate`),
+  ADD KEY `idx_vehicle_code` (`vehicle_code`),
+  ADD KEY `idx_license_plate` (`license_plate`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_assigned_driver` (`assigned_driver`);
+
+--
+-- Indexes for table `visitor_logs`
+--
+ALTER TABLE `visitor_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `log_number` (`log_number`),
+  ADD KEY `authorized_by` (`authorized_by`),
+  ADD KEY `idx_log_number` (`log_number`),
+  ADD KEY `idx_visit_date` (`visit_date`),
+  ADD KEY `idx_visitor_type` (`visitor_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `work_history`
 --
 ALTER TABLE `work_history`
@@ -7529,6 +9698,12 @@ ALTER TABLE `work_history`
 --
 ALTER TABLE `academic_analytics`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `academic_calendar`
+--
+ALTER TABLE `academic_calendar`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `academic_course_catalog`
@@ -7564,6 +9739,18 @@ ALTER TABLE `academic_reports`
 -- AUTO_INCREMENT for table `academic_timetable`
 --
 ALTER TABLE `academic_timetable`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `access_control_logs`
+--
+ALTER TABLE `access_control_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `accreditation_management`
+--
+ALTER TABLE `accreditation_management`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -7645,6 +9832,12 @@ ALTER TABLE `bank_accounts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `bank_reconciliation`
+--
+ALTER TABLE `bank_reconciliation`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `bank_reconciliations`
 --
 ALTER TABLE `bank_reconciliations`
@@ -7705,6 +9898,12 @@ ALTER TABLE `chart_of_accounts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
+-- AUTO_INCREMENT for table `chemical_inventory`
+--
+ALTER TABLE `chemical_inventory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `clinical_placements`
 --
 ALTER TABLE `clinical_placements`
@@ -7735,6 +9934,12 @@ ALTER TABLE `cost_centers`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `counseling_sessions`
+--
+ALTER TABLE `counseling_sessions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `course_assignments`
 --
 ALTER TABLE `course_assignments`
@@ -7762,6 +9967,12 @@ ALTER TABLE `data_sync_status`
 -- AUTO_INCREMENT for table `departmental_budgets`
 --
 ALTER TABLE `departmental_budgets`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `director_news`
+--
+ALTER TABLE `director_news`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -7795,9 +10006,21 @@ ALTER TABLE `duty_roster`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `duty_rosters`
+--
+ALTER TABLE `duty_rosters`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `email_notifications_queue`
 --
 ALTER TABLE `email_notifications_queue`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `emergency_contacts`
+--
+ALTER TABLE `emergency_contacts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -7891,6 +10114,12 @@ ALTER TABLE `financial_reports`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `fuel_management`
+--
+ALTER TABLE `fuel_management`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `general_ledger`
 --
 ALTER TABLE `general_ledger`
@@ -7903,9 +10132,33 @@ ALTER TABLE `generated_documents`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `grade_change_history`
+--
+ALTER TABLE `grade_change_history`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `grade_scales`
 --
 ALTER TABLE `grade_scales`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `grading_approval_workflow`
+--
+ALTER TABLE `grading_approval_workflow`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `grading_notifications`
+--
+ALTER TABLE `grading_notifications`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `health_incidents`
+--
+ALTER TABLE `health_incidents`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -7987,6 +10240,12 @@ ALTER TABLE `invoice_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `it_infrastructure`
+--
+ALTER TABLE `it_infrastructure`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `job_applications`
 --
 ALTER TABLE `job_applications`
@@ -8017,6 +10276,12 @@ ALTER TABLE `lab_equipment`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_equipment_maintenance`
+--
+ALTER TABLE `lab_equipment_maintenance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_experiments`
 --
 ALTER TABLE `lab_experiments`
@@ -8026,6 +10291,12 @@ ALTER TABLE `lab_experiments`
 -- AUTO_INCREMENT for table `lab_inventory`
 --
 ALTER TABLE `lab_inventory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_safety_records`
+--
+ALTER TABLE `lab_safety_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8077,9 +10348,27 @@ ALTER TABLE `library_fines`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `library_management`
+--
+ALTER TABLE `library_management`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `library_members`
 --
 ALTER TABLE `library_members`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_transactions`
+--
+ALTER TABLE `library_transactions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `meal_tracking`
+--
+ALTER TABLE `meal_tracking`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8110,6 +10399,12 @@ ALTER TABLE `midwifery_postnatal_care`
 -- AUTO_INCREMENT for table `midwifery_students`
 --
 ALTER TABLE `midwifery_students`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `news_images`
+--
+ALTER TABLE `news_images`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8152,6 +10447,12 @@ ALTER TABLE `nursing_students`
 -- AUTO_INCREMENT for table `onboarding_checklist`
 --
 ALTER TABLE `onboarding_checklist`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `partnerships`
+--
+ALTER TABLE `partnerships`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8233,6 +10534,12 @@ ALTER TABLE `proof_of_payments`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `quality_assurance`
+--
+ALTER TABLE `quality_assurance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `real_time_updates`
 --
 ALTER TABLE `real_time_updates`
@@ -8260,7 +10567,7 @@ ALTER TABLE `recruitment_jobs`
 -- AUTO_INCREMENT for table `registrar_academic_calendar`
 --
 ALTER TABLE `registrar_academic_calendar`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `registrar_academic_records`
@@ -8305,6 +10612,30 @@ ALTER TABLE `requirement_messages`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `research_projects`
+--
+ALTER TABLE `research_projects`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `result_publication`
+--
+ALTER TABLE `result_publication`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `room_inspections`
+--
+ALTER TABLE `room_inspections`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `salary_components`
 --
 ALTER TABLE `salary_components`
@@ -8341,9 +10672,39 @@ ALTER TABLE `security_emergency_contacts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `security_equipment`
+--
+ALTER TABLE `security_equipment`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `security_incidents`
+--
+ALTER TABLE `security_incidents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `security_patrols`
+--
+ALTER TABLE `security_patrols`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `security_visitors`
 --
 ALTER TABLE `security_visitors`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `skills_laboratory`
+--
+ALTER TABLE `skills_laboratory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `skills_lab_sessions`
+--
+ALTER TABLE `skills_lab_sessions`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8362,7 +10723,7 @@ ALTER TABLE `sponsorships`
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT for table `staff_access_control`
@@ -8374,7 +10735,7 @@ ALTER TABLE `staff_access_control`
 -- AUTO_INCREMENT for table `staff_activity_log`
 --
 ALTER TABLE `staff_activity_log`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `staff_announcements`
@@ -8416,7 +10777,7 @@ ALTER TABLE `staff_contracts`
 -- AUTO_INCREMENT for table `staff_dashboard_access`
 --
 ALTER TABLE `staff_dashboard_access`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `staff_departments`
@@ -8428,6 +10789,12 @@ ALTER TABLE `staff_departments`
 -- AUTO_INCREMENT for table `staff_documents`
 --
 ALTER TABLE `staff_documents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff_leave_records`
+--
+ALTER TABLE `staff_leave_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8446,7 +10813,7 @@ ALTER TABLE `staff_login_attempts`
 -- AUTO_INCREMENT for table `staff_login_sessions`
 --
 ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `staff_notifications`
@@ -8470,7 +10837,7 @@ ALTER TABLE `staff_performance`
 -- AUTO_INCREMENT for table `staff_permissions`
 --
 ALTER TABLE `staff_permissions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `staff_profiles`
@@ -8506,7 +10873,7 @@ ALTER TABLE `staff_resignations`
 -- AUTO_INCREMENT for table `staff_roles`
 --
 ALTER TABLE `staff_roles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `staff_salaries`
@@ -8521,6 +10888,48 @@ ALTER TABLE `staff_training`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `store_categories`
+--
+ALTER TABLE `store_categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=222;
+
+--
+-- AUTO_INCREMENT for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `store_orders`
+--
+ALTER TABLE `store_orders`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_order_items`
+--
+ALTER TABLE `store_order_items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_requests`
+--
+ALTER TABLE `store_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
@@ -8530,6 +10939,12 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_academic_profiles`
 --
 ALTER TABLE `student_academic_profiles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_activities`
+--
+ALTER TABLE `student_activities`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8581,6 +10996,12 @@ ALTER TABLE `student_health_incidents`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `student_health_records`
+--
+ALTER TABLE `student_health_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
@@ -8623,6 +11044,12 @@ ALTER TABLE `student_search_index`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `student_welfare_cases`
+--
+ALTER TABLE `student_welfare_cases`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -8641,9 +11068,27 @@ ALTER TABLE `training_programs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `transcript_generation_log`
+--
+ALTER TABLE `transcript_generation_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `trip_logs`
+--
+ALTER TABLE `trip_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `universal_student_profiles`
 --
 ALTER TABLE `universal_student_profiles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ura_reporting`
+--
+ALTER TABLE `ura_reporting`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -8657,6 +11102,18 @@ ALTER TABLE `ura_reports`
 --
 ALTER TABLE `user_preferences`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `vehicles`
+--
+ALTER TABLE `vehicles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `visitor_logs`
+--
+ALTER TABLE `visitor_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `work_history`
@@ -8673,6 +11130,12 @@ ALTER TABLE `work_history`
 --
 ALTER TABLE `academic_analytics`
   ADD CONSTRAINT `academic_analytics_ibfk_1` FOREIGN KEY (`generated_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `academic_calendar`
+--
+ALTER TABLE `academic_calendar`
+  ADD CONSTRAINT `academic_calendar_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `academic_course_catalog`
@@ -8712,6 +11175,18 @@ ALTER TABLE `academic_reports`
 ALTER TABLE `academic_timetable`
   ADD CONSTRAINT `academic_timetable_ibfk_1` FOREIGN KEY (`lecturer_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `academic_timetable_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `access_control_logs`
+--
+ALTER TABLE `access_control_logs`
+  ADD CONSTRAINT `access_control_logs_ibfk_1` FOREIGN KEY (`processed_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `accreditation_management`
+--
+ALTER TABLE `accreditation_management`
+  ADD CONSTRAINT `accreditation_management_ibfk_1` FOREIGN KEY (`responsible_person`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `activity_log`
@@ -8799,6 +11274,12 @@ ALTER TABLE `cache_management`
   ADD CONSTRAINT `cache_management_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `chemical_inventory`
+--
+ALTER TABLE `chemical_inventory`
+  ADD CONSTRAINT `chemical_inventory_ibfk_1` FOREIGN KEY (`received_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `clinical_placements`
 --
 ALTER TABLE `clinical_placements`
@@ -8816,6 +11297,13 @@ ALTER TABLE `compliance_records`
 --
 ALTER TABLE `compliance_tracking`
   ADD CONSTRAINT `compliance_tracking_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `counseling_sessions`
+--
+ALTER TABLE `counseling_sessions`
+  ADD CONSTRAINT `counseling_sessions_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `counseling_sessions_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `course_assignments`
@@ -8870,6 +11358,13 @@ ALTER TABLE `duty_roster`
   ADD CONSTRAINT `duty_roster_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `duty_rosters`
+--
+ALTER TABLE `duty_rosters`
+  ADD CONSTRAINT `duty_rosters_ibfk_1` FOREIGN KEY (`warden_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `duty_rosters_ibfk_2` FOREIGN KEY (`replacement_warden`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `email_notifications_queue`
 --
 ALTER TABLE `email_notifications_queue`
@@ -8898,7 +11393,10 @@ ALTER TABLE `error_logs`
 -- Constraints for table `examination_records`
 --
 ALTER TABLE `examination_records`
-  ADD CONSTRAINT `examination_records_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `examination_records_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `examination_records_ibfk_2` FOREIGN KEY (`workflow_id`) REFERENCES `grading_approval_workflow` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `examination_records_ibfk_3` FOREIGN KEY (`lecturer_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `examination_records_ibfk_4` FOREIGN KEY (`hod_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `expenditures`
@@ -8950,6 +11448,13 @@ ALTER TABLE `financial_records`
   ADD CONSTRAINT `financial_records_ibfk_3` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `fuel_management`
+--
+ALTER TABLE `fuel_management`
+  ADD CONSTRAINT `fuel_management_ibfk_1` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fuel_management_ibfk_2` FOREIGN KEY (`filled_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `general_ledger`
 --
 ALTER TABLE `general_ledger`
@@ -8962,6 +11467,38 @@ ALTER TABLE `generated_documents`
   ADD CONSTRAINT `generated_documents_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `generated_documents_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `generated_documents_ibfk_3` FOREIGN KEY (`generated_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `grade_change_history`
+--
+ALTER TABLE `grade_change_history`
+  ADD CONSTRAINT `grade_change_history_ibfk_1` FOREIGN KEY (`examination_record_id`) REFERENCES `examination_records` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `grade_change_history_ibfk_2` FOREIGN KEY (`changed_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `grading_approval_workflow`
+--
+ALTER TABLE `grading_approval_workflow`
+  ADD CONSTRAINT `grading_approval_workflow_ibfk_1` FOREIGN KEY (`examination_record_id`) REFERENCES `examination_records` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_approval_workflow_ibfk_2` FOREIGN KEY (`submitted_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_approval_workflow_ibfk_3` FOREIGN KEY (`hod_reviewed_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_approval_workflow_ibfk_4` FOREIGN KEY (`registrar_approved_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_approval_workflow_ibfk_5` FOREIGN KEY (`principal_approved_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `grading_notifications`
+--
+ALTER TABLE `grading_notifications`
+  ADD CONSTRAINT `grading_notifications_ibfk_1` FOREIGN KEY (`workflow_number`) REFERENCES `grading_approval_workflow` (`workflow_number`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_notifications_ibfk_2` FOREIGN KEY (`recipient_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `grading_notifications_ibfk_3` FOREIGN KEY (`sender_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `health_incidents`
+--
+ALTER TABLE `health_incidents`
+  ADD CONSTRAINT `health_incidents_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `health_incidents_ibfk_2` FOREIGN KEY (`reported_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `hostel_allocations`
@@ -9010,6 +11547,13 @@ ALTER TABLE `invoice_records`
   ADD CONSTRAINT `invoice_records_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `it_infrastructure`
+--
+ALTER TABLE `it_infrastructure`
+  ADD CONSTRAINT `it_infrastructure_ibfk_1` FOREIGN KEY (`assigned_to`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `it_infrastructure_ibfk_2` FOREIGN KEY (`maintained_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `job_applications`
 --
 ALTER TABLE `job_applications`
@@ -9021,6 +11565,12 @@ ALTER TABLE `job_applications`
 ALTER TABLE `job_offers`
   ADD CONSTRAINT `job_offers_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `job_applications` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `job_offers_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `lab_equipment_maintenance`
+--
+ALTER TABLE `lab_equipment_maintenance`
+  ADD CONSTRAINT `lab_equipment_maintenance_ibfk_1` FOREIGN KEY (`technician_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `lab_experiments`
@@ -9035,6 +11585,13 @@ ALTER TABLE `lab_experiments`
 --
 ALTER TABLE `lab_inventory`
   ADD CONSTRAINT `lab_inventory_ibfk_1` FOREIGN KEY (`received_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `lab_safety_records`
+--
+ALTER TABLE `lab_safety_records`
+  ADD CONSTRAINT `lab_safety_records_ibfk_1` FOREIGN KEY (`lab_id`) REFERENCES `skills_laboratory` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `lab_safety_records_ibfk_2` FOREIGN KEY (`inspector_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `lab_skills_sessions`
@@ -9085,11 +11642,33 @@ ALTER TABLE `library_fines`
   ADD CONSTRAINT `library_fines_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `library_members` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `library_management`
+--
+ALTER TABLE `library_management`
+  ADD CONSTRAINT `library_management_ibfk_1` FOREIGN KEY (`added_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `library_members`
 --
 ALTER TABLE `library_members`
   ADD CONSTRAINT `library_members_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `universal_student_profiles` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `library_members_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `library_transactions`
+--
+ALTER TABLE `library_transactions`
+  ADD CONSTRAINT `library_transactions_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `library_management` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `library_transactions_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `library_transactions_ibfk_3` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `library_transactions_ibfk_4` FOREIGN KEY (`processed_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `meal_tracking`
+--
+ALTER TABLE `meal_tracking`
+  ADD CONSTRAINT `meal_tracking_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `meal_tracking_ibfk_2` FOREIGN KEY (`served_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `midwifery_antenatal_care`
@@ -9168,6 +11747,12 @@ ALTER TABLE `onboarding_checklist`
   ADD CONSTRAINT `onboarding_checklist_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `partnerships`
+--
+ALTER TABLE `partnerships`
+  ADD CONSTRAINT `partnerships_ibfk_1` FOREIGN KEY (`responsible_person`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `payments`
 --
 ALTER TABLE `payments`
@@ -9218,6 +11803,12 @@ ALTER TABLE `professional_licenses`
 --
 ALTER TABLE `proof_of_payments`
   ADD CONSTRAINT `proof_of_payments_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `quality_assurance`
+--
+ALTER TABLE `quality_assurance`
+  ADD CONSTRAINT `quality_assurance_ibfk_1` FOREIGN KEY (`assessed_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `real_time_updates`
@@ -9288,10 +11879,55 @@ ALTER TABLE `requirement_clearances`
   ADD CONSTRAINT `requirement_clearances_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `requirement_items` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
+-- Constraints for table `research_projects`
+--
+ALTER TABLE `research_projects`
+  ADD CONSTRAINT `research_projects_ibfk_1` FOREIGN KEY (`lead_researcher`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `research_projects_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `result_publication`
+--
+ALTER TABLE `result_publication`
+  ADD CONSTRAINT `result_publication_ibfk_1` FOREIGN KEY (`published_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `room_inspections`
+--
+ALTER TABLE `room_inspections`
+  ADD CONSTRAINT `room_inspections_ibfk_1` FOREIGN KEY (`inspector_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  ADD CONSTRAINT `route_schedules_ibfk_1` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `route_schedules_ibfk_2` FOREIGN KEY (`driver_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `salary_structures`
 --
 ALTER TABLE `salary_structures`
   ADD CONSTRAINT `salary_structures_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff_records` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `security_equipment`
+--
+ALTER TABLE `security_equipment`
+  ADD CONSTRAINT `security_equipment_ibfk_1` FOREIGN KEY (`maintained_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `security_incidents`
+--
+ALTER TABLE `security_incidents`
+  ADD CONSTRAINT `security_incidents_ibfk_1` FOREIGN KEY (`reported_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `security_incidents_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `security_patrols`
+--
+ALTER TABLE `security_patrols`
+  ADD CONSTRAINT `security_patrols_ibfk_1` FOREIGN KEY (`guard_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `security_visitors`
@@ -9300,6 +11936,19 @@ ALTER TABLE `security_visitors`
   ADD CONSTRAINT `security_visitors_ibfk_1` FOREIGN KEY (`person_to_visit`) REFERENCES `staff` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `security_visitors_ibfk_2` FOREIGN KEY (`check_in_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `security_visitors_ibfk_3` FOREIGN KEY (`check_out_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `skills_laboratory`
+--
+ALTER TABLE `skills_laboratory`
+  ADD CONSTRAINT `skills_laboratory_ibfk_1` FOREIGN KEY (`in_charge`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `skills_lab_sessions`
+--
+ALTER TABLE `skills_lab_sessions`
+  ADD CONSTRAINT `skills_lab_sessions_ibfk_1` FOREIGN KEY (`lab_id`) REFERENCES `skills_laboratory` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `skills_lab_sessions_ibfk_2` FOREIGN KEY (`lecturer_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `smart_suggestions`
@@ -9467,10 +12116,42 @@ ALTER TABLE `staff_training`
   ADD CONSTRAINT `staff_training_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `store_inventory`
+--
+ALTER TABLE `store_inventory`
+  ADD CONSTRAINT `store_inventory_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `store_categories` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `store_inventory_transactions`
+--
+ALTER TABLE `store_inventory_transactions`
+  ADD CONSTRAINT `store_inventory_transactions_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `store_order_items`
+--
+ALTER TABLE `store_order_items`
+  ADD CONSTRAINT `store_order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `store_orders` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `store_order_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `store_request_items`
+--
+ALTER TABLE `store_request_items`
+  ADD CONSTRAINT `store_request_items_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `store_requests` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `store_request_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `store_inventory` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `student_academic_profiles`
 --
 ALTER TABLE `student_academic_profiles`
   ADD CONSTRAINT `student_academic_profiles_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `student_activities`
+--
+ALTER TABLE `student_activities`
+  ADD CONSTRAINT `student_activities_ibfk_1` FOREIGN KEY (`organizer_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student_admissions`
@@ -9518,6 +12199,12 @@ ALTER TABLE `student_health_incidents`
   ADD CONSTRAINT `student_health_incidents_ibfk_2` FOREIGN KEY (`reported_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL;
 
 --
+-- Constraints for table `student_health_records`
+--
+ALTER TABLE `student_health_records`
+  ADD CONSTRAINT `student_health_records_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
@@ -9561,16 +12248,57 @@ ALTER TABLE `student_search_index`
   ADD CONSTRAINT `student_search_index_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `universal_student_profiles` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `student_welfare_cases`
+--
+ALTER TABLE `student_welfare_cases`
+  ADD CONSTRAINT `student_welfare_cases_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `student_welfare_cases_ibfk_2` FOREIGN KEY (`assigned_warden`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `system_logs`
 --
 ALTER TABLE `system_logs`
   ADD CONSTRAINT `system_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `transcript_generation_log`
+--
+ALTER TABLE `transcript_generation_log`
+  ADD CONSTRAINT `transcript_generation_log_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `transcript_generation_log_ibfk_2` FOREIGN KEY (`requested_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `transcript_generation_log_ibfk_3` FOREIGN KEY (`approved_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `trip_logs`
+--
+ALTER TABLE `trip_logs`
+  ADD CONSTRAINT `trip_logs_ibfk_1` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `trip_logs_ibfk_2` FOREIGN KEY (`driver_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `ura_reporting`
+--
+ALTER TABLE `ura_reporting`
+  ADD CONSTRAINT `ura_reporting_ibfk_1` FOREIGN KEY (`prepared_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `ura_reporting_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `user_preferences`
 --
 ALTER TABLE `user_preferences`
   ADD CONSTRAINT `user_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `vehicles`
+--
+ALTER TABLE `vehicles`
+  ADD CONSTRAINT `vehicles_ibfk_1` FOREIGN KEY (`assigned_driver`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `visitor_logs`
+--
+ALTER TABLE `visitor_logs`
+  ADD CONSTRAINT `visitor_logs_ibfk_1` FOREIGN KEY (`authorized_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `work_history`

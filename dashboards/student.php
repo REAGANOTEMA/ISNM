@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
+require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -986,6 +987,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             </div>
                         </div>
                         
+                        <?php
+                        $studentStringId = $student_info['student_id'] ?? $student_info['id'] ?? '';
+                        $activeSub = [];
+                        if ($studentStringId) {
+                            $subs = getStudentSubscriptions($studentStringId);
+                            $activeSub = array_filter($subs, fn($s) => $s['status'] === 'active');
+                        }
+                        ?>
                         <div class="payment-actions">
                             <button class="btn btn-primary btn-lg" onclick="showStudentPaymentModal()">
                                 <i class="fas fa-credit-card"></i> Make Payment
@@ -996,7 +1005,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             <button class="btn btn-outline-success" onclick="openModal('downloadReceipt')">
                                 <i class="fas fa-receipt"></i> Download Receipt
                             </button>
+                            <a href="payment-subscriptions.php?student_id=<?= urlencode($studentStringId) ?>" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-arrow-repeat"></i> <?= !empty($activeSub) ? 'Manage Auto-Pay' : 'Setup Auto-Pay' ?>
+                            </a>
                         </div>
+                        <?php if (!empty($activeSub)): ?>
+                        <div class="mt-3 p-3 bg-light rounded border">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                <div>
+                                    <strong>Auto-Deduction Active</strong>
+                                    <br><small class="text-muted">
+                                        <?= count($activeSub) ?> subscription(s) active &middot;
+                                        Next deduction: <?= date('d M Y', strtotime($activeSub[0]['next_due_date'])) ?> &middot;
+                                        UGX <?= number_format($activeSub[0]['installment_amount']) ?>/mo
+                                    </small>
+                                </div>
+                                <a href="payment-subscriptions.php?student_id=<?= urlencode($studentStringId) ?>" class="btn btn-sm btn-outline-primary ms-auto">Details</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
                         <?php if (!empty($pending_invoices)): ?>
                         <div class="alert alert-warning mt-4">
@@ -1259,6 +1287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                                 <option value="centenary_bank">Centenary Bank</option>
                                                 <option value="stanbic_bank">Stanbic Bank</option>
                                                 <option value="equity_bank">Equity Bank</option>
+                                                <option value="pearl_bank">Pearl Bank</option>
+                                                <option value="uba_bank">UBA Bank</option>
                                                 <option value="dfcu_bank">DFCU Bank</option>
                                                 <option value="absa_bank">Absa Bank</option>
                                             </select>
@@ -1388,6 +1418,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                         <option value="">Select Bank</option>
                                         <option value="centenary">Centenary Bank</option>
                                         <option value="stanbic">Stanbic Bank</option>
+                                        <option value="equity">Equity Bank</option>
+                                        <option value="pearl">Pearl Bank</option>
+                                        <option value="uba">UBA Bank</option>
                                         <option value="dfcu">DFCU Bank</option>
                                         <option value="absa">Absa Bank</option>
                                     </select>

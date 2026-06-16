@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-ledger"></i></div>
-            <h5>General Ledger</h5>
-            <p class="text-muted">This module is under development. Chart of accounts, journal entries, trial balance, and comprehensive ledger management coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-list-alt fa-2x text-primary mb-2"></i><br><small>Chart of Accounts</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-pen-alt fa-2x text-primary mb-2"></i><br><small>Journal Entries</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-balance-scale fa-2x text-primary mb-2"></i><br><small>Trial Balance</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('General Ledger', 'fas fa-book', [
+            ['icon'=>'fas fa-journal-whills', 'label'=>'Chart of Accounts', 'note'=>'Account structure'],
+            ['icon'=>'fas fa-exchange-alt', 'label'=>'Journal Entries', 'note'=>'Record transactions'],
+            ['icon'=>'fas fa-file-invoice', 'label'=>'Trial Balance', 'note'=>'Account balances'],
+            ['icon'=>'fas fa-balance-scale', 'label'=>'Income Statement', 'note'=>'P&L summary'],
+            ['icon'=>'fas fa-file-alt', 'label'=>'Balance Sheet', 'note'=>'Financial position'],
+            ['icon'=>'fas fa-chart-bar', 'label'=>'Audit Trail', 'note'=>'Transaction log'],
+        ], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

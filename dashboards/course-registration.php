@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'lecturers']);
 $user = $ctx['user'];
 ?><!DOCTYPE html>
@@ -41,19 +42,14 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
           </div>
         </div>
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-user-plus text-success"></i> Register students for academic programs and courses</li>
-            <li><i class="fas fa-check-circle text-primary"></i> Approval workflow for course registrations</li>
-            <li><i class="fas fa-calendar-alt text-warning"></i> Set and manage registration deadlines per semester</li>
-            <li><i class="fas fa-file-export text-info"></i> Export registration lists and generate reports</li>
-            <li><i class="fas fa-history text-secondary"></i> Track registration changes and audit logs</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
+          <?php renderComingSoon('Course Registration', 'fas fa-user-plus', [
+    ['icon'=>'fas fa-book', 'label'=>'Course Catalog', 'note'=>'Available courses'],
+    ['icon'=>'fas fa-clipboard-list', 'label'=>'Registration', 'note'=>'Select courses'],
+    ['icon'=>'fas fa-calendar-check', 'label'=>'Schedule', 'note'=>'View timetable'],
+    ['icon'=>'fas fa-credit-card', 'label'=>'Fee Check', 'note'=>'Payment status'],
+    ['icon'=>'fas fa-file-alt', 'label'=>'Form Print', 'note'=>'Registration form'],
+    ['icon'=>'fas fa-history', 'label'=>'My Registrations', 'note'=>'Past semesters'],
+], 'Under Development'); ?>
         </div>
       </div>
     </div>

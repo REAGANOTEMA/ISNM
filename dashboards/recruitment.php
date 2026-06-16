@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-users"></i></div>
-            <h5>Recruitment</h5>
-            <p class="text-muted">This module is under development. Job postings, applicant tracking, interview scheduling, candidate evaluations, and hiring workflows coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-briefcase fa-2x text-primary mb-2"></i><br><small>Job Postings</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-user-check fa-2x text-primary mb-2"></i><br><small>Applicants</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-calendar-check fa-2x text-primary mb-2"></i><br><small>Interviews</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Staff Recruitment', 'fas fa-user-plus', [
+            ['icon'=>'fas fa-bullhorn', 'label'=>'Job Postings', 'note'=>'Advertise vacancies'],
+            ['icon'=>'fas fa-file-alt', 'label'=>'Applications', 'note'=>'Receive applications'],
+            ['icon'=>'fas fa-filter', 'label'=>'Shortlisting', 'note'=>'Filter candidates'],
+            ['icon'=>'fas fa-calendar-check', 'label'=>'Interviews', 'note'=>'Schedule interviews'],
+            ['icon'=>'fas fa-file-signature', 'label'=>'Offers', 'note'=>'Generate offer letters'],
+            ['icon'=>'fas fa-clipboard-list', 'label'=>'Onboarding', 'note'=>'New hire process'],
+        ], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

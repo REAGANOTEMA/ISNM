@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-chart-simple"></i></div>
-            <h5>Performance Appraisal</h5>
-            <p class="text-muted">This module is under development. Staff evaluations, goal setting, performance reviews, 360-degree feedback, and appraisal reports coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-bullseye fa-2x text-primary mb-2"></i><br><small>Goal Setting</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-clipboard-check fa-2x text-primary mb-2"></i><br><small>Evaluations</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-file-signature fa-2x text-primary mb-2"></i><br><small>Reviews</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Staff Performance Appraisal', 'fas fa-chart-line', [
+            ['icon'=>'fas fa-clipboard-check', 'label'=>'Self Assessment', 'note'=>'Staff self-review'],
+            ['icon'=>'fas fa-users', 'label'=>'Peer Review', 'note'=>'Colleague feedback'],
+            ['icon'=>'fas fa-star', 'label'=>'Supervisor Review', 'note'=>'Manager evaluation'],
+            ['icon'=>'fas fa-trophy', 'label'=>'Goals & KPIs', 'note'=>'Target tracking'],
+            ['icon'=>'fas fa-file-signature', 'label'=>'Appraisal Forms', 'note'=>'Custom forms'],
+            ['icon'=>'fas fa-chart-bar', 'label'=>'Reports', 'note'=>'Performance stats'],
+        ], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

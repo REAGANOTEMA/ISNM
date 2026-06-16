@@ -240,15 +240,118 @@ if (!function_exists('generateFinancialStatement')) {
     }
 }
 
+if (!function_exists('getPaymentProviders')) {
+    function getPaymentProviders() {
+        return [
+            'mtn_momo' => [
+                'name' => 'MTN Mobile Money',
+                'short' => 'MTN',
+                'logo' => '../images/mtn-logo.jpg',
+                'group' => 'mobile_money',
+            ],
+            'airtel_money' => [
+                'name' => 'Airtel Money',
+                'short' => 'Airtel',
+                'logo' => '../images/airtel-logo.png',
+                'group' => 'mobile_money',
+            ],
+            'stanbic_bank' => [
+                'name' => 'Stanbic Bank',
+                'short' => 'Stanbic',
+                'logo' => '../images/stanbic-logo.jpg',
+                'group' => 'bank',
+            ],
+            'equity_bank' => [
+                'name' => 'Equity Bank',
+                'short' => 'Equity',
+                'logo' => '../images/equity_logo.png',
+                'group' => 'bank',
+            ],
+            'centenary_bank' => [
+                'name' => 'Centenary Bank',
+                'short' => 'Centenary',
+                'logo' => '../images/centenary-logo.jpg',
+                'group' => 'bank',
+            ],
+            'pearl_bank' => [
+                'name' => 'Pearl Bank',
+                'short' => 'Pearl',
+                'logo' => '../images/pearl-logo.png',
+                'group' => 'bank',
+            ],
+            'uba_bank' => [
+                'name' => 'UBA Bank',
+                'short' => 'UBA',
+                'logo' => '../images/uba-bank-logo.png',
+                'group' => 'bank',
+            ],
+            'dfcu_bank' => [
+                'name' => 'DFCU Bank',
+                'short' => 'DFCU',
+                'logo' => '../images/bank-default.svg',
+                'group' => 'bank',
+            ],
+            'absa_bank' => [
+                'name' => 'Absa Bank',
+                'short' => 'Absa',
+                'logo' => '../images/bank-default.svg',
+                'group' => 'bank',
+            ],
+            'mastercard' => [
+                'name' => 'Mastercard',
+                'short' => 'Mastercard',
+                'logo' => '../images/mastercard-logo.png',
+                'group' => 'card',
+            ],
+        ];
+    }
+}
+
 if (!function_exists('getPaymentProviderLogo')) {
     function getPaymentProviderLogo($provider) {
-        $logos = [
-            'mtn_momo' => '../images/mtn-logo.svg',
-            'airtel_money' => '../images/airtel-logo.svg',
-            'stanbic_bank' => '../images/stanbic-logo.svg',
-            'equity_bank' => '../images/equity-bank.svg',
-            'centenary_bank' => '../images/centenary-bank.svg',
+        $providers = getPaymentProviders();
+        if (isset($providers[$provider])) return $providers[$provider]['logo'];
+        $alias_map = [
+            'mtn' => 'mtn_momo',
+            'momo' => 'mtn_momo',
+            'airtel' => 'airtel_money',
+            'stanbic' => 'stanbic_bank',
+            'equity' => 'equity_bank',
+            'centenary' => 'centenary_bank',
+            'pearl' => 'pearl_bank',
+            'uba' => 'uba_bank',
+            'dfcu' => 'dfcu_bank',
+            'absa' => 'absa_bank',
         ];
-        return $logos[$provider] ?? '../images/bank-default.svg';
+        $key = $alias_map[$provider] ?? null;
+        if ($key && isset($providers[$key])) return $providers[$key]['logo'];
+        return '../images/bank-default.svg';
+    }
+}
+
+if (!function_exists('getPaymentProviderName')) {
+    function getPaymentProviderName($provider) {
+        $providers = getPaymentProviders();
+        if (isset($providers[$provider])) return $providers[$provider]['name'];
+        $alias_map = [
+            'mtn' => 'mtn_momo', 'momo' => 'mtn_momo', 'airtel' => 'airtel_money',
+            'stanbic' => 'stanbic_bank', 'equity' => 'equity_bank', 'centenary' => 'centenary_bank',
+            'pearl' => 'pearl_bank', 'uba' => 'uba_bank', 'dfcu' => 'dfcu_bank', 'absa' => 'absa_bank',
+        ];
+        $key = $alias_map[$provider] ?? null;
+        if ($key && isset($providers[$key])) return $providers[$key]['name'];
+        return ucfirst(str_replace('_', ' ', $provider));
+    }
+}
+
+if (!function_exists('renderPaymentProviderLogo')) {
+    function renderPaymentProviderLogo($provider, $height = 24, $show_label = true) {
+        $path = getPaymentProviderLogo($provider);
+        $name = getPaymentProviderName($provider);
+        $html = '<img src="' . htmlspecialchars($path) . '" alt="' . htmlspecialchars($name) . '"'
+              . ' style="height:' . (int)$height . 'px;vertical-align:middle;border-radius:4px;object-fit:contain;"'
+              . ' onerror="this.style.display=\'none\'">';
+        if ($show_label) $html .= ' ' . htmlspecialchars($name);
+        return $html;
     }
 }

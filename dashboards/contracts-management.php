@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-file-signature"></i></div>
-            <h5>Contract Management</h5>
-            <p class="text-muted">This module is under development. Contract creation, renewal tracking, document storage, expiry alerts, and compliance management coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-plus-circle fa-2x text-primary mb-2"></i><br><small>New Contract</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-redo fa-2x text-primary mb-2"></i><br><small>Renewals</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-bell fa-2x text-primary mb-2"></i><br><small>Alerts</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Contract Management', 'fas fa-file-signature', [
+    ['icon'=>'fas fa-file-contract', 'label'=>'Contracts', 'note'=>'Staff contracts'],
+    ['icon'=>'fas fa-calendar-alt', 'label'=>'Renewals', 'note'=>'Contract expiry'],
+    ['icon'=>'fas fa-clock', 'label'=>'Probation', 'note'=>'Probation tracking'],
+    ['icon'=>'fas fa-file-pdf', 'label'=>'Templates', 'note'=>'Contract templates'],
+    ['icon'=>'fas fa-clipboard-check', 'label'=>'Compliance', 'note'=>'Policy checks'],
+    ['icon'=>'fas fa-archive', 'label'=>'Archive', 'note'=>'Past contracts'],
+], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

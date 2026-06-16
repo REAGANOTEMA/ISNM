@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-clock"></i></div>
-            <h5>Timetable Management</h5>
-            <p class="text-muted">This module is under development. Class scheduling, room allocation, lecturer timetables, clash detection, and printable timetables coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-plus-circle fa-2x text-primary mb-2"></i><br><small>Create Timetable</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-edit fa-2x text-primary mb-2"></i><br><small>Edit Schedule</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-print fa-2x text-primary mb-2"></i><br><small>Print Timetable</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Timetable Management', 'fas fa-calendar-alt', [
+            ['icon'=>'fas fa-clock', 'label'=>'Class Schedule', 'note'=>'Lecture timings'],
+            ['icon'=>'fas fa-chalkboard-teacher', 'label'=>'Lecturer Assignments', 'note'=>'Allocate teachers'],
+            ['icon'=>'fas fa-users-class', 'label'=>'Room Booking', 'note'=>'Venue allocation'],
+            ['icon'=>'fas fa-calendar-week', 'label'=>'Weekly View', 'note'=>'Week timetables'],
+            ['icon'=>'fas fa-print', 'label'=>'Print', 'note'=>'Export timetables'],
+            ['icon'=>'fas fa-bell', 'label'=>'Notifications', 'note'=>'Schedule alerts'],
+        ], 'Planned'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

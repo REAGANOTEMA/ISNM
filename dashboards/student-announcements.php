@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
 ?><!DOCTYPE html>
@@ -41,19 +42,14 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
           </div>
         </div>
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-pen-fancy text-primary"></i> Compose announcements with rich text formatting</li>
-            <li><i class="fas fa-clock text-warning"></i> Schedule announcements for future release</li>
-            <li><i class="fas fa-filter text-success"></i> Target specific programs, years, or cohorts</li>
-            <li><i class="fas fa-bell text-info"></i> Push notifications and email digests</li>
-            <li><i class="fas fa-chart-simple text-secondary"></i> Track read receipts and engagement metrics</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
+          <?php renderComingSoon('Student Announcements', 'fas fa-bullhorn', [
+    ['icon'=>'fas fa-newspaper', 'label'=>'School News', 'note'=>'Official notices'],
+    ['icon'=>'fas fa-calendar-alt', 'label'=>'Events', 'note'=>'Upcoming events'],
+    ['icon'=>'fas fa-exclamation-circle', 'label'=>'Alerts', 'note'=>'Urgent notices'],
+    ['icon'=>'fas fa-file-pdf', 'label'=>'Circulars', 'note'=>'Downloadable PDFs'],
+    ['icon'=>'fas fa-bell', 'label'=>'Push Notifications', 'note'=>'Get notified'],
+    ['icon'=>'fas fa-clock', 'label'=>'Archive', 'note'=>'Past announcements'],
+], 'Under Development'); ?>
         </div>
       </div>
     </div>

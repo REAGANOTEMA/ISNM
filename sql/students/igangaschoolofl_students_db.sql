@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 08, 2026 at 04:49 PM
+-- Generation Time: Jun 16, 2026 at 07:28 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -24,25 +24,56 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `academic_registrar_activity_log`
+--
+
+CREATE TABLE `academic_registrar_activity_log` (
+  `id` int NOT NULL,
+  `activity` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `announcements`
+--
+
+CREATE TABLE `announcements` (
+  `id` int NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_audience` enum('All','Nursing','Midwifery','Year1','Year2','Year3','Staff') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'All',
+  `priority` enum('Normal','High','Urgent') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Normal',
+  `posted_by` int DEFAULT NULL,
+  `expires_at` date DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `assets`
 --
 
 CREATE TABLE `assets` (
   `id` int NOT NULL,
-  `asset_tag` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `asset_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `asset_tag` varchar(50) NOT NULL,
+  `asset_name` varchar(255) NOT NULL,
   `category_id` int DEFAULT NULL,
   `purchase_date` date DEFAULT NULL,
   `purchase_price` decimal(12,2) DEFAULT NULL,
   `current_value` decimal(12,2) DEFAULT NULL,
-  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
   `assigned_to` int DEFAULT NULL,
-  `status` enum('Active','Disposed','Lost','Under Maintenance') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('Active','Disposed','Lost','Under Maintenance') DEFAULT 'Active',
+  `notes` text,
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -52,13 +83,13 @@ CREATE TABLE `assets` (
 
 CREATE TABLE `asset_categories` (
   `id` int NOT NULL,
-  `category_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `category_name` varchar(100) NOT NULL,
+  `description` text,
   `depreciation_rate` decimal(5,2) DEFAULT '0.00',
   `useful_life_years` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -68,18 +99,18 @@ CREATE TABLE `asset_categories` (
 
 CREATE TABLE `budgets` (
   `id` int NOT NULL,
-  `budget_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fiscal_year` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `budget_name` varchar(255) NOT NULL,
+  `fiscal_year` varchar(20) NOT NULL,
   `total_amount` decimal(15,2) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
-  `status` enum('Draft','Approved','Active','Closed') COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `status` enum('Draft','Approved','Active','Closed') DEFAULT 'Draft',
   `approved_by` int DEFAULT NULL,
   `approved_date` timestamp NULL DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -90,15 +121,15 @@ CREATE TABLE `budgets` (
 CREATE TABLE `budget_records` (
   `id` int NOT NULL,
   `budget_id` int NOT NULL,
-  `budget_item` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `budget_item` varchar(255) NOT NULL,
   `allocated_amount` decimal(12,2) NOT NULL,
   `spent_amount` decimal(12,2) DEFAULT '0.00',
   `remaining_amount` decimal(12,2) GENERATED ALWAYS AS ((`allocated_amount` - `spent_amount`)) STORED,
-  `status` enum('Active','Exhausted','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('Active','Exhausted','Cancelled') DEFAULT 'Active',
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -108,16 +139,16 @@ CREATE TABLE `budget_records` (
 
 CREATE TABLE `bursar_users` (
   `id` int NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `full_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` enum('bursar','accounts_assistant','auditor') COLLATE utf8mb4_unicode_ci DEFAULT 'bursar',
-  `status` enum('active','inactive','suspended') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `role` enum('bursar','accounts_assistant','auditor') DEFAULT 'bursar',
+  `status` enum('active','inactive','suspended') DEFAULT 'active',
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -127,18 +158,18 @@ CREATE TABLE `bursar_users` (
 
 CREATE TABLE `cash_book` (
   `id` int NOT NULL,
-  `entry_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `entry_type` enum('Receipt','Payment') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entry_number` varchar(50) NOT NULL,
+  `entry_type` enum('Receipt','Payment') NOT NULL,
+  `description` text NOT NULL,
   `amount` decimal(15,2) NOT NULL,
   `balance` decimal(15,2) NOT NULL,
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `reference_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `reference_number` varchar(100) DEFAULT NULL,
   `related_student_id` int DEFAULT NULL,
   `transaction_date` date DEFAULT (curdate()),
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -148,35 +179,76 @@ CREATE TABLE `cash_book` (
 
 CREATE TABLE `chart_of_accounts` (
   `id` int NOT NULL,
-  `account_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_type` enum('Asset','Liability','Equity','Revenue','Expense') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `account_code` varchar(20) NOT NULL,
+  `account_name` varchar(255) NOT NULL,
+  `account_type` enum('Asset','Liability','Equity','Revenue','Expense') NOT NULL,
   `parent_account_id` int DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `description` text,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `chart_of_accounts`
 --
 
 INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_type`, `parent_account_id`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, '1000', 'Cash and Cash Equivalents', 'Asset', NULL, 'Cash on hand and in bank', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(2, '1100', 'Accounts Receivable', 'Asset', NULL, 'Student fees receivable', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(3, '1200', 'Inventory', 'Asset', NULL, 'Supplies and inventory', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(4, '1500', 'Fixed Assets', 'Asset', NULL, 'Property, plant and equipment', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(5, '2000', 'Accounts Payable', 'Liability', NULL, 'Amounts owed to suppliers', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(6, '2100', 'Accrued Liabilities', 'Liability', NULL, 'Accrued expenses', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(7, '3000', 'Net Assets', 'Equity', NULL, 'Institution net worth', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(8, '4000', 'Tuition Revenue', 'Revenue', NULL, 'Income from student tuition', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(9, '4100', 'Registration Revenue', 'Revenue', NULL, 'Income from student registration', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(10, '4200', 'Other Revenue', 'Revenue', NULL, 'Miscellaneous income', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(11, '5000', 'Salary Expenses', 'Expense', NULL, 'Staff salaries and wages', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(12, '5100', 'Administrative Expenses', 'Expense', NULL, 'Office and administrative costs', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(13, '5200', 'Operational Expenses', 'Expense', NULL, 'Day-to-day operational costs', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(14, '5300', 'Maintenance Expenses', 'Expense', NULL, 'Facility maintenance costs', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24');
+(1, '1000', 'Cash and Cash Equivalents', 'Asset', NULL, 'Cash on hand and in bank', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(2, '1100', 'Accounts Receivable', 'Asset', NULL, 'Student fees receivable', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(3, '1200', 'Inventory', 'Asset', NULL, 'Supplies and inventory', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(4, '1500', 'Fixed Assets', 'Asset', NULL, 'Property, plant and equipment', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(5, '2000', 'Accounts Payable', 'Liability', NULL, 'Amounts owed to suppliers', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(6, '2100', 'Accrued Liabilities', 'Liability', NULL, 'Accrued expenses', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(7, '3000', 'Net Assets', 'Equity', NULL, 'Institution net worth', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(8, '4000', 'Tuition Revenue', 'Revenue', NULL, 'Income from student tuition', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(9, '4100', 'Registration Revenue', 'Revenue', NULL, 'Income from student registration', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(10, '4200', 'Other Revenue', 'Revenue', NULL, 'Miscellaneous income', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(11, '5000', 'Salary Expenses', 'Expense', NULL, 'Staff salaries and wages', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(12, '5100', 'Administrative Expenses', 'Expense', NULL, 'Office and administrative costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(13, '5200', 'Operational Expenses', 'Expense', NULL, 'Day-to-day operational costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(14, '5300', 'Maintenance Expenses', 'Expense', NULL, 'Facility maintenance costs', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clinical_placements`
+--
+
+CREATE TABLE `clinical_placements` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `facility_name` varchar(255) NOT NULL,
+  `facility_location` varchar(255) DEFAULT NULL,
+  `supervisor_name` varchar(255) DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `hours_completed` int DEFAULT '0',
+  `skills_assessment` text,
+  `status` enum('Active','Completed','Cancelled') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clinical_placements_students`
+--
+
+CREATE TABLE `clinical_placements_students` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `placement_site` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `supervisor_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `competency_score` decimal(5,2) DEFAULT NULL,
+  `logbook_submitted` tinyint(1) DEFAULT '0',
+  `supervisor_evaluation` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('Scheduled','Active','Completed','Withdrawn') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Scheduled',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -186,31 +258,55 @@ INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_
 
 CREATE TABLE `cost_centers` (
   `id` int NOT NULL,
-  `cost_center_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `cost_center_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `cost_center_code` varchar(20) NOT NULL,
+  `cost_center_name` varchar(255) NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `description` text,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `cost_centers`
 --
 
 INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `department`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'CC-EXEC', 'Executive Office', 'Executive Office', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(2, 'CC-NUR', 'Nursing Department', 'Nursing Department', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(3, 'CC-MID', 'Midwifery Department', 'Midwifery Department', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(4, 'CC-ACAD', 'Academic Affairs', 'Academic Affairs', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(5, 'CC-FIN', 'Finance Department', 'Finance Department', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(6, 'CC-HR', 'Human Resources', 'Human Resources', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(7, 'CC-LIB', 'Library Services', 'Library Services', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(8, 'CC-STU', 'Student Affairs', 'Student Affairs', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(9, 'CC-SEC', 'Security Services', 'Security Services', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(10, 'CC-ICT', 'Information Technology', 'Information Technology', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(11, 'CC-FAC', 'Facilities Management', 'Facilities Management', NULL, 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24');
+(1, 'CC-EXEC', 'Executive Office', 'Executive Office', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(2, 'CC-NUR', 'Nursing Department', 'Nursing Department', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(3, 'CC-MID', 'Midwifery Department', 'Midwifery Department', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(4, 'CC-ACAD', 'Academic Affairs', 'Academic Affairs', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(5, 'CC-FIN', 'Finance Department', 'Finance Department', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(6, 'CC-HR', 'Human Resources', 'Human Resources', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(7, 'CC-LIB', 'Library Services', 'Library Services', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(8, 'CC-STU', 'Student Affairs', 'Student Affairs', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(9, 'CC-SEC', 'Security Services', 'Security Services', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(10, 'CC-ICT', 'Information Technology', 'Information Technology', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(11, 'CC-FAC', 'Facilities Management', 'Facilities Management', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `department_requests`
+--
+
+CREATE TABLE `department_requests` (
+  `id` int NOT NULL,
+  `request_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `from_department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `to_department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Store',
+  `item_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` int DEFAULT '1',
+  `unit` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `purpose` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `urgency` enum('Normal','Urgent','Emergency') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Normal',
+  `status` enum('Pending','Approved','Rejected','Fulfilled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `requested_by` int DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -220,21 +316,21 @@ INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `depar
 
 CREATE TABLE `expenditure_records` (
   `id` int NOT NULL,
-  `expenditure_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expenditure_number` varchar(50) NOT NULL,
   `budget_record_id` int DEFAULT NULL,
-  `expenditure_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expenditure_type` varchar(100) NOT NULL,
+  `description` text NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receipt_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `receipt_number` varchar(100) DEFAULT NULL,
   `expenditure_date` date DEFAULT (curdate()),
   `approved_by` int DEFAULT NULL,
   `recorded_by` int DEFAULT NULL,
-  `supporting_document` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `supporting_document` varchar(500) DEFAULT NULL,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -244,19 +340,19 @@ CREATE TABLE `expenditure_records` (
 
 CREATE TABLE `fee_adjustments` (
   `id` int NOT NULL,
-  `adjustment_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `adjustment_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
   `invoice_id` int DEFAULT NULL,
-  `adjustment_type` enum('Discount','Waiver','Penalty','Refund','Other') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `adjustment_type` enum('Discount','Waiver','Penalty','Refund','Other') NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` text NOT NULL,
   `approved_by` int DEFAULT NULL,
   `approved_at` timestamp NULL DEFAULT NULL,
-  `status` enum('Pending','Approved','Rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -266,15 +362,15 @@ CREATE TABLE `fee_adjustments` (
 
 CREATE TABLE `fee_reminders` (
   `id` int NOT NULL,
-  `reminder_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reminder_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
   `invoice_id` int DEFAULT NULL,
-  `reminder_type` enum('Email','SMS','Letter','Call') COLLATE utf8mb4_unicode_ci DEFAULT 'Email',
+  `reminder_type` enum('Email','SMS','Letter','Call') DEFAULT 'Email',
   `reminder_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `sent_by` int DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -284,18 +380,18 @@ CREATE TABLE `fee_reminders` (
 
 CREATE TABLE `fee_structures` (
   `id` int NOT NULL,
-  `fee_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fee_type` enum('Tuition','Registration','Library','Laboratory','Examination','Graduation','Other') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fee_name` varchar(255) NOT NULL,
+  `fee_type` enum('Tuition','Registration','Library','Laboratory','Examination','Graduation','Other') NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `program_id` int DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `semester` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(50) DEFAULT NULL,
   `is_mandatory` tinyint(1) DEFAULT '1',
   `due_date` date DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -305,17 +401,17 @@ CREATE TABLE `fee_structures` (
 
 CREATE TABLE `financial_reports` (
   `id` int NOT NULL,
-  `report_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `report_type` enum('Income Statement','Balance Sheet','Cash Flow','Budget vs Actual','Fee Collection','Expenditure','Custom') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `report_period` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `report_name` varchar(255) NOT NULL,
+  `report_type` enum('Income Statement','Balance Sheet','Cash Flow','Budget vs Actual','Fee Collection','Expenditure','Custom') NOT NULL,
+  `report_period` varchar(50) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `report_data` longtext COLLATE utf8mb4_unicode_ci,
+  `report_data` longtext,
   `generated_by` int DEFAULT NULL,
   `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` enum('Draft','Final','Archived') COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `status` enum('Draft','Final','Archived') DEFAULT 'Draft',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -325,16 +421,128 @@ CREATE TABLE `financial_reports` (
 
 CREATE TABLE `general_ledger` (
   `id` int NOT NULL,
-  `entry_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entry_number` varchar(50) NOT NULL,
   `account_id` int NOT NULL,
   `cost_center_id` int DEFAULT NULL,
-  `transaction_type` enum('Debit','Credit') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `transaction_type` enum('Debit','Credit') NOT NULL,
   `amount` decimal(15,2) NOT NULL,
-  `reference_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
   `reference_id` int DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `description` text,
   `transaction_date` date DEFAULT (curdate()),
   `posted_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `graduation_candidates`
+--
+
+CREATE TABLE `graduation_candidates` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `academic_year` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `graduation_date` date DEFAULT NULL,
+  `status` enum('Pending','Cleared','Graduated','Deferred') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `clearance_bursar` tinyint(1) DEFAULT '0',
+  `clearance_library` tinyint(1) DEFAULT '0',
+  `clearance_registrar` tinyint(1) DEFAULT '0',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_allocations`
+--
+
+CREATE TABLE `hostel_allocations` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `room_id` int NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(20) NOT NULL,
+  `check_in_date` date DEFAULT (curdate()),
+  `check_out_date` date DEFAULT NULL,
+  `status` enum('Active','Checked Out','Cancelled') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_rooms`
+--
+
+CREATE TABLE `hostel_rooms` (
+  `id` int NOT NULL,
+  `room_number` varchar(20) NOT NULL,
+  `hostel_name` varchar(100) NOT NULL,
+  `capacity` int NOT NULL DEFAULT '4',
+  `occupancy` int NOT NULL DEFAULT '0',
+  `fee_per_semester` decimal(12,2) DEFAULT '0.00',
+  `status` enum('Available','Full','Maintenance') DEFAULT 'Available',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_books`
+--
+
+CREATE TABLE `library_books` (
+  `id` int NOT NULL,
+  `book_title` varchar(255) NOT NULL,
+  `author` varchar(255) DEFAULT NULL,
+  `isbn` varchar(50) DEFAULT NULL,
+  `publisher` varchar(255) DEFAULT NULL,
+  `publication_year` year DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `total_copies` int DEFAULT '1',
+  `available_copies` int DEFAULT '1',
+  `shelf_location` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_borrowing`
+--
+
+CREATE TABLE `library_borrowing` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `book_id` int NOT NULL,
+  `borrow_date` date DEFAULT (curdate()),
+  `due_date` date NOT NULL,
+  `return_date` date DEFAULT NULL,
+  `fine_amount` decimal(10,2) DEFAULT '0.00',
+  `fine_paid` tinyint(1) DEFAULT '0',
+  `status` enum('Borrowed','Returned','Overdue','Lost') DEFAULT 'Borrowed',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_fines`
+--
+
+CREATE TABLE `library_fines` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `book_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `borrow_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `return_date` date DEFAULT NULL,
+  `fine_amount` decimal(10,2) DEFAULT '0.00',
+  `paid` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -346,16 +554,16 @@ CREATE TABLE `general_ledger` (
 
 CREATE TABLE `notifications` (
   `id` int NOT NULL,
-  `notification_type` enum('fee_reminder','payment_received','invoice_generated','budget_alert','system') COLLATE utf8mb4_unicode_ci DEFAULT 'system',
-  `recipient_type` enum('student','staff','bursar') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `notification_type` enum('fee_reminder','payment_received','invoice_generated','budget_alert','system') DEFAULT 'system',
+  `recipient_type` enum('student','staff','bursar') NOT NULL,
   `recipient_id` int DEFAULT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `channel` enum('email','sms','in_app') COLLATE utf8mb4_unicode_ci DEFAULT 'in_app',
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `channel` enum('email','sms','in_app') DEFAULT 'in_app',
   `is_read` tinyint(1) DEFAULT '0',
   `sent_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -365,20 +573,20 @@ CREATE TABLE `notifications` (
 
 CREATE TABLE `payments` (
   `id` int NOT NULL,
-  `payment_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payment_reference` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
   `invoice_id` int DEFAULT NULL,
   `amount_received` decimal(12,2) NOT NULL,
-  `payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Cash',
+  `payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other') DEFAULT 'Cash',
   `payment_date` date DEFAULT (curdate()),
-  `transaction_ref` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `slip_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` enum('Pending','Completed','Failed','Reversed') COLLATE utf8mb4_unicode_ci DEFAULT 'Completed',
+  `transaction_ref` varchar(100) DEFAULT NULL,
+  `slip_number` varchar(100) DEFAULT NULL,
+  `status` enum('Pending','Completed','Failed','Reversed') DEFAULT 'Completed',
   `received_by` int DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -388,19 +596,51 @@ CREATE TABLE `payments` (
 
 CREATE TABLE `payment_receipts` (
   `id` int NOT NULL,
-  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receipt_number` varchar(50) NOT NULL,
   `payment_id` int NOT NULL,
   `student_id` int NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
   `receipt_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `issued_by` int DEFAULT NULL,
   `voided` tinyint(1) DEFAULT '0',
   `voided_at` timestamp NULL DEFAULT NULL,
   `voided_by` int DEFAULT NULL,
-  `void_reason` text COLLATE utf8mb4_unicode_ci,
+  `void_reason` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_subscriptions`
+--
+
+CREATE TABLE `payment_subscriptions` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `subscription_type` enum('fee_installment','hostel','library','other') NOT NULL DEFAULT 'fee_installment',
+  `reference_type` varchar(50) DEFAULT NULL COMMENT 'eg: fee_structure_id, hostel_room_id',
+  `reference_id` int DEFAULT NULL,
+  `total_amount` decimal(12,2) NOT NULL,
+  `installment_amount` decimal(12,2) NOT NULL,
+  `frequency` enum('monthly','weekly','quarterly') NOT NULL DEFAULT 'monthly',
+  `total_installments` int NOT NULL,
+  `installments_collected` int NOT NULL DEFAULT '0',
+  `start_date` date NOT NULL DEFAULT (curdate()),
+  `next_due_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `payment_method` enum('mobile_money','bank','cash') DEFAULT 'mobile_money',
+  `payment_provider` varchar(50) DEFAULT NULL COMMENT 'mtn_momo, airtel_money, etc.',
+  `phone_number` varchar(20) DEFAULT NULL,
+  `bank_name` varchar(100) DEFAULT NULL,
+  `bank_account` varchar(50) DEFAULT NULL,
+  `status` enum('active','paused','completed','cancelled','failed') NOT NULL DEFAULT 'active',
+  `notes` text,
+  `created_by` varchar(50) DEFAULT NULL COMMENT 'student_id or staff_id who created',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -410,27 +650,27 @@ CREATE TABLE `payment_receipts` (
 
 CREATE TABLE `penalty_configurations` (
   `id` int NOT NULL,
-  `penalty_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `penalty_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `penalty_name` varchar(100) NOT NULL,
+  `penalty_type` varchar(100) DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT '0.00',
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `description` text,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `penalty_configurations`
 --
 
 INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amount`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Late Registration', 'Late Fee', 50000.00, 'Penalty for late course registration', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(2, 'Late Payment (1-7 days)', 'Late Fee', 10000.00, 'Penalty for fee payment 1-7 days after due date', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(3, 'Late Payment (8-14 days)', 'Late Fee', 25000.00, 'Penalty for fee payment 8-14 days after due date', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(4, 'Late Payment (15+ days)', 'Late Fee', 50000.00, 'Penalty for fee payment more than 15 days after due date', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(5, 'Lost Library Book', 'Replacement', 30000.00, 'Replacement fee for lost library book', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(6, 'Damaged Property', 'Damage', 20000.00, 'Penalty for damaging school property', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24'),
-(7, 'ID Card Replacement', 'Administrative', 10000.00, 'Fee for replacement of lost student ID card', 1, '2026-06-08 14:42:24', '2026-06-08 14:42:24');
+(1, 'Late Registration', 'Late Fee', 50000.00, 'Penalty for late course registration', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(2, 'Late Payment (1-7 days)', 'Late Fee', 10000.00, 'Penalty for fee payment 1-7 days after due date', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(3, 'Late Payment (8-14 days)', 'Late Fee', 25000.00, 'Penalty for fee payment 8-14 days after due date', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(4, 'Late Payment (15+ days)', 'Late Fee', 50000.00, 'Penalty for fee payment more than 15 days after due date', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(5, 'Lost Library Book', 'Replacement', 30000.00, 'Replacement fee for lost library book', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(6, 'Damaged Property', 'Damage', 20000.00, 'Penalty for damaging school property', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
+(7, 'ID Card Replacement', 'Administrative', 10000.00, 'Fee for replacement of lost student ID card', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20');
 
 -- --------------------------------------------------------
 
@@ -440,15 +680,15 @@ INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amo
 
 CREATE TABLE `programs` (
   `id` int NOT NULL,
-  `program_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `program_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `program_type` enum('Certificate','Diploma','Degree') COLLATE utf8mb4_unicode_ci DEFAULT 'Diploma',
+  `program_code` varchar(20) NOT NULL,
+  `program_name` varchar(255) NOT NULL,
+  `program_type` enum('Certificate','Diploma','Degree') DEFAULT 'Diploma',
   `duration_years` int DEFAULT '2',
   `total_fee` decimal(12,2) DEFAULT '0.00',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -458,17 +698,17 @@ CREATE TABLE `programs` (
 
 CREATE TABLE `proof_of_payments` (
   `id` int NOT NULL,
-  `proof_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `proof_number` varchar(50) NOT NULL,
   `payment_id` int NOT NULL,
   `student_id` int NOT NULL,
-  `document_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `document_path` varchar(500) DEFAULT NULL,
   `uploaded_by` int DEFAULT NULL,
   `verified` tinyint(1) DEFAULT '0',
   `verified_by` int DEFAULT NULL,
   `verified_at` timestamp NULL DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -478,14 +718,14 @@ CREATE TABLE `proof_of_payments` (
 
 CREATE TABLE `salary_components` (
   `id` int NOT NULL,
-  `component_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `component_type` enum('Earning','Deduction') COLLATE utf8mb4_unicode_ci DEFAULT 'Earning',
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `component_name` varchar(100) NOT NULL,
+  `component_type` enum('Earning','Deduction') DEFAULT 'Earning',
+  `description` text,
   `is_percentage` tinyint(1) DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -495,20 +735,20 @@ CREATE TABLE `salary_components` (
 
 CREATE TABLE `sponsorships` (
   `id` int NOT NULL,
-  `sponsorship_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sponsorship_code` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
-  `sponsor_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sponsor_type` enum('Government','NGO','Private','Self','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Self',
-  `sponsorship_type` enum('Full','Partial','Tuition Only','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Partial',
+  `sponsor_name` varchar(255) NOT NULL,
+  `sponsor_type` enum('Government','NGO','Private','Self','Other') DEFAULT 'Self',
+  `sponsorship_type` enum('Full','Partial','Tuition Only','Other') DEFAULT 'Partial',
   `amount` decimal(12,2) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
-  `terms_conditions` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('Active','Expired','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `terms_conditions` text,
+  `status` enum('Active','Expired','Cancelled') DEFAULT 'Active',
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -525,11 +765,11 @@ CREATE TABLE `staff_salaries` (
   `net_salary` decimal(12,2) GENERATED ALWAYS AS (((`base_salary` + `allowances`) - `deductions`)) STORED,
   `effective_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
-  `status` enum('Active','Inactive','Pending') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `status` enum('Active','Inactive','Pending') DEFAULT 'Active',
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -539,38 +779,38 @@ CREATE TABLE `staff_salaries` (
 
 CREATE TABLE `students` (
   `id` int NOT NULL,
-  `student_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `registration_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `national_student_id_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `index_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `surname` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `other_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `full_name` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `mobile_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `program` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `course` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_number` varchar(50) NOT NULL,
+  `registration_number` varchar(50) DEFAULT NULL,
+  `national_student_id_number` varchar(50) DEFAULT NULL,
+  `index_number` varchar(50) DEFAULT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `surname` varchar(100) NOT NULL,
+  `other_name` varchar(100) DEFAULT NULL,
+  `full_name` varchar(300) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `mobile_number` varchar(20) DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `course` varchar(100) DEFAULT NULL,
   `current_year` int DEFAULT NULL,
   `year` int DEFAULT NULL,
-  `level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `set_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `current_semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `level` varchar(50) DEFAULT NULL,
+  `set_name` varchar(50) DEFAULT NULL,
+  `current_semester` varchar(20) DEFAULT NULL,
   `intake_date` date DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
-  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Other',
-  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
-  `emergency_contact_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `emergency_contact_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `emergency_contact_email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `guardian_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `guardian_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `profile_picture` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `passport_photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `gender` enum('Male','Female','Other') DEFAULT 'Other',
+  `nationality` varchar(100) DEFAULT NULL,
+  `address` text,
+  `emergency_contact_name` varchar(100) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
+  `emergency_contact_email` varchar(100) DEFAULT NULL,
+  `guardian_name` varchar(200) DEFAULT NULL,
+  `guardian_phone` varchar(20) DEFAULT NULL,
+  `profile_picture` varchar(500) DEFAULT NULL,
+  `passport_photo` varchar(500) DEFAULT NULL,
+  `status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted') DEFAULT 'Active',
   `last_login` timestamp NULL DEFAULT NULL,
   `locked_until` timestamp NULL DEFAULT NULL,
   `login_attempts` int DEFAULT '0',
@@ -578,7 +818,7 @@ CREATE TABLE `students` (
   `is_first_login` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Triggers `students`
@@ -659,25 +899,44 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `students_trash`
+--
+
+CREATE TABLE `students_trash` (
+  `id` int NOT NULL,
+  `original_id` int NOT NULL,
+  `student_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `full_name` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `course` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `snapshot_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `deleted_by` int DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `restored_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_academic_records`
 --
 
 CREATE TABLE `student_academic_records` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `semester` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `subject` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `course_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `grade` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `semester` varchar(50) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `subject` varchar(100) DEFAULT NULL,
+  `course_code` varchar(20) DEFAULT NULL,
+  `grade` varchar(10) DEFAULT NULL,
   `marks` decimal(5,2) DEFAULT NULL,
   `credits` decimal(3,1) DEFAULT NULL,
   `gpa` decimal(3,2) DEFAULT NULL,
   `cgpa` decimal(3,2) DEFAULT NULL,
-  `remarks` text COLLATE utf8mb4_unicode_ci,
+  `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -689,14 +948,31 @@ CREATE TABLE `student_attendance` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `date` date NOT NULL,
-  `subject` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `course_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` enum('Present','Absent','Late','Excused') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `remarks` text COLLATE utf8mb4_unicode_ci,
+  `subject` varchar(100) DEFAULT NULL,
+  `course_code` varchar(20) DEFAULT NULL,
+  `status` enum('Present','Absent','Late','Excused') NOT NULL,
+  `remarks` text,
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_course_registrations`
+--
+
+CREATE TABLE `student_course_registrations` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `course_id` int NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `semester` varchar(20) NOT NULL,
+  `registration_date` date DEFAULT (curdate()),
+  `status` enum('Registered','Dropped','Completed') DEFAULT 'Registered',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -705,18 +981,56 @@ CREATE TABLE `student_attendance` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_dashboard_view` (
-`attendance_rate` decimal(31,5)
-,`course` varchar(100)
-,`current_gpa` decimal(3,2)
-,`email` varchar(100)
-,`fee_balance` decimal(32,2)
-,`full_name` varchar(302)
-,`id` int
-,`profile_picture` varchar(500)
-,`set_name` varchar(50)
+`id` int
 ,`student_number` varchar(50)
+,`full_name` varchar(302)
+,`course` varchar(100)
 ,`year` bigint
+,`set_name` varchar(50)
+,`email` varchar(100)
+,`profile_picture` varchar(500)
+,`current_gpa` decimal(3,2)
+,`fee_balance` decimal(32,2)
+,`attendance_rate` decimal(31,5)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_discipline`
+--
+
+CREATE TABLE `student_discipline` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `incident_date` date NOT NULL,
+  `incident_type` varchar(100) NOT NULL,
+  `description` text,
+  `action_taken` varchar(255) DEFAULT NULL,
+  `action_date` date DEFAULT NULL,
+  `reported_by` int DEFAULT NULL,
+  `status` enum('Open','Resolved','Appealed') DEFAULT 'Open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_discipline_records`
+--
+
+CREATE TABLE `student_discipline_records` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `case_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `incident_date` date DEFAULT NULL,
+  `incident_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `action_taken` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Pending','Resolved','Closed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `recorded_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -727,15 +1041,15 @@ CREATE TABLE `student_dashboard_view` (
 CREATE TABLE `student_downloads` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `title` varchar(200) NOT NULL,
+  `description` text,
+  `file_path` varchar(500) NOT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
   `file_size` bigint DEFAULT NULL,
   `download_count` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -746,17 +1060,17 @@ CREATE TABLE `student_downloads` (
 CREATE TABLE `student_fees` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `fee_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fee_type` varchar(100) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `due_date` date DEFAULT NULL,
   `paid_date` date DEFAULT NULL,
-  `status` enum('Unpaid','Partially Paid','Paid','Overdue') COLLATE utf8mb4_unicode_ci DEFAULT 'Unpaid',
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `remarks` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('Unpaid','Partially Paid','Paid','Overdue') DEFAULT 'Unpaid',
+  `payment_method` varchar(50) DEFAULT NULL,
+  `receipt_number` varchar(50) DEFAULT NULL,
+  `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -771,11 +1085,29 @@ CREATE TABLE `student_fee_assignments` (
   `assigned_amount` decimal(10,2) NOT NULL,
   `paid_amount` decimal(10,2) DEFAULT '0.00',
   `balance` decimal(10,2) GENERATED ALWAYS AS ((`assigned_amount` - `paid_amount`)) STORED,
-  `status` enum('Unpaid','Partially Paid','Paid','Waived') COLLATE utf8mb4_unicode_ci DEFAULT 'Unpaid',
+  `status` enum('Unpaid','Partially Paid','Paid','Waived') DEFAULT 'Unpaid',
   `due_date` date DEFAULT NULL,
   `assigned_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_hostel_allocations`
+--
+
+CREATE TABLE `student_hostel_allocations` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `hostel_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `room_number` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `allocation_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `monthly_fee` decimal(10,2) DEFAULT '0.00',
+  `status` enum('Active','Vacated','Transferred') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -786,24 +1118,24 @@ CREATE TABLE `student_fee_assignments` (
 
 CREATE TABLE `student_invoices` (
   `id` int NOT NULL,
-  `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `invoice_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
   `fee_assignment_id` int DEFAULT NULL,
-  `fee_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `fee_type` varchar(100) NOT NULL,
+  `description` text,
   `total_amount` decimal(12,2) NOT NULL,
   `discount_amount` decimal(12,2) DEFAULT '0.00',
   `net_amount` decimal(12,2) GENERATED ALWAYS AS ((`total_amount` - `discount_amount`)) STORED,
   `amount_paid` decimal(12,2) DEFAULT '0.00',
   `balance` decimal(12,2) GENERATED ALWAYS AS ((`net_amount` - `amount_paid`)) STORED,
-  `status` enum('Draft','Pending','Partially Paid','Paid','Overdue','Cancelled','Waived') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `status` enum('Draft','Pending','Partially Paid','Paid','Overdue','Cancelled','Waived') DEFAULT 'Pending',
   `due_date` date DEFAULT NULL,
   `issue_date` date DEFAULT (curdate()),
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -812,16 +1144,16 @@ CREATE TABLE `student_invoices` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_login_view` (
-`course` varchar(100)
-,`email` varchar(100)
+`id` int
+,`student_number` varchar(50)
 ,`full_name` varchar(302)
-,`id` int
-,`is_first_login` tinyint(1)
+,`email` varchar(100)
+,`password` varchar(255)
+,`course` varchar(100)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
 ,`last_login` timestamp
 ,`login_attempts` int
-,`password` varchar(255)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
-,`student_number` varchar(50)
+,`is_first_login` tinyint(1)
 );
 
 -- --------------------------------------------------------
@@ -833,15 +1165,15 @@ CREATE TABLE `student_login_view` (
 CREATE TABLE `student_messages` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `department_email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_email` varchar(100) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
   `is_read` tinyint(1) DEFAULT '0',
   `replied` tinyint(1) DEFAULT '0',
-  `reply_message` text COLLATE utf8mb4_unicode_ci,
+  `reply_message` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `replied_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -852,15 +1184,15 @@ CREATE TABLE `student_messages` (
 CREATE TABLE `student_notifications` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` enum('General','Academic','Fee','Attendance','Exam','Event','Matron','Bursar') COLLATE utf8mb4_unicode_ci DEFAULT 'General',
-  `priority` enum('Low','Medium','High','Urgent') COLLATE utf8mb4_unicode_ci DEFAULT 'Medium',
+  `title` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `type` enum('General','Academic','Fee','Attendance','Exam','Event','Matron','Bursar') DEFAULT 'General',
+  `priority` enum('Low','Medium','High','Urgent') DEFAULT 'Medium',
   `is_read` tinyint(1) DEFAULT '0',
-  `action_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `action_url` varchar(500) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -871,11 +1203,11 @@ CREATE TABLE `student_notifications` (
 CREATE TABLE `student_password_resets` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `reset_token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reset_token` varchar(255) NOT NULL,
   `expires_at` timestamp NOT NULL,
   `is_used` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -885,20 +1217,20 @@ CREATE TABLE `student_password_resets` (
 
 CREATE TABLE `student_penalties` (
   `id` int NOT NULL,
-  `penalty_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `penalty_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
-  `penalty_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `penalty_type` varchar(100) NOT NULL,
   `amount` decimal(10,2) DEFAULT '0.00',
-  `reason` text COLLATE utf8mb4_unicode_ci,
+  `reason` text,
   `applied_by` int DEFAULT NULL,
   `applied_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `waived` tinyint(1) DEFAULT '0',
   `waived_by` int DEFAULT NULL,
   `waived_at` timestamp NULL DEFAULT NULL,
-  `waiver_reason` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('Active','Waived','Paid') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `waiver_reason` text,
+  `status` enum('Active','Waived','Paid') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -909,11 +1241,30 @@ CREATE TABLE `student_penalties` (
 CREATE TABLE `student_profiles` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `bio` text COLLATE utf8mb4_unicode_ci,
-  `interests` text COLLATE utf8mb4_unicode_ci,
-  `skills` text COLLATE utf8mb4_unicode_ci,
-  `achievements` text COLLATE utf8mb4_unicode_ci,
-  `education_background` text COLLATE utf8mb4_unicode_ci,
+  `bio` text,
+  `interests` text,
+  `skills` text,
+  `achievements` text,
+  `education_background` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_requests`
+--
+
+CREATE TABLE `student_requests` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `request_type` enum('Leave of Absence','Deferral','Transfer','Withdrawal','Other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `supporting_doc` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `reviewed_by` int DEFAULT NULL,
+  `review_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -927,14 +1278,60 @@ CREATE TABLE `student_profiles` (
 CREATE TABLE `student_timetables` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
-  `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `time_slot` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `course_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `lecturer` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `classroom` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
+  `time_slot` varchar(50) NOT NULL,
+  `subject` varchar(100) NOT NULL,
+  `course_code` varchar(20) DEFAULT NULL,
+  `lecturer` varchar(100) DEFAULT NULL,
+  `classroom` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subscription_deductions`
+--
+
+CREATE TABLE `subscription_deductions` (
+  `id` int NOT NULL,
+  `subscription_id` int NOT NULL,
+  `student_id` varchar(50) NOT NULL,
+  `installment_number` int NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `due_date` date NOT NULL,
+  `processed_date` datetime DEFAULT NULL,
+  `status` enum('pending','success','failed','skipped') NOT NULL DEFAULT 'pending',
+  `payment_reference` varchar(50) DEFAULT NULL,
+  `payment_id` int DEFAULT NULL COMMENT 'FK to payments.id if successful',
+  `failure_reason` text,
+  `attempt_count` int DEFAULT '0',
+  `last_attempt_date` datetime DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `timetable`
+--
+
+CREATE TABLE `timetable` (
+  `id` int NOT NULL,
+  `program` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year_of_study` int DEFAULT '1',
+  `semester` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `time_slot` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_code` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lecturer` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `room` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -958,6 +1355,20 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `academic_registrar_activity_log`
+--
+ALTER TABLE `academic_registrar_activity_log`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `announcements`
+--
+ALTER TABLE `announcements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_target` (`target_audience`),
+  ADD KEY `idx_active` (`is_active`);
 
 --
 -- Indexes for table `assets`
@@ -1026,12 +1437,34 @@ ALTER TABLE `chart_of_accounts`
   ADD KEY `idx_account_type` (`account_type`);
 
 --
+-- Indexes for table `clinical_placements`
+--
+ALTER TABLE `clinical_placements`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `clinical_placements_students`
+--
+ALTER TABLE `clinical_placements_students`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_id` (`student_id`);
+
+--
 -- Indexes for table `cost_centers`
 --
 ALTER TABLE `cost_centers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `cost_center_code` (`cost_center_code`),
   ADD KEY `idx_cost_center_code` (`cost_center_code`);
+
+--
+-- Indexes for table `department_requests`
+--
+ALTER TABLE `department_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_req_num` (`request_number`),
+  ADD KEY `idx_from_dept` (`from_department`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `expenditure_records`
@@ -1101,6 +1534,46 @@ ALTER TABLE `general_ledger`
   ADD KEY `idx_transaction_date` (`transaction_date`);
 
 --
+-- Indexes for table `graduation_candidates`
+--
+ALTER TABLE `graduation_candidates`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `hostel_allocations`
+--
+ALTER TABLE `hostel_allocations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hostel_rooms`
+--
+ALTER TABLE `hostel_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `room_number` (`room_number`);
+
+--
+-- Indexes for table `library_books`
+--
+ALTER TABLE `library_books`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `library_borrowing`
+--
+ALTER TABLE `library_borrowing`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `library_fines`
+--
+ALTER TABLE `library_fines`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_id` (`student_id`);
+
+--
 -- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
@@ -1133,6 +1606,15 @@ ALTER TABLE `payment_receipts`
   ADD KEY `idx_receipt_number` (`receipt_number`),
   ADD KEY `idx_payment_id` (`payment_id`),
   ADD KEY `idx_student_id` (`student_id`);
+
+--
+-- Indexes for table `payment_subscriptions`
+--
+ALTER TABLE `payment_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_next_due` (`next_due_date`);
 
 --
 -- Indexes for table `penalty_configurations`
@@ -1209,7 +1691,17 @@ ALTER TABLE `students`
   ADD KEY `idx_course` (`course`),
   ADD KEY `idx_current_year` (`current_year`),
   ADD KEY `idx_year` (`year`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_full_name` (`full_name`(100)),
+  ADD KEY `idx_set_name` (`set_name`),
+  ADD KEY `idx_intake_date` (`intake_date`);
+
+--
+-- Indexes for table `students_trash`
+--
+ALTER TABLE `students_trash`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_original_id` (`original_id`);
 
 --
 -- Indexes for table `student_academic_records`
@@ -1230,6 +1722,26 @@ ALTER TABLE `student_attendance`
   ADD KEY `idx_date` (`date`),
   ADD KEY `idx_subject` (`subject`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `student_course_registrations`
+--
+ALTER TABLE `student_course_registrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_discipline`
+--
+ALTER TABLE `student_discipline`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `student_discipline_records`
+--
+ALTER TABLE `student_discipline_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_case` (`case_number`),
+  ADD KEY `idx_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_downloads`
@@ -1260,6 +1772,13 @@ ALTER TABLE `student_fee_assignments`
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_due_date` (`due_date`);
+
+--
+-- Indexes for table `student_hostel_allocations`
+--
+ALTER TABLE `student_hostel_allocations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_invoices`
@@ -1322,6 +1841,14 @@ ALTER TABLE `student_profiles`
   ADD KEY `idx_student_id` (`student_id`);
 
 --
+-- Indexes for table `student_requests`
+--
+ALTER TABLE `student_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `student_timetables`
 --
 ALTER TABLE `student_timetables`
@@ -1331,8 +1858,37 @@ ALTER TABLE `student_timetables`
   ADD KEY `idx_subject` (`subject`);
 
 --
+-- Indexes for table `subscription_deductions`
+--
+ALTER TABLE `subscription_deductions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_subscription` (`subscription_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `timetable`
+--
+ALTER TABLE `timetable`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_program` (`program`),
+  ADD KEY `idx_day` (`day_of_week`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `academic_registrar_activity_log`
+--
+ALTER TABLE `academic_registrar_activity_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `announcements`
+--
+ALTER TABLE `announcements`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -1377,10 +1933,28 @@ ALTER TABLE `chart_of_accounts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
+-- AUTO_INCREMENT for table `clinical_placements`
+--
+ALTER TABLE `clinical_placements`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `clinical_placements_students`
+--
+ALTER TABLE `clinical_placements_students`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `cost_centers`
 --
 ALTER TABLE `cost_centers`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `department_requests`
+--
+ALTER TABLE `department_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `expenditure_records`
@@ -1419,6 +1993,42 @@ ALTER TABLE `general_ledger`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `graduation_candidates`
+--
+ALTER TABLE `graduation_candidates`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_allocations`
+--
+ALTER TABLE `hostel_allocations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_rooms`
+--
+ALTER TABLE `hostel_rooms`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_books`
+--
+ALTER TABLE `library_books`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_borrowing`
+--
+ALTER TABLE `library_borrowing`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_fines`
+--
+ALTER TABLE `library_fines`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
@@ -1434,6 +2044,12 @@ ALTER TABLE `payments`
 -- AUTO_INCREMENT for table `payment_receipts`
 --
 ALTER TABLE `payment_receipts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_subscriptions`
+--
+ALTER TABLE `payment_subscriptions`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -1479,6 +2095,12 @@ ALTER TABLE `students`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `students_trash`
+--
+ALTER TABLE `students_trash`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_academic_records`
 --
 ALTER TABLE `student_academic_records`
@@ -1488,6 +2110,24 @@ ALTER TABLE `student_academic_records`
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_course_registrations`
+--
+ALTER TABLE `student_course_registrations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_discipline`
+--
+ALTER TABLE `student_discipline`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_discipline_records`
+--
+ALTER TABLE `student_discipline_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -1506,6 +2146,12 @@ ALTER TABLE `student_fees`
 -- AUTO_INCREMENT for table `student_fee_assignments`
 --
 ALTER TABLE `student_fee_assignments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_hostel_allocations`
+--
+ALTER TABLE `student_hostel_allocations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -1545,9 +2191,27 @@ ALTER TABLE `student_profiles`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `student_requests`
+--
+ALTER TABLE `student_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_timetables`
 --
 ALTER TABLE `student_timetables`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `subscription_deductions`
+--
+ALTER TABLE `subscription_deductions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `timetable`
+--
+ALTER TABLE `timetable`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --

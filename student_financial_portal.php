@@ -83,41 +83,16 @@ $balance = getStudentBalance($student_id);
                         <h5 class="mb-0"><i class="fas fa-mobile-alt"></i> Payment Methods</h5>
                     </div>
                     <div class="card-body payment-methods">
+                        <?php $payment_providers = getPaymentProviders(); ?>
+                        <?php foreach ($payment_providers as $key => $p): ?>
                         <div class="d-flex align-items-center mb-3">
-                            <img src="../images/mtn-logo.svg" alt="MTN" style="height: 32px; background: #FFCC00; border-radius: 6px; padding: 4px; margin-right: 10px;">
+                            <img src="<?= htmlspecialchars($p['logo']) ?>" alt="<?= htmlspecialchars($p['short']) ?>" style="height: 32px; background: #fff; border-radius: 6px; padding: 4px; margin-right: 10px; object-fit: contain;">
                             <div>
-                                <strong>MTN Mobile Money</strong><br>
-                                <small>Pay with MTN MoMo</small>
+                                <strong><?= htmlspecialchars($p['name']) ?></strong><br>
+                                <small>Pay via <?= htmlspecialchars($p['short']) ?></small>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="../images/airtel-logo.svg" alt="Airtel" style="height: 32px; background: #ED1C24; border-radius: 6px; padding: 4px; margin-right: 10px;">
-                            <div>
-                                <strong>Airtel Money</strong><br>
-                                <small>Pay with Airtel Money</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="../images/stanbic-logo.svg" alt="Stanbic" style="height: 32px; background: #005DAA; border-radius: 6px; padding: 4px; margin-right: 10px;">
-                            <div>
-                                <strong>Stanbic Bank</strong><br>
-                                <small>Pay via Stanbic</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="../images/equity-logo.svg" alt="Equity" style="height: 32px; background: #C8102E; border-radius: 6px; padding: 4px; margin-right: 10px;">
-                            <div>
-                                <strong>Equity Bank</strong><br>
-                                <small>Pay via Equity</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="../images/centenary-logo.svg" alt="Centenary" style="height: 32px; background: #00843D; border-radius: 6px; padding: 4px; margin-right: 10px;">
-                            <div>
-                                <strong>Centenary Bank</strong><br>
-                                <small>Pay via Centenary</small>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
@@ -199,26 +174,13 @@ $balance = getStudentBalance($student_id);
                                         <td><?php echo date('M j, Y', strtotime($payment['payment_date'])); ?></td>
                                         <td>UGX <?php echo number_format($payment['amount']); ?></td>
                                         <td>
-                                            <?php 
-                                                $logo_map = [
-                                                    'mtn_momo' => '../images/mtn-logo.svg',
-                                                    'momo' => '../images/mtn-logo.svg',
-                                                    'mtn' => '../images/mtn-logo.svg',
-                                                    'airtel_money' => '../images/airtel-logo.svg',
-                                                    'airtel' => '../images/airtel-logo.svg',
-                                                    'bank' => '../images/bank-default.svg',
-                                                    'bank_deposit' => '../images/bank-default.svg',
-                                                    'bank_transfer' => '../images/bank-default.svg',
-                                                    'cash' => '../images/bank-default.svg',
-                                                    'cheque' => '../images/bank-default.svg',
-                                                ];
+                                            <?php
                                                 $pm = strtolower($payment['payment_method'] ?? '');
-                                                $logo_path = $logo_map[$pm] ?? '../images/bank-default.svg';
+                                                $pp = strtolower($payment['payment_provider'] ?? '');
+                                                $logo_provider = $pp ?: $pm;
                                             ?>
-                                            <?php if (file_exists($logo_path)): ?>
-                                                <img src="<?php echo $logo_path; ?>" alt="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $pm))); ?>" style="height: 20px; vertical-align: middle; margin-right: 5px; border-radius: 3px;">
-                                            <?php endif; ?>
-                                            <?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?>
+                                            <?= renderPaymentProviderLogo($logo_provider, 20, false) ?>
+                                            <?= htmlspecialchars(getPaymentProviderName($logo_provider)) ?>
                                         </td>
                                         <td><?php echo htmlspecialchars($payment['reference_number'] ?? '-'); ?></td>
                                         <td>

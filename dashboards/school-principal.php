@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx          = bootstrapStaffDashboard(['school principal', 'principal']);
 $auth_service = $ctx['auth'];
@@ -264,6 +265,17 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5}
     <!-- NEWS MANAGEMENT -->
     <div class="card-section">
       <?php renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $user_role, 5); ?>
+    </div>
+
+    <!-- Student Records -->
+    <div class="card-section">
+      <?php renderStudentSetViewer($students_conn, [
+        'title' => 'Student Records',
+        'icon' => 'fa-user-graduate',
+        'show_all' => true,
+        'per_page' => 50,
+        'show_statement_link' => false
+      ]); ?>
     </div>
 
     <!-- Recent Activities -->

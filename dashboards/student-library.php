@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard(['librarian', 'library', 'admin']);
 $user = $ctx['user'];
 ?><!DOCTYPE html>
@@ -41,19 +42,14 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
           </div>
         </div>
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-search text-primary"></i> Catalogue search by title, author, ISBN, or subject</li>
-            <li><i class="fas fa-hand-holding-heart text-success"></i> Issue and track book loans with due dates</li>
-            <li><i class="fas fa-undo-alt text-warning"></i> Process returns and calculate late fees automatically</li>
-            <li><i class="fas fa-chart-bar text-info"></i> View borrowing trends and popular titles</li>
-            <li><i class="fas fa-exclamation-triangle text-danger"></i> Overdue notifications and fine management</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
+          <?php renderComingSoon('Student Library Access', 'fas fa-book-reader', [
+    ['icon'=>'fas fa-book', 'label'=>'Book Catalog', 'note'=>'Browse available books'],
+    ['icon'=>'fas fa-search', 'label'=>'Search', 'note'=>'Find resources'],
+    ['icon'=>'fas fa-shopping-cart', 'label'=>'Borrow Requests', 'note'=>'Request books'],
+    ['icon'=>'fas fa-history', 'label'=>'Borrow History', 'note'=>'Past borrowings'],
+    ['icon'=>'fas fa-clock', 'label'=>'Due Dates', 'note'=>'Return reminders'],
+    ['icon'=>'fas fa-download', 'label'=>'Digital Resources', 'note'=>'E-books & PDFs'],
+], 'Under Development'); ?>
         </div>
       </div>
     </div>

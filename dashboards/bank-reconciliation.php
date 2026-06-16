@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard([]);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -32,18 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-handshake"></i></div>
-            <h5>Bank Reconciliation</h5>
-            <p class="text-muted">This module is under development. Bank statement uploads, automated matching, discrepancy detection, and reconciliation reports coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-            <hr class="my-4" style="max-width:400px;margin:auto;">
-            <div class="row g-3 mt-2" style="max-width:600px;margin:auto;">
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-upload fa-2x text-success mb-2"></i><br><small>Upload Statements</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-check-double fa-2x text-success mb-2"></i><br><small>Auto-Match</small></div></div>
-                <div class="col-4"><div class="border rounded p-3 bg-light"><i class="fas fa-exclamation-triangle fa-2x text-success mb-2"></i><br><small>Discrepancies</small></div></div>
-            </div>
-        </div>
+        <?php renderComingSoon('Bank Reconciliation', 'fas fa-university', [
+    ['icon'=>'fas fa-file-invoice', 'label'=>'Statements', 'note'=>'Upload statements'],
+    ['icon'=>'fas fa-exchange-alt', 'label'=>'Matching', 'note'=>'Auto-reconcile'],
+    ['icon'=>'fas fa-exclamation-triangle', 'label'=>'Discrepancies', 'note'=>'Flag issues'],
+    ['icon'=>'fas fa-check-double', 'label'=>'Verification', 'note'=>'Verify entries'],
+    ['icon'=>'fas fa-file-export', 'label'=>'Reports', 'note'=>'Reconciliation rep.'],
+    ['icon'=>'fas fa-history', 'label'=>'History', 'note'=>'Past reconciliations'],
+], 'Under Development'); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

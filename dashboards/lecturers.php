@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx = bootstrapStaffDashboard(['lecturer']);
 $auth_service = $ctx['auth'];
@@ -642,6 +643,19 @@ if ($conn) {
                 </section>
             </div>
         </div>
+    </div>
+
+    <!-- Student Records -->
+    <div class="content-area" style="padding-top:0">
+        <section id="student-records" class="section-card">
+            <?php renderStudentSetViewer($studentsConn, [
+                'title' => 'Student Records',
+                'icon' => 'fa-user-graduate',
+                'show_all' => true,
+                'per_page' => 50,
+                'show_statement_link' => false
+            ]); ?>
+        </section>
     </div>
 
     <!-- Modals -->

@@ -70,6 +70,7 @@ function getModuleConfig(): array {
                 ['title' => 'Payroll Management',  'route' => 'bursar-payroll.php',                'roles' => ['bursar','payroll','finance','director']],
                 ['title' => 'General Ledger',      'route' => 'general-ledger.php',                'roles' => ['bursar','finance','accountant']],
                 ['title' => 'Bank Reconciliation', 'route' => 'bank-reconciliation.php',           'roles' => ['bursar','finance','accountant']],
+                ['title' => 'Auto-Deductions',     'route' => 'payment-subscriptions.php',          'roles' => ['bursar','finance','director','accountant','school bursar']],
             ],
         ],
         [

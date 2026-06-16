@@ -21,6 +21,80 @@ $available_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_bo
 $borrowed_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_borrowing WHERE return_status = 'Borrowed'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_members = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_members WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
+// Get book categories from library_books (if table exists)
+$book_categories = [];
+$book_category_names = ['Nursing', 'Midwifery', 'Medical Sciences', 'General Education'];
+$category_colors = ['primary', 'success', 'info', 'warning'];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT category, COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available FROM library_books GROUP BY category ORDER BY category");
+        if ($r) while ($row = $r->fetch_assoc()) $book_categories[] = $row;
+    } catch (Exception $e) {}
+}
+// If no book categories from DB, show empty state
+if (empty($book_categories)) {
+    foreach ($book_category_names as $i => $name) {
+        $book_categories[] = ['category' => $name, 'total' => 0, 'available' => 0];
+    }
+}
+
+// Get today's circulation stats
+$checked_out_today = 0; $returned_today = 0; $renewed_today = 0; $overdue_books = 0;
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE DATE(borrow_date)=CURDATE() AND return_status='Borrowed'");
+        if ($r) $checked_out_today = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE DATE(return_date)=CURDATE() AND return_status='Returned'");
+        if ($r) $returned_today = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE renewals>0 AND DATE(borrow_date)=CURDATE()");
+        if ($r) $renewed_today = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE due_date<CURDATE() AND return_status='Borrowed'");
+        if ($r) $overdue_books = (int)$r->fetch_assoc()['c'];
+    } catch (Exception $e) {}
+}
+
+// Get recent transactions
+$recent_transactions = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT lb.id, CONCAT(s.first_name,' ',s.surname) as member_name, lb.member_id, lb.book_title, lb.borrow_date as transaction_date, lb.return_status as status, lb.due_date FROM library_borrowing lb LEFT JOIN students s ON lb.student_id=s.student_id ORDER BY lb.borrow_date DESC LIMIT 10");
+        if ($r) $recent_transactions = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get member statistics
+$member_students = 0; $member_staff = 0; $member_faculty = 0; $new_members_month = 0;
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Student' AND status='Active'");
+        if ($r) $member_students = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Staff' AND status='Active'");
+        if ($r) $member_staff = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Faculty' AND status='Active'");
+        if ($r) $member_faculty = (int)$r->fetch_assoc()['c'];
+        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE MONTH(registration_date)=MONTH(CURDATE()) AND YEAR(registration_date)=YEAR(CURDATE())");
+        if ($r) $new_members_month = (int)$r->fetch_assoc()['c'];
+    } catch (Exception $e) {}
+}
+
+// Get recent member registrations
+$recent_members = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT lm.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM library_members lm LEFT JOIN students s ON lm.student_id=s.student_id ORDER BY lm.registration_date DESC LIMIT 5");
+        if ($r) $recent_members = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get acquisitions
+$recent_acquisitions = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM library_acquisitions ORDER BY acquisition_date DESC LIMIT 5");
+        if ($r) $recent_acquisitions = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -143,73 +217,24 @@ if ($conn) {
                     <div class="books-overview">
                         <h3>Book Categories</h3>
                         <div class="categories-grid">
+                            <?php $ci=0; foreach ($book_categories as $bc): $ci++; $catName = $bc['category'] ?? $book_category_names[$ci-1] ?? 'Category'; $total = (int)($bc['total']??0); $avail = (int)($bc['available']??0); $borrowed = $total - $avail; ?>
                             <div class="category-card">
                                 <div class="category-header">
-                                    <h4>Nursing</h4>
-                                    <span class="book-count">245 books</span>
+                                    <h4><?= htmlspecialchars($catName) ?></h4>
+                                    <span class="book-count"><?= $total ?> book<?= $total!==1?'s':'' ?></span>
                                 </div>
                                 <div class="category-stats">
                                     <div class="stat">
                                         <span>Available:</span>
-                                        <strong>198</strong>
+                                        <strong><?= $avail ?></strong>
                                     </div>
                                     <div class="stat">
                                         <span>Borrowed:</span>
-                                        <strong>47</strong>
+                                        <strong><?= max(0,$borrowed) ?></strong>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="category-card">
-                                <div class="category-header">
-                                    <h4>Midwifery</h4>
-                                    <span class="book-count">189 books</span>
-                                </div>
-                                <div class="category-stats">
-                                    <div class="stat">
-                                        <span>Available:</span>
-                                        <strong>156</strong>
-                                    </div>
-                                    <div class="stat">
-                                        <span>Borrowed:</span>
-                                        <strong>33</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="category-card">
-                                <div class="category-header">
-                                    <h4>Medical Sciences</h4>
-                                    <span class="book-count">312 books</span>
-                                </div>
-                                <div class="category-stats">
-                                    <div class="stat">
-                                        <span>Available:</span>
-                                        <strong>267</strong>
-                                    </div>
-                                    <div class="stat">
-                                        <span>Borrowed:</span>
-                                        <strong>45</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="category-card">
-                                <div class="category-header">
-                                    <h4>General Education</h4>
-                                    <span class="book-count">156 books</span>
-                                </div>
-                                <div class="category-stats">
-                                    <div class="stat">
-                                        <span>Available:</span>
-                                        <strong>134</strong>
-                                    </div>
-                                    <div class="stat">
-                                        <span>Borrowed:</span>
-                                        <strong>22</strong>
-                                    </div>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </section>
@@ -237,22 +262,22 @@ if ($conn) {
                         <div class="circulation-stats">
                             <div class="circ-stat">
                                 <h4>Books Checked Out</h4>
-                                <div class="count">23</div>
+                                <div class="count"><?= $checked_out_today ?></div>
                                 <small>Today</small>
                             </div>
                             <div class="circ-stat">
                                 <h4>Books Returned</h4>
-                                <div class="count">18</div>
+                                <div class="count"><?= $returned_today ?></div>
                                 <small>Today</small>
                             </div>
                             <div class="circ-stat">
                                 <h4>Books Renewed</h4>
-                                <div class="count">7</div>
+                                <div class="count"><?= $renewed_today ?></div>
                                 <small>Today</small>
                             </div>
                             <div class="circ-stat">
                                 <h4>Overdue Books</h4>
-                                <div class="count">12</div>
+                                <div class="count"><?= $overdue_books ?></div>
                                 <small>Currently</small>
                             </div>
                         </div>
@@ -274,29 +299,26 @@ if ($conn) {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php if (empty($recent_transactions)): ?>
+                                    <tr><td colspan="7" class="text-center text-muted py-4">No recent transactions</td></tr>
+                                    <?php else: ?>
+                                    <?php foreach ($recent_transactions as $trx): $trxId = 'TRX-'.date('Y').'-'.str_pad($trx['id']??0,3,'0',STR_PAD_LEFT); ?>
                                     <tr>
-                                        <td>TRX-2026-001</td>
-                                        <td>John Student</td>
-                                        <td>Nursing Fundamentals</td>
-                                        <td><span class="transaction-type checkout">Checkout</span></td>
-                                        <td>Apr 22, 2026</td>
-                                        <td><span class="status-badge active">Active</span></td>
+                                        <td><?= $trxId ?></td>
+                                        <td><?= htmlspecialchars($trx['member_name'] ?? $trx['member_id'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($trx['book_title'] ?? '—') ?></td>
+                                        <td><span class="transaction-type <?= ($trx['status']??'Borrowed')==='Borrowed'?'checkout':'return' ?>"><?= ($trx['status']??'Borrowed')==='Borrowed'?'Checkout':'Return' ?></span></td>
+                                        <td><?= !empty($trx['transaction_date']) ? date('M j, Y', strtotime($trx['transaction_date'])) : '—' ?></td>
+                                        <td><span class="status-badge <?= ($trx['status']??'Borrowed')==='Returned'?'completed':'active' ?>"><?= htmlspecialchars($trx['status'] ?? 'Active') ?></span></td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-info">View</button>
+                                            <?php if (($trx['status']??'')==='Borrowed'): ?>
                                             <button class="btn btn-sm btn-outline-warning">Return</button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td>TRX-2026-002</td>
-                                        <td>Jane Student</td>
-                                        <td>Midwifery Practice</td>
-                                        <td><span class="transaction-type return">Return</span></td>
-                                        <td>Apr 22, 2026</td>
-                                        <td><span class="status-badge completed">Completed</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-info">View</button>
-                                        </td>
-                                    </tr>
+                                    <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -326,22 +348,22 @@ if ($conn) {
                         <div class="member-stats">
                             <div class="member-stat">
                                 <h4>Students</h4>
-                                <div class="count">285</div>
+                                <div class="count"><?= $member_students ?></div>
                                 <small>Active members</small>
                             </div>
                             <div class="member-stat">
                                 <h4>Staff</h4>
-                                <div class="count">45</div>
+                                <div class="count"><?= $member_staff ?></div>
                                 <small>Active members</small>
                             </div>
                             <div class="member-stat">
                                 <h4>Faculty</h4>
-                                <div class="count">12</div>
+                                <div class="count"><?= $member_faculty ?></div>
                                 <small>Active members</small>
                             </div>
                             <div class="member-stat">
                                 <h4>New This Month</h4>
-                                <div class="count">18</div>
+                                <div class="count"><?= $new_members_month ?></div>
                                 <small>Registrations</small>
                             </div>
                         </div>
@@ -350,23 +372,27 @@ if ($conn) {
                     <div class="recent-members">
                         <h3>Recent Member Registrations</h3>
                         <div class="members-list">
+                            <?php if (empty($recent_members)): ?>
+                            <div class="text-center text-muted py-3">No member registrations yet</div>
+                            <?php else: ?>
+                            <?php foreach ($recent_members as $rm): ?>
                             <div class="member-item">
                                 <div class="member-header">
-                                    <h4>John Doe</h4>
-                                    <span class="member-type student">Student</span>
+                                    <h4><?= htmlspecialchars($rm['student_name'] ?? $rm['full_name'] ?? 'Member') ?></h4>
+                                    <span class="member-type student"><?= htmlspecialchars($rm['member_type'] ?? 'Student') ?></span>
                                 </div>
                                 <div class="member-details">
                                     <div class="detail">
                                         <span>Member ID:</span>
-                                        <strong>LIB-2026-045</strong>
+                                        <strong><?= htmlspecialchars($rm['member_id'] ?? '—') ?></strong>
                                     </div>
                                     <div class="detail">
-                                        <span>Program:</span>
-                                        <strong>Certificate Nursing</strong>
+                                        <span>Type:</span>
+                                        <strong><?= htmlspecialchars($rm['membership_type'] ?? 'Regular') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Registered:</span>
-                                        <strong>Apr 20, 2026</strong>
+                                        <strong><?= !empty($rm['registration_date']) ? date('M j, Y', strtotime($rm['registration_date'])) : '—' ?></strong>
                                     </div>
                                 </div>
                                 <div class="member-actions">
@@ -374,6 +400,8 @@ if ($conn) {
                                     <button class="btn btn-sm btn-outline-success">Issue Card</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -399,34 +427,36 @@ if ($conn) {
                     <div class="acquisition-overview">
                         <h3>Current Acquisitions</h3>
                         <div class="acquisition-list">
+                            <?php if (empty($recent_acquisitions)): ?>
+                            <div class="text-center text-muted py-3">No active acquisitions</div>
+                            <?php else: ?>
+                            <?php foreach ($recent_acquisitions as $acq): ?>
                             <div class="acquisition-item">
                                 <div class="acquisition-header">
-                                    <h4>Nursing Textbooks Collection</h4>
-                                    <span class="status-badge in-progress">In Progress</span>
+                                    <h4><?= htmlspecialchars($acq['title'] ?? 'Acquisition') ?></h4>
+                                    <span class="status-badge in-progress"><?= htmlspecialchars($acq['status'] ?? 'In Progress') ?></span>
                                 </div>
                                 <div class="acquisition-details">
-                                    <div class="detail">
-                                        <span>Books:</span>
-                                        <strong>25 titles</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Cost:</span>
-                                        <strong>UGX 2,500,000</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Vendor:</span>
-                                        <strong>Makere Bookshop</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Expected:</span>
-                                        <strong>May 15, 2026</strong>
-                                    </div>
+                                    <?php if (!empty($acq['quantity'])): ?>
+                                    <div class="detail"><span>Books:</span><strong><?= (int)$acq['quantity'] ?> titles</strong></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($acq['total_cost'])): ?>
+                                    <div class="detail"><span>Cost:</span><strong>UGX <?= number_format((float)$acq['total_cost']) ?></strong></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($acq['vendor'])): ?>
+                                    <div class="detail"><span>Vendor:</span><strong><?= htmlspecialchars($acq['vendor']) ?></strong></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($acq['expected_date'])): ?>
+                                    <div class="detail"><span>Expected:</span><strong><?= date('M j, Y', strtotime($acq['expected_date'])) ?></strong></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="acquisition-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
                                     <button class="btn btn-sm btn-outline-success">Track Order</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>

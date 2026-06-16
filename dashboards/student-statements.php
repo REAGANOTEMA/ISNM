@@ -7,6 +7,7 @@ $websiteDb = $ctx['website'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 $userName = $user['full_name'] ?? 'User';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,43 +33,14 @@ $userName = $user['full_name'] ?? 'User';
             <span class="text-muted small"><?= date('l, d M Y') ?></span>
         </div>
 
-        <div class="card-section text-center py-5 mb-4">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-file-alt"></i></div>
-            <h5>Student Statements</h5>
-            <p class="text-muted">This module is under development. Individual student fee statements, balance summaries, payment history, and printable statements coming soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-        </div>
-
-        <div class="card-section">
-            <h5 class="fw-bold mb-3"><i class="fas fa-search me-2"></i>Search Student Statement</h5>
-            <form class="row g-3" onsubmit="event.preventDefault();">
-                <div class="col-md-4">
-                    <label class="form-label">Student Name / ID</label>
-                    <input type="text" class="form-control" placeholder="Enter student name or ID...">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Program</label>
-                    <select class="form-select">
-                        <option value="">All Programs</option>
-                        <option>Diploma in Nursing</option>
-                        <option>Diploma in Midwifery</option>
-                        <option>Certificate in Nursing</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Academic Year</label>
-                    <select class="form-select">
-                        <option value="">All Years</option>
-                        <option>2025</option>
-                        <option>2026</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-primary w-100" disabled><i class="fas fa-search me-1"></i>Search</button>
-                </div>
-            </form>
-            <p class="text-muted small mt-3 mb-0"><i class="fas fa-info-circle me-1"></i>Search functionality will be enabled once the module is fully developed.</p>
-        </div>
+        <?php renderComingSoon('Student Fee Statements', 'fas fa-file-invoice', [
+            ['icon'=>'fas fa-file-alt', 'label'=>'Fee Statement', 'note'=>'Full fee breakdown'],
+            ['icon'=>'fas fa-credit-card', 'label'=>'Payment History', 'note'=>'Payment records'],
+            ['icon'=>'fas fa-balance-scale', 'label'=>'Balance Summary', 'note'=>'Outstanding fees'],
+            ['icon'=>'fas fa-print', 'label'=>'Print Statement', 'note'=>'Printable version'],
+            ['icon'=>'fas fa-download', 'label'=>'Download PDF', 'note'=>'Export statement'],
+            ['icon'=>'fas fa-envelope', 'label'=>'Email Statement', 'note'=>'Send to student'],
+        ]); ?>
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

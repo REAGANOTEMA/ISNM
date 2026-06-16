@@ -42,6 +42,70 @@ try {
     error_log('senior-lecturers stats: ' . $e->getMessage());
 }
 
+// Get assigned courses from course_assignments
+$assigned_courses_list = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT ca.*, c.course_name, c.course_code, c.credits, c.level, (SELECT COUNT(*) FROM student_course_registrations scr WHERE scr.course_id=ca.course_id AND scr.status='Active') as student_count FROM course_assignments ca LEFT JOIN courses c ON ca.course_id=c.id WHERE ca.lecturer_id=$user_id AND ca.status='Active'");
+        if ($r) $assigned_courses_list = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get today's schedule from academic_timetable
+$today_schedule = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT tt.*, c.course_name, c.course_code FROM academic_timetable tt LEFT JOIN courses c ON tt.course_id=c.id WHERE tt.lecturer_id=$user_id AND tt.day_of_week=DAYNAME(CURDATE()) AND tt.timetable_status='Published' ORDER BY tt.start_time");
+        if ($r) $today_schedule = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get my students
+$my_students = [];
+if ($studentsConn) {
+    try {
+        $r = $studentsConn->query("SELECT scr.*, s.student_id, s.full_name, s.first_name, s.surname, s.program, c.course_name FROM student_course_registrations scr JOIN students s ON scr.student_id=s.id JOIN course_assignments ca ON scr.course_id=ca.course_id LEFT JOIN courses c ON scr.course_id=c.id WHERE ca.lecturer_id=$user_id AND scr.status='Active' LIMIT 30");
+        if ($r) $my_students = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get recent assessments
+$recent_assessments = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT a.*, c.course_name FROM assessments a LEFT JOIN courses c ON a.course_id=c.id WHERE a.created_by=$user_id ORDER BY a.created_at DESC LIMIT 5");
+        if ($r) $recent_assessments = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get grade distribution
+$grade_distribution = ['A'=>0,'B'=>0,'C'=>0,'D'=>0,'F'=>0];
+$total_grades = 0;
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT grade, COUNT(*) as c FROM academic_records WHERE lecturer_id=$user_id AND grade IS NOT NULL GROUP BY grade");
+        if ($r) while ($row = $r->fetch_assoc()) { $g = strtoupper(trim($row['grade'])); if (isset($grade_distribution[$g])) $grade_distribution[$g] = (int)$row['c']; $total_grades += (int)$row['c']; }
+    } catch (Exception $e) {}
+}
+
+// Get teaching resources
+$teaching_resources = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM teaching_resources WHERE uploaded_by=$user_id ORDER BY created_at DESC LIMIT 5");
+        if ($r) $teaching_resources = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get research projects
+$research_projects = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM research_projects WHERE principal_investigator=$user_id ORDER BY start_date DESC LIMIT 3");
+        if ($r) $research_projects = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -164,27 +228,31 @@ if ($conn) {
                     <div class="courses-overview">
                         <h3>Current Course Assignments</h3>
                         <div class="courses-grid">
+                            <?php if (empty($assigned_courses_list)): ?>
+                            <div class="text-center text-muted py-4 col-12">No courses assigned yet</div>
+                            <?php else: ?>
+                            <?php foreach ($assigned_courses_list as $course): ?>
                             <div class="course-card">
                                 <div class="course-header">
-                                    <h4>Nursing Fundamentals</h4>
-                                    <span class="course-code">NUR-101</span>
+                                    <h4><?= htmlspecialchars($course['course_name'] ?? 'Course') ?></h4>
+                                    <span class="course-code"><?= htmlspecialchars($course['course_code'] ?? '—') ?></span>
                                 </div>
                                 <div class="course-details">
                                     <div class="detail">
                                         <span>Students:</span>
-                                        <strong>45</strong>
+                                        <strong><?= (int)($course['student_count'] ?? 0) ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Credits:</span>
-                                        <strong>4</strong>
+                                        <strong><?= (int)($course['credits'] ?? 0) ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Level:</span>
-                                        <strong>Year 1</strong>
+                                        <strong><?= htmlspecialchars($course['level'] ?? '—') ?></strong>
                                     </div>
                                     <div class="detail">
-                                        <span>Progress:</span>
-                                        <strong>65%</strong>
+                                        <span>Semester:</span>
+                                        <strong><?= htmlspecialchars($course['semester'] ?? $course['academic_year'] ?? '—') ?></strong>
                                     </div>
                                 </div>
                                 <div class="course-actions">
@@ -192,35 +260,8 @@ if ($conn) {
                                     <button class="btn btn-sm btn-outline-success">Manage</button>
                                 </div>
                             </div>
-                            
-                            <div class="course-card">
-                                <div class="course-header">
-                                    <h4>Medical-Surgical Nursing</h4>
-                                    <span class="course-code">NUR-201</span>
-                                </div>
-                                <div class="course-details">
-                                    <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>38</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Credits:</span>
-                                        <strong>5</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Level:</span>
-                                        <strong>Year 2</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Progress:</span>
-                                        <strong>45%</strong>
-                                    </div>
-                                </div>
-                                <div class="course-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Details</button>
-                                    <button class="btn btn-sm btn-outline-success">Manage</button>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -246,23 +287,27 @@ if ($conn) {
                     <div class="schedule-overview">
                         <h3>Today's Schedule</h3>
                         <div class="schedule-list">
+                            <?php if (empty($today_schedule)): ?>
+                            <div class="text-center text-muted py-4"><i class="fas fa-calendar-day fa-2x mb-2"></i><p>No classes scheduled for today</p></div>
+                            <?php else: ?>
+                            <?php foreach ($today_schedule as $slot): ?>
                             <div class="schedule-item">
                                 <div class="schedule-header">
-                                    <h4>Nursing Fundamentals</h4>
-                                    <span class="schedule-time">8:00 AM - 10:00 AM</span>
+                                    <h4><?= htmlspecialchars($slot['course_name'] ?? $slot['course_code'] ?? 'Lecture') ?></h4>
+                                    <span class="schedule-time"><?= htmlspecialchars($slot['start_time'] ?? '—') ?> - <?= htmlspecialchars($slot['end_time'] ?? '—') ?></span>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="detail">
                                         <span>Room:</span>
-                                        <strong>Classroom A</strong>
+                                        <strong><?= htmlspecialchars($slot['room'] ?? $slot['venue'] ?? '—') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Topic:</span>
-                                        <strong>Introduction to Nursing Concepts</strong>
+                                        <strong><?= htmlspecialchars($slot['topic'] ?? $slot['description'] ?? 'Lecture') ?></strong>
                                     </div>
                                     <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>45 enrolled</strong>
+                                        <span>Type:</span>
+                                        <strong><?= htmlspecialchars($slot['session_type'] ?? $slot['class_type'] ?? 'Lecture') ?></strong>
                                     </div>
                                 </div>
                                 <div class="schedule-actions">
@@ -270,31 +315,8 @@ if ($conn) {
                                     <button class="btn btn-sm btn-outline-info">Take Attendance</button>
                                 </div>
                             </div>
-                            
-                            <div class="schedule-item">
-                                <div class="schedule-header">
-                                    <h4>Medical-Surgical Nursing</h4>
-                                    <span class="schedule-time">2:00 PM - 4:00 PM</span>
-                                </div>
-                                <div class="schedule-details">
-                                    <div class="detail">
-                                        <span>Room:</span>
-                                        <strong>Laboratory 1</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Topic:</span>
-                                        <strong>Pre-operative Nursing Care</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>38 enrolled</strong>
-                                    </div>
-                                </div>
-                                <div class="schedule-actions">
-                                    <button class="btn btn-sm btn-outline-primary">Start Class</button>
-                                    <button class="btn btn-sm btn-outline-info">Take Attendance</button>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -343,50 +365,17 @@ if ($conn) {
                         </div>
                     </div>
                     
-                    <div class="students-table">
-                        <h3>My Students</h3>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Name</th>
-                                        <th>Course</th>
-                                        <th>Attendance</th>
-                                        <th>Current Grade</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>STU-2023-001</td>
-                                        <td>John Student</td>
-                                        <td>Nursing Fundamentals</td>
-                                        <td>95%</td>
-                                        <td>A-</td>
-                                        <td><span class="status-badge active">Good</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary">View</button>
-                                            <button class="btn btn-sm btn-outline-info">Message</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>STU-2023-002</td>
-                                        <td>Jane Student</td>
-                                        <td>Nursing Fundamentals</td>
-                                        <td>88%</td>
-                                        <td>B+</td>
-                                        <td><span class="status-badge active">Good</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary">View</button>
-                                            <button class="btn btn-sm btn-outline-info">Message</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <!-- Student Records Viewer -->
+                    <?php
+                    require_once __DIR__ . '/../includes/student_set_viewer.php';
+                    renderStudentSetViewer($studentsConn, [
+                        'title' => 'My Students',
+                        'icon' => 'fa-user-graduate',
+                        'show_all' => true,
+                        'per_page' => 20,
+                        'show_statement_link' => false
+                    ]);
+                    ?>
                 </section>
 
                 <!-- Assessments -->
@@ -410,23 +399,27 @@ if ($conn) {
                     <div class="assessment-overview">
                         <h3>Recent Assessments</h3>
                         <div class="assessment-list">
+                            <?php if (empty($recent_assessments)): ?>
+                            <div class="text-center text-muted py-4">No assessments created yet</div>
+                            <?php else: ?>
+                            <?php foreach ($recent_assessments as $asm): ?>
                             <div class="assessment-item">
                                 <div class="assessment-header">
-                                    <h4>Nursing Fundamentals - Midterm Exam</h4>
-                                    <span class="assessment-date">Apr 15, 2026</span>
+                                    <h4><?= htmlspecialchars($asm['title'] ?? ($asm['course_name'] ?? 'Assessment')) ?></h4>
+                                    <span class="assessment-date"><?= !empty($asm['created_at']) ? date('M j, Y', strtotime($asm['created_at'])) : '—' ?></span>
                                 </div>
                                 <div class="assessment-details">
                                     <div class="detail">
                                         <span>Type:</span>
-                                        <strong>Written Examination</strong>
+                                        <strong><?= htmlspecialchars($asm['assessment_type'] ?? 'Exam') ?></strong>
                                     </div>
                                     <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>45 submitted</strong>
+                                        <span>Course:</span>
+                                        <strong><?= htmlspecialchars($asm['course_name'] ?? '—') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Status:</span>
-                                        <strong class="text-warning">Grading in Progress</strong>
+                                        <strong class="text-<?= ($asm['status']??'draft')==='published'?'success':'warning' ?>"><?= ucfirst(htmlspecialchars($asm['status'] ?? 'Draft')) ?></strong>
                                     </div>
                                 </div>
                                 <div class="assessment-actions">
@@ -434,31 +427,8 @@ if ($conn) {
                                     <button class="btn btn-sm btn-outline-success">Continue Grading</button>
                                 </div>
                             </div>
-                            
-                            <div class="assessment-item">
-                                <div class="assessment-header">
-                                    <h4>Medical-Surgical - Case Study Assignment</h4>
-                                    <span class="assessment-date">Apr 10, 2026</span>
-                                </div>
-                                <div class="assessment-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Assignment</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>38 submitted</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-success">Graded</strong>
-                                    </div>
-                                </div>
-                                <div class="assessment-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Results</button>
-                                    <button class="btn btn-sm btn-outline-info">Publish Grades</button>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -483,36 +453,30 @@ if ($conn) {
                     
                     <div class="grade-overview">
                         <h3>Grade Summary</h3>
+                        <?php if ($total_grades === 0): ?>
+                        <div class="text-center text-muted py-3">No grades recorded yet</div>
+                        <?php else: ?>
+                        <?php
+                        $grade_ranges = [
+                            'A' => ['label'=>'A Range (80-100%)', 'color'=>'success', 'students'=>$grade_distribution['A']],
+                            'B' => ['label'=>'B Range (70-79%)', 'color'=>'info', 'students'=>$grade_distribution['B']],
+                            'C' => ['label'=>'C Range (60-69%)', 'color'=>'warning', 'students'=>$grade_distribution['C']],
+                            'D' => ['label'=>'D Range (50-59%)', 'color'=>'secondary', 'students'=>$grade_distribution['D']],
+                            'F' => ['label'=>'F Range (Below 50%)', 'color'=>'danger', 'students'=>$grade_distribution['F']],
+                        ];
+                        ?>
                         <div class="grade-distribution">
+                            <?php foreach ($grade_ranges as $gr): $pct = $total_grades > 0 ? round($gr['students']/$total_grades*100) : 0; ?>
                             <div class="grade-category">
-                                <h4>A Range (85-100%)</h4>
-                                <div class="grade-count">12 students</div>
+                                <h4><?= $gr['label'] ?></h4>
+                                <div class="grade-count"><?= $gr['students'] ?> student<?= $gr['students']!==1?'s':'' ?></div>
                                 <div class="progress">
-                                    <div class="progress-bar bg-success" style="width: 27%">27%</div>
+                                    <div class="progress-bar bg-<?= $gr['color'] ?>" style="width: <?= $pct ?>%"><?= $pct ?>%</div>
                                 </div>
                             </div>
-                            <div class="grade-category">
-                                <h4>B Range (70-84%)</h4>
-                                <div class="grade-count">23 students</div>
-                                <div class="progress">
-                                    <div class="progress-bar bg-info" style="width: 51%">51%</div>
-                                </div>
-                            </div>
-                            <div class="grade-category">
-                                <h4>C Range (55-69%)</h4>
-                                <div class="grade-count">7 students</div>
-                                <div class="progress">
-                                    <div class="progress-bar bg-warning" style="width: 16%">16%</div>
-                                </div>
-                            </div>
-                            <div class="grade-category">
-                                <h4>D/F Range (Below 55%)</h4>
-                                <div class="grade-count">3 students</div>
-                                <div class="progress">
-                                    <div class="progress-bar bg-danger" style="width: 6%">6%</div>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </section>
 
@@ -537,24 +501,23 @@ if ($conn) {
                     <div class="resources-overview">
                         <h3>My Teaching Resources</h3>
                         <div class="resources-list">
+                            <?php if (empty($teaching_resources)): ?>
+                            <div class="text-center text-muted py-4">No resources uploaded yet</div>
+                            <?php else: ?>
+                            <?php foreach ($teaching_resources as $res): ?>
                             <div class="resource-item">
                                 <div class="resource-header">
-                                    <h4>Nursing Fundamentals Lecture Notes</h4>
-                                    <span class="resource-type">PDF</span>
+                                    <h4><?= htmlspecialchars($res['title'] ?? $res['file_name'] ?? 'Resource') ?></h4>
+                                    <span class="resource-type"><?= htmlspecialchars(strtoupper(pathinfo($res['file_name']??'', PATHINFO_EXTENSION) ?: 'FILE')) ?></span>
                                 </div>
                                 <div class="resource-details">
-                                    <div class="detail">
-                                        <span>Size:</span>
-                                        <strong>5.2 MB</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Uploaded:</span>
-                                        <strong>Apr 1, 2026</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Downloads:</span>
-                                        <strong>45 times</strong>
-                                    </div>
+                                    <?php if (!empty($res['file_size'])): ?>
+                                    <div class="detail"><span>Size:</span><strong><?= number_format((float)$res['file_size']/1048576, 1) ?> MB</strong></div>
+                                    <?php endif; ?>
+                                    <div class="detail"><span>Uploaded:</span><strong><?= !empty($res['created_at']) ? date('M j, Y', strtotime($res['created_at'])) : '—' ?></strong></div>
+                                    <?php if (!empty($res['download_count'])): ?>
+                                    <div class="detail"><span>Downloads:</span><strong><?= (int)$res['download_count'] ?> times</strong></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="resource-actions">
                                     <button class="btn btn-sm btn-outline-primary">View</button>
@@ -562,6 +525,8 @@ if ($conn) {
                                     <button class="btn btn-sm btn-outline-info">Share</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>
@@ -587,30 +552,31 @@ if ($conn) {
                     <div class="research-overview">
                         <h3>Current Research Projects</h3>
                         <div class="research-projects">
+                            <?php if (empty($research_projects)): ?>
+                            <div class="text-center text-muted py-4">No active research projects</div>
+                            <?php else: ?>
+                            <?php foreach ($research_projects as $proj): ?>
                             <div class="project-card">
                                 <div class="project-header">
-                                    <h4>Improving Clinical Teaching Methods</h4>
-                                    <span class="status-badge active">In Progress</span>
+                                    <h4><?= htmlspecialchars($proj['title'] ?? 'Research Project') ?></h4>
+                                    <span class="status-badge active"><?= htmlspecialchars($proj['status'] ?? 'In Progress') ?></span>
                                 </div>
                                 <div class="project-details">
-                                    <div class="detail">
-                                        <span>Role:</span>
-                                        <strong>Principal Investigator</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Duration:</span>
-                                        <strong>8 months</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Team:</span>
-                                        <strong>3 members</strong>
-                                    </div>
+                                    <div class="detail"><span>Role:</span><strong><?= htmlspecialchars($proj['role'] ?? 'Investigator') ?></strong></div>
+                                    <?php if (!empty($proj['start_date']) && !empty($proj['end_date'])): ?>
+                                    <div class="detail"><span>Duration:</span><strong><?= date('M Y', strtotime($proj['start_date'])) ?> - <?= date('M Y', strtotime($proj['end_date'])) ?></strong></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($proj['team_size'])): ?>
+                                    <div class="detail"><span>Team:</span><strong><?= (int)$proj['team_size'] ?> members</strong></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="project-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
                                     <button class="btn btn-sm btn-outline-info">Progress Report</button>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </section>

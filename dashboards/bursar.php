@@ -447,6 +447,7 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5;margin:0;paddi
         <a href="?view=financial_reports" class="ab"><i class="fas fa-chart-bar"></i><span>Financial Reports</span></a>
         <a href="?view=budget" class="ab"><i class="fas fa-wallet"></i><span>Budget</span></a>
         <a href="?view=daily_collections" class="ab"><i class="fas fa-list-ol"></i><span>Daily Collections</span></a>
+        <a href="payment-subscriptions.php" class="ab"><i class="fas fa-sync"></i><span>Auto-Deductions</span></a>
     </div>
 
     <div class="cc">

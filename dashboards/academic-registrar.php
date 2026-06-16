@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/student_set_viewer.php';
 $ctx = bootstrapStaffDashboard(['registrar']);
 $user = $ctx['user'];
 $students_conn = getStudentsConnection();
@@ -434,6 +435,17 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif;margin:0}
   <section class="section-card">
     <h5><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h5>
     <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user['full_name'] ?? 'Registrar', $user['role'] ?? 'Academic Registrar', 5); ?>
+  </section>
+
+  <!-- Student Records -->
+  <section id="student-records" class="section-card">
+    <?php renderStudentSetViewer($students_conn, [
+      'title' => 'Student Records',
+      'icon' => 'fa-user-graduate',
+      'show_all' => true,
+      'per_page' => 50,
+      'show_statement_link' => false
+    ]); ?>
   </section>
 
 </div><!-- /main -->

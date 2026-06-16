@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/module_coming_soon.php';
 $ctx = bootstrapStaffDashboard(['registrar', 'admissions', 'admin']);
 $user = $ctx['user'];
 ?><!DOCTYPE html>
@@ -30,32 +31,14 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
 <div class="main" style="margin-left:270px;padding:40px 32px">
   <div class="row justify-content-center">
     <div class="col-lg-8">
-      <div class="card dev-card">
-        <div class="card-header text-white">
-          <div class="d-flex align-items-center gap-3 mb-1">
-            <i class="fas fa-user-plus fa-3x"></i>
-            <div>
-              <h2 class="mb-1">Add New Student</h2>
-              <p class="mb-0 opacity-75">Enrol new students, capture personal details, and assign academic programs</p>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-id-card text-primary"></i> Capture student biodata, contact info, and documents</li>
-            <li><i class="fas fa-graduation-cap text-success"></i> Assign program, year, semester, and intake batch</li>
-            <li><i class="fas fa-upload text-warning"></i> Bulk import via Excel/CSV file upload</li>
-            <li><i class="fas fa-fingerprint text-info"></i> Generate unique student numbers and registration IDs</li>
-            <li><i class="fas fa-camera text-secondary"></i> Capture and store student photograph and signatures</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
-        </div>
-      </div>
+      <?php renderComingSoon('Add New Student', 'fas fa-user-plus', [
+            ['icon'=>'fas fa-file-alt', 'label'=>'Enrollment Form', 'note'=>'Student details'],
+            ['icon'=>'fas fa-id-card', 'label'=>'Documents', 'note'=>'Upload docs'],
+            ['icon'=>'fas fa-credit-card', 'label'=>'Fee Payment', 'note'=>'Initial payment'],
+            ['icon'=>'fas fa-calendar-check', 'label'=>'Placement', 'note'=>'Class assignment'],
+            ['icon'=>'fas fa-stethoscope', 'label'=>'Medical Check', 'note'=>'Health records'],
+            ['icon'=>'fas fa-bed', 'label'=>'Hostel', 'note'=>'Accommodation'],
+        ], 'Under Development'); ?>
     </div>
   </div>
 </div>

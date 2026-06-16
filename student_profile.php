@@ -6,6 +6,7 @@
 
 require_once 'config/database.php';
 require_once 'auth-service.php';
+require_once __DIR__ . '/includes/financial_functions.php';
 
 // Start session and check authentication
 session_start();
@@ -1260,26 +1261,13 @@ function handlePasswordChange() {
                                                 <td><?php echo htmlspecialchars($payment['receipt_number']); ?></td>
                                                 <td><?php echo formatCurrency($payment['amount_paid']); ?></td>
                                                 <td>
-                                                    <?php 
-                                                        $logo_map = [
-                                                            'mtn_momo' => '../images/mtn-logo.svg',
-                                                            'momo' => '../images/mtn-logo.svg',
-                                                            'mtn' => '../images/mtn-logo.svg',
-                                                            'airtel_money' => '../images/airtel-logo.svg',
-                                                            'airtel' => '../images/airtel-logo.svg',
-                                                            'bank' => '../images/bank-default.svg',
-                                                            'bank_deposit' => '../images/bank-default.svg',
-                                                            'bank_transfer' => '../images/bank-default.svg',
-                                                            'cash' => '../images/bank-default.svg',
-                                                            'cheque' => '../images/bank-default.svg',
-                                                        ];
+                                                    <?php
                                                         $pm = strtolower($payment['payment_method'] ?? '');
-                                                        $logo_path = $logo_map[$pm] ?? '../images/bank-default.svg';
+                                                        $pp = strtolower($payment['payment_provider'] ?? '');
+                                                        $logo_provider = $pp ?: $pm;
                                                     ?>
-                                                    <?php if (file_exists($logo_path)): ?>
-                                                        <img src="<?php echo $logo_path; ?>" alt="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $pm))); ?>" style="height: 20px; vertical-align: middle; margin-right: 5px; border-radius: 3px;">
-                                                    <?php endif; ?>
-                                                    <?php echo ucfirst(str_replace('_', ' ', $payment['payment_method'])); ?>
+                                                    <?= renderPaymentProviderLogo($logo_provider, 20, false) ?>
+                                                    <?= htmlspecialchars(getPaymentProviderName($logo_provider)) ?>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-<?php echo $payment['status'] === 'verified' ? 'success' : 'warning'; ?>">

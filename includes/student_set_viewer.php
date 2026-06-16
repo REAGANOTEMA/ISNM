@@ -72,7 +72,7 @@ function renderStudentSetViewer($conn, array $options = []) {
         $bindTypes   .= 's';
     }
     if ($search !== '') {
-        $conditions[] = '(full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR index_number LIKE ? OR phone LIKE ? OR mobile_number LIKE ?)';
+        $conditions[] = '(full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR registration_number LIKE ? OR student_number LIKE ? OR index_number LIKE ? OR phone LIKE ? OR mobile_number LIKE ?)';
         $like = '%' . $search . '%';
         for ($i = 0; $i < 9; $i++) {
             $bindParams[] = $like;

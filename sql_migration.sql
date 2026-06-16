@@ -401,3 +401,59 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_website_db.portal_messages (
     read_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==============================================================================
+-- DATABASE 1 (continued): Auto-Deduction / Subscription Payment System
+-- ==============================================================================
+
+-- Payment subscriptions (auto-deduction plans)
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.payment_subscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50) NOT NULL,
+    subscription_type ENUM('fee_installment','hostel','library','other') NOT NULL DEFAULT 'fee_installment',
+    reference_type VARCHAR(50) COMMENT 'eg: fee_structure_id, hostel_room_id',
+    reference_id INT,
+    total_amount DECIMAL(12,2) NOT NULL,
+    installment_amount DECIMAL(12,2) NOT NULL,
+    frequency ENUM('monthly','weekly','quarterly') NOT NULL DEFAULT 'monthly',
+    total_installments INT NOT NULL,
+    installments_collected INT NOT NULL DEFAULT 0,
+    start_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    next_due_date DATE NOT NULL,
+    end_date DATE,
+    payment_method ENUM('mobile_money','bank','cash') DEFAULT 'mobile_money',
+    payment_provider VARCHAR(50) COMMENT 'mtn_momo, airtel_money, etc.',
+    phone_number VARCHAR(20),
+    bank_name VARCHAR(100),
+    bank_account VARCHAR(50),
+    status ENUM('active','paused','completed','cancelled','failed') NOT NULL DEFAULT 'active',
+    notes TEXT,
+    created_by VARCHAR(50) COMMENT 'student_id or staff_id who created',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student (student_id),
+    INDEX idx_status (status),
+    INDEX idx_next_due (next_due_date)
+);
+
+-- Subscription deduction logs
+CREATE TABLE IF NOT EXISTS igangaschoolofl_students_db.subscription_deductions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subscription_id INT NOT NULL,
+    student_id VARCHAR(50) NOT NULL,
+    installment_number INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    due_date DATE NOT NULL,
+    processed_date DATETIME,
+    status ENUM('pending','success','failed','skipped') NOT NULL DEFAULT 'pending',
+    payment_reference VARCHAR(50),
+    payment_id INT COMMENT 'FK to payments.id if successful',
+    failure_reason TEXT,
+    attempt_count INT DEFAULT 0,
+    last_attempt_date DATETIME,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_subscription (subscription_id),
+    INDEX idx_student (student_id),
+    INDEX idx_status (status)
+);
