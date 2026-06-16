@@ -21,11 +21,18 @@ $welfare_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_welf
 $counseling_sessions = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_counseling_sessions WHERE session_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $discipline_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// Get recent activities (using a simple approach)
-$recent_activities = [
-    ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
-    ['activity' => 'Student welfare check completed', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))]
-];
+// Get recent activities
+$recent_activities = [];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
+}
 ?>
 
 <!DOCTYPE html>

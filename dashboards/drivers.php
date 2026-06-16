@@ -19,12 +19,18 @@ $upcoming_trips = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM trip_logs W
 $total_vehicles = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM vehicles")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_routes = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM route_schedules WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// Get recent trips (using fallback data)
-$recent_trips = [
-    ['destination' => 'Kampala Hospital', 'passengers' => 12, 'time' => '09:00 AM', 'status' => 'completed'],
-    ['destination' => 'Entebbe Clinic', 'passengers' => 8, 'time' => '11:30 AM', 'status' => 'completed'],
-    ['destination' => 'Makerere University', 'passengers' => 15, 'time' => '02:00 PM', 'status' => 'scheduled']
-];
+// Get recent trips
+$recent_trips = [];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT vehicle, driver_name, destination, departure_time, status FROM fleet_management ORDER BY departure_time DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_trips[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

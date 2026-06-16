@@ -1,27 +1,14 @@
 <?php
-// Guild President Dashboard
-require_once '../auth-service.php';
-require_once '../config/database.php';
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Check authentication
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('Location: ../staff-login.php?position=Guild%20President');
-    exit;
-}
-
-// Allow both student and guild president roles
-$userRole = $_SESSION['role'] ?? '';
-if (!in_array($userRole, ['Guild President', 'guild president']) && ($_SESSION['type'] ?? '') !== 'student') {
-    $_SESSION['error'] = "Access denied. Student privileges required.";
-    header('Location: ../staff-login.php');
-    exit;
-}
-
-$conn = getStudentsConnection();
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard([]);
+$staffDb = $ctx['staff'];
+$studentsDb = $ctx['students'];
+$websiteDb = $ctx['website'];
+$auth_service = $ctx['auth'];
+$user = $ctx['user'];
+$user_id = (int)($user['id'] ?? 0);
+$user_name = $user['full_name'] ?? 'User';
+$user_role = $user['role'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,7 +31,7 @@ $conn = getStudentsConnection();
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     <div class="dashboard-container" style="margin-left:270px">
         <h1><i class="fas fa-crown"></i> Guild President Dashboard</h1>
-        <p>Welcome, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?></p>
+        <p>Welcome, <?php echo htmlspecialchars($user_name ?? 'User'); ?></p>
         
         <div class="text-center mb-3">
             <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>

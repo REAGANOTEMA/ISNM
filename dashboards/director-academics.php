@@ -33,18 +33,18 @@ try {
     }
 } catch (Exception $e) {}
 
-// Get recent activities with fallback
-$recent_activities = [
-    ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
-    ['activity' => 'Academic curriculum updated', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 hour'))]
-];
-try {
-    $recent_activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
-    $recent_activities_result = $conn->query($recent_activities_sql);
-    if ($recent_activities_result && $recent_activities_result->num_rows > 0) {
-        $recent_activities = $recent_activities_result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {}
+// Get recent activities
+$recent_activities = [];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
+}
 ?>
 
 <!DOCTYPE html>
@@ -326,5 +326,6 @@ try {
             });
         });
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

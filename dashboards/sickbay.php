@@ -35,12 +35,15 @@ $total_visits = sb_q($students_conn, "SELECT COUNT(*) AS cnt FROM student_health
 $recent_records = sb_fetch($students_conn, "SELECT shr.*, s.full_name, s.student_id, s.program, s.phone FROM student_health_records shr LEFT JOIN students s ON shr.student_id = s.id OR shr.student_id = s.student_id ORDER BY shr.created_at DESC LIMIT 10");
 
 $recent_activities = [];
-try {
-    $r = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5");
-    if ($r) $recent_activities = $r->fetch_all(MYSQLI_ASSOC);
-} catch (Exception $e) {}
-if (empty($recent_activities)) {
-    $recent_activities = [['activity' => 'Sickbay dashboard accessed', 'created_at' => date('Y-m-d H:i:s')]];
+if ($staff_conn) {
+    try {
+        $result = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
 }
 
 // Handle POST: add health record

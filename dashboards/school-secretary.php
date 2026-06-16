@@ -36,13 +36,14 @@ if ($staff_conn) {
 // Recent activities
 $recent_activities = [];
 if ($staff_conn) {
-    $ra = $staff_conn->query("SELECT activity_description AS activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
-    if ($ra) $recent_activities = $ra->fetch_all(MYSQLI_ASSOC);
-}
-if (empty($recent_activities)) {
-    $recent_activities = [
-        ['activity' => 'Dashboard initialized', 'created_at' => date('Y-m-d H:i:s')],
-    ];
+    try {
+        $result = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
 }
 
 // POST: publish announcement via inline form

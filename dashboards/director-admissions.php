@@ -761,5 +761,6 @@ try {
             });
         });
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

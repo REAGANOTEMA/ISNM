@@ -8,14 +8,14 @@ $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-$conn = $ctx['staff'];
+$staffDb = $ctx['staff'];
+$studentsDb = $ctx['students'];
+$websiteDb = $ctx['website'];
 
 $user_id    = $_SESSION['user_id'] ?? 0;
 $user_role  = $_SESSION['role']    ?? '';
 $user_email = $_SESSION['email']   ?? '';
 $user_name  = $_SESSION['full_name'] ?? '';
-
-$students_conn = $ctx['students'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -29,8 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+if (!function_exists('handleAddStudent')) {
 function handleAddStudent() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: secretary.php"); exit(); }
     $student_id = generateStudentId();
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
@@ -62,9 +64,12 @@ function handleAddStudent() {
     }
     header("Location: secretary.php"); exit();
 }
+}
 
+if (!function_exists('handleUpdateStudent')) {
 function handleUpdateStudent() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: secretary.php"); exit(); }
     $student_id = sanitizeInput($_POST['student_id']);
     $first_name = sanitizeInput($_POST['first_name']);
     $surname = sanitizeInput($_POST['surname']);
@@ -90,13 +95,20 @@ function handleUpdateStudent() {
     }
     header("Location: secretary.php"); exit();
 }
+}
 
+if (!function_exists('handleDeleteStudent')) {
 function handleDeleteStudent() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: secretary.php"); exit(); }
     $student_id = sanitizeInput($_POST['student_id']);
     $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
-    $check_result = executeQuery($check_sql, [$student_id], 's');
-    $payment_count = (int)($check_result[0]['count'] ?? 0);
+    $check_stmt = $conn->prepare($check_sql);
+    if (!$check_stmt) { $_SESSION['error'] = 'Prepare failed'; header("Location: secretary.php"); exit(); }
+    $check_stmt->bind_param("s", $student_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result()->fetch_assoc();
+    $payment_count = (int)($check_result['count'] ?? 0);
     if ($payment_count > 0) {
         $_SESSION['error'] = "Cannot delete student with payment records. Please archive instead.";
     } else {
@@ -113,9 +125,12 @@ function handleDeleteStudent() {
     }
     header("Location: secretary.php"); exit();
 }
+}
 
+if (!function_exists('handleSendMessage')) {
 function handleSendMessage() {
-    global $conn;
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: secretary.php"); exit(); }
     $student_id = sanitizeInput($_POST['student_id']);
     $message = sanitizeInput($_POST['message']);
     $message_type = sanitizeInput($_POST['message_type']);
@@ -131,9 +146,12 @@ function handleSendMessage() {
     }
     header("Location: secretary.php"); exit();
 }
+}
 
+if (!function_exists('handleScheduleAppointment')) {
 function handleScheduleAppointment() {
-    global $conn;
+    $conn = getStaffConnection();
+    if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: secretary.php"); exit(); }
     $student_id = sanitizeInput($_POST['student_id']);
     $appointment_date = sanitizeInput($_POST['appointment_date']);
     $appointment_time = sanitizeInput($_POST['appointment_time']);
@@ -151,30 +169,40 @@ function handleScheduleAppointment() {
     }
     header("Location: secretary.php"); exit();
 }
+}
 
+if (!function_exists('generateStudentId')) {
 function generateStudentId() {
-    global $conn;
+    $conn = getStudentsConnection();
+    if (!$conn) return 'ISNM/' . date('Y') . '/' . mt_rand(1000, 9999);
     do {
         $year = date('Y');
         $random = mt_rand(1000, 9999);
         $student_id = "ISNM/$year/$random";
         $check_sql = "SELECT COUNT(*) as count FROM students WHERE student_id = ?";
-        $check_result = executeQuery($check_sql, [$student_id], 's');
-        $count = (int)($check_result[0]['count'] ?? 0);
+        $stmt = $conn->prepare($check_sql);
+        if (!$stmt) break;
+        $stmt->bind_param("s", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $count = $row ? (int)$row['count'] : 0;
+        $stmt->close();
     } while ($count > 0);
     return $student_id;
 }
+}
 
 $total_students = 0;
-$total_stmt = $students_conn ? $students_conn->query("SELECT COUNT(*) as count FROM students WHERE status = 'Active'") : null;
+$total_stmt = $studentsDb ? $studentsDb->query("SELECT COUNT(*) as count FROM students WHERE status = 'Active'") : null;
 if ($total_stmt) { $row = $total_stmt->fetch_assoc(); $total_students = (int)($row['count'] ?? 0); }
 
 $appointments_today = 0;
-$apt_stmt = $students_conn ? $students_conn->query("SELECT COUNT(*) as count FROM appointments WHERE appointment_date = CURDATE()") : null;
+$apt_stmt = $studentsDb ? $studentsDb->query("SELECT COUNT(*) as count FROM appointments WHERE appointment_date = CURDATE()") : null;
 if ($apt_stmt) { $row = $apt_stmt->fetch_assoc(); $appointments_today = (int)($row['count'] ?? 0); }
 
 $recent_students = [];
-$rs_stmt = $students_conn ? $students_conn->query("SELECT student_id, first_name, surname, program, status FROM students WHERE status = 'Active' ORDER BY created_at DESC LIMIT 6") : null;
+$rs_stmt = $studentsDb ? $studentsDb->query("SELECT student_id, first_name, surname, program, status FROM students WHERE status = 'Active' ORDER BY created_at DESC LIMIT 6") : null;
 if ($rs_stmt) { while ($row = $rs_stmt->fetch_assoc()) { $recent_students[] = $row; } }
 ?>
 <!DOCTYPE html>

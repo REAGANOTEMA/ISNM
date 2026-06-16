@@ -19,6 +19,7 @@ try {
 }
 
 // Helper: safe query
+if (!function_exists('ict_q')) {
 function ict_q($conn, $sql) {
     if (!$conn) return 0;
     try {
@@ -28,8 +29,10 @@ function ict_q($conn, $sql) {
         return $row[array_key_first($row)] ?? 0;
     } catch (Exception $e) { return 0; }
 }
+}
 
 // Helper: safe fetch all
+if (!function_exists('ict_fetch')) {
 function ict_fetch($conn, $sql) {
     if (!$conn) return [];
     try {
@@ -38,8 +41,10 @@ function ict_fetch($conn, $sql) {
         return $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) { return []; }
 }
+}
 
 // Generate student ID
+if (!function_exists('generateStudentIdICT')) {
 function generateStudentIdICT() {
     global $students_conn;
     do {
@@ -50,6 +55,7 @@ function generateStudentIdICT() {
         $row = $check ? $check->fetch_assoc() : ['cnt' => 1];
     } while ($row['cnt'] > 0);
     return $student_id;
+}
 }
 
 // Handle POST actions
@@ -152,12 +158,15 @@ $usage_stats = ict_fetch($ict_conn, "SELECT * FROM lab_usage_stats ORDER BY date
 
 // Recent activity
 $recent_activities = [];
-try {
-    $r = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5");
-    if ($r) $recent_activities = $r->fetch_all(MYSQLI_ASSOC);
-} catch (Exception $e) {}
-if (empty($recent_activities)) {
-    $recent_activities = [['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')]];
+if ($staff_conn) {
+    try {
+        $result = $staff_conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
 }
 
 // Student search
@@ -821,5 +830,6 @@ if ($search_term && $students_conn) {
             new bootstrap.Modal(document.getElementById('resolveTicketModal')).show();
         }
     </script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

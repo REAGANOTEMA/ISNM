@@ -18,12 +18,18 @@ $emergency_alerts = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_
 $cctv_cameras_active = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_equipment WHERE equipment_type = 'CCTV Camera' AND status = 'Operational'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $total_guards = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM security_patrols WHERE patrol_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// Get recent security incidents (using fallback data)
-$recent_incidents = [
-    ['type' => 'Visitor Check-in', 'location' => 'Main Gate', 'time' => '08:30 AM', 'status' => 'resolved'],
-    ['type' => 'Vehicle Entry', 'location' => 'Parking Lot', 'time' => '09:15 AM', 'status' => 'resolved'],
-    ['type' => 'Access Control', 'location' => 'Library', 'time' => '10:45 AM', 'status' => 'resolved']
-];
+// Get recent security incidents
+$recent_incidents = [];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT incident_type, description, location, reported_at, status FROM security_incidents ORDER BY reported_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_incidents[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

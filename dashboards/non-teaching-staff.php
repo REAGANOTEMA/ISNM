@@ -32,11 +32,18 @@ if ($conn) {
     }
 }
 
-// Get recent activities (using a simple approach)
-$recent_activities = [
-    ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
-    ['activity' => 'Administrative task completed', 'created_at' => date('Y-m-d H:i:s', strtotime('-1 hour'))]
-];
+// Get recent activities
+$recent_activities = [];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
+}
 ?>
 
 <!DOCTYPE html>

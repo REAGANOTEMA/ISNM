@@ -62,18 +62,15 @@ try {
 
 // Get recent activities
 $recent_activities = [];
-try {
-    $activities_sql = "SELECT activity_description as activity, created_at FROM staff_activity_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ORDER BY created_at DESC LIMIT 5";
-    $activities_result = $conn->query($activities_sql);
-    if ($activities_result && $activities_result->num_rows > 0) {
-        $recent_activities = $activities_result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {}
-if (empty($recent_activities)) {
-    $recent_activities = [
-        ['activity' => 'Dashboard accessed', 'created_at' => date('Y-m-d H:i:s')],
-        ['activity' => 'Academic meeting conducted', 'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))]
-    ];
+if ($conn) {
+    try {
+        $result = $conn->query("SELECT activity_description as activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $recent_activities[] = $row;
+            }
+        }
+    } catch (Exception $e) {}
 }
 ?>
 

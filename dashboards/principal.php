@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
+if (!function_exists('handleAddStudent')) {
 function handleAddStudent() {
     $conn = getStudentsConnection();
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
@@ -94,7 +95,9 @@ function handleAddStudent() {
     header("Location: principal.php");
     exit();
 }
+}
 
+if (!function_exists('handleUpdateStudent')) {
 function handleUpdateStudent() {
     $conn = getStudentsConnection();
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
@@ -129,7 +132,9 @@ function handleUpdateStudent() {
     header("Location: principal.php");
     exit();
 }
+}
 
+if (!function_exists('handleDeleteStudent')) {
 function handleDeleteStudent() {
     $conn = getStudentsConnection();
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
@@ -162,7 +167,9 @@ function handleDeleteStudent() {
     header("Location: principal.php");
     exit();
 }
+}
 
+if (!function_exists('handleApproveApplication')) {
 function handleApproveApplication() {
     $conn = getWebsiteConnection();
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header("Location: principal.php"); exit(); }
@@ -187,7 +194,9 @@ function handleApproveApplication() {
     header("Location: principal.php");
     exit();
 }
+}
 
+if (!function_exists('generateStudentId')) {
 function generateStudentId() {
     $conn = getStudentsConnection();
     if (!$conn) return 'ISNM/' . date('Y') . '/' . mt_rand(1000, 9999);
@@ -209,6 +218,7 @@ function generateStudentId() {
     } while ($count > 0);
 
     return $student_id;
+}
 }
 
 $recent_students = [];

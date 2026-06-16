@@ -17,7 +17,19 @@ $user_name = $_SESSION['full_name'] ?? 'Principal';
 $stats            = getDashboardStats($staff_conn, $user_id, $user_role);
 $total_students   = $stats['total_students'];
 $total_staff      = $stats['total_staff'];
-$active_programs  = 2;
+$active_programs  = 0;
+if ($students_conn) {
+    try {
+        $result = $students_conn->query("SELECT COUNT(DISTINCT program) as count FROM students WHERE status='Active'");
+        if ($result) $active_programs = (int)$result->fetch_assoc()['count'];
+    } catch (Exception $e) {}
+}
+if ($active_programs < 1 && $staff_conn) {
+    try {
+        $result = $staff_conn->query("SELECT COUNT(*) as count FROM academic_programs WHERE status='Active'");
+        if ($result) $active_programs = (int)$result->fetch_assoc()['count'];
+    } catch (Exception $e) {}
+}
 $total_applications = $stats['pending_applications'];
 
 // Academic stats from students DB
