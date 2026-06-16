@@ -208,11 +208,22 @@ switch ($action) {
                 $auth_service->createSecureSession($result['user']);
             }
 
-            // Determine dashboard directly from the authenticated role
-            $sessionRole = $result['user']['role'] ?? ($_SESSION['role'] ?? '');
-            $dashboard   = $auth_service->getDashboardRouteFromKey($sessionRole);
+            // Determine dashboard: prefer requested_position (organogram card clicked)
+            $dashboard = null;
+            if (!empty($requested_position)) {
+                $resolvedForDashboard = $auth_service->resolveOrganogramPosition($requested_position);
+                $dashboard = $auth_service->getDashboardRouteFromKey($resolvedForDashboard);
+                if (!$dashboard) {
+                    $dashboard = $auth_service->getDashboardRoute($resolvedForDashboard);
+                }
+            }
+            // Fall back to the authenticated role
             if (!$dashboard) {
-                $dashboard = $auth_service->getDashboardRoute($sessionRole);
+                $sessionRole = $result['user']['role'] ?? ($_SESSION['role'] ?? '');
+                $dashboard   = $auth_service->getDashboardRouteFromKey($sessionRole);
+                if (!$dashboard) {
+                    $dashboard = $auth_service->getDashboardRoute($sessionRole);
+                }
             }
             if (!$dashboard) { $dashboard = 'dashboards/director-general.php'; }
 
