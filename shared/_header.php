@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../includes/config_enhanced.php';
+include_once __DIR__ . '/../includes/functions.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -27,6 +31,12 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/school-logo.png">
   <link rel="icon" type="image/png" sizes="16x16" href="images/school-logo.png">
     
+  <!-- Preconnect for faster CDN resource loading -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   
@@ -36,11 +46,11 @@
   <!-- Google Fonts - Professional & Clean -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="shared/style.css" />
-  <link rel="stylesheet" href="css/isnm-style.css" />
-  <link rel="stylesheet" href="css/responsive.css" />
-  <link rel="stylesheet" href="css/animations.css" />
+  <!-- Custom CSS (with cache-busting version) -->
+  <link rel="stylesheet" href="shared/style.css?v=2" />
+  <link rel="stylesheet" href="css/isnm-style.css?v=2" />
+  <link rel="stylesheet" href="css/responsive.css?v=2" />
+  <link rel="stylesheet" href="css/animations.css?v=2" />
   
   <!-- Perfect Mobile Responsive CSS -->
   <style>
@@ -1966,11 +1976,6 @@
       -webkit-transform: translateZ(0);
       will-change: transform;
     }
-    
-    <?php
-// Use enhanced configuration with multi-database support
-require_once 'includes/config_enhanced.php';
-include_once 'includes/functions.php'; ?>
     
     /* Enhanced navigation interactions */
     .isnm-navbar .nav-link::after {
