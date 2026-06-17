@@ -1,4 +1,4 @@
-<?php include('shared/_header.php');?>
+﻿<?php include('shared/_header.php');?>
 
   <main>
     <!-- Page Header -->
@@ -33,7 +33,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Certificate in Nursing</h3>
-                  <span class="program-duration">2½ Years</span>
+                  <span class="program-duration">2Â½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -79,7 +79,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Certificate in Midwifery</h3>
-                  <span class="program-duration">2½ Years</span>
+                  <span class="program-duration">2Â½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -125,7 +125,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Diploma in Nursing - Extension</h3>
-                  <span class="program-duration">1½ Years</span>
+                  <span class="program-duration">1Â½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -171,7 +171,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Diploma in Midwifery - Extension</h3>
-                  <span class="program-duration">1½ Years</span>
+                  <span class="program-duration">1Â½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -233,7 +233,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Iganga Hospital</h4>
-                    <p>Government Hospital • 3km from school • 200 bed capacity</p>
+                    <p>Government Hospital â€¢ 3km from school â€¢ 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -243,7 +243,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Bugiri Hospital</h4>
-                    <p>Government Hospital • 30km from school • 200 bed capacity</p>
+                    <p>Government Hospital â€¢ 30km from school â€¢ 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -253,7 +253,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Tororo Hospital</h4>
-                    <p>Government Hospital • 50km from school • 200 bed capacity</p>
+                    <p>Government Hospital â€¢ 50km from school â€¢ 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -263,7 +263,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Busolwe Hospital</h4>
-                    <p>Government Hospital • 40km from school • 200 bed capacity</p>
+                    <p>Government Hospital â€¢ 40km from school â€¢ 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -273,7 +273,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Masafu Hospital</h4>
-                    <p>Government Hospital • 40km from school • 200 bed capacity</p>
+                    <p>Government Hospital â€¢ 40km from school â€¢ 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -283,7 +283,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Mbale Regional Referral Hospital</h4>
-                    <p>Government Hospital • 80km from school • 300 bed capacity</p>
+                    <p>Government Hospital â€¢ 80km from school â€¢ 300 bed capacity</p>
                   </div>
                 </div>
               </div>
@@ -375,714 +375,6 @@
 
   </main>
 
-  <style>
-    /* Enhanced Page Header */
-    .page-header {
-      background: var(--gradient-primary);
-      color: white;
-      padding: 3.5rem 0;
-      margin-bottom: 1rem;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-
-    .page-header::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at 30% 60%, rgba(255,215,0,0.08) 0%, transparent 50%);
-    }
-
-    .page-title {
-      font-size: 2.25rem;
-      font-weight: 800;
-      margin-bottom: 0.75rem;
-      animation: fadeInDown 0.8s ease-out;
-      color: #ffffff;
-    }
-
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .page-subtitle {
-      font-size: 1.05rem;
-      opacity: 0.9;
-      animation: fadeInUp 1s ease-out;
-      color: #ffffff;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Enhanced Program Cards */
-    .program-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
-      border-radius: 15px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-      overflow: visible;
-      transition: all 0.3s ease;
-      height: auto;
-      animation: cardEntrance 0.6s ease-out;
-      border: 2px solid rgba(144, 238, 144, 0.5);
-      margin-bottom: 1.5rem;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    @keyframes cardEntrance {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .program-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    }
-
-    .program-header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-      color: white;
-      padding: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .program-icon {
-      width: 45px;
-      height: 45px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      animation: iconFloat 3s ease-in-out infinite;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    @keyframes iconFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-
-    .program-icon i {
-      font-size: 1.2rem;
-      color: white;
-      animation: iconRotate 8s linear infinite;
-    }
-
-    @keyframes iconRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .program-title h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      line-height: 1.2;
-    }
-
-    .program-duration {
-      display: inline-block;
-      background: rgba(255,255,255,0.2);
-      padding: 0.2rem 0.5rem;
-      border-radius: 15px;
-      font-size: 0.8rem;
-      margin-top: 0.3rem;
-    }
-
-    .program-content {
-      padding: 1.5rem;
-      position: relative;
-      z-index: 15;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    .program-content h4 {
-      color: #1e3a8a !important;
-      margin: 0.8rem 0 0.5rem;
-      font-size: 0.95rem;
-      font-weight: 700;
-      font-family: 'Playfair Display', Georgia, serif;
-      position: relative;
-      z-index: 20;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    .program-content h4:first-child {
-      margin-top: 0;
-    }
-
-    .program-content p {
-      color: #1e293b !important;
-      line-height: 1.7;
-      margin-bottom: 1rem;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 400;
-      position: relative;
-      z-index: 15;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    .requirements-list,
-    .course-content {
-      list-style: none;
-      padding: 0;
-      margin: 1rem 0;
-    }
-
-    .requirements-list li,
-    .course-content li {
-      padding: 0.5rem 0.75rem;
-      color: #1e293b !important;
-      position: relative;
-      padding-left: 1.5rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      border: 2px solid rgba(26, 35, 126, 0.1);
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 400;
-      z-index: 10;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    .requirements-list li:hover,
-    .course-content li:hover {
-      background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
-      transform: translateX(5px);
-      border-color: rgba(144, 238, 144, 0.6);
-    }
-
-    .requirements-list li:before,
-    .course-content li:before {
-      content: "✓";
-      color: #1e3a8a !important;
-      position: absolute;
-      left: 0;
-      font-weight: bold;
-      font-size: 1.1rem;
-      z-index: 25;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-
-    .program-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 2px solid rgba(144, 238, 144, 0.3);
-      position: relative;
-      z-index: 20;
-    }
-
-    .program-actions .btn {
-      padding: 12px 28px;
-      border-radius: 10px;
-      font-weight: 600;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-decoration: none;
-      display: inline-block;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transform-style: preserve-3d;
-      perspective: 1000px;
-    }
-
-    .program-actions .btn-primary {
-        color: #0d1442;
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
-        border-color: #E6A100;
-        box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
-      }
-  
-    .program-actions .btn-primary:hover {
-        transform: perspective(1000px) translateY(-3px) translateZ(6px);
-        box-shadow: 0 8px 25px rgba(255, 165, 0, 0.45);
-        background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%);
-      }
-  
-    .program-actions .btn-outline-primary {
-        color: #0d1442;
-        background: transparent;
-        border-color: #FFA500;
-      }
-  
-    .program-actions .btn-outline-primary:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
-        color: #0d1442;
-        border-color: #E6A100;
-        transform: perspective(1000px) translateY(-3px) translateZ(6px);
-      }
-
-    /* Clean Hospitals Grid */
-    .hospitals-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.2rem;
-      margin: 1.5rem 0;
-    }
-
-    .hospital-card {
-      display: flex;
-      align-items: center;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
-      padding: 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(144, 238, 144, 0.4);
-    }
-
-    .hospital-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-    }
-
-    .hospital-icon {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1rem;
-      flex-shrink: 0;
-      box-shadow: 0 3px 8px rgba(30, 58, 138, 0.2);
-    }
-
-    .hospital-icon i {
-      font-size: 1.5rem;
-      color: white;
-    }
-
-    .hospital-info h4 {
-      color: #1e3a8a;
-      margin: 0 0 0.4rem;
-      font-size: 1rem;
-      font-weight: 700;
-      font-family: 'Inter', 'Poppins', sans-serif;
-    }
-
-    .hospital-info p {
-      color: #475569;
-      margin: 0;
-      font-size: 0.85rem;
-      line-height: 1.4;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-weight: 400;
-    }
-
-    .practicum-details {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-      margin-top: 1.5rem;
-      border: 1px solid rgba(144, 238, 144, 0.4);
-    }
-
-    .practicum-details h3 {
-      color: #1e3a8a;
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
-      font-weight: 700;
-      font-family: 'Playfair Display', Georgia, serif;
-    }
-
-    .practicum-info p {
-      color: #475569;
-      line-height: 1.7;
-      margin-bottom: 1.5rem;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 400;
-    }
-
-    .training-structure {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .training-structure li {
-      padding: 0.6rem 0.75rem;
-      color: #1e293b;
-      position: relative;
-      padding-left: 2rem;
-      margin-bottom: 0.6rem;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      border-left: 3px solid rgba(26, 35, 126, 0.2);
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 400;
-    }
-
-    .training-structure li:hover {
-      background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);
-      transform: translateX(5px);
-      border-left-color: #1e3a8a;
-    }
-
-    .training-structure li:last-child {
-      border-bottom: none;
-    }
-
-    .training-structure li:before {
-      content: "→";
-      color: #1e3a8a;
-      position: absolute;
-      left: 0.5rem;
-      font-weight: bold;
-      font-size: 1rem;
-    }
-
-    /* Enhanced Timeline */
-    .process-timeline {
-      max-width: 800px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .process-timeline::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 3px;
-      height: 100%;
-      background: linear-gradient(180deg, #ffd700 0%, #1a237e 50%, #ffd700 100%);
-    }
-
-    .timeline-item {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 2rem;
-      position: relative;
-      animation: timelineItemEntrance 0.8s ease-out;
-    }
-
-    @keyframes timelineItemEntrance {
-      from { opacity: 0; transform: translateX(-30px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .timeline-item:nth-child(even) {
-      flex-direction: row-reverse;
-      animation: timelineItemEntranceRight 0.8s ease-out;
-    }
-
-    @keyframes timelineItemEntranceRight {
-      from { opacity: 0; transform: translateX(30px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .timeline-marker {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      font-weight: bold;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-      margin-right: 1.5rem;
-      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
-      animation: markerPulse 2s ease-in-out infinite;
-      font-family: 'Inter', 'Poppins', sans-serif;
-    }
-
-    @keyframes markerPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    .timeline-content {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fff8 100%);
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-      flex: 1;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(144, 238, 144, 0.4);
-    }
-
-    .timeline-item:hover .timeline-content {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    }
-
-    .timeline-content h4 {
-      color: #1e3a8a;
-      margin: 0 0 0.6rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      font-family: 'Playfair Display', Georgia, serif;
-    }
-
-    .timeline-content p {
-      color: #475569;
-      margin: 0;
-      line-height: 1.6;
-      font-family: 'Inter', 'Poppins', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 400;
-    }
-
-    /* Enhanced Responsive Design */
-    @media (max-width: 768px) {
-      .page-header {
-        padding: 3rem 0;
-      }
-      
-      .page-title {
-        font-size: 2.2rem;
-      }
-      
-      .page-subtitle {
-        font-size: 1rem;
-      }
-      
-      .program-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.5rem;
-      }
-      
-      .program-icon {
-        width: 60px;
-        height: 60px;
-        margin-right: 0;
-        margin-bottom: 1rem;
-      }
-      
-      .program-icon i {
-        font-size: 1.5rem;
-      }
-      
-      .program-title h3 {
-        font-size: 1.3rem;
-      }
-      
-      .program-duration {
-        font-size: 0.8rem;
-        padding: 0.2rem 0.5rem;
-      }
-      
-      .program-content {
-        padding: 1.5rem;
-      }
-      
-      .program-content h4 {
-        font-size: 1.1rem;
-        margin: 1rem 0 0.75rem;
-      }
-      
-      .program-content p {
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
-      }
-      
-      .requirements-list li,
-      .course-content li {
-        padding: 0.4rem 0;
-        font-size: 0.9rem;
-        margin-bottom: 0.4rem;
-      }
-      
-      .program-actions {
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-      }
-      
-      .btn {
-        padding: 10px 25px;
-        font-size: 0.9rem;
-        width: 100%;
-      }
-      
-      .hospital-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem;
-      }
-      
-      .hospital-icon {
-        width: 50px;
-        height: 50px;
-        margin-right: 0;
-        margin-bottom: 1rem;
-      }
-      
-      .hospital-icon i {
-        font-size: 1.2rem;
-      }
-      
-      .hospital-info h4 {
-        font-size: 1rem;
-      }
-      
-      .hospital-info p {
-        font-size: 0.85rem;
-      }
-      
-      .practicum-details {
-        padding: 1.5rem;
-      }
-      
-      .practicum-details h3 {
-        font-size: 1.2rem;
-      }
-      
-      .training-structure li {
-        padding: 0.5rem 0;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .timeline-item {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin-bottom: 2rem;
-      }
-      
-      .timeline-item:nth-child(even) {
-        flex-direction: column;
-      }
-      
-      .timeline-marker {
-        width: 50px;
-        height: 50px;
-        margin-right: 0;
-        margin-bottom: 1rem;
-        font-size: 1rem;
-      }
-      
-      .timeline-content {
-        padding: 1.5rem;
-      }
-      
-      .timeline-content h4 {
-        font-size: 1.1rem;
-        margin: 0 0 0.5rem;
-      }
-      
-      .timeline-content p {
-        font-size: 0.9rem;
-      }
-      
-      .process-timeline::before {
-        left: 25px;
-      }
-      
-      .timeline-item:not(:last-child):after {
-        left: 25px;
-        top: 60px;
-        height: calc(100% + 1rem);
-      }
-    }
-
-    @media (max-width: 576px) {
-      .page-title {
-        font-size: 1.8rem;
-      }
-      
-      .program-header {
-        padding: 1rem;
-      }
-      
-      .program-icon {
-        width: 50px;
-        height: 50px;
-      }
-      
-      .program-icon i {
-        font-size: 1.2rem;
-      }
-      
-      .program-title h3 {
-        font-size: 1.1rem;
-      }
-      
-      .program-content {
-        padding: 1rem;
-      }
-      
-      .program-content h4 {
-        font-size: 1rem;
-      }
-      
-      .program-content p {
-        font-size: 0.85rem;
-      }
-      
-      .requirements-list li,
-      .course-content li {
-        font-size: 0.85rem;
-      }
-      
-      .btn {
-        padding: 8px 20px;
-        font-size: 0.8rem;
-      }
-      
-      .hospital-card {
-        padding: 0.75rem;
-      }
-      
-      .hospital-icon {
-        width: 40px;
-        height: 40px;
-      }
-      
-      .hospital-icon i {
-        font-size: 1rem;
-      }
-      
-      .timeline-marker {
-        width: 40px;
-        height: 40px;
-        font-size: 0.9rem;
-      }
-      
-      .timeline-content {
-        padding: 1rem;
-      }
-    }
-  </style>
 
   <!-- Apply Now & Donate CTA Section -->
   <section class="cta-section py-5 bg-primary text-white">

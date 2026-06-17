@@ -1,4 +1,4 @@
-<?php include('shared/_header.php');?>
+﻿<?php include('shared/_header.php');?>
 
   <main>
     <!-- Hero Page Header -->
@@ -27,8 +27,8 @@
         </div>
         <div class="row">
           <div class="col-lg-12">
-            <div class="intro-content animate-fade-in">
-              <p class="intro-text">
+            <div class="intro-content-modern animate-fade-in">
+              <p class="intro-text-big">
                 Iganga School of Nursing and Midwifery was established in 2009 with a vision to produce world-class healthcare professionals. 
                 Starting with just 13 students, we have grown into a premier institution with over 315 students, 
                 committed to excellence in nursing and midwifery education.
@@ -70,45 +70,93 @@
             <i class="fas fa-route"></i>
           </div>
           <h2 class="section-title">Our Journey</h2>
+          <p class="section-subtitle">From humble beginnings to a beacon of healthcare education — tracing the milestones that shaped ISNM</p>
         </div>
-        <div class="timeline">
-          <div class="timeline-item animate-slide-up" style="animation-delay: 0.1s;">
-            <div class="timeline-marker">
-              <div class="timeline-year">2009</div>
-            </div>
-            <div class="timeline-content">
-              <h3>Foundation Year</h3>
-              <p>ISNM was established with 13 founding students and a vision to transform healthcare education in Eastern Uganda.</p>
-            </div>
-          </div>
-          
-          <div class="timeline-item animate-slide-up" style="animation-delay: 0.3s;">
-            <div class="timeline-marker">
-              <div class="timeline-year">2010 , 2015</div>
-            </div>
-            <div class="timeline-content">
-              <h3>Growth & Development</h3>
-              <p>Expansion of academic programs, development of infrastructure, and establishment of clinical partnerships with major hospitals.</p>
+        <div class="timeline-classic">
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="timeline-year-badge">2009</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-seedling me-2" style="color:#10b981;"></i>Foundation Year</h3>
+              <p>ISNM was established with <strong>13 founding students</strong> and a vision to transform healthcare education in Eastern Uganda. The school opened its doors with a handful of dedicated staff and a commitment to excellence.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">13 Students</span>
+                <span class="badge bg-success me-1">1 Program</span>
+                <span class="badge bg-warning text-dark">Founded</span>
+              </div>
             </div>
           </div>
           
-          <div class="timeline-item animate-slide-up" style="animation-delay: 0.5s;">
-            <div class="timeline-marker">
-              <div class="timeline-year">2016 , 2020</div>
-            </div>
-            <div class="timeline-content">
-              <h3>Academic Excellence</h3>
-              <p>Achieved 100% pass rate in midwifery and over 85% in nursing. Established partnerships with 7 major hospitals for clinical training.</p>
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="timeline-year-badge">2012</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-expand-arrows-alt me-2" style="color:#2563eb;"></i>First Major Expansion</h3>
+              <p>Enrollment grew to over <strong>60 students</strong>. New classrooms were constructed and the first batch of midwifery students graduated with outstanding results, establishing ISNM's reputation for academic excellence.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">60+ Students</span>
+                <span class="badge bg-info me-1">First Graduates</span>
+              </div>
             </div>
           </div>
           
-          <div class="timeline-item animate-slide-up" style="animation-delay: 0.7s;">
-            <div class="timeline-marker">
-              <div class="timeline-year">2021 , 2025</div>
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.3s;">
+            <div class="timeline-year-badge">2015</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-handshake me-2" style="color:#f59e0b;"></i>Clinical Partnerships</h3>
+              <p>Established clinical training partnerships with <strong>7 major hospitals</strong> including Iganga Hospital, Mbale Regional Referral Hospital, and Tororo Hospital, providing students with real-world experience.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">7 Hospitals</span>
+                <span class="badge bg-success me-1">Clinical Training</span>
+              </div>
             </div>
-            <div class="timeline-content">
-              <h3>Modernization</h3>
-              <p>Construction of multi purpose hall, computer laboratory with 60 computers, and implementation of modern teaching technologies.</p>
+          </div>
+          
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.4s;">
+            <div class="timeline-year-badge">2018</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-trophy me-2" style="color:#ffd700;"></i>Academic Excellence</h3>
+              <p>Achieved <strong>100% pass rate</strong> in midwifery and over 85% in nursing state final examinations. The school's reputation attracted students from across the Eastern region and beyond.</p>
+              <div class="mt-3">
+                <span class="badge bg-success me-1">100% Pass Rate</span>
+                <span class="badge bg-warning text-dark me-1">Top Performer</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.5s;">
+            <div class="timeline-year-badge">2020</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-building me-2" style="color:#8b5cf6;"></i>Infrastructure Growth</h3>
+              <p>Enrollment surpassed <strong>200 students</strong>. Construction of a multi-purpose hall, additional classrooms, and a girls' hostel began. The school also acquired <strong>12 acres of land</strong> for future expansion.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">200+ Students</span>
+                <span class="badge bg-info me-1">12 Acres</span>
+                <span class="badge bg-secondary me-1">New Facilities</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.6s;">
+            <div class="timeline-year-badge">2023</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-laptop-code me-2" style="color:#06b6d4;"></i>Digital Transformation</h3>
+              <p>Commissioned a modern <strong>computer laboratory with 60 computers</strong>, implemented digital learning management systems, and upgraded the library with current medical texts and research databases.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">60 Computers</span>
+                <span class="badge bg-success me-1">Digital Learning</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-entry animate-slide-up" style="animation-delay: 0.7s;">
+            <div class="timeline-year-badge">2025</div>
+            <div class="timeline-content-card">
+              <h3><i class="fas fa-gem me-2" style="color:#ec4899;"></i>Present Day</h3>
+              <p>ISNM now serves <strong>315+ students</strong> with a comprehensive range of nursing and midwifery programs. State-of-the-art skills laboratories, dedicated faculty, and a growing campus continue to elevate the standard of healthcare education.</p>
+              <div class="mt-3">
+                <span class="badge bg-primary me-1">315+ Students</span>
+                <span class="badge bg-info me-1">Multiple Programs</span>
+                <span class="badge bg-success me-1">Skills Labs</span>
+              </div>
             </div>
           </div>
         </div>
@@ -212,7 +260,10 @@
               <h3>Leadership Philosophy</h3>
             </div>
             <p class="philosophy-text">Our leadership team is committed to maintaining high standards of education, ensuring student welfare, 
-            and fostering an environment that produces competent healthcare professionals.</p>
+            and fostering an environment that produces competent healthcare professionals. We believe in servant leadership — leading by example, 
+            empowering both staff and students to reach their full potential. Through transparent governance, continuous professional development, 
+            and a culture of mutual respect, we create a nurturing academic community where excellence thrives. Every decision is guided by our 
+            core values of integrity, compassion, innovation, and a steadfast dedication to improving healthcare outcomes in Uganda and beyond.</p>
           </div>
         </div>
       </div>
@@ -325,856 +376,6 @@
 
 <?php include('shared/_footer.php');?>
 
-<style>
-/* Hero Header Styles */
-     .hero-header {
-       position: relative;
-       background: var(--gradient-primary);
-       color: white;
-       padding: 3.5rem 0;
-       overflow: hidden;
-     }
-
-     .hero-header::before {
-       content: '';
-       position: absolute;
-       top: 0; left: 0; right: 0; bottom: 0;
-       background: radial-gradient(circle at 50% 50%, rgba(255,215,0,0.08) 0%, transparent 50%);
-     }
-
-    .hero-overlay {
-      display: none;
-    }
-
-    .hero-particles {
-      display: none;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-    }
-
-.hero-title {
-       font-size: 2.25rem;
-       font-weight: 800;
-       margin-bottom: 0.75rem;
-     }
-
-     .hero-subtitle {
-       font-size: 1.05rem;
-       font-weight: 400;
-       margin-bottom: 1.5rem;
-       opacity: 0.9;
-     }
-
-     .hero-decoration {
-       width: 100px;
-       height: 4px;
-       background: linear-gradient(90deg, #ffd700, #ffed4e);
-       margin: 0 auto;
-       border-radius: 2px;
-     }
-
-     @media (max-width: 768px) {
-       .hero-header {
-         padding: 4rem 0 2.5rem;
-       }
-       
-       .hero-title {
-         font-size: 2.2rem;
-         letter-spacing: 1px;
-       }
-       
-       .hero-subtitle {
-         font-size: 1.1rem;
-       }
-       
-       .hero-decoration {
-         width: 70px;
-       }
-     }
-
-     @media (max-width: 480px) {
-       .hero-header {
-         padding: 3.5rem 0 2rem;
-       }
-       
-       .hero-title {
-         font-size: 1.8rem;
-       }
-       
-       .hero-subtitle {
-         font-size: 1rem;
-       }
-     }
-
-    /* Section Headers */
-    .section-header {
-      margin-bottom: 3rem;
-    }
-
-    .section-header.text-center {
-      text-align: center;
-    }
-
-    .header-icon {
-      width: 80px;
-      height: 80px;
-      background: var(--gradient-primary);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
-      position: relative;
-    }
-
-    .header-icon::before {
-      content: '';
-      position: absolute;
-      top: -5px;
-      left: -5px;
-      right: -5px;
-      bottom: -5px;
-      background: var(--gradient-primary);
-      border-radius: 25px;
-      z-index: -1;
-      opacity: 0.3;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    .header-icon i {
-      font-size: 2.5rem;
-      color: white;
-    }
-
-.section-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: #0f172a;
-      margin-bottom: 0.5rem;
-    }
-    
-    /* Introduction Section */
-    .history-intro {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .history-intro::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 100%;
-      background: radial-gradient(circle at 10% 20%, rgba(26, 35, 126, 0.03) 0%, transparent 50%);
-      pointer-events: none;
-    }
-    
-    .intro-content {
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 4rem 3rem;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.06);
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      position: relative;
-      margin: 0 auto;
-      max-width: 1000px;
-    }
-
-     .intro-content::before {
-       content: '';
-       position: absolute;
-       top: 0;
-       left: 0;
-       right: 0;
-       height: 4px;
-       background: linear-gradient(90deg, #1a237e, #3949ab, #ffd700, #10b981, #1a237e);
-       background-size: 200% 100%;
-       animation: shimmer 3s ease-in-out infinite;
-     }
-
-     .intro-text {
-       font-size: 1.2rem;
-       color: #2d3748;
-       line-height: 1.8;
-       margin-bottom: 3.5rem;
-       text-align: center;
-       max-width: 850px;
-       margin-left: auto;
-       margin-right: auto;
-     }
-
-     /* Key Highlights - Perfect Grid for All Screens */
-     .key-highlights {
-       display: grid;
-       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-       gap: 2rem;
-       margin-top: 1rem;
-     }
-
-     .highlight-item {
-       background: #ffffff;
-       border-radius: 20px;
-       padding: 2.5rem 1.5rem;
-       text-align: center;
-       transition: all 0.3s ease;
-       border: 1px solid #edf2f7;
-       display: flex;
-       flex-direction: column;
-       align-items: center;
-       justify-content: center;
-       min-height: 200px;
-       box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-     }
-
-     .highlight-item:hover {
-       transform: translateY(-10px);
-       box-shadow: 0 20px 40px rgba(26, 35, 126, 0.08);
-       border-color: #1a237e;
-     }
-
-     .highlight-icon {
-       width: 60px;
-       height: 60px;
-       background: linear-gradient(135deg, #1a237e, #3949ab);
-       border-radius: 50%;
-       display: flex;
-       align-items: center;
-       justify-content: center;
-       margin-bottom: 1rem;
-       box-shadow: 0 6px 20px rgba(26, 35, 126, 0.25);
-       flex-shrink: 0;
-     }
-
-     .highlight-icon i {
-       font-size: 1.6rem;
-       color: white;
-     }
-
-     .highlight-item h4 {
-       font-size: 1.15rem;
-       font-weight: 700;
-       color: #1e3c72;
-       margin-bottom: 0.4rem;
-       word-wrap: break-word;
-       line-height: 1.3;
-     }
-
-     .highlight-item p {
-       color: #6c757d;
-       margin: 0;
-       font-size: 0.95rem;
-       line-height: 1.5;
-     }
-
-    /* Timeline Section */
-    .timeline-section {
-      background: #fef9e7;
-      position: relative;
-    }
-
-    .timeline {
-      position: relative;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: linear-gradient(180deg, #1a237e, #3949ab, #ffd700, #10b981);
-      transform: translateX(-50%);
-    }
-
-    .timeline-item {
-      position: relative;
-      margin-bottom: 4rem;
-      display: flex;
-      align-items: center;
-    }
-
-    .timeline-item:nth-child(odd) {
-      flex-direction: row-reverse;
-    }
-
-    .timeline-marker {
-      position: relative;
-      z-index: 2;
-      flex-shrink: 0;
-    }
-
-    .timeline-year {
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(135deg, #1a237e, #3949ab);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(26, 35, 126, 0.4);
-      margin: 0 2rem;
-    }
-
-    .timeline-content {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
-      flex: 1;
-      transition: all 0.3s ease;
-    }
-
-    .timeline-content:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.15);
-    }
-
-    .timeline-content h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 1rem;
-    }
-
-    .timeline-content p {
-      color: #495057;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    /* Achievements Section */
-    .achievements-section {
-      background: #fef9e7;
-    }
-
-    .achievements-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-    }
-
-    .achievement-card {
-      text-align: center;
-      padding: 2.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .achievement-icon {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-    }
-
-    .achievement-icon i {
-      font-size: 2.5rem;
-      color: white;
-    }
-
-    .achievement-card h3 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 1rem;
-    }
-
-    .achievement-card p {
-      color: #6c757d;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    /* Leadership Section */
-    .leadership-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: start;
-    }
-
-    .leadership-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .leadership-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-    }
-
-    .leadership-icon i {
-      font-size: 2rem;
-      color: white;
-    }
-
-    .leadership-header h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin: 0;
-    }
-
-    .leader-profile {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-
-    .leader-avatar {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      flex-shrink: 0;
-      border: 3px solid var(--isnm-yellow, #f59e0b);
-    }
-
-    .leader-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .leader-info h4 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 0.5rem;
-    }
-
-    .leader-title {
-      color: #1a237e;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .leader-description {
-      color: #495057;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .philosophy-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .philosophy-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-    }
-
-    .philosophy-icon i {
-      font-size: 2rem;
-      color: white;
-    }
-
-    .philosophy-header h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin: 0;
-    }
-
-    .philosophy-text {
-      color: #495057;
-      line-height: 1.8;
-      margin: 0;
-    }
-
-    /* Future Vision Section */
-
-    .future-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-    }
-
-    .future-plans {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      border-radius: 25px;
-      padding: 2.5rem;
-      border: 1px solid #dee2e6;
-      transition: all 0.3s ease;
-    }
-
-    .future-plans:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    }
-
-    .plan-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .plan-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #3949ab, #1a237e);
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
-    }
-
-    .plan-icon i {
-      font-size: 2rem;
-      color: white;
-    }
-
-    .plan-header h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin: 0;
-    }
-
-    .plans-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .plans-list li {
-      padding: 1rem 0;
-      border-bottom: 1px solid #dee2e6;
-      color: #495057;
-      position: relative;
-      padding-left: 2rem;
-      line-height: 1.6;
-    }
-
-    .plans-list li::before {
-      content: '▸';
-      position: absolute;
-      left: 0;
-      color: #1a237e;
-      font-weight: bold;
-    }
-
-    .plans-list li:last-child {
-      border-bottom: none;
-    }
-
-    /* Impact Section */
-    .impact-section {
-      background: #fef9e7;
-    }
-
-    .impact-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 2rem;
-    }
-
-    .stat-item {
-      background: white;
-      border-radius: 25px;
-      padding: 2.5rem;
-      text-align: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-      border: 1px solid #e9ecef;
-    }
-
-    .stat-item:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    }
-
-    .stat-icon {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-    }
-
-    .stat-icon i {
-      font-size: 2rem;
-      color: white;
-    }
-
-    .stat-number {
-      font-size: 3rem;
-      font-weight: 700;
-      color: #1e3c72;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-number::after {
-      content: attr(data-suffix);
-      font-size: 1.5rem;
-      color: #1a237e;
-    }
-
-    .stat-label {
-      color: #6c757d;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Animations */
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.3; }
-      50% { transform: scale(1.05); opacity: 0.5; }
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideUp {
-      0% { opacity: 0; transform: translateY(30px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes scaleIn {
-      0% { opacity: 0; transform: scale(0.8); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    .animate-fade-in {
-      animation: fadeIn 0.8s ease-out;
-    }
-
-    .animate-slide-up {
-      animation: slideUp 0.8s ease-out;
-    }
-
-    .animate-scale-in {
-      animation: scaleIn 0.8s ease-out;
-    }
-
-/* Responsive Design - Introduction Section Specific */
-    @media (max-width: 768px) {
-      .section-title {
-        font-size: 1.75rem;
-      }
-      
-      .intro-content {
-        padding: 3rem 1.5rem;
-        border-radius: 20px;
-      }
-      
-      .section-header {
-        margin-bottom: 2.5rem;
-      }
-      
-      .intro-text {
-        font-size: 1.1rem;
-        margin-bottom: 3rem;
-        padding: 0 0.5rem;
-      }
-      
-      .key-highlights {
-        grid-template-columns: 1fr;
-        gap: 1.2rem;
-      }
-      
-      .highlight-item {
-        padding: 1.5rem 1rem;
-        min-height: 160px;
-        border-radius: 14px;
-      }
-      
-      .highlight-icon {
-        width: 50px;
-        height: 50px;
-        margin-bottom: 0.8rem;
-      }
-      
-      .highlight-icon i {
-        font-size: 1.3rem;
-      }
-      
-      .highlight-item h4 {
-        font-size: 1.05rem;
-      }
-      
-      .highlight-item p {
-        font-size: 0.9rem;
-      }
-      
-      .achievements-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .leadership-content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-      
-      .future-content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-      
-      .impact-stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      .timeline::before {
-        left: 30px;
-      }
-      
-      .timeline-item {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-      }
-      
-      .timeline-year {
-        margin: 0 0 2rem 0;
-        width: 80px;
-        height: 80px;
-        font-size: 0.9rem;
-      }
-      
-      .leader-profile {
-        flex-direction: column;
-        text-align: center;
-        gap: 1.5rem;
-      }
-
-      .leader-avatar {
-        width: 120px;
-        height: 120px;
-      }
-
-      .leader-info h4 {
-        font-size: 1.2rem;
-      }
-      
-      .plan-header,
-      .leadership-header,
-      .philosophy-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .leader-avatar {
-        width: 100px;
-        height: 100px;
-      }
-
-      .leader-info h4 {
-        font-size: 1.1rem;
-      }
-
-      .leader-title {
-        font-size: 0.9rem;
-      }
-
-      .leader-description {
-        font-size: 0.9rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .intro-content,
-      .current-leadership,
-      .leadership-philosophy,
-      .future-plans {
-        padding: 2.5rem 1.2rem;
-        border-radius: 14px;
-      }
-      
-      .intro-text {
-        font-size: 1.05rem;
-        padding: 0 0.3rem;
-      }
-      
-      .key-highlights {
-        gap: 1rem;
-      }
-      
-      .highlight-item {
-        padding: 1.2rem 0.8rem;
-        min-height: 140px;
-        border-radius: 12px;
-      }
-      
-      .highlight-icon {
-        width: 45px;
-        height: 45px;
-        margin-bottom: 0.6rem;
-      }
-      
-      .highlight-icon i {
-        font-size: 1.2rem;
-      }
-      
-      .highlight-item h4 {
-        font-size: 1rem;
-      }
-      
-      .highlight-item p {
-        font-size: 0.85rem;
-      }
-    }
-  </style>
 
 <script>
     // Animated Counter for Statistics

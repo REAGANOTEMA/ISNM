@@ -266,7 +266,6 @@ if ($view === 'single' && $slug) {
 $pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' | ISNM News' : 'News | ISNM');
 include 'shared/_header.php';
 ?>
-<link href="css/news.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
 
 <?php if ($is_admin): ?>

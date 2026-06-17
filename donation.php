@@ -1,637 +1,5 @@
-<?php include('shared/_header.php');?>
+﻿<?php include('shared/_header.php');?>
 
-  <style>
-    /* Enhanced Donation Page Styles
-    .page-header {
-      background: var(--gradient-primary);
-      color: white;
-      padding: 4rem 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .page-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('images/hero-pattern.png') repeat;
-      opacity: 0.1;
-      animation: patternMove 20s linear infinite;
-    }
-
-    @keyframes patternMove {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(50px); }
-    }
-
-    .page-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.25rem;
-      font-weight: 800;
-      margin-bottom: 0.75rem;
-    }
-
-    .page-subtitle {
-      font-size: 1.05rem;
-      opacity: 0.9;
-      margin-bottom: 0;
-    }
-
-    /* Enhanced Donation Overview */
-    .donation-overview {
-      position: relative;
-    }
-
-    .donation-overview::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('images/subtle-pattern.png') repeat;
-      opacity: 0.05;
-    }
-
-    .section-title {
-      margin-bottom: 0.75rem;
-    }
-
-    .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: linear-gradient(135deg, #FFD700, #FFA000);
-      border-radius: 2px;
-    }
-
-    .section-subtitle {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    /* Enhanced Donation Content */
-    .donation-content {
-      padding: 3rem;
-      position: relative;
-    }
-
-    /* Enhanced Impact Items */
-    .impact-list {
-      list-style: none;
-      padding: 0;
-      margin: 2rem 0 0;
-    }
-
-    .impact-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding: 1.5rem;
-      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-      border-radius: 15px;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border: 1px solid rgba(0,0,0,0.05);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .impact-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,215,0,0.1), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .impact-item:hover::before {
-      left: 100%;
-    }
-
-    .impact-item:hover {
-      transform: translateY(-5px) scale(1.02);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      border-color: var(--isnm-yellow);
-    }
-
-    .impact-icon {
-      width: 60px;
-      height: 60px;
-      background: var(--gradient-secondary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1.5rem;
-      flex-shrink: 0;
-      position: relative;
-      box-shadow: 0 5px 15px rgba(255,215,0,0.3);
-    }
-
-    .impact-icon::after {
-      content: '';
-      position: absolute;
-      top: -3px;
-      left: -3px;
-      right: -3px;
-      bottom: -3px;
-      background: var(--gradient-secondary);
-      border-radius: 50%;
-      z-index: -1;
-      opacity: 0.3;
-    }
-
-    .impact-icon i {
-      font-size: 1.5rem;
-      color: var(--isnm-chocolate);
-    }
-
-    .impact-text h4 {
-      margin: 0 0 0.5rem;
-      font-weight: 600;
-    }
-
-    .impact-text p {
-      margin: 0;
-      line-height: 1.6;
-    }
-
-    /* Enhanced Donation Image */
-    .donation-image {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      transform: perspective(1000px) rotateY(5deg);
-      transition: all 0.5s ease;
-      height: 500px;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .donation-image:hover {
-      transform: perspective(1000px) rotateY(0deg) scale(1.05);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
-    }
-
-    .donation-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-      filter: brightness(1.05) contrast(1.1);
-    }
-
-    .donation-image:hover img {
-      transform: scale(1.08);
-      filter: brightness(1.1) contrast(1.15);
-    }
-
-    .donation-image::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, transparent 50%, rgba(255,215,0,0.1) 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .donation-image::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.1) 100%);
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    /* Enhanced Donation Options */
-    .donation-options {
-      position: relative;
-    }
-
-    .donation-options::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('images/dots-pattern.png') repeat;
-      opacity: 0.03;
-    }
-
-    .donation-card {
-      text-align: center;
-      height: 100%;
-    }
-
-    .donation-icon {
-      width: 90px;
-      height: 90px;
-      background: var(--gradient-secondary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 2rem;
-      position: relative;
-      box-shadow: 0 10px 25px rgba(255,215,0,0.3);
-      transition: all 0.3s ease;
-    }
-
-    .donation-card:hover .donation-icon {
-      transform: scale(1.1) rotate(5deg);
-      box-shadow: 0 15px 35px rgba(255,215,0,0.4);
-    }
-
-    .donation-icon i {
-      font-size: 2.5rem;
-      color: var(--isnm-chocolate);
-    }
-
-    .donation-card h3 {
-      margin-bottom: 1.5rem;
-      font-weight: 700;
-    }
-
-    .donation-card p {
-      margin-bottom: 2rem;
-      line-height: 1.7;
-    }
-
-    .donation-amounts {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 2rem;
-      text-align: left;
-    }
-
-    .donation-amounts li {
-      padding: 0.8rem 1rem;
-      margin-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(0,0,0,0.02);
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-
-    .donation-amounts li:hover {
-      background: rgba(255,215,0,0.08);
-      transform: translateX(5px);
-    }
-
-    .donation-amounts .amount {
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .project-card {
-      overflow: visible;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .project-image {
-      height: 250px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .project-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-    }
-
-    .project-card:hover .project-image img {
-      transform: scale(1.1);
-    }
-
-    .project-image::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(26,35,126,0.1) 0%, transparent 50%, rgba(255,215,0,0.05) 100%);
-    }
-
-    .project-content {
-      padding: 2rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .project-content h3 {
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-
-    .project-content p {
-      margin-bottom: 1.5rem;
-      line-height: 1.7;
-    }
-
-    .project-progress {
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.8rem;
-      font-size: 0.9rem;
-    }
-
-    .progress-info span:first-child {
-      font-weight: 500;
-    }
-
-    .progress-info span:last-child {
-      font-weight: 700;
-    }
-
-    .progress {
-      height: 10px;
-      background-color: #e9ecef;
-      border-radius: 5px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar {
-      background: var(--gradient-secondary);
-      transition: width 0.8s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .progress-bar::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: progressShine 2s infinite;
-    }
-
-    @keyframes progressShine {
-      0% { left: -100%; }
-      100% { left: 100%; }
-    }
-
-    .progress-percentage {
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-top: 0.5rem;
-    }
-
-    /* Additional button visibility fixes */
-    .project-card .btn-outline-primary {
-      display: inline-flex !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: relative !important;
-      z-index: 10 !important;
-      width: 100% !important;
-      max-width: 250px !important;
-      margin: 1rem auto 0 !important;
-      text-align: center !important;
-      align-items: center !important;
-      justify-content: center !important;
-      align-self: flex-end !important;
-    }
-
-    .project-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Enhanced Modal */
-    .modal {
-      z-index: 9999 !important;
-    }
-
-    .modal-dialog {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .modal-content {
-      border-radius: 20px;
-      border: none;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-      background: white;
-      max-width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: modalSlideIn 0.3s ease-out;
-    }
-
-    @keyframes modalSlideIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-
-    .modal-header {
-      background: var(--gradient-primary);
-      color: white;
-      border-radius: 20px 20px 0 0;
-      border: none;
-      padding: 2rem 2.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .modal-title {
-      font-weight: 700;
-      font-size: 1.8rem;
-      margin: 0;
-    }
-
-    .btn-close {
-      filter: brightness(0) invert(1);
-      font-size: 1.5rem;
-      opacity: 0.8;
-      transition: opacity 0.3s ease;
-    }
-
-    .btn-close:hover {
-      opacity: 1;
-    }
-
-    .modal-body {
-      padding: 2.5rem;
-      background: white;
-      border-radius: 0 0 20px 20px;
-    }
-
-    .modal-footer {
-      padding: 1.5rem 2.5rem;
-      background: #f8f9fa;
-      border-radius: 0 0 20px 20px;
-      border-top: 1px solid #e9ecef;
-    }
-
-    .modal-backdrop {
-      background: rgba(0, 0, 0, 0.7) !important;
-      backdrop-filter: blur(5px);
-    }
-
-    /* Ensure modal is visible */
-    .modal.show {
-      display: flex !important;
-    }
-
-    .modal.show .modal-dialog {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .form-control {
-      border-radius: 10px;
-      border: 2px solid #e9ecef;
-      padding: 12px 15px;
-      transition: all 0.3s ease;
-    }
-
-    .form-control:focus {
-      border-color: var(--isnm-yellow);
-      box-shadow: 0 0 0 0.2rem rgba(255,215,0,0.25);
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: var(--isnm-dark-blue);
-      margin-bottom: 0.5rem;
-    }
-
-    /* Payment Method Cards */
-    .payment-methods {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .payment-method-card {
-      text-align: center;
-      cursor: pointer;
-    }
-
-    .payment-method-card:hover {
-      border-color: var(--isnm-yellow);
-    }
-
-    .payment-method-card.selected {
-      border: 2px solid var(--isnm-yellow) !important;
-      box-shadow: 0 5px 20px rgba(255,215,0,0.2);
-    }
-
-    .payment-method-card i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-
-    .payment-method-card .visa { color: #1a1f71; }
-    .payment-method-card .mastercard { color: #eb001b; }
-    .payment-method-card .mobile-money { color: #28a745; }
-    .payment-method-card .mtn { color: #ff6600; }
-    .payment-method-card .airtel { color: #ed1c24; }
-
-    .payment-method-card span {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #333;
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      .page-title {
-        font-size: 1.75rem;
-      }
-      
-      .donation-content {
-        padding: 2rem;
-      }
-      
-      .donation-image {
-        height: 350px;
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .impact-item {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem;
-      }
-      
-      .impact-icon {
-        margin-right: 0;
-        margin-bottom: 1rem;
-      }
-      
-      .donation-amounts li {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-      }
-      
-      .payment-methods {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 576px) {
-      .donation-image {
-        height: 280px;
-      }
-    }
-  </style>
 
   <main>
     <!-- Enhanced Page Header -->
@@ -727,51 +95,51 @@
         
         <div class="row g-4">
           <div class="col-lg-4">
-            <div class="donation-card">
+            <div class="donation-card" data-card="one-time">
               <div class="donation-icon">
                 <i class="fas fa-hand-holding-heart"></i>
               </div>
               <h3>One Time Donation</h3>
               <p>Make a single donation to support our immediate needs and ongoing programs</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 50,000</span> , Supports student learning materials</li>
-                <li><span class="amount">UGX 100,000</span> , Funds clinical training equipment</li>
-                <li><span class="amount">UGX 500,000</span> , Supports library resources</li>
-                <li><span class="amount">UGX 1,000,000</span> , Funds technology upgrades</li>
+                <li><span class="amount">UGX 50,000</span><span class="amount-desc">Supports student learning materials</span></li>
+                <li><span class="amount">UGX 100,000</span><span class="amount-desc">Funds clinical training equipment</span></li>
+                <li><span class="amount">UGX 500,000</span><span class="amount-desc">Supports library resources</span></li>
+                <li><span class="amount">UGX 1,000,000</span><span class="amount-desc">Funds technology upgrades</span></li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('one-time')">Donate Now</button>
             </div>
           </div>
           
           <div class="col-lg-4">
-            <div class="donation-card">
+            <div class="donation-card" data-card="monthly">
               <div class="donation-icon">
                 <i class="fas fa-sync-alt"></i>
               </div>
               <h3>Monthly Giving</h3>
               <p>Provide sustained support through monthly contributions</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 25,000/month</span> , Student meal support</li>
-                <li><span class="amount">UGX 50,000/month</span> , Textbook fund</li>
-                <li><span class="amount">UGX 100,000/month</span> , Technology maintenance</li>
-                <li><span class="amount">UGX 200,000/month</span> , Scholarship fund</li>
+                <li><span class="amount">UGX 25,000<span class="period">/month</span></span><span class="amount-desc">Student meal support</span></li>
+                <li><span class="amount">UGX 50,000<span class="period">/month</span></span><span class="amount-desc">Textbook fund</span></li>
+                <li><span class="amount">UGX 100,000<span class="period">/month</span></span><span class="amount-desc">Technology maintenance</span></li>
+                <li><span class="amount">UGX 200,000<span class="period">/month</span></span><span class="amount-desc">Scholarship fund</span></li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('monthly')">Give Monthly</button>
             </div>
           </div>
           
           <div class="col-lg-4">
-            <div class="donation-card">
+            <div class="donation-card" data-card="scholarship">
               <div class="donation-icon">
                 <i class="fas fa-award"></i>
               </div>
               <h3>Scholarship Fund</h3>
               <p>Support deserving students who cannot afford tuition fees</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 500,000</span> , Partial scholarship</li>
-                <li><span class="amount">UGX 1,000,000</span> , Half scholarship</li>
-                <li><span class="amount">UGX 2,000,000</span> , Full semester</li>
-                <li><span class="amount">UGX 4,000,000</span> , Full year scholarship</li>
+                <li><span class="amount">UGX 500,000</span><span class="amount-desc">Partial scholarship</span></li>
+                <li><span class="amount">UGX 1,000,000</span><span class="amount-desc">Half scholarship</span></li>
+                <li><span class="amount">UGX 2,000,000</span><span class="amount-desc">Full semester</span></li>
+                <li><span class="amount highlight">UGX 4,000,000</span><span class="amount-desc">Full year scholarship</span></li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('scholarship')">Fund Scholarship</button>
             </div>
@@ -809,7 +177,7 @@
                   </div>
                   <span class="progress-percentage">30% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary">Support This Project</button>
+                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'library')">Support This Project</button>
               </div>
             </div>
           </div>
@@ -832,7 +200,7 @@
                   </div>
                   <span class="progress-percentage">27% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary">Support This Project</button>
+                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'computer-lab')">Support This Project</button>
               </div>
             </div>
           </div>
@@ -855,7 +223,7 @@
                   </div>
                   <span class="progress-percentage">12.5% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary">Support This Project</button>
+                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'skills-lab')">Support This Project</button>
               </div>
             </div>
           </div>
@@ -878,7 +246,7 @@
                   </div>
                   <span class="progress-percentage">25% Complete</span>
                 </div>
-                <button class="btn btn-outline-primary">Support This Project</button>
+                <button class="btn btn-outline-primary" onclick="showDonationForm('project', 'hostel')">Support This Project</button>
               </div>
             </div>
           </div>
@@ -1110,13 +478,21 @@
     }
 
     // Show donation form with type
-    function showDonationForm(type) {
-      console.log('Opening donation form for type:', type);
+    function showDonationForm(type, purpose) {
+      console.log('Opening donation form for type:', type, 'purpose:', purpose);
       
       // Set donation type
       const donationTypeField = document.getElementById('donationType');
       if (donationTypeField) {
         donationTypeField.value = type;
+      }
+      
+      // Set donation purpose
+      const purposeField = document.getElementById('donationPurpose');
+      if (purposeField && purpose) {
+        purposeField.value = purpose;
+      } else if (purposeField) {
+        purposeField.value = '';
       }
       
       // Generate and set reference
