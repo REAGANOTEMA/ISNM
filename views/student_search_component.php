@@ -103,21 +103,7 @@ $filterOptions = $dataLoader->getFilterOptions();
     </div>
 </div>
 
-<?php
-$stats = $dataLoader->getStatistics();
-$fileSummary = $stats['excel_file_summary'] ?? [];
-?>
-<div class="small text-muted mb-2">
-  <i class="fas fa-database me-1"></i>
-  Searching <?php echo (int) $stats['total_students']; ?> student records from <?php echo (int) $stats['data_files']; ?> Excel file(s).
-</div>
-<?php if (!empty($fileSummary)): ?>
-<div class="small mb-3">
-  <?php foreach ($fileSummary as $file): ?>
-    <span class="badge bg-light text-dark me-1 mb-1"><?= htmlspecialchars($file['name']) ?> (<?= (int) $file['students'] ?>)</span>
-  <?php endforeach; ?>
-</div>
-<?php endif; ?>
+
 
 <!-- Student Results -->
 <?php if (!empty($searchTerm) || !empty(array_filter($filters))): ?>

@@ -122,38 +122,11 @@ if ($conn) {
 
   <section id="overview">
     <div class="row g-3 mb-4">
-      <?php $cards=[['Total Excel Students',$stats['total_students'],'users'],['Excel Files Scanned',$stats['data_files'],'file-excel'],['Pending Admissions',$pending_admissions,'user-check'],['Active Courses',$active_courses,'book'],['Pending Results',$pending_results,'clipboard-check'],['Clinical Placements',$clinical_active,'hospital-user'],['Absent Records',$overdue_attendance,'calendar-times'],['Fee Not Cleared',$fee_not_cleared,'exclamation-triangle']]; foreach($cards as $c): ?>
+      <?php $cards=[['Total Enrolled',$stats['total_students'],'users'],['Pending Admissions',$pending_admissions,'user-check'],['Active Courses',$active_courses,'book'],['Pending Results',$pending_results,'clipboard-check'],['Clinical Placements',$clinical_active,'hospital-user'],['Absent Records',$overdue_attendance,'calendar-times'],['Fee Not Cleared',$fee_not_cleared,'exclamation-triangle']]; foreach($cards as $c): ?>
       <div class="col-6 col-md-3"><div class="stat-card"><div class="fs-3 fw-bold"><?= $c[1] ?></div><div class="text-muted small"><i class="fas fa-<?= $c[2] ?> me-1"></i><?= $c[0] ?></div></div></div>
       <?php endforeach; ?>
     </div>
-    <div class="section-card">
-      <h5><i class="fas fa-database me-2"></i>Excel Data Search Coverage</h5>
-      <p class="mb-3">The universal search below reads every <code>.xlsx</code> and <code>.xlsm</code> file inside <code>students_data/</code>, including subfolders, and searches names, index numbers, NSIN, phone, email, program, level, set, year, source file, and course codes.</p>
-      <?php if (!empty($stats['excel_file_summary'])): ?>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered table-hover">
-            <thead class="table-light">
-              <tr>
-                <th>#</th>
-                <th>File Name</th>
-                <th class="text-end">Student Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach(($stats['excel_file_summary'] ?? []) as $i => $f): ?>
-                <tr>
-                  <td><?= $i + 1 ?></td>
-                  <td><code><?= htmlspecialchars($f['name']) ?></code></td>
-                  <td class="text-end"><span class="badge bg-primary"><?= (int)$f['students'] ?></span></td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      <?php else: ?>
-        <p class="text-muted small">No Excel files found in <code>students_data/</code>.</p>
-      <?php endif; ?>
-    </div>
+
   </section>
 
   <section id="admissions" class="section-card">
@@ -261,7 +234,7 @@ if ($conn) {
   <section id="reports" class="section-card">
     <h5><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h5>
     <div class="row g-3">
-      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $stats['total_students'] ?></div><small>Enrollment from Excel + DB</small></div></div>
+      <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $stats['total_students'] ?></div><small>Enrolled Students</small></div></div>
       <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $stats['total_programs'] ?></div><small>Programs</small></div></div>
       <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $stats['total_sets'] ?></div><small>Sets</small></div></div>
       <div class="col-md-3"><div class="border rounded p-3 text-center"><div class="fs-4 fw-bold"><?= $stats['total_years'] ?></div><small>Intake years</small></div></div>

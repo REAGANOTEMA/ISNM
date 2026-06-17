@@ -29,8 +29,6 @@ $total_students      = $overview['total_students'];
 $total_staff         = $overview['total_staff'];
 $total_applications  = $overview['website_applications'];
 $pending_apps        = $overview['pending_applications'];
-$student_data_files  = $overview['data_files'];
-
 // Load Excel file summary
 $loader = new StudentDataLoader();
 $excel_files_summary = $loader->getExcelFileSummary();
@@ -173,16 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     <?php if(!empty($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     <?php unset($_SESSION['success']); endif; ?>
-
-    <!-- DB STATUS -->
-    <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size:.82rem">
-      <i class="fas fa-database"></i>
-      <span>
-        <strong>staffs_db:</strong> <?= $total_staff ?> staff &nbsp;|&nbsp;
-        <strong>students_db:</strong> <?= (int)$overview['total_students_db'] ?> records &nbsp;|&nbsp;
-        <strong>students_data/:</strong> <?= $student_data_files ?> Excel file(s), <?= (int)$overview['total_students_files'] ?> profiles
-      </span>
-    </div>
 
     <!-- STATS -->
     <div class="row g-3 mb-4">
@@ -415,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
 
       <!-- Universal Student Search Component -->
-      <?= displayStudentSearchBox('Search for any student across all Excel files and database', 'dg_search') ?>
+      <?= displayStudentSearchBox('Search for any student by name or index number', 'dg_search') ?>
 
       <!-- Recent Students Grid - Click to view profile -->
       <div class="row g-3 mt-3">

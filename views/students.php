@@ -389,12 +389,7 @@ $flashMessages = getFlashMessages();
                                 </table>
                             </div>
 
-                            <!-- Data Source Info -->
-                            <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Data Source:</strong> Loaded from Excel files in students_data folder
-                                (<?php echo count($students); ?> students displayed)
-                            </div>
+
                         </div>
                     </div>
 
