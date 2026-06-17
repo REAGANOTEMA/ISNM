@@ -33,7 +33,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Certificate in Nursing</h3>
-                  <span class="program-duration">2Â½ Years</span>
+                  <span class="program-duration">2½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -79,7 +79,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Certificate in Midwifery</h3>
-                  <span class="program-duration">2Â½ Years</span>
+                  <span class="program-duration">2½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -125,7 +125,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Diploma in Nursing - Extension</h3>
-                  <span class="program-duration">1Â½ Years</span>
+                  <span class="program-duration">1½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -171,7 +171,7 @@
                 </div>
                 <div class="program-title">
                   <h3>Diploma in Midwifery - Extension</h3>
-                  <span class="program-duration">1Â½ Years</span>
+                  <span class="program-duration">1½ Years</span>
                 </div>
               </div>
               <div class="program-content">
@@ -233,7 +233,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Iganga Hospital</h4>
-                    <p>Government Hospital â€¢ 3km from school â€¢ 200 bed capacity</p>
+                    <p>Government Hospital • 3km from school • 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -243,7 +243,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Bugiri Hospital</h4>
-                    <p>Government Hospital â€¢ 30km from school â€¢ 200 bed capacity</p>
+                    <p>Government Hospital • 30km from school • 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -253,7 +253,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Tororo Hospital</h4>
-                    <p>Government Hospital â€¢ 50km from school â€¢ 200 bed capacity</p>
+                    <p>Government Hospital • 50km from school • 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -263,7 +263,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Busolwe Hospital</h4>
-                    <p>Government Hospital â€¢ 40km from school â€¢ 200 bed capacity</p>
+                    <p>Government Hospital • 40km from school • 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -273,7 +273,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Masafu Hospital</h4>
-                    <p>Government Hospital â€¢ 40km from school â€¢ 200 bed capacity</p>
+                    <p>Government Hospital • 40km from school • 200 bed capacity</p>
                   </div>
                 </div>
                 
@@ -283,7 +283,7 @@
                   </div>
                   <div class="hospital-info">
                     <h4>Mbale Regional Referral Hospital</h4>
-                    <p>Government Hospital â€¢ 80km from school â€¢ 300 bed capacity</p>
+                    <p>Government Hospital • 80km from school • 300 bed capacity</p>
                   </div>
                 </div>
               </div>

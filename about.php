@@ -237,7 +237,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Certificate in Nursing</h3>
-                  <p>Duration: 2Â½ years</p>
+                  <p>Duration: 2½ years</p>
                   <p>Comprehensive nursing program with theoretical and practical training</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Certificate in Midwifery</h3>
-                  <p>Duration: 2Â½ years</p>
+                  <p>Duration: 2½ years</p>
                   <p>Specialized midwifery program with hands on delivery experience</p>
                 </div>
               </div>
@@ -257,7 +257,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Diploma in Nursing â€“ Extension</h3>
-                  <p>Duration: 1Â½ years</p>
+                  <p>Duration: 1½ years</p>
                   <p>Advanced program for enrolled nurses seeking diploma qualification</p>
                 </div>
               </div>
@@ -267,7 +267,7 @@
                 </div>
                 <div class="program-details">
                   <h3>Diploma in Midwifery â€“ Extension</h3>
-                  <p>Duration: 1Â½ years</p>
+                  <p>Duration: 1½ years</p>
                   <p>Advanced program for enrolled midwives</p>
                 </div>
               </div>

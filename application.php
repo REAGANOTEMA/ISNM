@@ -2,37 +2,8 @@
 
   <main>
 
-      <!-- Perfect Mobile Application Introduction -->
       <section class="application-intro py-5">
         <div class="container">
-          <div class="row">
-            <div class="col-12">
-              <div class="school-banner animate-fade-in">
-                <div class="school-info">
-                  <h2 class="school-title">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h2>
-                  <div class="school-details">
-                    <p><i class="fas fa-map-marker-alt"></i> P.O. Box 418, Iganga</p>
-                    <p><i class="fas fa-phone"></i> 0782 990 403 | 0782 633 253 | 0753 393 340 | 0703 999 796</p>
-                    <p><i class="fas fa-envelope"></i> iganganursingschool@gmail.com</p>
-                    <p><i class="fas fa-globe"></i> www.isnm.ac.ug</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="row">
-            <div class="col-12 text-center mb-5">
-              <div class="announcement-card animate-slide-up">
-                <div class="announcement-icon">
-                  <i class="fas fa-bullhorn"></i>
-                </div>
-                <h3 class="announcement-title">SPECIAL ANNOUNCEMENT</h3>
-                <p class="announcement-text">The Principal of Iganga School of Nursing & Midwifery, Iganga Campus cordially invites suitable applicants for Certificate Courses in Nursing & Midwifery and Diploma Extension programs in Nursing and Midwifery for JUNE/JULY, 2026 INTAKE (PICKING OF APPLICATIONS IS IN PROGRESS)</p>
-              </div>
-            </div>
-          </div>
-          
           <div class="row">
             <div class="col-lg-6 col-md-12 mb-4">
               <div class="requirements-card animate-fade-in">
