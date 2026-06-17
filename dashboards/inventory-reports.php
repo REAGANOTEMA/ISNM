@@ -70,7 +70,7 @@ foreach ($reports as $report) {
             <header class="dashboard-header">
                 <div class="header-left">
                     <h1>Inventory Reports</h1>
-                    <p>Department-level reporting and resolution tracking for stores, sickbay, food service, and campus support.</p>
+                    <p>Department level reporting and resolution tracking for stores, sickbay, food service, and campus support.</p>
                 </div>
                 <div class="header-right">
                     <div class="d-flex align-items-center gap-2 me-3">

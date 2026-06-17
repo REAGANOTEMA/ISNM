@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISNM Management Systems - Home</title>
+    <title>ISNM Management Systems | Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -509,7 +509,7 @@
                 </div>
                 <div class="info-item">
                     <h3>🔒 Secure</h3>
-                    <p>Password hashing, prepared statements, input sanitization, role-based access, and activity logging.</p>
+                    <p>Password hashing, prepared statements, input sanitization, role based access, and activity logging.</p>
                 </div>
                 <div class="info-item">
                     <h3>📱 Responsive</h3>
@@ -521,7 +521,7 @@
                 </div>
                 <div class="info-item">
                     <h3>📊 Analytics</h3>
-                    <p>Real-time dashboards with statistics, charts, and comprehensive reporting capabilities.</p>
+                    <p>Real time dashboards with statistics, charts, and comprehensive reporting capabilities.</p>
                 </div>
                 <div class="info-item">
                     <h3>🔄 Integration</h3>
@@ -533,7 +533,7 @@
         <!-- Footer -->
         <div class="footer">
             <p><strong>ISNM Financial & HR Management Systems</strong></p>
-            <p>Professional • Complete • Production-Ready</p>
+            <p>Professional • Complete • Production Ready</p>
             <p>© 2025 Iganga School of Nursing and Midwifery. All rights reserved.</p>
             <p style="margin-top: 20px; font-size: 11px; color: #999;">
                 For support and customization, contact your system administrator.

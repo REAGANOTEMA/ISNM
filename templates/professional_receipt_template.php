@@ -8,7 +8,7 @@ function generateProfessionalReceipt($data) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Official Receipt - ISNM</title>
+    <title>Official Receipt | ISNM</title>
     <style>
         body {
             font-family: Arial, sans-serif;

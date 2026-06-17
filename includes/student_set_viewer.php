@@ -191,7 +191,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             <div class="col-md-3">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-layer-group me-1"></i>Set / Intake</label>
                 <select name="set_name" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— All Sets —</option>
+                    <option value="">All Sets</option>
                     <?php foreach ($sets as $s): ?>
                         <option value="<?= htmlspecialchars($s) ?>" <?= $selectedSet === $s ? 'selected' : '' ?>><?= htmlspecialchars($s) ?></option>
                     <?php endforeach; ?>
@@ -200,7 +200,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             <div class="col-md-2">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-graduation-cap me-1"></i>Program</label>
                 <select name="program" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— All Programs —</option>
+                    <option value="">All Programs</option>
                     <?php foreach ($programs as $p): ?>
                         <option value="<?= htmlspecialchars($p) ?>" <?= $selectedProgram === $p ? 'selected' : '' ?>><?= htmlspecialchars($p) ?></option>
                     <?php endforeach; ?>
@@ -209,7 +209,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             <div class="col-md-2">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-layer-group me-1"></i>Level</label>
                 <select name="level" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">— All —</option>
+                    <option value=""> , All , </option>
                     <?php foreach ($levels as $l): ?>
                         <option value="<?= htmlspecialchars($l) ?>" <?= $selectedLevel === $l ? 'selected' : '' ?>><?= htmlspecialchars($l) ?></option>
                     <?php endforeach; ?>
@@ -284,9 +284,9 @@ function renderStudentSetViewer($conn, array $options = []) {
                                     <br><small class="text-muted">Index: <?= htmlspecialchars($stu['index_number']) ?></small>
                                 <?php endif; ?>
                             </td>
-                            <td><code><?= htmlspecialchars($stu['student_id'] ?? $stu['student_number'] ?? '—') ?></code></td>
-                            <td><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></td>
-                            <td><?= htmlspecialchars($stu['level'] ?? '—') ?></td>
+                            <td><code><?= htmlspecialchars($stu['student_id'] ?? $stu['student_number'] ?? '-') ?></code></td>
+                            <td><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($stu['level'] ?? '-') ?></td>
                             <td class="phone-cell">
                                 <?php if (!empty($stu['phone'])): ?>
                                     <a href="tel:<?= htmlspecialchars($stu['phone']) ?>" class="text-decoration-none"><i class="fas fa-phone-alt me-1"></i><?= htmlspecialchars($stu['phone']) ?></a>
@@ -296,7 +296,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                     <a href="tel:<?= htmlspecialchars($stu['mobile_number']) ?>" class="badge bg-info text-dark text-decoration-none mt-1"><i class="fas fa-mobile-alt me-1"></i><?= htmlspecialchars($stu['mobile_number']) ?></a>
                                 <?php endif; ?>
                                 <?php if (empty($stu['phone']) && empty($stu['mobile_number'])): ?>
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted"> , </span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -393,7 +393,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                             <div class="info-block">
                                                 <div class="info-label"><i class="fas fa-graduation-cap me-1 text-success"></i>Academic</div>
                                                 <div class="info-value">
-                                                    <div><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></div>
+                                                    <div><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '-') ?></div>
                                                     <?php if (!empty($stu['level'])): ?><small>Level: <?= htmlspecialchars($stu['level']) ?></small><?php endif; ?>
                                                     <?php if (!empty($stu['current_semester'])): ?><small> | <?= htmlspecialchars($stu['current_semester']) ?></small><?php endif; ?>
                                                 </div>
@@ -453,7 +453,7 @@ function renderStudentSetViewer($conn, array $options = []) {
 
                                     <div class="mt-2 pt-2 border-top d-flex flex-wrap justify-content-between align-items-center">
                                         <small class="text-muted">
-                                            <i class="fas fa-calendar-alt me-1"></i>Created: <?= !empty($stu['created_at']) ? date('d M Y', strtotime($stu['created_at'])) : '—' ?>
+                                            <i class="fas fa-calendar-alt me-1"></i>Created: <?= !empty($stu['created_at']) ? date('d M Y', strtotime($stu['created_at'])) : '-' ?>
                                             <?php if (!empty($stu['intake_date'])): ?> | Intake: <?= date('d M Y', strtotime($stu['intake_date'])) ?><?php endif; ?>
                                         </small>
                                         <div class="d-flex gap-1">
@@ -781,11 +781,11 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                                 <a href="tel:<?= htmlspecialchars($stu['mobile_number']) ?>" class="badge bg-info text-dark fs-6 text-decoration-none"><i class="fas fa-mobile-alt me-1"></i><?= htmlspecialchars($stu['mobile_number']) ?></a>
                             <?php endif; ?>
                         </div>
-                        <p class="mb-1"><strong>Program:</strong> <?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></p>
+                        <p class="mb-1"><strong>Program:</strong> <?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '-') ?></p>
                         <p class="mb-1">
-                            <strong>Set:</strong> <?= htmlspecialchars($stu['set_name'] ?? '—') ?> &nbsp;|&nbsp;
-                            <strong>Level:</strong> <?= htmlspecialchars($stu['level'] ?? '—') ?> &nbsp;|&nbsp;
-                            <strong>Year:</strong> <?= htmlspecialchars($stu['current_year'] ?? $stu['year'] ?? '—') ?>
+                            <strong>Set:</strong> <?= htmlspecialchars($stu['set_name'] ?? '-') ?> &nbsp;|&nbsp;
+                            <strong>Level:</strong> <?= htmlspecialchars($stu['level'] ?? '-') ?> &nbsp;|&nbsp;
+                            <strong>Year:</strong> <?= htmlspecialchars($stu['current_year'] ?? $stu['year'] ?? '-') ?>
                         </p>
                     </div>
                     <div class="col-md-4 text-md-end">
@@ -793,7 +793,7 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                             <?= htmlspecialchars($stu['status'] ?? 'Active') ?>
                         </span>
                         <div class="mt-2">
-                            <small class="text-muted">Student ID: <?= htmlspecialchars($stu['student_id'] ?? $stu['student_number'] ?? '—') ?></small>
+                            <small class="text-muted">Student ID: <?= htmlspecialchars($stu['student_id'] ?? $stu['student_number'] ?? '-') ?></small>
                         </div>
                     </div>
                 </div>
@@ -809,13 +809,13 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                     <div class="card-body p-3">
                         <table class="table table-sm table-borderless mb-0 profile-detail-table">
                             <tr><td class="text-muted" style="width:40%">Full Name</td><td><strong><?= htmlspecialchars($stu['full_name'] ?: trim($stu['first_name'] . ' ' . ($stu['other_name'] ?? '') . ' ' . $stu['surname'])) ?></strong></td></tr>
-                            <tr><td class="text-muted">First Name</td><td><?= htmlspecialchars($stu['first_name'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Surname</td><td><?= htmlspecialchars($stu['surname'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Other Name</td><td><?= htmlspecialchars($stu['other_name'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Gender</td><td><?= htmlspecialchars($stu['gender'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Date of Birth</td><td><?= !empty($stu['date_of_birth']) ? date('d F Y', strtotime($stu['date_of_birth'])) : '—' ?></td></tr>
-                            <tr><td class="text-muted">Nationality</td><td><?= htmlspecialchars($stu['nationality'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Address</td><td><?= nl2br(htmlspecialchars($stu['address'] ?? '—')) ?></td></tr>
+                            <tr><td class="text-muted">First Name</td><td><?= htmlspecialchars($stu['first_name'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Surname</td><td><?= htmlspecialchars($stu['surname'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Other Name</td><td><?= htmlspecialchars($stu['other_name'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Gender</td><td><?= htmlspecialchars($stu['gender'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Date of Birth</td><td><?= !empty($stu['date_of_birth']) ? date('d F Y', strtotime($stu['date_of_birth'])) : '-' ?></td></tr>
+                            <tr><td class="text-muted">Nationality</td><td><?= htmlspecialchars($stu['nationality'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Address</td><td><?= nl2br(htmlspecialchars($stu['address'] ?? '-')) ?></td></tr>
                         </table>
                     </div>
                 </div>
@@ -827,15 +827,15 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                     <div class="card-header bg-success text-white py-2"><strong><i class="fas fa-graduation-cap me-2"></i>Academic Information</strong></div>
                     <div class="card-body p-3">
                         <table class="table table-sm table-borderless mb-0 profile-detail-table">
-                            <tr><td class="text-muted" style="width:40%">Program / Course</td><td><strong><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '—') ?></strong></td></tr>
-                            <tr><td class="text-muted">Student Number</td><td><?= htmlspecialchars($stu['student_number'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Registration Number</td><td><?= htmlspecialchars($stu['registration_number'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Index Number</td><td><?= htmlspecialchars($stu['index_number'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">National Student ID</td><td><?= htmlspecialchars($stu['national_student_id_number'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Set / Intake</td><td><?= htmlspecialchars($stu['set_name'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Level / Year</td><td><?= htmlspecialchars($stu['level'] ?? '—') ?> (<?= htmlspecialchars($stu['current_year'] ?? $stu['year'] ?? '—') ?>)</td></tr>
-                            <tr><td class="text-muted">Current Semester</td><td><?= htmlspecialchars($stu['current_semester'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Intake Date</td><td><?= !empty($stu['intake_date']) ? date('d F Y', strtotime($stu['intake_date'])) : '—' ?></td></tr>
+                            <tr><td class="text-muted" style="width:40%">Program / Course</td><td><strong><?= htmlspecialchars($stu['program'] ?: $stu['course'] ?: '-') ?></strong></td></tr>
+                            <tr><td class="text-muted">Student Number</td><td><?= htmlspecialchars($stu['student_number'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Registration Number</td><td><?= htmlspecialchars($stu['registration_number'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Index Number</td><td><?= htmlspecialchars($stu['index_number'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">National Student ID</td><td><?= htmlspecialchars($stu['national_student_id_number'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Set / Intake</td><td><?= htmlspecialchars($stu['set_name'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Level / Year</td><td><?= htmlspecialchars($stu['level'] ?? '-') ?> (<?= htmlspecialchars($stu['current_year'] ?? $stu['year'] ?? '-') ?>)</td></tr>
+                            <tr><td class="text-muted">Current Semester</td><td><?= htmlspecialchars($stu['current_semester'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Intake Date</td><td><?= !empty($stu['intake_date']) ? date('d F Y', strtotime($stu['intake_date'])) : '-' ?></td></tr>
                         </table>
                     </div>
                 </div>
@@ -847,9 +847,9 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                     <div class="card-header bg-warning text-dark py-2"><strong><i class="fas fa-address-book me-2"></i>Contact Information</strong></div>
                     <div class="card-body p-3">
                         <table class="table table-sm table-borderless mb-0 profile-detail-table">
-                            <tr><td class="text-muted" style="width:40%">Phone</td><td><strong><?= htmlspecialchars($stu['phone'] ?? '—') ?></strong></td></tr>
-                            <tr><td class="text-muted">Mobile Number</td><td><?= htmlspecialchars($stu['mobile_number'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Email</td><td><?= htmlspecialchars($stu['email'] ?? '—') ?></td></tr>
+                            <tr><td class="text-muted" style="width:40%">Phone</td><td><strong><?= htmlspecialchars($stu['phone'] ?? '-') ?></strong></td></tr>
+                            <tr><td class="text-muted">Mobile Number</td><td><?= htmlspecialchars($stu['mobile_number'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Email</td><td><?= htmlspecialchars($stu['email'] ?? '-') ?></td></tr>
                         </table>
                     </div>
                 </div>
@@ -861,11 +861,11 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                     <div class="card-header bg-danger text-white py-2"><strong><i class="fas fa-shield-alt me-2"></i>Emergency & Guardian</strong></div>
                     <div class="card-body p-3">
                         <table class="table table-sm table-borderless mb-0 profile-detail-table">
-                            <tr><td class="text-muted" style="width:40%">Emergency Contact</td><td><strong><?= htmlspecialchars($stu['emergency_contact_name'] ?? '—') ?></strong></td></tr>
-                            <tr><td class="text-muted">Emergency Phone</td><td><?= htmlspecialchars($stu['emergency_contact_phone'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Emergency Email</td><td><?= htmlspecialchars($stu['emergency_contact_email'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Guardian Name</td><td><?= htmlspecialchars($stu['guardian_name'] ?? '—') ?></td></tr>
-                            <tr><td class="text-muted">Guardian Phone</td><td><?= htmlspecialchars($stu['guardian_phone'] ?? '—') ?></td></tr>
+                            <tr><td class="text-muted" style="width:40%">Emergency Contact</td><td><strong><?= htmlspecialchars($stu['emergency_contact_name'] ?? '-') ?></strong></td></tr>
+                            <tr><td class="text-muted">Emergency Phone</td><td><?= htmlspecialchars($stu['emergency_contact_phone'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Emergency Email</td><td><?= htmlspecialchars($stu['emergency_contact_email'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Guardian Name</td><td><?= htmlspecialchars($stu['guardian_name'] ?? '-') ?></td></tr>
+                            <tr><td class="text-muted">Guardian Phone</td><td><?= htmlspecialchars($stu['guardian_phone'] ?? '-') ?></td></tr>
                         </table>
                     </div>
                 </div>
@@ -879,8 +879,8 @@ function renderFullStudentProfile($stu, $conn, $showStatementLink = false) {
                         <div class="row">
                             <div class="col-md-3"><small class="text-muted">Status</small><br><span class="badge bg-<?= ($stu['status'] ?? 'Active') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($stu['status'] ?? 'Active') ?></span></div>
                             <div class="col-md-3"><small class="text-muted">First Login</small><br><?= $stu['is_first_login'] ? '<span class="badge bg-warning text-dark">Yes</span>' : '<span class="badge bg-success">No</span>' ?></div>
-                            <div class="col-md-3"><small class="text-muted">Created</small><br><?= !empty($stu['created_at']) ? date('d M Y H:i', strtotime($stu['created_at'])) : '—' ?></div>
-                            <div class="col-md-3"><small class="text-muted">Last Updated</small><br><?= !empty($stu['updated_at']) ? date('d M Y H:i', strtotime($stu['updated_at'])) : '—' ?></div>
+                            <div class="col-md-3"><small class="text-muted">Created</small><br><?= !empty($stu['created_at']) ? date('d M Y H:i', strtotime($stu['created_at'])) : '-' ?></div>
+                            <div class="col-md-3"><small class="text-muted">Last Updated</small><br><?= !empty($stu['updated_at']) ? date('d M Y H:i', strtotime($stu['updated_at'])) : '-' ?></div>
                         </div>
                     </div>
                 </div>

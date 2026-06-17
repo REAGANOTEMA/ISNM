@@ -240,7 +240,7 @@
                     <div style="display: inline;">
                   
                     <b><a href="buspanel.php" class="link-btn">Bus Panel</a></b><br>
-                    <b><a href="fee-payment.php" class="link-btn">Pay-Fee</a></b>
+                    <b><a href="fee-payment.php" class="link-btn">Pay Fee</a></b>
                     
                     </div>
                 </div>

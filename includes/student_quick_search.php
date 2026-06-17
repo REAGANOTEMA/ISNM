@@ -128,8 +128,8 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
         var html = '<div class="list-group list-group-flush">';
         data.students.forEach(function(s, i){
             var name = s.full_name || (s.first_name + ' ' + (s.other_name||'') + ' ' + s.surname).trim() || 'Unknown';
-            var sid = s.student_id || s.student_number || s.index_number || '—';
-            var prog = s.program || s.level || '—';
+            var sid = s.student_id || s.student_number || s.index_number || '-';
+            var prog = s.program || s.level || '-';
             var phone = s.phone || s.mobile_number || '';
             var hasPhoto = (s.passport_photo || s.profile_picture);
             var initials = (s.first_name ? s.first_name[0] : 'S') + (s.surname ? s.surname[0] : 'T');

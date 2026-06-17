@@ -58,7 +58,7 @@ if ($staffDb) {
                         <?php foreach ($expenditures as $exp): ?>
                         <tr>
                             <?php foreach ($exp as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '—') ?></td>
+                            <td><?= htmlspecialchars($val ?? '-') ?></td>
                             <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>

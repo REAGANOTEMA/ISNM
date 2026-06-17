@@ -22,7 +22,7 @@ if ($login_success) { unset($_SESSION['success']); }
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Student Login — ISNM</title>
+  <title>Student Login | ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -309,6 +309,212 @@ if ($login_success) { unset($_SESSION['success']); }
     .logo-wrap img { width: 68px; height: 68px; }
     .link-row { flex-direction: column; gap: 8px; }
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     PREMIUM MODERN ENHANCEMENTS
+     ═══════════════════════════════════════════════════════════════ */
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 50%, rgba(255,214,0,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 30%, rgba(255,255,255,0.04) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 80%, rgba(46,125,50,0.07) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: ambientGlow 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes ambientGlow {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  .logo-wrap .ring-deco {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,214,0,0.12);
+    pointer-events: none;
+  }
+
+  .logo-wrap .ring-deco:nth-child(1) {
+    top: -8px; left: -8px; right: -8px; bottom: -8px;
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+
+  .logo-wrap .ring-deco:nth-child(2) {
+    top: -15px; left: -15px; right: -15px; bottom: -15px;
+    border-color: rgba(255,214,0,0.07);
+    animation: ringPulse 3s ease-in-out 1s infinite;
+  }
+
+  .logo-wrap .ring-deco:nth-child(3) {
+    top: -22px; left: -22px; right: -22px; bottom: -22px;
+    border-color: rgba(255,214,0,0.04);
+    animation: ringPulse 3s ease-in-out 2s infinite;
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.06); opacity: 1; }
+  }
+
+  .login-card::before,
+  .login-card::after {
+    content: '';
+    position: absolute;
+    width: 60px; height: 60px;
+    border: 2px solid rgba(255,214,0,0.1);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .login-card::before {
+    top: 10px; left: 10px;
+    border-right: none; border-bottom: none;
+    border-radius: 4px 0 0 0;
+  }
+
+  .login-card::after {
+    bottom: 10px; right: 10px;
+    border-left: none; border-top: none;
+    border-radius: 0 0 4px 0;
+  }
+
+  .info-block {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .info-block::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -50%;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hint-pill {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .hint-pill:hover {
+    background: rgba(255,255,255,0.2) !important;
+    transform: scale(1.03);
+  }
+
+  .form-group {
+    position: relative;
+  }
+
+  .form-group .input-highlight {
+    position: absolute;
+    bottom: 0; left: 50%;
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: all 0.3s ease;
+    border-radius: 2px;
+    z-index: 3;
+  }
+
+  .input-group:focus-within ~ .input-highlight,
+  .form-control:focus ~ .input-highlight {
+    width: 80%;
+    left: 10%;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1.1rem;
+    z-index: 3;
+    transition: color 0.2s ease;
+  }
+
+  .password-toggle:hover { color: var(--primary); }
+
+  .btn-login .spinner-layer {
+    display: none;
+    width: 20px; height: 20px;
+    border: 2.5px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .btn-login.loading .spinner-layer { display: inline-block; }
+  .btn-login.loading .btn-text { opacity: 0.7; }
+  .btn-login.loading { pointer-events: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-group {
+    animation: slideUpFade 0.5s ease-out backwards;
+  }
+
+  .form-group:nth-child(1) { animation-delay: 0.1s; }
+  .form-group:nth-child(2) { animation-delay: 0.15s; }
+  .form-group:nth-child(3) { animation-delay: 0.2s; }
+  .form-group:nth-child(4) { animation-delay: 0.25s; }
+  .btn-login { animation: slideUpFade 0.5s ease-out 0.3s backwards; }
+  .info-block { animation: slideUpFade 0.5s ease-out 0.4s backwards; }
+  .link-row { animation: slideUpFade 0.5s ease-out 0.45s backwards; }
+
+  @keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .particle {
+    mix-blend-mode: overlay;
+  }
+
+  .particle.type-star {
+    background: transparent;
+    border: none;
+    width: 0 !important; height: 0 !important;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 7px solid rgba(255,214,0,0.08);
+  }
+
+  .login-header h1 {
+    position: relative;
+    display: inline-block;
+  }
+
+  .login-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  }
+
+  @media (min-width: 1200px) {
+    .login-wrapper { max-width: 540px; }
+  }
+
+  @media(max-width:380px) {
+    .login-body { padding: 16px 12px; }
+    .form-control { padding: 12px 14px 12px 46px; font-size: 13px; }
+  }
   </style>
 </head>
 <body>
@@ -320,10 +526,13 @@ if ($login_success) { unset($_SESSION['success']); }
     <div class="login-header">
       <div class="header-inner">
         <div class="logo-wrap">
+          <div class="ring-deco"></div>
+          <div class="ring-deco"></div>
+          <div class="ring-deco"></div>
           <img src="images/school-logo.png" alt="ISNM Logo">
         </div>
         <h1>Student Portal</h1>
-        <p>Secure student access — ISNM Learning Management System</p>
+        <p>Secure student access , ISNM Learning Management System</p>
         <?php if ($student_hint): ?>
           <div class="hint-pill">
             <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($student_hint); ?>
@@ -392,12 +601,17 @@ if ($login_success) { unset($_SESSION['success']); }
             <span class="input-group-text"><i class="fas fa-lock"></i></span>
             <input id="stu-password" name="password" class="form-control" type="password" 
                    placeholder="Enter your password (if already set)" autocomplete="current-password">
+            <button type="button" class="password-toggle" id="toggle-stu-password" tabindex="-1" aria-label="Toggle password visibility">
+              <i class="fas fa-eye"></i>
+            </button>
+            <div class="input-highlight"></div>
           </div>
           <div class="form-text">First time? Leave blank to set your password.</div>
         </div>
 
-        <button type="submit" class="btn-login">
-          <i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal
+        <button type="submit" class="btn-login" id="btn-submit">
+          <span class="spinner-layer"></span>
+          <span class="btn-text"><i class="fas fa-sign-in-alt me-2"></i>Login to Student Portal</span>
         </button>
       </form>
 
@@ -418,21 +632,50 @@ if ($login_success) { unset($_SESSION['success']); }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Create floating particles
+  // ── Floating particles (enhanced) ──
   const container = document.getElementById('particles');
-  for (let i = 0; i < 15; i++) {
+  const particleCount = 18;
+  const shapes = ['circle', 'star'];
+  
+  for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
-    particle.className = 'particle';
-    const size = 2 + Math.random() * 4;
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    particle.className = 'particle' + (shape === 'star' ? ' type-star' : '');
+    const size = 2 + Math.random() * 5;
     particle.style.width = size + 'px';
     particle.style.height = size + 'px';
     particle.style.left = Math.random() * 100 + '%';
-    particle.style.animationDuration = (10 + Math.random() * 15) + 's';
+    particle.style.animationDuration = (12 + Math.random() * 18) + 's';
     particle.style.animationDelay = Math.random() * 10 + 's';
+    if (shape === 'star') {
+      particle.style.borderBottomWidth = (size * 1.5) + 'px';
+      particle.style.borderLeftWidth = (size * 0.9) + 'px';
+      particle.style.borderRightWidth = (size * 0.9) + 'px';
+    }
     container.appendChild(particle);
   }
 
-  // iOS viewport guard
+  // ── Password visibility toggle ──
+  const toggleBtn = document.getElementById('toggle-stu-password');
+  const pwdInput = document.getElementById('stu-password');
+  if (toggleBtn && pwdInput) {
+    toggleBtn.addEventListener('click', function() {
+      const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      pwdInput.setAttribute('type', type);
+      this.querySelector('i').className = 'fas fa-' + (type === 'password' ? 'eye' : 'eye-slash');
+    });
+  }
+
+  // ── Loading state on submit ──
+  const form = document.querySelector('form');
+  const btn = document.getElementById('btn-submit');
+  if (form && btn) {
+    form.addEventListener('submit', function() {
+      btn.classList.add('loading');
+    });
+  }
+
+  // ── iOS viewport guard ──
   const m = 'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no';
   document.querySelectorAll('input[type="email"],input[type="password"],input[type="text"],input[type="tel"]').forEach(function(el) {
     el.addEventListener('focus', function() { 

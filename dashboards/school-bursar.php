@@ -471,7 +471,7 @@ $pageTitle = 'Bursar Dashboard';
         <a href="?view=financial_reports" class="ab"><i class="fas fa-chart-bar"></i><span>Financial Reports</span></a>
         <a href="?view=budget" class="ab"><i class="fas fa-wallet"></i><span>Budget</span></a>
         <a href="?view=daily_collections" class="ab"><i class="fas fa-list-ol"></i><span>Daily Collections</span></a>
-        <a href="payment-subscriptions.php" class="ab"><i class="fas fa-sync"></i><span>Auto-Deductions</span></a>
+        <a href="payment-subscriptions.php" class="ab"><i class="fas fa-sync"></i><span>Auto Deductions</span></a>
     </div>
 
     <!-- ── Payment Provider Logos ───────────────────────────────── -->
@@ -859,8 +859,8 @@ echo $budgetRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No 
             <p><strong>Processed By:</strong> School Bursar</p>
         </div>
         <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px dashed #999">
-            <p style="font-size:12px;color:#666">This is a computer-generated receipt and is valid without signature.</p>
-            <p style="font-size:12px;color:#666">"Chosen to Serve" - Disciplined Mind for Health Action</p>
+            <p style="font-size:12px;color:#666">This is a computer generated receipt and is valid without signature.</p>
+            <p style="font-size:12px;color:#666">"Chosen to Serve" , Disciplined Mind for Health Action</p>
         </div>
     </div>
 
@@ -1005,7 +1005,7 @@ function generateReport(){
 function exportReportExcel(){
     var tbl = document.getElementById('rptTable');
     if(!tbl) return;
-    var html = '<html><head><meta charset="UTF-8"><title>Financial Report - ISNM</title><style>td,th{border:1px solid #ccc;padding:6px 10px}th{background:#1a237e;color:#fff;font-weight:600}</style></head><body>'+tbl.outerHTML+'</body></html>';
+    var html = '<html><head><meta charset="UTF-8"><title>Financial Report | ISNM</title><style>td,th{border:1px solid #ccc;padding:6px 10px}th{background:#1a237e;color:#fff;font-weight:600}</style></head><body>'+tbl.outerHTML+'</body></html>';
     var blob = new Blob([html], {type:'application/vnd.ms-excel'});
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'financial_report_'+new Date().toISOString().slice(0,10)+'.xls'; a.click();

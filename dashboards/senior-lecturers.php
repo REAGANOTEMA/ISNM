@@ -228,7 +228,7 @@ if ($conn) {
                             <div class="course-card">
                                 <div class="course-header">
                                     <h4><?= htmlspecialchars($course['course_name'] ?? 'Course') ?></h4>
-                                    <span class="course-code"><?= htmlspecialchars($course['course_code'] ?? '—') ?></span>
+                                    <span class="course-code"><?= htmlspecialchars($course['course_code'] ?? '-') ?></span>
                                 </div>
                                 <div class="course-details">
                                     <div class="detail">
@@ -241,11 +241,11 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Level:</span>
-                                        <strong><?= htmlspecialchars($course['level'] ?? '—') ?></strong>
+                                        <strong><?= htmlspecialchars($course['level'] ?? '-') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Semester:</span>
-                                        <strong><?= htmlspecialchars($course['semester'] ?? $course['academic_year'] ?? '—') ?></strong>
+                                        <strong><?= htmlspecialchars($course['semester'] ?? $course['academic_year'] ?? '-') ?></strong>
                                     </div>
                                 </div>
                                 <div class="course-actions">
@@ -287,12 +287,12 @@ if ($conn) {
                             <div class="schedule-item">
                                 <div class="schedule-header">
                                     <h4><?= htmlspecialchars($slot['course_name'] ?? $slot['course_code'] ?? 'Lecture') ?></h4>
-                                    <span class="schedule-time"><?= htmlspecialchars($slot['start_time'] ?? '—') ?> - <?= htmlspecialchars($slot['end_time'] ?? '—') ?></span>
+                                    <span class="schedule-time"><?= htmlspecialchars($slot['start_time'] ?? '-') ?> to <?= htmlspecialchars($slot['end_time'] ?? '-') ?></span>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="detail">
                                         <span>Room:</span>
-                                        <strong><?= htmlspecialchars($slot['room'] ?? $slot['venue'] ?? '—') ?></strong>
+                                        <strong><?= htmlspecialchars($slot['room'] ?? $slot['venue'] ?? '-') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Topic:</span>
@@ -348,7 +348,7 @@ if ($conn) {
                             <div class="perf-stat">
                                 <h4>Assignment Completion</h4>
                                 <div class="completion-rate">87%</div>
-                                <small>On-time submission</small>
+                                <small>On time submission</small>
                             </div>
                             <div class="perf-stat">
                                 <h4>At Risk Students</h4>
@@ -399,7 +399,7 @@ if ($conn) {
                             <div class="assessment-item">
                                 <div class="assessment-header">
                                     <h4><?= htmlspecialchars($asm['title'] ?? ($asm['course_name'] ?? 'Assessment')) ?></h4>
-                                    <span class="assessment-date"><?= !empty($asm['created_at']) ? date('M j, Y', strtotime($asm['created_at'])) : '—' ?></span>
+                                    <span class="assessment-date"><?= !empty($asm['created_at']) ? date('M j, Y', strtotime($asm['created_at'])) : '-' ?></span>
                                 </div>
                                 <div class="assessment-details">
                                     <div class="detail">
@@ -408,7 +408,7 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Course:</span>
-                                        <strong><?= htmlspecialchars($asm['course_name'] ?? '—') ?></strong>
+                                        <strong><?= htmlspecialchars($asm['course_name'] ?? '-') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Status:</span>
@@ -507,7 +507,7 @@ if ($conn) {
                                     <?php if (!empty($res['file_size'])): ?>
                                     <div class="detail"><span>Size:</span><strong><?= number_format((float)$res['file_size']/1048576, 1) ?> MB</strong></div>
                                     <?php endif; ?>
-                                    <div class="detail"><span>Uploaded:</span><strong><?= !empty($res['created_at']) ? date('M j, Y', strtotime($res['created_at'])) : '—' ?></strong></div>
+                                    <div class="detail"><span>Uploaded:</span><strong><?= !empty($res['created_at']) ? date('M j, Y', strtotime($res['created_at'])) : '-' ?></strong></div>
                                     <?php if (!empty($res['download_count'])): ?>
                                     <div class="detail"><span>Downloads:</span><strong><?= (int)$res['download_count'] ?> times</strong></div>
                                     <?php endif; ?>
@@ -557,7 +557,7 @@ if ($conn) {
                                 <div class="project-details">
                                     <div class="detail"><span>Role:</span><strong><?= htmlspecialchars($proj['role'] ?? 'Investigator') ?></strong></div>
                                     <?php if (!empty($proj['start_date']) && !empty($proj['end_date'])): ?>
-                                    <div class="detail"><span>Duration:</span><strong><?= date('M Y', strtotime($proj['start_date'])) ?> - <?= date('M Y', strtotime($proj['end_date'])) ?></strong></div>
+                                    <div class="detail"><span>Duration:</span><strong><?= date('M Y', strtotime($proj['start_date'])) ?> to <?= date('M Y', strtotime($proj['end_date'])) ?></strong></div>
                                     <?php endif; ?>
                                     <?php if (!empty($proj['team_size'])): ?>
                                     <div class="detail"><span>Team:</span><strong><?= (int)$proj['team_size'] ?> members</strong></div>
@@ -665,7 +665,7 @@ if ($conn) {
                                         <select class="form-control" required>
                                             <option value="">Select Course</option>
                                             <option value="nursing-fundamentals">Nursing Fundamentals</option>
-                                            <option value="medical-surgical">Medical-Surgical Nursing</option>
+                                            <option value="medical-surgical">Medical Surgical Nursing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -729,8 +729,8 @@ if ($conn) {
                                 <label class="form-label">Select Assessment</label>
                                 <select class="form-control" required>
                                     <option value="">Select Assessment</option>
-                                    <option value="midterm-nursing">Nursing Fundamentals - Midterm Exam</option>
-                                    <option value="assignment-medical">Medical-Surgical - Case Study</option>
+                                    <option value="midterm-nursing">Nursing Fundamentals , Midterm Exam</option>
+                                    <option value="assignment-medical">Medical Surgical , Case Study</option>
                                 </select>
                             </div>
                             <div class="mb-3">

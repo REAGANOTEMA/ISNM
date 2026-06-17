@@ -204,10 +204,10 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
               <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
               <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
               <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-              <td><?= htmlspecialchars($s['department'] ?? '—') ?></td>
+              <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
               <td><small><?= htmlspecialchars($s['email']) ?></small></td>
               <td><span class="badge <?= $bc ?>"><?= $s['status'] ?></span></td>
-              <td><?= $s['hire_date'] ? date('d M Y',strtotime($s['hire_date'])) : '—' ?></td>
+              <td><?= $s['hire_date'] ? date('d M Y',strtotime($s['hire_date'])) : '-' ?></td>
             </tr>
           <?php endforeach; endif; ?>
           </tbody>

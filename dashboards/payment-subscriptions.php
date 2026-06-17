@@ -51,9 +51,9 @@ if ($action === 'run_auto' && in_array(strtolower($userRole), ['director general
             <div>
                 <span class="text-muted small me-3"><?= date('l, d M Y') ?></span>
                 <?php if (in_array(strtolower($userRole), ['director general','director ict','school secretary','bursar'])): ?>
-                <form method="post" style="display:inline" onsubmit="return confirm('Run auto-deduction processor?')">
+                <form method="post" style="display:inline" onsubmit="return confirm('Run auto deduction processor?')">
                     <input type="hidden" name="action" value="run_auto">
-                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-play-fill me-1"></i>Run Auto-Deductions</button>
+                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-play-fill me-1"></i>Run Auto Deductions</button>
                 </form>
                 <?php endif; ?>
             </div>
@@ -61,7 +61,7 @@ if ($action === 'run_auto' && in_array(strtolower($userRole), ['director general
 
         <?php if (isset($procResult)): ?>
         <div class="alert alert-info d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-info-circle me-2"></i>Auto-Deduction Run: <strong><?= $procResult['success'] ?> succeeded</strong>, <?= $procResult['failed'] ?> failed, <?= $procResult['skipped'] ?> skipped</span>
+            <span><i class="bi bi-info-circle me-2"></i>Auto Deduction Run: <strong><?= $procResult['success'] ?> succeeded</strong>, <?= $procResult['failed'] ?> failed, <?= $procResult['skipped'] ?> skipped</span>
             <small class="text-muted"><?= date('H:i:s') ?></small>
         </div>
         <?php endif; ?>

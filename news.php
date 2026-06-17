@@ -263,7 +263,7 @@ if ($view === 'single' && $slug) {
     }
 }
 
-$pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' - ISNM News' : 'News - ISNM');
+$pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' | ISNM News' : 'News | ISNM');
 include 'shared/_header.php';
 ?>
 <link href="css/news.css" rel="stylesheet">

@@ -32,7 +32,7 @@ $yearsJson = json_encode(array_map('strval', $filterOptions['years']));
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Student Directory — ISNM</title>
+<title>Student Directory | ISNM</title>
 <link rel="icon" href="images/school-logo.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -601,14 +601,14 @@ function render() {
       const initial = (s.first_name || s.full_name || 'S').charAt(0).toUpperCase();
       const color = colors[Math.floor(Math.random() * colors.length)];
       const srcFile = s.source_file || '';
-      const indexNum = s.index_number || s.national_id || '—';
+      const indexNum = s.index_number || s.national_id || '-';
       html += `<div class="student-card" onclick="showProfile(${ALL_STUDENTS.indexOf(s)})">
         <div class="avatar" style="background:${color}">${initial}</div>
         <div class="info">
           <div class="name">${escHtml(name)}</div>
           <div class="meta">
             <span><i class="fas fa-hashtag me-1" style="font-size:.7rem"></i>${escHtml(indexNum)}</span>
-            <span><i class="fas fa-phone me-1" style="font-size:.7rem"></i>${escHtml(s.phone || '—')}</span>
+            <span><i class="fas fa-phone me-1" style="font-size:.7rem"></i>${escHtml(s.phone || '-')}</span>
           </div>
           <div class="badge-program">${escHtml(s.program || 'General')}</div>
         </div>
@@ -625,15 +625,15 @@ function render() {
       </tr></thead><tbody>`;
     pageStudents.forEach((s, i) => {
       const name = s.full_name || (s.surname + ' ' + s.first_name).trim() || 'Unknown';
-      const indexNum = s.index_number || s.national_id || '—';
+      const indexNum = s.index_number || s.national_id || '-';
       const genBadge = (s.gender||'').toLowerCase() === 'male' ? 'bg-primary' : (s.gender||'').toLowerCase() === 'female' ? 'bg-danger' : 'bg-secondary';
       html += `<tr onclick="showProfile(${ALL_STUDENTS.indexOf(s)})" style="cursor:pointer">
         <td><strong>${escHtml(name)}</strong></td>
         <td><code>${escHtml(indexNum)}</code></td>
-        <td>${escHtml(s.program || '—')}</td>
-        <td>${escHtml(s.set || '—')}</td>
-        <td>${s.gender ? `<span class="badge ${genBadge}">${escHtml(s.gender)}</span>` : '—'}</td>
-        <td>${escHtml(s.phone || '—')}</td>
+        <td>${escHtml(s.program || '-')}</td>
+        <td>${escHtml(s.set || '-')}</td>
+        <td>${s.gender ? `<span class="badge ${genBadge}">${escHtml(s.gender)}</span>` : '-'}</td>
+        <td>${escHtml(s.phone || '-')}</td>
         <td><small class="text-muted">${escHtml(s.source_file || '')}</small></td>
       </tr>`;
     });
@@ -689,7 +689,7 @@ function showProfile(index) {
   document.getElementById('pAvatar').style.background = color;
   document.getElementById('pAvatar').textContent = initial;
   document.getElementById('pName').textContent = name;
-  document.getElementById('pIndex').textContent = s.index_number || s.national_id || s.registration_number || '—';
+  document.getElementById('pIndex').textContent = s.index_number || s.national_id || s.registration_number || '-';
   document.getElementById('pSource').textContent = s.source_file || 'Excel file';
 
   const fields = [
@@ -737,7 +737,7 @@ function printProfile() {
   const printWindow = window.open('', '_blank', 'width=800,height=600');
   if (currentProfileIndex < 0) return;
   printWindow.document.write(`<!DOCTYPE html><html><head>
-    <title>Student Profile - ISNM</title>
+    <title>Student Profile | ISNM</title>
     <style>
       body{font-family:'Segoe UI',sans-serif;padding:30px;color:#111;max-width:700px;margin:0 auto}
       .header{display:flex;gap:20px;align-items:center;border-bottom:2px solid #0f766e;padding-bottom:16px;margin-bottom:20px}

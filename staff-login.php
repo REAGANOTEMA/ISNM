@@ -79,7 +79,7 @@ $active_staff_tab = 'show active';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1a237e">
-  <title>Staff Login — ISNM</title>
+  <title>Staff Login | ISNM</title>
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -454,21 +454,466 @@ $active_staff_tab = 'show active';
     .logo-wrap { width: 85px; height: 85px; }
     .logo-wrap img { width: 68px; height: 68px; }
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     PREMIUM MODERN ENHANCEMENTS
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Ambient background glow */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 50%, rgba(255,214,0,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 30%, rgba(255,255,255,0.04) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 80%, rgba(26,35,126,0.07) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: ambientGlow 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes ambientGlow {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  /* Decorative rings around logo */
+  .logo-wrap .ring-deco {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,214,0,0.12);
+    pointer-events: none;
+  }
+
+  .logo-wrap .ring-deco:nth-child(1) {
+    top: -8px; left: -8px; right: -8px; bottom: -8px;
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+
+  .logo-wrap .ring-deco:nth-child(2) {
+    top: -15px; left: -15px; right: -15px; bottom: -15px;
+    border-color: rgba(255,214,0,0.07);
+    animation: ringPulse 3s ease-in-out 1s infinite;
+  }
+
+  .logo-wrap .ring-deco:nth-child(3) {
+    top: -22px; left: -22px; right: -22px; bottom: -22px;
+    border-color: rgba(255,214,0,0.04);
+    animation: ringPulse 3s ease-in-out 2s infinite;
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.06); opacity: 1; }
+  }
+
+  /* Card corner decorations */
+  .login-card::before,
+  .login-card::after {
+    content: '';
+    position: absolute;
+    width: 60px; height: 60px;
+    border: 2px solid rgba(255,214,0,0.1);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .login-card::before {
+    top: 10px; left: 10px;
+    border-right: none; border-bottom: none;
+    border-radius: 4px 0 0 0;
+  }
+
+  .login-card::after {
+    bottom: 10px; right: 10px;
+    border-left: none; border-top: none;
+    border-radius: 0 0 4px 0;
+  }
+
+  /* Glass info block enhancement */
+  .info-block {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .info-block::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -50%;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Role badge glass enhancement */
+  .role-badge {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .role-badge:hover {
+    background: rgba(255,255,255,0.2) !important;
+    transform: scale(1.03);
+  }
+
+  /* Enhanced form field on focus */
+  .form-group {
+    position: relative;
+  }
+
+  .form-group .input-highlight {
+    position: absolute;
+    bottom: 0; left: 50%;
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: all 0.3s ease;
+    border-radius: 2px;
+    z-index: 3;
+  }
+
+  .input-group:focus-within ~ .input-highlight,
+  .form-control:focus ~ .input-highlight {
+    width: 80%;
+    left: 10%;
+  }
+
+  /* Password toggle */
+  .password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1.1rem;
+    z-index: 3;
+    transition: color 0.2s ease;
+  }
+
+  .password-toggle:hover { color: var(--primary); }
+
+  /* Loading spinner for submit */
+  .btn-login .spinner-layer {
+    display: none;
+    width: 20px; height: 20px;
+    border: 2.5px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .btn-login.loading .spinner-layer { display: inline-block; }
+  .btn-login.loading .btn-text { opacity: 0.7; }
+  .btn-login.loading { pointer-events: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Staggered entrance for form elements */
+  .form-group {
+    animation: slideUpFade 0.5s ease-out backwards;
+  }
+
+  .form-group:nth-child(1) { animation-delay: 0.1s; }
+  .form-group:nth-child(2) { animation-delay: 0.2s; }
+  .btn-login { animation: slideUpFade 0.5s ease-out 0.3s backwards; }
+  .help-links { animation: slideUpFade 0.5s ease-out 0.4s backwards; }
+  .info-block { animation: slideUpFade 0.5s ease-out 0.5s backwards; }
+
+  @keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Enhanced divider */
+  .panel-divider {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel-divider::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(26,35,126,0.08), transparent);
+    animation: dividerShimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes dividerShimmer {
+    0% { left: -50%; }
+    100% { left: 150%; }
+  }
+
+  /* Enhanced particles with multiple shapes */
+  .particle {
+    mix-blend-mode: overlay;
+  }
+
+  .particle.type-star {
+    background: transparent;
+    border: none;
+    width: 0 !important; height: 0 !important;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 7px solid rgba(255,214,0,0.08);
+  }
+
+  /* Header gradient text enhancement */
+  .login-header h1 {
+    position: relative;
+    display: inline-block;
+  }
+
+  .login-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  }
+
+  @media (min-width: 1200px) {
+    .login-wrapper { max-width: 520px; }
+  }
+
+  @media(max-width:380px) {
+    .login-body { padding: 16px 12px; }
+    .form-control { padding: 12px 14px 12px 40px; font-size: 13px; }
+    .input-group i { left: 12px; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     MIND-BLOWING ENHANCEMENTS — next-level advanced design
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  /* ── Noise grain overlay ── */
+  .noise-overlay {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+
+  /* ── Floating geometric shapes ── */
+  .floating-shapes {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    animation: floatShape 25s linear infinite;
+    will-change: transform;
+  }
+
+  .floating-shape.type-blob {
+    border-radius: 40% 60% 60% 40% / 60% 40% 70% 40%;
+    animation: floatShape 25s linear infinite, morphBlob 14s ease-in-out infinite alternate;
+  }
+
+  .floating-shape.type-tri {
+    width: 0 !important; height: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 26px solid rgba(255,214,0,0.05);
+  }
+
+  .floating-shape.type-rect {
+    border-radius: 25%;
+    animation: floatShape 30s linear infinite, rotateRect 12s linear infinite;
+  }
+
+  @keyframes floatShape {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    8% { opacity: 0.5; }
+    92% { opacity: 0.5; }
+    100% { transform: translateY(-20vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes morphBlob {
+    0% { border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%; }
+    50% { border-radius: 60% 40% 30% 70% / 50% 60% 40% 60%; }
+    100% { border-radius: 30% 70% 50% 50% / 60% 40% 60% 50%; }
+  }
+
+  @keyframes rotateRect {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* ── 3D card tilt container ── */
+  .card-3d-wrap {
+    perspective: 1200px;
+  }
+
+  .card-3d-wrap .login-card {
+    transition: transform 0.12s ease-out, box-shadow 0.5s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .card-3d-wrap .login-card:hover {
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.04),
+      0 4px 8px rgba(0,0,0,0.06),
+      0 8px 16px rgba(0,0,0,0.08),
+      0 16px 32px rgba(0,0,0,0.1),
+      0 32px 64px rgba(0,0,0,0.12),
+      0 0 80px rgba(26,35,126,0.1);
+  }
+
+  /* ── Animated gradient border on input focus ── */
+  .input-group::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #1a237e, #ffd600, #0d47a1, #f9a825, #1a237e);
+    background-size: 300% 100%;
+    animation: gradientBorder 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .input-group:focus-within::before {
+    opacity: 1;
+  }
+
+  .input-group .form-control {
+    position: relative;
+    z-index: 1;
+    background-clip: padding-box;
+  }
+
+  .input-group:focus-within .form-control {
+    border-color: transparent;
+    background: #fff;
+  }
+
+  @keyframes gradientBorder {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* ── Magnetic button ── */
+  .btn-login {
+    transition: transform 0.15s ease, box-shadow 0.3s ease;
+    will-change: transform;
+  }
+
+  .btn-login.loading {
+    transition: none;
+    will-change: auto;
+  }
+
+  /* ── Ripple effect ── */
+  .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    transform: scale(0);
+    animation: rippleAnim 0.65s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* ── Enhanced particles with glow ── */
+  .particle {
+    box-shadow: 0 0 6px rgba(255,255,255,0.18);
+    will-change: transform, opacity;
+  }
+
+  /* ── Animated gradient text in header ── */
+  .login-header h1 {
+    background-size: 200% auto;
+    animation: gradientText 5s ease-in-out infinite alternate;
+  }
+
+  @keyframes gradientText {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  /* ── Typing cursor ── */
+  .typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: rgba(255,255,255,0.75);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blinkCursor 0.75s step-end infinite;
+  }
+
+  @keyframes blinkCursor {
+    50% { opacity: 0; }
+  }
+
+  /* ── Enhanced entrance animation ── */
+  .card-3d-wrap .login-card {
+    animation: premiumEntrance 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes premiumEntrance {
+    0% { opacity: 0; transform: translateY(35px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Tab bar sliding indicator polish ── */
+  .tab-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border-radius: 3px 3px 0 0;
+  }
   </style>
 </head>
 <body>
 
 <div class="bg-particles" id="particles"></div>
+<div class="floating-shapes" id="floatingShapes"></div>
+<div class="noise-overlay"></div>
 
 <div class="login-wrapper">
-  <div class="login-card">
+  <div class="card-3d-wrap">
+    <div class="login-card">
     <div class="login-header">
       <div class="header-inner">
         <div class="logo-wrap">
+          <div class="ring-deco"></div>
+          <div class="ring-deco"></div>
+          <div class="ring-deco"></div>
           <img src="images/school-logo.png" alt="ISNM Logo">
         </div>
         <h1>ISNM Portal</h1>
-        <p>Iganga School of Nursing and Midwifery — Staff Sign-In</p>
+        <p>Iganga School of Nursing and Midwifery , Staff Sign In</p>
 
         <?php if ($requested_position): ?>
           <div>
@@ -526,11 +971,16 @@ $active_staff_tab = 'show active';
               <i class="fas fa-lock"></i>
               <input type="password" class="form-control" id="s-password" name="password"
                      placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" class="password-toggle" id="toggle-s-password" tabindex="-1" aria-label="Toggle password visibility">
+                <i class="fas fa-eye"></i>
+              </button>
+              <div class="input-highlight"></div>
             </div>
           </div>
 
-          <button type="submit" class="btn-login" style="margin-top:4px;">
-            <i class="fas fa-sign-in-alt me-2"></i>Login to Staff Portal
+          <button type="submit" class="btn-login" style="margin-top:4px;" id="btn-submit">
+            <span class="spinner-layer"></span>
+            <span class="btn-text"><i class="fas fa-sign-in-alt me-2"></i>Login to Staff Portal</span>
           </button>
         </form>
       </div>
@@ -547,34 +997,185 @@ $active_staff_tab = 'show active';
       <div class="info-block">
         <div class="block-title"><i class="fas fa-university"></i> About ISNM</div>
         <div style="font-size: 0.8rem; line-height: 1.6;">
-          <strong>Iganga School of Nursing and Midwifery</strong> — GOVERNMENT OF UGANDA<br>
-          P.O. Box 416, Iganga District — Tel: +256 703 204722
+          <strong>Iganga School of Nursing and Midwifery</strong> , GOVERNMENT OF UGANDA<br>
+          P.O. Box 416, Iganga District , Tel: +256 703 204722
         </div>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Create floating particles
+  // ════════════════════════════════════════════════════════════════
+  // 1. FLOATING GEOMETRIC SHAPES
+  // ════════════════════════════════════════════════════════════════
+  const shapesContainer = document.getElementById('floatingShapes');
+  if (shapesContainer) {
+    const shapeTypes = ['circle', 'blob', 'rect'];
+    const colors = [
+      'rgba(255,214,0,0.08)', 'rgba(255,255,255,0.04)',
+      'rgba(26,35,126,0.06)', 'rgba(13,71,161,0.05)',
+      'rgba(249,168,37,0.07)', 'rgba(255,255,255,0.03)'
+    ];
+    for (let i = 0; i < 12; i++) {
+      const shape = document.createElement('div');
+      const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+      shape.className = 'floating-shape type-' + type;
+      const size = 20 + Math.random() * 70;
+      if (type !== 'tri') {
+        shape.style.width = size + 'px';
+        shape.style.height = size + 'px';
+        shape.style.background = colors[Math.floor(Math.random() * colors.length)];
+        if (type === 'blob') {
+          shape.style.background = 'linear-gradient(135deg, rgba(255,214,0,0.08), rgba(26,35,126,0.04))';
+        }
+      }
+      shape.style.left = Math.random() * 100 + '%';
+      shape.style.animationDuration = (20 + Math.random() * 35) + 's';
+      shape.style.animationDelay = Math.random() * 15 + 's';
+      shapesContainer.appendChild(shape);
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 2. FLOATING PARTICLES (enhanced)
+  // ════════════════════════════════════════════════════════════════
   const container = document.getElementById('particles');
-  const particleCount = 15;
+  const particleCount = 20;
+  const pShapes = ['circle', 'star'];
   
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
-    particle.className = 'particle';
-    const size = 2 + Math.random() * 4;
+    const shape = pShapes[Math.floor(Math.random() * pShapes.length)];
+    particle.className = 'particle' + (shape === 'star' ? ' type-star' : '');
+    const size = 2 + Math.random() * 5;
     particle.style.width = size + 'px';
     particle.style.height = size + 'px';
     particle.style.left = Math.random() * 100 + '%';
-    particle.style.animationDuration = (10 + Math.random() * 15) + 's';
+    particle.style.animationDuration = (12 + Math.random() * 20) + 's';
     particle.style.animationDelay = Math.random() * 10 + 's';
+    if (shape === 'star') {
+      particle.style.borderBottomWidth = (size * 1.5) + 'px';
+      particle.style.borderLeftWidth = (size * 0.9) + 'px';
+      particle.style.borderRightWidth = (size * 0.9) + 'px';
+    }
     container.appendChild(particle);
   }
 
-  // iOS viewport guard
+  // ════════════════════════════════════════════════════════════════
+  // 3. 3D TILT ON CARD
+  // ════════════════════════════════════════════════════════════════
+  const card3dWrap = document.querySelector('.card-3d-wrap');
+  const loginCard = document.querySelector('.card-3d-wrap .login-card');
+  if (card3dWrap && loginCard) {
+    let isTilting = false;
+    card3dWrap.addEventListener('mousemove', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -5;
+      const rotateY = ((x - centerX) / centerX) * 5;
+      loginCard.style.transform = 'rotateX(' + rotateX.toFixed(2) + 'deg) rotateY(' + rotateY.toFixed(2) + 'deg)';
+    });
+    card3dWrap.addEventListener('mouseleave', function() {
+      loginCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 4. MAGNETIC BUTTON
+  // ════════════════════════════════════════════════════════════════
+  const loginBtn = document.querySelector('.btn-login');
+  if (loginBtn && !loginBtn.classList.contains('loading')) {
+    loginBtn.addEventListener('mousemove', function(e) {
+      if (this.classList.contains('loading')) return;
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      this.style.setProperty('--mx', (x * 0.25) + 'px');
+      this.style.setProperty('--my', (y * 0.25) + 'px');
+      this.style.transform = 'translate(var(--mx), var(--my))';
+    });
+    loginBtn.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 5. RIPPLE EFFECT ON BUTTONS
+  // ════════════════════════════════════════════════════════════════
+  document.querySelectorAll('.btn-login').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple-effect';
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 1.2;
+      ripple.style.width = size + 'px';
+      ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      this.appendChild(ripple);
+      setTimeout(function() { ripple.remove(); }, 700);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════
+  // 6. TYPING EFFECT ON SUBTITLE
+  // ════════════════════════════════════════════════════════════════
+  const subtitle = document.querySelector('.login-header p');
+  if (subtitle) {
+    const originalText = subtitle.textContent;
+    subtitle.textContent = '';
+    subtitle.style.display = 'inline';
+    let charIndex = 0;
+    function typeChar() {
+      if (charIndex < originalText.length) {
+        subtitle.textContent += originalText.charAt(charIndex);
+        charIndex++;
+        setTimeout(typeChar, 18 + Math.random() * 25);
+      } else {
+        const cursor = document.createElement('span');
+        cursor.className = 'typing-cursor';
+        subtitle.parentNode.insertBefore(cursor, subtitle.nextSibling);
+      }
+    }
+    setTimeout(typeChar, 600);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 7. PASSWORD VISIBILITY TOGGLE
+  // ════════════════════════════════════════════════════════════════
+  const toggleBtn = document.getElementById('toggle-s-password');
+  const pwdInput = document.getElementById('s-password');
+  if (toggleBtn && pwdInput) {
+    toggleBtn.addEventListener('click', function() {
+      const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      pwdInput.setAttribute('type', type);
+      this.querySelector('i').className = 'fas fa-' + (type === 'password' ? 'eye' : 'eye-slash');
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 8. LOADING STATE ON SUBMIT
+  // ════════════════════════════════════════════════════════════════
+  const form = document.querySelector('form');
+  const btn = document.getElementById('btn-submit');
+  if (form && btn) {
+    form.addEventListener('submit', function() {
+      btn.classList.add('loading');
+      // Disable magnetic when loading
+      btn.style.transform = '';
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // 9. iOS VIEWPORT GUARD
+  // ════════════════════════════════════════════════════════════════
   const m = 'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no';
   document.querySelectorAll('input[type="email"],input[type="password"],input[type="text"]').forEach(function(el) {
     el.addEventListener('focus', function() { 

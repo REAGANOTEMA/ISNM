@@ -58,7 +58,7 @@ if ($conn) {
             <div class="dashboard-header">
                 <div class="header-left">
                     <h1>Head of Nursing Dashboard</h1>
-                    <p>Nursing Department Management - Iganga School of Nursing and Midwifery</p>
+                    <p>Nursing Department Management , Iganga School of Nursing and Midwifery</p>
                 </div>
                 <div class="header-right">
                     <div class="date-time">
@@ -164,7 +164,7 @@ if ($conn) {
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
                         <div class="stat-card">
                             <h3 class="fw-bold">Certificate in Nursing</h3>
-                            <p class="text-muted mb-2">2-Year Program</p>
+                            <p class="text-muted mb-2">2 Year Program</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Enrolled:</span>
                                 <strong>85 Students</strong>
@@ -176,7 +176,7 @@ if ($conn) {
                         
                         <div class="stat-card">
                             <h3 class="fw-bold">Diploma in Nursing</h3>
-                            <p class="text-muted mb-2">3-Year Program</p>
+                            <p class="text-muted mb-2">3 Year Program</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Enrolled:</span>
                                 <strong>65 Students</strong>

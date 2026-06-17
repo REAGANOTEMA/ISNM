@@ -154,7 +154,7 @@ if ($conn) {
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Bus 1 - Toyota Coaster</h6>
+                                <h6>Bus 1 , Toyota Coaster</h6>
                                 <small class="text-muted">Capacity: 30 | License: UAB 123A</small>
                             </div>
                             <span class="vehicle-status status-available">Available</span>
@@ -163,7 +163,7 @@ if ($conn) {
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Bus 2 - Nissan Civilian</h6>
+                                <h6>Bus 2 , Nissan Civilian</h6>
                                 <small class="text-muted">Capacity: 25 | License: UAB 456B</small>
                             </div>
                             <span class="vehicle-status status-busy">In Use</span>
@@ -172,7 +172,7 @@ if ($conn) {
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Van 1 - Toyota Hiace</h6>
+                                <h6>Van 1 , Toyota Hiace</h6>
                                 <small class="text-muted">Capacity: 15 | License: UAB 789C</small>
                             </div>
                             <span class="vehicle-status status-maintenance">Maintenance</span>
@@ -185,7 +185,7 @@ if ($conn) {
                     <h3><i class="fas fa-tasks"></i> Driver Tasks</h3>
                     <div class="route-item">
                         <h6>Daily Vehicle Check</h6>
-                        <small class="text-muted">Complete pre-trip inspection checklist</small>
+                        <small class="text-muted">Complete pre trip inspection checklist</small>
                         <div class="progress mt-2" style="height: 5px;">
                             <div class="progress-bar bg-success" style="width: 100%"></div>
                         </div>

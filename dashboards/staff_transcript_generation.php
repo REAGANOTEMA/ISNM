@@ -117,7 +117,7 @@ function generateTranscriptContent($student, $academic_records, $transcript_type
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Academic Transcript - ISNM</title>
+    <title>Academic Transcript | ISNM</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -332,7 +332,7 @@ function getSemesters() {
                             <?php
                             $students = getStudentsForDropdown();
                             foreach ($students as $student) {
-                                echo '<option value="' . $student['id'] . '">' . htmlspecialchars($student['full_name']) . ' - ' . htmlspecialchars($student['registration_number']) . '</option>';
+                                echo '<option value="' . $student['id'] . '">' . htmlspecialchars($student['full_name']) . ' , ' . htmlspecialchars($student['registration_number']) . '</option>';
                             }
                             ?>
                         </select>

@@ -436,7 +436,7 @@ if ($students) {
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <h1><i class="fas fa-flask me-2" style="color:var(--sl-primary)"></i>Skills Lab Dashboard</h1>
-                    <p class="mb-0">Skills Laboratory Management System — <?= htmlspecialchars($role) ?></p>
+                    <p class="mb-0">Skills Laboratory Management System , <?= htmlspecialchars($role) ?></p>
                 </div>
                 <div class="col-md-6 text-end">
                     <div class="user-info">
@@ -456,7 +456,7 @@ if ($students) {
         <ul class="nav nav-tabs nav-fill mb-4 border-0" style="background:rgba(13,110,253,.04); border-radius:14px; padding:6px;">
             <li class="nav-item"><a class="nav-link <?= $view==='home'?'active fw-bold':'' ?>" href="?view=home"><i class="fas fa-home me-1"></i>Home</a></li>
             <li class="nav-item"><a class="nav-link <?= $view==='equipment'?'active fw-bold':'' ?>" href="?view=equipment"><i class="fas fa-tools me-1"></i>Equipment</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='checkouts'?'active fw-bold':'' ?>" href="?view=checkouts"><i class="fas fa-hand-holding me-1"></i>Check-outs</a></li>
+            <li class="nav-item"><a class="nav-link <?= $view==='checkouts'?'active fw-bold':'' ?>" href="?view=checkouts"><i class="fas fa-hand-holding me-1"></i>Check outs</a></li>
             <li class="nav-item"><a class="nav-link <?= $view==='sessions'?'active fw-bold':'' ?>" href="?view=sessions"><i class="fas fa-calendar-alt me-1"></i>Sessions</a></li>
             <li class="nav-item"><a class="nav-link <?= $view==='skills'?'active fw-bold':'' ?>" href="?view=skills"><i class="fas fa-certificate me-1"></i>Skills</a></li>
             <li class="nav-item"><a class="nav-link <?= $view==='consumables'?'active fw-bold':'' ?>" href="?view=consumables"><i class="fas fa-boxes me-1"></i>Consumables</a></li>
@@ -473,7 +473,7 @@ if ($students) {
             </div></div></div>
             <div class="col-md-3 col-6"><div class="card stats-card-lab"><div class="card-body d-flex align-items-center gap-3">
                 <div class="stats-icon" style="background:rgba(25,135,84,.12);color:var(--sl-success)"><i class="fas fa-hand-holding"></i></div>
-                <div><h3 class="fw-bold mb-0" id="stat-checkouts"><?= $checkout_count ?></h3><small class="text-muted">Active Check-outs</small></div>
+                <div><h3 class="fw-bold mb-0" id="stat-checkouts"><?= $checkout_count ?></h3><small class="text-muted">Active Check outs</small></div>
             </div></div></div>
             <div class="col-md-3 col-6"><div class="card stats-card-lab"><div class="card-body d-flex align-items-center gap-3">
                 <div class="stats-icon" style="background:rgba(220,53,69,.12);color:var(--sl-danger)"><i class="fas fa-exclamation-circle"></i></div>
@@ -512,7 +512,7 @@ if ($students) {
             </div></div></a></div>
             <div class="col-md-3"><a href="?view=checkouts" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
                 <div class="module-icon" style="background:rgba(25,135,84,.1);color:var(--sl-success)"><i class="fas fa-hand-holding"></i></div>
-                <h6 class="fw-bold">Check-out / Check-in</h6><p class="small text-muted mb-0">Track equipment borrowed by students</p>
+                <h6 class="fw-bold">Check out / Check in</h6><p class="small text-muted mb-0">Track equipment borrowed by students</p>
             </div></div></a></div>
             <div class="col-md-3"><a href="?view=sessions" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
                 <div class="module-icon" style="background:rgba(111,66,193,.1);color:#6f42c1"><i class="fas fa-calendar-alt"></i></div>
@@ -586,19 +586,19 @@ if ($students) {
 
 <?php elseif ($view === 'checkouts'): ?>
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold mb-0"><i class="fas fa-hand-holding me-2"></i>Equipment Check-out / Check-in</h4>
+            <h4 class="fw-bold mb-0"><i class="fas fa-hand-holding me-2"></i>Equipment Check out / Check in</h4>
             <div>
                 <input type="text" id="co-search" class="form-control form-control-sm d-inline-block" style="width:250px" placeholder="Search student or equipment...">
-                <button class="btn btn-primary btn-sm ms-2" onclick="openCoModal()"><i class="fas fa-plus me-1"></i>New Check-out</button>
+                <button class="btn btn-primary btn-sm ms-2" onclick="openCoModal()"><i class="fas fa-plus me-1"></i>New Check out</button>
             </div>
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="co-table"><thead class="table-light"><tr>
-                <th>ID</th><th>Equipment</th><th>Student ID</th><th>Check-out</th><th>Expected Return</th><th>Qty</th><th>Status</th><th style="width:140px">Actions</th>
+                <th>ID</th><th>Equipment</th><th>Student ID</th><th>Check out</th><th>Expected Return</th><th>Qty</th><th>Status</th><th style="width:140px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <div class="modal fade" id="coModal"><div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="coModalTitle">New Check-out</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header"><h5 class="modal-title" id="coModalTitle">New Check out</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body"><form id="coForm">
                 <input type="hidden" name="id" id="co-id">
                 <div class="mb-3"><label class="form-label">Equipment *</label><select name="equipment_id" id="co-eid" class="form-select" required><option value="">-- Select Equipment --</option></select></div>
@@ -726,7 +726,7 @@ if ($students) {
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="att-table"><thead class="table-light"><tr>
-                <th>Session</th><th>Date</th><th>Student ID</th><th>Status</th><th>Check-in</th><th>Marked By</th><th style="width:80px">Actions</th>
+                <th>Session</th><th>Date</th><th>Student ID</th><th>Status</th><th>Check in</th><th>Marked By</th><th style="width:80px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <!-- Batch Attendance Modal -->
@@ -888,7 +888,7 @@ function loadCoEquipmentList() {
     fetch('?view=equipment&ajax=get').then(r=>r.json()).then(d => {
         const sel = document.getElementById('co-eid');
         if (!sel) return;
-        sel.innerHTML = '<option value="">-- Select Equipment --</option>' + d.data.map(x => `<option value="${x.id}">${esc(x.name)} (${x.equipment_code}) — Avail: ${x.available_quantity}</option>`).join('');
+        sel.innerHTML = '<option value="">-- Select Equipment --</option>' + d.data.map(x => `<option value="${x.id}">${esc(x.name)} (${x.equipment_code}) , Avail: ${x.available_quantity}</option>`).join('');
     });
 }
 function openCoModal(data) {
@@ -904,10 +904,10 @@ function openCoModal(data) {
         setVal('co-qr', data?.quantity_returned||0);
         setVal('co-stat', data?.status||'checked_out');
         document.getElementById('co-return-fields').style.display = 'block';
-        document.getElementById('coModalTitle').textContent = 'Edit Check-out';
+        document.getElementById('coModalTitle').textContent = 'Edit Check out';
     } else {
         document.getElementById('co-return-fields').style.display = 'none';
-        document.getElementById('coModalTitle').textContent = 'New Check-out';
+        document.getElementById('coModalTitle').textContent = 'New Check out';
         setVal('co-erd', new Date(Date.now()+7*86400000).toISOString().substring(0,10));
     }
     loadCoEquipmentList();
@@ -945,7 +945,7 @@ function deleteCo(id) {
 function loadSes() { loadTable('?view=sessions&ajax=get', 'ses-table', r => `<tr>
     <td>${esc(r.session_code)}</td><td><strong>${esc(r.title)}</strong></td>
     <td>${esc(r.session_date)}</td>
-    <td>${r.start_time ? r.start_time.substring(0,5) : ''}${r.end_time ? ' - '+r.end_time.substring(0,5) : ''}</td>
+    <td>${r.start_time ? r.start_time.substring(0,5) : ''}${r.end_time ? ' to '+r.end_time.substring(0,5) : ''}</td>
     <td>${esc(r.instructor)}</td><td>${esc(r.program)}</td><td>${esc(r.location)}</td>
     <td><span class="badge-status bg-${r.status==='scheduled'?'primary':r.status==='ongoing'?'success':r.status==='completed'?'secondary':'danger'}">${esc(r.status)}</span></td>
     <td>
@@ -1093,9 +1093,9 @@ function loadAtt() {
 function loadAttSessions() {
     fetch('?view=attendance&ajax=sessions').then(r=>r.json()).then(d => {
         const sel = document.getElementById('att-session-filter');
-        if (sel) sel.innerHTML = '<option value="">-- All Sessions --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} — ${esc(x.title)} (${x.session_date})</option>`).join('');
+        if (sel) sel.innerHTML = '<option value="">-- All Sessions --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} , ${esc(x.title)} (${x.session_date})</option>`).join('');
         const sel2 = document.getElementById('att-session-id');
-        if (sel2) sel2.innerHTML = '<option value="">-- Select Session --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} — ${esc(x.title)} (${x.session_date})</option>`).join('');
+        if (sel2) sel2.innerHTML = '<option value="">-- Select Session --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} , ${esc(x.title)} (${x.session_date})</option>`).join('');
     });
 }
 function openAttBatchModal() {

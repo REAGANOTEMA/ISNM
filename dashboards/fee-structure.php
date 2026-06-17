@@ -33,7 +33,7 @@ if ($studentsDb) {
         <div class="card-section text-center py-5 mb-4">
             <div class="coming-soon-icon mb-3"><i class="fas fa-tools"></i></div>
             <h5>Fee Structure Management</h5>
-            <p class="text-muted">This module is under development. Full CRUD for fee structures, program-based fee assignment, and bulk updates coming soon.</p>
+            <p class="text-muted">This module is under development. Full CRUD for fee structures, program based fee assignment, and bulk updates coming soon.</p>
             <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
         </div>
 
@@ -53,7 +53,7 @@ if ($studentsDb) {
                         <?php foreach ($feeStructures as $fs): ?>
                         <tr>
                             <?php foreach ($fs as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '—') ?></td>
+                            <td><?= htmlspecialchars($val ?? '-') ?></td>
                             <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>

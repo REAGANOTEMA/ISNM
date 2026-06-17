@@ -660,7 +660,7 @@
           <div class="col-lg-6">
             <div class="donation-content content-section">
               <h3>Why Support ISNM?</h3>
-              <p>Iganga School of Nursing and Midwifery is committed to producing world-class healthcare professionals who serve communities across Uganda and beyond. Your donation helps us:</p>
+              <p>Iganga School of Nursing and Midwifery is committed to producing world class healthcare professionals who serve communities across Uganda and beyond. Your donation helps us:</p>
               
               <div class="impact-list">
                 <div class="impact-item">
@@ -731,13 +731,13 @@
               <div class="donation-icon">
                 <i class="fas fa-hand-holding-heart"></i>
               </div>
-              <h3>One-Time Donation</h3>
+              <h3>One Time Donation</h3>
               <p>Make a single donation to support our immediate needs and ongoing programs</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 50,000</span> - Supports student learning materials</li>
-                <li><span class="amount">UGX 100,000</span> - Funds clinical training equipment</li>
-                <li><span class="amount">UGX 500,000</span> - Supports library resources</li>
-                <li><span class="amount">UGX 1,000,000</span> - Funds technology upgrades</li>
+                <li><span class="amount">UGX 50,000</span> , Supports student learning materials</li>
+                <li><span class="amount">UGX 100,000</span> , Funds clinical training equipment</li>
+                <li><span class="amount">UGX 500,000</span> , Supports library resources</li>
+                <li><span class="amount">UGX 1,000,000</span> , Funds technology upgrades</li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('one-time')">Donate Now</button>
             </div>
@@ -751,10 +751,10 @@
               <h3>Monthly Giving</h3>
               <p>Provide sustained support through monthly contributions</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 25,000/month</span> - Student meal support</li>
-                <li><span class="amount">UGX 50,000/month</span> - Textbook fund</li>
-                <li><span class="amount">UGX 100,000/month</span> - Technology maintenance</li>
-                <li><span class="amount">UGX 200,000/month</span> - Scholarship fund</li>
+                <li><span class="amount">UGX 25,000/month</span> , Student meal support</li>
+                <li><span class="amount">UGX 50,000/month</span> , Textbook fund</li>
+                <li><span class="amount">UGX 100,000/month</span> , Technology maintenance</li>
+                <li><span class="amount">UGX 200,000/month</span> , Scholarship fund</li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('monthly')">Give Monthly</button>
             </div>
@@ -768,10 +768,10 @@
               <h3>Scholarship Fund</h3>
               <p>Support deserving students who cannot afford tuition fees</p>
               <ul class="donation-amounts">
-                <li><span class="amount">UGX 500,000</span> - Partial scholarship</li>
-                <li><span class="amount">UGX 1,000,000</span> - Half scholarship</li>
-                <li><span class="amount">UGX 2,000,000</span> - Full semester</li>
-                <li><span class="amount">UGX 4,000,000</span> - Full year scholarship</li>
+                <li><span class="amount">UGX 500,000</span> , Partial scholarship</li>
+                <li><span class="amount">UGX 1,000,000</span> , Half scholarship</li>
+                <li><span class="amount">UGX 2,000,000</span> , Full semester</li>
+                <li><span class="amount">UGX 4,000,000</span> , Full year scholarship</li>
               </ul>
               <button class="btn btn-primary" onclick="showDonationForm('scholarship')">Fund Scholarship</button>
             </div>
@@ -821,7 +821,7 @@
               </div>
               <div class="project-content">
                 <h3>Computer Lab Enhancement</h3>
-                <p>Upgrade our computer lab with modern systems, high-speed internet, and educational software to enhance digital learning.</p>
+                <p>Upgrade our computer lab with modern systems, high speed internet, and educational software to enhance digital learning.</p>
                 <div class="project-progress">
                   <div class="progress-info">
                     <span>Goal: UGX 30,000,000</span>
@@ -928,7 +928,7 @@
                   <label for="donationType" class="form-label">Donation Type *</label>
                   <select class="form-control" id="donationType" name="donationType" required>
                     <option value="">Select Type</option>
-                    <option value="one-time">One-Time Donation</option>
+                    <option value="one-time">One Time Donation</option>
                     <option value="monthly">Monthly Giving</option>
                     <option value="scholarship">Scholarship Fund</option>
                     <option value="project">Specific Project</option>

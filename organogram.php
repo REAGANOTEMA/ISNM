@@ -884,7 +884,7 @@ include('shared/_header.php');
                           <div class="card-shine"></div>
                           <i class="fas fa-user-tie org-icon"></i>
                           <div class="org-title">Director ICT</div>
-                          <div class="org-subtitle">Head of ICT Department — Oversight & Management</div>
+                          <div class="org-subtitle">Head of ICT Department , Oversight & Management</div>
                           <a href="staff-login.php?position=Director%20ICT" class="org-link" onclick="event.preventDefault(); window.location.replace('staff-login.php?position=Director%20ICT');">
                               <i class="fas fa-sign-in-alt"></i> Login
                           </a>
@@ -900,7 +900,7 @@ include('shared/_header.php');
                           <div class="card-shine"></div>
                           <i class="fas fa-desktop org-icon"></i>
                           <div class="org-title">Computer Lab Manager</div>
-                          <div class="org-subtitle">ICT Operations — Lab Management & Support</div>
+                          <div class="org-subtitle">ICT Operations , Lab Management & Support</div>
                           <a href="staff-login.php?position=Computer%20Lab%20Manager" class="org-link">
                               <i class="fas fa-sign-in-alt"></i> Login
                           </a>

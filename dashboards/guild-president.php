@@ -73,7 +73,7 @@ if ($studentsDb) {
 
         <div class="card">
             <h3>Student Leadership Panel</h3>
-            <p>Access student-related information and manage student affairs.</p>
+            <p>Access student related information and manage student affairs.</p>
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary" onclick="location.href='../student-login.php'">
                     <i class="fas fa-users"></i> View Student Platform

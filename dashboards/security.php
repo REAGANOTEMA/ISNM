@@ -125,7 +125,7 @@ if ($conn) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6><i class="fas fa-<?= $sevClass === 'high' ? 'exclamation-circle' : ($sevClass === 'medium' ? 'exclamation-triangle' : 'info-circle') ?>"></i> <?= htmlspecialchars($inc['incident_type'] ?? 'Incident') ?></h6>
-                        <small class="text-muted"><?= htmlspecialchars($inc['location'] ?? '—') ?> - <?= !empty($inc['reported_at']) ? date('g:i A', strtotime($inc['reported_at'])) : '—' ?> | <?= htmlspecialchars(substr($inc['description'] ?? '—', 0, 80)) ?></small>
+                        <small class="text-muted"><?= htmlspecialchars($inc['location'] ?? '-') ?> , <?= !empty($inc['reported_at']) ? date('g:i A', strtotime($inc['reported_at'])) : '-' ?> | <?= htmlspecialchars(substr($inc['description'] ?? '-', 0, 80)) ?></small>
                     </div>
                     <span class="badge bg-<?= $sevClass === 'high' ? 'danger' : ($sevClass === 'medium' ? 'warning text-dark' : 'success') ?>"><?= ucfirst(htmlspecialchars($inc['severity'] ?? 'Low')) ?> Priority</span>
                 </div>
@@ -147,7 +147,7 @@ if ($conn) {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6><?= htmlspecialchars($pat['guard_name'] ?? 'Guard') ?></h6>
-                                <small class="text-muted"><?= htmlspecialchars($pat['location'] ?? $pat['patrol_area'] ?? '—') ?> | Started: <?= !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '—' ?></small>
+                                <small class="text-muted"><?= htmlspecialchars($pat['location'] ?? $pat['patrol_area'] ?? '-') ?> | Started: <?= !empty($pat['start_time']) ? date('g:i A', strtotime($pat['start_time'])) : '-' ?></small>
                             </div>
                             <span class="patrol-status status-<?= $pStatus === 'active' ? 'active' : ($pStatus === 'break' ? 'break' : 'inactive') ?>"><?= ucfirst(htmlspecialchars($pStatus)) ?></span>
                         </div>

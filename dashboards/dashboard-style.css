@@ -373,3 +373,204 @@
     transform: translateY(-2px);
     background: var(--isnm-light-blue);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Director General Dashboard Layout
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page layout */
+.page-content {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.content-area {
+    padding: 20px 24px;
+    flex: 1;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Top bar header */
+.top-bar {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+    color: #fff;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(26, 35, 126, 0.25);
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.top-bar strong {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.top-bar .small {
+    opacity: 0.85;
+}
+
+.top-bar .btn-outline-danger {
+    color: #fca5a5;
+    border-color: rgba(252, 165, 165, 0.3);
+}
+
+.top-bar .btn-outline-danger:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+/* Section cards (used by DG dashboard) */
+.section-card {
+    background: linear-gradient(to bottom, var(--card-chocolate-accent, #d7ccc8) 0%, var(--card-chocolate-accent, #d7ccc8) 5px, var(--card-chocolate, #f0dcc8) 5px, var(--card-chocolate, #f0dcc8) 100%);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06) !important;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.section-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(183, 149, 128, 0.2);
+}
+
+.section-card h2 {
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+}
+
+/* Stats icon colors for DG dashboard */
+.si {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.si-blue { background: linear-gradient(135deg, #1a237e, #3949ab); }
+.si-green { background: linear-gradient(135deg, #059669, #10b981); }
+.si-cyan { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+.si-red { background: linear-gradient(135deg, #dc2626, #ef4444); }
+.si-orange { background: linear-gradient(135deg, #ea580c, #f97316); }
+.si-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+
+/* DG dashboard stat cards */
+.page-content .stat-card {
+    background: linear-gradient(to bottom, var(--card-yellow-accent, #ffe082) 0%, var(--card-yellow-accent, #ffe082) 5px, var(--card-yellow, #fef9e7) 5px, var(--card-yellow, #fef9e7) 100%);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    perspective: 1200px;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+}
+
+.page-content .stat-card:hover {
+    transform: perspective(1200px) translateY(-4px) translateZ(12px) rotateX(1.5deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(255, 224, 130, 0.25);
+}
+
+.page-content .stat-content h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.page-content .stat-content p {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive for DG dashboard */
+@media (max-width: 992px) {
+    .page-content .stat-card {
+        padding: 12px;
+        gap: 10px;
+    }
+    .page-content .stat-content h3 {
+        font-size: 1rem;
+    }
+    .page-content .stat-content p {
+        font-size: 0.68rem;
+    }
+    .si {
+        width: 36px;
+        height: 36px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    .content-area {
+        padding: 12px;
+    }
+    .top-bar {
+        padding: 10px 12px;
+    }
+    .top-bar strong {
+        font-size: 0.95rem;
+    }
+    .section-card {
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+    .section-card h2 {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-area {
+        padding: 8px;
+    }
+    .section-card {
+        padding: 10px;
+        border-radius: 12px;
+    }
+}

@@ -53,7 +53,7 @@ if ($staffDb) {
                         <?php foreach ($budgets as $b): ?>
                         <tr>
                             <?php foreach ($b as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '—') ?></td>
+                            <td><?= htmlspecialchars($val ?? '-') ?></td>
                             <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>

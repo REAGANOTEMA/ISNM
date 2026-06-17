@@ -180,7 +180,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <div class="inventory-card">
             <h4>Total Stock Value</h4>
             <p class="inventory-card-value">UGX <?php echo number_format($total_stock_value, 2); ?></p>
-            <p class="text-muted">Real-time valuation for department items</p>
+            <p class="text-muted">Real time valuation for department items</p>
         </div>
         <div class="inventory-card">
             <h4>Department</h4>

@@ -138,7 +138,7 @@ if ($conn) {
                         <div class="welfare-cases">
                             <div class="case-card">
                                 <div class="case-header">
-                                    <h4>Student Mary - Homesickness</h4>
+                                    <h4>Student Mary , Homesickness</h4>
                                     <span class="case-date">Apr 22, 2026</span>
                                 </div>
                                 <div class="case-details">
@@ -163,7 +163,7 @@ if ($conn) {
                             
                             <div class="case-card">
                                 <div class="case-header">
-                                    <h4>Student John - Financial Need</h4>
+                                    <h4>Student John , Financial Need</h4>
                                     <span class="case-date">Apr 20, 2026</span>
                                 </div>
                                 <div class="case-details">
@@ -212,8 +212,8 @@ if ($conn) {
                         <div class="counseling-schedule">
                             <div class="session-item">
                                 <div class="session-header">
-                                    <h4>Individual Counseling - Mary Student</h4>
-                                    <span class="session-time">10:00 AM - 11:00 AM</span>
+                                    <h4>Individual Counseling , Mary Student</h4>
+                                    <span class="session-time">10:00 AM to 11:00 AM</span>
                                 </div>
                                 <div class="session-details">
                                     <div class="detail">
@@ -237,8 +237,8 @@ if ($conn) {
                             
                             <div class="session-item">
                                 <div class="session-header">
-                                    <h4>Group Counseling - First Year Students</h4>
-                                    <span class="session-time">2:00 PM - 3:30 PM</span>
+                                    <h4>Group Counseling , First Year Students</h4>
+                                    <span class="session-time">2:00 PM to 3:30 PM</span>
                                 </div>
                                 <div class="session-details">
                                     <div class="detail">
@@ -286,7 +286,7 @@ if ($conn) {
                         <div class="health-incidents">
                             <div class="incident-card">
                                 <div class="incident-header">
-                                    <h4>Student Sarah - Fever</h4>
+                                    <h4>Student Sarah , Fever</h4>
                                     <span class="incident-date">Apr 22, 2026</span>
                                 </div>
                                 <div class="incident-details">
@@ -380,7 +380,7 @@ if ($conn) {
                         <div class="discipline-cases">
                             <div class="discipline-item">
                                 <div class="discipline-header">
-                                    <h4>Student Peter - Late Night Return</h4>
+                                    <h4>Student Peter , Late Night Return</h4>
                                     <span class="discipline-date">Apr 21, 2026</span>
                                 </div>
                                 <div class="discipline-details">
@@ -573,9 +573,9 @@ if ($conn) {
                                 <textarea class="form-control" rows="3"></textarea>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Follow-up Required</label>
+                                <label class="form-label">Follow up Required</label>
                                 <select class="form-control" required>
-                                    <option value="">Select Follow-up</option>
+                                    <option value="">Select Follow up</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                 </select>

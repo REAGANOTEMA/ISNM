@@ -57,7 +57,7 @@ ob_start();
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Academic Transcript - <?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name']); ?></title>
+    <title>Academic Transcript | <?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name']); ?></title>
     <style>
         @page {
             margin: 1cm;

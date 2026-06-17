@@ -263,7 +263,7 @@ function getUserDashboard($role) {
         
         // Executive Level
         'Director General' => 'director-general.php',
-        'Chief Executive Officer' => 'ceo.php',
+        'Chief Executive Officer' => 'director-general.php',
         
         // Director Level
         'Director Academics' => 'director-academics.php',

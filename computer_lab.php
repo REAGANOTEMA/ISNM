@@ -358,7 +358,7 @@ if ($conn) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Lab Dashboard - ISNM ICT Management System</title>
+    <title>Computer Lab Dashboard | ISNM ICT Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -1113,9 +1113,9 @@ if ($conn) {
                                     <tr>
                                         <td><code><?= htmlspecialchars($s['student_id']) ?></code></td>
                                         <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-                                        <td><?= htmlspecialchars($s['index_number'] ?? '—') ?></td>
-                                        <td><?= htmlspecialchars($s['program'] ?? '—') ?></td>
-                                        <td><?= htmlspecialchars($s['phone'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($s['index_number'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
                                         <td><span class="badge bg-<?= $s['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
                                     </tr>
                                     <?php endforeach; ?>

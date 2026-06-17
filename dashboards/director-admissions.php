@@ -168,7 +168,7 @@ try {
             <div class="dashboard-header">
                 <div class="header-left">
                     <h1>Director Admissions Dashboard</h1>
-                    <p>Admissions & Requirements Management - Iganga School of Nursing and Midwifery</p>
+                    <p>Admissions & Requirements Management , Iganga School of Nursing and Midwifery</p>
                 </div>
                 <div class="header-right d-flex gap-3 align-items-center">
                     <div class="date-time">

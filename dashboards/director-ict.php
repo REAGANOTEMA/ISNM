@@ -244,7 +244,7 @@ if ($search_term && $students_conn) {
                                 </div>
                                 <div class="card-body p-0">
                                     <?php if (empty($tickets)): ?>
-                                        <div class="no-data"><i class="fas fa-check-circle" style="color:#10b981"></i><p>No tickets — all clear!</p></div>
+                                        <div class="no-data"><i class="fas fa-check-circle" style="color:#10b981"></i><p>No tickets , all clear!</p></div>
                                     <?php else: ?>
                                     <div class="table-responsive">
                                         <table class="table table-hover mb-0">
@@ -331,10 +331,10 @@ if ($search_term && $students_conn) {
                                         <tr>
                                             <td><code><?= htmlspecialchars($s['student_id']) ?></code></td>
                                             <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-                                            <td><?= htmlspecialchars($s['index_number'] ?? '—') ?></td>
-                                            <td><?= htmlspecialchars($s['program'] ?? '—') ?></td>
-                                            <td><?= htmlspecialchars($s['phone'] ?? '—') ?></td>
-                                            <td><small><?= htmlspecialchars($s['email'] ?? '—') ?></small></td>
+                                            <td><?= htmlspecialchars($s['index_number'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
+                                            <td><small><?= htmlspecialchars($s['email'] ?? '-') ?></small></td>
                                             <td><span class="badge bg-<?= $s['status'] === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
                                         </tr>
                                         <?php endforeach; ?>
@@ -373,9 +373,9 @@ if ($search_term && $students_conn) {
                                             <td><?= htmlspecialchars($c['computer_name']) ?></td>
                                             <td><?= htmlspecialchars($c['location']) ?></td>
                                             <td><span class="badge bg-<?= $c['status'] === 'online' ? 'success' : ($c['status'] === 'maintenance' ? 'warning text-dark' : 'danger') ?>"><span class="status-dot <?= $c['status'] ?>"></span><?= ucfirst($c['status']) ?></span></td>
-                                            <td><small><?= htmlspecialchars($c['ip_address'] ?? '—') ?></small></td>
-                                            <td><small><?= htmlspecialchars($c['os_installed'] ?? '—') ?></small></td>
-                                            <td><small><?= $c['last_maintenance'] ? date('M d, Y', strtotime($c['last_maintenance'])) : '—' ?></small></td>
+                                            <td><small><?= htmlspecialchars($c['ip_address'] ?? '-') ?></small></td>
+                                            <td><small><?= htmlspecialchars($c['os_installed'] ?? '-') ?></small></td>
+                                            <td><small><?= $c['last_maintenance'] ? date('M d, Y', strtotime($c['last_maintenance'])) : '-' ?></small></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -473,9 +473,9 @@ if ($search_term && $students_conn) {
                                             <td><strong><?= htmlspecialchars($d['device_name']) ?></strong></td>
                                             <td><span class="badge bg-secondary"><?= ucfirst(str_replace('_', ' ', $d['device_type'])) ?></span></td>
                                             <td><code><?= htmlspecialchars($d['ip_address']) ?></code></td>
-                                            <td><?= htmlspecialchars($d['location'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($d['location'] ?? '-') ?></td>
                                             <td><span class="badge bg-<?= $d['status'] === 'online' ? 'success' : ($d['status'] === 'maintenance' ? 'warning text-dark' : 'danger') ?>"><span class="status-dot <?= $d['status'] ?>"></span><?= ucfirst($d['status']) ?></span></td>
-                                            <td><small><?= htmlspecialchars($d['firmware_version'] ?? '—') ?></small></td>
+                                            <td><small><?= htmlspecialchars($d['firmware_version'] ?? '-') ?></small></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -501,9 +501,9 @@ if ($search_term && $students_conn) {
                                         <?php foreach ($software as $s): ?>
                                         <tr>
                                             <td><strong><?= htmlspecialchars($s['software_name']) ?></strong></td>
-                                            <td><?= htmlspecialchars($s['version'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($s['version'] ?? '-') ?></td>
                                             <td><span class="badge bg-<?= $s['license_type'] === 'commercial' ? 'warning text-dark' : ($s['license_type'] === 'educational' ? 'info' : 'success') ?>"><?= ucfirst($s['license_type']) ?></span></td>
-                                            <td><?= $s['license_expiry'] ? date('M d, Y', strtotime($s['license_expiry'])) : '—' ?></td>
+                                            <td><?= $s['license_expiry'] ? date('M d, Y', strtotime($s['license_expiry'])) : '-' ?></td>
                                             <td><?= (int)$s['installation_count'] ?></td>
                                             <td><?= $s['update_available'] ? '<span class="badge bg-warning text-dark"><i class="fas fa-arrow-up me-1"></i>Update Available</span>' : '<span class="badge bg-success">Up to date</span>' ?></td>
                                         </tr>
@@ -535,8 +535,8 @@ if ($search_term && $students_conn) {
                                             <td><?= htmlspecialchars(substr($m['description'], 0, 50)) ?></td>
                                             <td><?= htmlspecialchars($m['performed_by']) ?></td>
                                             <td><span class="badge bg-<?= $m['status'] === 'completed' ? 'success' : ($m['status'] === 'in_progress' ? 'warning text-dark' : ($m['status'] === 'scheduled' ? 'primary' : 'secondary')) ?>"><?= ucfirst(str_replace('_', ' ', $m['status'])) ?></span></td>
-                                            <td><small><?= $m['scheduled_date'] ? date('M d, Y', strtotime($m['scheduled_date'])) : '—' ?></small></td>
-                                            <td><small><?= $m['completed_date'] ? date('M d, Y', strtotime($m['completed_date'])) : '—' ?></small></td>
+                                            <td><small><?= $m['scheduled_date'] ? date('M d, Y', strtotime($m['scheduled_date'])) : '-' ?></small></td>
+                                            <td><small><?= $m['completed_date'] ? date('M d, Y', strtotime($m['completed_date'])) : '-' ?></small></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -635,7 +635,7 @@ if ($search_term && $students_conn) {
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label fw-semibold">Computer ID *</label><input type="text" class="form-control" name="computer_id" required placeholder="e.g. LAB-C-001"></div>
                         <div class="col-md-6"><label class="form-label fw-semibold">Computer Name *</label><input type="text" class="form-control" name="computer_name" required></div>
-                        <div class="col-12"><label class="form-label fw-semibold">Location *</label><input type="text" class="form-control" name="location" required placeholder="e.g. Lab C - Floor 1"></div>
+                        <div class="col-12"><label class="form-label fw-semibold">Location *</label><input type="text" class="form-control" name="location" required placeholder="e.g. Lab C , Floor 1"></div>
                         <div class="col-md-6"><label class="form-label">IP Address</label><input type="text" class="form-control" name="ip_address" placeholder="192.168.1.x"></div>
                         <div class="col-md-6"><label class="form-label">MAC Address</label><input type="text" class="form-control" name="mac_address" placeholder="AA:BB:CC:DD:EE:FF"></div>
                         <div class="col-md-6"><label class="form-label">Specifications</label><input type="text" class="form-control" name="specifications" placeholder="Intel i5, 8GB RAM"></div>

@@ -52,7 +52,7 @@ $modules = getFilteredModules($user_role);
     <div class="dashboard-main">
         <div class="page-title">
             <h1><i class="fas fa-tachometer-alt me-2" style="color:#3949ab;"></i>Dashboard Overview</h1>
-            <p>Welcome back, <?= htmlspecialchars($user_name) ?> — <?= date('l, F j, Y') ?></p>
+            <p>Welcome back, <?= htmlspecialchars($user_name) ?> , <?= date('l, F j, Y') ?></p>
         </div>
 
         <!-- Summary stat cards -->
@@ -123,7 +123,7 @@ $modules = getFilteredModules($user_role);
                         <?php foreach ($recent_activities as $act): ?>
                         <div class="activity-item">
                             <strong><?= htmlspecialchars($act['full_name'] ?? 'System') ?></strong>
-                            <span class="text-muted">— <?= htmlspecialchars(mb_substr($act['action'] ?? $act['description'] ?? '', 0, 80)) ?></span>
+                            <span class="text-muted">, <?= htmlspecialchars(mb_substr($act['action'] ?? $act['description'] ?? '', 0, 80)) ?></span>
                             <div class="activity-time"><?= htmlspecialchars($act['created_at'] ?? '') ?></div>
                         </div>
                         <?php endforeach; ?>

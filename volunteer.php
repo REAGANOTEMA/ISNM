@@ -117,7 +117,7 @@
                 </ul>
                 
                 <h4>Time Commitment</h4>
-                <p>Flexible - 4-8 hours per week during clinical placements</p>
+                <p>Flexible , 4-8 hours per week during clinical placements</p>
                 
                 <button class="btn btn-primary" onclick="applyVolunteer('Clinical Instructor')">Apply Now</button>
               </div>
@@ -179,7 +179,7 @@
                 </ul>
                 
                 <h4>Time Commitment</h4>
-                <p>Flexible - 4-6 hours per week</p>
+                <p>Flexible , 4-6 hours per week</p>
                 
                 <button class="btn btn-primary" onclick="applyVolunteer('IT Support')">Apply Now</button>
               </div>
@@ -210,7 +210,7 @@
                 </ul>
                 
                 <h4>Time Commitment</h4>
-                <p>Flexible - 8-12 hours per week</p>
+                <p>Flexible , 8-12 hours per week</p>
                 
                 <button class="btn btn-primary" onclick="applyVolunteer('Administrative Assistant')">Apply Now</button>
               </div>
@@ -241,7 +241,7 @@
                 </ul>
                 
                 <h4>Time Commitment</h4>
-                <p>Event-based - 4-8 hours per screening event</p>
+                <p>Event-based , 4-8 hours per screening event</p>
                 
                 <button class="btn btn-primary" onclick="applyVolunteer('Health Screening')">Apply Now</button>
               </div>
@@ -272,7 +272,7 @@
                 </ul>
                 
                 <h4>Time Commitment</h4>
-                <p>Flexible - 6-10 hours per week</p>
+                <p>Flexible , 6-10 hours per week</p>
                 
                 <button class="btn btn-primary" onclick="applyVolunteer('Library Assistant')">Apply Now</button>
               </div>
@@ -392,7 +392,7 @@
                       <option value="Weekends">Weekends Only</option>
                       <option value="Flexible">Flexible</option>
                       <option value="Evenings">Evenings Only</option>
-                      <option value="Event-based">Event-based Only</option>
+                      <option value="Event-based">Event based Only</option>
                     </select>
                   </div>
                   <div class="col-md-6">

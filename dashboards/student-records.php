@@ -27,7 +27,7 @@ $isSuperAdmin = $auth_service->hasFullInstitutionAccess($user_role);
     <div class="top-bar no-print">
         <div>
             <h1><i class="fas fa-users-gear"></i>Student Records</h1>
-            <small class="text-muted">View students by set, program & level — <?= htmlspecialchars($user_name) ?> (<?= htmlspecialchars($user_role) ?>)</small>
+            <small class="text-muted">View students by set, program & level , <?= htmlspecialchars($user_name) ?> (<?= htmlspecialchars($user_role) ?>)</small>
         </div>
         <div class="d-flex gap-2">
             <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>

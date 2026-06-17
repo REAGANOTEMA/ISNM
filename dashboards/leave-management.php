@@ -58,7 +58,7 @@ if ($staffDb) {
                         <?php foreach ($leaveRecords as $l): ?>
                         <tr>
                             <?php foreach ($l as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '—') ?></td>
+                            <td><?= htmlspecialchars($val ?? '-') ?></td>
                             <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>

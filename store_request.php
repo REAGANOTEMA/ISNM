@@ -93,7 +93,7 @@ $viewTab = $_GET['view'] ?? 'new';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Store Request - ISNM</title>
+<title>Store Request | ISNM</title>
 <?php include_once __DIR__ . '/includes/_favicon.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -406,7 +406,7 @@ $(document).ready(function() {
             let qty = row.find('.qty-input').val();
             let name = $(this).data('name');
             let unit = $(this).data('unit');
-            if (parseFloat(qty) > 0) items.push('<div>' + name + ' - <strong>' + qty + '</strong> ' + unit + '</div>');
+            if (parseFloat(qty) > 0) items.push('<div>' + name + ' , <strong>' + qty + '</strong> ' + unit + '</div>');
         });
         if (items.length > 0) { summary.show(); list.html(items.join('')); }
         else { summary.hide(); list.html(''); }

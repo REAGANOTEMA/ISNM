@@ -194,7 +194,7 @@ $pageTitle = 'Sickbay Dashboard';
                                         <small class="d-block text-muted"><?= htmlspecialchars($r['student_id'] ?? '') ?></small>
                                     </td>
                                     <td><?= htmlspecialchars(substr($r['diagnosis'] ?? $r['complaint'] ?? $r['symptoms'] ?? 'N/A', 0, 50)) ?></td>
-                                    <td><?= $r['temperature'] ? htmlspecialchars($r['temperature']).'°C' : '—' ?></td>
+                                    <td><?= $r['temperature'] ? htmlspecialchars($r['temperature']).'°C' : '-' ?></td>
                                     <td><span class="badge <?= $status_class ?>"><?= htmlspecialchars(ucfirst($r['status'] ?? 'Unknown')) ?></span></td>
                                     <td><small class="text-muted"><?= date('d M Y H:i', strtotime($r['created_at'])) ?></small></td>
                                 </tr>

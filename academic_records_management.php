@@ -260,7 +260,7 @@ $programs = executeQuery($programs_sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Records Management - ISNM</title>
+    <title>Academic Records Management | ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -715,7 +715,7 @@ $programs = executeQuery($programs_sql);
                                     <td><?php echo htmlspecialchars($record['program']); ?></td>
                                     <td><?php echo htmlspecialchars($record['academic_year']); ?></td>
                                     <td><?php echo htmlspecialchars($record['semester']); ?></td>
-                                    <td><?php echo htmlspecialchars($record['course_code'] . ' - ' . $record['course_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($record['course_code'] . ' , ' . $record['course_name']); ?></td>
                                     <td><?php echo htmlspecialchars($record['credits']); ?></td>
                                     <td><?php echo htmlspecialchars($record['assessment_marks']); ?></td>
                                     <td><?php echo htmlspecialchars($record['exam_marks']); ?></td>

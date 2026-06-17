@@ -298,10 +298,10 @@ if ($conn) {
                                     <?php foreach ($recent_transactions as $trx): $trxId = 'TRX-'.date('Y').'-'.str_pad($trx['id']??0,3,'0',STR_PAD_LEFT); ?>
                                     <tr>
                                         <td><?= $trxId ?></td>
-                                        <td><?= htmlspecialchars($trx['member_name'] ?? $trx['member_id'] ?? '—') ?></td>
-                                        <td><?= htmlspecialchars($trx['book_title'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($trx['member_name'] ?? $trx['member_id'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($trx['book_title'] ?? '-') ?></td>
                                         <td><span class="transaction-type <?= ($trx['status']??'Borrowed')==='Borrowed'?'checkout':'return' ?>"><?= ($trx['status']??'Borrowed')==='Borrowed'?'Checkout':'Return' ?></span></td>
-                                        <td><?= !empty($trx['transaction_date']) ? date('M j, Y', strtotime($trx['transaction_date'])) : '—' ?></td>
+                                        <td><?= !empty($trx['transaction_date']) ? date('M j, Y', strtotime($trx['transaction_date'])) : '-' ?></td>
                                         <td><span class="status-badge <?= ($trx['status']??'Borrowed')==='Returned'?'completed':'active' ?>"><?= htmlspecialchars($trx['status'] ?? 'Active') ?></span></td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-info">View</button>
@@ -377,7 +377,7 @@ if ($conn) {
                                 <div class="member-details">
                                     <div class="detail">
                                         <span>Member ID:</span>
-                                        <strong><?= htmlspecialchars($rm['member_id'] ?? '—') ?></strong>
+                                        <strong><?= htmlspecialchars($rm['member_id'] ?? '-') ?></strong>
                                     </div>
                                     <div class="detail">
                                         <span>Type:</span>
@@ -385,7 +385,7 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Registered:</span>
-                                        <strong><?= !empty($rm['registration_date']) ? date('M j, Y', strtotime($rm['registration_date'])) : '—' ?></strong>
+                                        <strong><?= !empty($rm['registration_date']) ? date('M j, Y', strtotime($rm['registration_date'])) : '-' ?></strong>
                                     </div>
                                 </div>
                                 <div class="member-actions">

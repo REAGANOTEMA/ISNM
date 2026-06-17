@@ -22,7 +22,7 @@ $user         = $ctx['user'];
 
 $user_id   = (int)($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
-$user_name = $user['full_name'] ?? 'Doris Joy';
+$user_name = $user['full_name'] ?? ($_SESSION['full_name'] ?? 'Director General');
 
 $overview            = getInstitutionOverviewStats();
 $total_students      = $overview['total_students'];
@@ -147,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     header('Location: director-general.php'); exit;
 }
 ?>
+<?php $pageTitle = 'Director General Dashboard'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -159,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 <div class="page-content">
   <div class="top-bar">
     <div>
-      <strong><i class="fas fa-crown me-2 text-warning"></i>Director General – Doris Joy</strong>
+      <strong><i class="fas fa-crown me-2 text-warning"></i>Director General – <?= htmlspecialchars($user_name) ?></strong>
       <div class="text-muted small">Full Institution Oversight | Iganga School of Nursing &amp; Midwifery</div>
     </div>
     <div class="d-flex align-items-center gap-3">
@@ -194,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
         ['Pending Review',      $pending_apps,                 'si-purple','hourglass-half'],
       ];
       foreach($cards as $c): ?>
-      <div class="col-6 col-md-2">
+      <div class="col-6 col-md-4 col-lg-2">
         <div class="stat-card">
           <div class="si <?= $c[2] ?>"><i class="fas fa-<?= $c[3] ?>"></i></div>
           <div class="stat-content"><h3><?= is_numeric($c[1]) ? number_format($c[1]) : $c[1] ?></h3><p><?= $c[0] ?></p></div>
@@ -298,39 +299,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 
     <!-- QUICK ACTIONS -->
     <div class="section-card">
-      <h2><i class="fas fa-bolt me-2"></i>Quick Actions – Full Control</h2>
-      <div class="d-flex flex-wrap gap-2">
-        <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
-        <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
-        <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
-        <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
-        <a href="../dashboards/ceo.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-user-tie me-1"></i>CEO</a>
-        <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
-        <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
-        <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
-        <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
-        <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
-        <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
-        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
-        <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
-        <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
-        <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
-        <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
-        <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
-        <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
-        <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
-        <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
-        <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
-        <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
-        <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
-        <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
-        <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
-        <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
-        <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
-        <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
-        <a href="../dashboards/school-bursar.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Financial Reports</a>
-        <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+      <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
+
+      <div class="mb-3">
+        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-primary" style="font-size:11px">OPERATIONS</span><small class="text-muted">Core daily tasks</small></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
+          <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
+          <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
+          <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+          <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-warning text-dark" style="font-size:11px">EXECUTIVE</span><small class="text-muted">Leadership dashboards</small></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
+          <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
+          <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
+          <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-info" style="font-size:11px">ADMINISTRATION</span><small class="text-muted">School administration</small></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
+          <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
+          <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
+          <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
+          <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
+          <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-success" style="font-size:11px">ACADEMIC</span><small class="text-muted">Faculty & student services</small></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
+          <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
+          <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
+          <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
+          <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
+          <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-secondary" style="font-size:11px">SUPPORT</span><small class="text-muted">Welfare & facilities</small></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
+          <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
+          <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
+          <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
+          <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
+          <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
+          <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTITUTIONAL REPORTS -->
+    <div class="section-card">
+      <h2><i class="fas fa-chart-bar me-2"></i>Institutional Reports</h2>
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <div class="report-card text-center p-3">
+            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-chart-pie"></i></div>
+            <h6 class="fw-bold mb-1">Institutional Summary</h6>
+            <p class="small text-muted mb-2">Performance summary</p>
+            <a href="../dashboards/inventory-reports.php" class="btn btn-sm btn-primary w-100">Generate</a>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="report-card text-center p-3">
+            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-users"></i></div>
+            <h6 class="fw-bold mb-1">Enrollment Statistics</h6>
+            <p class="small text-muted mb-2">Trends & analysis</p>
+            <a href="../dashboards/student-management.php" class="btn btn-sm btn-primary w-100">Generate</a>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="report-card text-center p-3">
+            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-trophy"></i></div>
+            <h6 class="fw-bold mb-1">Graduation Report</h6>
+            <p class="small text-muted mb-2">Completion statistics</p>
+            <a href="../academic_records_management.php" class="btn btn-sm btn-primary w-100">Generate</a>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="report-card text-center p-3">
+            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-balance-scale"></i></div>
+            <h6 class="fw-bold mb-1">Financial Summary</h6>
+            <p class="small text-muted mb-2">Revenue & expenses</p>
+            <a href="../dashboards/director-finance.php" class="btn btn-sm btn-primary w-100">Generate</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -386,7 +452,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
             <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
             <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
             <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-            <td><?= htmlspecialchars($s['department'] ?? '—') ?></td>
+            <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
             <td><small><?= htmlspecialchars($s['email']) ?></small></td>
             <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
             <td><?= $s['last_login'] ? date('d M Y H:i',strtotime($s['last_login'])) : '<span class="text-muted">Never</span>' ?></td>
@@ -396,24 +462,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
         </table>
       </div>
     </div>
-
-    <!-- RECENT STUDENTS FROM EXCEL -->
-    <?php if(!empty($recent_students)): ?>
-    <div class="section-card">
-      <h2><i class="fas fa-user-graduate me-2"></i>Recently Loaded Student Profiles</h2>
-      <div class="row g-2">
-      <?php foreach($recent_students as $st): ?>
-        <div class="col-md-4 col-lg-2">
-          <div class="border rounded p-2 text-center small">
-            <div class="fw-bold"><?= htmlspecialchars($st['full_name'] ?? ($st['first_name']??'').' '.($st['surname']??'')) ?></div>
-            <div class="text-muted"><?= htmlspecialchars($st['index_number'] ?? $st['student_number'] ?? '') ?></div>
-            <div><?= htmlspecialchars($st['program'] ?? $st['course'] ?? '') ?></div>
-          </div>
-        </div>
-      <?php endforeach; ?>
-      </div>
-    </div>
-    <?php endif; ?>
 
     <!-- STUDENT RECORDS BY SET – Full Institution View -->
     <div class="section-card">
@@ -498,7 +546,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
   <div class="modal-dialog">
     <form method="POST" class="modal-content">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Send Announcement – Doris Joy</h5>
+        <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Send Announcement</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -606,7 +654,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 1000)); ?>;
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 function viewFullProfile(id){ showStudentProfileModal(id); }
 function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }

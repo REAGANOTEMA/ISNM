@@ -236,7 +236,7 @@ if ($conn) $conn->close();
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Template Variables (comma-separated)</label>
+                    <label class="form-label fw-bold">Template Variables (comma separated)</label>
                     <input type="text" class="form-control" name="template_variables" 
                            value="<?php 
                            $vars = $editing['template_variables'] ?? '{}';

@@ -299,13 +299,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <tr>
             <td><?= $offset+$i+1 ?></td>
             <td><code><?= htmlspecialchars($s['registration_number'] ?: $s['student_number']) ?></code></td>
-            <td><code><?= htmlspecialchars($s['national_student_id_number'] ?? '—') ?></code></td>
+            <td><code><?= htmlspecialchars($s['national_student_id_number'] ?? '-') ?></code></td>
             <td><strong><?= $fullname ?></strong></td>
-            <td><?= htmlspecialchars($s['course'] ?? '—') ?></td>
-            <td><?= $s['current_year'] ?? '—' ?></td>
-            <td><?= htmlspecialchars($s['set_name'] ?? '—') ?></td>
-            <td><?= htmlspecialchars($s['gender'] ?? '—') ?></td>
-            <td><?= htmlspecialchars($s['phone'] ?? '—') ?></td>
+            <td><?= htmlspecialchars($s['course'] ?? '-') ?></td>
+            <td><?= $s['current_year'] ?? '-' ?></td>
+            <td><?= htmlspecialchars($s['set_name'] ?? '-') ?></td>
+            <td><?= htmlspecialchars($s['gender'] ?? '-') ?></td>
+            <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
             <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
             <td>
               <button class="btn btn-sm btn-outline-primary btn-tbl" onclick="editStudent(<?= htmlspecialchars(json_encode($s)) ?>)"><i class="fas fa-edit"></i></button>
@@ -351,8 +351,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <td><?= $c['semester_start_date'] ?></td>
           <td><?= $c['semester_end_date'] ?></td>
           <td><?= $c['exam_start_date'] ?> – <?= $c['exam_end_date'] ?></td>
-          <td><?= $c['result_publication_date'] ?: '—' ?></td>
-          <td><?= $c['registration_deadline'] ?: '—' ?></td>
+          <td><?= $c['result_publication_date'] ?: '-' ?></td>
+          <td><?= $c['registration_deadline'] ?: '-' ?></td>
           <td><span class="badge bg-<?= $c['status']==='Current'?'success':($c['status']==='Upcoming'?'info':'secondary') ?>"><?= $c['status'] ?></span></td>
         </tr>
         <?php endforeach; ?>
@@ -588,15 +588,15 @@ function viewStudent(s){
     <div class="row g-2 small">
       <div class="col-md-6"><strong>Full Name:</strong> ${fn}</div>
       <div class="col-md-6"><strong>Reg No:</strong> ${s.registration_number||s.student_number}</div>
-      <div class="col-md-6"><strong>National ID:</strong> ${s.national_student_id_number||'—'}</div>
-      <div class="col-md-6"><strong>Program:</strong> ${s.course||'—'}</div>
-      <div class="col-md-3"><strong>Year:</strong> ${s.current_year||'—'}</div>
-      <div class="col-md-3"><strong>Semester:</strong> ${s.current_semester||'—'}</div>
-      <div class="col-md-3"><strong>Set:</strong> ${s.set_name||'—'}</div>
-      <div class="col-md-3"><strong>Gender:</strong> ${s.gender||'—'}</div>
-      <div class="col-md-6"><strong>Phone:</strong> ${s.phone||'—'}</div>
-      <div class="col-md-6"><strong>Email:</strong> ${s.email||'—'}</div>
-      <div class="col-md-6"><strong>Intake Date:</strong> ${s.intake_date||'—'}</div>
+      <div class="col-md-6"><strong>National ID:</strong> ${s.national_student_id_number||'-'}</div>
+      <div class="col-md-6"><strong>Program:</strong> ${s.course||'-'}</div>
+      <div class="col-md-3"><strong>Year:</strong> ${s.current_year||'-'}</div>
+      <div class="col-md-3"><strong>Semester:</strong> ${s.current_semester||'-'}</div>
+      <div class="col-md-3"><strong>Set:</strong> ${s.set_name||'-'}</div>
+      <div class="col-md-3"><strong>Gender:</strong> ${s.gender||'-'}</div>
+      <div class="col-md-6"><strong>Phone:</strong> ${s.phone||'-'}</div>
+      <div class="col-md-6"><strong>Email:</strong> ${s.email||'-'}</div>
+      <div class="col-md-6"><strong>Intake Date:</strong> ${s.intake_date||'-'}</div>
       <div class="col-md-6"><strong>Status:</strong> <span class="badge bg-success">${s.status}</span></div>
     </div>`;
   new bootstrap.Modal(document.getElementById('viewStudentModal')).show();

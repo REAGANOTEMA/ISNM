@@ -84,7 +84,7 @@
           
           <div class="timeline-item animate-slide-up" style="animation-delay: 0.3s;">
             <div class="timeline-marker">
-              <div class="timeline-year">2010-2015</div>
+              <div class="timeline-year">2010 , 2015</div>
             </div>
             <div class="timeline-content">
               <h3>Growth & Development</h3>
@@ -94,7 +94,7 @@
           
           <div class="timeline-item animate-slide-up" style="animation-delay: 0.5s;">
             <div class="timeline-marker">
-              <div class="timeline-year">2016-2020</div>
+              <div class="timeline-year">2016 , 2020</div>
             </div>
             <div class="timeline-content">
               <h3>Academic Excellence</h3>
@@ -104,11 +104,11 @@
           
           <div class="timeline-item animate-slide-up" style="animation-delay: 0.7s;">
             <div class="timeline-marker">
-              <div class="timeline-year">2021-2025</div>
+              <div class="timeline-year">2021 , 2025</div>
             </div>
             <div class="timeline-content">
               <h3>Modernization</h3>
-              <p>Construction of multi-purpose hall, computer laboratory with 60 computers, and implementation of modern teaching technologies.</p>
+              <p>Construction of multi purpose hall, computer laboratory with 60 computers, and implementation of modern teaching technologies.</p>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@
               <i class="fas fa-building"></i>
             </div>
             <h3>Infrastructure Development</h3>
-            <p>Multi-purpose hall, computer lab, 6 classrooms, girls' hostel, and modern facilities</p>
+            <p>Multi purpose hall, computer lab, 6 classrooms, girls' hostel, and modern facilities</p>
           </div>
           
           <div class="achievement-card animate-fade-in" style="animation-delay: 0.3s;">
@@ -162,7 +162,7 @@
               <i class="fas fa-graduation-cap"></i>
             </div>
             <h3>Staff Development</h3>
-            <p>Sponsored 4 staff members for Medical Education at Health Tutors' College - Mulage</p>
+            <p>Sponsored 4 staff members for Medical Education at Health Tutors' College , Mulage</p>
           </div>
           
           <div class="achievement-card animate-fade-in" style="animation-delay: 0.6s;">

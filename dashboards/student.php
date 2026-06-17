@@ -660,7 +660,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             <div class="d-flex align-items-center gap-3">
                                 <i class="bi bi-check-circle-fill text-success fs-4"></i>
                                 <div>
-                                    <strong>Auto-Deduction Active</strong>
+                                    <strong>Auto Deduction Active</strong>
                                     <br><small class="text-muted">
                                         <?= count($activeSub) ?> subscription(s) active &middot;
                                         Next deduction: <?= date('d M Y', strtotime($activeSub[0]['next_due_date'])) ?> &middot;

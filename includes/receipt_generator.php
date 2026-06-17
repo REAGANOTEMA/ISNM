@@ -57,7 +57,7 @@ class ReceiptGenerator {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Receipt - {$receipt_number}</title>
+            <title>Receipt | {$receipt_number}</title>
             <style>
                 @media print {
                     body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
@@ -113,7 +113,7 @@ class ReceiptGenerator {
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Fee Payment - {$payment['payment_reference']}</td>
+                            <td>Fee Payment , {$payment['payment_reference']}</td>
                             <td>" . number_format($payment['amount']) . "</td>
                         </tr>
                         <tr class='total-row'>
@@ -139,7 +139,7 @@ class ReceiptGenerator {
                 </div>
                 
                 <div class='footer'>
-                    <p><strong>\"Chosen to Serve\" - Disciplined Mind for Health Action</strong></p>
+                    <p><strong>\"Chosen to Serve\" , Disciplined Mind for Health Action</strong></p>
                     <p>This is a computer-generated receipt and is valid without signature.</p>
                     <p>Printed on: " . date('F j, Y \a\t g:i A') . "</p>
                 </div>
@@ -184,7 +184,7 @@ class ReceiptGenerator {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Payslip - {$payslip_number}</title>
+            <title>Payslip | {$payslip_number}</title>
             <style>
                 @media print { body { margin: 0; padding: 20px; } }
                 body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
@@ -263,7 +263,7 @@ class ReceiptGenerator {
                 </table>
                 
                 <div class='footer'>
-                    <p><strong>\"Chosen to Serve\" - Disciplined Mind for Health Action</strong></p>
+                    <p><strong>\"Chosen to Serve\" , Disciplined Mind for Health Action</strong></p>
                     <p>This is a computer-generated payslip and is valid without signature.</p>
                     <p>Generated on: " . date('F j, Y \a\t g:i A') . "</p>
                 </div>

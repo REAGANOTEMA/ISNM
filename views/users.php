@@ -55,7 +55,7 @@ $flashMessages = getFlashMessages();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - ISNM</title>
+    <title><?php echo $pageTitle; ?> | ISNM</title>
     <link rel="icon" type="image/png" href="../images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -350,7 +350,7 @@ $flashMessages = getFlashMessages();
                                             <div class="mb-3">
                                                 <label class="form-label">Staff ID</label>
                                                 <input type="text" name="staff_id" class="form-control">
-                                                <small class="text-muted">Optional - Link to staff record</small>
+                                                <small class="text-muted">Optional , Link to staff record</small>
                                             </div>
                                         </div>
                                     </div>
@@ -419,7 +419,7 @@ $flashMessages = getFlashMessages();
                                                 <label class="form-label">Staff ID</label>
                                                 <input type="text" name="staff_id" class="form-control" 
                                                        value="<?php echo htmlspecialchars($user['staff_id'] ?? ''); ?>">
-                                                <small class="text-muted">Optional - Link to staff record</small>
+                                                <small class="text-muted">Optional , Link to staff record</small>
                                             </div>
                                         </div>
                                     </div>

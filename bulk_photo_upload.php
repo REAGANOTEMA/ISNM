@@ -82,7 +82,7 @@ $students = executeQuery($students_sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk Photo Upload - ISNM</title>
+    <title>Bulk Photo Upload | ISNM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -413,7 +413,7 @@ $students = executeQuery($students_sql);
                     <?php foreach ($students as $student): ?>
                     const option<?php echo $student['student_id']; ?> = document.createElement('option');
                     option<?php echo $student['student_id']; ?>.value = '<?php echo $student['student_id']; ?>';
-                    option<?php echo $student['student_id']; ?>.textContent = '<?php echo htmlspecialchars($student['student_id'] . ' - ' . $student['surname'] . ', ' . $student['first_name']); ?>';
+                    option<?php echo $student['student_id']; ?>.textContent = '<?php echo htmlspecialchars($student['student_id'] . ' , ' . $student['surname'] . ', ' . $student['first_name']); ?>';
                     select.appendChild(option<?php echo $student['student_id']; ?>);
                     <?php endforeach; ?>
                     

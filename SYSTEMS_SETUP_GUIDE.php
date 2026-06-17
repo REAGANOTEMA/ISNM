@@ -350,7 +350,7 @@
                         <li>✓ Salary structure and payroll support</li>
                         <li>✓ Payslip generation</li>
                         <li>✓ Professional reports and analytics</li>
-                        <li>✓ Staff self-service portal features</li>
+                        <li>✓ Staff self service portal features</li>
                     </ul>
                 </div>
                 
@@ -505,11 +505,11 @@ mysql -u username -p database_name < sql/staffs/hr_system.sql
                 
                 <div class="subsection">
                     <p>✓ Both systems use <strong>professional, modern designs</strong> with gradient backgrounds and intuitive interfaces</p>
-                    <p>✓ All dashboards include <strong>real-time statistics</strong> and analytics</p>
+                    <p>✓ All dashboards include <strong>real time statistics</strong> and analytics</p>
                     <p>✓ Complete <strong>audit trail and activity logging</strong> is implemented</p>
-                    <p>✓ Systems support <strong>role-based access control</strong> for security</p>
+                    <p>✓ Systems support <strong>role based access control</strong> for security</p>
                     <p>✓ Database schemas include <strong>all requested features and more</strong></p>
-                    <p>✓ Both systems are <strong>production-ready</strong> and professional quality</p>
+                    <p>✓ Both systems are <strong>production ready</strong> and professional quality</p>
                     <p>⚠ Remember to <strong>change default passwords</strong> in production</p>
                     <p>⚠ <strong>Back up your databases</strong> regularly</p>
                 </div>

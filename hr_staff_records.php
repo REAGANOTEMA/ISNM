@@ -7,7 +7,7 @@ if (isset($_SESSION['hr_id'])) { header('Location: hr_login.php'); exit; }
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Staff Records - HR Portal</title>
+    <title>Staff Records | HR Portal</title>
 </head>
 <body style="padding: 40px; text-align: center; font-family: Arial; color: #666;">
     <h1>👨‍💼 Staff Records Management</h1>

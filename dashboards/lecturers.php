@@ -241,7 +241,7 @@ if ($conn) {
                             <div class="schedule-item">
                                 <div class="schedule-header">
                                     <h4>Basic Nursing Skills</h4>
-                                    <span class="schedule-time">10:00 AM - 12:00 PM</span>
+                                    <span class="schedule-time">10:00 AM to 12:00 PM</span>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="detail">
@@ -266,7 +266,7 @@ if ($conn) {
                             <div class="schedule-item">
                                 <div class="schedule-header">
                                     <h4>Anatomy & Physiology</h4>
-                                    <span class="schedule-time">2:00 PM - 4:00 PM</span>
+                                    <span class="schedule-time">2:00 PM to 4:00 PM</span>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="detail">
@@ -325,7 +325,7 @@ if ($conn) {
                             <div class="perf-stat">
                                 <h4>Assignment Completion</h4>
                                 <div class="completion-rate">85%</div>
-                                <small>On-time submission</small>
+                                <small>On time submission</small>
                             </div>
                             <div class="perf-stat">
                                 <h4>At Risk Students</h4>
@@ -404,7 +404,7 @@ if ($conn) {
                         <div class="assessment-list">
                             <div class="assessment-item">
                                 <div class="assessment-header">
-                                    <h4>Basic Nursing Skills - Practical Test</h4>
+                                    <h4>Basic Nursing Skills , Practical Test</h4>
                                     <span class="assessment-date">Apr 18, 2026</span>
                                 </div>
                                 <div class="assessment-details">
@@ -429,7 +429,7 @@ if ($conn) {
                             
                             <div class="assessment-item">
                                 <div class="assessment-header">
-                                    <h4>Anatomy & Physiology - Quiz</h4>
+                                    <h4>Anatomy & Physiology , Quiz</h4>
                                     <span class="assessment-date">Apr 12, 2026</span>
                                 </div>
                                 <div class="assessment-details">
@@ -477,21 +477,21 @@ if ($conn) {
                         <h3>Grade Summary</h3>
                         <div class="grade-distribution">
                             <div class="grade-category">
-                                <h4>A Range (85-100%)</h4>
+                                <h4>A Range (85 , 100%)</h4>
                                 <div class="grade-count">8 students</div>
                                 <div class="progress">
                                     <div class="progress-bar bg-success" style="width: 25%">25%</div>
                                 </div>
                             </div>
                             <div class="grade-category">
-                                <h4>B Range (70-84%)</h4>
+                                <h4>B Range (70 , 84%)</h4>
                                 <div class="grade-count">18 students</div>
                                 <div class="progress">
                                     <div class="progress-bar bg-info" style="width: 56%">56%</div>
                                 </div>
                             </div>
                             <div class="grade-category">
-                                <h4>C Range (55-69%)</h4>
+                                <h4>C Range (55 , 69%)</h4>
                                 <div class="grade-count">4 students</div>
                                 <div class="progress">
                                     <div class="progress-bar bg-warning" style="width: 13%">13%</div>

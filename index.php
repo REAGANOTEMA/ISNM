@@ -58,7 +58,7 @@ include_once 'shared/_header.php';
         </div>
         
         <div class="hero-subtitle">
-          <p>"Chosen to Serve - Based on a disciplined mind for health action"</p>
+          <p>"Chosen to Serve , Based on a disciplined mind for health action"</p>
         </div>
         
         <div class="hero-stats">
@@ -160,7 +160,7 @@ include_once 'shared/_header.php';
                 <i class="fas fa-baby"></i>
               </div>
               <h3>Certificate in Midwifery</h3>
-              <p>2½ years specialized midwifery program with hands-on delivery experience</p>
+              <p>2½ years specialized midwifery program with hands on delivery experience</p>
               <ul class="program-features">
                 <li>Maternal health training</li>
                 <li>Delivery room practice</li>
@@ -193,7 +193,7 @@ include_once 'shared/_header.php';
               <p>1½ years advanced program for enrolled midwives</p>
               <ul class="program-features">
                 <li>Advanced midwifery skills</li>
-                <li>High-risk pregnancy management</li>
+                <li>High risk pregnancy management</li>
                 <li>Neonatal care specialization</li>
               </ul>
               <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
@@ -263,14 +263,14 @@ include_once 'shared/_header.php';
             <div class="facility-card">
               <i class="fas fa-book fa-3x text-info mb-3"></i>
               <h4>Library</h4>
-              <p>Well-stocked library with reference materials</p>
+              <p>Well stocked library with reference materials</p>
             </div>
           </div>
           <div class="col-md-6 col-lg-3">
             <div class="facility-card">
               <i class="fas fa-utensils fa-3x text-warning mb-3"></i>
               <h4>Dining Hall</h4>
-              <p>Multi-purpose hall accommodating 300 students</p>
+              <p>Multi purpose hall accommodating 300 students</p>
             </div>
           </div>
         </div>

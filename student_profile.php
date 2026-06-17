@@ -433,7 +433,7 @@ function handlePasswordChange() {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#3E2723">
-    <title>My Profile - ISNM</title>
+    <title>My Profile | ISNM</title>
     <link rel="icon" type="image/x-icon" href="images/school-logo.png">
     <link rel="apple-touch-icon" href="images/school-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -958,7 +958,7 @@ function handlePasswordChange() {
             <div class="profile-info">
                 <h1 class="profile-name"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?></h1>
                 <p class="profile-id"><?php echo htmlspecialchars($student['student_id']); ?></p>
-                <p class="mb-0"><i class="fas fa-graduation-cap"></i> <?php echo htmlspecialchars($student['program']); ?> - <?php echo htmlspecialchars($student['level']); ?></p>
+                <p class="mb-0"><i class="fas fa-graduation-cap"></i> <?php echo htmlspecialchars($student['program']); ?> , <?php echo htmlspecialchars($student['level']); ?></p>
             </div>
         </div>
 

@@ -53,7 +53,7 @@
           <a class="nav-link active" aria-current="page" href="fee-payment.php">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="check-fee-recipt.php">Fee-Recipt</a>
+          <a class="nav-link" href="check-fee-recipt.php">Fee Receipt</a>
         </li>
         
         <li class="nav-item">

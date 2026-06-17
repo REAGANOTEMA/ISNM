@@ -2058,7 +2058,7 @@ include_once 'includes/functions.php'; ?>
           </div>
         </div>
       </div>
-      <p class="school-motto">"Chosen to Serve - Based on a disciplined mind for health action"</p>
+      <p class="school-motto">"Chosen to Serve , Based on a disciplined mind for health action"</p>
     </div>
     
     <!-- Right: Logo -->

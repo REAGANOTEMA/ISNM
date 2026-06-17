@@ -21,11 +21,11 @@ $v = '2.0.1';
 <meta name="msapplication-TileColor" content="#1a237e">
 <meta name="msapplication-TileImage" content="<?= $rootPath ?>/images/school-logo.png">
 <meta name="application-name" content="ISNM">
-<meta name="description" content="Iganga School of Nursing &amp; Midwifery — School Management System">
+<meta name="description" content="Iganga School of Nursing &amp; Midwifery , School Management System">
 <meta name="keywords" content="ISNM, Iganga, Nursing, Midwifery, School, Management, ERP">
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
-<title><?= htmlspecialchars($pageTitle) ?> — ISNM</title>
+<title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
 
 <!-- Favicon — all sizes, all devices -->
 <link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">

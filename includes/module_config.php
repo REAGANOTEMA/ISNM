@@ -97,8 +97,6 @@ function getModuleConfig(): array {
             'icon'     => 'fas fa-crown',
             'roles'    => '*',
             'children' => [
-                ['title' => 'Director General',    'route' => 'director-general.php',              'roles' => '*'],
-                ['title' => 'CEO',                 'route' => 'ceo.php',                           'roles' => ['ceo','director']],
                 ['title' => 'ICT Director',        'route' => 'director-ict.php',                  'roles' => ['director','ict','it']],
             ],
         ],

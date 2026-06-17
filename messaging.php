@@ -49,7 +49,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
             <li><i class="fas fa-paper-plane text-primary"></i> Compose and send messages with attachments</li>
             <li><i class="fas fa-inbox text-success"></i> Inbox with read receipts and conversation threading</li>
             <li><i class="fas fa-users text-warning"></i> Group messaging to departments and cohorts</li>
-            <li><i class="fas fa-search text-info"></i> Full-text search across all conversations</li>
+            <li><i class="fas fa-search text-info"></i> Full text search across all conversations</li>
             <li><i class="fas fa-archive text-secondary"></i> Archive and folder organisation for important messages</li>
           </ul>
           <hr class="my-4">

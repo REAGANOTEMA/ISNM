@@ -53,7 +53,7 @@ if ($studentsDb) {
                         <?php foreach ($invoices as $inv): ?>
                         <tr>
                             <?php foreach ($inv as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '—') ?></td>
+                            <td><?= htmlspecialchars($val ?? '-') ?></td>
                             <?php endforeach; ?>
                         </tr>
                         <?php endforeach; ?>

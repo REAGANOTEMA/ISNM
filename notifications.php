@@ -46,9 +46,9 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
             <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
           </div>
           <ul class="feature-list">
-            <li><i class="fas fa-bell-on text-primary"></i> Real-time notification feed for system events</li>
+            <li><i class="fas fa-bell-on text-primary"></i> Real time notification feed for system events</li>
             <li><i class="fas fa-gear text-success"></i> Configurable notification preferences per user</li>
-            <li><i class="fas fa-bell-slash text-warning"></i> Snooze and mute controls for non-urgent alerts</li>
+            <li><i class="fas fa-bell-slash text-warning"></i> Snooze and mute controls for non urgent alerts</li>
             <li><i class="fas fa-clock text-info"></i> Scheduled reminders for deadlines and events</li>
             <li><i class="fas fa-check-double text-secondary"></i> Mark as read and bulk notification management</li>
           </ul>

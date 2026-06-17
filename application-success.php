@@ -35,7 +35,7 @@
                   <li><strong>Application Review:</strong> Your application will be reviewed by our admissions committee.</li>
                   <li><strong>Interview Invitation:</strong> You will be contacted via phone or email for an interview.</li>
                   <li><strong>Interview:</strong> Attend the scheduled interview at the school campus.</li>
-                  <li><strong>Application Fee:</strong> Pay the non-refundable application fee of UGX 95,000.</li>
+                  <li><strong>Application Fee:</strong> Pay the non refundable application fee of UGX 95,000.</li>
                   <li><strong>Admission Decision:</strong> Successful candidates will receive admission letters.</li>
                 </ol>
               </div>
@@ -52,8 +52,8 @@
                   </div>
                   <div class="info-item">
                     <h4>Interview Time</h4>
-                    <p>9:00 AM - 4:00 PM<br>
-                    Monday - Friday</p>
+                    <p>9:00 AM to 4:00 PM<br>
+                    Monday , Friday</p>
                   </div>
                   <div class="info-item">
                     <h4>Required Documents</h4>
@@ -61,7 +61,7 @@
                       <li>Original academic certificates</li>
                       <li>Birth certificate</li>
                       <li>National ID</li>
-                      <li>Passport-sized photos</li>
+                      <li>Passport sized photos</li>
                     </ul>
                   </div>
                 </div>

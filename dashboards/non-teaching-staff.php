@@ -60,7 +60,7 @@ if ($conn) {
             <!-- Header -->
             <header class="dashboard-header">
                 <div class="header-left">
-                    <h1>Non-Teaching Staff Dashboard</h1>
+                    <h1>Non Teaching Staff Dashboard</h1>
                     <p>Administrative Support & Operations</p>
                 </div>
                 <div class="header-right">
@@ -304,13 +304,13 @@ if ($conn) {
                             <h4>Recent Leave Requests</h4>
                             <div class="leave-item">
                                 <div class="leave-header">
-                                    <h5>Annual Leave - Family Visit</h5>
+                                    <h5>Annual Leave , Family Visit</h5>
                                     <span class="leave-status approved">Approved</span>
                                 </div>
                                 <div class="leave-details">
                                     <div class="detail">
                                         <span>Period:</span>
-                                        <strong>Apr 10-12, 2026 (3 days)</strong>
+                                        <strong>Apr 10 , 12, 2026 (3 days)</strong>
                                     </div>
                                     <div class="detail">
                                         <span>Applied:</span>
@@ -395,7 +395,7 @@ if ($conn) {
                             <div class="training-item">
                                 <div class="training-header">
                                     <h4>Office Management Workshop</h4>
-                                    <span class="training-date">May 5-6, 2026</span>
+                                    <span class="training-date">May 5 , 6, 2026</span>
                                 </div>
                                 <div class="training-details">
                                     <div class="detail">

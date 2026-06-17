@@ -18,7 +18,7 @@ $balance = getStudentBalance($student_id);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Financial Portal - ISNM</title>
+    <title>Student Financial Portal | ISNM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/isnm-style.css">
@@ -60,7 +60,7 @@ $balance = getStudentBalance($student_id);
         <div class="text-center mb-4">
             <img src="images/school-logo.png" alt="ISNM Logo" height="80">
             <h2 class="mt-2">Iganga School of Nursing and Midwifery</h2>
-            <p class="text-muted">Student Financial Self-Service Portal</p>
+            <p class="text-muted">Student Financial Self Service Portal</p>
         </div>
         
         <div class="row">

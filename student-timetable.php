@@ -50,7 +50,7 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
             <li><i class="fas fa-calendar-check text-success"></i> Exam schedule with venue and seating info</li>
             <li><i class="fas fa-bell text-warning"></i> Timetable change alerts and notifications</li>
             <li><i class="fas fa-print text-info"></i> Print or download timetable as PDF</li>
-            <li><i class="fas fa-sync text-secondary"></i> Real-time updates from academic calendar</li>
+            <li><i class="fas fa-sync text-secondary"></i> Real time updates from academic calendar</li>
           </ul>
           <hr class="my-4">
           <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>

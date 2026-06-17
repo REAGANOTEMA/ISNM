@@ -187,13 +187,13 @@ if ($conn) {
                             <?php foreach ($welfare_cases_list as $wc): ?>
                             <div class="case-card">
                                 <div class="case-header">
-                                    <h4><?= htmlspecialchars($wc['student_name'] ?? 'Student') ?> - <?= htmlspecialchars($wc['case_type'] ?? 'General') ?></h4>
-                                    <span class="case-date"><?= !empty($wc['created_at']) ? date('M j, Y', strtotime($wc['created_at'])) : '—' ?></span>
+                                    <h4><?= htmlspecialchars($wc['student_name'] ?? 'Student') ?> , <?= htmlspecialchars($wc['case_type'] ?? 'General') ?></h4>
+                                    <span class="case-date"><?= !empty($wc['created_at']) ? date('M j, Y', strtotime($wc['created_at'])) : '-' ?></span>
                                 </div>
                                 <div class="case-details">
                                     <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($wc['case_type'] ?? 'General') ?></strong></div>
                                     <div class="detail"><span>Status:</span><strong class="text-<?= ($wc['status']??'Open')==='Resolved'?'success':'warning' ?>"><?= htmlspecialchars($wc['status'] ?? 'Open') ?></strong></div>
-                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['actions'] ?? $wc['description'] ?? '—', 0, 60)) ?></strong></div>
+                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['actions'] ?? $wc['description'] ?? '-', 0, 60)) ?></strong></div>
                                 </div>
                                 <div class="case-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
@@ -233,8 +233,8 @@ if ($conn) {
                             <?php foreach ($today_counseling as $cs): ?>
                             <div class="session-item">
                                 <div class="session-header">
-                                    <h4><?= htmlspecialchars($cs['session_type'] ?? 'Counseling') ?> - <?= htmlspecialchars($cs['student_name'] ?? 'Student') ?></h4>
-                                    <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '—') ?></span>
+                                    <h4><?= htmlspecialchars($cs['session_type'] ?? 'Counseling') ?> , <?= htmlspecialchars($cs['student_name'] ?? 'Student') ?></h4>
+                                    <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '-') ?></span>
                                 </div>
                                 <div class="session-details">
                                     <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['topic'] ?? $cs['reason'] ?? 'General') ?></strong></div>
@@ -281,11 +281,11 @@ if ($conn) {
                             <?php foreach ($discipline_cases_list as $dc): ?>
                             <div class="discipline-item">
                                 <div class="discipline-header">
-                                    <h4><?= htmlspecialchars($dc['student_name'] ?? 'Student') ?> - <?= htmlspecialchars($dc['incident_type'] ?? $dc['offense'] ?? 'Case') ?></h4>
-                                    <span class="discipline-date"><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '—' ?></span>
+                                    <h4><?= htmlspecialchars($dc['student_name'] ?? 'Student') ?> , <?= htmlspecialchars($dc['incident_type'] ?? $dc['offense'] ?? 'Case') ?></h4>
+                                    <span class="discipline-date"><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '-' ?></span>
                                 </div>
                                 <div class="discipline-details">
-                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars(substr($dc['description'] ?? $dc['incident_description'] ?? '—', 0, 50)) ?></strong></div>
+                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars(substr($dc['description'] ?? $dc['incident_description'] ?? '-', 0, 50)) ?></strong></div>
                                     <div class="detail"><span>Action:</span><strong><?= htmlspecialchars($dc['action_taken'] ?? $dc['resolution'] ?? 'Pending') ?></strong></div>
                                     <div class="detail"><span>Status:</span><strong class="text-<?= ($dc['status']??'Pending')==='Resolved'?'success':'danger' ?>"><?= htmlspecialchars($dc['status'] ?? 'Pending') ?></strong></div>
                                 </div>
@@ -376,7 +376,7 @@ if ($conn) {
                             <div class="activity-item">
                                 <div class="activity-header">
                                     <h4><?= htmlspecialchars($act['title'] ?? $act['activity_name'] ?? 'Activity') ?></h4>
-                                    <span class="activity-date"><?= !empty($act['activity_date']) ? date('M j, Y', strtotime($act['activity_date'])) : '—' ?></span>
+                                    <span class="activity-date"><?= !empty($act['activity_date']) ? date('M j, Y', strtotime($act['activity_date'])) : '-' ?></span>
                                 </div>
                                 <div class="activity-details">
                                     <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($act['activity_type'] ?? 'General') ?></strong></div>
@@ -437,7 +437,7 @@ if ($conn) {
                             <div class="security-stat">
                                 <h4>Emergency Drills</h4>
                                 <div class="drill-status">Scheduled</div>
-                                <small>Next: Fire drill - May 5</small>
+                                <small>Next: Fire drill , May 5</small>
                             </div>
                         </div>
                     </div>
@@ -561,9 +561,9 @@ if ($conn) {
                                 <textarea class="form-control" rows="3"></textarea>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Follow-up Required</label>
+                                <label class="form-label">Follow up Required</label>
                                 <select class="form-control" required>
-                                    <option value="">Select Follow-up</option>
+                                    <option value="">Select Follow up</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                 </select>
@@ -682,9 +682,9 @@ if ($conn) {
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Follow-up Required</label>
+                                <label class="form-label">Follow up Required</label>
                                 <select class="form-control" required>
-                                    <option value="">Select Follow-up</option>
+                                    <option value="">Select Follow up</option>
                                     <option value="yes">Yes</option>
                                     <option value="no">No</option>
                                 </select>

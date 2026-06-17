@@ -105,7 +105,7 @@
               </div>
               <div class="value-item">
                 <i class="fas fa-globe"></i>
-                <h4>Non-Partisan</h4>
+                <h4>Non Partisan</h4>
               </div>
             </div>
           </div>
@@ -243,7 +243,7 @@
                 <div class="program-details">
                   <h3>Certificate in Midwifery</h3>
                   <p>Duration: 2½ years</p>
-                  <p>Specialized midwifery program with hands-on delivery experience</p>
+                  <p>Specialized midwifery program with hands on delivery experience</p>
                 </div>
               </div>
               <div class="program-item">
@@ -292,14 +292,14 @@
                   <img src="images/skills-lab-s.jpeg" alt="Skills Laboratory" class="img-fluid rounded-3 slide-img-lab">
                   <div class="slide-caption">
                     <h4>Skills Laboratory</h4>
-                    <p>State-of-the-art simulation equipment for practical training</p>
+                    <p>State of the art simulation equipment for practical training</p>
                   </div>
                 </div>
                 <div class="slide">
                    <img src="images/class.JPG" alt="Modern Classrooms" class="img-fluid rounded-3 slide-img-classroom">
                   <div class="slide-caption">
                     <h4>Modern Classrooms</h4>
-                    <p>Well-equipped learning environments with modern teaching aids</p>
+                    <p>Well equipped learning environments with modern teaching aids</p>
                   </div>
                 </div>
                 <div class="slide">
@@ -341,7 +341,7 @@
                   <img src="images/skill-nurses.jpeg" alt="Nursing Students in Skill Lab" class="img-fluid rounded-3 slide-img-hostel">
                   <div class="slide-caption">
                     <h4>Nursing Skills Lab</h4>
-                    <p>Hands-on practical training with medical simulation equipment</p>
+                    <p>Hands on practical training with medical simulation equipment</p>
                   </div>
                 </div>
                 <div class="slide">

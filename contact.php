@@ -209,16 +209,16 @@ include_once 'shared/_header.php'; ?>
                 <div class="hour-item">
                   <div class="day-info">
                     <i class="fas fa-calendar-day me-2"></i>
-                    <span class="day">Monday - Friday</span>
+                    <span class="day">Monday , Friday</span>
                   </div>
-                  <span class="time">8:00 AM - 5:00 PM</span>
+                  <span class="time">8:00 AM to 5:00 PM</span>
                 </div>
                 <div class="hour-item">
                   <div class="day-info">
                     <i class="fas fa-calendar-week me-2"></i>
                     <span class="day">Saturday</span>
                   </div>
-                  <span class="time">9:00 AM - 1:00 PM</span>
+                  <span class="time">9:00 AM to 1:00 PM</span>
                 </div>
                 <div class="hour-item closed">
                   <div class="day-info">
@@ -243,16 +243,16 @@ include_once 'shared/_header.php'; ?>
                 <div class="hour-item">
                   <div class="day-info">
                     <i class="fas fa-calendar-day me-2"></i>
-                    <span class="day">Monday - Friday</span>
+                    <span class="day">Monday , Friday</span>
                   </div>
-                  <span class="time">9:00 AM - 4:00 PM</span>
+                  <span class="time">9:00 AM to 4:00 PM</span>
                 </div>
                 <div class="hour-item">
                   <div class="day-info">
                   <i class="fas fa-calendar-week"></i>
                   <span class="day">Saturday</span>
                 </div>
-                <span class="time">9:00 AM - 1:00 PM</span>
+                <span class="time">9:00 AM to 1:00 PM</span>
               </div>
               <div class="hour-item closed">
                 <div class="day-info">

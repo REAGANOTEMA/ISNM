@@ -51,7 +51,7 @@ height: 100vh !important;
           <a class="nav-link active" aria-current="page" href="index.php">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="check-fee-recipt.php">Fee-Recipt</a>
+          <a class="nav-link" href="check-fee-recipt.php">Fee Receipt</a>
         </li>
         
         <li class="nav-item">
@@ -93,7 +93,7 @@ height: 100vh !important;
                   
                   <select class="form-select" aria-label="Default select example" id="select">
   <option selected>Open this select menu</option>
-  <option value="nu-ukg">Nur-UKG</option>
+  <option value="nu-ukg">Nur UKG</option>
   <option value="1">Class 1</option>
   <option value="2">Class 2</option>
   <option value="3">Class 3</option>

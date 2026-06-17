@@ -11,7 +11,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>ERP - Progress Report</title>
+	<title>ERP | Progress Report</title>
 	<style type="text/css">
 		.body{
 			width: 80%;

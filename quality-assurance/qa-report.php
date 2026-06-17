@@ -526,7 +526,7 @@ if (isset($_GET['run_qa']) && $_GET['run_qa'] == 'true') {
     </div>
     
     <footer class="mt-5 py-3 bg-light text-center">
-        <p>&copy; 2026 Iganga School of Nursing and Midwifery - Quality Assurance Report</p>
+        <p>&copy; 2026 Iganga School of Nursing and Midwifery , Quality Assurance Report</p>
         <p>Designed and Developed by Reagan Otema</p>
         <p>MTN WhatsApp: +256772514889 | Airtel WhatsApp: +256730314979</p>
     </footer>

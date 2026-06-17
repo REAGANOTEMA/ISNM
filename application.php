@@ -93,7 +93,7 @@
                     </div>
                     <div class="detail-content">
                       <span class="label">TIME:</span>
-                      <span class="value">9:00AM-4:00PM (MONDAY-FRIDAY)</span>
+                      <span class="value">9:00AM to 4:00PM (MONDAY , FRIDAY)</span>
                     </div>
                   </div>
                   <div class="detail-item">
@@ -102,7 +102,7 @@
                     </div>
                     <div class="detail-content">
                       <span class="label">FEE:</span>
-                      <span class="value">UGX 95,000 (NON-REFUNDABLE)</span>
+                      <span class="value">UGX 95,000 (NON REFUNDABLE)</span>
                     </div>
                   </div>
                 </div>
@@ -309,7 +309,7 @@
                         </select>
                       </div>
                       <div class="col-lg-6 col-md-6 col-sm-12">
-                        <label for="parentName" class="form-label">Details of the person responsible for fees payment - Name *</label>
+                        <label for="parentName" class="form-label">Details of the person responsible for fees payment , Name *</label>
                         <input type="text" class="form-control" id="parentName" name="parentName" required>
                       </div>
                       <div class="col-lg-6 col-md-6 col-sm-12">
@@ -501,7 +501,7 @@
 
                 <!-- UACE Results (Optional, for Certificate Applicants) -->
                 <div class="form-section" id="uaceSection">
-                  <h4><i class="fas fa-book me-2"></i> UGANDA ADVANCED CERTIFICATE OF EDUCATION (UACE) - OPTIONAL</h4>
+                  <h4><i class="fas fa-book me-2"></i> UGANDA ADVANCED CERTIFICATE OF EDUCATION (UACE) , OPTIONAL</h4>
                   <div class="row g-3">
                     <div class="col-lg-4 col-md-6 col-sm-12">
                       <label for="uaceIndexNumber" class="form-label">INDEX NUMBER</label>
@@ -834,7 +834,7 @@
                   </button>
                   <div class="mt-3">
                     <small class="text-muted">
-                      Application Fee: UGX 95,000 (Non-refundable)<br>
+                      Application Fee: UGX 95,000 (Non refundable)<br>
                       You will be contacted for interview and fee payment after submission
                     </small>
                   </div>

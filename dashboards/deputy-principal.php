@@ -188,7 +188,7 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Time:</span>
-                                        <strong>8:00 AM - 10:00 AM</strong>
+                                        <strong>8:00 AM to 10:00 AM</strong>
                                     </div>
                                     <div class="detail">
                                         <span>Room:</span>
@@ -213,7 +213,7 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Time:</span>
-                                        <strong>10:30 AM - 12:30 PM</strong>
+                                        <strong>10:30 AM to 12:30 PM</strong>
                                     </div>
                                     <div class="detail">
                                         <span>Room:</span>
@@ -238,7 +238,7 @@ if ($conn) {
                                     </div>
                                     <div class="detail">
                                         <span>Time:</span>
-                                        <strong>2:00 PM - 4:00 PM</strong>
+                                        <strong>2:00 PM to 4:00 PM</strong>
                                     </div>
                                     <div class="detail">
                                         <span>Room:</span>
@@ -373,8 +373,8 @@ if ($conn) {
                         <div class="exam-schedule">
                             <div class="exam-item">
                                 <div class="exam-header">
-                                    <h4>Mid-Semester Examinations</h4>
-                                    <span class="exam-date">May 15-20, 2026</span>
+                                    <h4>Mid Semester Examinations</h4>
+                                    <span class="exam-date">May 15 to 20, 2026</span>
                                 </div>
                                 <div class="exam-details">
                                     <div class="detail">
@@ -395,7 +395,7 @@ if ($conn) {
                             <div class="exam-item">
                                 <div class="exam-header">
                                     <h4>Final Practical Examinations</h4>
-                                    <span class="exam-date">June 10-15, 2026</span>
+                                    <span class="exam-date">June 10 to 15, 2026</span>
                                 </div>
                                 <div class="exam-details">
                                     <div class="detail">

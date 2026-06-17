@@ -52,7 +52,7 @@
                 <ul class="course-content">
                   <li>Anatomy and Physiology</li>
                   <li>Pharmacology</li>
-                  <li>Medical-Surgical Nursing</li>
+                  <li>Medical Surgical Nursing</li>
                   <li>Community Health Nursing</li>
                   <li>Mental Health Nursing</li>
                   <li>Pediatric Nursing</li>
@@ -60,7 +60,7 @@
                 </ul>
                 
                 <h4>Clinical Practicum</h4>
-                <p>Students gain hands-on experience at major hospitals including Iganga, Bugiri, Busolwe, Tororo, Masafu, and Mbale Regional Referral hospitals.</p>
+                <p>Students gain hands on experience at major hospitals including Iganga, Bugiri, Busolwe, Tororo, Masafu, and Mbale Regional Referral hospitals.</p>
                 
                 <div class="program-actions">
                   <a href="application.php" class="btn btn-primary">Apply Now</a>
@@ -102,7 +102,7 @@
                   <li>Postnatal Care</li>
                   <li>Newborn Care</li>
                   <li>Family Planning</li>
-                  <li>High-Risk Pregnancy Management</li>
+                  <li>High Risk Pregnancy Management</li>
                 </ul>
                 
                 <h4>Clinical Practicum</h4>
@@ -144,7 +144,7 @@
                 <ul class="course-content">
                   <li>Advanced Nursing Concepts</li>
                   <li>Nursing Leadership and Management</li>
-                  <li>Advanced Medical-Surgical Nursing</li>
+                  <li>Advanced Medical Surgical Nursing</li>
                   <li>Research and Evidence-Based Practice</li>
                   <li>Healthcare Ethics and Law</li>
                   <li>Quality Improvement in Healthcare</li>
@@ -189,7 +189,7 @@
                 <h4>Course Content</h4>
                 <ul class="course-content">
                   <li>Advanced Midwifery Practice</li>
-                  <li>High-Risk Obstetrics</li>
+                  <li>High Risk Obstetrics</li>
                   <li>Neonatal Intensive Care</li>
                   <li>Gynecological Nursing</li>
                   <li>Midwifery Research</li>
@@ -224,7 +224,7 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="practicum-info">
-              <p>Iganga School of Nursing and Midwifery has entered into a Memorandum of Understanding (MOU) with major hospitals for providing our students with hands-on practical experience.</p>
+              <p>Iganga School of Nursing and Midwifery has entered into a Memorandum of Understanding (MOU) with major hospitals for providing our students with hands on practical experience.</p>
               
               <div class="hospitals-grid">
                 <div class="hospital-card">

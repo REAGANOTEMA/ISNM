@@ -55,16 +55,16 @@ if ($studentsDb) {
                     <tbody>
                         <?php foreach ($attendance as $a): ?>
                         <tr>
-                            <td><strong><?= htmlspecialchars($a['student_name'] ?? '—') ?></strong></td>
-                            <td><code><?= htmlspecialchars($a['student_number'] ?? '—') ?></code></td>
-                            <td><?= htmlspecialchars($a['attendance_date'] ?? '—') ?></td>
+                            <td><strong><?= htmlspecialchars($a['student_name'] ?? '-') ?></strong></td>
+                            <td><code><?= htmlspecialchars($a['student_number'] ?? '-') ?></code></td>
+                            <td><?= htmlspecialchars($a['attendance_date'] ?? '-') ?></td>
                             <td>
                                 <?php $st = $a['status'] ?? 'Unknown'; ?>
                                 <span class="badge <?= $st === 'Present' ? 'bg-success' : ($st === 'Absent' ? 'bg-danger' : ($st === 'Late' ? 'bg-warning text-dark' : 'bg-secondary')) ?>">
                                     <?= htmlspecialchars($st) ?>
                                 </span>
                             </td>
-                            <td><?= htmlspecialchars($a['attendance_type'] ?? '—') ?></td>
+                            <td><?= htmlspecialchars($a['attendance_type'] ?? '-') ?></td>
                             <td><?= htmlspecialchars($a['remarks'] ?? '') ?></td>
                         </tr>
                         <?php endforeach; ?>

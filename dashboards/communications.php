@@ -30,8 +30,8 @@ $user = $ctx['user'];
           <ul class="feature-list">
             <li><i class="fas fa-envelope text-primary"></i> Send individual and bulk email messages</li>
             <li><i class="fas fa-sms text-success"></i> SMS notifications for urgent alerts and reminders</li>
-            <li><i class="fas fa-inbox text-warning"></i> Centralised inbox for staff-student messaging</li>
-            <li><i class="fas fa-tags text-info"></i> Tag-based contact groups and mailing lists</li>
+            <li><i class="fas fa-inbox text-warning"></i> Centralised inbox for staff student messaging</li>
+            <li><i class="fas fa-tags text-info"></i> Tag based contact groups and mailing lists</li>
             <li><i class="fas fa-file-alt text-secondary"></i> Communication templates and history log</li>
           </ul>
           <hr class="my-4">
