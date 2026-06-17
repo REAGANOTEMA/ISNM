@@ -160,6 +160,23 @@ function applyLegacyUserSession(array $user_entry): void {
 }
 
 // ── route ──────────────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_student') {
+    header('Content-Type: application/json');
+    $indexNumber = trim($_GET['index_number'] ?? '');
+    if (empty($indexNumber)) { echo json_encode(['exists' => false]); exit(); }
+    $conn = getConnection();
+    if (!$conn) { echo json_encode(['exists' => false]); exit(); }
+    $q = $conn->prepare("SELECT id, password FROM students WHERE index_number = ? LIMIT 1");
+    if (!$q) { echo json_encode(['exists' => false]); exit(); }
+    $q->bind_param('s', $indexNumber);
+    $q->execute();
+    $r = $q->get_result();
+    $student = $r->fetch_assoc();
+    $q->close();
+    echo json_encode(['exists' => !empty($student), 'has_password' => !empty($student['password'])]);
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: staff-login.php');
     exit();

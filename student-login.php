@@ -244,6 +244,40 @@ if ($login_success) { unset($_SESSION['success']); }
     margin-top: 4px; font-weight: 400;
   }
 
+  .first-login-section {
+    background: linear-gradient(135deg, #fff8e1, #fff3cd);
+    border: 1px solid #ffe082;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .first-login-section .section-divider {
+    display: flex; align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .first-login-section .section-divider span {
+    font-size: 0.9rem; font-weight: 600;
+    color: #e65100;
+  }
+
+  .first-login-section .section-divider span i {
+    margin-right: 6px;
+  }
+
+  .first-login-section .section-help {
+    font-size: 0.8rem; color: #bf360c;
+    margin-bottom: 14px;
+  }
+
+  .first-login-section .form-group { margin-bottom: 12px; }
+
+  .first-login-section .form-control {
+    background: #fff;
+  }
+
   .btn-login {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #fff; border: none;
@@ -571,7 +605,7 @@ if ($login_success) { unset($_SESSION['success']); }
         </div>
       <?php endif; ?>
 
-      <form method="POST" action="auth-handler.php">
+      <form method="POST" action="auth-handler.php" id="login-form">
         <input type="hidden" name="action" value="student_login">
         <?php if ($student_hint): ?>
           <input type="hidden" name="student_role" value="<?php echo htmlspecialchars($student_hint); ?>">
@@ -589,25 +623,32 @@ if ($login_success) { unset($_SESSION['success']); }
           <div class="form-text">Format: UXXX/CC/XXX/XX</div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="stu-name">
-            <i class="fas fa-user" style="margin-right: 6px; color: var(--primary);"></i>Full Name
-          </label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-user"></i></span>
-            <input id="stu-name" name="full_name" class="form-control" type="text" required 
-                   placeholder="Enter your full name as registered" autocomplete="name">
+        <div id="first-login-fields" class="first-login-section" style="display: none;">
+          <div class="section-divider">
+            <span><i class="fas fa-user-plus"></i> First-Time Verification</span>
           </div>
-        </div>
+          <p class="section-help">Enter your registered full name and phone number to verify your identity.</p>
 
-        <div class="form-group">
-          <label class="form-label" for="stu-phone">
-            <i class="fas fa-phone" style="margin-right: 6px; color: var(--primary);"></i>Phone Number
-          </label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-phone"></i></span>
-            <input id="stu-phone" name="phone_number" class="form-control" type="tel" required 
-                   placeholder="0771234567" autocomplete="tel">
+          <div class="form-group">
+            <label class="form-label" for="stu-name">
+              <i class="fas fa-user" style="margin-right: 6px; color: var(--primary);"></i>Full Name
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input id="stu-name" name="full_name" class="form-control" type="text"
+                     placeholder="Enter your full name as registered" autocomplete="name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="stu-phone">
+              <i class="fas fa-phone" style="margin-right: 6px; color: var(--primary);"></i>Phone Number
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-phone"></i></span>
+              <input id="stu-phone" name="phone_number" class="form-control" type="tel"
+                     placeholder="0771234567" autocomplete="tel">
+            </div>
           </div>
         </div>
 
@@ -618,13 +659,13 @@ if ($login_success) { unset($_SESSION['success']); }
           <div class="input-group">
             <span class="input-group-text"><i class="fas fa-lock"></i></span>
             <input id="stu-password" name="password" class="form-control" type="password" 
-                   placeholder="Enter your password (if already set)" autocomplete="current-password">
+                   placeholder="Enter your password" autocomplete="current-password">
             <button type="button" class="password-toggle" id="toggle-stu-password" tabindex="-1" aria-label="Toggle password visibility">
               <i class="fas fa-eye"></i>
             </button>
             <div class="input-highlight"></div>
           </div>
-          <div class="form-text">First time? Leave blank to set your password.</div>
+          <div class="form-text" id="password-hint">First time? Leave blank and we'll verify your details.</div>
         </div>
 
         <button type="submit" class="btn-login" id="btn-submit">
@@ -684,11 +725,67 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ── Loading state on submit ──
-  const form = document.querySelector('form');
+  // ── Auto-detect student account type ──
+  const indexInput = document.getElementById('stu-index');
+  const firstLoginFields = document.getElementById('first-login-fields');
+  const nameInput = document.getElementById('stu-name');
+  const phoneInput = document.getElementById('stu-phone');
+  const passwordHint = document.getElementById('password-hint');
+  let checkTimeout = null;
+
+  if (indexInput && firstLoginFields) {
+    indexInput.addEventListener('blur', function() {
+      const val = this.value.trim();
+      if (val.length < 5) { firstLoginFields.style.display = 'none'; return; }
+
+      if (checkTimeout) clearTimeout(checkTimeout);
+      checkTimeout = setTimeout(function() {
+        fetch('auth-handler.php?action=check_student&index_number=' + encodeURIComponent(val))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.exists && data.has_password) {
+              firstLoginFields.style.display = 'none';
+              if (nameInput) nameInput.required = false;
+              if (phoneInput) phoneInput.required = false;
+              if (passwordHint) passwordHint.textContent = 'Enter your password to sign in.';
+              if (pwdInput) pwdInput.placeholder = 'Enter your password';
+              if (pwdInput) pwdInput.required = true;
+            } else {
+              firstLoginFields.style.display = 'block';
+              if (nameInput) nameInput.required = true;
+              if (phoneInput) phoneInput.required = true;
+              if (passwordHint) passwordHint.textContent = 'First time? Leave blank and we\'ll verify your details.';
+              if (pwdInput) pwdInput.placeholder = 'Leave blank for first login';
+              if (pwdInput) pwdInput.required = false;
+            }
+          })
+          .catch(function() {
+            // fallback: show all fields
+            firstLoginFields.style.display = 'block';
+          });
+      }, 300);
+    });
+
+    indexInput.addEventListener('input', function() {
+      firstLoginFields.style.display = 'none';
+    });
+  }
+
+  // ── Ensure first-login fields are correctly toggled on submit ──
+  const form = document.getElementById('login-form');
   const btn = document.getElementById('btn-submit');
   if (form && btn) {
     form.addEventListener('submit', function() {
+      // If first-login fields are visible, ensure they're required
+      if (firstLoginFields && firstLoginFields.style.display !== 'none') {
+        if (nameInput) nameInput.required = true;
+        if (phoneInput) phoneInput.required = true;
+        if (pwdInput) pwdInput.required = false;
+      } else {
+        // Hidden -> not needed, but password is required
+        if (nameInput) nameInput.required = false;
+        if (phoneInput) phoneInput.required = false;
+      }
       btn.classList.add('loading');
     });
   }

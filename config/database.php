@@ -297,4 +297,11 @@ if (!function_exists('validatePhone')) {
         return false;
     }
 }
+
+if (!function_exists('validatePhoneLenient')) {
+    function validatePhoneLenient($phone) {
+        $clean = preg_replace('/[^0-9]/', '', (string) $phone);
+        return strlen($clean) >= 9;
+    }
+}
 ?>

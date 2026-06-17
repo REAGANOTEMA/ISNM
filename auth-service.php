@@ -121,7 +121,8 @@ class AuthenticationService {
             }
         }
         if (!$match) return null;
-        [$first, $sur] = $this->splitFullName($fullName);
+        $matchName = $match['full_name'] ?? $fullName;
+        [$first, $sur] = $this->splitFullName($matchName);
         $on   = trim($match['other_name']  ?? '');
         $em   = trim($match['email']        ?? '');
         $prog = trim($match['program']      ?? '');
@@ -130,7 +131,8 @@ class AuthenticationService {
         $snum = $indexNumber;
         $ins  = $conn->prepare("INSERT INTO students (student_number,index_number,first_name,surname,other_name,email,phone,program,level,set_name,status,is_first_login,password_changed,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,'Active',TRUE,FALSE,NOW(),NOW())");
         if (!$ins) return null;
-        $ins->bind_param('ssssssssss', $snum, $indexNumber, $first, $sur, $on, $em, $phoneNumber, $prog, $lv, $set);
+        $excelPhone = trim($match['phone'] ?? $phoneNumber);
+        $ins->bind_param('ssssssssss', $snum, $indexNumber, $first, $sur, $on, $em, $excelPhone, $prog, $lv, $set);
         if ($ins->execute()) {
             $id  = $conn->insert_id;
             $rs  = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
@@ -162,20 +164,54 @@ class AuthenticationService {
         return ($r && $r->num_rows === 1) ? $r->fetch_assoc() : null;
     }
 
-    public function authenticateStudent($indexNumber, $fullName, $phoneNumber, $password = null) {
+    public function authenticateStudent($indexNumber, $fullName = '', $phoneNumber = '', $password = null) {
         $indexNumber = sanitizeInput($indexNumber);
         $fullName    = sanitizeInput($fullName);
         $phoneNumber = sanitizeInput($phoneNumber);
         $password    = is_string($password) ? trim($password) : null;
 
-        if (empty($indexNumber) || empty($fullName) || empty($phoneNumber))
-            return ['success' => false, 'message' => 'Index number, full name and phone number are required.'];
+        if (empty($indexNumber))
+            return ['success' => false, 'message' => 'Index number is required.'];
         if (!validateIndexNumber($indexNumber))
             return ['success' => false, 'message' => 'Invalid index number format'];
-        if (!validatePhone($phoneNumber))
-            return ['success' => false, 'message' => 'Invalid phone number format'];
         if ($this->isStudentAccountLocked($indexNumber))
             return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
+
+        $conn = getConnection();
+        if (!$conn) return ['success' => false, 'message' => 'Database unavailable'];
+
+        $q = $conn->prepare("SELECT id, index_number, TRIM(CONCAT_WS(' ', first_name, NULLIF(other_name,''), surname)) AS full_name, phone, password, is_first_login FROM students WHERE index_number = ? LIMIT 1");
+
+        $existing = null;
+        if ($q) {
+            $q->bind_param('s', $indexNumber);
+            $q->execute();
+            $existing = $q->get_result()->fetch_assoc();
+            $q->close();
+        }
+
+        if ($existing && !empty($existing['password'])) {
+            if (empty($password))
+                return ['success' => false, 'message' => 'Password is required for this account.'];
+            if (!password_verify($password, $existing['password']) && $existing['password'] !== $password) {
+                $this->recordStudentFailedAttempt($indexNumber);
+                return ['success' => false, 'message' => 'Invalid password. Please try again.'];
+            }
+            $this->resetStudentFailedAttempts($existing['id']);
+            return ['success' => true, 'first_login' => false, 'user' => [
+                'id'           => $existing['id'],
+                'index_number' => $existing['index_number'],
+                'full_name'    => $existing['full_name'],
+                'phone'        => $existing['phone'],
+                'role'         => 'student',
+                'type'         => 'student',
+            ]];
+        }
+
+        if (empty($fullName) || empty($phoneNumber))
+            return ['success' => false, 'message' => 'Full name and phone number are required for first-time login.'];
+        if (!validatePhoneLenient($phoneNumber))
+            return ['success' => false, 'message' => 'Please enter a valid phone number.'];
 
         $student = $this->loadOrCreateStudentFromMaster($indexNumber, $fullName, $phoneNumber);
         if (!$student) {
@@ -191,10 +227,13 @@ class AuthenticationService {
                 return ['success' => false, 'message' => 'Invalid student credentials. Please check your password.'];
             }
         } else {
-            if (strcasecmp($student['full_name'] ?? '', $fullName) !== 0 ||
-                preg_replace('/[^0-9]/', '', $student['phone'] ?? '') !== preg_replace('/[^0-9]/', '', $phoneNumber)) {
+            $dbName  = trim(preg_replace('/\s+/', ' ', strtolower($student['full_name'] ?? '')));
+            $inName  = trim(preg_replace('/\s+/', ' ', strtolower($fullName)));
+            $dbPhone = preg_replace('/[^0-9]/', '', $student['phone'] ?? '');
+            $inPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+            if ($dbName !== $inName || $dbPhone !== $inPhone) {
                 $this->recordStudentFailedAttempt($indexNumber);
-                return ['success' => false, 'message' => 'Student verification failed. Please use the exact registered details.'];
+                return ['success' => false, 'message' => 'Name or phone does not match our records. Please use the exact details you registered with.'];
             }
         }
 
