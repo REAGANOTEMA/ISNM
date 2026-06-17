@@ -123,17 +123,6 @@ if (!function_exists('getStaffProfileImageUrl')) {
     }
 }
 
-// ── Render floating profile button ────────────────────────────
-function renderProfileButton() {
-    $staffId = (int)($_SESSION['user_id'] ?? 0);
-    $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/username.png';
-    ?>
-    <div id="profileFloatBtn" class="profile-float-btn" title="Profile Settings" onclick="openProfileModal()">
-        <img src="<?= $imgUrl ?>" alt="" class="profile-float-avatar" id="profileFloatAvatar">
-        <span class="profile-float-badge"><i class="fas fa-cog"></i></span>
-    </div>
-<?php }
-
 // ── Render profile settings modal ─────────────────────────────
 function renderProfileModal() {
     $staffId = (int)($_SESSION['user_id'] ?? 0);
@@ -189,25 +178,6 @@ function renderProfileModal() {
 // ── Styles ────────────────────────────────────────────────────
 function renderProfileStyles() { ?>
 <style>
-.profile-float-btn {
-    position: fixed; bottom: 24px; left: 24px; z-index: 1055;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg, #1a237e, #283593);
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 16px rgba(26,35,126,.35);
-    transition: all .3s cubic-bezier(.4,0,.2,1); overflow: hidden;
-    border: 2.5px solid rgba(255,255,255,.2);
-}
-.profile-float-btn:hover { transform: scale(1.08) translateY(-2px); box-shadow: 0 6px 24px rgba(26,35,126,.45); }
-.profile-float-avatar { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; top: 0; left: 0; }
-.profile-float-badge {
-    position: absolute; bottom: -2px; right: -2px;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: linear-gradient(135deg,#ff6b6b,#ee5a24); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    z-index: 1;
-}
 .profile-modal-content { border: none; border-radius: 20px; overflow: hidden; }
 .profile-modal-header {
     background: linear-gradient(135deg, #1a237e, #283593); color: #fff;
@@ -239,7 +209,6 @@ function renderProfileScripts() { ?>
     var saveBtn = document.getElementById('profileSaveBtn');
     var status = document.getElementById('profileUploadStatus');
     var modalAvatar = document.getElementById('profileModalAvatar');
-    var floatAvatar = document.getElementById('profileFloatAvatar');
 
     if (input) {
         input.addEventListener('change', function(e) {
@@ -284,7 +253,6 @@ function renderProfileScripts() { ?>
                 if (d.success) {
                     status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Uploaded successfully!</span>';
                     modalAvatar.src = d.path + '?v=' + Date.now();
-                    if (floatAvatar) floatAvatar.src = d.path + '?v=' + Date.now();
                     // Also update sidebar avatar if it exists
                     var sidebarAvatar = document.querySelector('.user-avatar');
                     if (sidebarAvatar) sidebarAvatar.src = d.path.replace('../', '') + '?v=' + Date.now();

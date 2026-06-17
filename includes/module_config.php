@@ -8,14 +8,6 @@ if (!function_exists('getModuleConfig')) {
 function getModuleConfig(): array {
     return [
         [
-            'title'    => 'Dashboard',
-            'icon'     => 'fas fa-th-large',
-            'roles'    => '*',
-            'children' => [
-                ['title' => 'Dashboard Home',      'route' => 'index.php',                          'roles' => '*'],
-            ],
-        ],
-        [
             'title'    => 'Student Management',
             'icon'     => 'fas fa-user-graduate',
             'roles'    => '*',

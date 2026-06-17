@@ -61,14 +61,6 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     </div>
 
     <div class="sidebar-menu" id="sidebarMenu">
-        <!-- Dashboard Home -->
-        <div class="menu-item">
-            <a href="index.php" class="menu-link <?= $currentPage === 'index.php' || $currentPage === '' ? 'active' : '' ?>" data-route="index">
-                <span class="menu-icon"><i class="fas fa-th-large"></i></span>
-                <span class="menu-label">Dashboard</span>
-            </a>
-        </div>
-
         <div class="menu-divider"><span>Modules</span></div>
 
         <?php foreach ($modules as $parent):
@@ -83,7 +75,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                     }
                 }
             }
+            $isStudentMgmt = stripos($parent['title'], 'Student Management') !== false;
         ?>
+        <?php if ($isStudentMgmt): ?><div id="hiddenStudentMgmt" style="display:none"><?php endif; ?>
         <div class="menu-group <?= $hasActiveChild ? 'expanded' : '' ?>" data-group="<?= $parentId ?>">
             <div class="menu-group-header" data-target="<?= $parentId ?>">
                 <span class="menu-icon"><i class="<?= $parent['icon'] ?>"></i></span>
@@ -108,14 +102,19 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             </div>
             <?php endif; ?>
         </div>
+        <?php if ($isStudentMgmt): ?></div><?php endif; ?>
         <?php endforeach; ?>
     </div>
 
     <div class="sidebar-extra">
         <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
         <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
-        <a href="#" class="extra-link settings-trigger" onclick="event.preventDefault();$('#settingsModal').modal('show');">
+        <a href="#" class="extra-link settings-trigger" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i> Settings
+        </a>
+        <a href="#" class="extra-link" id="toggleStudentMgmt">
+            <i class="fas fa-user-graduate"></i> <span>Student Management</span>
+            <i class="fas fa-chevron-down smgmt-chevron ms-auto"></i>
         </a>
     </div>
 
@@ -497,19 +496,22 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     .isnm-sidebar.collapsed .menu-children,
     .isnm-sidebar.collapsed .extra-link span,
     .isnm-sidebar.collapsed .logout-btn span,
-    .isnm-sidebar.collapsed .footer-meta,
-    .isnm-sidebar.collapsed .sidebar-extra { display: none; }
+    .isnm-sidebar.collapsed .footer-meta { display: none; }
+    .isnm-sidebar.collapsed .sidebar-extra { padding: 4px; align-items: center; }
     .isnm-sidebar.collapsed .menu-group-header,
     .isnm-sidebar.collapsed .menu-link { justify-content: center; padding: 10px 0; }
     .isnm-sidebar.collapsed .menu-icon,
     .isnm-sidebar.collapsed .extra-link i { width: auto; font-size: 16px; margin: 0; }
-    .isnm-sidebar.collapsed .extra-link { justify-content: center; padding: 10px 0; }
+    .isnm-sidebar.collapsed .extra-link { justify-content: center; padding: 8px 0; width: 48px; margin: 0 auto; }
     .isnm-sidebar.collapsed .logout-btn { justify-content: center; }
     .isnm-sidebar.collapsed .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
     .isnm-sidebar.collapsed .sidebar-user { justify-content: center; padding: 14px 8px; }
     .isnm-sidebar.collapsed .brand-logo { margin: 0; }
+    .isnm-sidebar.collapsed .smgmt-chevron { display: none; }
     .sidebar-collapse-btn { display: block; }
 }
+.smgmt-chevron { transition: transform .25s ease; font-size: 10px; }
+.smgmt-chevron.open { transform: rotate(180deg); }
 </style>
 
 <script>
@@ -644,6 +646,18 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             });
         }, 200);
     });
+
+    // ── Student Management toggle ──
+    var smgmtToggle = document.getElementById('toggleStudentMgmt');
+    var smgmtBlock = document.getElementById('hiddenStudentMgmt');
+    if (smgmtToggle && smgmtBlock) {
+        smgmtToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            var isHidden = smgmtBlock.style.display === 'none';
+            smgmtBlock.style.display = isHidden ? '' : 'none';
+            smgmtToggle.querySelector('.smgmt-chevron').classList.toggle('open', isHidden);
+        });
+    }
 })();
 </script>
 <?php

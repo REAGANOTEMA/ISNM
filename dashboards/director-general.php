@@ -285,69 +285,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
     </div>
 
-    <!-- QUICK ACTIONS -->
+    <!-- QUICK ACTIONS (collapsible) -->
     <div class="section-card">
-      <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>
+      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false" aria-controls="quickActionsContent">
+        <i class="fas fa-bolt me-2"></i>Quick Actions
+        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
+      </h2>
 
-      <div class="mb-3">
-        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-primary" style="font-size:11px">OPERATIONS</span><small class="text-muted">Core daily tasks</small></div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
-          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
-          <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
-          <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
-          <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
-          <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+      <div id="quickActionsContent" class="collapse">
+        <div class="mb-3 mt-2">
+          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-primary" style="font-size:11px">OPERATIONS</span><small class="text-muted">Core daily tasks</small></div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
+            <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
+            <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
+            <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+            <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+          </div>
         </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-warning text-dark" style="font-size:11px">EXECUTIVE</span><small class="text-muted">Leadership dashboards</small></div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
-          <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
-          <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
-          <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
+        <div class="mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-warning text-dark" style="font-size:11px">EXECUTIVE</span><small class="text-muted">Leadership dashboards</small></div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
+            <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
+            <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
+            <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
+          </div>
         </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-info" style="font-size:11px">ADMINISTRATION</span><small class="text-muted">School administration</small></div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
-          <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
-          <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
-          <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
-          <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
-          <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+        <div class="mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-info" style="font-size:11px">ADMINISTRATION</span><small class="text-muted">School administration</small></div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
+            <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
+            <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
+            <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
+            <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
+            <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+          </div>
         </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-success" style="font-size:11px">ACADEMIC</span><small class="text-muted">Faculty & student services</small></div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
-          <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
-          <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
-          <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
-          <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
-          <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
+        <div class="mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-success" style="font-size:11px">ACADEMIC</span><small class="text-muted">Faculty & student services</small></div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
+            <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
+            <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
+            <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
+            <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
+            <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-secondary" style="font-size:11px">SUPPORT</span><small class="text-muted">Welfare & facilities</small></div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
-          <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
-          <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
-          <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
-          <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
-          <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
-          <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-secondary" style="font-size:11px">SUPPORT</span><small class="text-muted">Welfare & facilities</small></div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
+            <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
+            <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
+            <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
+            <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
+            <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
+            <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+          </div>
         </div>
       </div>
     </div>
+
+    <style>
+    .quick-chevron { transition: transform .25s ease; }
+    .quick-chevron.rotated { transform: rotate(180deg); }
+    </style>
+    <script>
+    document.getElementById('quickActionsContent').addEventListener('show.bs.collapse', function () {
+      document.querySelector('.quick-chevron').classList.add('rotated');
+    });
+    document.getElementById('quickActionsContent').addEventListener('hide.bs.collapse', function () {
+      document.querySelector('.quick-chevron').classList.remove('rotated');
+    });
+    </script>
 
     <!-- INSTITUTIONAL REPORTS -->
     <div class="section-card">

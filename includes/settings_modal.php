@@ -54,7 +54,7 @@ $is_head = in_array(strtolower($s_role), [
           </a>
 
           <!-- Change Password – everyone -->
-          <a href="#" class="settings-card" onclick="event.preventDefault();$('#settingsModal').modal('hide');document.getElementById('changePasswordModal')?.__proto__?.constructor?.call(changePasswordModal);(typeof openChangePasswordModal==='function')?openChangePasswordModal():'';">
+          <a href="#" class="settings-card" onclick="event.preventDefault();bootstrap.Modal.getInstance(document.getElementById('settingsModal'))?.hide();if(typeof openChangePasswordModal==='function')openChangePasswordModal();">
             <div class="sc-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
               <i class="fas fa-key"></i>
             </div>

@@ -30,12 +30,14 @@ if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABL
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Font Awesome JS (icons) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" defer></script>
-<?php if (function_exists('renderProfileButton')) renderProfileButton(); ?>
 <?php if (function_exists('renderProfileModal')) renderProfileModal(); ?>
 
 <script>
 // Cache-busting version constant
 var ISNM_VERSION = '<?= $v ?>';
+
+// ── Suppress unhandled Promise rejections (e.g. Font Awesome deferred) ──
+window.addEventListener('unhandledrejection', function (e) { e.preventDefault(); });
 
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {
@@ -241,10 +243,10 @@ var ISNM_VERSION = '<?= $v ?>';
     registerSW();
     detectPWA();
     initNotificationBell();
-    <?php if (function_exists('renderProfileScripts')): ?>try { <?php renderProfileScripts(); ?> } catch(e){}<?php endif; ?>
   });
 })();
 </script>
+<?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 
 <style>
 /* ── Notification Bell Styles ──────────────────────────────────── */
