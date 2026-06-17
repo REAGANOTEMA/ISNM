@@ -114,6 +114,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     <div class="sidebar-extra">
         <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
         <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
+        <a href="#" class="extra-link settings-trigger" onclick="event.preventDefault();$('#settingsModal').modal('show');">
+            <i class="fas fa-cog"></i> Settings
+        </a>
     </div>
 
     <div class="sidebar-footer">
@@ -645,4 +648,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 </script>
 <?php
 $sidebarRendered = true;
+
+// Include universal settings modal
+require_once __DIR__ . '/settings_modal.php';
 ?>
