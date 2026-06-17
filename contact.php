@@ -597,7 +597,7 @@ include_once 'shared/_header.php'; ?>
 
     /* Contact Information Section */
     .contact-info-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: #fef9e7;
       padding: 5rem 0;
     }
 
@@ -662,7 +662,7 @@ include_once 'shared/_header.php'; ?>
 
     /* Contact Form Section */
     .contact-form-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: #fef9e7;
       padding: 5rem 0;
     }
 
@@ -793,7 +793,7 @@ include_once 'shared/_header.php'; ?>
 
     /* Office Hours Section */
     .office-hours-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: #fef9e7;
     }
 
     .hours-grid {
@@ -893,7 +893,7 @@ include_once 'shared/_header.php'; ?>
 
     /* Map Section */
     .map-section {
-      background: white;
+      background: #fef9e7;
     }
 
     .map-content {

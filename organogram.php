@@ -22,7 +22,7 @@ include('shared/_header.php');
 
         body {
             font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--gradient-primary);
+            background: #fef9e7;
             min-height: 100vh;
             color: var(--dark-text);
         }

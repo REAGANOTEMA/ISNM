@@ -15,7 +15,7 @@
         
         body {
             font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f8fafc;
+            background: #fef9e7;
             min-height: 100vh;
             padding: 20px;
             -webkit-font-smoothing: antialiased;

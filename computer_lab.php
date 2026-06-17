@@ -1083,7 +1083,7 @@ if ($conn) {
             <div id="students" style="display:none;">
                 <h2 class="section-title"><i class="fas fa-user-graduate"></i> Student Management</h2>
                 <div class="table-container">
-                    <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#f8fafc;border-bottom:1px solid #e5e7eb;">
+                    <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#fef9e7;border-bottom:1px solid #e5e7eb;">
                         <form method="GET" action="computer_lab.php" class="d-flex gap-2 flex-grow-1">
                             <input type="text" name="student_search" class="form-control form-control-sm" placeholder="Search by name, ID, phone..." style="max-width:400px;" value="<?= htmlspecialchars($_GET['student_search'] ?? '') ?>">
                             <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>

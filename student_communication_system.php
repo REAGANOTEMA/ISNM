@@ -403,7 +403,7 @@ if ($_SESSION['role'] !== 'Student') {
         }
 
         .compose-form {
-            background: #f8f9fa;
+            background: #fef9e7;
             border-radius: 10px;
             padding: 2rem;
             margin-bottom: 2rem;

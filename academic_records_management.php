@@ -391,7 +391,7 @@ $programs = executeQuery($programs_sql);
         }
 
         .filter-section {
-            background: #f8f9fa;
+            background: #fef9e7;
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 2rem;

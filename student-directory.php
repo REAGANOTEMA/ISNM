@@ -49,7 +49,7 @@ $yearsJson = json_encode(array_map('strval', $filterOptions['years']));
 
 body {
   font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f8fafc;
+  background: #fef9e7;
   margin: 0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

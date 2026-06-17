@@ -488,7 +488,7 @@
 
     /* Enhanced Introduction Section */
     .intro-section {
-      background: white;
+      background: transparent;
       position: relative;
     }
 
@@ -928,7 +928,7 @@
 
     /* Enhanced Campus Life Slider Section */
     .campus-life-section {
-      background: white;
+      background: transparent;
     }
 
     .campus-slider {

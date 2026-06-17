@@ -575,7 +575,7 @@
 
     /* Timeline Section */
     .timeline-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: #fef9e7;
       position: relative;
     }
 
@@ -659,7 +659,7 @@
 
     /* Achievements Section */
     .achievements-section {
-      background: white;
+      background: #fef9e7;
     }
 
     .achievements-grid {
@@ -901,7 +901,7 @@
 
     /* Impact Section */
     .impact-section {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: #fef9e7;
     }
 
     .impact-stats {

@@ -18,11 +18,12 @@
   --isnm-gold: #d97706;
   --isnm-dark-green: #0f4c3a;
   --isnm-cream: #fdf6ec;
-  --isnm-light-bg: #f8fafc;
+  --isnm-light-bg: #fdf6ec;
+  --isnm-yellow-bg: #fef9e7;
   --gradient-primary: linear-gradient(135deg, var(--isnm-navy) 0%, var(--isnm-blue) 50%, var(--isnm-light-blue) 100%);
   --gradient-secondary: linear-gradient(135deg, var(--isnm-green) 0%, var(--isnm-teal) 100%);
   --gradient-accent: linear-gradient(135deg, #ffd700, #f59e0b);
-  --section-bg: #ffffff;
+  --section-bg: #fef9e7;
 
   /* Card Color System */
   --card-green: #eaf7e8;
@@ -45,7 +46,7 @@ body {
   color: #1a1a1a;
   position: relative;
   z-index: 10;
-  background: radial-gradient(ellipse at 50% 0%, #fefaef 0%, #fdf6ec 50%, #f8f0e4 100%);
+  background: #fef9e7;
   background-attachment: fixed;
 }
 
@@ -135,7 +136,7 @@ body, p, .about-text, .intro-text {
 
 .cinematic-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 3.15rem;
+  font-size: 2.6rem;
   font-weight: 900;
   color: #ffffff;
   background: transparent !important;
@@ -269,14 +270,14 @@ h3 {
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
-/* === Clean Medical-Grade Section Backgrounds === */
-.stats-section { background: var(--isnm-light-bg, #f8fafc); }
-.programs-section { background: #ffffff; }
-.about-section { background: var(--isnm-light-bg, #f8fafc); }
-.facilities-section { background: #ffffff; }
-.news-section { background: var(--isnm-light-bg, #f8fafc); }
-.vmv-section { background: var(--isnm-light-bg, #f8fafc); }
-.contact-info-section { background: var(--isnm-light-bg, #f8fafc); }
+/* === Clean Light Yellow Section Backgrounds === */
+.stats-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.programs-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.about-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.facilities-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.news-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.vmv-section { background: var(--isnm-yellow-bg, #fef9e7); }
+.contact-info-section { background: var(--isnm-yellow-bg, #fef9e7); }
 .py-5, .py-4, .py-3 { background: transparent !important; }
 .cta-section { background: var(--gradient-primary) !important; }
 .programs-overview h2,
@@ -1021,16 +1022,16 @@ h4 {
 
 /* === Hero Override — reduced cinematic title === */
 .hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
-  font-size: 3rem !important;
+  font-size: 2.6rem !important;
 }
 @media (max-width: 768px) {
   .hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
-    font-size: 2.2rem !important;
+    font-size: 2rem !important;
   }
 }
 @media (max-width: 480px) {
   .hero-section .hero-content .cinematic-title-wrapper .cinematic-title-track .cinematic-title {
-    font-size: 1.7rem !important;
+    font-size: 1.5rem !important;
   }
 }
 
