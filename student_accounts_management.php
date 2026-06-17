@@ -922,7 +922,7 @@ function generateStudentId() {
                             <?php foreach ($students as $student): ?>
                                 <tr>
                                     <td>
-                                        <img src="<?php echo getPassportPhotoUrl($student['profile_image']); ?>" alt="Student" class="student-avatar" onerror="this.src='images/default-avatar.png'">
+                                        <img src="<?php echo getPassportPhotoUrl($student['profile_image']); ?>" alt="Student" class="student-avatar" onerror="this.src='images/username.png'">
                                     </td>
                                     <td>
                                         <strong><?php echo htmlspecialchars($student['student_id']); ?></strong>

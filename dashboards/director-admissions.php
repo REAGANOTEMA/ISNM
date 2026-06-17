@@ -183,7 +183,7 @@ try {
                         <i class="fas fa-user-plus"></i> Add Student
                     </button>
                     <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>

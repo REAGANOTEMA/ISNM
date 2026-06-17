@@ -132,7 +132,7 @@ if ($conn) {
                         <span id="currentDate"></span>
                     </div>
                     <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
                         <div class="user-dropdown">
                             <span><?php echo htmlspecialchars($user_name); ?></span>
                             <i class="fas fa-chevron-down"></i>

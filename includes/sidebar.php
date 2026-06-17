@@ -15,7 +15,7 @@ $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
 // Load profile image from staff_profiles
-$profileImage = '../images/default-avatar.png';
+$profileImage = '../images/username.png';
 if ($user_id) {
     $profileFile = __DIR__ . '/profile_settings.php';
     if (file_exists($profileFile)) {

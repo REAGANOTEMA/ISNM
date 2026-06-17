@@ -10,6 +10,19 @@ if ($rootPath === '') $rootPath = '.';
 
 // Cache-busting version — bump on every deploy
 $v = '2.0.1';
+
+// Profile image URL for dashboard header avatars (falls back to username.png)
+$profileImageUrl = '../images/username.png';
+if (!empty($_SESSION['user_id'])) {
+    $pf = __DIR__ . '/profile_settings.php';
+    if (file_exists($pf)) {
+        include_once $pf;
+        if (function_exists('getStaffProfileImageUrl')) {
+            $url = getStaffProfileImageUrl((int)$_SESSION['user_id']);
+            if ($url) $profileImageUrl = $url;
+        }
+    }
+}
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">

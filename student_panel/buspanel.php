@@ -214,7 +214,7 @@ checkAuth('Student');
     <div class="container mt-4">
         <!-- Student Header -->
         <div class="student-header">
-            <img src="../images/default-avatar.png" alt="Student Avatar" id="student-avatar">
+            <img src="../images/username.png" alt="Student Avatar" id="student-avatar">
             <h4><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
             <p class="mb-0">
                 <i class="fas fa-id-card"></i> Index: <?php echo htmlspecialchars($_SESSION['nsin_number']); ?> | 

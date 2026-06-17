@@ -340,7 +340,7 @@ $students = executeQuery($students_sql);
                 <?php foreach ($students as $student): ?>
                     <?php if ($student['profile_image'] === 'default-student.png' || empty($student['profile_image'])): ?>
                         <div class="photo-item">
-                            <img src="images/default-avatar.png" alt="No Photo">
+                            <img src="images/username.png" alt="No Photo">
                             <h6><?php echo htmlspecialchars($student['surname'] . ', ' . $student['first_name']); ?></h6>
                             <small class="text-muted"><?php echo htmlspecialchars($student['student_id']); ?></small>
                             <button type="button" class="btn btn-sm btn-primary mt-2" onclick="uploadSinglePhoto('<?php echo $student['student_id']; ?>', '<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['surname']); ?>')">

@@ -75,7 +75,7 @@ if ($conn) {
                     <a href="../student-directory.php" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-address-book me-1"></i>Directory</a>
                     <a href="../index.php" class="btn btn-sm btn-outline-secondary ms-1"><i class="fas fa-home"></i></a>
                     <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>

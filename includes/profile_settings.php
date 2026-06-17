@@ -118,15 +118,15 @@ if (!function_exists('getStaffProfileImageUrl')) {
                 }
             }
         } catch (Exception $e) {}
-        $urls[$staffId] = '../images/default-avatar.png';
-        return '../images/default-avatar.png';
+        $urls[$staffId] = '../images/username.png';
+        return '../images/username.png';
     }
 }
 
 // ── Render floating profile button ────────────────────────────
 function renderProfileButton() {
     $staffId = (int)($_SESSION['user_id'] ?? 0);
-    $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/default-avatar.png';
+    $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/username.png';
     ?>
     <div id="profileFloatBtn" class="profile-float-btn" title="Profile Settings" onclick="openProfileModal()">
         <img src="<?= $imgUrl ?>" alt="" class="profile-float-avatar" id="profileFloatAvatar">
@@ -137,7 +137,7 @@ function renderProfileButton() {
 // ── Render profile settings modal ─────────────────────────────
 function renderProfileModal() {
     $staffId = (int)($_SESSION['user_id'] ?? 0);
-    $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/default-avatar.png';
+    $imgUrl = $staffId ? getStaffProfileImageUrl($staffId) : '../images/username.png';
     $name = $_SESSION['full_name'] ?? $_SESSION['first_name'] ?? 'Staff';
     $role = $_SESSION['role'] ?? '';
     $email = $_SESSION['email'] ?? $_SESSION['staff_email'] ?? '';

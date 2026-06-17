@@ -214,7 +214,7 @@ if ($search_term && $students_conn) {
                     <button class="btn btn-ict btn-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus"></i> Add Student</button>
                     <button class="btn btn-ict btn-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addComputerModal"><i class="fas fa-plus"></i> Add Computer</button>
                     <div class="user-menu d-flex align-items-center gap-2">
-                        <img src="../images/default-avatar.png" alt="" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?>" alt="" class="user-avatar">
                         <span class="d-none d-md-inline"><?= htmlspecialchars($user_name) ?></span>
                     </div>
                 </div>

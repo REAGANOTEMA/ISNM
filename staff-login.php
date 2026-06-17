@@ -83,7 +83,7 @@ $active_staff_tab = 'show active';
   <link rel="icon" type="image/x-icon" href="images/school-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 
   <style>
   :root {
@@ -228,20 +228,58 @@ $active_staff_tab = 'show active';
     object-fit: cover;
   }
 
-  .login-header h1 {
-    font-size: 1.85rem; 
-    font-weight: 800; 
-    margin: 0 0 6px;
-    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.85) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .title-3d {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin: 0 0 4px;
+    color: #ffd700;
+    text-shadow:
+      0 1px 0 #cc9600,
+      0 2px 0 #b88700,
+      0 3px 0 #a37700,
+      0 4px 0 #8e6800,
+      0 5px 0 #795900,
+      0 6px 8px rgba(0,0,0,0.2),
+      0 8px 16px rgba(0,0,0,0.1);
+    position: relative;
+    line-height: 1.2;
+  }
+
+  .title-3d::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+    background-size: 200% 200%;
+    pointer-events: none;
+    animation: goldShine 6s ease-in-out infinite;
+  }
+
+  @keyframes goldShine {
+    0% { background-position: 100% 100%; }
+    50% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
   }
   
-  .login-header p { 
-    opacity: 0.88; 
-    font-size: 0.92rem; 
+  .school-name {
+    opacity: 0.92;
+    font-size: 0.92rem;
+    font-weight: 500;
+    margin: 0 0 2px;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+  
+  .sign-in-label {
+    opacity: 0.7;
+    font-size: 0.82rem;
     font-weight: 400;
+    margin: 0;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
   
   .role-badge {
@@ -444,13 +482,18 @@ $active_staff_tab = 'show active';
     .login-header { padding: 36px 24px 32px; }
     .login-body { padding: 24px 20px; }
     .login-footer { padding: 0 20px 20px; }
-    .login-header h1 { font-size: 1.5rem; }
+    .title-3d { font-size: 1.9rem; }
+    .school-name { font-size: 0.85rem; }
+    .sign-in-label { font-size: 0.78rem; }
   }
   
   @media(max-width:480px){
     .login-card { border-radius: 16px; }
     .login-header { padding: 30px 18px 26px; }
     .login-body { padding: 20px 16px; }
+    .title-3d { font-size: 1.6rem; letter-spacing: 2px; }
+    .school-name { font-size: 0.82rem; }
+    .sign-in-label { font-size: 0.72rem; }
     .logo-wrap { width: 85px; height: 85px; }
     .logo-wrap img { width: 68px; height: 68px; }
   }
@@ -667,19 +710,7 @@ $active_staff_tab = 'show active';
     border-bottom: 7px solid rgba(255,214,0,0.08);
   }
 
-  /* Header gradient text enhancement */
-  .login-header h1 {
-    position: relative;
-    display: inline-block;
-  }
-
-  .login-header h1::after {
-    content: '';
-    position: absolute;
-    bottom: -2px; left: 10%; right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  }
+  /* Title shine overlay (applied via JS on .title-3d) */
 
   @media (min-width: 1200px) {
     .login-wrapper { max-width: 520px; }
@@ -846,17 +877,6 @@ $active_staff_tab = 'show active';
     will-change: transform, opacity;
   }
 
-  /* ── Animated gradient text in header ── */
-  .login-header h1 {
-    background-size: 200% auto;
-    animation: gradientText 5s ease-in-out infinite alternate;
-  }
-
-  @keyframes gradientText {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
-  }
-
   /* ── Typing cursor ── */
   .typing-cursor {
     display: inline-block;
@@ -893,13 +913,189 @@ $active_staff_tab = 'show active';
     background: linear-gradient(90deg, var(--accent), var(--accent-dark));
     border-radius: 3px 3px 0 0;
   }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     MEDICAL THEME ENHANCEMENTS — 3D medical precision design
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  /* ── 3D Medical Plus watermark (rotates in 3D space) ── */
+  .medical-plus {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 400px; height: 400px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035;
+    transform: translate(-50%, -50%);
+    perspective: 800px;
+  }
+
+  .medical-plus-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: plus3dSpin 40s linear infinite;
+  }
+
+  .medical-plus-inner::before,
+  .medical-plus-inner::after {
+    content: '';
+    position: absolute;
+    background: linear-gradient(135deg, rgba(255,214,0,0.15), rgba(255,255,255,0.08));
+    border-radius: 18px;
+    box-shadow:
+      0 0 30px rgba(255,214,0,0.06),
+      0 0 60px rgba(26,35,126,0.04),
+      inset 0 0 20px rgba(255,255,255,0.03);
+  }
+
+  .medical-plus-inner::before {
+    width: 68%; height: 20%;
+    top: 40%; left: 16%;
+  }
+
+  .medical-plus-inner::after {
+    width: 20%; height: 68%;
+    top: 16%; left: 40%;
+  }
+
+  @keyframes plus3dSpin {
+    0% { transform: rotateX(25deg) rotateY(0deg) rotateZ(0deg); }
+    33% { transform: rotateX(25deg) rotateY(120deg) rotateZ(120deg); }
+    66% { transform: rotateX(25deg) rotateY(240deg) rotateZ(240deg); }
+    100% { transform: rotateX(25deg) rotateY(360deg) rotateZ(360deg); }
+  }
+
+  /* ── Pulse / Sonar Rings ── */
+  .pulse-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    top: 0; left: 0;
+    border: 1.5px solid rgba(255,214,0,0.07);
+    border-radius: 50%;
+    animation: pulseWave 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+    transform: translate(-50%, -50%);
+  }
+
+  .pulse-ring:nth-child(1) { width: 40px; height: 40px; animation-delay: 0s; }
+  .pulse-ring:nth-child(2) { width: 100px; height: 100px; animation-delay: 1s; }
+  .pulse-ring:nth-child(3) { width: 200px; height: 200px; animation-delay: 2s; border-width: 1px; }
+  .pulse-ring:nth-child(4) { width: 350px; height: 350px; animation-delay: 3s; border-width: 1px; opacity: 0.6; }
+  .pulse-ring:nth-child(5) { width: 550px; height: 550px; animation-delay: 4s; border-width: 0.8px; opacity: 0.4; }
+
+  @keyframes pulseWave {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+  }
+
+  /* ── Heartbeat / EKG Line ── */
+  .ekg-line {
+    position: fixed;
+    bottom: 50px; left: 8%; right: 8%;
+    height: 32px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.045;
+  }
+
+  .ekg-line svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  .ekg-line path {
+    fill: none;
+    stroke: #ffd700;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 3000;
+    stroke-dashoffset: 3000;
+    animation: drawEKG 4s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255,214,0,0.15));
+  }
+
+  @keyframes drawEKG {
+    0% { stroke-dashoffset: 3000; }
+    80% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /* ── Hexagonal Medical Grid (subtle background pattern) ── */
+  .hex-grid {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.025;
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.15) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── Enhanced floating medical shapes ── */
+  .floating-shape.type-pill {
+    border-radius: 50px;
+    animation: floatShape 28s linear infinite, pillGlow 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes pillGlow {
+    0% { box-shadow: 0 0 4px rgba(255,214,0,0.03); }
+    100% { box-shadow: 0 0 12px rgba(255,214,0,0.08); }
+  }
+
+  .floating-shape.type-plus {
+    background: transparent !important;
+    position: relative;
+  }
+
+  .floating-shape.type-plus::before,
+  .floating-shape.type-plus::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,214,0,0.06);
+    border-radius: 2px;
+  }
+
+  .floating-shape.type-plus::before {
+    width: 60%; height: 20%;
+    top: 40%; left: 20%;
+  }
+
+  .floating-shape.type-plus::after {
+    width: 20%; height: 60%;
+    top: 20%; left: 40%;
+  }
   </style>
 </head>
 <body>
 
+<div class="hex-grid"></div>
 <div class="bg-particles" id="particles"></div>
 <div class="floating-shapes" id="floatingShapes"></div>
 <div class="noise-overlay"></div>
+<div class="pulse-container">
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+  <div class="pulse-ring"></div>
+</div>
+<div class="medical-plus"><div class="medical-plus-inner"></div></div>
+<div class="ekg-line">
+  <svg viewBox="0 0 1000 32" preserveAspectRatio="none">
+    <path d="M0,20 L120,20 L140,20 L155,18 L165,22 L180,20 L200,20 L300,20 L320,20 L335,12 L345,28 L360,20 L380,20 L500,20 L520,20 L535,18 L545,22 L560,20 L580,20 L700,20 L715,20 L730,8 L740,32 L755,20 L770,20 L900,20 L920,20 L935,18 L945,22 L960,20 L1000,20"/>
+  </svg>
+</div>
 
 <div class="login-wrapper">
   <div class="card-3d-wrap">
@@ -912,8 +1108,9 @@ $active_staff_tab = 'show active';
           <div class="ring-deco"></div>
           <img src="images/school-logo.png" alt="ISNM Logo">
         </div>
-        <h1>ISNM Portal</h1>
-        <p>Iganga School of Nursing and Midwifery , Staff Sign In</p>
+        <div class="title-3d" data-text="ISNM Portal">ISNM Portal</div>
+        <p class="school-name">Iganga School of Nursing and Midwifery</p>
+        <p class="sign-in-label">Staff Sign In</p>
 
         <?php if ($requested_position): ?>
           <div>
@@ -1014,27 +1211,31 @@ document.addEventListener('DOMContentLoaded', function() {
   // ════════════════════════════════════════════════════════════════
   const shapesContainer = document.getElementById('floatingShapes');
   if (shapesContainer) {
-    const shapeTypes = ['circle', 'blob', 'rect'];
+    const shapeTypes = ['circle', 'blob', 'rect', 'pill', 'plus'];
     const colors = [
       'rgba(255,214,0,0.08)', 'rgba(255,255,255,0.04)',
       'rgba(26,35,126,0.06)', 'rgba(13,71,161,0.05)',
       'rgba(249,168,37,0.07)', 'rgba(255,255,255,0.03)'
     ];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 18; i++) {
       const shape = document.createElement('div');
       const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
       shape.className = 'floating-shape type-' + type;
-      const size = 20 + Math.random() * 70;
-      if (type !== 'tri') {
-        shape.style.width = size + 'px';
+      const size = 18 + Math.random() * 60;
+      if (type !== 'tri' && type !== 'plus') {
+        shape.style.width = type === 'pill' ? (size * 2.2) + 'px' : size + 'px';
         shape.style.height = size + 'px';
         shape.style.background = colors[Math.floor(Math.random() * colors.length)];
         if (type === 'blob') {
           shape.style.background = 'linear-gradient(135deg, rgba(255,214,0,0.08), rgba(26,35,126,0.04))';
         }
       }
+      if (type === 'plus') {
+        shape.style.width = (size * 0.8) + 'px';
+        shape.style.height = (size * 0.8) + 'px';
+      }
       shape.style.left = Math.random() * 100 + '%';
-      shape.style.animationDuration = (20 + Math.random() * 35) + 's';
+      shape.style.animationDuration = (22 + Math.random() * 35) + 's';
       shape.style.animationDelay = Math.random() * 15 + 's';
       shapesContainer.appendChild(shape);
     }
@@ -1127,7 +1328,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ════════════════════════════════════════════════════════════════
   // 6. TYPING EFFECT ON SUBTITLE
   // ════════════════════════════════════════════════════════════════
-  const subtitle = document.querySelector('.login-header p');
+  const subtitle = document.querySelector('.school-name');
   if (subtitle) {
     const originalText = subtitle.textContent;
     subtitle.textContent = '';

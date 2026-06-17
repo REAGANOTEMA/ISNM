@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <span><?php echo date('l, F j, Y'); ?></span>
                     </div>
                     <div class="user-menu">
-                        <img src="../images/default-avatar.png" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
                         <div class="user-dropdown">
                             <span><?php echo $student_info['first_name'] . ' ' . $student_info['surname']; ?></span>
                             <i class="fas fa-chevron-down"></i>
@@ -265,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <div class="profile-header">
                             <div class="profile-avatar">
                                 <?php
-                                $photo = !empty($student_info['profile_picture']) ? '../studentUploads/profile_images/' . htmlspecialchars($student_info['profile_picture']) : '../images/default-avatar.png';
+                                $photo = !empty($student_info['profile_picture']) ? '../studentUploads/profile_images/' . htmlspecialchars($student_info['profile_picture']) : '../images/username.png';
                                 ?>
                                 <img src="<?= $photo ?>" alt="Profile" class="avatar-img" id="studentProfileImage">
                                 <label for="profilePhotoInput" class="btn btn-sm btn-primary" style="cursor:pointer">

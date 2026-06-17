@@ -134,7 +134,7 @@ function deletePassportPhoto($filename) {
 
 function getPassportPhotoUrl($filename) {
     if (empty($filename) || $filename === 'default-student.png') {
-        return 'images/default-avatar.png';
+        return 'images/username.png';
     }
     
     $file_path = 'uploads/passport_photos/' . $filename;
@@ -142,7 +142,7 @@ function getPassportPhotoUrl($filename) {
         return $file_path;
     }
     
-    return 'images/default-avatar.png';
+    return 'images/username.png';
 }
 
 function updateStudentPhoto($student_id, $filename) {

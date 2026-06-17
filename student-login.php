@@ -52,9 +52,27 @@ if ($login_success) { unset($_SESSION['success']); }
     padding: 20px;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+    background: #1a2e1a;
+    background-image: url('images/loginimage.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
     background: 
-      linear-gradient(135deg, #2e7d32 0%, #388e3c 40%, #1b5e20 100%),
-      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      linear-gradient(135deg,
+        rgba(27,94,32,0.85) 0%,
+        rgba(20,65,24,0.78) 40%,
+        rgba(10,30,12,0.82) 100%
+      );
+    z-index: 0;
+    pointer-events: none;
   }
 
   .bg-particles {

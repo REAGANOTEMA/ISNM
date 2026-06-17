@@ -4,33 +4,86 @@ include('shared/_header.php');
 ?>
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --light-bg: #ecf0f1;
-            --dark-text: #2c3e50;
-            --border-color: #bdc3c7;
+            --executive: #667eea;
+            --management: #c471f5;
+            --administrative: #4facfe;
+            --academic: #43e97b;
+            --support: #f673a8;
+            --student: #30cfd0;
+            --ict: #00b4d8;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #fef9e7;
+            background: linear-gradient(135deg, #070b15 0%, #0a1226 25%, #0f1a2e 50%, #0a1628 75%, #070b15 100%);
             min-height: 100vh;
-            color: var(--dark-text);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ambient-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .ambient-orb {
+            position: absolute; border-radius: 50%; filter: blur(100px);
+            animation: orbDrift 20s ease-in-out infinite alternate;
+        }
+        .ambient-orb:nth-child(1) {
+            top: -10%; left: -5%; width: 450px; height: 450px;
+            background: rgba(102,126,234,0.08);
+        }
+        .ambient-orb:nth-child(2) {
+            bottom: -10%; right: -5%; width: 500px; height: 500px;
+            background: rgba(196,113,245,0.07);
+            animation-delay: -7s;
+        }
+        .ambient-orb:nth-child(3) {
+            top: 50%; left: 50%; width: 600px; height: 600px;
+            background: rgba(79,172,254,0.05);
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes orbDrift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -20px) scale(1.1); }
+        }
+
+        .stars-container {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute; width: 2px; height: 2px;
+            background: #fff; border-radius: 50%;
+            animation: starTwinkle var(--duration) ease-in-out infinite alternate;
+        }
+        .star:nth-child(odd) { width: 1.5px; height: 1.5px; }
+        .star:nth-child(3n) { width: 2.5px; height: 2.5px; }
+
+        @keyframes starTwinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
         }
 
         .organogram-container {
             padding: 40px 20px;
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .page-header {
@@ -43,11 +96,17 @@ include('shared/_header.php');
             font-size: 2.25rem;
             font-weight: 800;
             margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #a8b8ff 40%, #c471f5 70%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(102,126,234,0.15));
         }
 
         .page-header p {
             font-size: 1rem;
-            opacity: 0.9;
+            opacity: 0.8;
+            color: rgba(255,255,255,0.75);
         }
 
         .organogram-tree {
@@ -56,19 +115,215 @@ include('shared/_header.php');
             perspective: 1200px;
         }
 
-        /* ── Universal card size (all cards identical) ── */
+        /* ── School header (premium 3D) ── */
+        .school-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 32px 28px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 800px;
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.25),
+                0 2px 8px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        /* Animated gradient border ring */
+        .school-header::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 22px;
+            background: conic-gradient(
+                from 0deg at 50% 50%,
+                transparent 0deg,
+                rgba(102,126,234,0.15) 60deg,
+                transparent 120deg,
+                rgba(196,113,245,0.12) 180deg,
+                transparent 240deg,
+                rgba(79,172,254,0.15) 300deg,
+                transparent 360deg
+            );
+            z-index: -2;
+            animation: borderSpin 8s linear infinite;
+            pointer-events: none;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+            padding: 2px;
+        }
+
+        /* Static glow behind the animated border */
+        .school-header::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 21px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.08), transparent 40%, rgba(196,113,245,0.06));
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @keyframes borderSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Logo containers with glow rings */
+        .logo-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-container::after {
+            content: '';
+            position: absolute;
+            width: 92px; height: 92px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(102,126,234,0.12);
+            animation: logoRingPulse 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .logo-container:first-child::after {
+            animation-delay: 0s;
+        }
+
+        .logo-container:last-child::after {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes logoRingPulse {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        .school-logo {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.12);
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.35),
+                0 0 40px rgba(102,126,234,0.06);
+            position: relative;
+            z-index: 1;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .school-header:hover .school-logo {
+            transform: scale(1.04);
+            box-shadow:
+                0 6px 30px rgba(0,0,0,0.4),
+                0 0 60px rgba(102,126,234,0.1);
+        }
+
+        .school-info {
+            text-align: center;
+            margin: 0 22px;
+            color: white;
+            position: relative;
+        }
+
+        /* Decorative side glow lines */
+        .school-info::before,
+        .school-info::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06));
+        }
+
+        .school-info::before {
+            right: calc(100% + 8px);
+        }
+
+        .school-info::after {
+            left: calc(100% + 8px);
+            background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);
+        }
+
+        .school-info h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 6px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #c8d0ff 40%, #a88bff 70%, #c471f5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(102,126,234,0.15));
+            animation: headerTitleGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerTitleGlow {
+            0% { filter: drop-shadow(0 0 15px rgba(102,126,234,0.1)); }
+            100% { filter: drop-shadow(0 0 30px rgba(102,126,234,0.2)) drop-shadow(0 0 60px rgba(196,113,245,0.08)); }
+        }
+
+        .school-info h2 .title-accent {
+            display: inline-block;
+            animation: titleAccentPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes titleAccentPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .school-info p {
+            font-size: 0.95rem;
+            font-style: italic;
+            opacity: 0.65;
+            margin: 0;
+            letter-spacing: 0.3px;
+            color: rgba(255,255,255,0.75);
+        }
+
+        /* Decorative floating dots near header */
+        .header-deco {
+            position: absolute;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: rgba(102,126,234,0.15);
+            pointer-events: none;
+            animation: decoFloat 6s ease-in-out infinite;
+        }
+
+        .header-deco:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .header-deco:nth-child(2) { top: 15%; right: 8%; animation-delay: -2s; }
+        .header-deco:nth-child(3) { bottom: 20%; left: 10%; animation-delay: -4s; }
+        .header-deco:nth-child(4) { bottom: 12%; right: 5%; animation-delay: -1s; }
+
+        @keyframes decoFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+            50% { transform: translateY(-6px) scale(1.3); opacity: 0.6; }
+        }
+
+        /* ── Universal card ── */
         .org-node {
-            background: white;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border-radius: 16px;
             padding: 22px 18px 18px;
             margin: 12px;
-            box-shadow:
-                0 2px 6px rgba(0,0,0,0.05),
-                0 6px 18px rgba(0,0,0,0.09),
-                0 14px 36px rgba(0,0,0,0.07);
+            border: 1.5px solid rgba(255,255,255,0.06);
             text-align: center;
-            transition: transform 0.4s cubic-bezier(.25,.8,.25,1), box-shadow 0.4s ease;
-            border: 2.5px solid rgba(0,0,0,0.05);
             position: relative;
             width: 238px;
             height: 290px;
@@ -80,54 +335,90 @@ include('shared/_header.php');
             overflow: hidden;
             transform-style: preserve-3d;
             will-change: transform;
+            transition: transform 0.45s cubic-bezier(.25,.8,.25,1), box-shadow 0.45s ease, border-color 0.3s ease;
+            box-shadow:
+                0 4px 16px rgba(0,0,0,0.25),
+                0 8px 32px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
-        /* Subtle glass overlay */
         .org-node::before {
             content: '';
             position: absolute;
             inset: 0;
             border-radius: 16px;
-            background: linear-gradient(145deg, rgba(255,255,255,0.22) 0%, transparent 40%, rgba(0,0,0,0.03) 100%);
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 45%, rgba(0,0,0,0.04) 100%);
             pointer-events: none;
             z-index: 1;
         }
 
-        .org-node > * {
-            position: relative;
-            z-index: 2;
+        .org-node > * { position: relative; z-index: 2; }
+
+        .org-node:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.35),
+                0 16px 48px rgba(0,0,0,0.25),
+                0 0 40px var(--card-glow),
+                inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
-        /* Hover lift — steady, no shake */
-        .org-node:hover {
-            transform: translateY(-5px);
-            box-shadow:
-                0 6px 14px rgba(0,0,0,0.07),
-                0 14px 28px rgba(0,0,0,0.11),
-                0 22px 52px rgba(0,0,0,0.09);
-            border-color: rgba(255,255,255,0.3);
+        /* Category neon borders + glow */
+        .org-node.executive {
+            border-color: rgba(102,126,234,0.2);
+            --card-glow: rgba(102,126,234,0.12);
         }
+        .org-node.executive:hover { border-color: rgba(102,126,234,0.4); }
+        .org-node.management {
+            border-color: rgba(196,113,245,0.2);
+            --card-glow: rgba(196,113,245,0.12);
+        }
+        .org-node.management:hover { border-color: rgba(196,113,245,0.4); }
+        .org-node.administrative {
+            border-color: rgba(79,172,254,0.2);
+            --card-glow: rgba(79,172,254,0.12);
+        }
+        .org-node.administrative:hover { border-color: rgba(79,172,254,0.4); }
+        .org-node.academic {
+            border-color: rgba(67,233,123,0.2);
+            --card-glow: rgba(67,233,123,0.12);
+        }
+        .org-node.academic:hover { border-color: rgba(67,233,123,0.4); }
+        .org-node.support {
+            border-color: rgba(246,115,168,0.2);
+            --card-glow: rgba(246,115,168,0.12);
+        }
+        .org-node.support:hover { border-color: rgba(246,115,168,0.4); }
+        .org-node.student {
+            border-color: rgba(48,207,208,0.2);
+            --card-glow: rgba(48,207,208,0.12);
+        }
+        .org-node.student:hover { border-color: rgba(48,207,208,0.4); }
+        .org-node.ict {
+            border-color: rgba(0,180,216,0.25);
+            --card-glow: rgba(0,180,216,0.15);
+        }
+        .org-node.ict:hover { border-color: rgba(0,180,216,0.5); }
 
         /* Shine sweep on hover */
         .card-shine {
             position: absolute;
             top: 0; left: -110%;
             width: 60%; height: 100%;
-            background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.16) 50%, transparent 75%);
+            background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%);
             transform: skewX(-15deg);
             transition: left 0.65s ease;
             pointer-events: none;
             z-index: 3;
         }
 
-        .org-node:hover .card-shine {
-            left: 130%;
-        }
+        .org-node:hover .card-shine { left: 130%; }
 
-        /* Button press — real 3D feel */
+        /* Button press */
         .org-node .btn-3d:active {
             transform: translateY(3px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.18) !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25) !important;
         }
 
         /* Icon */
@@ -135,13 +426,21 @@ include('shared/_header.php');
             font-size: 2rem;
             margin-bottom: 8px;
             display: block;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
-            transition: transform 0.4s cubic-bezier(.25,.8,.25,1);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            transition: transform 0.45s cubic-bezier(.25,.8,.25,1);
         }
 
         .org-node:hover .org-icon {
-            transform: scale(1.1) translateY(-2px);
+            transform: scale(1.12) translateY(-3px);
         }
+
+        .org-node.executive .org-icon { color: #667eea; }
+        .org-node.management .org-icon { color: #c471f5; text-shadow: 0 0 15px rgba(196,113,245,0.3); }
+        .org-node.administrative .org-icon { color: #4facfe; }
+        .org-node.academic .org-icon { color: #43e97b; }
+        .org-node.support .org-icon { color: #f673a8; }
+        .org-node.student .org-icon { color: #30cfd0; }
+        .org-node.ict .org-icon { color: #00b4d8; }
 
         /* Typography */
         .org-title {
@@ -155,44 +454,44 @@ include('shared/_header.php');
             max-height: 2.4em;
             overflow: hidden;
             letter-spacing: 0.1px;
+            color: #fff;
         }
 
         .org-subtitle {
             font-size: 0.80rem;
-            color: rgba(255,255,255,0.88);
+            color: rgba(255,255,255,0.6);
             line-height: 1.3;
             word-wrap: break-word;
             overflow-wrap: break-word;
             flex-grow: 1;
             margin-bottom: 6px;
             overflow: hidden;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.12);
         }
 
         /* Link pill */
         .org-link {
             display: inline-block;
             padding: 6px 16px;
-            background: rgba(255,255,255,0.13);
-            color: white;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.8);
             text-decoration: none;
             border-radius: 20px;
             font-size: 0.80rem;
             transition: all 0.3s ease;
-            border: 1.5px solid rgba(255,255,255,0.22);
+            border: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 4px;
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
 
         .org-link:hover {
-            background: rgba(255,255,255,0.26);
+            background: rgba(255,255,255,0.12);
             transform: scale(1.03);
-            color: white;
-            border-color: rgba(255,255,255,0.45);
+            color: #fff;
+            border-color: rgba(255,255,255,0.25);
         }
 
-        /* Actions (button stack) */
+        /* Actions */
         .org-actions {
             margin-top: 8px;
             display: flex;
@@ -206,96 +505,62 @@ include('shared/_header.php');
             padding: 7px 12px;
             border: none;
             border-radius: 14px;
-            background: linear-gradient(155deg, rgba(255,255,255,0.22), rgba(255,255,255,0.07));
-            color: white;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.85);
             position: relative;
-            transform-style: preserve-3d;
             transition: all 0.3s cubic-bezier(.25,.8,.25,1);
-            box-shadow:
-                0 2px 0 rgba(0,0,0,0.16),
-                0 4px 8px rgba(0,0,0,0.10);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.12);
             text-transform: uppercase;
             letter-spacing: 0.25px;
             overflow: hidden;
             font-size: 0.68rem;
             width: 100%;
             text-align: center;
-            border: 1.5px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.08);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
+            cursor: pointer;
         }
 
-        /* Frosted inner shine */
         .org-actions .btn-3d::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 60%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent 60%);
             border-radius: 14px;
             pointer-events: none;
         }
 
         .org-actions .btn-3d:hover {
             transform: translateY(-2px);
-            box-shadow:
-                0 4px 0 rgba(0,0,0,0.18),
-                0 8px 16px rgba(0,0,0,0.14);
-            border-color: rgba(255,255,255,0.38);
-        }
-
-        /* Color themes — identical layout, different hues */
-        .org-node.executive {
-            background: linear-gradient(160deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .org-node.management {
-            background: linear-gradient(160deg, #c471f5 0%, #b03070 100%);
-            color: white;
-        }
-        .org-node.administrative {
-            background: linear-gradient(160deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-        .org-node.academic {
-            background: linear-gradient(160deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-        }
-        .org-node.support {
-            background: linear-gradient(160deg, #f673a8 0%, #d4a017 100%);
-            color: white;
-        }
-        .org-node.student {
-            background: linear-gradient(160deg, #30cfd0 0%, #330867 100%);
-            color: white;
-        }
-        .org-node.ict {
-            background: linear-gradient(160deg, #00b4d8 0%, #0077b6 100%);
-            color: white;
-            border: 2.5px solid rgba(144,224,239,0.45);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
         }
 
         .btn-ict-primary {
-            background: linear-gradient(155deg, #0077b6 0%, #005f92 100%) !important;
-            box-shadow: 0 2px 0 #003d66, 0 4px 8px rgba(0,0,0,0.14) !important;
+            background: rgba(0,119,182,0.2) !important;
+            border-color: rgba(0,180,216,0.25) !important;
         }
         .btn-ict-primary:hover {
-            box-shadow: 0 4px 0 #003d66, 0 8px 16px rgba(0,0,0,0.16) !important;
+            background: rgba(0,119,182,0.3) !important;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18), 0 0 20px rgba(0,180,216,0.1) !important;
         }
 
         .btn-ict-secondary {
-            background: linear-gradient(155deg, #00b4d8 0%, #0288d1 100%) !important;
-            box-shadow: 0 2px 0 #01579b, 0 4px 8px rgba(0,0,0,0.14) !important;
+            background: rgba(0,180,216,0.15) !important;
+            border-color: rgba(0,180,216,0.2) !important;
         }
         .btn-ict-secondary:hover {
-            box-shadow: 0 4px 0 #01579b, 0 8px 16px rgba(0,0,0,0.16) !important;
+            background: rgba(0,180,216,0.25) !important;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.18), 0 0 20px rgba(0,180,216,0.1) !important;
         }
 
-        /* Gentle float — very subtle, no shaking */
+        /* Floating levitation */
         .floating {
             animation: subtleFloat 6s ease-in-out infinite;
         }
 
-        /* Stagger floating so cards don't move in sync (prevents any perceived shaking) */
         .org-level .org-branch:nth-child(1) .floating { animation-delay: 0s; }
         .org-level .org-branch:nth-child(2) .floating { animation-delay: -1.2s; }
         .org-level .org-branch:nth-child(3) .floating { animation-delay: -2.4s; }
@@ -307,9 +572,10 @@ include('shared/_header.php');
 
         @keyframes subtleFloat {
             0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-2px); }
+            50%      { transform: translateY(-3px); }
         }
 
+        /* Level + connectors (neon) */
         .org-level {
             display: flex;
             justify-content: center;
@@ -327,7 +593,7 @@ include('shared/_header.php');
             left: 50%;
             width: 2px;
             height: 28px;
-            background: rgba(255,255,255,0.28);
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.08));
         }
 
         .org-branch {
@@ -345,7 +611,7 @@ include('shared/_header.php');
             left: 50%;
             width: 2px;
             height: 28px;
-            background: rgba(255,255,255,0.28);
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.06));
         }
 
         .org-branch:first-child::before  { left: 50%;  width: 50%; }
@@ -355,8 +621,8 @@ include('shared/_header.php');
         .org-horizontal {
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 2px;
-            background: rgba(255,255,255,0.28);
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
         }
 
         @media (max-width: 1200px) {
@@ -396,6 +662,13 @@ include('shared/_header.php');
             .org-branch { width: 100%; max-width: none; margin: 0; }
             .org-branch::before,
             .org-horizontal { display: none; }
+            .school-header { flex-direction: column; text-align: center; padding: 24px 18px; }
+            .school-info { margin: 14px 0; }
+            .school-info::before,
+            .school-info::after { display: none; }
+            .school-logo { width: 58px; height: 58px; }
+            .school-info h2 { font-size: 1.4rem; }
+            .header-deco { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -418,58 +691,6 @@ include('shared/_header.php');
             .org-subtitle { font-size: 0.68rem; }
             .org-link { padding: 4px 10px; font-size: 0.70rem; }
             .org-actions .btn-3d { padding: 4px 8px; font-size: 0.62rem; }
-        }
-
-        /* ── School header ── */
-        .school-header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 28px 24px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(8px);
-            border-radius: 18px;
-            margin-bottom: 28px;
-            box-shadow: 0 6px 28px rgba(0,0,0,0.08);
-        }
-
-        .school-logo {
-            width: 78px;
-            height: 78px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid white;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.18);
-        }
-
-        .school-info {
-            text-align: center;
-            margin: 0 18px;
-            color: white;
-        }
-
-        .school-info h2 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin: 0 0 4px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.25);
-        }
-
-        .school-info p {
-            font-size: 0.95rem;
-            font-style: italic;
-            opacity: 0.9;
-            margin: 0;
-        }
-
-        @media (max-width: 768px) {
-            .school-header { flex-direction: column; text-align: center; }
-            .school-info { margin: 14px 0; }
-            .school-logo { width: 58px; height: 58px; }
-            .school-info h2 { font-size: 1.4rem; }
-        }
-
-        @media (max-width: 480px) {
             .school-logo { width: 48px; height: 48px; }
             .school-info h2 { font-size: 1.1rem; }
             .school-info p { font-size: 0.85rem; }
@@ -477,13 +698,23 @@ include('shared/_header.php');
     </style>
 
     <main>
+        <div class="ambient-orbs">
+            <div class="ambient-orb"></div>
+            <div class="ambient-orb"></div>
+            <div class="ambient-orb"></div>
+        </div>
+        <div class="stars-container" id="stars"></div>
         <div class="school-header">
+            <div class="header-deco"></div>
+            <div class="header-deco"></div>
+            <div class="header-deco"></div>
+            <div class="header-deco"></div>
             <div class="logo-container">
                 <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
             </div>
             <div class="school-info">
                 <h2>Iganga School of Nursing and Midwifery</h2>
-                <p>"Chosen to Serve - Based on a disciplined mind for health action"</p>
+                <p>"Chosen to Serve , Based on a disciplined mind for health action"</p>
             </div>
             <div class="logo-container">
                 <img src="images/school-logo.png" alt="ISNM Logo" class="school-logo">
@@ -969,9 +1200,31 @@ include('shared/_header.php');
 
             <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ── Generate star particles ──
+            const starsContainer = document.getElementById('stars');
+            if (starsContainer) {
+                for (let i = 0; i < 120; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.setProperty('--duration', (2 + Math.random() * 4) + 's');
+                    star.style.animationDelay = Math.random() * 5 + 's';
+                    star.style.opacity = 0.2 + Math.random() * 0.4;
+                    starsContainer.appendChild(star);
+                }
+            }
+
+            // ── 3D tilt on cards ──
             document.querySelectorAll('.org-node').forEach(function(node) {
-                node.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                node.addEventListener('mousemove', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    const rotateX = y * -6;
+                    const rotateY = x * 6;
+                    this.style.transform =
+                        'translateY(-6px) perspective(600px) rotateX(' + rotateX.toFixed(2) + 'deg) rotateY(' + rotateY.toFixed(2) + 'deg) scale(1.02)';
                 });
                 node.addEventListener('mouseleave', function() {
                     this.style.transform = '';
