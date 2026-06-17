@@ -70,8 +70,8 @@ if (!function_exists('getInstitutionOverviewStats')) {
                 foreach (
                     [
                         'website_pages' => 'pages',
-                        'website_posts' => 'posts',
-                        'website_applications' => 'applications',
+                        'website_posts' => 'news',
+                        'website_applications' => 'student_applications',
                     ] as $key => $table
                 ) {
                     $check = $websiteConn->query("SHOW TABLES LIKE '{$table}'");
@@ -82,9 +82,9 @@ if (!function_exists('getInstitutionOverviewStats')) {
                         }
                     }
                 }
-                $check = $websiteConn->query("SHOW TABLES LIKE 'applications'");
+                $check = $websiteConn->query("SHOW TABLES LIKE 'student_applications'");
                 if ($check && $check->num_rows > 0) {
-                    $r = $websiteConn->query("SELECT COUNT(*) AS c FROM applications WHERE status IN ('Pending','Submitted','Under Review')");
+                    $r = $websiteConn->query("SELECT COUNT(*) AS c FROM student_applications WHERE status IN ('Pending','Submitted','Under Review')");
                     if ($r) {
                         $stats['pending_applications'] = (int) ($r->fetch_assoc()['c'] ?? 0);
                     }

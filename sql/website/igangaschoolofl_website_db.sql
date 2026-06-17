@@ -186,7 +186,17 @@ CREATE TABLE `student_applications` (
   `status` enum('Pending','Shortlisted','Admitted','Rejected','Withdrawn') DEFAULT 'Pending',
   `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `reviewed_by` int DEFAULT NULL,
-  `reviewed_at` datetime DEFAULT NULL
+  `reviewed_at` datetime DEFAULT NULL,
+  `additional_data` text COMMENT 'JSON-encoded additional form fields',
+  `academic_document_path` varchar(255) DEFAULT NULL,
+  `photo_path` varchar(255) DEFAULT NULL,
+  `uce_certificate_path` varchar(255) DEFAULT NULL,
+  `uace_certificate_path` varchar(255) DEFAULT NULL,
+  `unmeb_result_slip_path` varchar(255) DEFAULT NULL,
+  `unmeb_certificate_path` varchar(255) DEFAULT NULL,
+  `enrolment_certificate_path` varchar(255) DEFAULT NULL,
+  `practicing_license_path` varchar(255) DEFAULT NULL,
+  `academic_transcript_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
