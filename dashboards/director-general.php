@@ -68,6 +68,36 @@ if ($conn) {
 $recent_students = [];
 try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
 
+// ── Staff attendance today ──
+$staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0];
+if ($conn) {
+    $sa = $conn->query("SELECT status, COUNT(*) cnt FROM staff_attendance WHERE DATE(date)=CURDATE() GROUP BY status");
+    if ($sa) while ($row = $sa->fetch_assoc()) {
+        $k = strtolower(str_replace(' ', '_', $row['status']));
+        if (isset($staffAttendanceToday[$k])) $staffAttendanceToday[$k] = (int)$row['cnt'];
+    }
+}
+
+// ── Enhanced financials ──
+$week_collection = 0; $month_collection = 0; $total_expenses = 0; $total_revenue = 0;
+if ($conn) {
+    $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('Completed','verified','approved')");
+    if ($rw) $week_collection = $rw->fetch_assoc()['v'] ?? 0;
+    $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('Completed','verified','approved')");
+    if ($rm) $month_collection = $rm->fetch_assoc()['v'] ?? 0;
+    $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses");
+    if ($re) $total_expenses = $re->fetch_assoc()['v'] ?? 0;
+    $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('Completed','verified','approved')");
+    if ($rr) $total_revenue = $rr->fetch_assoc()['v'] ?? 0;
+}
+
+// ── Latest 5 payments ──
+$recent_payments = [];
+if ($conn) {
+    $rp = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
+    if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
+}
+
 // POST: send announcement
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     $title    = $conn ? $conn->real_escape_string(trim($_POST['ann_title'] ?? '')) : '';
@@ -158,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 <div class="page-content">
   <div class="top-bar">
     <div>
-      <strong><i class="fas fa-crown me-2 text-warning"></i>Director General – <?= htmlspecialchars($user_name) ?></strong>
+      <strong><i class="fas fa-crown me-2 text-warning"></i>Director General – Namugwanya Doris Joy</strong>
       <div class="text-muted small">Full Institution Oversight | Iganga School of Nursing &amp; Midwifery</div>
     </div>
     <div class="d-flex align-items-center gap-3">
@@ -279,12 +309,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     </div>
     <?php endif; ?>
 
-    <!-- STUDENT SEARCH -->
-    <div class="section-card">
-      <h2><i class="fas fa-search me-2"></i>Student Search</h2>
-      <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
-    </div>
-
     <!-- QUICK ACTIONS (collapsible) -->
     <div class="section-card">
       <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false" aria-controls="quickActionsContent">
@@ -358,50 +382,165 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     .quick-chevron { transition: transform .25s ease; }
     .quick-chevron.rotated { transform: rotate(180deg); }
     </style>
+
+    <!-- EMPLOYEE DAILY ANALYSIS -->
+    <div class="section-card">
+      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#employeeAnalysisContent" aria-expanded="false" aria-controls="employeeAnalysisContent">
+        <i class="fas fa-clipboard-list me-2"></i>Employee Daily Analysis
+        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
+      </h2>
+      <div id="employeeAnalysisContent" class="collapse">
+        <div class="row g-3 mt-2">
+          <div class="col-3 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#dcfce7">
+              <div class="fs-3 fw-bold" style="color:#166534"><?= $staffAttendanceToday['present'] ?></div>
+              <small style="color:#14532d">Present Today</small>
+            </div>
+          </div>
+          <div class="col-3 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#fef9c3">
+              <div class="fs-3 fw-bold" style="color:#854d0e"><?= $staffAttendanceToday['late'] ?></div>
+              <small style="color:#713f12">Late</small>
+            </div>
+          </div>
+          <div class="col-3 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#fee2e2">
+              <div class="fs-3 fw-bold" style="color:#991b1b"><?= $staffAttendanceToday['absent'] ?></div>
+              <small style="color:#7f1d1d">Absent</small>
+            </div>
+          </div>
+          <div class="col-3 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#dbeafe">
+              <div class="fs-3 fw-bold" style="color:#1e40af"><?= $staffAttendanceToday['on_leave'] ?></div>
+              <small style="color:#1e3a8a">On Leave</small>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          <a href="../dashboards/staff-attendance.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-clock me-1"></i>Full Attendance Report</a>
+          <a href="../dashboards/hr-manager.php" class="btn btn-outline-success btn-sm"><i class="fas fa-users me-1"></i>HR Dashboard</a>
+          <a href="../dashboards/staff-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Staff Directory</a>
+        </div>
+      </div>
+    </div>
+
     <script>
     document.getElementById('quickActionsContent').addEventListener('show.bs.collapse', function () {
-      document.querySelector('.quick-chevron').classList.add('rotated');
+      document.querySelector('[data-bs-target="#quickActionsContent"] .quick-chevron').classList.add('rotated');
     });
     document.getElementById('quickActionsContent').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('.quick-chevron').classList.remove('rotated');
+      document.querySelector('[data-bs-target="#quickActionsContent"] .quick-chevron').classList.remove('rotated');
+    });
+    document.getElementById('staffTableCollapse').addEventListener('show.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#staffTableCollapse"] .quick-chevron').classList.add('rotated');
+    });
+    document.getElementById('staffTableCollapse').addEventListener('hide.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#staffTableCollapse"] .quick-chevron').classList.remove('rotated');
+    });
+    document.getElementById('employeeAnalysisContent').addEventListener('show.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#employeeAnalysisContent"] .quick-chevron').classList.add('rotated');
+    });
+    document.getElementById('employeeAnalysisContent').addEventListener('hide.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#employeeAnalysisContent"] .quick-chevron').classList.remove('rotated');
+    });
+    document.getElementById('financialOverviewContent').addEventListener('show.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#financialOverviewContent"] .quick-chevron').classList.add('rotated');
+    });
+    document.getElementById('financialOverviewContent').addEventListener('hide.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#financialOverviewContent"] .quick-chevron').classList.remove('rotated');
+    });
+    document.getElementById('studentManagementContent').addEventListener('show.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#studentManagementContent"] .quick-chevron').classList.add('rotated');
+    });
+    document.getElementById('studentManagementContent').addEventListener('hide.bs.collapse', function () {
+      document.querySelector('[data-bs-target="#studentManagementContent"] .quick-chevron').classList.remove('rotated');
     });
     </script>
 
-    <!-- INSTITUTIONAL REPORTS -->
+    <!-- FINANCIAL OVERVIEW -->
     <div class="section-card">
-      <h2><i class="fas fa-chart-bar me-2"></i>Institutional Reports</h2>
-      <div class="row g-3">
-        <div class="col-6 col-md-3">
-          <div class="report-card text-center p-3">
-            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-chart-pie"></i></div>
-            <h6 class="fw-bold mb-1">Institutional Summary</h6>
-            <p class="small text-muted mb-2">Performance summary</p>
-            <a href="../dashboards/inventory-reports.php" class="btn btn-sm btn-primary w-100">Generate</a>
+      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#financialOverviewContent" aria-expanded="false" aria-controls="financialOverviewContent">
+        <i class="fas fa-coins me-2 text-success"></i>Financial Overview
+        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
+      </h2>
+      <div id="financialOverviewContent" class="collapse">
+        <div class="row g-3 mt-2">
+          <div class="col-4 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#f0fdf4">
+              <div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($today_collection) ?></div>
+              <small style="color:#14532d">Today's Collection</small>
+            </div>
+          </div>
+          <div class="col-4 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#fefce8">
+              <div class="fs-5 fw-bold" style="color:#854d0e">UGX <?= number_format($week_collection) ?></div>
+              <small style="color:#713f12">This Week</small>
+            </div>
+          </div>
+          <div class="col-4 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#eff6ff">
+              <div class="fs-5 fw-bold" style="color:#1e40af">UGX <?= number_format($month_collection) ?></div>
+              <small style="color:#1e3a8a">This Month</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#fef2f2">
+              <div class="fs-5 fw-bold" style="color:#991b1b">UGX <?= number_format($outstanding) ?></div>
+              <small style="color:#7f1d1d">Outstanding</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#f8fafc">
+              <div class="fs-5 fw-bold" style="color:#0f172a">UGX <?= number_format($total_revenue) ?></div>
+              <small style="color:#475569">Total Revenue</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#fff7ed">
+              <div class="fs-5 fw-bold" style="color:#9a3412">UGX <?= number_format($total_expenses) ?></div>
+              <small style="color:#7c2d12">Total Expenses</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#f0fdf4">
+              <div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($total_revenue - $total_expenses) ?></div>
+              <small style="color:#14532d">Net Position</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 rounded text-center" style="background:#faf5ff">
+              <div class="fs-5 fw-bold" style="color:#6b21a8">UGX <?= number_format($month_collection - $total_expenses) ?></div>
+              <small style="color:#581c87">Monthly Balance</small>
+            </div>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="report-card text-center p-3">
-            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-users"></i></div>
-            <h6 class="fw-bold mb-1">Enrollment Statistics</h6>
-            <p class="small text-muted mb-2">Trends & analysis</p>
-            <a href="../dashboards/student-management.php" class="btn btn-sm btn-primary w-100">Generate</a>
-          </div>
+
+        <?php if (!empty($recent_payments)): ?>
+        <h6 class="mt-3 mb-2"><i class="fas fa-list me-1"></i>Recent Payments</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead class="table-light"><tr><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody>
+            <?php foreach ($recent_payments as $p):
+              $pc = $p['status']==='Completed'||$p['status']==='verified'||$p['status']==='approved'?'bg-success':'bg-warning text-dark';
+            ?>
+            <tr>
+              <td><small><?= htmlspecialchars(($p['first_name']??'') . ' ' . ($p['surname']??'') . ' (' . ($p['student_number']??'') . ')') ?></small></td>
+              <td><strong>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></strong></td>
+              <td><small><?= htmlspecialchars($p['payment_method']??'-') ?></small></td>
+              <td><small><?= isset($p['payment_date']) ? date('d M', strtotime($p['payment_date'])) : '-' ?></small></td>
+              <td><span class="badge <?= $pc ?>"><?= htmlspecialchars($p['status']??'') ?></span></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="report-card text-center p-3">
-            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-trophy"></i></div>
-            <h6 class="fw-bold mb-1">Graduation Report</h6>
-            <p class="small text-muted mb-2">Completion statistics</p>
-            <a href="../academic_records_management.php" class="btn btn-sm btn-primary w-100">Generate</a>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="report-card text-center p-3">
-            <div class="report-icon mx-auto mb-2" style="width:50px;height:50px;font-size:1.2rem"><i class="fas fa-balance-scale"></i></div>
-            <h6 class="fw-bold mb-1">Financial Summary</h6>
-            <p class="small text-muted mb-2">Revenue & expenses</p>
-            <a href="../dashboards/director-finance.php" class="btn btn-sm btn-primary w-100">Generate</a>
-          </div>
+        <?php endif; ?>
+
+        <div class="mt-2 d-flex flex-wrap gap-2">
+          <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Full Finance Dashboard</a>
+          <a href="../dashboards/school-bursar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
+          <a href="../dashboards/budget-management.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-chart-line me-1"></i>Budget Management</a>
         </div>
       </div>
     </div>
@@ -411,72 +550,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       <?php renderNewsWidget($conn, $websiteConn, $user_id, $user_name, $user_role, 5); ?>
     </div>
 
-    <!-- STUDENT MANAGEMENT -->
+    <!-- STUDENT MANAGEMENT (collapsible) -->
     <div class="section-card">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Management</h2>
+      <div class="d-flex justify-content-between align-items-center mb-0">
+        <h2 class="mb-0" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#studentManagementContent" aria-expanded="false" aria-controls="studentManagementContent">
+          <i class="fas fa-user-graduate me-2"></i>Student Management
+          <i class="fas fa-chevron-down ms-1 small quick-chevron"></i>
+        </h2>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
           <i class="fas fa-plus me-2"></i>Add New Student
         </button>
       </div>
 
-      <!-- Universal Student Search Component -->
-      <?= displayStudentSearchBox('Search for any student by name or index number', 'dg_search') ?>
+      <div id="studentManagementContent" class="collapse mt-3">
 
-      <!-- Recent Students Grid - Click to view profile -->
-      <div class="row g-3 mt-3">
-        <?php 
-        $recentStudents = array_slice($allStudentsData, 0, 6);
-        foreach ($recentStudents as $student): 
-            $studentId = $student['index_number'] ?? $student['student_number'] ?? $student['national_id'] ?? '';
-        ?>
-        <div class="col-md-4 col-lg-2">
-          <div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($studentId) ?>')">
-            <?= displayStudentProfileCard($studentId, 'compact') ?>
+        <!-- Universal Student Search Component -->
+        <?= displayStudentSearchBox('Search for any student by name or index number', 'dg_search') ?>
+
+        <!-- Recent Students Grid - Click to view profile -->
+        <div class="row g-3 mt-3">
+          <?php 
+          $recentStudents = array_slice($allStudentsData, 0, 6);
+          foreach ($recentStudents as $student): 
+              $studentId = $student['index_number'] ?? $student['student_number'] ?? $student['national_id'] ?? '';
+          ?>
+          <div class="col-md-4 col-lg-2">
+            <div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($studentId) ?>')">
+              <?= displayStudentProfileCard($studentId, 'compact') ?>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- Full Records Toggle -->
+        <div class="mt-3">
+          <button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#fullStudentRecords" aria-expanded="false">
+            <i class="fas fa-chevron-down me-1"></i>View All Student Records – Full Institution View
+          </button>
+          <div class="collapse mt-2" id="fullStudentRecords">
+            <?php renderStudentSetViewer($studentsConn, [
+                'title'       => '',
+                'icon'        => 'fa-users-gear',
+                'super_admin' => true,
+                'show_all'    => true,
+            ]); ?>
           </div>
         </div>
-        <?php endforeach; ?>
+
       </div>
     </div>
 
     <!-- ALL STAFF -->
     <div class="section-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>All Staff Members (<?= count($staff_list) ?>+)</h2>
+        <h2 class="mb-0">
+          <button class="btn btn-outline-primary btn-sm border-0 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#staffTableCollapse" aria-expanded="false" aria-controls="staffTableCollapse" style="background:none;color:inherit;padding:0;">
+            <i class="fas fa-id-badge me-2"></i>All Staff Members (<?= count($staff_list) ?>+)
+            <i class="fas fa-chevron-down ms-1 small quick-chevron"></i>
+          </button>
+        </h2>
         <a href="../dashboards/hr-manager.php" class="btn btn-sm btn-outline-primary">View HR Dashboard</a>
       </div>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle">
-          <thead class="table-light"><tr><th>Staff ID</th><th>Full Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
-          <tbody>
-          <?php if(empty($staff_list)): ?>
-          <tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
-          <?php else: foreach($staff_list as $s):
-            $bc = $s['status']==='Active'?'bg-success':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger');
-          ?>
-          <tr>
-            <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-            <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-            <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-            <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
-            <td><small><?= htmlspecialchars($s['email']) ?></small></td>
-            <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
-            <td><?= $s['last_login'] ? date('d M Y H:i',strtotime($s['last_login'])) : '<span class="text-muted">Never</span>' ?></td>
-          </tr>
-          <?php endforeach; endif; ?>
-          </tbody>
-        </table>
+      <div class="collapse" id="staffTableCollapse">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light"><tr><th>Staff ID</th><th>Full Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
+            <tbody>
+            <?php if(empty($staff_list)): ?>
+            <tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
+            <?php else: foreach($staff_list as $s):
+              $bc = $s['status']==='Active'?'bg-success':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger');
+            ?>
+            <tr>
+              <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
+              <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
+              <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
+              <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
+              <td><small><?= htmlspecialchars($s['email']) ?></small></td>
+              <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
+              <td><?= $s['last_login'] ? date('d M Y H:i',strtotime($s['last_login'])) : '<span class="text-muted">Never</span>' ?></td>
+            </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
-    <!-- STUDENT RECORDS BY SET – Full Institution View -->
-    <div class="section-card">
-      <?php renderStudentSetViewer($studentsConn, [
-          'title'       => 'All Student Records – Full Institution View',
-          'icon'        => 'fa-users-gear',
-          'super_admin' => true,
-          'show_all'    => true,
-      ]); ?>
     </div>
 
     <!-- DEPARTMENTS -->
