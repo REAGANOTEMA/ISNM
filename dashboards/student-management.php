@@ -149,9 +149,29 @@ if ($conn) {
       <div class="col-md-2"><select name="set" class="form-select form-select-sm"><option value="">All Sets</option><?php foreach($filterOptions['sets'] as $s): ?><option <?= $filters['set']===$s?'selected':'' ?>><?= htmlspecialchars($s) ?></option><?php endforeach; ?></select></div>
       <div class="col-md-2"><button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i></button></div>
     </form>
-    <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Name</th><th>Index / NSIN</th><th>Program</th><th>Level</th><th>Set</th><th>Year</th><th>Phone</th><th>Source</th></tr></thead><tbody><?php if(empty($students)): ?><tr><td colspan="8" class="text-center py-4 text-muted">No students found. Try another name, index number, NSIN, phone, source file, or course code.</td></tr><?php else: foreach(array_slice($students,0,100) as $s): ?>
-      <tr><td><strong><?= htmlspecialchars($s['full_name'] ?: ($s['surname'].' '.$s['first_name'])) ?></strong></td><td><code><?= htmlspecialchars($s['index_number'] ?: $s['national_id']) ?></code></td><td><?= htmlspecialchars($s['program']) ?></td><td><?= htmlspecialchars($s['level']) ?></td><td><?= htmlspecialchars($s['set']) ?></td><td><?= htmlspecialchars($s['intake_year']) ?></td><td><?= htmlspecialchars($s['phone']) ?></td><td><small><?= htmlspecialchars($s['source_file']) ?></small></td></tr>
+    <div class="table-responsive"><table class="table table-sm table-hover" id="studentTable"><thead class="table-light"><tr><th>Name</th><th>Index / NSIN</th><th>Program</th><th>Level</th><th>Set</th><th>Year</th><th>Phone</th><th>Actions</th></tr></thead><tbody><?php if(empty($students)): ?><tr><td colspan="8" class="text-center py-4 text-muted">No students found. Try another name, index number, NSIN, phone, source file, or course code.</td></tr><?php else: $idx=0; foreach(array_slice($students,0,100) as $s): $idx++; ?>
+      <tr>
+        <td><strong><?= htmlspecialchars($s['full_name'] ?: ($s['surname'].' '.$s['first_name'])) ?></strong></td>
+        <td><code><?= htmlspecialchars($s['index_number'] ?: $s['national_id']) ?></code></td>
+        <td><?= htmlspecialchars($s['program']) ?></td>
+        <td><?= htmlspecialchars($s['level']) ?></td>
+        <td><?= htmlspecialchars($s['set']) ?></td>
+        <td><?= htmlspecialchars($s['intake_year']) ?></td>
+        <td><?= htmlspecialchars($s['phone']) ?></td>
+        <td nowrap>
+          <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick='showStudent(<?= json_encode($s, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>)' title="View Profile"><i class="fas fa-eye"></i></button>
+          <button class="btn btn-sm btn-outline-info py-0 px-1" onclick='printStudent(<?= json_encode($s, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>)' title="Print Profile"><i class="fas fa-print"></i></button>
+          <a href="school-bursar.php?student=<?= urlencode($s['index_number'] ?: $s['national_id']) ?>" class="btn btn-sm btn-outline-warning py-0 px-1" title="Fee Statement"><i class="fas fa-file-invoice-dollar"></i></a>
+        </td>
+      </tr>
     <?php endforeach; endif; ?></tbody></table></div>
+
+    <!-- Student Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Student Profile</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="profileBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-primary" onclick="printProfileFromModal()"><i class="fas fa-print"></i> Print</button></div></div></div></div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content"><div class="modal-header bg-danger text-white"><h6 class="modal-title">Confirm Deactivate</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="deleteBody">Deactivate this record?</div><div class="modal-footer"><form method="POST" id="deleteForm" action="student-add.php"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" id="deleteId" value="0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Deactivate</button></form></div></div></div></div>
+
   </section>
 
   <section id="courses" class="section-card">
@@ -254,6 +274,78 @@ if ($conn) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.querySelectorAll('.sidebar nav a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('.sidebar nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');});});
+
+var currentProfileStudent = null;
+function showStudent(s) {
+    currentProfileStudent = s;
+    var html = '<div class="row mb-3"><div class="col-md-8"><table class="table table-sm table-borderless">';
+    html += '<tr><th width="140">Full Name</th><td>' + esc(s.full_name || (s.surname + ' ' + s.first_name)) + '</td></tr>';
+    html += '<tr><th>Surname</th><td>' + esc(s.surname) + '</td></tr>';
+    html += '<tr><th>First Name</th><td>' + esc(s.first_name) + '</td></tr>';
+    html += '<tr><th>Other Name</th><td>' + esc(s.other_name) + '</td></tr>';
+    html += '<tr><th>Gender</th><td>' + esc(s.gender) + '</td></tr>';
+    html += '<tr><th>Index Number</th><td>' + esc(s.index_number) + '</td></tr>';
+    html += '<tr><th>Registration #</th><td>' + esc(s.registration_number) + '</td></tr>';
+    html += '<tr><th>Student #</th><td>' + esc(s.student_number) + '</td></tr>';
+    html += '<tr><th>National ID</th><td>' + esc(s.national_id) + '</td></tr>';
+    html += '<tr><th>Date of Birth</th><td>' + esc(s.date_of_birth) + '</td></tr>';
+    html += '<tr><th>Phone</th><td>' + esc(s.phone) + '</td></tr>';
+    html += '<tr><th>Email</th><td>' + esc(s.email) + '</td></tr>';
+    html += '<tr><th>District</th><td>' + esc(s.district) + '</td></tr>';
+    html += '<tr><th>Nationality</th><td>' + esc(s.nationality) + '</td></tr>';
+    html += '</table></div><div class="col-md-4 text-center">';
+    if (s.passport_photo) html += '<img src="../' + s.passport_photo + '" class="img-thumbnail" style="max-width:180px;max-height:200px;">';
+    else html += '<div class="border rounded p-4 text-muted"><i class="fas fa-user fa-4x"></i></div>';
+    html += '</div></div>';
+    html += '<h6 class="fw-bold">Academic Info</h6><table class="table table-sm table-borderless">';
+    html += '<tr><th width="140">Program</th><td>' + esc(s.program) + '</td></tr>';
+    html += '<tr><th>Level</th><td>' + esc(s.level) + '</td></tr>';
+    html += '<tr><th>Set</th><td>' + esc(s.set) + '</td></tr>';
+    html += '<tr><th>Intake Year</th><td>' + esc(s.intake_year) + '</td></tr>';
+    html += '<tr><th>Intake Period</th><td>' + esc(s.intake_period) + '</td></tr>';
+    html += '<tr><th>Source</th><td>' + esc(s.source_file) + '</td></tr>';
+    html += '<tr><th>Course Codes</th><td>' + esc(s.course_codes) + '</td></tr>';
+    html += '</table>';
+    document.getElementById('profileBody').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('profileModal')).show();
+}
+function printProfileFromModal() {
+    if (!currentProfileStudent) return;
+    printStudent(currentProfileStudent);
+}
+function printStudent(s) {
+    var w = window.open('', '_blank');
+    w.document.write('<html><head><title>Student Profile</title>');
+    w.document.write('<style>body{font-family:Arial,sans-serif;padding:40px;}h2{color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:8px;}.section{margin:20px 0;}.row{display:flex;margin:4px 0;}.label{font-weight:700;width:180px;color:#555;}.value{flex:1;}</style></head>');
+    w.document.write('<body>');
+    w.document.write('<div style="text-align:center;margin-bottom:20px;"><h2 style="border:none;">ISNM - Student Profile</h2></div>');
+    w.document.write('<div class="section"><h4>Personal Information</h4>');
+    w.document.write('<div class="row"><span class="label">Full Name:</span><span class="value">' + esc(s.full_name || (s.surname + ' ' + s.first_name)) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Surname:</span><span class="value">' + esc(s.surname) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">First Name:</span><span class="value">' + esc(s.first_name) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Other Name:</span><span class="value">' + esc(s.other_name) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Gender:</span><span class="value">' + esc(s.gender) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Date of Birth:</span><span class="value">' + esc(s.date_of_birth) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Phone:</span><span class="value">' + esc(s.phone) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Email:</span><span class="value">' + esc(s.email) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">District:</span><span class="value">' + esc(s.district) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Nationality:</span><span class="value">' + esc(s.nationality) + '</span></div>');
+    w.document.write('</div><div class="section"><h4>Academic Information</h4>');
+    w.document.write('<div class="row"><span class="label">Index Number:</span><span class="value">' + esc(s.index_number) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Registration #:</span><span class="value">' + esc(s.registration_number) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Student #:</span><span class="value">' + esc(s.student_number) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">National ID:</span><span class="value">' + esc(s.national_id) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Program:</span><span class="value">' + esc(s.program) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Level:</span><span class="value">' + esc(s.level) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Set:</span><span class="value">' + esc(s.set) + '</span></div>');
+    w.document.write('<div class="row"><span class="label">Intake Year:</span><span class="value">' + esc(s.intake_year) + '</span></div>');
+    w.document.write('</div>');
+    w.document.write('<p style="margin-top:40px;color:#999;font-size:11px;">Generated on ' + new Date().toLocaleDateString() + ' | ISNM Student Management System</p>');
+    w.document.write('</body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); }, 500);
+}
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

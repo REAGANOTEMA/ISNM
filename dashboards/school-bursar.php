@@ -18,6 +18,13 @@ $ajax  = $_GET['ajax'] ?? '';
 $sid   = $_GET['sid'] ?? '';
 $q     = $_GET['q'] ?? '';
 
+// Handle student parameter from student-management.php link
+$studentParam = $_GET['student'] ?? '';
+if ($studentParam !== '' && $view === 'home') {
+    $view = 'student_statement';
+    $q = $studentParam;
+}
+
 // ── AJAX endpoints (must exit before any HTML output) ────────────
 
 // record_payment - get student fee balance (staffs_db)
@@ -717,12 +724,15 @@ echo $feeRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No fee
         <div class="ch"><i class="fas fa-file-alt me-2"></i>Student Statement</div>
         <div class="cb">
             <form id="stmtSearchForm" onsubmit="event.preventDefault(); searchStatementStudent()" class="row g-2 mb-4">
-                <div class="col-md-6"><div class="input-group"><input type="text" id="stmtQuery" class="form-control" placeholder="Search by name or index number..."><button class="btn bb" type="submit"><i class="fas fa-search"></i></button></div></div>
+                <div class="col-md-6"><div class="input-group"><input type="text" id="stmtQuery" class="form-control" placeholder="Search by name or index number..." value="<?= htmlspecialchars($q) ?>"><button class="btn bb" type="submit"><i class="fas fa-search"></i></button></div></div>
             </form>
             <div id="stmtSearchResults" class="mb-3"></div>
             <div id="stmtOutput"></div>
         </div>
     </div>
+    <?php if ($studentParam !== ''): ?>
+    <script>document.addEventListener('DOMContentLoaded',function(){ setTimeout(searchStatementStudent,300); });</script>
+    <?php endif; ?>
     <?php endif; ?>
 
     <!-- ======================== receipt_print ======================== -->
