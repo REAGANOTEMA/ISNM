@@ -5,6 +5,7 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 $ctx          = bootstrapStaffDashboard(['hr', 'manager']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
+$user_role    = $_SESSION['role'] ?? '';
 $staff_conn   = $ctx['staff'];
 $students_conn = $ctx['students'];
 $website_conn  = $ctx['website'];
@@ -139,6 +140,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
       </div>
       <?php endforeach; ?>
     </div>
+
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
     <!-- STORE REQUESTS -->
     <?php

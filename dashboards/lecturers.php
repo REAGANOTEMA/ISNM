@@ -135,6 +135,8 @@ if ($conn) {
                     </div>
                 </section>
 
+                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
                 <!-- My Courses -->
                 <section id="courses" class="section-card">
                     <h2>My Courses</h2>

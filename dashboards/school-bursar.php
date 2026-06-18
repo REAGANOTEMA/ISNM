@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 $ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant', 'finance']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? '';
 $role = $user['role_name'] ?? $user['role'] ?? 'School Bursar';
 $staff = $ctx['staff'];
@@ -541,6 +542,8 @@ endif;
     </div>
 
     <?php endif; ?><!-- /home -->
+
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($role); ?>
 
     <!-- ======================== record_payment ======================== -->
     <?php if ($view === 'record_payment'): ?>

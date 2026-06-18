@@ -151,6 +151,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && !empty($_POST['action'])) {
       <?php endforeach; ?>
     </div>
 
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
     <!-- Academic Performance -->
     <div class="card-section">
       <h2><i class="fas fa-chart-line me-2"></i>Academic Performance</h2>

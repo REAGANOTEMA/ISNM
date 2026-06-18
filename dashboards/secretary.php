@@ -264,6 +264,8 @@ if ($rs_stmt) { while ($row = $rs_stmt->fetch_assoc()) { $recent_students[] = $r
       </div>
     </div>
 
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
     <div class="section-card">
       <h2><i class="fas fa-users me-2"></i>Student Management</h2>
       <div class="mb-3 d-flex gap-2 flex-wrap">

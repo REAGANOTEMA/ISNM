@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['storekeeper', 'store', 'inventory']);
 $staffConn = $ctx['staff'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $userName = $user['full_name'] ?? 'Store Keeper';
@@ -243,6 +244,8 @@ $statsOrders = count($orders);
                 </div>
             </div>
         </div>
+
+        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
         <!-- Tab Navigation -->
         <div class="tab-nav">

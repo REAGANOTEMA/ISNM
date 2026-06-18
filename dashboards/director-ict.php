@@ -9,6 +9,7 @@ $ctx = bootstrapStaffDashboard(['director', 'ict']);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'ICT Director';
 $website_conn = $ctx['website'];
 
@@ -230,6 +231,8 @@ if ($search_term && $students_conn) {
             </div>
 
             <div class="dashboard-content">
+
+                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
                 <!-- ═══ OFFICIAL DUTIES ═══ -->
                 <section id="duties" class="content-section">

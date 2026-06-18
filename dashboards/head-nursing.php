@@ -6,6 +6,7 @@ $ctx = bootstrapStaffDashboard(['head', 'nursing']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Nursing';
 
 // Set dashboard statistics from database
@@ -119,6 +120,8 @@ if ($conn) {
                         </div>
                     </div>
                 </section>
+
+                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
                 <!-- Student Management -->
                 <section id="students" class="content-section">

@@ -11,6 +11,7 @@ $websiteDb = $ctx['website'];
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
+$user_role = $_SESSION['role'] ?? '';
 
 $user_id = (int) ($user['id'] ?? 0);
 $user_email = $user['email'] ?? '';
@@ -324,6 +325,8 @@ if ($websiteDb) {
                     </div>
                 </div>
             </section>
+
+            <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($userRole); ?>
 
             <!-- Student Profiles Section -->
             <section id="students" class="content-section">

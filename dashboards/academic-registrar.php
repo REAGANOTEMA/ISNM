@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 $ctx = bootstrapStaffDashboard(['registrar']);
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $students_conn = getStudentsConnection();
 $staff_conn    = getStaffConnection();
 $website_conn  = $ctx['website'];
@@ -237,6 +238,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endforeach; ?>
     </div>
   </section>
+
+  <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
   <!-- STUDENT MANAGEMENT -->
   <section id="students" class="section-card">

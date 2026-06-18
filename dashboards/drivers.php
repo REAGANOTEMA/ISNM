@@ -97,6 +97,8 @@ if ($conn) {
             </div>
         </div>
 
+        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
         <!-- Transport Schedule -->
         <div class="transport-schedule">
             <h3><i class="fas fa-calendar-alt"></i> Today's Transport Schedule</h3>

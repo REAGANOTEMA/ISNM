@@ -189,6 +189,8 @@ if ($conn) {
                     </div>
                 </section>
 
+                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
                 <!-- Book Management -->
                 <section id="books" class="content-section">
                     <h2>Book Management</h2>

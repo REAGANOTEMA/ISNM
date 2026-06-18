@@ -149,6 +149,8 @@ $pageTitle = 'Sickbay Dashboard';
             </div>
         </div>
 
+        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="section-card">

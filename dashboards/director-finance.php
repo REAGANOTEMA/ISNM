@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/approval_workflow.php';
 $ctx = bootstrapStaffDashboard(['director', 'finance']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Finance Director';
 $website_conn = $ctx['website'];
 
@@ -140,6 +141,8 @@ if ($conn) {
                         </div>
                     </div>
                 </section>
+
+                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
                 <!-- Official Duties & Responsibilities -->
                 <section id="duties" class="content-section">

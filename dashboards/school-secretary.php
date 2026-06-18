@@ -104,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sec_ann_title'])) {
       <?php endforeach; ?>
     </div>
 
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
     <!-- QUICK ACTIONS -->
     <div class="section-card">
       <h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2>

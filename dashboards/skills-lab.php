@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['skills lab', 'skills', 'lab manager', 'laboratory']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
+$user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? '';
 $role = $user['role_name'] ?? $user['role'] ?? 'Skills Lab Manager';
 $staff = $ctx['staff'];
@@ -502,6 +503,8 @@ if ($students) {
                 <div><h3 class="fw-bold mb-0"><?= count($students_list) ?></h3><small class="text-muted">Active Students</small></div>
             </div></div></div>
         </div>
+
+        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
         <!-- Quick Access Modules -->
         <h5 class="fw-bold mb-3"><i class="fas fa-th-large me-2"></i>Quick Access</h5>
