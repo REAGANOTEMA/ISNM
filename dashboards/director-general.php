@@ -79,7 +79,7 @@ if ($conn) {
 }
 
 // ── Staff attendance today ──
-$staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0];
+$staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0, 'onLeave' => 0];
 if ($conn) {
     $sa = $conn->query("SELECT status, COUNT(*) cnt FROM staff_attendance WHERE DATE(date)=CURDATE() GROUP BY status");
     if ($sa) while ($row = $sa->fetch_assoc()) {

@@ -2,9 +2,6 @@
 // ISNM Bursar Payroll Management System
 // Professional payroll management for bursar
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
 $ctx = bootstrapStaffDashboard(['bursar', 'payroll', 'finance']);
@@ -14,8 +11,8 @@ $userRole = $user['role'] ?? '';
 
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
-$staff_conn->set_charset("utf8mb4");
-$students_conn->set_charset("utf8mb4");
+if ($staff_conn) $staff_conn->set_charset("utf8mb4");
+if ($students_conn) $students_conn->set_charset("utf8mb4");
 
 // Get user information from session
 $staff_id = $_SESSION['user_id'] ?? 0;

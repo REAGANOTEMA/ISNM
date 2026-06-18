@@ -39,6 +39,7 @@ if (!empty($_SESSION['user_id'])) {
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
+<script>window.addEventListener('unhandledrejection',function(e){e.preventDefault()});</script>
 
 <!-- Favicon — all sizes, all devices -->
 <link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
