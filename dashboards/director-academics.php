@@ -34,6 +34,13 @@ try {
     }
 } catch (Exception $e) {}
 
+// ── Get current user's role_id for official duties ──
+$user_role_id = 0;
+if ($conn) {
+    $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . (int)($user['id'] ?? 0));
+    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -126,6 +133,27 @@ if ($conn) {
                                 <p>Average GPA</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Official Duties & Responsibilities -->
+                <section id="duties" class="content-section">
+                    <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
+                    <?php renderOfficialDuties($user_role_id, $conn); ?>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="content-section">
+                    <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
+                        <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>School Principal</a>
+                        <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
+                        <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head of Nursing</a>
+                        <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head of Midwifery</a>
+                        <a href="../dashboards/lecturers.php" class="btn btn-outline-info btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
+                        <a href="../student-directory.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
+                        <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-file-alt me-1"></i>Transcripts</a>
                     </div>
                 </section>
 

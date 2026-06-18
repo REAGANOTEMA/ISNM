@@ -156,6 +156,13 @@ $software = ict_fetch($ict_conn, "SELECT * FROM software_inventory ORDER BY soft
 $maintenance = ict_fetch($ict_conn, "SELECT * FROM maintenance_logs ORDER BY created_at DESC LIMIT 10");
 $usage_stats = ict_fetch($ict_conn, "SELECT * FROM lab_usage_stats ORDER BY date DESC LIMIT 10");
 
+// ── Get current user's role_id for official duties ──
+$user_role_id = 0;
+if ($staff_conn) {
+    $ri = $staff_conn->query("SELECT role_id FROM staff WHERE id = " . (int)($user['id'] ?? 0));
+    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+}
+
 // Recent activity
 $recent_activities = [];
 if ($staff_conn) {
@@ -221,6 +228,26 @@ if ($search_term && $students_conn) {
             </div>
 
             <div class="dashboard-content">
+
+                <!-- ═══ OFFICIAL DUTIES ═══ -->
+                <section id="duties" class="content-section">
+                    <h2><i class="fas fa-tasks" style="color:var(--isnm-blue)"></i> Official Duties &amp; Responsibilities</h2>
+                    <?php renderOfficialDuties($user_role_id, $staff_conn); ?>
+                </section>
+
+                <!-- ═══ QUICK ACTIONS ═══ -->
+                <section class="content-section">
+                    <h2><i class="fas fa-bolt" style="color:var(--isnm-gold)"></i> Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#addComputerModal"><i class="fas fa-plus me-1"></i>Add Computer</button>
+                        <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#ticketModal"><i class="fas fa-headset me-1"></i>New Support Ticket</button>
+                        <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i>Add Student</button>
+                        <a href="../computer_lab.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-desktop me-1"></i>Computer Lab</a>
+                        <a href="../dashboards/skills-lab.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-flask me-1"></i>Skills Lab</a>
+                        <a href="../dashboards/director-general.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-crown me-1"></i>Director General</a>
+                        <a href="../student-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Directory</a>
+                    </div>
+                </section>
 
                 <!-- ═══ OVERVIEW ═══ -->
                 <section id="overview" class="content-section">

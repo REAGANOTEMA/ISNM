@@ -432,4 +432,63 @@ function getSystemStatistics() {
     return $stats;
 }
 }
+
+/**
+ * Fetch official duties for a specific staff role from the database.
+ * Falls back to empty array if the table doesn't exist or DB unavailable.
+ *
+ * @param int    $roleId   The staff_roles.id to fetch duties for
+ * @param mysqli $conn     Optional staff DB connection (will try global if null)
+ * @return array           Array of duties with 'duty_title', 'duty_icon', 'sort_order'
+ */
+if (!function_exists('getOfficialDuties')) {
+function getOfficialDuties(int $roleId, $conn = null): array {
+    if (!$conn) {
+        if (function_exists('getStaffConnection')) {
+            $conn = getStaffConnection();
+        }
+    }
+    if (!$conn) return [];
+    try {
+        $stmt = $conn->prepare("SELECT duty_title, duty_icon, sort_order FROM official_duties WHERE role_id = ? AND is_active = 1 ORDER BY sort_order ASC");
+        if (!$stmt) return [];
+        $stmt->bind_param('i', $roleId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $duties = [];
+        while ($row = $result->fetch_assoc()) {
+            $duties[] = $row;
+        }
+        $stmt->close();
+        return $duties;
+    } catch (Exception $e) {
+        error_log('getOfficialDuties error: ' . $e->getMessage());
+        return [];
+    }
+}
+}
+
+/**
+ * Render the Official Duties & Responsibilities section as HTML.
+ * Displays duties from the database, or a fallback message if none found.
+ *
+ * @param int    $roleId   The staff_roles.id
+ * @param mysqli $conn     Staff DB connection
+ */
+if (!function_exists('renderOfficialDuties')) {
+function renderOfficialDuties(int $roleId, $conn) {
+    $duties = getOfficialDuties($roleId, $conn);
+    if (empty($duties)) return;
+    ?>
+    <div class="duties-grid">
+        <?php foreach ($duties as $duty): ?>
+        <div class="duty-card">
+            <i class="<?= htmlspecialchars($duty['duty_icon'] ?? 'fas fa-tasks') ?> text-primary"></i>
+            <span><?= $duty['duty_title'] ?></span>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php
+}
+}
 ?>

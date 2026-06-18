@@ -729,3 +729,87 @@ INSERT IGNORE INTO igangaschoolofl_staffs_db.staff
     (`id`, `staff_id`, `full_name`, `email`, `password`, `phone`, `position`, `department`, `role_id`, `status`, `hire_date`, `salary`, `address`, `emergency_contact_name`, `emergency_contact_phone`, `is_first_login`, `created_at`, `updated_at`)
 VALUES
     (75, 'SKL001', 'Skills Lab Manager', 'skills-lab@igangaschoolofnursingandmidwifery.ac.ug', '$2y$10$VlgcTKefl1ANCgn87eD2we4/dnTWCxgtH9PqB7tNKqhrYfQO1vJmW', NULL, 'Skills Lab Manager', 'Skills Laboratory', 53, 'Active', CURDATE(), NULL, NULL, NULL, NULL, 1, NOW(), NOW());
+
+-- ==============================================================================
+-- Official Duties Table (staffs_db)
+-- Dynamically manages director duties & responsibilities per role
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.official_duties (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    duty_title VARCHAR(255) NOT NULL,
+    duty_icon VARCHAR(100) DEFAULT 'fas fa-tasks',
+    sort_order INT DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_role (role_id),
+    INDEX idx_active (is_active),
+    CONSTRAINT fk_duties_role FOREIGN KEY (role_id) REFERENCES igangaschoolofl_staffs_db.staff_roles(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed data: Director General (role_id=1)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_title, duty_icon, sort_order) VALUES
+(1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1),
+(1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2),
+(1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3),
+(1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4),
+(1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5),
+(1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6),
+(1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7),
+(1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8),
+(1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9),
+(1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10);
+
+-- Seed data: Director Academics (role_id=4)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_title, duty_icon, sort_order) VALUES
+(4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1),
+(4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2),
+(4, 'Examination Management', 'fas fa-clipboard-list', 3),
+(4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4),
+(4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5),
+(4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6),
+(4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7),
+(4, 'Academic Policy Development', 'fas fa-file-alt', 8),
+(4, 'Timetable Coordination', 'fas fa-clock', 9),
+(4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10);
+
+-- Seed data: Director Finance (role_id=5)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_title, duty_icon, sort_order) VALUES
+(5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1),
+(5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2),
+(5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3),
+(5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4),
+(5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5),
+(5, 'Payroll Management', 'fas fa-wallet', 6),
+(5, 'Fee Structure Development', 'fas fa-file-invoice', 7),
+(5, 'Procurement Oversight', 'fas fa-truck-loading', 8),
+(5, 'Bank Reconciliation', 'fas fa-university', 9),
+(5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10);
+
+-- Seed data: Director ICT (role_id=6)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_title, duty_icon, sort_order) VALUES
+(6, 'Technology Infrastructure Management', 'fas fa-server', 1),
+(6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2),
+(6, 'Computer Lab Management', 'fas fa-desktop', 3),
+(6, 'Network Administration', 'fas fa-network-wired', 4),
+(6, 'Software &amp; License Management', 'fas fa-download', 5),
+(6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6),
+(6, 'ICT Policy Development', 'fas fa-shield-alt', 7),
+(6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8),
+(6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9),
+(6, 'ICT Asset Management', 'fas fa-boxes', 10);
+
+-- Seed data: Director Admissions (role_id=27)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_title, duty_icon, sort_order) VALUES
+(27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1),
+(27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2),
+(27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3),
+(27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4),
+(27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5),
+(27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6),
+(27, 'Admission Policy Development', 'fas fa-file-contract', 7),
+(27, 'Student Records Management', 'fas fa-folder-open', 8),
+(27, 'Orientation Program Coordination', 'fas fa-handshake', 9),
+(27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10);

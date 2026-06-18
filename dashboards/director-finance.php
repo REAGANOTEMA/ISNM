@@ -37,6 +37,13 @@ try {
     }
 } catch (Exception $e) {}
 
+// ── Get current user's role_id for official duties ──
+$user_role_id = 0;
+if ($conn) {
+    $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . (int)($user['id'] ?? 0));
+    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -129,6 +136,27 @@ if ($conn) {
                                 <p>Outstanding Fees</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Official Duties & Responsibilities -->
+                <section id="duties" class="content-section">
+                    <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
+                    <?php renderOfficialDuties($user_role_id, $conn); ?>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="content-section">
+                    <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Dashboard</a>
+                        <a href="../dashboards/bursar-payroll.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-wallet me-1"></i>Payroll</a>
+                        <a href="../dashboards/budget-management.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-chart-line me-1"></i>Budget Management</a>
+                        <a href="../dashboards/fee-structure.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-invoice me-1"></i>Fee Structure</a>
+                        <a href="../ura_reporting.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-file-invoice-dollar me-1"></i>URA Tax Reports</a>
+                        <a href="../dashboards/expenditure-tracking.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-receipt me-1"></i>Expenditure Tracking</a>
+                        <a href="../dashboards/inventory-reports.php" class="btn btn-outline-info btn-sm"><i class="fas fa-boxes me-1"></i>Inventory Reports</a>
+                        <a href="../dashboards/director-general.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-crown me-1"></i>Director General</a>
                     </div>
                 </section>
 

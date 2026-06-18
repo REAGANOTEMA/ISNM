@@ -34,6 +34,8 @@ function getModuleConfig(): array {
                 ['title' => 'Principal',           'route' => 'principal.php',                     'roles' => ['principal']],
                 ['title' => 'Deputy Principal',    'route' => 'deputy-principal.php',              'roles' => ['deputy','principal']],
                 ['title' => 'Admissions',          'route' => 'director-admissions.php',           'roles' => ['admissions','director','secretary']],
+                ['title' => 'Admission Letters',   'route' => 'admission-letters.php',             'roles' => ['admissions','director','secretary']],
+                ['title' => 'Intake Planning',     'route' => 'intake-planning.php',               'roles' => ['admissions','director','secretary','registrar']],
                 ['title' => 'Lecturers',           'route' => 'lecturers.php',                     'roles' => ['lecturer','senior']],
                 ['title' => 'Senior Lecturers',    'route' => 'senior-lecturers.php',              'roles' => ['senior','lecturer']],
                 ['title' => 'Head of Nursing',     'route' => 'head-nursing.php',                  'roles' => ['head','nursing']],
@@ -41,6 +43,9 @@ function getModuleConfig(): array {
                 ['title' => 'Transcripts',         'route' => 'staff_transcript_generation.php',   'roles' => '*'],
                 ['title' => 'Timetable',           'route' => 'timetable.php',                     'roles' => ['registrar','academics','lecturer','head']],
                 ['title' => 'Exams & Results',     'route' => 'exams-results.php',                 'roles' => ['registrar','academics','lecturer','head']],
+                ['title' => 'Curriculum Management','route' => 'curriculum-management.php',         'roles' => ['director','academics','principal','head']],
+                ['title' => 'Academic Calendar',   'route' => 'academic-calendar.php',             'roles' => ['director','academics','registrar','principal']],
+                ['title' => 'Quality Assurance',   'route' => 'quality-assurance.php',             'roles' => ['director','academics','principal','head']],
             ],
         ],
         [
@@ -63,6 +68,8 @@ function getModuleConfig(): array {
                 ['title' => 'General Ledger',      'route' => 'general-ledger.php',                'roles' => ['bursar','finance','accountant']],
                 ['title' => 'Bank Reconciliation', 'route' => 'bank-reconciliation.php',           'roles' => ['bursar','finance','accountant']],
                 ['title' => 'Auto-Deductions',     'route' => 'payment-subscriptions.php',          'roles' => ['bursar','finance','director','accountant','school bursar']],
+                ['title' => 'Audit Management',    'route' => 'audit-management.php',              'roles' => ['director','finance','bursar','accountant']],
+                ['title' => 'Procurement Oversight','route' => 'procurement-oversight.php',         'roles' => ['director','finance','bursar','store']],
             ],
         ],
         [
@@ -89,7 +96,11 @@ function getModuleConfig(): array {
             'icon'     => 'fas fa-crown',
             'roles'    => '*',
             'children' => [
-                ['title' => 'ICT Director',        'route' => 'director-ict.php',                  'roles' => ['director','ict','it']],
+                ['title' => 'Director General',    'route' => 'director-general.php',              'roles' => ['director general','ceo','chief executive officer','system admin']],
+                ['title' => 'Director Academics',  'route' => 'director-academics.php',            'roles' => ['director','academics','principal','ceo']],
+                ['title' => 'Director Admissions', 'route' => 'director-admissions.php',           'roles' => ['director','admissions','secretary']],
+                ['title' => 'Director Finance',    'route' => 'director-finance.php',              'roles' => ['director','finance','ceo']],
+                ['title' => 'Director ICT',        'route' => 'director-ict.php',                  'roles' => ['director','ict','it']],
             ],
         ],
         [
@@ -151,6 +162,9 @@ function getModuleConfig(): array {
             'children' => [
                 ['title' => 'Computer Lab',        'route' => '../computer_lab.php',               'roles' => ['director','ict','it','lab']],
                 ['title' => 'Skills Lab',          'route' => '../dashboards/skills-lab.php',      'roles' => ['skills lab','lab','director','principal']],
+                ['title' => 'Digital Learning',    'route' => 'digital-learning.php',              'roles' => ['director','ict','it','lecturer']],
+                ['title' => 'Cybersecurity',       'route' => 'cybersecurity.php',                 'roles' => ['director','ict','it']],
+                ['title' => 'ICT Policy',          'route' => 'ict-policy.php',                    'roles' => ['director','ict','it']],
             ],
         ],
         [

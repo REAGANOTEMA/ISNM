@@ -68,6 +68,13 @@ if ($conn) {
 $recent_students = [];
 try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
 
+// ── Get current user's role_id for official duties ──
+$user_role_id = 0;
+if ($conn) {
+    $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+}
+
 // ── Staff attendance today ──
 $staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0];
 if ($conn) {
@@ -308,6 +315,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
         <?php endif; ?>
     </div>
     <?php endif; ?>
+
+    <!-- OFFICIAL DUTIES & RESPONSIBILITIES -->
+    <div class="section-card">
+      <h2><i class="fas fa-tasks me-2 text-primary"></i>Official Duties &amp; Responsibilities</h2>
+      <?php renderOfficialDuties($user_role_id, $conn); ?>
+    </div>
 
     <!-- QUICK ACTIONS (collapsible) -->
     <div class="section-card">

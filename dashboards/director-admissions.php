@@ -112,6 +112,13 @@ if (file_exists($new_students_file)) {
     }
 }
 
+// ── Get current user's role_id for official duties ──
+$user_role_id = 0;
+if ($staff_conn) {
+    $ri = $staff_conn->query("SELECT role_id FROM staff WHERE id = " . (int)($user['id'] ?? 0));
+    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+}
+
 // Dashboard statistics from database
 $total_applications = 0;
 $pending_applications = 0;
@@ -247,6 +254,25 @@ try {
                     </div>
                 </section>
                 
+                <!-- Official Duties & Responsibilities -->
+                <section id="duties" class="content-section">
+                    <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
+                    <?php renderOfficialDuties($user_role_id, $staff_conn); ?>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="content-section">
+                    <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+                        <a href="../student-directory.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
+                        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
+                        <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i>Add Student</button>
+                        <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+                    </div>
+                </section>
+
                 <!-- Requirements Portal Section -->
                 <section id="requirements" class="content-section">
                     <h2><i class="fas fa-clipboard-check me-2"></i>Requirements Portal</h2>
