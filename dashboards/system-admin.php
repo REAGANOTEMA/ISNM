@@ -1,0 +1,152 @@
+<?php
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
+$conn = $ctx['staff'];
+$studentsConn = $ctx['students'];
+$user = $ctx['user'];
+
+$pageTitle = 'System Administration';
+
+$backups = [];
+$r = $conn->query("SELECT * FROM backup_management ORDER BY created_at DESC LIMIT 50");
+if ($r) while ($row = $r->fetch_assoc()) $backups[] = $row;
+
+$logs = [];
+$r2 = $conn->query("SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 50");
+if ($r2) while ($row = $r2->fetch_assoc()) $logs[] = $row;
+
+$sync = [];
+$r3 = $conn->query("SELECT * FROM data_sync_status ORDER BY last_sync DESC LIMIT 20");
+if ($r3) while ($row = $r3->fetch_assoc()) $sync[] = $row;
+
+$settings = [];
+$r4 = $conn->query("SELECT * FROM system_settings ORDER BY setting_name LIMIT 50");
+if ($r4) while ($row = $r4->fetch_assoc()) $settings[] = $row;
+
+$errorLogs = [];
+$r5 = $conn->query("SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 50");
+if ($r5) while ($row = $r5->fetch_assoc()) $errorLogs[] = $row;
+
+$cacheCount = 0;
+$r6 = $conn->query("SELECT COUNT(*) c FROM cache_management");
+if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+</head>
+<body>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="page-content">
+    <div class="content-header">
+        <h1><i class="fas fa-cogs"></i> System Administration</h1>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>Backups</h6><h3><?= count($backups) ?></h3></div></div></div>
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>System Logs</h6><h3><?= count($logs) ?></h3></div></div></div>
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>Sync Records</h6><h3><?= count($sync) ?></h3></div></div></div>
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>Settings</h6><h3><?= count($settings) ?></h3></div></div></div>
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>Errors</h6><h3><?= count($errorLogs) ?></h3></div></div></div>
+        <div class="col-md-2"><div class="card"><div class="card-body"><h6>Cache</h6><h3><?= $cacheCount ?></h3></div></div></div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>Backup History</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>File</th><th>Type</th><th>Size</th><th>Date</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($backups as $b): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($b['file_name'] ?? $b['name'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($b['backup_type'] ?? $b['type'] ?? '-') ?></td>
+                                    <td><?= $b['file_size'] ?? $b['size'] ?? '-' ?></td>
+                                    <td><?= $b['created_at'] ?? '-' ?></td>
+                                    <td><span class="badge bg-<?= ($b['status'] ?? 'completed') === 'completed' ? 'success' : 'warning' ?>"><?= $b['status'] ?? 'completed' ?></span></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($backups)): ?><tr><td colspan="5" class="text-center">No backups recorded</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>System Settings</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Setting</th><th>Value</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($settings as $s): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($s['setting_name'] ?? $s['key'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars(substr($s['setting_value'] ?? $s['value'] ?? '', 0, 40)) ?></td>
+                                    <td><?= htmlspecialchars(substr($s['description'] ?? '', 0, 40)) ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($settings)): ?><tr><td colspan="3" class="text-center">No settings defined</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>Error Logs</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Error</th><th>File</th><th>Line</th><th>Date</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($errorLogs as $e): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars(substr($e['error_message'] ?? $e['message'] ?? '', 0, 50)) ?></td>
+                                    <td><?= htmlspecialchars(basename($e['file'] ?? $e['script'] ?? '')) ?></td>
+                                    <td><?= $e['line'] ?? '-' ?></td>
+                                    <td><?= $e['created_at'] ?? '-' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($errorLogs)): ?><tr><td colspan="4" class="text-center">No error logs</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>Data Sync Status</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>Table/Dataset</th><th>Last Sync</th><th>Status</th><th>Records</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($sync as $s): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($s['table_name'] ?? $s['dataset'] ?? '-') ?></td>
+                                    <td><?= $s['last_sync'] ?? '-' ?></td>
+                                    <td><span class="badge bg-<?= ($s['status'] ?? 'synced') === 'synced' ? 'success' : 'danger' ?>"><?= $s['status'] ?? 'synced' ?></span></td>
+                                    <td><?= $s['records_count'] ?? $s['count'] ?? '-' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($sync)): ?><tr><td colspan="4" class="text-center">No sync records</td></tr><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body>
+</html>

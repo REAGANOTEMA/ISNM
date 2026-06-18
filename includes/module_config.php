@@ -21,6 +21,8 @@ function getModuleConfig(): array {
                 ['title' => 'Discipline',          'route' => 'student-discipline.php',            'roles' => ['head','principal','deputy','secretary','matron','warden']],
                 ['title' => 'Hostel Management',   'route' => 'hostel-management.php',             'roles' => ['warden','matron','registrar']],
                 ['title' => 'Library',             'route' => 'student-library.php',               'roles' => ['librarian','student','lecturer']],
+                ['title' => 'Counseling & Welfare', 'route' => 'counseling-welfare.php',             'roles' => ['director','principal','deputy','matron','warden','secretary']],
+                ['title' => 'Scholarships & Sponsorships','route' => 'scholarships-sponsorships.php','roles' => ['bursar','finance','director','registrar','secretary']],
             ],
         ],
         [
@@ -46,6 +48,11 @@ function getModuleConfig(): array {
                 ['title' => 'Curriculum Management','route' => 'curriculum-management.php',         'roles' => ['director','academics','principal','head']],
                 ['title' => 'Academic Calendar',   'route' => 'academic-calendar.php',             'roles' => ['director','academics','registrar','principal']],
                 ['title' => 'Quality Assurance',   'route' => 'quality-assurance.php',             'roles' => ['director','academics','principal','head']],
+                ['title' => 'Grade Scales & Grading','route' => 'grade-scales.php',                 'roles' => ['academics','registrar','director','principal','head','lecturer']],
+                ['title' => 'Research Projects',    'route' => 'research-projects.php',              'roles' => ['director','academics','principal','head','lecturer']],
+                ['title' => 'Accreditation & Compliance','route' => 'accreditation.php',             'roles' => ['director','academics','principal','head']],
+                ['title' => 'Graduation Management','route' => 'graduation-management.php',          'roles' => ['registrar','academics','director','principal']],
+                ['title' => 'Partnerships & Linkages','route' => 'partnerships.php',                 'roles' => ['director','principal','ceo','head']],
             ],
         ],
         [
@@ -70,6 +77,8 @@ function getModuleConfig(): array {
                 ['title' => 'Auto-Deductions',     'route' => 'payment-subscriptions.php',          'roles' => ['bursar','finance','director','accountant','school bursar']],
                 ['title' => 'Audit Management',    'route' => 'audit-management.php',              'roles' => ['director','finance','bursar','accountant']],
                 ['title' => 'Procurement Oversight','route' => 'procurement-oversight.php',         'roles' => ['director','finance','bursar','store']],
+                ['title' => 'URA/Tax Reporting',   'route' => 'ura-reporting.php',                 'roles' => ['bursar','finance','director','accountant']],
+                ['title' => 'Donations Management','route' => 'donations-management.php',           'roles' => ['director','bursar','finance','ceo']],
             ],
         ],
         [
@@ -89,6 +98,10 @@ function getModuleConfig(): array {
                 ['title' => 'Disciplinary',        'route' => 'staff-disciplinary.php',            'roles' => ['hr','manager','director','principal']],
                 ['title' => 'Non-Teaching Staff',  'route' => 'non-teaching-staff.php',            'roles' => ['non teaching','staff','lecturer']],
                 ['title' => 'Payroll',             'route' => 'bursar-payroll.php',                'roles' => ['hr','bursar','payroll','finance','director']],
+                ['title' => 'Onboarding & Orientation','route' => 'onboarding.php',                 'roles' => ['hr','manager','director']],
+                ['title' => 'Resignations & Exit',  'route' => 'resignations.php',                  'roles' => ['hr','manager','director']],
+                ['title' => 'Duty Rosters',         'route' => 'duty-rosters.php',                  'roles' => ['hr','manager','director','head','matron','warden']],
+                ['title' => 'Professional Licenses','route' => 'professional-licenses.php',         'roles' => ['hr','manager','director','head','nursing','midwifery']],
             ],
         ],
         [
@@ -116,6 +129,8 @@ function getModuleConfig(): array {
                 ['title' => 'Wardens',             'route' => 'wardens.php',                       'roles' => ['warden','matron']],
                 ['title' => 'Student Announcements','route' => 'student-announcements.php',        'roles' => '*'],
                 ['title' => 'Communication',       'route' => 'communications.php',                'roles' => '*'],
+                ['title' => 'Student Requests Desk','route' => 'student-requests-desk.php',        'roles' => ['secretary','registrar','director','principal','deputy']],
+                ['title' => 'Meal & Accommodation', 'route' => 'meal-accommodation.php',            'roles' => ['matron','warden','registrar','director']],
             ],
         ],
         [
@@ -125,6 +140,8 @@ function getModuleConfig(): array {
             'children' => [
                 ['title' => 'Security',            'route' => 'security.php',                      'roles' => ['security','director']],
                 ['title' => 'Fleet Management',    'route' => 'drivers.php',                       'roles' => ['driver','director']],
+                ['title' => 'Visitor & Access Control','route' => 'visitor-access.php',             'roles' => ['security','director','manager']],
+                ['title' => 'Fuel & Trip Logs',    'route' => 'fuel-trips.php',                    'roles' => ['driver','director','manager']],
             ],
         ],
         [
@@ -145,6 +162,9 @@ function getModuleConfig(): array {
                 ['title' => 'News Management',     'route' => '../news.php',                       'roles' => '*'],
                 ['title' => 'SMS / E-mail',        'route' => '../messaging.php',                  'roles' => '*'],
                 ['title' => 'Notifications',       'route' => '../notifications.php',              'roles' => '*'],
+                ['title' => 'Website Pages',       'route' => 'website-pages.php',                  'roles' => ['director','ict','it','secretary']],
+                ['title' => 'Contact & Applications','route' => 'contact-submissions.php',          'roles' => ['director','secretary','ict','it']],
+                ['title' => 'Portal Messages',     'route' => 'portal-messages.php',                'roles' => ['director','secretary','ict','it']],
             ],
         ],
         [
@@ -156,6 +176,7 @@ function getModuleConfig(): array {
                 ['title' => 'Certificates',        'route' => '../print_certificate.php',          'roles' => '*'],
                 ['title' => 'Transcripts',         'route' => '../print_transcript.php',           'roles' => '*'],
                 ['title' => 'Recycle Bin',         'route' => 'recycle_bin.php',                   'roles' => '*'],
+                ['title' => 'Student Downloads',   'route' => 'student-downloads.php',              'roles' => ['director','secretary','registrar','ict']],
             ],
         ],
         [
@@ -168,6 +189,8 @@ function getModuleConfig(): array {
                 ['title' => 'Digital Learning',    'route' => 'digital-learning.php',              'roles' => ['director','ict','it','lecturer']],
                 ['title' => 'Cybersecurity',       'route' => 'cybersecurity.php',                 'roles' => ['director','ict','it']],
                 ['title' => 'ICT Policy',          'route' => 'ict-policy.php',                    'roles' => ['director','ict','it']],
+                ['title' => 'Lab Practical Management','route' => 'lab-practical.php',             'roles' => ['lecturer','head','nursing','midwifery','lab']],
+                ['title' => 'System Administration','route' => 'system-admin.php',                 'roles' => ['director','ict','it','system admin']],
             ],
         ],
         [
