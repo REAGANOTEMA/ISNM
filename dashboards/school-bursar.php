@@ -96,7 +96,7 @@ if ($view === 'receipt_print' && $ajax === '1' && $q) {
     try {
         if ($staff && $students) {
             $like = "%$q%";
-            $stmt = $staff->prepare("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.payment_reference AS ref, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id WHERE fp.receipt_number LIKE ? OR fp.student_id LIKE ? OR s.first_name LIKE ? OR s.surname LIKE ? ORDER BY fp.payment_date DESC LIMIT 1");
+            $stmt = $staff->prepare("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.payment_reference AS ref, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.last_name FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id WHERE fp.receipt_number LIKE ? OR fp.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ? ORDER BY fp.payment_date DESC LIMIT 1");
             if ($stmt) {
                 $stmt->bind_param("ssss", $like, $like, $like, $like);
                 $stmt->execute();
@@ -115,7 +115,7 @@ if ($view === 'receipt_print' && $ajax === '1' && $q) {
                         'found' => true,
                         'receipt_number' => $row['receipt_number'],
                         'payment_date' => $row['payment_date'],
-                        'student_name' => ($row['surname'] ?? '') . ', ' . ($row['first_name'] ?? ''),
+                        'student_name' => ($row['last_name'] ?? '') . ', ' . ($row['first_name'] ?? ''),
                         'student_id' => $row['student_id'],
                         'amount' => (float)$row['amount_paid'],
                         'method' => ucfirst(str_replace('_', ' ', $row['payment_method'] ?? '')),
@@ -171,14 +171,14 @@ if ($view === 'daily_collections' && $ajax === '1') {
     $data = ['total' => 0, 'count' => 0, 'methods' => [], 'payments' => []];
     try {
         if ($staff) {
-            $r = $staff->query("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = '$date' AND fp.status='verified' ORDER BY fp.payment_date DESC");
+            $r = $staff->query("SELECT fp.*, s.first_name, s.last_name FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = '$date' AND fp.status='verified' ORDER BY fp.payment_date DESC");
             if ($r) {
                 $data['count'] = $r->num_rows;
                 while ($row = $r->fetch_assoc()) {
                     $data['total'] += (float)$row['amount_paid'];
                     $m = ucfirst(str_replace('_', ' ', $row['payment_method'] ?? 'Unknown'));
                     $data['methods'][$m] = ($data['methods'][$m] ?? 0) + (float)$row['amount_paid'];
-                    $data['payments'][] = ['student_name' => ($row['surname'] ?? '') . ' ' . ($row['first_name'] ?? ''), 'student_id' => $row['student_id'], 'receipt_number' => $row['receipt_number'] ?? '', 'amount' => $row['amount_paid'], 'method' => $m];
+                    $data['payments'][] = ['student_name' => ($row['last_name'] ?? '') . ' ' . ($row['first_name'] ?? ''), 'student_id' => $row['student_id'], 'receipt_number' => $row['receipt_number'] ?? '', 'amount' => $row['amount_paid'], 'method' => $m];
                 }
             }
         }
@@ -380,7 +380,7 @@ $not_cleared_students = max(0, $total_students - $students_db_cleared);
 $recent_txns = [];
 try {
     if ($staff) {
-        $rp = $staff->query("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id ORDER BY fp.payment_date DESC LIMIT 10");
+        $rp = $staff->query("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.last_name FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id ORDER BY fp.payment_date DESC LIMIT 10");
         if ($rp) {
             while ($row = $rp->fetch_assoc()) {
                 $recent_txns[] = $row;
@@ -391,8 +391,8 @@ try {
 
 $recent_payments = [];
 try {
-    if ($students) {
-        $payments_stmt = $students->query("
+    if ($staff) {
+        $payments_stmt = $staff->query("
             SELECT p.*, s.first_name, s.last_name, s.student_number, s.index_number 
             FROM payments p 
             JOIN students s ON p.student_id = s.id 
@@ -502,7 +502,7 @@ $txnCount = 0;
 if (!empty($recent_txns)):
     foreach ($recent_txns as $row):
         $txnCount++;
-        echo '<tr><td>' . $txnCount . '</td><td>' . htmlspecialchars(($row['surname'] ?? '') . ' ' . ($row['first_name'] ?? '')) . '<br><small class="text-muted">' . htmlspecialchars($row['student_id']) . '</small></td><td>' . htmlspecialchars($row['receipt_number'] ?? 'N/A') . '</td><td><strong>' . currency($row['amount_paid']) . '</strong></td><td>' . htmlspecialchars(ucfirst(str_replace('_',' ',$row['payment_method'] ?? ''))) . '</td><td>' . date('d/m/Y', strtotime($row['payment_date'])) . '</td><td>' . bsBadge($row['status']) . '</td></tr>';
+        echo '<tr><td>' . $txnCount . '</td><td>' . htmlspecialchars(($row['last_name'] ?? '') . ' ' . ($row['first_name'] ?? '')) . '<br><small class="text-muted">' . htmlspecialchars($row['student_id']) . '</small></td><td>' . htmlspecialchars($row['receipt_number'] ?? 'N/A') . '</td><td><strong>' . currency($row['amount_paid']) . '</strong></td><td>' . htmlspecialchars(ucfirst(str_replace('_',' ',$row['payment_method'] ?? ''))) . '</td><td>' . date('d/m/Y', strtotime($row['payment_date'])) . '</td><td>' . bsBadge($row['status']) . '</td></tr>';
     endforeach;
 else:
     echo '<tr><td colspan="7" class="text-center text-muted py-4">No recent transactions.</td></tr>';
@@ -888,7 +888,8 @@ function searchStudentForPayment(){
     .then(function(r){ return r.json(); })
     .then(function(d){
         var el = document.getElementById('payStudentResults'), info = document.getElementById('payStudentInfo');
-        el.innerHTML = ''; info.classList.add('d-none');
+        if (!el) return; if (info) info.classList.add('d-none');
+        el.innerHTML = '';
         if(!d||!d.length){ el.innerHTML = '<div class="text-muted small">No students found.</div>'; return; }
         d.forEach(function(s){
             var di = document.createElement('div');
@@ -924,7 +925,8 @@ function searchStatementStudent(){
     fetch('../includes/ajax_student_search.php?q='+encodeURIComponent(q))
     .then(function(r){ return r.json(); })
     .then(function(d){
-        var el = document.getElementById('stmtSearchResults'); el.innerHTML = '';
+        var el = document.getElementById('stmtSearchResults'); if (!el) return;
+        el.innerHTML = '';
         if(!d||!d.length){ el.innerHTML = '<div class="text-muted small">No students found.</div>'; return; }
         d.forEach(function(s){
             var di = document.createElement('div');
@@ -933,11 +935,13 @@ function searchStatementStudent(){
             di.addEventListener('click',function(){ loadStatement(s); });
             el.appendChild(di);
         });
-    }).catch(function(){ document.getElementById('stmtSearchResults').innerHTML = '<div class="text-danger small">Search failed.</div>'; });
+    }).catch(function(){ var el = document.getElementById('stmtSearchResults'); if (el) el.innerHTML = '<div class="text-danger small">Search failed.</div>'; });
 }
 function loadStatement(s){
-    document.getElementById('stmtSearchResults').innerHTML = '';
+    var stmtSearch = document.getElementById('stmtSearchResults');
+    if (stmtSearch) stmtSearch.innerHTML = '';
     var out = document.getElementById('stmtOutput');
+    if (!out) return;
     out.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     fetch('school-bursar.php?view=student_statement&ajax=1&sid='+encodeURIComponent(s.student_id))
     .then(function(r){ return r.json(); })

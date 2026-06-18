@@ -153,9 +153,9 @@ function getModuleConfig(): array {
             'roles'    => '*',
             'children' => [
                 ['title' => 'Document Templates',  'route' => 'document_management.php',           'roles' => '*'],
-                ['title' => 'Certificates',        'route' => 'print_certificate.php',             'roles' => '*'],
-                ['title' => 'Transcripts',         'route' => 'print_transcript.php',              'roles' => '*'],
-                ['title' => 'Recycle Bin',         'route' => 'dashboards/recycle_bin.php',        'roles' => '*'],
+                ['title' => 'Certificates',        'route' => '../print_certificate.php',          'roles' => '*'],
+                ['title' => 'Transcripts',         'route' => '../print_transcript.php',           'roles' => '*'],
+                ['title' => 'Recycle Bin',         'route' => 'recycle_bin.php',                   'roles' => '*'],
             ],
         ],
         [
@@ -168,6 +168,41 @@ function getModuleConfig(): array {
                 ['title' => 'Digital Learning',    'route' => 'digital-learning.php',              'roles' => ['director','ict','it','lecturer']],
                 ['title' => 'Cybersecurity',       'route' => 'cybersecurity.php',                 'roles' => ['director','ict','it']],
                 ['title' => 'ICT Policy',          'route' => 'ict-policy.php',                    'roles' => ['director','ict','it']],
+            ],
+        ],
+        [
+            'title'    => 'Executive Management',
+            'icon'     => 'fas fa-crown',
+            'roles'    => '*',
+            'children' => [
+                ['title' => 'Director General',    'route' => 'director-general.php',              'roles' => ['director general','ceo','chief executive officer','system admin']],
+                ['title' => 'Institution Hierarchy','route' => 'director-general.php#hierarchy',    'roles' => ['director general','ceo','director']],
+                ['title' => 'Executive Overview',  'route' => 'director-general.php#executive',    'roles' => ['director general','ceo']],
+                ['title' => 'Department Comparison','route' => 'director-general.php#departments',  'roles' => ['director general','ceo']],
+                ['title' => 'Director Performance','route' => 'director-general.php#performance',  'roles' => ['director general','ceo']],
+            ],
+        ],
+        [
+            'title'    => 'Approvals & Workflow',
+            'icon'     => 'fas fa-check-double',
+            'roles'    => '*',
+            'children' => [
+                ['title' => 'Pending Approvals',   'route' => 'director-general.php#approvals',    'roles' => ['director general','ceo','director']],
+                ['title' => 'Finance Requests',    'route' => 'director-finance.php#approvals',     'roles' => ['director general','finance','director']],
+                ['title' => 'Student Issues',      'route' => 'director-academics.php#approvals',   'roles' => ['director general','academics','director']],
+                ['title' => 'Admission Decisions', 'route' => 'director-admissions.php#approvals',  'roles' => ['director general','admissions','director']],
+                ['title' => 'System Changes',      'route' => 'director-ict.php#approvals',         'roles' => ['director general','ict','director']],
+            ],
+        ],
+        [
+            'title'    => 'Monitoring & Alerts',
+            'icon'     => 'fas fa-bell',
+            'roles'    => '*',
+            'children' => [
+                ['title' => 'Active Alerts',       'route' => 'director-general.php#alerts',       'roles' => ['director general','ceo','director']],
+                ['title' => 'Audit Trail',         'route' => 'director-general.php#audit',        'roles' => ['director general','ceo','finance','director']],
+                ['title' => 'Compliance Tracking', 'route' => 'director-general.php#compliance',   'roles' => ['director general','ceo','director']],
+                ['title' => 'Risk Register',       'route' => 'director-general.php#risks',        'roles' => ['director general','ceo','director']],
             ],
         ],
         [

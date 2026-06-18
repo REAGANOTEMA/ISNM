@@ -8,7 +8,7 @@ require_once __DIR__ . '/../config/database.php';
 if (!function_exists('getNotifConn')) {
     function getNotifConn() {
         if (function_exists('getDatabaseConnection')) {
-            return getNotifConn();
+            return getDatabaseConnection('website');
         }
         if (function_exists('getWebsiteConnection')) {
             return getWebsiteConnection();

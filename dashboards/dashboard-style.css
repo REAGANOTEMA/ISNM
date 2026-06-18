@@ -206,13 +206,11 @@
     align-items: center;
     gap: 20px;
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    perspective: 1200px;
 }
 
 .stat-card:hover {
-    transform: perspective(1200px) translateY(-6px) translateZ(16px) rotateX(1.5deg);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(255, 224, 130, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .stat-icon {
@@ -260,13 +258,11 @@
     margin-bottom: 30px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    perspective: 1200px;
 }
 
 .content-section:hover {
-    transform: perspective(1200px) translateY(-6px) translateZ(16px) rotateX(1.5deg);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(183, 149, 128, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .fee-status-grid {
@@ -303,13 +299,11 @@
     text-align: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03), 0 12px 30px rgba(0,0,0,0.02);
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    perspective: 1200px;
 }
 
 .report-card:hover {
-    transform: perspective(1200px) translateY(-6px) translateZ(16px) rotateX(1.5deg);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(255, 224, 130, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .report-icon {
@@ -576,7 +570,7 @@
 }
 
 .section-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(183, 149, 128, 0.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .section-card h2 {
@@ -616,8 +610,6 @@
     align-items: center;
     gap: 12px;
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    perspective: 1200px;
     border: 1px solid rgba(148, 163, 184, 0.18) !important;
     height: 100%;
     width: 100%;
@@ -625,8 +617,8 @@
 }
 
 .page-content .stat-card:hover {
-    transform: perspective(1200px) translateY(-4px) translateZ(12px) rotateX(1.5deg);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03), 0 0 30px rgba(255, 224, 130, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.04), 0 30px 60px rgba(0,0,0,0.03);
 }
 
 .page-content .stat-content h3 {
@@ -915,6 +907,12 @@
     margin-top: 4px;
 }
 
+/* ── Analytics Strip ── */
+.ax-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.ax{flex:0 0 auto;width:170px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px}
+.ax-w{width:230px;flex-shrink:0}
+@media(max-width:768px){.ax{width:140px}.ax-w{width:180px}}
+
 /* ── Analytics Dashboard ── */
 .analytics-dashboard-row {
     display: grid;
@@ -963,3 +961,170 @@
 }
 .metric-box .metric-change.up { color: #059669; }
 .metric-box .metric-change.down { color: #dc2626; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   INSTITUTIONAL FRAMEWORK — Hierarchy, Executive, Alerts, Performance
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Hierarchy Chart ── */
+.hierarchy-chart { display: flex; flex-direction: column; gap: 16px; }
+.hierarchy-level {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    padding: 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid #e5e7eb;
+}
+.hierarchy-node { flex: 1; min-width: 200px; }
+.hierarchy-node-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border-radius: 8px;
+    background: #fff; border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+.hierarchy-node-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: #3b82f6;
+}
+.hierarchy-node-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: #eff6ff; color: #2563eb; font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.hierarchy-node-name { font-weight: 600; font-size: 13px; color: #0f172a; }
+.hierarchy-node-meta { font-size: 10px; color: #64748b; }
+.hierarchy-node-staff { font-size: 10px; color: #3b82f6; }
+.hierarchy-connector {
+    text-align: center; font-size: 10px; color: #94a3b8;
+    padding: 4px 0;
+}
+
+/* ── Executive Stats ── */
+.exec-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+.exec-stat-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; border-radius: 12px;
+    background: #fff; border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+.exec-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.exec-stat-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.exec-stat-value { font-size: 1.4rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.exec-stat-label { font-size: 11px; color: #64748b; display: flex; align-items: center; }
+.exec-trend { font-size: 10px; }
+
+/* ── Department Comparison ── */
+.dept-comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+.dept-comparison-card {
+    background: #fff; border-radius: 12px;
+    border: 1px solid #e5e7eb; overflow: hidden;
+    transition: all 0.2s ease;
+}
+.dept-comparison-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.dept-card-header {
+    padding: 14px; border-bottom: 1px solid #e5e7eb;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    background: #f8fafc;
+}
+.dept-card-title h6 { font-size: 13px; }
+.dept-director { font-size: 11px; color: #64748b; }
+.dept-card-body { padding: 14px; }
+.progress { background: #e5e7eb; border-radius: 10px; overflow: hidden; }
+.progress-bar { border-radius: 10px; }
+
+/* ── Ownership Badges ── */
+.ownership-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.ownership-badges .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+
+/* ── Performance Director Card ── */
+.director-perf-card {
+    background: #fff; border-radius: 10px;
+    border: 1px solid #e5e7eb; padding: 14px;
+    transition: all 0.2s ease;
+}
+.director-perf-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+.perf-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #eff6ff; flex-shrink: 0;
+}
+.perf-score-circle {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; background: #f8fafc; border: 2px solid currentColor;
+    flex-shrink: 0;
+}
+.perf-stat { padding: 4px; border-radius: 6px; background: #f8fafc; }
+
+/* ── Performance Gauge ── */
+.performance-gauge-wrap { display: flex; align-items: center; justify-content: center; }
+.performance-gauge-wrap svg { max-width: 100%; height: auto; }
+
+/* ── Alerts Panel ── */
+.alerts-list { display: flex; flex-direction: column; gap: 6px; }
+.alert-item {
+    padding: 10px 14px; border-radius: 8px;
+    border-left: 4px solid currentColor;
+    transition: all 0.2s ease;
+}
+.alert-item:hover { transform: translateX(2px); }
+
+/* ── Approval Request Cards ── */
+.approval-request-card {
+    padding: 12px; border-radius: 8px;
+    background: #fff; border: 1px solid #e5e7eb;
+    margin-bottom: 8px; transition: all 0.2s ease;
+}
+.approval-request-card:hover { border-color: #3b82f6; }
+
+/* ── Audit Trail ── */
+.audit-table { font-size: 12px; }
+.audit-table th { font-weight: 600; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom-width: 1px; }
+.audit-table td { vertical-align: middle; }
+
+/* ── Compliance Summary ── */
+.compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.compliance-item {
+    padding: 12px 8px; border-radius: 8px;
+    text-align: center; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+}
+
+/* ── Risk List ── */
+.risk-list .risk-item:last-child { border-bottom: none !important; }
+
+/* ── Executive Overview Section ── */
+.executive-section { margin-bottom: 1.5rem; }
+.executive-section .card-header-custom { margin-bottom: 1rem; }
+
+/* ── Responsive: Executive Stats ── */
+@media (max-width: 768px) {
+    .exec-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .dept-comparison-grid { grid-template-columns: 1fr; }
+    .compliance-grid { grid-template-columns: repeat(2, 1fr); }
+    .hierarchy-level { flex-direction: column; }
+}
+@media (max-width: 480px) {
+    .exec-stats-grid { grid-template-columns: 1fr; }
+}

@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
+require_once __DIR__ . '/../includes/institutional_framework.php';
+require_once __DIR__ . '/../includes/approval_workflow.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'academics']);
 $conn = $ctx['staff'];
@@ -308,10 +310,63 @@ if ($conn) {
         </div>
     </div>
 
+    <!-- ═══ DEPARTMENT MANAGEMENT (HIERARCHY-AWARE) ═══ -->
+    <div class="container-fluid px-4 pb-4">
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
+                    <div class="d-flex align-items-center gap-2 mb-2 small">
+                        <span class="badge bg-primary">Level 3</span>
+                        <span class="text-muted">You report to:</span>
+                        <span class="fw-semibold">Director General (Level 1)</span>
+                    </div>
+                    <?= renderHierarchyChart($conn) ?>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Department Alerts</h6>
+                    </div>
+                    <?= renderAlertsPanel($conn, 'ACAD', 5) ?>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Department Performance</h6>
+                    <?php
+                    $acadStaffId = 0; $acadRoleId = 4;
+                    $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = ? AND status = 'Active' LIMIT 1") : false;
+                    if ($sq) { $sq->bind_param('i', $acadRoleId); $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
+                    echo renderDirectorPerformanceCard($acadStaffId, $acadRoleId, 'Director Academics', $conn);
+                    ?>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h6>
+                    <?php
+                    $acadApprovals = getPendingApprovals($conn, 4, 5);
+                    if (!empty($acadApprovals)):
+                        foreach ($acadApprovals as $apr):
+                            echo renderApprovalWorkflowCard($apr, $conn);
+                            echo renderApprovalActionButtons($apr['id']);
+                        endforeach;
+                    else:
+                        echo '<div class="text-muted small py-3 text-center">No pending approvals.</div>';
+                    endif;
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar navigation
             document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();

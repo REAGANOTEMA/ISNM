@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/institutional_framework.php';
+require_once __DIR__ . '/../includes/approval_workflow.php';
 
 $ctx = bootstrapStaffDashboard(['director', 'ict']);
 $staff_conn = $ctx['staff'];
@@ -615,6 +617,60 @@ if ($search_term && $students_conn) {
 
             </div>
         </main>
+    </div>
+
+    <!-- ═══ DEPARTMENT MANAGEMENT (HIERARCHY-AWARE) ═══ -->
+    <div class="container-fluid px-4 py-4">
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
+                    <div class="d-flex align-items-center gap-2 mb-2 small">
+                        <span class="badge bg-primary">Level 3</span>
+                        <span class="text-muted">You report to:</span>
+                        <span class="fw-semibold">Director General (Level 1)</span>
+                    </div>
+                    <?= renderHierarchyChart($staff_conn) ?>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>ICT Alerts</h6>
+                    </div>
+                    <?= renderAlertsPanel($staff_conn, 'ICT', 5) ?>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>ICT Department Performance</h6>
+                    <?php
+                    $ictStaffId = 0; $ictRoleId = 6;
+                    $sq = $staff_conn ? $staff_conn->prepare("SELECT id FROM staff WHERE role_id = ? AND status = 'Active' LIMIT 1") : false;
+                    if ($sq) { $sq->bind_param('i', $ictRoleId); $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $ictStaffId = $sr['id']; }
+                    echo renderDirectorPerformanceCard($ictStaffId, $ictRoleId, 'Director ICT', $staff_conn);
+                    ?>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending System Approvals</h6>
+                    <?php
+                    $ictApprovals = getPendingApprovals($staff_conn, 6, 5);
+                    if (!empty($ictApprovals)):
+                        foreach ($ictApprovals as $apr):
+                            echo renderApprovalWorkflowCard($apr, $staff_conn);
+                            echo renderApprovalActionButtons($apr['id']);
+                        endforeach;
+                    else:
+                        echo '<div class="text-muted small py-3 text-center">No pending approvals.</div>';
+                    endif;
+                    ?>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ════ MODALS ════ -->

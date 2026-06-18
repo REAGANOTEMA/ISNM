@@ -187,6 +187,19 @@ if (!function_exists('getWebsiteConnection')) {
     }
 }
 
+if (!function_exists('getDatabaseConnection')) {
+    function getDatabaseConnection($database) {
+        $map = [
+            'staffs'   => 'getStaffConnection',
+            'students' => 'getStudentsConnection',
+            'website'  => 'getWebsiteConnection',
+            'ict'      => 'getICTConnection',
+        ];
+        $func = $map[$database] ?? 'getStaffConnection';
+        return function_exists($func) ? $func() : null;
+    }
+}
+
 if (!function_exists('getConnection')) {
     function getConnection() {
         return getStudentsConnection();

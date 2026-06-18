@@ -1,64 +1,51 @@
 <?php
+$pageTitle = 'Notifications';
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
-?><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Notifications Center – ISNM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link href="dashboards/dashboard-professional.css" rel="stylesheet">
-<style>
-:root{--primary:#2c5f8a;--accent:#1a9e6e}
-body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
-.dev-card{border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08)}
-.dev-card .card-header{background:linear-gradient(135deg,#2c5f8a,#1a9e6e);padding:28px 32px;border:none}
-.dev-card .card-header h2{font-weight:700;letter-spacing:-.5px}
-.dev-card .card-body{padding:36px 32px}
-.dev-card .feature-list{list-style:none;padding:0;margin:0}
-.dev-card .feature-list li{padding:10px 0;border-bottom:1px solid #e9ecef;display:flex;align-items:center;gap:12px;font-size:.95rem}
-.dev-card .feature-list li:last-child{border-bottom:none}
-.dev-card .feature-list li i{width:20px;text-align:center}
-.badge-soon{background:#fef3c7;color:#92400e;font-size:.7rem;padding:4px 14px;border-radius:20px;font-weight:600}
-</style>
-</head>
+$conn = getDatabaseConnection('website');
+$userId = (int)($_SESSION['user_id'] ?? 0);
+
+$totalNotifications = 0; $unreadNotifications = 0; $readNotifications = 0; $recentNotifications = 0;
+$notifications = [];
+if ($conn) {
+    $r = $conn->query("SELECT COUNT(*) c FROM notifications");
+    if ($r) $totalNotifications = (int)$r->fetch_assoc()['c'];
+    $r = $conn->query("SELECT COUNT(*) c FROM notification_reads WHERE user_id = $userId");
+    if ($r) $readNotifications = (int)$r->fetch_assoc()['c'];
+    $unreadNotifications = max(0, $totalNotifications - $readNotifications);
+    $r = $conn->query("SELECT COUNT(*) c FROM notifications WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+    if ($r) $recentNotifications = (int)$r->fetch_assoc()['c'];
+    $r = $conn->query("SELECT n.id, n.title, n.message, n.type, n.created_at, (SELECT COUNT(*) FROM notification_reads nr WHERE nr.notification_id = n.id AND nr.user_id = $userId) AS is_read FROM notifications n ORDER BY n.created_at DESC LIMIT 100");
+    if ($r) while ($row = $r->fetch_assoc()) $notifications[] = $row;
+}
+?>
+<?php include_once __DIR__ . '/includes/dashboard_head.php'; ?>
 <body>
 <?php include_once __DIR__ . '/includes/sidebar.php'; ?>
-<div class="main" style="margin-left:270px;padding:40px 32px">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card dev-card">
-        <div class="card-header text-white">
-          <div class="d-flex align-items-center gap-3 mb-1">
-            <i class="fas fa-bell fa-3x"></i>
-            <div>
-              <h2 class="mb-1">Notifications Center</h2>
-              <p class="mb-0 opacity-75">View, manage, and configure system alerts and push notifications</p>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-semibold mb-0" style="color:var(--primary)"><i class="fas fa-list-check me-2"></i>Module Features</h5>
-            <span class="badge-soon"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-          </div>
-          <ul class="feature-list">
-            <li><i class="fas fa-bell-on text-primary"></i> Real time notification feed for system events</li>
-            <li><i class="fas fa-gear text-success"></i> Configurable notification preferences per user</li>
-            <li><i class="fas fa-bell-slash text-warning"></i> Snooze and mute controls for non urgent alerts</li>
-            <li><i class="fas fa-clock text-info"></i> Scheduled reminders for deadlines and events</li>
-            <li><i class="fas fa-check-double text-secondary"></i> Mark as read and bulk notification management</li>
-          </ul>
-          <hr class="my-4">
-          <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> This module is under active development. Full functionality will be available in the next system update.</p>
-        </div>
-      </div>
+<main class="main" style="margin-left:270px;padding:32px;">
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="fas fa-bell me-2"></i>Notifications</h4>
+    <span class="text-muted small"><?= date('l, d M Y') ?></span>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="stat-card primary"><div class="stat-icon"><i class="fas fa-bell"></i></div><div class="stat-content"><h3><?= $totalNotifications ?></h3><p>Total</p></div></div></div>
+    <div class="col-md-3"><div class="stat-card warning"><div class="stat-icon"><i class="fas fa-bell-slash"></i></div><div class="stat-content"><h3><?= $unreadNotifications ?></h3><p>Unread</p></div></div></div>
+    <div class="col-md-3"><div class="stat-card success"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3><?= $readNotifications ?></h3><p>Read</p></div></div></div>
+    <div class="col-md-3"><div class="stat-card info"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $recentNotifications ?></h3><p>Last 7 Days</p></div></div></div>
+  </div>
+  <div class="content-section">
+    <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Notification History</h5>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark"><tr><th>Title</th><th>Message</th><th>Type</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody><?php if (empty($notifications)): ?><tr><td colspan="5" class="text-muted text-center py-3">No notifications found.</td></tr><?php else: foreach ($notifications as $n): ?><tr><td><?= htmlspecialchars($n['title'] ?? '-') ?></td><td><?= htmlspecialchars(mb_substr($n['message'] ?? '', 0, 80)) ?><?= (isset($n['message']) && mb_strlen($n['message']) > 80) ? '...' : '' ?></td><td><span class="badge bg-<?= $n['type'] === 'alert' ? 'danger' : ($n['type'] === 'warning' ? 'warning text-dark' : ($n['type'] === 'info' ? 'info' : 'primary')) ?>"><?= htmlspecialchars($n['type'] ?? 'info') ?></span></td><td><?= htmlspecialchars($n['created_at'] ?? '-') ?></td><td><span class="badge <?= ($n['is_read'] ?? 0) ? 'bg-success' : 'bg-warning text-dark' ?>"><?= ($n['is_read'] ?? 0) ? 'Read' : 'Unread' ?></span></td></tr><?php endforeach; endif; ?></tbody>
+      </table>
     </div>
   </div>
 </div>
+</main>
 <?php include_once __DIR__ . '/includes/dashboard_footer.php'; ?>
 </body>
 </html>

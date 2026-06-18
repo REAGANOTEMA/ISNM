@@ -110,6 +110,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
         <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
         <a href="../dashboards/recycle_bin.php" class="extra-link"><i class="fas fa-trash-alt"></i> Recycle Bin</a>
+        <a href="director-general.php#alerts" class="extra-link"><i class="fas fa-bell"></i> <span>Alerts</span><span id="alertBadgeSidebar" class="badge bg-danger ms-auto" style="font-size:8px;display:none">0</span></a>
+        <a href="director-general.php#audit" class="extra-link"><i class="fas fa-history"></i> <span>Audit Trail</span></a>
+        <a href="director-general.php#approvals" class="extra-link"><i class="fas fa-check-double"></i> <span>Approvals</span><span id="approvalBadgeSidebar" class="badge bg-warning ms-auto" style="font-size:8px;display:none">0</span></a>
         <a href="#" class="extra-link settings-trigger" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i> Settings
         </a>
@@ -122,6 +125,35 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <i class="fas fa-chevron-down smgmt-chevron ms-auto"></i>
         </a>
     </div>
+    <script>
+    (function() {
+        // Fetch alert and approval counts for sidebar badges
+        function updateBadges() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '../ajax/get_counts.php', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        var alertBadge = document.getElementById('alertBadgeSidebar');
+                        var approvalBadge = document.getElementById('approvalBadgeSidebar');
+                        if (alertBadge && data.critical_alerts > 0) {
+                            alertBadge.textContent = data.critical_alerts;
+                            alertBadge.style.display = 'inline';
+                        }
+                        if (approvalBadge && data.pending_approvals > 0) {
+                            approvalBadge.textContent = data.pending_approvals;
+                            approvalBadge.style.display = 'inline';
+                        }
+                    } catch(e) {}
+                }
+            };
+            xhr.send();
+        }
+        updateBadges();
+        setInterval(updateBadges, 60000);
+    })();
+    </script>
 
     <div class="sidebar-footer">
         <a href="../auth-handler.php?action=logout" class="logout-btn">

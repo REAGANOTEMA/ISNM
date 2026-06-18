@@ -22,6 +22,16 @@ if (!isset($studentQuickSearchRendered) && !defined('STUDENT_QUICK_SEARCH_DISABL
         } catch (Exception $e) {}
     }
 }
+
+// Staff communication system (compose-to-department modal)
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
+    $commFile = __DIR__ . '/staff_communication.php';
+    if (file_exists($commFile)) {
+        require_once $commFile;
+        renderCommunicationModal();
+    }
+}
 ?>
 <?php if (function_exists('renderProfileStyles')) renderProfileStyles(); ?>
 <!-- Dashboard professional styles -->
@@ -248,7 +258,41 @@ window.addEventListener('unhandledrejection', function (e) { e.preventDefault();
 </script>
 <?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 
+<?php if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff'): ?>
+<div id="commFloatingBtn" class="comm-floating-btn" title="Send Department Communication" onclick="openCommunicationModal()">
+    <i class="fas fa-envelope"></i>
+</div>
+
+<script>
+function openCommunicationModal() {
+    var el = document.getElementById('staffCommModal');
+    if (el) {
+        var modal = new bootstrap.Modal(el);
+        modal.show();
+    }
+}
+</script>
+<?php endif; ?>
+
 <style>
+/* ── Communication Floating Button ─────────────────────────────── */
+.comm-floating-btn {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1059;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(26,35,126,.35);
+    transition: transform .2s ease, box-shadow .2s ease;
+    font-size: 22px;
+}
+.comm-floating-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(26,35,126,.5);
+}
+.comm-floating-btn:active { transform: scale(.95); }
+@media (max-width: 480px) {
+    .comm-floating-btn { width: 44px; height: 44px; font-size: 18px; bottom: 16px; right: 16px; }
+}
 /* ── Notification Bell Styles ──────────────────────────────────── */
 .notif-bell {
   position: fixed; top: 12px; right: 20px; z-index: 1060;

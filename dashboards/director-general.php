@@ -7,6 +7,9 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/email_notifications.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 require_once __DIR__ . '/../views/student_data_loader.php';
+require_once __DIR__ . '/../includes/institutional_framework.php';
+require_once __DIR__ . '/../includes/approval_workflow.php';
+require_once __DIR__ . '/../includes/executive_overview.php';
 
 // Load all students for search functionality
 $loader = new StudentDataLoader();
@@ -33,12 +36,12 @@ $pending_apps        = $overview['pending_applications'];
 $loader = new StudentDataLoader();
 $excel_files_summary = $loader->getExcelFileSummary();
 
-// Financial quick stats from students DB
+// Financial quick stats from staffs DB
 $today_collection = 0; $outstanding = 0;
-if ($studentsConn) {
-    $r = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('Completed','verified','approved')");
+if ($conn) {
+    $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
     if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
-    $r2 = $studentsConn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('Pending','partial','Overdue','Partially Paid')");
+    $r2 = $conn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')");
     if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
 }
 
@@ -88,20 +91,20 @@ if ($conn) {
 // ── Enhanced financials ──
 $week_collection = 0; $month_collection = 0; $total_expenses = 0; $total_revenue = 0;
 if ($conn) {
-    $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('Completed','verified','approved')");
+    $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
     if ($rw) $week_collection = $rw->fetch_assoc()['v'] ?? 0;
-    $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('Completed','verified','approved')");
+    $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
     if ($rm) $month_collection = $rm->fetch_assoc()['v'] ?? 0;
-    $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses");
+    $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE status IN('approved','paid')");
     if ($re) $total_expenses = $re->fetch_assoc()['v'] ?? 0;
-    $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('Completed','verified','approved')");
+    $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('verified','approved')");
     if ($rr) $total_revenue = $rr->fetch_assoc()['v'] ?? 0;
 }
 
 // ── Latest 5 payments ──
 $recent_payments = [];
 if ($conn) {
-    $rp = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
+    $rp = $conn->query("SELECT p.*, s.first_name, s.last_name, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
     if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
 }
 
@@ -142,31 +145,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     $date_of_birth = trim($_POST['date_of_birth'] ?? '');
 
     if ($first_name && $last_name && $student_id) {
-        // First, check if we can use StudentDataLoader to save
         try {
-            // Add to a simple text or temporary file for now
+            $full_name = $first_name . ($middle_name ? ' ' . $middle_name : '') . ' ' . $last_name;
+            $intake_date = $intake_year . '-' . ($intake_period === 'July' ? '07' : '01') . '-01';
             $newStudent = [
-                'full_name' => $first_name . ($middle_name ? ' ' . $middle_name : '') . ' ' . $last_name,
+                'full_name' => $full_name,
                 'first_name' => $first_name,
-                'middle_name' => $middle_name,
                 'surname' => $last_name,
-                'index_number' => $student_id,
                 'student_number' => $student_id,
                 'program' => $program,
                 'level' => $level,
-                'intake_year' => $intake_year,
-                'intake_period' => $intake_period,
+                'intake_date' => $intake_date,
                 'phone' => $phone,
                 'email' => $email,
                 'date_of_birth' => $date_of_birth
             ];
 
-            // Also try to save to DB if possible
             if ($studentsConn) {
-                $stmt = $studentsConn->prepare("INSERT IGNORE INTO students (student_id, first_name, middle_name, surname, full_name, program, level, intake_year, intake_period, phone, email, date_of_birth, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
+                $stmt = $studentsConn->prepare("INSERT IGNORE INTO students (student_number, first_name, surname, full_name, program, level, intake_date, phone, email, date_of_birth, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
                 if ($stmt) {
-                    $full_name = $newStudent['full_name'];
-                    $stmt->bind_param("ssssssssssss", $student_id, $first_name, $middle_name, $last_name, $full_name, $program, $level, $intake_year, $intake_period, $phone, $email, $date_of_birth);
+                    $stmt->bind_param("ssssssssss", $student_id, $first_name, $last_name, $full_name, $program, $level, $intake_date, $phone, $email, $date_of_birth);
                     $stmt->execute();
                     $stmt->close();
                 }
@@ -232,263 +230,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       <?php endforeach; ?>
     </div>
 
-    <!-- ═══ AI-POWERED ANALYTICS DASHBOARD ═══ -->
+    <!-- ═══ ANALYTICS ROW ═══ -->
     <?php
-    // Collect analytics data for charts
-    $chartMonthLabels = [];
-    $chartRevenue = [];
-    $chartExpenses = [];
+    $mn = []; $rv = []; $ex = [];
     for ($m = 5; $m >= 0; $m--) {
-        $ts = strtotime("-$m months");
-        $chartMonthLabels[] = date('M Y', $ts);
-        $mn = date('m', $ts);
-        $yr = date('Y', $ts);
-        $rev = 0; $exp = 0;
-        if ($studentsConn) {
-            $r = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=$mn AND YEAR(payment_date)=$yr AND status IN('Completed','verified','approved')");
-            if ($r) $rev = (float)($r->fetch_assoc()['v'] ?? 0);
-            $r2 = $studentsConn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE MONTH(expense_date)=$mn AND YEAR(expense_date)=$yr");
-            if ($r2) $exp = (float)($r2->fetch_assoc()['v'] ?? 0);
-        }
-        $chartRevenue[] = $rev;
-        $chartExpenses[] = $exp;
+        $ts = strtotime("-$m months"); $mn[] = date('M Y', $ts);
+        $mo = date('m', $ts); $yr = date('Y', $ts);
+        $r = $conn ? $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=$mo AND YEAR(payment_date)=$yr AND status IN('verified','approved')") : null;
+        $e = $conn ? $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE MONTH(expense_date)=$mo AND YEAR(expense_date)=$yr AND status IN('approved','paid')") : null;
+        $rv[] = $r ? (float)$r->fetch_assoc()['v'] : 0; $ex[] = $e ? (float)$e->fetch_assoc()['v'] : 0;
     }
-    // Payment method distribution
-    $methodLabels = []; $methodValues = [];
-    if ($studentsConn) {
-        $mr = $studentsConn->query("SELECT payment_method, COUNT(*) cnt, COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('Completed','verified','approved') GROUP BY payment_method ORDER BY total DESC LIMIT 5");
-        if ($mr) while ($row = $mr->fetch_assoc()) {
-            $methodLabels[] = $row['payment_method'] ?: 'Other';
-            $methodValues[] = (float)$row['total'];
-        }
+    $ml = []; $mv = [];
+    if ($conn) {
+        $mr = $conn->query("SELECT payment_method, COALESCE(SUM(amount_received),0) t FROM payments WHERE status IN('verified','approved') GROUP BY payment_method ORDER BY t DESC LIMIT 5");
+        if ($mr) while ($row = $mr->fetch_assoc()) { $ml[] = $row['payment_method'] ?: 'Other'; $mv[] = (float)$row['t']; }
     }
+    $collRate = $total_revenue > 0 ? round(min(100, ($today_collection / max(1, $total_revenue / 365)) * 100)) : 50;
     ?>
-    <!-- ═══ AI-POWERED ANALYTICS DASHBOARD ═══ -->
-    <div class="analytics-section">
-      <div class="section-card analytics-card">
-        <div class="analytics-card-header">
-          <div class="d-flex align-items-center gap-3">
-            <div class="analytics-icon-wrap">
-              <i class="fas fa-chart-pie"></i>
-            </div>
-            <div>
-              <h2 class="fw-bold mb-0" style="font-size:1.1rem">AI-Powered Analytics Dashboard</h2>
-              <small class="text-muted">Real-time institutional intelligence &amp; predictive insights</small>
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="analytics-badge"><i class="fas fa-brain me-1"></i>AI v1.0</span>
-            <span class="analytics-badge analytics-badge-live"><i class="fas fa-circle me-1" style="font-size:6px"></i>Live</span>
-          </div>
-        </div>
-
-        <!-- Main Analytics Grid -->
-        <div class="analytics-main-grid mt-3">
-          <!-- Revenue Chart -->
-          <div class="chart-wrapper chart-main">
-            <div class="chart-title-bar">
-              <h6><i class="fas fa-chart-line text-success"></i> Revenue vs Expenses</h6>
-              <span class="chart-period">Last 6 months</span>
-            </div>
-            <div class="chart-container"><canvas id="chartRevenue"></canvas></div>
-          </div>
-          <!-- Right Column: Payment Methods + AI Insights -->
-          <div class="analytics-sidebar">
-            <div class="chart-wrapper">
-              <div class="chart-title-bar">
-                <h6><i class="fas fa-chart-pie text-primary"></i> Payment Methods</h6>
-              </div>
-              <div class="chart-container chart-container-sm"><canvas id="chartPaymentMethods"></canvas></div>
-            </div>
-            <div class="chart-wrapper mt-3">
-              <div class="chart-title-bar">
-                <h6><i class="fas fa-robot text-info"></i> AI Insights <span class="badge bg-info ms-1" style="font-size:9px">Real-time</span></h6>
-              </div>
-              <div id="aiInsightsPanel" style="min-height:100px">
-                <div class="text-muted small text-center py-4"><i class="fas fa-spinner fa-spin me-1"></i>Analyzing data...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bottom Row: 3 Cards -->
-        <div class="analytics-bottom-row mt-3">
-          <div class="chart-wrapper">
-            <div class="chart-title-bar">
-              <h6><i class="fas fa-chart-bar text-warning"></i> Monthly Collection vs Target</h6>
-            </div>
-            <div class="chart-container chart-container-sm"><canvas id="chartMonthlyComparison"></canvas></div>
-          </div>
-          <div class="chart-wrapper">
-            <div class="chart-title-bar">
-              <h6><i class="fas fa-users text-info"></i> Staff Attendance Today</h6>
-            </div>
-            <div class="chart-container chart-container-sm"><canvas id="chartStaffAttendance"></canvas></div>
-          </div>
-          <div class="chart-wrapper">
-            <div class="chart-title-bar">
-              <h6><i class="fas fa-tachometer-alt text-danger"></i> Institutional Health</h6>
-            </div>
-            <div id="performanceGauge" class="performance-gauge" style="min-height:140px"></div>
-            <div id="aiPredictionPanel"></div>
-          </div>
-        </div>
+    <div class="section-card mb-3 p-2 analytics-bar" data-ax='<?= json_encode(['months'=>$mn,'rev'=>$rv,'exp'=>$ex,'methods'=>['l'=>$ml,'v'=>$mv],'attendance'=>$staffAttendanceToday,'collRate'=>$collRate]) ?>'>
+      <div class="ax-strip">
+        <div class="ax"><canvas id="chartRevenue" height="58"></canvas></div>
+        <div class="ax"><canvas id="chartPaymentMethods" height="58"></canvas></div>
+        <div class="ax"><canvas id="chartStaffAttendance" height="58"></canvas></div>
+        <div class="ax"><div id="performanceGauge" style="height:58px"></div></div>
+        <div class="ax ax-w"><div id="aiInsightsPanel" style="font-size:9px;min-height:42px;line-height:1.3"><span class="text-muted">Analyzing...</span></div><div id="aiPredictionPanel" style="font-size:9px"></div></div>
       </div>
     </div>
-
-    <script>
-    (function() {
-      // Initialize charts after DOM is ready and canvas has dimensions
-      function initAnalytics() {
-        var pd = {
-          labels: <?= json_encode($chartMonthLabels) ?>,
-          revenue: <?= json_encode($chartRevenue) ?>,
-          expenses: <?= json_encode($chartExpenses) ?>,
-          methods: { labels: <?= json_encode($methodLabels) ?>, values: <?= json_encode($methodValues) ?> },
-          monthly: {
-            labels: <?= json_encode($chartMonthLabels) ?>,
-            collection: <?= json_encode($chartRevenue) ?>,
-            targets: <?= json_encode(array_map(function($v) { return $v * 1.15; }, $chartRevenue)) ?>
-          }
-        };
-
-        // Staff attendance data
-        var staffData = {
-          present: <?= (int)($staffAttendanceToday['present'] ?? 0) ?>,
-          late: <?= (int)($staffAttendanceToday['late'] ?? 0) ?>,
-          absent: <?= (int)($staffAttendanceToday['absent'] ?? 0) ?>,
-          onLeave: <?= (int)($staffAttendanceToday['on_leave'] ?? 0) ?>
-        };
-
-        if (typeof initDashboardCharts === 'function') {
-          initDashboardCharts({ paymentData: pd, staffData: staffData });
-        }
-
-        // AI Insights
-        var insights = [];
-        if (typeof ISNMAI !== 'undefined') {
-          var revArr = <?= json_encode($chartRevenue) ?>;
-          var expArr = <?= json_encode($chartExpenses) ?>;
-          var prevRev = revArr.length >= 2 ? revArr[revArr.length - 2] : 0;
-          var currRev = revArr.length ? revArr[revArr.length - 1] : 0;
-          var prevExp = expArr.length >= 2 ? expArr[expArr.length - 2] : 0;
-          var currExp = expArr.length ? expArr[expArr.length - 1] : 0;
-          var revTotal = revArr.reduce(function(a,b){return a+b;}, 0);
-          var expTotal = expArr.reduce(function(a,b){return a+b;}, 0);
-
-          var insight1 = ISNMAI.generateInsight('Revenue', currRev, prevRev, 'UGX');
-          if (insight1) insights.push(insight1);
-          var insight2 = ISNMAI.generateInsight('Expenses', currExp, prevExp, 'UGX');
-          if (insight2) insights.push(insight2);
-          if (revTotal > 0) {
-            var margin = ((revTotal - expTotal) / revTotal) * 100;
-            insights.push({
-              label: 'Profit Margin',
-              text: margin.toFixed(1) + '% overall ' + (margin > 20 ? '✅ Healthy' : margin > 10 ? '⚠️ Moderate' : '🔴 Low'),
-              trend: margin > 15 ? 'up' : 'down',
-              change: Math.round(margin * 10) / 10
-            });
-          }
-          var totalStaff = staffData.present + staffData.late + staffData.absent + staffData.onLeave;
-          var attRate = totalStaff > 0 ? Math.round(staffData.present / totalStaff * 100) : 0;
-          insights.push({
-            label: 'Staff Attendance',
-            text: attRate + '% today (' + staffData.present + ' present, ' + staffData.absent + ' absent)',
-            trend: attRate >= 80 ? 'up' : 'down',
-            change: attRate
-          });
-          if (typeof renderAIInsights === 'function') renderAIInsights('aiInsightsPanel', insights);
-
-          // Predictions
-          if (revArr.length > 0) {
-            var predictions = ISNMAI.predict(revArr, 3);
-            if (typeof renderAIPrediction === 'function') renderAIPrediction('aiPredictionPanel', predictions, 'Revenue Forecast', 'UGX');
-          }
-
-          // Performance gauge
-          var collRate = <?= $total_revenue > 0 ? round(min(100, ($today_collection / max(1, $total_revenue / 365)) * 100)) : 50 ?>;
-          var perfScore = ISNMAI.calculatePerformanceScore({ attendanceRate: attRate, passRate: 82, collectionRate: collRate, staffMorale: 70 });
-          if (typeof renderPerformanceGauge === 'function') renderPerformanceGauge('performanceGauge', perfScore, 'Institutional Health Score');
-        }
-      }
-
-      // Run immediately (charts are visible - not in collapse)
-      if (document.readyState === 'complete') {
-        initAnalytics();
-      } else {
-        document.addEventListener('DOMContentLoaded', initAnalytics);
-      }
-    })();
-    </script>
-
-    <style>
-    .analytics-card {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 1px solid rgba(148,163,184,0.2);
-    }
-    .analytics-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding-bottom: 4px;
-    }
-    .analytics-icon-wrap {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, #1a237e, #3b82f6);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 20px;
-      flex-shrink: 0;
-    }
-    .analytics-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 5px 12px; border-radius: 999px;
-      background: linear-gradient(135deg, #1a237e, #283593);
-      color: #fff; font-size: 11px; font-weight: 600;
-    }
-    .analytics-badge-live {
-      background: linear-gradient(135deg, #059669, #10b981);
-      animation: pulseLive 2s infinite;
-    }
-    @keyframes pulseLive {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    .analytics-main-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-    }
-    .analytics-bottom-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-    }
-    .chart-title-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .chart-title-bar h6 {
-      font-size: 13px; font-weight: 700; color: #0f172a;
-      margin: 0; display: flex; align-items: center; gap: 6px;
-    }
-    .chart-period {
-      font-size: 10px; color: #94a3b8;
-      background: #f1f5f9; padding: 2px 8px; border-radius: 4px;
-    }
-    @media (max-width: 992px) {
-      .analytics-main-grid { grid-template-columns: 1fr; }
-      .analytics-bottom-row { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 768px) {
-      .analytics-bottom-row { grid-template-columns: 1fr; }
-      .analytics-card-header { flex-direction: column; align-items: flex-start; }
-    }
-    </style>
 
     <!-- PENDING SUBMISSIONS INBOX -->
     <?php
@@ -519,462 +286,244 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     }
     $totalPending = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
     ?>
-    <?php if ($totalPending > 0): ?>
-    <div class="section-card mb-4" style="border-left:4px solid #dc2626">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h2 class="mb-0"><i class="fas fa-bell me-2" style="color:#dc2626"></i>Pending Submissions</h2>
-            <span class="badge bg-danger rounded-pill fs-6"><?= $totalPending ?> New</span>
-        </div>
-        <div class="row g-2 mb-3">
-            <div class="col-3 col-md-3">
-                <div class="p-3 rounded text-center" style="background:#fee2e2">
-                    <div class="fs-3 fw-bold" style="color:#991b1b"><?= $pendingContacts ?></div>
-                    <small style="color:#7f1d1d">Messages</small>
-                </div>
-            </div>
-            <div class="col-3 col-md-3">
-                <div class="p-3 rounded text-center" style="background:#fef3c7">
-                    <div class="fs-3 fw-bold" style="color:#92400e"><?= $pendingVolunteers ?></div>
-                    <small style="color:#78350f">Volunteers</small>
-                </div>
-            </div>
-            <div class="col-3 col-md-3">
-                <div class="p-3 rounded text-center" style="background:#dbeafe">
-                    <div class="fs-3 fw-bold" style="color:#1e40af"><?= $pendingDonations ?></div>
-                    <small style="color:#1e3a8a">Donations</small>
-                </div>
-            </div>
-            <div class="col-3 col-md-3">
-                <div class="p-3 rounded text-center" style="background:#dcfce7">
-                    <div class="fs-3 fw-bold" style="color:#166534"><?= $pendingApplications ?></div>
-                    <small style="color:#14532d">Applications</small>
-                </div>
-            </div>
-        </div>
-        <?php if (!empty($recentSubmissions)): ?>
-        <div class="list-group list-group-flush">
-            <?php foreach ($recentSubmissions as $sub): 
-                $icons = ['contact' => 'fa-envelope','volunteer' => 'fa-hands-helping','donation' => 'fa-hand-holding-heart','application' => 'fa-file-alt'];
-                $colors = ['contact' => '#dc2626','volunteer' => '#d97706','donation' => '#2563eb','application' => '#16a34a'];
-                $labels = ['contact' => 'Contact','volunteer' => 'Volunteer','donation' => 'Donation','application' => 'Application'];
-                $ic = $icons[$sub['type']] ?? 'fa-bell';
-                $cl = $colors[$sub['type']] ?? '#6b7280';
-                $lb = $labels[$sub['type']] ?? 'Submission';
-            ?>
-            <div class="list-group-item border-0 ps-0 d-flex align-items-center gap-3">
-                <div style="width:36px;height:36px;border-radius:50%;background:<?= $cl ?>15;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <i class="fas <?= $ic ?>" style="color:<?= $cl ?>;font-size:14px"></i>
-                </div>
-                <div class="flex-grow-1 min-width-0">
-                    <div class="fw-semibold" style="font-size:14px"><?= htmlspecialchars($sub['name']) ?></div>
-                    <div style="font-size:12px;color:#64748b"><?= htmlspecialchars($sub['title']) ?> <span class="badge bg-light text-dark ms-1"><?= $lb ?></span></div>
-                </div>
-                <small style="color:#94a3b8;flex-shrink:0"><?= date('d M H:i', strtotime($sub['created_at'])) ?></small>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
+    <!-- ═══ DYNAMIC SECTIONS (hidden, shown via module card click) ═══ -->
+    <style>
+    .dg-section { display:none; }
+    .dg-section.active { display:block; }
+    .quick-chevron { transition: transform .25s ease; }
+    .quick-chevron.rotated { transform: rotate(180deg); }
+    </style>
 
-    <!-- OFFICIAL DUTIES & RESPONSIBILITIES -->
-    <div class="section-card">
-      <h2><i class="fas fa-tasks me-2 text-primary"></i>Official Duties &amp; Responsibilities</h2>
-      <?php renderOfficialDuties($user_role_id, $conn); ?>
+    <div id="section-executive" class="dg-section">
+      <div class="executive-section mb-4">
+        <div class="section-card">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-chart-simple me-2 text-primary"></i>Executive Overview</h5><small class="text-muted">Real-time institutional snapshot</small></div>
+            <span class="badge bg-primary" style="font-size:9px">Updated live</span>
+          </div>
+          <?= renderExecutiveOverview($studentsConn, $conn) ?>
+        </div>
+      </div>
+      <div class="mb-4"><div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-building me-2 text-warning"></i>Department Performance</h5><small class="text-muted">Status, problems, trends &amp; responsible directors</small></div></div><?= renderDepartmentComparison($conn) ?></div></div>
+      <div class="row g-3 mb-4">
+        <div class="col-lg-4"><div class="section-card h-100"><h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Institutional Hierarchy</h6><?php echo renderHierarchyChart($conn); ?></div></div>
+        <div class="col-lg-4"><div class="section-card h-100"><div class="d-flex align-items-center justify-content-between mb-3"><h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Active Alerts</h6><?php $ac=getAlertCounts($conn); if($ac['critical']>0): ?><span class="badge bg-danger"><?= $ac['critical'] ?> Critical</span><?php endif; if($ac['high']>0): ?><span class="badge bg-warning text-dark"><?= $ac['high'] ?> High</span><?php endif; ?></div><?= renderAlertsPanel($conn,null,5) ?></div></div>
+        <div class="col-lg-4"><div class="section-card h-100"><h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-shield-alt me-2 text-success"></i>Compliance &amp; Risk</h6><div class="mb-3"><div class="fw-semibold small mb-2">Compliance Status</div><?= renderComplianceSummary($conn) ?></div><div><div class="fw-semibold small mb-2">Top Risks</div><?= renderRiskRegister($conn,4) ?></div></div></div>
+      </div>
+      <div class="mb-4"><div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-chart-bar me-2 text-success"></i>Director Performance Monitoring</h5><small class="text-muted">Dept targets, completed/pending/delayed tasks</small></div></div><div class="row g-3"><?php foreach([1,3,4,5,6,27] as $rid): $rq=$conn?$conn->prepare("SELECT id,role_name FROM igangaschoolofl_staffs_db.staff_roles WHERE id=?"):false; $rn=''; $si=0; if($rq){$rq->bind_param('i',$rid);$rq->execute();$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];} if($rn): $sq=$conn->prepare("SELECT id FROM staff WHERE role_id=? AND status='Active' LIMIT 1"); if($sq){$sq->bind_param('i',$rid);$sq->execute();$sr=$sq->get_result()->fetch_assoc();$sq->close();if($sr)$si=$sr['id'];} ?><div class="col-md-4 col-lg-3"><?= renderDirectorPerformanceCard($si,$rid,$rn,$conn) ?></div><?php endif; endforeach; ?></div></div></div>
     </div>
 
-    <!-- QUICK ACTIONS (collapsible) -->
-    <div class="section-card">
-      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false" aria-controls="quickActionsContent">
-        <i class="fas fa-bolt me-2"></i>Quick Actions
-        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
-      </h2>
-
-      <div id="quickActionsContent" class="collapse">
-        <div class="mb-3 mt-2">
-          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-primary" style="font-size:11px">OPERATIONS</span><small class="text-muted">Core daily tasks</small></div>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button>
-            <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcript Generation</a>
-            <a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipt Printing</a>
-            <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
-            <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+    <div id="section-financial" class="dg-section">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="section-card h-100">
+            <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#financialOverviewContent" aria-expanded="false"><i class="fas fa-coins me-2 text-success"></i>Financial Overview<i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i></h2>
+            <div id="financialOverviewContent" class="collapse">
+              <div class="row g-3 mt-2">
+                <div class="col-4 col-md-3"><div class="p-3 rounded text-center" style="background:#f0fdf4"><div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($today_collection) ?></div><small style="color:#14532d">Today</small></div></div>
+                <div class="col-4 col-md-3"><div class="p-3 rounded text-center" style="background:#fefce8"><div class="fs-5 fw-bold" style="color:#854d0e">UGX <?= number_format($week_collection) ?></div><small style="color:#713f12">This Week</small></div></div>
+                <div class="col-4 col-md-3"><div class="p-3 rounded text-center" style="background:#eff6ff"><div class="fs-5 fw-bold" style="color:#1e40af">UGX <?= number_format($month_collection) ?></div><small style="color:#1e3a8a">This Month</small></div></div>
+                <div class="col-6 col-md-3"><div class="p-3 rounded text-center" style="background:#fef2f2"><div class="fs-5 fw-bold" style="color:#991b1b">UGX <?= number_format($outstanding) ?></div><small style="color:#7f1d1d">Outstanding</small></div></div>
+                <div class="col-6 col-md-3"><div class="p-3 rounded text-center" style="background:#f8fafc"><div class="fs-5 fw-bold" style="color:#0f172a">UGX <?= number_format($total_revenue) ?></div><small style="color:#475569">Total Revenue</small></div></div>
+                <div class="col-6 col-md-3"><div class="p-3 rounded text-center" style="background:#fff7ed"><div class="fs-5 fw-bold" style="color:#9a3412">UGX <?= number_format($total_expenses) ?></div><small style="color:#7c2d12">Total Expenses</small></div></div>
+                <div class="col-6 col-md-3"><div class="p-3 rounded text-center" style="background:#f0fdf4"><div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($total_revenue-$total_expenses) ?></div><small style="color:#14532d">Net Position</small></div></div>
+                <div class="col-6 col-md-3"><div class="p-3 rounded text-center" style="background:#faf5ff"><div class="fs-5 fw-bold" style="color:#6b21a8">UGX <?= number_format($month_collection-$total_expenses) ?></div><small style="color:#581c87">Monthly Balance</small></div></div>
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2"><a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Finance Dashboard</a><a href="../dashboards/school-bursar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a><a href="../dashboards/budget-management.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-chart-line me-1"></i>Budget</a></div>
+            </div>
           </div>
         </div>
-
-        <div class="mb-3">
-          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-warning text-dark" style="font-size:11px">EXECUTIVE</span><small class="text-muted">Leadership dashboards</small></div>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
-            <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Director Finance</a>
-            <a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Director Admissions</a>
-            <a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>Director ICT</a>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-info" style="font-size:11px">ADMINISTRATION</span><small class="text-muted">School administration</small></div>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
-            <a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy Principal</a>
-            <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
-            <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
-            <a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR Manager</a>
-            <a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-success" style="font-size:11px">ACADEMIC</span><small class="text-muted">Faculty & student services</small></div>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head Nursing</a>
-            <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head Midwifery</a>
-            <a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior Lecturers</a>
-            <a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
-            <a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a>
-            <a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Student Management</a>
-          </div>
-        </div>
-
-        <div>
-          <div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-secondary" style="font-size:11px">SUPPORT</span><small class="text-muted">Welfare & facilities</small></div>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="../dashboards/matrons.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-hospital me-1"></i>Matrons</a>
-            <a href="../dashboards/wardens.php" class="btn btn-outline-purple btn-sm"><i class="fas fa-building-user me-1"></i>Wardens</a>
-            <a href="../dashboards/sickbay.php" class="btn btn-outline-red btn-sm"><i class="fas fa-hospital-user me-1"></i>Sickbay</a>
-            <a href="../dashboards/storekeeper.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-boxes-stacked me-1"></i>Storekeeper</a>
-            <a href="../dashboards/drivers.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Drivers</a>
-            <a href="../dashboards/security.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-shield-halved me-1"></i>Security</a>
-            <a href="../dashboards/guild-president.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-people-group me-1"></i>Guild President</a>
+        <div class="col-lg-5">
+          <div class="section-card h-100">
+            <h2 class="mb-2"><i class="fas fa-list me-2 text-primary"></i>Recent Payments</h2>
+            <?php if(empty($recent_payments)): ?><p class="text-muted small">No recent payments.</p>
+            <?php else: ?>
+            <div class="table-responsive"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>
+            <?php foreach($recent_payments as $p): $pc=in_array($p['status'],['verified','approved']) ? 'bg-success' : 'bg-warning text-dark'; ?>
+            <tr><td><small><?= htmlspecialchars(($p['first_name']??'').' '.($p['last_name']??'').' ('.($p['student_number']??'').')') ?></small></td><td><strong>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></strong></td><td><small><?= htmlspecialchars($p['payment_method']??'-') ?></small></td><td><small><?= isset($p['payment_date'])?date('d M',strtotime($p['payment_date'])):'-' ?></small></td><td><span class="badge <?= $pc ?>"><?= htmlspecialchars($p['status']??'') ?></span></td></tr>
+            <?php endforeach; ?></tbody></table></div>
+            <?php endif; ?>
           </div>
         </div>
       </div>
     </div>
 
-    <style>
-    .quick-chevron { transition: transform .25s ease; }
-    .quick-chevron.rotated { transform: rotate(180deg); }
-    </style>
-
-    <!-- EMPLOYEE DAILY ANALYSIS -->
-    <div class="section-card">
-      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#employeeAnalysisContent" aria-expanded="false" aria-controls="employeeAnalysisContent">
-        <i class="fas fa-clipboard-list me-2"></i>Employee Daily Analysis
-        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
-      </h2>
-      <div id="employeeAnalysisContent" class="collapse">
-        <div class="row g-3 mt-2">
-          <div class="col-3 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#dcfce7">
-              <div class="fs-3 fw-bold" style="color:#166534"><?= $staffAttendanceToday['present'] ?></div>
-              <small style="color:#14532d">Present Today</small>
+    <div id="section-staff" class="dg-section">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="section-card h-100">
+            <h2><i class="fas fa-clipboard-list me-2"></i>Employee Daily Analysis</h2>
+            <div class="row g-3 mt-2">
+              <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#dcfce7"><div class="fs-3 fw-bold" style="color:#166534"><?= $staffAttendanceToday['present'] ?></div><small style="color:#14532d">Present</small></div></div>
+              <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#fef9c3"><div class="fs-3 fw-bold" style="color:#854d0e"><?= $staffAttendanceToday['late'] ?></div><small style="color:#713f12">Late</small></div></div>
+              <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#fee2e2"><div class="fs-3 fw-bold" style="color:#991b1b"><?= $staffAttendanceToday['absent'] ?></div><small style="color:#7f1d1d">Absent</small></div></div>
+              <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#dbeafe"><div class="fs-3 fw-bold" style="color:#1e40af"><?= $staffAttendanceToday['on_leave'] ?></div><small style="color:#1e3a8a">On Leave</small></div></div>
             </div>
-          </div>
-          <div class="col-3 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#fef9c3">
-              <div class="fs-3 fw-bold" style="color:#854d0e"><?= $staffAttendanceToday['late'] ?></div>
-              <small style="color:#713f12">Late</small>
-            </div>
-          </div>
-          <div class="col-3 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#fee2e2">
-              <div class="fs-3 fw-bold" style="color:#991b1b"><?= $staffAttendanceToday['absent'] ?></div>
-              <small style="color:#7f1d1d">Absent</small>
-            </div>
-          </div>
-          <div class="col-3 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#dbeafe">
-              <div class="fs-3 fw-bold" style="color:#1e40af"><?= $staffAttendanceToday['on_leave'] ?></div>
-              <small style="color:#1e3a8a">On Leave</small>
-            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2"><a href="../dashboards/staff-attendance.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-clock me-1"></i>Full Report</a><a href="../dashboards/hr-manager.php" class="btn btn-outline-success btn-sm"><i class="fas fa-users me-1"></i>HR Dashboard</a><a href="../dashboards/staff-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Staff Directory</a></div>
+            <?php if(!empty($dept_list)): ?>
+            <h2 class="mt-4"><i class="fas fa-building me-2"></i>Departments</h2><div class="row g-2"><?php foreach($dept_list as $d): ?><div class="col-md-6 col-6"><div class="border rounded p-2"><div class="fw-bold small"><?= htmlspecialchars($d['department_name']) ?></div><small class="text-muted"><?= htmlspecialchars($d['department_code']??'') ?> | <?= htmlspecialchars($d['department_level']??'') ?></small></div></div><?php endforeach; ?></div>
+            <?php endif; ?>
           </div>
         </div>
-        <div class="mt-3 d-flex flex-wrap gap-2">
-          <a href="../dashboards/staff-attendance.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-clock me-1"></i>Full Attendance Report</a>
-          <a href="../dashboards/hr-manager.php" class="btn btn-outline-success btn-sm"><i class="fas fa-users me-1"></i>HR Dashboard</a>
-          <a href="../dashboards/staff-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Staff Directory</a>
+        <div class="col-lg-7">
+          <div class="section-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="mb-0"><i class="fas fa-id-badge me-2"></i>All Staff (<?= count($staff_list) ?>+)</h2><a href="../dashboards/hr-manager.php" class="btn btn-sm btn-outline-primary">HR Dashboard</a></div>
+            <div class="table-responsive" style="max-height:320px;overflow-y:auto"><table class="table table-sm table-hover align-middle"><thead class="table-light"><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th></tr></thead><tbody>
+            <?php if(empty($staff_list)): ?><tr><td colspan="6" class="text-center text-muted py-3">No staff records found.</td></tr>
+            <?php else: foreach($staff_list as $s): $bc=$s['status']==='Active'?'bg-success':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger'); ?>
+            <tr><td><code><?= htmlspecialchars($s['staff_id']) ?></code></td><td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td><td><?= htmlspecialchars($s['role_name']??$s['position']) ?></td><td><?= htmlspecialchars($s['department']??'-') ?></td><td><small><?= htmlspecialchars($s['email']) ?></small></td><td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td></tr>
+            <?php endforeach; endif; ?></tbody></table></div>
+          </div>
+          <div class="section-card mt-3"><h2><i class="fas fa-history me-2"></i>Recent System Activities</h2><?php if(empty($recent_activities)): ?><p class="text-muted small">No recent activities recorded.</p><?php else: ?><ul class="list-unstyled mb-0"><?php foreach($recent_activities as $act): ?><li class="border-bottom py-2 d-flex gap-3 align-items-start"><span class="badge bg-primary mt-1"><?= htmlspecialchars($act['activity_type']) ?></span><div><div class="small"><?= htmlspecialchars($act['activity_description']??'') ?></div><small class="text-muted"><?= $act['created_at']?date('d M Y H:i',strtotime($act['created_at'])):'' ?></small></div></li><?php endforeach; ?></ul><?php endif; ?></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-student" class="dg-section">
+      <div class="section-card">
+        <div class="d-flex justify-content-between align-items-center mb-0">
+          <h2 class="mb-0" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#studentManagementContent" aria-expanded="false"><i class="fas fa-user-graduate me-2"></i>Student Management<i class="fas fa-chevron-down ms-1 small quick-chevron"></i></h2>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus me-2"></i>Add New</button>
+        </div>
+        <div id="studentManagementContent" class="collapse mt-3">
+          <?= displayStudentSearchBox('Search students by name or index number', 'dg_search') ?>
+          <div class="row g-3 mt-3"><?php $rs=array_slice($allStudentsData,0,6); foreach($rs as $s): $sid=$s['index_number']??$s['student_number']??$s['national_id']??''; ?><div class="col-md-4 col-lg-2"><div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($sid) ?>')"><?= displayStudentProfileCard($sid,'compact') ?></div></div><?php endforeach; ?></div>
+          <div class="mt-3"><button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#fullStudentRecords"><i class="fas fa-chevron-down me-1"></i>View All Records</button><div class="collapse mt-2" id="fullStudentRecords"><?php renderStudentSetViewer($studentsConn,['title'=>'','icon'=>'fa-users-gear','super_admin'=>true,'show_all'=>true]); ?></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-approvals" class="dg-section">
+      <div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h5><small class="text-muted">Workflow items requiring attention</small></div></div><?php $pa=getPendingApprovals($conn,null,8); if(!empty($pa)): ?><div class="row g-2"><?php foreach($pa as $a): ?><div class="col-md-6 col-lg-3"><?= renderApprovalWorkflowCard($a,$conn) ?><?= renderApprovalActionButtons($a['id']) ?></div><?php endforeach; ?></div><?php else: ?><div class="text-center text-muted py-3"><i class="fas fa-check-circle fa-2x mb-2 text-success"></i><div>No pending approvals.</div></div><?php endif; ?></div>
+    </div>
+
+    <div id="section-monitoring" class="dg-section">
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="section-card h-100"><h5 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Active Alerts</h5><?php renderAlertsPanel($conn,null,8); ?></div></div>
+        <div class="col-lg-6"><div class="section-card h-100"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-history me-2 text-secondary"></i>Recent Audit Trail</h5><small class="text-muted">Latest tracked actions</small></div></div><?= renderAuditTrailTable($conn,[],8) ?></div></div>
+      </div>
+    </div>
+
+    <div id="section-services" class="dg-section">
+      <?php if($totalPending>0): ?>
+      <div class="section-card mb-4" style="border-left:4px solid #dc2626">
+        <div class="d-flex align-items-center justify-content-between mb-3"><h2 class="mb-0"><i class="fas fa-bell me-2" style="color:#dc2626"></i>Pending Submissions</h2><span class="badge bg-danger rounded-pill fs-6"><?= $totalPending ?> New</span></div>
+        <div class="row g-2 mb-3">
+          <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#fee2e2"><div class="fs-3 fw-bold" style="color:#991b1b"><?= $pendingContacts ?></div><small style="color:#7f1d1d">Messages</small></div></div>
+          <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#fef3c7"><div class="fs-3 fw-bold" style="color:#92400e"><?= $pendingVolunteers ?></div><small style="color:#78350f">Volunteers</small></div></div>
+          <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#dbeafe"><div class="fs-3 fw-bold" style="color:#1e40af"><?= $pendingDonations ?></div><small style="color:#1e3a8a">Donations</small></div></div>
+          <div class="col-3 col-md-3"><div class="p-3 rounded text-center" style="background:#dcfce7"><div class="fs-3 fw-bold" style="color:#166534"><?= $pendingApplications ?></div><small style="color:#14532d">Applications</small></div></div>
+        </div>
+        <?php if(!empty($recentSubmissions)): ?><div class="list-group list-group-flush"><?php foreach($recentSubmissions as $sub): $ic=['contact'=>'fa-envelope','volunteer'=>'fa-hands-helping','donation'=>'fa-hand-holding-heart','application'=>'fa-file-alt'][$sub['type']]??'fa-bell'; $cl=['contact'=>'#dc2626','volunteer'=>'#d97706','donation'=>'#2563eb','application'=>'#16a34a'][$sub['type']]??'#6b7280'; $lb=['contact'=>'Contact','volunteer'=>'Volunteer','donation'=>'Donation','application'=>'Application'][$sub['type']]??'Submission'; ?><div class="list-group-item border-0 ps-0 d-flex align-items-center gap-3"><div style="width:36px;height:36px;border-radius:50%;background:<?= $cl ?>15;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas <?= $ic ?>" style="color:<?= $cl ?>;font-size:14px"></i></div><div class="flex-grow-1 min-width-0"><div class="fw-semibold" style="font-size:14px"><?= htmlspecialchars($sub['name']) ?></div><div style="font-size:12px;color:#64748b"><?= htmlspecialchars($sub['title']) ?> <span class="badge bg-light text-dark ms-1"><?= $lb ?></span></div></div><small style="color:#94a3b8;flex-shrink:0"><?= date('d M H:i',strtotime($sub['created_at'])) ?></small></div><?php endforeach; ?></div><?php endif; ?>
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <div id="section-store" class="dg-section">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="section-card h-100"><h2><i class="fas fa-shopping-cart me-2 text-warning"></i>Pending Store Requests</h2><?php $storeReqs=[]; if($conn){$sr=$conn->query("SELECT sr.request_number,sr.urgency,sr.status,sr.created_at,s.full_name as requester FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'),sr.created_at ASC LIMIT 5");if($sr)while($row=$sr->fetch_assoc())$storeReqs[]=$row;} if(empty($storeReqs)): ?><p class="text-muted small">No pending store requests.</p><?php else: foreach($storeReqs as $sr_): ?><div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><code class="fw-bold"><?= htmlspecialchars($sr_['request_number']) ?></code><small class="text-muted ms-2">by <?= htmlspecialchars($sr_['requester']??'') ?></small></div><div class="d-flex align-items-center gap-2"><span class="badge bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span><small class="text-muted"><?= date('d M',strtotime($sr_['created_at'])) ?></small></div></div><?php endforeach; ?><div class="text-center mt-2"><a href="../dashboards/storekeeper.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Go to Store</a></div><?php endif; ?></div>
+        </div>
+        <div class="col-lg-6">
+          <div class="section-card h-100"><h2><i class="fas fa-tasks me-2 text-primary"></i>Official Duties</h2><?php renderOfficialDuties($user_role_id,$conn); ?></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-communications" class="dg-section">
+      <div class="section-card"><?php renderNewsWidget($conn,$websiteConn,$user_id,$user_name,$user_role,5); ?></div>
+    </div>
+
+    <div id="section-quick" class="dg-section">
+      <div class="section-card">
+        <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false"><i class="fas fa-bolt me-2"></i>Quick Actions<i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i></h2>
+        <div id="quickActionsContent" class="collapse">
+          <div class="mb-3 mt-2"><div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-primary" style="font-size:11px">OPERATIONS</span></div><div class="d-flex flex-wrap gap-2"><a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="fas fa-bullhorn me-1"></i>Send Announcement</button><a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-alt me-1"></i>Transcripts</a><a href="../dashboards/staff_receipt_printing.php" class="btn btn-outline-info btn-sm"><i class="fas fa-receipt me-1"></i>Receipts</a><a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a><button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div></div>
+          <div class="mb-3"><div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-warning text-dark" style="font-size:11px">EXECUTIVE</span></div><div class="d-flex flex-wrap gap-2"><a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Academics</a><a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Finance</a><a href="../dashboards/director-admissions.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-contract me-1"></i>Admissions</a><a href="../dashboards/director-ict.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-laptop-code me-1"></i>ICT</a></div></div>
+          <div class="mb-3"><div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-info" style="font-size:11px">ADMIN</span></div><div class="d-flex flex-wrap gap-2"><a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a><a href="../dashboards/deputy-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-check me-1"></i>Deputy</a><a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Registrar</a><a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>Secretary</a><a href="../dashboards/hr-manager.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-users me-1"></i>HR</a><a href="../dashboards/school-bursar.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar</a></div></div>
+          <div><div class="d-flex align-items-center gap-2 mb-2"><span class="badge bg-success" style="font-size:11px">ACADEMIC</span></div><div class="d-flex flex-wrap gap-2"><a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Nursing</a><a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Midwifery</a><a href="../dashboards/senior-lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-graduate me-1"></i>Senior</a><a href="../dashboards/lecturers.php" class="btn btn-outline-success btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a><a href="../dashboards/school-librarian.php" class="btn btn-outline-info btn-sm"><i class="fas fa-book me-1"></i>Librarian</a><a href="../dashboards/student-management.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-users-rectangle me-1"></i>Students</a></div></div>
         </div>
       </div>
     </div>
 
     <script>
-    document.getElementById('quickActionsContent').addEventListener('show.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#quickActionsContent"] .quick-chevron').classList.add('rotated');
-    });
-    document.getElementById('quickActionsContent').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#quickActionsContent"] .quick-chevron').classList.remove('rotated');
-    });
-    document.getElementById('staffTableCollapse').addEventListener('show.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#staffTableCollapse"] .quick-chevron').classList.add('rotated');
-    });
-    document.getElementById('staffTableCollapse').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#staffTableCollapse"] .quick-chevron').classList.remove('rotated');
-    });
-    document.getElementById('employeeAnalysisContent').addEventListener('show.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#employeeAnalysisContent"] .quick-chevron').classList.add('rotated');
-    });
-    document.getElementById('employeeAnalysisContent').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#employeeAnalysisContent"] .quick-chevron').classList.remove('rotated');
-    });
-    document.getElementById('financialOverviewContent').addEventListener('show.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#financialOverviewContent"] .quick-chevron').classList.add('rotated');
-    });
-    document.getElementById('financialOverviewContent').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#financialOverviewContent"] .quick-chevron').classList.remove('rotated');
-    });
-    document.getElementById('studentManagementContent').addEventListener('show.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#studentManagementContent"] .quick-chevron').classList.add('rotated');
-    });
-    document.getElementById('studentManagementContent').addEventListener('hide.bs.collapse', function () {
-      document.querySelector('[data-bs-target="#studentManagementContent"] .quick-chevron').classList.remove('rotated');
-    });
+    // Module card → section toggle + hash routing
+    (function () {
+      var sections = document.querySelectorAll('.dg-section');
+      var sectionMap = {
+        'Student Management':'section-student', 'Academic Management':'section-student',
+        'Financial Management':'section-financial', 'Staff & HR Management':'section-staff',
+        'Executive':'section-executive', 'Executive Management':'section-executive',
+        'Student Services':'section-services', 'Store & Assets':'section-store',
+        'Communications':'section-communications', 'Approvals & Workflow':'section-approvals',
+        'Monitoring & Alerts':'section-monitoring',
+        'Quick Access':'section-quick', 'Quick Actions':'section-quick'
+      };
+      var hashMap = {
+        'executive': 'section-executive', 'hierarchy': 'section-executive',
+        'departments': 'section-executive', 'performance': 'section-executive',
+        'financial': 'section-financial',
+        'staff': 'section-staff',
+        'student': 'section-student',
+        'approvals': 'section-approvals',
+        'alerts': 'section-monitoring', 'audit': 'section-monitoring',
+        'compliance': 'section-monitoring', 'risks': 'section-monitoring',
+        'services': 'section-services',
+        'store': 'section-store',
+        'communications': 'section-communications',
+        'quick': 'section-quick'
+      };
+
+      function showSection(id) {
+        sections.forEach(function(s){ s.classList.remove('active'); });
+        var el = document.getElementById(id);
+        if (el) el.classList.add('active');
+      }
+
+      function showSectionFromHash() {
+        var hash = window.location.hash.replace('#', '');
+        if (!hash) return;
+        var sid = hashMap[hash];
+        if (sid) showSection(sid);
+      }
+
+      // Handle hash changes
+      window.addEventListener('hashchange', showSectionFromHash);
+
+      // Add onclick to module cards. Use event delegation on the slider track.
+      document.addEventListener('click', function(e) {
+        var card = e.target.closest('.module-card');
+        if (!card) return;
+        var title = card.querySelector('.module-card-title');
+        if (!title) return;
+        var t = title.textContent.trim();
+        var sid = sectionMap[t];
+        if (sid) {
+          var target = document.getElementById(sid);
+          if (target && target.classList.contains('active')) {
+            target.classList.remove('active');
+          } else {
+            showSection(sid);
+          }
+        }
+      });
+
+      // Collapse chevron rotation
+      function bindChevron(cid) {
+        var el = document.getElementById(cid);
+        if (!el) return;
+        var ch = document.querySelector('[data-bs-target="#' + cid + '"] .quick-chevron');
+        el.addEventListener('show.bs.collapse', function(){ if(ch) ch.classList.add('rotated'); });
+        el.addEventListener('hide.bs.collapse', function(){ if(ch) ch.classList.remove('rotated'); });
+      }
+      function initChevrons() {
+        ['quickActionsContent','employeeAnalysisContent','financialOverviewContent','studentManagementContent','staffTableCollapse'].forEach(bindChevron);
+      }
+      if (document.readyState === 'complete') { initChevrons(); showSectionFromHash(); }
+      else document.addEventListener('DOMContentLoaded', function() { initChevrons(); showSectionFromHash(); });
+    })();
     </script>
-
-    <!-- FINANCIAL OVERVIEW -->
-    <div class="section-card">
-      <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#financialOverviewContent" aria-expanded="false" aria-controls="financialOverviewContent">
-        <i class="fas fa-coins me-2 text-success"></i>Financial Overview
-        <i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i>
-      </h2>
-      <div id="financialOverviewContent" class="collapse">
-        <div class="row g-3 mt-2">
-          <div class="col-4 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#f0fdf4">
-              <div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($today_collection) ?></div>
-              <small style="color:#14532d">Today's Collection</small>
-            </div>
-          </div>
-          <div class="col-4 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#fefce8">
-              <div class="fs-5 fw-bold" style="color:#854d0e">UGX <?= number_format($week_collection) ?></div>
-              <small style="color:#713f12">This Week</small>
-            </div>
-          </div>
-          <div class="col-4 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#eff6ff">
-              <div class="fs-5 fw-bold" style="color:#1e40af">UGX <?= number_format($month_collection) ?></div>
-              <small style="color:#1e3a8a">This Month</small>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#fef2f2">
-              <div class="fs-5 fw-bold" style="color:#991b1b">UGX <?= number_format($outstanding) ?></div>
-              <small style="color:#7f1d1d">Outstanding</small>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#f8fafc">
-              <div class="fs-5 fw-bold" style="color:#0f172a">UGX <?= number_format($total_revenue) ?></div>
-              <small style="color:#475569">Total Revenue</small>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#fff7ed">
-              <div class="fs-5 fw-bold" style="color:#9a3412">UGX <?= number_format($total_expenses) ?></div>
-              <small style="color:#7c2d12">Total Expenses</small>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#f0fdf4">
-              <div class="fs-5 fw-bold" style="color:#166534">UGX <?= number_format($total_revenue - $total_expenses) ?></div>
-              <small style="color:#14532d">Net Position</small>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="p-3 rounded text-center" style="background:#faf5ff">
-              <div class="fs-5 fw-bold" style="color:#6b21a8">UGX <?= number_format($month_collection - $total_expenses) ?></div>
-              <small style="color:#581c87">Monthly Balance</small>
-            </div>
-          </div>
-        </div>
-
-        <?php if (!empty($recent_payments)): ?>
-        <h6 class="mt-3 mb-2"><i class="fas fa-list me-1"></i>Recent Payments</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead class="table-light"><tr><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-            <tbody>
-            <?php foreach ($recent_payments as $p):
-              $pc = $p['status']==='Completed'||$p['status']==='verified'||$p['status']==='approved'?'bg-success':'bg-warning text-dark';
-            ?>
-            <tr>
-              <td><small><?= htmlspecialchars(($p['first_name']??'') . ' ' . ($p['surname']??'') . ' (' . ($p['student_number']??'') . ')') ?></small></td>
-              <td><strong>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></strong></td>
-              <td><small><?= htmlspecialchars($p['payment_method']??'-') ?></small></td>
-              <td><small><?= isset($p['payment_date']) ? date('d M', strtotime($p['payment_date'])) : '-' ?></small></td>
-              <td><span class="badge <?= $pc ?>"><?= htmlspecialchars($p['status']??'') ?></span></td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-        <?php endif; ?>
-
-        <div class="mt-2 d-flex flex-wrap gap-2">
-          <a href="../dashboards/director-finance.php" class="btn btn-outline-success btn-sm"><i class="fas fa-coins me-1"></i>Full Finance Dashboard</a>
-          <a href="../dashboards/school-bursar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
-          <a href="../dashboards/budget-management.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-chart-line me-1"></i>Budget Management</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- NEWS MANAGEMENT -->
-    <div class="section-card">
-      <?php renderNewsWidget($conn, $websiteConn, $user_id, $user_name, $user_role, 5); ?>
-    </div>
-
-    <!-- STUDENT MANAGEMENT (collapsible) -->
-    <div class="section-card">
-      <div class="d-flex justify-content-between align-items-center mb-0">
-        <h2 class="mb-0" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#studentManagementContent" aria-expanded="false" aria-controls="studentManagementContent">
-          <i class="fas fa-user-graduate me-2"></i>Student Management
-          <i class="fas fa-chevron-down ms-1 small quick-chevron"></i>
-        </h2>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-          <i class="fas fa-plus me-2"></i>Add New Student
-        </button>
-      </div>
-
-      <div id="studentManagementContent" class="collapse mt-3">
-
-        <!-- Universal Student Search Component -->
-        <?= displayStudentSearchBox('Search for any student by name or index number', 'dg_search') ?>
-
-        <!-- Recent Students Grid - Click to view profile -->
-        <div class="row g-3 mt-3">
-          <?php 
-          $recentStudents = array_slice($allStudentsData, 0, 6);
-          foreach ($recentStudents as $student): 
-              $studentId = $student['index_number'] ?? $student['student_number'] ?? $student['national_id'] ?? '';
-          ?>
-          <div class="col-md-4 col-lg-2">
-            <div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($studentId) ?>')">
-              <?= displayStudentProfileCard($studentId, 'compact') ?>
-            </div>
-          </div>
-          <?php endforeach; ?>
-        </div>
-
-        <!-- Full Records Toggle -->
-        <div class="mt-3">
-          <button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#fullStudentRecords" aria-expanded="false">
-            <i class="fas fa-chevron-down me-1"></i>View All Student Records – Full Institution View
-          </button>
-          <div class="collapse mt-2" id="fullStudentRecords">
-            <?php renderStudentSetViewer($studentsConn, [
-                'title'       => '',
-                'icon'        => 'fa-users-gear',
-                'super_admin' => true,
-                'show_all'    => true,
-            ]); ?>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ALL STAFF -->
-    <div class="section-card">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">
-          <button class="btn btn-outline-primary btn-sm border-0 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#staffTableCollapse" aria-expanded="false" aria-controls="staffTableCollapse" style="background:none;color:inherit;padding:0;">
-            <i class="fas fa-id-badge me-2"></i>All Staff Members (<?= count($staff_list) ?>+)
-            <i class="fas fa-chevron-down ms-1 small quick-chevron"></i>
-          </button>
-        </h2>
-        <a href="../dashboards/hr-manager.php" class="btn btn-sm btn-outline-primary">View HR Dashboard</a>
-      </div>
-      <div class="collapse" id="staffTableCollapse">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle">
-            <thead class="table-light"><tr><th>Staff ID</th><th>Full Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Last Login</th></tr></thead>
-            <tbody>
-            <?php if(empty($staff_list)): ?>
-            <tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
-            <?php else: foreach($staff_list as $s):
-              $bc = $s['status']==='Active'?'bg-success':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger');
-            ?>
-            <tr>
-              <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-              <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-              <td><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-              <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
-              <td><small><?= htmlspecialchars($s['email']) ?></small></td>
-              <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
-              <td><?= $s['last_login'] ? date('d M Y H:i',strtotime($s['last_login'])) : '<span class="text-muted">Never</span>' ?></td>
-            </tr>
-            <?php endforeach; endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- DEPARTMENTS -->
-    <?php if(!empty($dept_list)): ?>
-    <div class="section-card">
-      <h2><i class="fas fa-building me-2"></i>Departments</h2>
-      <div class="row g-2">
-      <?php foreach($dept_list as $d): ?>
-        <div class="col-md-3 col-6">
-          <div class="border rounded p-2">
-            <div class="fw-bold small"><?= htmlspecialchars($d['department_name']) ?></div>
-            <small class="text-muted"><?= htmlspecialchars($d['department_code'] ?? '') ?> | <?= htmlspecialchars($d['department_level'] ?? '') ?></small>
-          </div>
-        </div>
-      <?php endforeach; ?>
-      </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- STORE REQUESTS WIDGET -->
-    <?php
-    $storeReqs = [];
-    if ($conn) {
-        $sr = $conn->query("SELECT sr.request_number, sr.urgency, sr.status, sr.created_at, s.full_name as requester FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC LIMIT 5");
-        if ($sr) while ($row = $sr->fetch_assoc()) $storeReqs[] = $row;
-    }
-    ?>
-    <div class="section-card">
-      <h2><i class="fas fa-shopping-cart me-2 text-warning"></i>Pending Store Requests <?= count($storeReqs) ? '<span class="badge bg-danger ms-1">'.count($storeReqs).'</span>' : '' ?></h2>
-      <?php if (empty($storeReqs)): ?>
-        <p class="text-muted small">No pending store requests.</p>
-      <?php else: foreach ($storeReqs as $sr_): ?>
-        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-          <div>
-            <code class="fw-bold"><?= htmlspecialchars($sr_['request_number']) ?></code>
-            <small class="text-muted ms-2">by <?= htmlspecialchars($sr_['requester'] ?? '') ?></small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span>
-            <small class="text-muted"><?= date('d M', strtotime($sr_['created_at'])) ?></small>
-          </div>
-        </div>
-      <?php endforeach; ?>
-        <div class="text-center mt-2"><a href="../dashboards/storekeeper.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Go to Store</a></div>
-      <?php endif; ?>
-    </div>
-
-    <!-- RECENT ACTIVITIES -->
-    <div class="section-card">
-      <h2><i class="fas fa-history me-2"></i>Recent System Activities</h2>
-      <?php if(empty($recent_activities)): ?>
-      <p class="text-muted small">No recent activities recorded.</p>
-      <?php else: ?>
-      <ul class="list-unstyled mb-0">
-      <?php foreach($recent_activities as $act): ?>
-        <li class="border-bottom py-2 d-flex gap-3 align-items-start">
-          <span class="badge bg-primary mt-1"><?= htmlspecialchars($act['activity_type']) ?></span>
-          <div>
-            <div class="small"><?= htmlspecialchars($act['activity_description'] ?? '') ?></div>
-            <small class="text-muted"><?= $act['created_at'] ? date('d M Y H:i',strtotime($act['created_at'])) : '' ?></small>
-          </div>
-        </li>
-      <?php endforeach; ?>
-      </ul>
-      <?php endif; ?>
-    </div>
+    <?php if (function_exists('registerApprovalActionHandler')) registerApprovalActionHandler(); ?>
 
   </div><!-- /content-area -->
 </div><!-- /page-content -->
@@ -1089,7 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 
 <!-- Make allStudents available globally -->
 <script>
-window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 1000)); ?>;
+window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 1000)) ?: '[]' ?>;
 </script>
 
 <script>

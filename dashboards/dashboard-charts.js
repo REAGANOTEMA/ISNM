@@ -5,6 +5,11 @@
 (function() {
     'use strict';
 
+    // Global handler for unhandled promise rejections (e.g. from Chart.js async internals)
+    window.addEventListener('unhandledrejection', function(e) {
+        e.preventDefault();
+    });
+
     const AI_ENGINE = {
         version: '1.0.0',
         modelId: 'isnm-predictor-v1',
@@ -27,8 +32,9 @@
                 sumXY += i * data[i];
                 sumX2 += i * i;
             }
-            var slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-            var intercept = (sumY - slope * sumX) / n;
+            var denom = n * sumX2 - sumX * sumX;
+            var slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+            var intercept = denom !== 0 ? (sumY - slope * sumX) / n : (sumY / n);
 
             var predictions = [];
             for (var j = 1; j <= horizon; j++) {
@@ -46,7 +52,7 @@
             if (previous === 0) return null;
             var change = ((current - previous) / previous) * 100;
             var direction = change >= 0 ? 'increased' : 'decreased';
-            var emoji = change >= 5 ? '📈' : change <= -5 ? '📉' : '➡️';
+            var arrow = change >= 5 ? '\u2191' : change <= -5 ? '\u2193' : '\u2192';
             var severity = Math.abs(change) > 20 ? 'significantly' : Math.abs(change) > 10 ? 'moderately' : 'slightly';
             return {
                 label: label,
@@ -54,7 +60,7 @@
                 previous: previous,
                 change: Math.round(change * 10) / 10,
                 direction: direction,
-                text: label + ' ' + direction + ' ' + severity + ' by ' + Math.abs(Math.round(change)) + '% ' + emoji,
+                text: label + ' ' + direction + ' ' + severity + ' by ' + Math.abs(Math.round(change)) + '% ' + arrow,
                 severity: severity,
                 trend: change >= 0 ? 'up' : 'down'
             };
@@ -419,5 +425,39 @@
         container.innerHTML = html;
     };
 
-    console.log('[ISNM] Dashboard Analytics Engine initialized');
+    // ── Auto-init from data attribute ──
+    document.addEventListener('DOMContentLoaded', function () {
+        var bar = document.querySelector('.analytics-bar');
+        if (!bar) return;
+        var raw = bar.getAttribute('data-ax');
+        if (!raw) return;
+        var d;
+        try { d = JSON.parse(raw); } catch(e) { return; }
+        if (!d.months) return;
+
+        initDashboardCharts({
+            paymentData: {
+                labels: d.months, revenue: d.rev, expenses: d.exp,
+                methods: { labels: d.methods.l, values: d.methods.v },
+                monthly: { labels: d.months, collection: d.rev, targets: d.rev.map(function(v){return v*1.15;}) }
+            },
+            staffData: d.attendance
+        });
+
+        if (typeof ISNMAI === 'undefined') return;
+        var insights = [];
+        var pR = d.rev.length>=2?d.rev[d.rev.length-2]:0, cR = d.rev.length?d.rev[d.rev.length-1]:0;
+        var pE = d.exp.length>=2?d.exp[d.exp.length-2]:0, cE = d.exp.length?d.exp[d.exp.length-1]:0;
+        var rT = d.rev.reduce(function(a,b){return a+b;},0), eT = d.exp.reduce(function(a,b){return a+b;},0);
+        var i1 = ISNMAI.generateInsight('Revenue', cR, pR, 'UGX'); if(i1) insights.push(i1);
+        var i2 = ISNMAI.generateInsight('Expenses', cE, pE, 'UGX'); if(i2) insights.push(i2);
+        if(rT>0){var m=((rT-eT)/rT)*100;insights.push({label:'Margin',text:m.toFixed(1)+'% '+(m>20?'Healthy':m>10?'Moderate':'Low'),trend:m>15?'up':'down',change:Math.round(m*10)/10});}
+        var tS = (d.attendance.present||0)+(d.attendance.late||0)+(d.attendance.absent||0)+(d.attendance.onLeave||0);
+        var aR = tS>0?Math.round((d.attendance.present||0)/tS*100):0;
+        insights.push({label:'Attendance',text:aR+'% today ('+(d.attendance.present||0)+' present)',trend:aR>=80?'up':'down',change:aR});
+        if (typeof renderAIInsights === 'function') renderAIInsights('aiInsightsPanel', insights);
+        if (d.rev.length>0) { var pred = ISNMAI.predict(d.rev, 3); if (typeof renderAIPrediction === 'function') renderAIPrediction('aiPredictionPanel', pred, 'Revenue Forecast', 'UGX'); }
+        var score = ISNMAI.calculatePerformanceScore({ attendanceRate: aR, passRate: 82, collectionRate: d.collRate||50, staffMorale: 70 });
+        if (typeof renderPerformanceGauge === 'function') renderPerformanceGauge('performanceGauge', score, 'Health');
+    });
 })();

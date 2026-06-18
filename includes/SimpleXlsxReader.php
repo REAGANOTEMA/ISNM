@@ -237,6 +237,7 @@ PY;
             return null;
         }
 
+        set_time_limit(0);
         foreach ($candidates as $candidate) {
             $command = $candidate . ' ' . escapeshellarg($scriptFile) . ' ' . escapeshellarg($file) . ' ' . escapeshellarg($outputFile) . ' 2>&1';
             exec($command, $output, $code);

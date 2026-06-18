@@ -3,6 +3,38 @@
 -- SQL Migration File - Creates ALL missing tables across 4 databases
 -- ==============================================================================
 
+-- Safe helpers (MySQL-compatible, works without IF NOT EXISTS / IF NOT EXISTS)
+DELIMITER //
+DROP PROCEDURE IF EXISTS AddColIfMissing//
+CREATE PROCEDURE AddColIfMissing(
+    IN p_schema VARCHAR(255), IN p_table VARCHAR(255),
+    IN p_col VARCHAR(255), IN p_def TEXT)
+BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END//
+
+DROP PROCEDURE IF EXISTS AddIdxIfMissing//
+CREATE PROCEDURE AddIdxIfMissing(
+    IN p_schema VARCHAR(255), IN p_table VARCHAR(255),
+    IN p_idx VARCHAR(255), IN p_cols TEXT)
+BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END//
+
+DELIMITER ;
+
 -- ==============================================================================
 -- DATABASE 1: igangaschoolofl_students_db (students_db)
 -- ==============================================================================
@@ -834,17 +866,12 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.recycle_bin (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Add soft-delete columns to existing tables
-ALTER TABLE igangaschoolofl_staffs_db.receipt_templates 
-    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
-
-ALTER TABLE igangaschoolofl_staffs_db.document_templates 
-    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
-
-ALTER TABLE igangaschoolofl_staffs_db.staff_announcements 
-    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'receipt_templates', 'is_deleted', 'TINYINT(1) DEFAULT 0');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'receipt_templates', 'deleted_at', 'TIMESTAMP NULL DEFAULT NULL');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'document_templates', 'is_deleted', 'TINYINT(1) DEFAULT 0');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'document_templates', 'deleted_at', 'TIMESTAMP NULL DEFAULT NULL');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_announcements', 'is_deleted', 'TINYINT(1) DEFAULT 0');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_announcements', 'deleted_at', 'TIMESTAMP NULL DEFAULT NULL');
 
 -- ==============================================================================
 -- Application & Submission Routing
@@ -946,11 +973,10 @@ CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.user_preferences (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Add bio column to staff_profiles if not exists
-ALTER TABLE igangaschoolofl_staffs_db.staff_profiles 
-    ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL AFTER profile_picture,
-    ADD COLUMN IF NOT EXISTS department VARCHAR(255) DEFAULT NULL AFTER bio,
-    ADD COLUMN IF NOT EXISTS phone VARCHAR(50) DEFAULT NULL AFTER department,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER department;
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_profiles', 'bio', 'TEXT DEFAULT NULL AFTER profile_picture');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_profiles', 'department', 'VARCHAR(255) DEFAULT NULL AFTER bio');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_profiles', 'phone', 'VARCHAR(50) DEFAULT NULL AFTER department');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_profiles', 'updated_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER department');
 
 -- ==============================================================================
 -- Enhanced Document Management
@@ -996,25 +1022,493 @@ INSERT IGNORE INTO igangaschoolofl_staffs_db.document_print_configs (document_ty
 -- ==============================================================================
 
 -- Staff activity log with soft-delete tracking
-ALTER TABLE igangaschoolofl_staffs_db.staff_activity_log 
-    ADD COLUMN IF NOT EXISTS related_table VARCHAR(255) DEFAULT NULL AFTER activity_description,
-    ADD COLUMN IF NOT EXISTS related_id INT DEFAULT NULL AFTER related_table,
-    ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45) DEFAULT NULL AFTER related_id,
-    ADD INDEX IF NOT EXISTS idx_related (related_table, related_id);
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_activity_log', 'related_table', 'VARCHAR(255) DEFAULT NULL AFTER activity_description');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_activity_log', 'related_id', 'INT DEFAULT NULL AFTER related_table');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_activity_log', 'ip_address', 'VARCHAR(45) DEFAULT NULL AFTER related_id');
+CALL AddIdxIfMissing('igangaschoolofl_staffs_db', 'staff_activity_log', 'idx_related', 'related_table, related_id');
 
 -- ==============================================================================
 -- INDEXES for performance on existing tables
 -- ==============================================================================
 
-ALTER TABLE igangaschoolofl_staffs_db.staff_audit_logs 
-    ADD INDEX IF NOT EXISTS idx_staff_action (staff_id, action);
-
-ALTER TABLE igangaschoolofl_staffs_db.notifications 
-    ADD INDEX IF NOT EXISTS idx_recipient_read (recipient_id, is_read);
-
-ALTER TABLE igangaschoolofl_staffs_db.staff_attendance 
-    ADD INDEX IF NOT EXISTS idx_staff_date (staff_id, date);
+CALL AddIdxIfMissing('igangaschoolofl_staffs_db', 'staff_audit_logs', 'idx_staff_action', 'staff_id, action');
+CALL AddIdxIfMissing('igangaschoolofl_staffs_db', 'notifications', 'idx_user_read', 'user_id, is_read');
+CALL AddIdxIfMissing('igangaschoolofl_staffs_db', 'staff_attendance', 'idx_staff_date', 'staff_id, attendance_date');
 
 -- ==============================================================================
--- END OF MIGRATION
+-- V2: Director Hierarchy, Approvals, Audit Trail, Performance, Alerts
+-- ==============================================================================
+
+-- ==============================================================================
+-- 1. DIRECTOR HIERARCHY & DEPARTMENT OWNERSHIP
+-- ==============================================================================
+
+-- Hierarchy levels for the institutional chain of command
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_roles', 'hierarchy_level', 'INT DEFAULT 99 COMMENT ''Lower = higher authority (1=DG)''');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_roles', 'reporting_to_role_id', 'INT DEFAULT NULL COMMENT ''FK to staff_roles.id''');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_roles', 'can_approve_level', 'INT DEFAULT 0 COMMENT ''Max approval level this role can authorize''');
+CALL AddColIfMissing('igangaschoolofl_staffs_db', 'staff_roles', 'is_executive', 'TINYINT(1) DEFAULT 0');
+
+-- Update hierarchy levels for director roles
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 1, reporting_to_role_id = NULL,     can_approve_level = 10, is_executive = 1 WHERE id = 1;  -- Director General
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 2, reporting_to_role_id = 1,        can_approve_level = 8,  is_executive = 1 WHERE id = 3;  -- CEO / Chief Executive
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 3, reporting_to_role_id = 1,        can_approve_level = 6,  is_executive = 1 WHERE id = 4;  -- Director Academics
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 3, reporting_to_role_id = 1,        can_approve_level = 6,  is_executive = 1 WHERE id = 5;  -- Director Finance
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 3, reporting_to_role_id = 1,        can_approve_level = 5,  is_executive = 1 WHERE id = 6;  -- Director ICT
+UPDATE igangaschoolofl_staffs_db.staff_roles SET hierarchy_level = 3, reporting_to_role_id = 1,        can_approve_level = 5,  is_executive = 1 WHERE id = 27; -- Director Admissions
+
+-- Department ownership table: maps roles to departments they own/manage
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.director_departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    department_name VARCHAR(255) NOT NULL,
+    department_code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    is_primary TINYINT(1) DEFAULT 1 COMMENT 'Primary department for this role',
+    status ENUM('Active','Inactive') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES igangaschoolofl_staffs_db.staff_roles(id) ON DELETE CASCADE,
+    INDEX idx_role (role_id),
+    INDEX idx_dept (department_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed department ownership
+INSERT IGNORE INTO igangaschoolofl_staffs_db.director_departments (role_id, department_name, department_code, description, is_primary) VALUES
+(1,  'Institution-wide Oversight', 'EXEC', 'Overall institutional leadership and strategic direction', 1),
+(3,  'Executive Management', 'CEO', 'Chief Executive Officer operations', 1),
+(4,  'Academic Affairs', 'ACAD', 'Academic programs, curriculum, examinations, and quality assurance', 1),
+(5,  'Finance & Accounts', 'FIN', 'Financial management, budgeting, revenue, and expenditure control', 1),
+(6,  'ICT & Systems', 'ICT', 'Information technology infrastructure, systems, and cybersecurity', 1),
+(27, 'Admissions & Enrollment', 'ADM', 'Student admissions, application processing, and enrollment', 1);
+
+-- Delegation / acting director records
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.delegation_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    delegator_staff_id INT NOT NULL COMMENT 'FK to staff.id - the person delegating authority',
+    delegate_staff_id INT NOT NULL COMMENT 'FK to staff.id - the person receiving authority',
+    delegated_role_id INT NOT NULL COMMENT 'FK to staff_roles.id - which role authority is delegated for',
+    delegation_type ENUM('acting','temporary','specific_task') DEFAULT 'temporary',
+    start_date DATETIME NOT NULL,
+    end_date DATETIME,
+    scope_of_authority TEXT COMMENT 'What powers are delegated (JSON)',
+    reason TEXT,
+    status ENUM('Active','Expired','Revoked') DEFAULT 'Active',
+    approved_by INT COMMENT 'FK to staff.id - DG approval',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_delegator (delegator_staff_id),
+    INDEX idx_delegate (delegate_staff_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 2. APPROVAL WORKFLOW SYSTEM
+-- ==============================================================================
+
+-- Workflow definitions
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.approval_workflows (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workflow_name VARCHAR(255) NOT NULL,
+    workflow_code VARCHAR(50) NOT NULL UNIQUE COMMENT 'e.g. FINANCE_REQUEST, STUDENT_ISSUE, ADMISSION_DECISION',
+    description TEXT,
+    category ENUM('Finance','Academic','Admissions','Student Affairs','System','HR','Other') NOT NULL DEFAULT 'Other',
+    requires_final_approval TINYINT(1) DEFAULT 0 COMMENT 'Requires DG final sign-off',
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Workflow stages (the steps in each workflow)
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.approval_stages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workflow_id INT NOT NULL,
+    stage_order INT NOT NULL COMMENT 'Sequence number (1,2,3...)',
+    stage_name VARCHAR(255) NOT NULL COMMENT 'e.g. Request, Review, Recommendation, Approval',
+    stage_code ENUM('request','review','recommendation','approval','final_approval','rejection') NOT NULL,
+    assigned_role_id INT DEFAULT NULL COMMENT 'FK to staff_roles.id - which role handles this stage',
+    assigned_staff_id INT DEFAULT NULL COMMENT 'FK to staff.id - specific person (optional)',
+    can_escalate TINYINT(1) DEFAULT 0,
+    escalate_after_hours INT DEFAULT 48 COMMENT 'Auto-escalate after N hours',
+    escalation_role_id INT DEFAULT NULL COMMENT 'FK to staff_roles.id - escalate to',
+    required_notes TINYINT(1) DEFAULT 0 COMMENT 'Requires notes/justification',
+    allow_rejection TINYINT(1) DEFAULT 1,
+    reject_requires_reason TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (workflow_id) REFERENCES igangaschoolofl_staffs_db.approval_workflows(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_workflow_order (workflow_id, stage_order),
+    INDEX idx_role (assigned_role_id),
+    INDEX idx_stage_code (stage_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Approval requests (actual items flowing through workflow)
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.approval_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workflow_id INT NOT NULL,
+    request_number VARCHAR(50) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    priority ENUM('Low','Medium','High','Critical') DEFAULT 'Medium',
+    requester_id INT NOT NULL COMMENT 'FK to staff.id',
+    requester_name VARCHAR(255),
+    requester_role VARCHAR(255),
+    current_stage_id INT DEFAULT NULL COMMENT 'FK to approval_stages.id - current stage',
+    current_stage_order INT DEFAULT 0,
+    status ENUM('Draft','Active','Approved','Rejected','Cancelled','Escalated') DEFAULT 'Draft',
+    reference_type VARCHAR(100) COMMENT 'Type of record this relates to',
+    reference_id INT COMMENT 'ID of related record',
+    reference_url VARCHAR(500) COMMENT 'Link to related record',
+    final_approval_by INT DEFAULT NULL COMMENT 'FK to staff.id',
+    final_approval_at DATETIME DEFAULT NULL,
+    rejection_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (workflow_id) REFERENCES igangaschoolofl_staffs_db.approval_workflows(id),
+    INDEX idx_status (status),
+    INDEX idx_requester (requester_id),
+    INDEX idx_priority (priority),
+    INDEX idx_ref (reference_type, reference_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Individual actions taken on each request
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.approval_actions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    action_by INT NOT NULL COMMENT 'FK to staff.id',
+    action_type ENUM('submit','review','recommend','approve','reject','escalate','return','cancel') NOT NULL,
+    comments TEXT,
+    notes TEXT COMMENT 'Internal notes',
+    decision ENUM('Pending','Approved','Rejected','Returned','Escalated') DEFAULT 'Pending',
+    previous_stage_order INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (request_id) REFERENCES igangaschoolofl_staffs_db.approval_requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (stage_id) REFERENCES igangaschoolofl_staffs_db.approval_stages(id),
+    INDEX idx_request (request_id),
+    INDEX idx_action_by (action_by),
+    INDEX idx_decision (decision)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed workflows
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_workflows (workflow_name, workflow_code, description, category, requires_final_approval) VALUES
+('Finance Request', 'FINANCE_REQUEST', 'Budget approvals, expenditure requests, procurement', 'Finance', 1),
+('Student Issue Resolution', 'STUDENT_ISSUE', 'Student complaints, disciplinary appeals, special requests', 'Student Affairs', 0),
+('Admission Decision', 'ADMISSION_DECISION', 'Admission approvals, special entry, transfers', 'Admissions', 1),
+('Academic Decision', 'ACADEMIC_DECISION', 'Curriculum changes, exam adjustments, academic appeals', 'Academic', 0),
+('System Change', 'SYSTEM_CHANGE', 'System configuration, data access, security changes', 'System', 1),
+('HR Request', 'HR_REQUEST', 'Staff hiring, leave approvals, performance reviews', 'HR', 0);
+
+-- Seed stages for Finance Request workflow (id=1)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(1, 1, 'Request Submission', 'request', 5, 1),
+(1, 2, 'Finance Review', 'review', 5, 1),
+(1, 3, 'Director Recommendation', 'recommendation', 5, 1),
+(1, 4, 'Executive Approval', 'approval', 1, 1),
+(1, 5, 'Final Sign-off', 'final_approval', 1, 0);
+
+-- Seed stages for Student Issue workflow (id=2)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(2, 1, 'Issue Reported', 'request', 27, 1),
+(2, 2, 'Department Review', 'review', 4, 1),
+(2, 3, 'Director Recommendation', 'recommendation', 4, 1),
+(2, 4, 'Final Resolution', 'approval', 1, 0);
+
+-- Seed stages for Admission Decision workflow (id=3)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(3, 1, 'Application Review', 'request', 27, 1),
+(3, 2, 'Admissions Recommendation', 'recommendation', 27, 1),
+(3, 3, 'Director Approval', 'approval', 4, 1),
+(3, 4, 'Final Authorization', 'final_approval', 1, 0);
+
+-- Seed stages for Academic Decision workflow (id=4)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(4, 1, 'Request Submission', 'request', 4, 1),
+(4, 2, 'Academic Review', 'review', 4, 1),
+(4, 3, 'Director Approval', 'approval', 4, 1);
+
+-- Seed stages for System Change workflow (id=5)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(5, 1, 'Change Request', 'request', 6, 1),
+(5, 2, 'ICT Review', 'review', 6, 1),
+(5, 3, 'Director Approval', 'approval', 6, 1),
+(5, 4, 'Executive Authorization', 'final_approval', 1, 0);
+
+-- Seed stages for HR Request workflow (id=6)
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_order, stage_name, stage_code, assigned_role_id, required_notes) VALUES
+(6, 1, 'HR Request', 'request', 7, 1),
+(6, 2, 'HR Review', 'review', 7, 1),
+(6, 3, 'Director Approval', 'approval', 1, 1);
+
+-- ==============================================================================
+-- 3. COMPREHENSIVE AUDIT TRAIL SYSTEM
+-- ==============================================================================
+
+-- Enhanced audit trail with full detail tracking
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.audit_trail (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL COMMENT 'FK to staff.id',
+    staff_name VARCHAR(255),
+    role_name VARCHAR(255),
+    action VARCHAR(100) NOT NULL COMMENT 'e.g. CREATE, UPDATE, DELETE, APPROVE, REJECT, LOGIN, LOGOUT',
+    category ENUM('User','Student','Finance','Academic','Admissions','System','Document','Settings','Approval','Alert','Other') DEFAULT 'Other',
+    description TEXT,
+    table_affected VARCHAR(255),
+    record_id INT,
+    record_identifier VARCHAR(255) COMMENT 'Human-readable record identifier',
+    previous_values JSON COMMENT 'Previous state of changed fields',
+    new_values JSON COMMENT 'New state of changed fields',
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    session_id VARCHAR(100),
+    request_method VARCHAR(10),
+    request_uri VARCHAR(500),
+    is_deleted TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_staff (staff_id),
+    INDEX idx_action (action),
+    INDEX idx_category (category),
+    INDEX idx_table (table_affected),
+    INDEX idx_record (record_id),
+    INDEX idx_created (created_at),
+    INDEX idx_staff_date (staff_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 4. DIRECTOR PERFORMANCE MONITORING
+-- ==============================================================================
+
+-- Department targets and KPIs
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.department_targets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    department_code VARCHAR(50) NOT NULL,
+    fiscal_year VARCHAR(20) NOT NULL,
+    target_name VARCHAR(255) NOT NULL,
+    target_category ENUM('academic','financial','admissions','staff','operational','compliance','other') NOT NULL DEFAULT 'other',
+    target_value DECIMAL(14,2) NOT NULL DEFAULT 0,
+    target_unit VARCHAR(50) DEFAULT 'count',
+    achieved_value DECIMAL(14,2) DEFAULT 0,
+    target_period ENUM('monthly','quarterly','semester','annual') DEFAULT 'semester',
+    period_start DATE,
+    period_end DATE,
+    weight INT DEFAULT 1 COMMENT 'Importance weight for scoring',
+    status ENUM('Not Started','In Progress','Achieved','Exceeded','Missed') DEFAULT 'Not Started',
+    notes TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_dept (department_code),
+    INDEX idx_year (fiscal_year),
+    INDEX idx_category (target_category),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Director performance reviews
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.director_performance_reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL COMMENT 'FK to staff.id',
+    role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    review_period VARCHAR(50) NOT NULL COMMENT 'e.g. Q1 2026, Semester 1 2026',
+    review_start DATE,
+    review_end DATE,
+    overall_score DECIMAL(5,2) DEFAULT 0 COMMENT '0-100 score',
+    tasks_completed INT DEFAULT 0,
+    tasks_pending INT DEFAULT 0,
+    tasks_delayed INT DEFAULT 0,
+    reports_submitted INT DEFAULT 0,
+    issues_resolved INT DEFAULT 0,
+    performance_rating ENUM('Excellent','Good','Satisfactory','Needs Improvement','Poor') DEFAULT 'Satisfactory',
+    reviewer_id INT DEFAULT NULL COMMENT 'FK to staff.id (usually DG)',
+    review_notes TEXT,
+    status ENUM('Active','Under Review','Completed','Appealed') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_staff (staff_id),
+    INDEX idx_period (review_period),
+    INDEX idx_rating (performance_rating)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Director report submissions tracker
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.director_reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL COMMENT 'FK to staff.id',
+    report_type ENUM('weekly','monthly','quarterly','semester','annual','incident','special') NOT NULL DEFAULT 'monthly',
+    report_title VARCHAR(255) NOT NULL,
+    report_period VARCHAR(50),
+    summary TEXT,
+    report_data JSON COMMENT 'Structured report data',
+    file_path VARCHAR(500),
+    is_submitted TINYINT(1) DEFAULT 0,
+    submitted_at DATETIME DEFAULT NULL,
+    reviewed_by INT DEFAULT NULL,
+    review_status ENUM('Pending','Reviewed','Needs Revision','Accepted') DEFAULT 'Pending',
+    review_comments TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_staff (staff_id),
+    INDEX idx_type (report_type),
+    INDEX idx_submitted (is_submitted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 5. INTELLIGENT MANAGEMENT ALERTS
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.institutional_alerts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alert_title VARCHAR(255) NOT NULL,
+    alert_message TEXT NOT NULL,
+    alert_type ENUM('warning','danger','info','success','critical') NOT NULL DEFAULT 'info',
+    priority ENUM('Low','Medium','High','Critical') NOT NULL DEFAULT 'Medium',
+    category ENUM('attendance','academic','finance','admissions','system','staff','compliance','approval','other') NOT NULL DEFAULT 'other',
+    department_code VARCHAR(50) DEFAULT NULL COMMENT 'NULL = institution-wide',
+    source VARCHAR(100) COMMENT 'Auto-generated or manual source identifier',
+    source_url VARCHAR(500) COMMENT 'Link to relevant page',
+    is_auto_generated TINYINT(1) DEFAULT 0,
+    is_read TINYINT(1) DEFAULT 0,
+    is_resolved TINYINT(1) DEFAULT 0,
+    resolved_at DATETIME DEFAULT NULL,
+    resolved_by INT DEFAULT NULL,
+    expires_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_type (alert_type),
+    INDEX idx_priority (priority),
+    INDEX idx_category (category),
+    INDEX idx_dept (department_code),
+    INDEX idx_read (is_read),
+    INDEX idx_resolved (is_resolved),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Alert recipients: who should see which alerts
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.alert_recipients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alert_id INT NOT NULL,
+    role_id INT DEFAULT NULL COMMENT 'FK to staff_roles.id - NULL for all',
+    staff_id INT DEFAULT NULL COMMENT 'FK to staff.id - specific person',
+    is_acknowledged TINYINT(1) DEFAULT 0,
+    acknowledged_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (alert_id) REFERENCES igangaschoolofl_staffs_db.institutional_alerts(id) ON DELETE CASCADE,
+    INDEX idx_alert (alert_id),
+    INDEX idx_role (role_id),
+    INDEX idx_staff (staff_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 6. COMPLIANCE TRACKING
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.compliance_requirements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    requirement_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category ENUM('accreditation','regulatory','safety','academic','financial','legal','other') DEFAULT 'regulatory',
+    frequency ENUM('once','annual','semester','quarterly','monthly','ongoing') DEFAULT 'annual',
+    due_date DATE,
+    assigned_role_id INT COMMENT 'FK to staff_roles.id',
+    assigned_staff_id INT COMMENT 'FK to staff.id',
+    status ENUM('Not Started','In Progress','Compliant','Non-Compliant','Overdue') DEFAULT 'Not Started',
+    evidence_path VARCHAR(500),
+    reviewed_by INT,
+    reviewed_at DATETIME,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_status (status),
+    INDEX idx_due (due_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 7. INSTITUTIONAL RISK REGISTER
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.institutional_risks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    risk_title VARCHAR(255) NOT NULL,
+    risk_description TEXT,
+    risk_category ENUM('financial','academic','operational','reputational','compliance','strategic','security') NOT NULL DEFAULT 'operational',
+    likelihood ENUM('Rare','Unlikely','Possible','Likely','Almost Certain') DEFAULT 'Possible',
+    impact ENUM('Insignificant','Minor','Moderate','Major','Catastrophic') DEFAULT 'Moderate',
+    risk_score INT GENERATED ALWAYS AS (
+        CASE
+            WHEN likelihood = 'Rare' THEN 1 WHEN likelihood = 'Unlikely' THEN 2
+            WHEN likelihood = 'Possible' THEN 3 WHEN likelihood = 'Likely' THEN 4
+            WHEN likelihood = 'Almost Certain' THEN 5 ELSE 3
+        END *
+        CASE
+            WHEN impact = 'Insignificant' THEN 1 WHEN impact = 'Minor' THEN 2
+            WHEN impact = 'Moderate' THEN 3 WHEN impact = 'Major' THEN 4
+            WHEN impact = 'Catastrophic' THEN 5 ELSE 3
+        END
+    ) STORED,
+    mitigation_strategy TEXT,
+    contingency_plan TEXT,
+    owner_staff_id INT COMMENT 'FK to staff.id',
+    status ENUM('Identified','Assessed','Mitigated','Monitored','Closed') DEFAULT 'Identified',
+    review_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (risk_category),
+    INDEX idx_score (risk_score),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 8. EXECUTIVE DASHBOARD CONFIG
+-- ==============================================================================
+
+-- Saved dashboard layouts per user
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.dashboard_configs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    config_key VARCHAR(100) NOT NULL,
+    config_value JSON NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_staff_key (staff_id, config_key),
+    INDEX idx_staff (staff_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==============================================================================
+-- 9. DATA ACCESS / OWNERSHIP RULES
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.data_ownership_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    department_code VARCHAR(50) NOT NULL,
+    access_level ENUM('full','read','write','none') NOT NULL DEFAULT 'read',
+    data_category ENUM('student','academic','financial','admission','staff','system','all') NOT NULL DEFAULT 'all',
+    can_export TINYINT(1) DEFAULT 0,
+    can_delete TINYINT(1) DEFAULT 0,
+    can_approve TINYINT(1) DEFAULT 0,
+    is_owner TINYINT(1) DEFAULT 0 COMMENT 'This role owns this data category',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_role (role_id),
+    INDEX idx_dept (department_code),
+    UNIQUE KEY uk_role_dept_category (role_id, department_code, data_category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed data ownership rules
+INSERT IGNORE INTO igangaschoolofl_staffs_db.data_ownership_rules (role_id, department_code, access_level, data_category, can_export, can_delete, can_approve, is_owner) VALUES
+(1,  'EXEC', 'full', 'all', 1, 1, 1, 1),
+(1,  'ACAD', 'full', 'all', 1, 1, 1, 0),
+(1,  'FIN',  'full', 'all', 1, 1, 1, 0),
+(1,  'ADM',  'full', 'all', 1, 1, 1, 0),
+(1,  'ICT',  'full', 'all', 1, 1, 1, 0),
+(3,  'CEO',  'full', 'all', 1, 0, 1, 1),
+(4,  'ACAD', 'full', 'academic', 1, 0, 1, 1),
+(4,  'ACAD', 'read', 'student', 1, 0, 0, 0),
+(5,  'FIN',  'full', 'financial', 1, 0, 1, 1),
+(5,  'FIN',  'read', 'student', 1, 0, 0, 0),
+(6,  'ICT',  'full', 'system', 1, 0, 0, 1),
+(6,  'ICT',  'read', 'all', 1, 0, 0, 0),
+(27, 'ADM',  'full', 'admission', 1, 0, 1, 1),
+(27, 'ADM',  'read', 'student', 1, 0, 0, 0);
+
+-- ==============================================================================
+-- END OF V2 MIGRATION
 -- ==============================================================================

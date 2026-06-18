@@ -380,4 +380,3 @@ if (!function_exists('setSystemSetting')) {
         }
     }
 }
-?>

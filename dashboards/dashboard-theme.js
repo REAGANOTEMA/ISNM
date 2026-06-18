@@ -241,15 +241,14 @@
             el.addEventListener('click', function() {
                 var themeId = this.dataset.theme;
                 applyTheme(themeId);
-                // Update modal options active state
                 modal.querySelectorAll('.theme-option').forEach(function(o) {
                     o.classList.toggle('active', o.dataset.theme === themeId);
                 });
-                // Update sidebar label
                 document.querySelectorAll('.theme-current-name').forEach(function(el) {
                     el.textContent = THEMES[themeId].name;
                 });
                 notifyThemeChange(themeId);
+                bsModal.hide();
             });
         });
 

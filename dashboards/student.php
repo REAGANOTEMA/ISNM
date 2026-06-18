@@ -1,13 +1,20 @@
 <?php
-require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../auth-service.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
-$ctx = bootstrapStaffDashboard([]);
-$staffDb = $ctx['staff'];
-$studentsDb = $ctx['students'];
-$websiteDb = $ctx['website'];
-$auth_service = $ctx['auth'];
-$user = $ctx['user'];
+
+session_start();
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'student') {
+    header('Location: ../login.php?error=student_access_required');
+    exit;
+}
+
+$staffDb = getStaffConnection();
+$studentsDb = getStudentsConnection();
+$websiteDb = getWebsiteConnection();
+$auth_service = new AuthenticationService();
+$user = $auth_service->getCurrentUser();
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'Student';
 $user_role = $user['role'] ?? '';
@@ -1144,10 +1151,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             modal.show();
         }
 
-        document.getElementById('paymentMethod').addEventListener('change', function () {
-            const bankPanel = document.getElementById('bankFields');
-            bankPanel.style.display = this.value === 'bank_deposit' ? 'block' : 'none';
-        });
+        var paymentMethodEl = document.getElementById('paymentMethod');
+        if (paymentMethodEl) {
+            paymentMethodEl.addEventListener('change', function () {
+                var bankPanel = document.getElementById('bankFields');
+                if (bankPanel) bankPanel.style.display = this.value === 'bank_deposit' ? 'block' : 'none';
+            });
+        }
 
         function submitStudentPayment() {
             const studentId = document.getElementById('studentId').value;
@@ -1223,9 +1233,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         
         // Payment confirmation handler
-        document.getElementById('confirmPayment').addEventListener('click', function() {
-            submitStudentPayment();
-        });
+        var confirmPaymentEl = document.getElementById('confirmPayment');
+        if (confirmPaymentEl) {
+            confirmPaymentEl.addEventListener('click', function() {
+                submitStudentPayment();
+            });
+        }
         
         // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {

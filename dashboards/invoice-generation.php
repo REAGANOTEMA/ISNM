@@ -1,19 +1,19 @@
 <?php
-require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
-$staffDb = $ctx['staff'];
-$studentsDb = $ctx['students'];
-$websiteDb = $ctx['website'];
-$user = $ctx['user'];
-$userRole = $user['role'] ?? '';
-$userName = $user['full_name'] ?? 'User';
-
-$invoices = [];
-if ($studentsDb) {
-    $r = $studentsDb->query("SELECT * FROM student_invoices ORDER BY created_at DESC LIMIT 20");
-    if ($r && !($r === false)) {
-        while ($row = $r->fetch_assoc()) $invoices[] = $row;
-    }
+require_once __DIR__ . '/../includes/config_enhanced.php';
+$conn = getStaffConnection();
+$pageTitle = 'Invoice Generation';
+$total = 0; $paid = 0; $pending = 0; $overdue = 0; $records = [];
+if ($conn) {
+    $r = $conn->query("SELECT COUNT(*) c FROM invoices");
+    if ($r) $total = (int)$r->fetch_assoc()['c'];
+    $r = $conn->query("SELECT COUNT(*) c FROM invoices WHERE status='paid'");
+    if ($r) $paid = (int)$r->fetch_assoc()['c'];
+    $r = $conn->query("SELECT COUNT(*) c FROM invoices WHERE status='pending'");
+    if ($r) $pending = (int)$r->fetch_assoc()['c'];
+    $r = $conn->query("SELECT COUNT(*) c FROM invoices WHERE status='overdue'");
+    if ($r) $overdue = (int)$r->fetch_assoc()['c'];
+    $q = $conn->query("SELECT i.invoice_number, CONCAT(s.first_name,' ',s.surname) student_name, i.amount, i.due_date, i.status FROM invoices i LEFT JOIN students s ON i.student_id=s.id ORDER BY i.created_at DESC LIMIT 50");
+    if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
 }
 ?>
 <!DOCTYPE html>
@@ -23,55 +23,41 @@ if ($studentsDb) {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="main-content" style="margin-left:270px;padding:20px;background:#f0f2f5;min-height:100vh;">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center page-header">
-            <h4 class="fw-bold mb-0"><i class="fas fa-file-invoice me-2"></i>Invoice Generation</h4>
-            <span class="text-muted small"><?= date('l, d M Y') ?></span>
-        </div>
-
-        <div class="card-section text-center py-5 mb-4">
-            <div class="coming-soon-icon mb-3"><i class="fas fa-file-invoice-dollar"></i></div>
-            <h5>Invoice Generation</h5>
-            <p class="text-muted">This module is under development. Automated invoice creation, bulk generation, PDF export, and email delivery will be available soon.</p>
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Coming Soon</span>
-        </div>
-
-        <?php if (!empty($invoices)): ?>
-        <div class="card-section">
-            <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Recent Invoices</h5>
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <?php $cols = array_keys($invoices[0]); foreach ($cols as $col): ?>
-                            <th><?= htmlspecialchars(ucwords(str_replace('_', ' ', $col))) ?></th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($invoices as $inv): ?>
-                        <tr>
-                            <?php foreach ($inv as $val): ?>
-                            <td><?= htmlspecialchars($val ?? '-') ?></td>
-                            <?php endforeach; ?>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <p class="text-muted small mb-0">Showing <?= count($invoices) ?> recent invoice(s).</p>
-        </div>
-        <?php else: ?>
-        <div class="card-section">
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-database fa-2x mb-2"></i>
-                <p class="mb-0">No invoices found in the database yet.</p>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
+<main class="main" style="margin-left:270px;padding:32px;">
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h4 class="fw-bold mb-0"><i class="fas fa-file-invoice me-2"></i>Invoice Generation</h4>
+<span class="text-muted small"><?= date('l, d M Y') ?></span>
 </div>
+<div class="row g-3 mb-4">
+<?php $c=[['Total Invoices',$total,'primary','file-invoice'],['Paid',$paid,'success','check-double'],['Pending',$pending,'warning','clock'],['Overdue',$overdue,'danger','exclamation-triangle']]; foreach($c as $s): ?>
+<div class="col-md-3">
+<div class="stat-card <?= $s[2] ?>">
+<div class="stat-icon"><i class="fas fa-<?= $s[3] ?>"></i></div>
+<div class="stat-content"><h3><?= number_format($s[1]) ?></h3><p><?= $s[0] ?></p></div>
+</div>
+</div>
+<?php endforeach; ?>
+</div>
+<div class="content-section">
+<h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Invoices</h5>
+<div class="table-responsive">
+<table class="table table-striped table-hover align-middle">
+<thead class="table-light"><tr><th>Invoice #</th><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead>
+<tbody>
+<?php if(empty($records)): ?>
+<tr><td colspan="5" class="text-center text-muted py-3">No invoices found.</td></tr>
+<?php else: foreach($records as $r):
+$st=$r['status']??'';
+$bc=$st==='paid'?'bg-success':($st==='pending'?'bg-warning text-dark':($st==='overdue'?'bg-danger':($st==='partial'?'bg-info':($st==='cancelled'?'bg-secondary':'bg-dark'))));
+?>
+<tr><td><code><?= htmlspecialchars($r['invoice_number']??'-') ?></code></td><td><?= htmlspecialchars($r['student_name']??'-') ?></td><td><?= number_format((float)($r['amount']??0),2) ?></td><td><?= htmlspecialchars($r['due_date']??'-') ?></td><td><span class="badge <?= $bc ?>"><?= htmlspecialchars($st) ?></span></td></tr>
+<?php endforeach; endif; ?>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
-</html>
