@@ -31,42 +31,45 @@ $records = [];
 // If student_id provided, try to fetch from DB
 if ($student_id) {
     try {
-        $staffDb = null;
-        if (function_exists('getDatabaseConnection')) $staffDb = getDatabaseConnection('staffs');
-        elseif (function_exists('getStaffConnection')) $staffDb = getStaffConnection();
-        $studentsDb = null;
-        if (function_exists('getDatabaseConnection')) $studentsDb = getDatabaseConnection('students');
+        require_once __DIR__ . '/config/database.php';
+        $studentsDb = function_exists('getStudentsConnection') ? getStudentsConnection() : null;
         
-        if ($staffDb) {
-            $q = $staffDb->prepare("SELECT first_name, surname, other_names, student_number, program FROM students WHERE id = ? OR student_number = ? LIMIT 1");
+        if (!$studentsDb) {
+            $studentsDb = @new mysqli(STUDENTS_DB_HOST, STUDENTS_DB_USER, STUDENTS_DB_PASS, STUDENTS_DB_NAME, STUDENTS_DB_PORT);
+        }
+        
+        if ($studentsDb && !$studentsDb->connect_error) {
+            $q = $studentsDb->prepare("SELECT first_name, surname, other_names, student_number, program FROM students WHERE id = ? OR student_number = ? LIMIT 1");
             if ($q) {
                 $q->bind_param('is', $student_id, $student_id);
                 $q->execute();
                 $s = $q->get_result()->fetch_assoc();
                 $q->close();
                 if ($s) {
-                    $student['full_name'] = $s['first_name'] . ' ' . $s['surname'] . ($s['other_names'] ? ' ' . $s['other_names'] : '');
+                    $student['full_name'] = trim($s['first_name'] . ' ' . ($s['surname'] ?? '') . ($s['other_names'] ? ' ' . $s['other_names'] : ''));
                     $student['registration_number'] = $s['student_number'] ?? $student['registration_number'];
                     $student['student_number'] = $student['registration_number'];
                     $student['program'] = $s['program'] ?? $student['program'];
                     $student['course'] = $student['program'];
                     
                     // Fetch academic records
-                    if ($studentsDb) {
-                        $rq = $studentsDb->prepare("SELECT course_code, course_name, credits, semester, academic_year, marks, grade FROM academic_records WHERE student_id = ? ORDER BY academic_year, semester");
-                        if ($rq) {
-                            $sid = $s['student_number'] ?? $student_id;
-                            $rq->bind_param('s', $sid);
-                            $rq->execute();
-                            $result = $rq->get_result();
-                            while ($row = $result->fetch_assoc()) $records[] = $row;
-                            $rq->close();
-                        }
+                    $rq = $studentsDb->prepare("SELECT course_code, course_name, credits, semester, academic_year, marks, grade FROM academic_records WHERE student_id = ? ORDER BY academic_year, semester");
+                    if ($rq) {
+                        $sid = $s['student_number'] ?? $student_id;
+                        $rq->bind_param('s', $sid);
+                        $rq->execute();
+                        $result = $rq->get_result();
+                        while ($row = $result->fetch_assoc()) $records[] = $row;
+                        $rq->close();
                     }
                 }
             }
+            if (isset($q) && $q) $q->close();
+            $studentsDb->close();
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) {
+        error_log('Transcript DB lookup: ' . $e->getMessage());
+    }
 }
 
 // Provide sample records if none found

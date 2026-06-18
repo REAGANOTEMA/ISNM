@@ -293,15 +293,14 @@ function getSemesters() {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-    <div class="transcript-container" style="margin-left:270px">
-        <div class="transcript-header">
-            <h2><i class="fas fa-graduation-cap me-2"></i>Transcript Generation</h2>
-            <p>Generate official academic transcripts for students</p>
-            <div class="text-center mb-3">
-                <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                <a href="../store_request.php" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
+<?php require_once __DIR__ . '/../includes/dashboard_back_button.php'; renderDashboardBackButton('Academic Registrar', '../dashboards/academic-registrar.php'); ?>
+    <div class="transcript-container" style="margin-left:270px;padding:20px">
+        <div class="page-title-card d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold mb-1"><i class="fas fa-graduation-cap me-2"></i>Transcript Generation</h3>
+                <p class="mb-0 text-muted small">Generate official academic transcripts for students</p>
             </div>
+        </div>
         </div>
         
         <?php if (isset($_SESSION['error'])): ?>

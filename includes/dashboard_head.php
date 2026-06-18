@@ -64,3 +64,7 @@ if (!empty($_SESSION['user_id'])) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>
+<!-- Chart.js 4.x for dashboard analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Dashboard Analytics Engine (Chart.js + AI) -->
+<script src="<?= $rootPath ?>/dashboards/dashboard-charts.js?v=<?= $v ?>" defer></script>

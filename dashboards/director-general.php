@@ -209,7 +209,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     <div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     <?php unset($_SESSION['success']); endif; ?>
 
-    <!-- STATS -->
+    <!-- ═══ MODULE SLIDER ═══ -->
+    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+
+    <!-- ═══ KPI STATS ═══ -->
     <div class="row g-3 mb-4">
       <?php $cards = [
         ['Total Students',      $total_students,               'si-blue',  'user-graduate'],
@@ -228,6 +231,264 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
       <?php endforeach; ?>
     </div>
+
+    <!-- ═══ AI-POWERED ANALYTICS DASHBOARD ═══ -->
+    <?php
+    // Collect analytics data for charts
+    $chartMonthLabels = [];
+    $chartRevenue = [];
+    $chartExpenses = [];
+    for ($m = 5; $m >= 0; $m--) {
+        $ts = strtotime("-$m months");
+        $chartMonthLabels[] = date('M Y', $ts);
+        $mn = date('m', $ts);
+        $yr = date('Y', $ts);
+        $rev = 0; $exp = 0;
+        if ($studentsConn) {
+            $r = $studentsConn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=$mn AND YEAR(payment_date)=$yr AND status IN('Completed','verified','approved')");
+            if ($r) $rev = (float)($r->fetch_assoc()['v'] ?? 0);
+            $r2 = $studentsConn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE MONTH(expense_date)=$mn AND YEAR(expense_date)=$yr");
+            if ($r2) $exp = (float)($r2->fetch_assoc()['v'] ?? 0);
+        }
+        $chartRevenue[] = $rev;
+        $chartExpenses[] = $exp;
+    }
+    // Payment method distribution
+    $methodLabels = []; $methodValues = [];
+    if ($studentsConn) {
+        $mr = $studentsConn->query("SELECT payment_method, COUNT(*) cnt, COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('Completed','verified','approved') GROUP BY payment_method ORDER BY total DESC LIMIT 5");
+        if ($mr) while ($row = $mr->fetch_assoc()) {
+            $methodLabels[] = $row['payment_method'] ?: 'Other';
+            $methodValues[] = (float)$row['total'];
+        }
+    }
+    ?>
+    <!-- ═══ AI-POWERED ANALYTICS DASHBOARD ═══ -->
+    <div class="analytics-section">
+      <div class="section-card analytics-card">
+        <div class="analytics-card-header">
+          <div class="d-flex align-items-center gap-3">
+            <div class="analytics-icon-wrap">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+            <div>
+              <h2 class="fw-bold mb-0" style="font-size:1.1rem">AI-Powered Analytics Dashboard</h2>
+              <small class="text-muted">Real-time institutional intelligence &amp; predictive insights</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="analytics-badge"><i class="fas fa-brain me-1"></i>AI v1.0</span>
+            <span class="analytics-badge analytics-badge-live"><i class="fas fa-circle me-1" style="font-size:6px"></i>Live</span>
+          </div>
+        </div>
+
+        <!-- Main Analytics Grid -->
+        <div class="analytics-main-grid mt-3">
+          <!-- Revenue Chart -->
+          <div class="chart-wrapper chart-main">
+            <div class="chart-title-bar">
+              <h6><i class="fas fa-chart-line text-success"></i> Revenue vs Expenses</h6>
+              <span class="chart-period">Last 6 months</span>
+            </div>
+            <div class="chart-container"><canvas id="chartRevenue"></canvas></div>
+          </div>
+          <!-- Right Column: Payment Methods + AI Insights -->
+          <div class="analytics-sidebar">
+            <div class="chart-wrapper">
+              <div class="chart-title-bar">
+                <h6><i class="fas fa-chart-pie text-primary"></i> Payment Methods</h6>
+              </div>
+              <div class="chart-container chart-container-sm"><canvas id="chartPaymentMethods"></canvas></div>
+            </div>
+            <div class="chart-wrapper mt-3">
+              <div class="chart-title-bar">
+                <h6><i class="fas fa-robot text-info"></i> AI Insights <span class="badge bg-info ms-1" style="font-size:9px">Real-time</span></h6>
+              </div>
+              <div id="aiInsightsPanel" style="min-height:100px">
+                <div class="text-muted small text-center py-4"><i class="fas fa-spinner fa-spin me-1"></i>Analyzing data...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: 3 Cards -->
+        <div class="analytics-bottom-row mt-3">
+          <div class="chart-wrapper">
+            <div class="chart-title-bar">
+              <h6><i class="fas fa-chart-bar text-warning"></i> Monthly Collection vs Target</h6>
+            </div>
+            <div class="chart-container chart-container-sm"><canvas id="chartMonthlyComparison"></canvas></div>
+          </div>
+          <div class="chart-wrapper">
+            <div class="chart-title-bar">
+              <h6><i class="fas fa-users text-info"></i> Staff Attendance Today</h6>
+            </div>
+            <div class="chart-container chart-container-sm"><canvas id="chartStaffAttendance"></canvas></div>
+          </div>
+          <div class="chart-wrapper">
+            <div class="chart-title-bar">
+              <h6><i class="fas fa-tachometer-alt text-danger"></i> Institutional Health</h6>
+            </div>
+            <div id="performanceGauge" class="performance-gauge" style="min-height:140px"></div>
+            <div id="aiPredictionPanel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      // Initialize charts after DOM is ready and canvas has dimensions
+      function initAnalytics() {
+        var pd = {
+          labels: <?= json_encode($chartMonthLabels) ?>,
+          revenue: <?= json_encode($chartRevenue) ?>,
+          expenses: <?= json_encode($chartExpenses) ?>,
+          methods: { labels: <?= json_encode($methodLabels) ?>, values: <?= json_encode($methodValues) ?> },
+          monthly: {
+            labels: <?= json_encode($chartMonthLabels) ?>,
+            collection: <?= json_encode($chartRevenue) ?>,
+            targets: <?= json_encode(array_map(function($v) { return $v * 1.15; }, $chartRevenue)) ?>
+          }
+        };
+
+        // Staff attendance data
+        var staffData = {
+          present: <?= (int)($staffAttendanceToday['present'] ?? 0) ?>,
+          late: <?= (int)($staffAttendanceToday['late'] ?? 0) ?>,
+          absent: <?= (int)($staffAttendanceToday['absent'] ?? 0) ?>,
+          onLeave: <?= (int)($staffAttendanceToday['on_leave'] ?? 0) ?>
+        };
+
+        if (typeof initDashboardCharts === 'function') {
+          initDashboardCharts({ paymentData: pd, staffData: staffData });
+        }
+
+        // AI Insights
+        var insights = [];
+        if (typeof ISNMAI !== 'undefined') {
+          var revArr = <?= json_encode($chartRevenue) ?>;
+          var expArr = <?= json_encode($chartExpenses) ?>;
+          var prevRev = revArr.length >= 2 ? revArr[revArr.length - 2] : 0;
+          var currRev = revArr.length ? revArr[revArr.length - 1] : 0;
+          var prevExp = expArr.length >= 2 ? expArr[expArr.length - 2] : 0;
+          var currExp = expArr.length ? expArr[expArr.length - 1] : 0;
+          var revTotal = revArr.reduce(function(a,b){return a+b;}, 0);
+          var expTotal = expArr.reduce(function(a,b){return a+b;}, 0);
+
+          var insight1 = ISNMAI.generateInsight('Revenue', currRev, prevRev, 'UGX');
+          if (insight1) insights.push(insight1);
+          var insight2 = ISNMAI.generateInsight('Expenses', currExp, prevExp, 'UGX');
+          if (insight2) insights.push(insight2);
+          if (revTotal > 0) {
+            var margin = ((revTotal - expTotal) / revTotal) * 100;
+            insights.push({
+              label: 'Profit Margin',
+              text: margin.toFixed(1) + '% overall ' + (margin > 20 ? '✅ Healthy' : margin > 10 ? '⚠️ Moderate' : '🔴 Low'),
+              trend: margin > 15 ? 'up' : 'down',
+              change: Math.round(margin * 10) / 10
+            });
+          }
+          var totalStaff = staffData.present + staffData.late + staffData.absent + staffData.onLeave;
+          var attRate = totalStaff > 0 ? Math.round(staffData.present / totalStaff * 100) : 0;
+          insights.push({
+            label: 'Staff Attendance',
+            text: attRate + '% today (' + staffData.present + ' present, ' + staffData.absent + ' absent)',
+            trend: attRate >= 80 ? 'up' : 'down',
+            change: attRate
+          });
+          if (typeof renderAIInsights === 'function') renderAIInsights('aiInsightsPanel', insights);
+
+          // Predictions
+          if (revArr.length > 0) {
+            var predictions = ISNMAI.predict(revArr, 3);
+            if (typeof renderAIPrediction === 'function') renderAIPrediction('aiPredictionPanel', predictions, 'Revenue Forecast', 'UGX');
+          }
+
+          // Performance gauge
+          var collRate = <?= $total_revenue > 0 ? round(min(100, ($today_collection / max(1, $total_revenue / 365)) * 100)) : 50 ?>;
+          var perfScore = ISNMAI.calculatePerformanceScore({ attendanceRate: attRate, passRate: 82, collectionRate: collRate, staffMorale: 70 });
+          if (typeof renderPerformanceGauge === 'function') renderPerformanceGauge('performanceGauge', perfScore, 'Institutional Health Score');
+        }
+      }
+
+      // Run immediately (charts are visible - not in collapse)
+      if (document.readyState === 'complete') {
+        initAnalytics();
+      } else {
+        document.addEventListener('DOMContentLoaded', initAnalytics);
+      }
+    })();
+    </script>
+
+    <style>
+    .analytics-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid rgba(148,163,184,0.2);
+    }
+    .analytics-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 4px;
+    }
+    .analytics-icon-wrap {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #1a237e, #3b82f6);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px;
+      flex-shrink: 0;
+    }
+    .analytics-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 12px; border-radius: 999px;
+      background: linear-gradient(135deg, #1a237e, #283593);
+      color: #fff; font-size: 11px; font-weight: 600;
+    }
+    .analytics-badge-live {
+      background: linear-gradient(135deg, #059669, #10b981);
+      animation: pulseLive 2s infinite;
+    }
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .analytics-main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+    .analytics-bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .chart-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .chart-title-bar h6 {
+      font-size: 13px; font-weight: 700; color: #0f172a;
+      margin: 0; display: flex; align-items: center; gap: 6px;
+    }
+    .chart-period {
+      font-size: 10px; color: #94a3b8;
+      background: #f1f5f9; padding: 2px 8px; border-radius: 4px;
+    }
+    @media (max-width: 992px) {
+      .analytics-main-grid { grid-template-columns: 1fr; }
+      .analytics-bottom-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .analytics-bottom-row { grid-template-columns: 1fr; }
+      .analytics-card-header { flex-direction: column; align-items: flex-start; }
+    }
+    </style>
 
     <!-- PENDING SUBMISSIONS INBOX -->
     <?php

@@ -773,3 +773,193 @@
         font-size: 0.78rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard Charts & Analytics
+   ═══════════════════════════════════════════════════════════════ */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 250px;
+}
+.chart-container-sm {
+    min-height: 180px;
+}
+.chart-wrapper {
+    background: #fff;
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.04);
+    transition: all 0.3s ease;
+}
+.chart-wrapper:hover {
+    box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+}
+.chart-wrapper h6 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+@media (max-width: 992px) {
+    .chart-grid { grid-template-columns: 1fr; }
+}
+
+/* ── AI Insights ── */
+.ai-insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.ai-insight-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,0.1);
+    transition: all 0.2s ease;
+}
+.ai-insight-item:hover {
+    transform: translateX(3px);
+}
+.ai-prediction-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid rgba(5,150,105,0.2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+.ai-prediction-card .badge {
+    background: linear-gradient(135deg, #1a237e, #3b82f6);
+}
+
+/* ── Performance Gauge ── */
+.performance-gauge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+}
+
+/* ── Analytics Section Toggle ── */
+.analytics-section .section-card h2 {
+    cursor: pointer;
+    user-select: none;
+}
+.analytics-section .section-card h2 i.fa-chevron-down {
+    transition: transform 0.25s ease;
+}
+.analytics-section .section-card h2[aria-expanded="true"] i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* ── Responsive chart tweaks ── */
+@media (max-width: 768px) {
+    .chart-container { min-height: 200px; }
+    .chart-wrapper { padding: 12px; }
+    .chart-wrapper h6 { font-size: 12px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard Overview KPI Cards
+   ═══════════════════════════════════════════════════════════════ */
+.kpi-card {
+    background: #fff;
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.04);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    height: 100%;
+}
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+}
+.kpi-card .kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+}
+.kpi-card .kpi-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
+}
+.kpi-card .kpi-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 2px 0 0;
+}
+.kpi-card .kpi-trend {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ── Analytics Dashboard ── */
+.analytics-dashboard-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+@media (max-width: 992px) {
+    .analytics-dashboard-row { grid-template-columns: 1fr; }
+}
+
+/* ── Metrics Grid ── */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.metric-box {
+    background: #fff;
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+    transition: all 0.25s ease;
+}
+.metric-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15,23,42,0.06);
+}
+.metric-box .metric-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.metric-box .metric-label {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+}
+.metric-box .metric-change {
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.metric-box .metric-change.up { color: #059669; }
+.metric-box .metric-change.down { color: #dc2626; }
