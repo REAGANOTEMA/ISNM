@@ -434,6 +434,54 @@ function getSystemStatistics() {
 }
 
 /**
+ * Move an item to the recycle bin (soft delete)
+ * 
+ * @param mysqli $conn        Staff DB connection
+ * @param int    $original_id The ID of the item being deleted
+ * @param string $table       Original table name
+ * @param string $id_column   Primary key column name in original table
+ * @param string $title       Display title for the recycled item
+ * @param string $description Optional description
+ * @param int    $deleted_by  Staff ID who deleted it
+ * @return bool
+ */
+if (!function_exists('moveToTrash')) {
+function moveToTrash($conn, int $original_id, string $table, string $id_column, string $title, string $description = '', int $deleted_by = 0): bool {
+    try {
+        if (!$conn) return false;
+        $deleted_by_name = '';
+        if ($deleted_by) {
+            $q = $conn->prepare("SELECT full_name FROM staff WHERE id = ?");
+            if ($q) { $q->bind_param('i', $deleted_by); $q->execute(); $r = $q->get_result()->fetch_assoc(); $q->close(); if ($r) $deleted_by_name = $r['full_name']; }
+        }
+        $stmt = $conn->prepare("INSERT INTO recycle_bin (original_table, original_id_column, original_id, item_title, item_description, deleted_by, deleted_by_name, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        if (!$stmt) return false;
+        $stmt->bind_param('ssissis', $table, $id_column, $original_id, $title, $description, $deleted_by, $deleted_by_name);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
+    } catch (Exception $e) {
+        error_log('moveToTrash error: ' . $e->getMessage());
+        return false;
+    }
+}
+}
+
+/**
+ * Permanently delete from recycle bin
+ */
+if (!function_exists('emptyTrash')) {
+function emptyTrash($conn): bool {
+    try {
+        if (!$conn) return false;
+        return $conn->query("DELETE FROM recycle_bin WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    } catch (Exception $e) {
+        return false;
+    }
+}
+}
+
+/**
  * Fetch official duties for a specific staff role from the database.
  * Falls back to empty array if the table doesn't exist or DB unavailable.
  *

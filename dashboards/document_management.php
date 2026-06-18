@@ -74,11 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $table = $_POST['table'] ?? 'receipt_templates';
         
         if ($id) {
-            $stmt = $conn->prepare("DELETE FROM $table WHERE id = ?");
+            // Get template name
+            $tq = $conn->prepare("SELECT template_name FROM $table WHERE id = ?");
+            $tq->bind_param('i', $id);
+            $tq->execute();
+            $tr = $tq->get_result()->fetch_assoc();
+            $tq->close();
+            $tname = $tr['template_name'] ?? 'Unnamed';
+
+            // Soft delete: mark as deleted
+            $stmt = $conn->prepare("UPDATE $table SET is_deleted = 1, deleted_at = NOW() WHERE id = ?");
             if ($stmt) {
                 $stmt->bind_param('i', $id);
                 if ($stmt->execute()) {
-                    $_SESSION['success'] = 'Template deleted successfully.';
+                    // Add to recycle bin
+                    include_once __DIR__ . '/../includes/functions.php';
+                    moveToTrash($conn, (int)$id, $table, 'id', $tname, 'Document template deleted', $staff_id);
+                    $_SESSION['success'] = 'Template moved to trash.';
                 } else {
                     $_SESSION['error'] = 'Failed to delete template: ' . $conn->error;
                 }
@@ -121,16 +133,23 @@ if ($action === 'edit' && $template_id) {
 
 $templates = [];
 $search = $_GET['search'] ?? '';
+// Check if is_deleted column exists
+$hasSoftDelete = false;
+$colCheck = $conn->query("SHOW COLUMNS FROM $current_table LIKE 'is_deleted'");
+if ($colCheck && $colCheck->num_rows > 0) $hasSoftDelete = true;
+$deletedFilter = $hasSoftDelete ? " AND (rt.is_deleted IS NULL OR rt.is_deleted = 0)" : "";
+$deletedFilterDt = $hasSoftDelete ? " AND (dt.is_deleted IS NULL OR dt.is_deleted = 0)" : "";
+
 if ($current_table === 'receipt_templates') {
     if ($template_type_filter) {
-        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE rt.template_type = ? ORDER BY rt.is_active DESC, rt.template_name ASC");
+        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE rt.template_type = ?$deletedFilter ORDER BY rt.is_active DESC, rt.template_name ASC");
         if ($stmt) $stmt->bind_param('s', $template_type_filter);
     } elseif ($search) {
         $like = "%$search%";
-        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE rt.template_name LIKE ? OR rt.template_type LIKE ? OR rt.template_content LIKE ? ORDER BY rt.is_active DESC, rt.template_name ASC");
+        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE (rt.template_name LIKE ? OR rt.template_type LIKE ? OR rt.template_content LIKE ?)$deletedFilter ORDER BY rt.is_active DESC, rt.template_name ASC");
         if ($stmt) $stmt->bind_param('sss', $like, $like, $like);
     } else {
-        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id ORDER BY rt.is_active DESC, rt.template_name ASC");
+        $stmt = $conn->prepare("SELECT rt.*, s.full_name as created_by_name FROM receipt_templates rt LEFT JOIN staff s ON rt.created_by = s.id WHERE 1=1$deletedFilter ORDER BY rt.is_active DESC, rt.template_name ASC");
     }
     if ($stmt) {
         $stmt->execute();
@@ -141,10 +160,10 @@ if ($current_table === 'receipt_templates') {
 } else {
     if ($search) {
         $like = "%$search%";
-        $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id WHERE dt.template_name LIKE ? OR dt.template_type LIKE ? OR dt.template_content LIKE ? ORDER BY dt.is_default DESC, dt.template_name ASC");
+        $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id WHERE (dt.template_name LIKE ? OR dt.template_type LIKE ? OR dt.template_content LIKE ?)$deletedFilterDt ORDER BY dt.is_default DESC, dt.template_name ASC");
         if ($stmt) $stmt->bind_param('sss', $like, $like, $like);
     } else {
-        $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id ORDER BY dt.is_default DESC, dt.template_name ASC");
+        $stmt = $conn->prepare("SELECT dt.*, s.full_name as created_by_name FROM document_templates dt LEFT JOIN staff s ON dt.created_by = s.id WHERE 1=1$deletedFilterDt ORDER BY dt.is_default DESC, dt.template_name ASC");
     }
     if ($stmt) {
         $stmt->execute();
@@ -335,14 +354,17 @@ if ($conn) $conn->close();
                             </td>
                             <td><?php echo htmlspecialchars($t['created_by_name'] ?? 'System'); ?></td>
                             <td><?php echo date('M d, Y', strtotime($t['created_at'])); ?></td>
-                            <td class="text-center action-btns">
-                                <button class="btn btn-outline-primary btn-sm" onclick="viewPreview(<?php echo $t['id']; ?>)">
+                            <td class="text-center action-btns" style="white-space:nowrap">
+                                <button class="btn btn-outline-primary btn-sm" onclick="viewPreview(<?php echo $t['id']; ?>)" title="Preview">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <a href="?action=edit&id=<?php echo $t['id']; ?>&table=<?php echo $current_table; ?>" class="btn btn-outline-warning btn-sm">
+                                <button class="btn btn-outline-success btn-sm" onclick="printTemplate(<?php echo $t['id']; ?>)" title="Print">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <a href="?action=edit&id=<?php echo $t['id']; ?>&table=<?php echo $current_table; ?>" class="btn btn-outline-warning btn-sm" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $t['id']; ?>">
+                                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $t['id']; ?>" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
@@ -363,8 +385,8 @@ if ($conn) $conn->close();
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete "<strong><?php echo htmlspecialchars($t['template_name']); ?></strong>"?</p>
-                    <p class="text-danger small">This action cannot be undone. Documents generated with this template will remain but may lose their formatting reference.</p>
+                    <p>Are you sure you want to move "<strong><?php echo htmlspecialchars($t['template_name']); ?></strong>" to trash?</p>
+                    <p class="text-warning small"><i class="fas fa-info-circle me-1"></i>This item will be moved to the <a href="recycle_bin.php" target="_blank">Recycle Bin</a> where it can be restored later.</p>
                 </div>
                 <div class="modal-footer">
                     <form method="POST" class="d-flex gap-2">
@@ -409,6 +431,16 @@ function updatePreview() {
     const content = document.getElementById('template_content').value;
     const preview = document.getElementById('templatePreview');
     if (preview) preview.innerHTML = content || 'No preview available';
+}
+function printTemplate(id) {
+    // Open preview then trigger print
+    const modal = document.getElementById('previewModal' + id);
+    if (!modal) return;
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    modal.addEventListener('shown.bs.modal', function() {
+        setTimeout(function() { window.print(); }, 300);
+    }, { once: true });
 }
 document.addEventListener('DOMContentLoaded', function() {
     const ta = document.getElementById('template_content');

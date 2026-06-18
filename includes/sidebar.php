@@ -109,8 +109,13 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     <div class="sidebar-extra">
         <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
         <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
+        <a href="../dashboards/recycle_bin.php" class="extra-link"><i class="fas fa-trash-alt"></i> Recycle Bin</a>
         <a href="#" class="extra-link settings-trigger" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i> Settings
+        </a>
+        <a href="#" class="extra-link theme-trigger" onclick="event.preventDefault();if(typeof openThemeModal==='function')openThemeModal();">
+            <i class="fas fa-palette"></i> <span>Theme</span>
+            <span class="theme-picker-name ms-auto"><span class="theme-current-name">Default</span></span>
         </a>
         <a href="#" class="extra-link" id="toggleStudentMgmt">
             <i class="fas fa-user-graduate"></i> <span>Student Management</span>

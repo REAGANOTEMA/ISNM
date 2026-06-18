@@ -153,6 +153,9 @@ function getModuleConfig(): array {
             'roles'    => '*',
             'children' => [
                 ['title' => 'Document Templates',  'route' => 'document_management.php',           'roles' => '*'],
+                ['title' => 'Certificates',        'route' => 'print_certificate.php',             'roles' => '*'],
+                ['title' => 'Transcripts',         'route' => 'print_transcript.php',              'roles' => '*'],
+                ['title' => 'Recycle Bin',         'route' => 'dashboards/recycle_bin.php',        'roles' => '*'],
             ],
         ],
         [

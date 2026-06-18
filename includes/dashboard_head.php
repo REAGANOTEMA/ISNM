@@ -62,3 +62,5 @@ if (!empty($_SESSION['user_id'])) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-style.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Mobile dashboard styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Dashboard Theme System -->
+<script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>

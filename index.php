@@ -213,10 +213,10 @@ include_once 'shared/_header.php';
               <p class="about-text">
                 Iganga School of Nursing and Midwifery is a private Nursing School registered by the Registrar of Companies as a Limited Liability Company. The school is also registered with the Ministry of Education & Sports (MOES) and Uganda Nurses and Midwives Council (UNMC).
               </p>
-              <div class="row g-4 mt-3">
+              <div class="row g-3 mt-3">
                 <div class="col-md-6">
-                  <div class="vm-item">
-                    <div class="vm-icon-circle bg-warning">
+                  <div class="vm-card">
+                    <div class="vm-card-icon bg-warning">
                       <i class="fas fa-eye"></i>
                     </div>
                     <h4>Vision</h4>
@@ -224,8 +224,8 @@ include_once 'shared/_header.php';
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="vm-item">
-                    <div class="vm-icon-circle bg-success">
+                  <div class="vm-card">
+                    <div class="vm-card-icon bg-success">
                       <i class="fas fa-bullseye"></i>
                     </div>
                     <h4>Mission</h4>
@@ -233,7 +233,10 @@ include_once 'shared/_header.php';
                   </div>
                 </div>
               </div>
-              <a href="about.php" class="btn btn-primary">Learn More About Us</a>
+              <div class="d-flex gap-3 mt-4 flex-wrap">
+                <a href="about.php" class="btn btn-primary"><i class="fas fa-info-circle me-2"></i>Learn More About Us</a>
+                <a href="volunteer.php" class="btn btn-volunteer"><i class="fas fa-hands-helping me-2"></i>Volunteer With Us</a>
+              </div>
             </div>
           </div>
           <div class="col-lg-6">

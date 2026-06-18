@@ -113,6 +113,17 @@ $is_head = in_array(strtolower($s_role), [
           </a>
           <?php endif; ?>
 
+          <!-- Theme Settings – everyone -->
+          <a href="#" class="settings-card" onclick="event.preventDefault();bootstrap.Modal.getInstance(document.getElementById('settingsModal'))?.hide();if(typeof openThemeModal==='function')openThemeModal();">
+            <div class="sc-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
+              <i class="fas fa-palette"></i>
+            </div>
+            <div class="sc-body">
+              <span class="sc-title">Theme Settings</span>
+              <span class="sc-desc">Choose your dashboard color theme</span>
+            </div>
+          </a>
+
           <!-- Directory – everyone (staff) -->
           <a href="../student-directory.php" class="settings-card">
             <div class="sc-icon" style="background:linear-gradient(135deg,#6366f1,#4338ca)">

@@ -123,6 +123,114 @@ if (!function_exists('getStaffProfileImageUrl')) {
     }
 }
 
+// ── Fetch staff data for profile form ─────────────────────────
+function getStaffProfileData($staffId) {
+    $data = [
+        'first_name' => '', 'surname' => '', 'other_names' => '',
+        'email' => '', 'phone' => '', 'department' => '', 'bio' => ''
+    ];
+    try {
+        $staffDb = null;
+        if (function_exists('getDatabaseConnection')) {
+            $staffDb = getDatabaseConnection('staffs');
+        } elseif (class_exists('DatabaseManager') && method_exists('DatabaseManager', 'getStaffConnection')) {
+            $staffDb = DatabaseManager::getStaffConnection();
+        } elseif (function_exists('getStaffConnection')) {
+            $staffDb = getStaffConnection();
+        }
+        if ($staffDb) {
+            $s = $staffDb->prepare("SELECT first_name, surname, other_names, email, phone, department, bio FROM staff WHERE id = ?");
+            if ($s) {
+                $s->bind_param('i', $staffId);
+                $s->execute();
+                $row = $s->get_result()->fetch_assoc();
+                $s->close();
+                if ($row) {
+                    $data = array_merge($data, $row);
+                }
+            }
+            // Also try staff_profiles for bio
+            $sp = $staffDb->prepare("SELECT bio, department FROM staff_profiles WHERE staff_id = ?");
+            if ($sp) {
+                $sp->bind_param('i', $staffId);
+                $sp->execute();
+                $row2 = $sp->get_result()->fetch_assoc();
+                $sp->close();
+                if ($row2) {
+                    if (!empty($row2['bio'])) $data['bio'] = $row2['bio'];
+                    if (!empty($row2['department'])) $data['department'] = $row2['department'];
+                }
+            }
+        }
+    } catch (Exception $e) {}
+    return $data;
+}
+
+// ── AJAX: Save profile fields ────────────────────────────────
+if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
+    header('Content-Type: application/json');
+    $response = ['success' => false, 'error' => ''];
+    try {
+        require_once __DIR__ . '/../config/database.php';
+        $staffDb = null;
+        if (function_exists('getDatabaseConnection')) {
+            $staffDb = getDatabaseConnection('staffs');
+        } elseif (class_exists('DatabaseManager') && method_exists('DatabaseManager', 'getStaffConnection')) {
+            $staffDb = DatabaseManager::getStaffConnection();
+        } elseif (function_exists('getStaffConnection')) {
+            $staffDb = getStaffConnection();
+        }
+        if (!$staffDb) { throw new Exception('Database connection failed'); }
+
+        $staffId = (int)($_POST['staff_id'] ?? 0);
+        if ($staffId <= 0) { throw new Exception('Invalid staff ID'); }
+
+        $first_name = trim($_POST['first_name'] ?? '');
+        $surname = trim($_POST['surname'] ?? '');
+        $other_names = trim($_POST['other_names'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $bio = trim($_POST['bio'] ?? '');
+
+        // Update staff table
+        $upd = $staffDb->prepare("UPDATE staff SET first_name = ?, surname = ?, other_names = ?, email = ?, phone = ? WHERE id = ?");
+        if (!$upd) { throw new Exception('Prepare failed: ' . $staffDb->error); }
+        $upd->bind_param('sssssi', $first_name, $surname, $other_names, $email, $phone, $staffId);
+        if (!$upd->execute()) { throw new Exception('Update failed: ' . $upd->error); }
+        $upd->close();
+
+        // Update staff_profiles (bio)
+        $check = $staffDb->prepare("SELECT id FROM staff_profiles WHERE staff_id = ?");
+        $check->bind_param('i', $staffId);
+        $check->execute();
+        $exists = $check->get_result()->fetch_assoc();
+        $check->close();
+        if ($exists) {
+            $upd2 = $staffDb->prepare("UPDATE staff_profiles SET bio = ? WHERE staff_id = ?");
+            $upd2->bind_param('si', $bio, $staffId);
+            $upd2->execute();
+            $upd2->close();
+        } else {
+            $ins = $staffDb->prepare("INSERT INTO staff_profiles (staff_id, bio) VALUES (?, ?)");
+            $ins->bind_param('is', $staffId, $bio);
+            $ins->execute();
+            $ins->close();
+        }
+
+        // Update session
+        $_SESSION['first_name'] = $first_name;
+        $_SESSION['surname'] = $surname;
+        $_SESSION['full_name'] = $first_name . ' ' . $surname . ($other_names ? ' ' . $other_names : '');
+        if ($email) $_SESSION['email'] = $email;
+
+        $response = ['success' => true, 'error' => ''];
+    } catch (Exception $e) {
+        $response = ['success' => false, 'error' => $e->getMessage()];
+    }
+    echo json_encode($response);
+    exit;
+}
+
 // ── Render profile settings modal ─────────────────────────────
 function renderProfileModal() {
     $staffId = (int)($_SESSION['user_id'] ?? 0);
@@ -130,45 +238,89 @@ function renderProfileModal() {
     $name = $_SESSION['full_name'] ?? $_SESSION['first_name'] ?? 'Staff';
     $role = $_SESSION['role'] ?? '';
     $email = $_SESSION['email'] ?? $_SESSION['staff_email'] ?? '';
+    $profile = getStaffProfileData($staffId);
     ?>
     <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content profile-modal-content">
                 <div class="modal-header profile-modal-header">
                     <h5 class="modal-title fw-bold"><i class="fas fa-user-cog me-2"></i>Profile Settings</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center py-4">
-                    <div class="profile-avatar-section mb-3">
-                        <div class="profile-avatar-wrap position-relative d-inline-block">
-                            <img src="<?= $imgUrl ?>" alt="" class="profile-modal-avatar rounded-circle" id="profileModalAvatar">
-                            <label for="profileImageInput" class="profile-avatar-overlay" title="Change Photo">
-                                <i class="fas fa-camera"></i>
-                            </label>
+                <div class="modal-body py-4">
+                    <div class="row g-4">
+                        <!-- Photo Column -->
+                        <div class="col-md-4 text-center">
+                            <div class="profile-avatar-section mb-3">
+                                <div class="profile-avatar-wrap position-relative d-inline-block">
+                                    <img src="<?= $imgUrl ?>" alt="" class="profile-modal-avatar rounded-circle" id="profileModalAvatar">
+                                    <label for="profileImageInput" class="profile-avatar-overlay" title="Change Photo">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                </div>
+                                <input type="file" id="profileImageInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+                                <div id="profileUploadPreview" class="mt-2" style="display:none">
+                                    <small class="text-muted">Preview:</small>
+                                    <img id="profilePreviewImg" class="rounded-circle mt-1" style="width:70px;height:70px;object-fit:cover;border:2px solid #e2e8f0">
+                                </div>
+                                <div id="profileUploadStatus" class="mt-2 small"></div>
+                            </div>
+                            <h5 class="fw-bold mb-1"><?= htmlspecialchars($name) ?></h5>
+                            <p class="text-muted mb-2"><i class="fas fa-briefcase me-1"></i><?= htmlspecialchars($role) ?></p>
+                            <div class="text-start small text-muted mt-3">
+                                <p class="mb-1"><i class="fas fa-info-circle me-1"></i>Upload a professional photo.</p>
+                                <p class="mb-0"><i class="fas fa-image me-1"></i>JPG, PNG, GIF, WebP (max 2MB)</p>
+                            </div>
                         </div>
-                        <input type="file" id="profileImageInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
-                        <div id="profileUploadPreview" class="mt-2" style="display:none">
-                            <small class="text-muted">Preview:</small>
-                            <img id="profilePreviewImg" class="rounded-circle mt-1" style="width:80px;height:80px;object-fit:cover;border:2px solid #e2e8f0">
+                        <!-- Form Column -->
+                        <div class="col-md-8">
+                            <div class="profile-form-section">
+                                <h6 class="fw-bold mb-3" style="color:#1a237e"><i class="fas fa-address-card me-2"></i>Personal Information</h6>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">First Name</label>
+                                        <input type="text" class="form-control form-control-sm" id="pf_first_name" value="<?= htmlspecialchars($profile['first_name']) ?>" placeholder="First name">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">Surname</label>
+                                        <input type="text" class="form-control form-control-sm" id="pf_surname" value="<?= htmlspecialchars($profile['surname']) ?>" placeholder="Surname">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">Other Names</label>
+                                        <input type="text" class="form-control form-control-sm" id="pf_other_names" value="<?= htmlspecialchars($profile['other_names']) ?>" placeholder="Other names">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">Phone Number</label>
+                                        <input type="text" class="form-control form-control-sm" id="pf_phone" value="<?= htmlspecialchars($profile['phone']) ?>" placeholder="+256 XXX XXX XXX">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">Email Address</label>
+                                        <input type="email" class="form-control form-control-sm" id="pf_email" value="<?= htmlspecialchars($profile['email']) ?>" placeholder="email@example.com">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-medium">Department</label>
+                                        <input type="text" class="form-control form-control-sm" id="pf_department" value="<?= htmlspecialchars($profile['department']) ?>" placeholder="Department" readonly>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-medium">Bio / About</label>
+                                        <textarea class="form-control form-control-sm" id="pf_bio" rows="3" placeholder="Brief description about yourself..."><?= htmlspecialchars($profile['bio']) ?></textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="profileUploadStatus" class="mt-2 small"></div>
-                    </div>
-                    <h5 class="fw-bold mb-1"><?= htmlspecialchars($name) ?></h5>
-                    <p class="text-muted mb-0"><i class="fas fa-briefcase me-1"></i><?= htmlspecialchars($role) ?></p>
-                    <?php if ($email): ?>
-                    <p class="text-muted small"><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($email) ?></p>
-                    <?php endif; ?>
-                    <hr>
-                    <div class="text-start small text-muted">
-                        <p class="mb-1"><i class="fas fa-info-circle me-1"></i>Upload a professional profile photo.</p>
-                        <p class="mb-0"><i class="fas fa-image me-1"></i>Accepted: JPG, PNG, GIF, WebP (max 2MB)</p>
                     </div>
                 </div>
-                <div class="modal-footer justify-content-center border-0 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary px-4" id="profileSaveBtn" onclick="uploadProfileImage()" disabled>
-                        <i class="fas fa-upload me-1"></i>Save Photo
-                    </button>
+                <div class="modal-footer justify-content-between border-0 pt-0 px-4 pb-4">
+                    <div id="profileSaveStatus" class="small"></div>
+                    <div>
+                        <button type="button" class="btn btn-secondary px-3 me-2" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary px-4" id="profilePhotoSaveBtn" onclick="uploadProfileImage()" disabled>
+                            <i class="fas fa-upload me-1"></i>Save Photo
+                        </button>
+                        <button type="button" class="btn btn-primary px-4" id="profileInfoSaveBtn" onclick="saveProfileFields()">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -192,7 +344,25 @@ function renderProfileStyles() { ?>
     cursor: pointer; opacity: 0; transition: opacity .25s ease;
     border: 4px solid transparent;
 }
-#profileUploadStatus .spinner-border { width: 1rem; height: 1rem; }
+#profileUploadStatus .spinner-border, #profileSaveStatus .spinner-border { width: 1rem; height: 1rem; }
+.profile-form-section {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+}
+.profile-form-section .form-label {
+    color: #475569;
+    margin-bottom: 4px;
+}
+.profile-form-section .form-control-sm {
+    border-radius: 8px;
+    border-color: #d1d5db;
+}
+.profile-form-section .form-control-sm:focus {
+    border-color: #1a237e;
+    box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
+}
 </style>
 <?php }
 
@@ -206,7 +376,7 @@ function renderProfileScripts() { ?>
     var input = document.getElementById('profileImageInput');
     var preview = document.getElementById('profileUploadPreview');
     var previewImg = document.getElementById('profilePreviewImg');
-    var saveBtn = document.getElementById('profileSaveBtn');
+    var saveBtn = document.getElementById('profilePhotoSaveBtn');
     var status = document.getElementById('profileUploadStatus');
     var modalAvatar = document.getElementById('profileModalAvatar');
 
@@ -289,6 +459,62 @@ function renderProfileScripts() { ?>
     }
 
     function escHtml(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ── Save profile fields ──
+    window.saveProfileFields = function() {
+        var saveBtn = document.getElementById('profileInfoSaveBtn');
+        var status = document.getElementById('profileSaveStatus');
+        if (!saveBtn) return;
+        saveBtn.disabled = true;
+        status.innerHTML = '<span class="text-info"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>';
+
+        var data = new URLSearchParams();
+        data.append('action', 'save_profile_fields');
+        data.append('staff_id', staffId);
+        data.append('first_name', (document.getElementById('pf_first_name') || {}).value || '');
+        data.append('surname', (document.getElementById('pf_surname') || {}).value || '');
+        data.append('other_names', (document.getElementById('pf_other_names') || {}).value || '');
+        data.append('phone', (document.getElementById('pf_phone') || {}).value || '');
+        data.append('email', (document.getElementById('pf_email') || {}).value || '');
+        data.append('bio', (document.getElementById('pf_bio') || {}).value || '');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '../includes/profile_settings.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            saveBtn.disabled = false;
+            if (xhr.status !== 200) {
+                status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Save failed</span>';
+                return;
+            }
+            try {
+                var d = JSON.parse(xhr.responseText);
+                if (d.success) {
+                    status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Saved successfully!</span>';
+                    // Update sidebar username
+                    var sidebarName = document.querySelector('.user-fullname');
+                    if (sidebarName) {
+                        var fn = data.get('first_name');
+                        var sn = data.get('surname');
+                        var on = data.get('other_names');
+                        sidebarName.textContent = fn + ' ' + sn + (on ? ' ' + on : '');
+                    }
+                    setTimeout(function() {
+                        status.innerHTML = '';
+                    }, 3000);
+                } else {
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>' + escHtml(d.error || 'Error') + '</span>';
+                }
+            } catch(e) {
+                status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Invalid response</span>';
+            }
+        };
+        xhr.onerror = function() {
+            saveBtn.disabled = false;
+            status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Network error</span>';
+        };
+        xhr.send(data);
+    };
 })();
 
 window.openProfileModal = function() {

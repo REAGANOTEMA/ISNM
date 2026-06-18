@@ -133,17 +133,21 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
             var phone = s.phone || s.mobile_number || '';
             var hasPhoto = (s.passport_photo || s.profile_picture);
             var initials = (s.first_name ? s.first_name[0] : 'S') + (s.surname ? s.surname[0] : 'T');
-            html += '<div class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-3" data-index="'+i+'" onclick="sqs_viewProfile(\''+id+'\',\''+escapeJs(sid)+'\')">';
+            html += '<div class="list-group-item list-group-item-action d-flex align-items-center gap-2 p-2" data-index="'+i+'" onclick="sqs_viewProfile(\''+id+'\',\''+escapeJs(sid)+'\')">';
             if(hasPhoto){
-                html += '<img src="'+escapeHtml(hasPhoto)+'" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
+                html += '<img src="'+escapeHtml(hasPhoto)+'" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
             } else {
-                html += '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">'+initials+'</div>';
+                html += '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">'+initials+'</div>';
             }
-            html += '<div class="flex-grow-1 min-w-0"><div class="fw-semibold text-truncate">'+escapeHtml(name)+'</div>';
-            html += '<small class="text-muted"><code>'+escapeHtml(sid)+'</code> &middot; '+escapeHtml(prog)+'</small></div>';
-            if(phone) html += '<a href="tel:'+escapeHtml(phone)+'" class="btn btn-sm btn-outline-success rounded-circle flex-shrink-0" title="Call" onclick="event.stopPropagation()"><i class="fas fa-phone"></i></a>';
-            html += '<span class="badge bg-'+(s.status === 'Active' ? 'success' : 'secondary')+' flex-shrink-0">'+(s.status||'Active')+'</span>';
-            html += '<i class="fas fa-chevron-right text-muted flex-shrink-0"></i>';
+            html += '<div class="flex-grow-1 min-w-0"><div class="fw-semibold text-truncate small">'+escapeHtml(name)+'</div>';
+            html += '<small class="text-muted" style="font-size:11px;"><code>'+escapeHtml(sid)+'</code> &middot; '+escapeHtml(prog)+'</small></div>';
+            // Action buttons
+            html += '<div class="btn-group btn-group-xs flex-shrink-0" style="white-space:nowrap">';
+            html += '<a href="../print_certificate.php?student_id='+encodeURIComponent(sid)+'&print=1" target="_blank" class="btn btn-sm btn-outline-info" title="Print Certificate" onclick="event.stopPropagation()"><i class="fas fa-certificate"></i></a>';
+            html += '<a href="../print_transcript.php?student_id='+encodeURIComponent(sid)+'&print=1" target="_blank" class="btn btn-sm btn-outline-success" title="Print Transcript" onclick="event.stopPropagation()"><i class="fas fa-scroll"></i></a>';
+            html += '<button class="btn btn-sm btn-outline-secondary" title="View Profile" onclick="event.stopPropagation();sqs_viewProfile(\''+id+'\',\''+escapeJs(sid)+'\')"><i class="fas fa-eye"></i></button>';
+            html += '</div>';
+            html += '<span class="badge bg-'+(s.status === 'Active' ? 'success' : 'secondary')+' flex-shrink-0" style="font-size:10px;">'+(s.status||'Active')+'</span>';
             html += '</div>';
         });
         html += '</div>';

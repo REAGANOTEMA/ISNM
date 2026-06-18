@@ -813,3 +813,208 @@ INSERT IGNORE INTO igangaschoolofl_staffs_db.official_duties (role_id, duty_titl
 (27, 'Student Records Management', 'fas fa-folder-open', 8),
 (27, 'Orientation Program Coordination', 'fas fa-handshake', 9),
 (27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10);
+
+-- ==============================================================================
+-- DATABASE 3: igangaschoolofl_staffs_db (staffs_db) — New Tables
+-- ==============================================================================
+
+-- Recycle Bin: Soft-deleted items across all modules
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.recycle_bin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_table VARCHAR(255) NOT NULL COMMENT 'Source table where item was deleted from',
+    original_id_column VARCHAR(255) NOT NULL DEFAULT 'id' COMMENT 'Primary key column name',
+    original_id INT NOT NULL COMMENT 'The ID in the original table',
+    item_title VARCHAR(500) NOT NULL COMMENT 'Readable title for the trashed item',
+    item_description TEXT COMMENT 'Optional description/context',
+    deleted_by INT DEFAULT 0 COMMENT 'staff.id who deleted it',
+    deleted_by_name VARCHAR(255) DEFAULT '',
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_original (original_table, original_id),
+    INDEX idx_deleted_at (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add soft-delete columns to existing tables
+ALTER TABLE igangaschoolofl_staffs_db.receipt_templates 
+    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
+
+ALTER TABLE igangaschoolofl_staffs_db.document_templates 
+    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
+
+ALTER TABLE igangaschoolofl_staffs_db.staff_announcements 
+    ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
+
+-- ==============================================================================
+-- Application & Submission Routing
+-- ==============================================================================
+
+-- Route submissions to specific roles/departments
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.submission_routes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    submission_type ENUM('application','volunteer','donation','contact','complaint','feedback') NOT NULL,
+    route_to_role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    route_to_role_name VARCHAR(255) NOT NULL,
+    route_order INT DEFAULT 0 COMMENT 'Routing priority order',
+    notify_via ENUM('email','notification','both') DEFAULT 'both',
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_type (submission_type),
+    INDEX idx_role (route_to_role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Application review workflow
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.application_reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    application_id INT NOT NULL COMMENT 'FK to student_applications.id',
+    reviewer_id INT NOT NULL COMMENT 'FK to staff.id',
+    review_status ENUM('Pending','Reviewed','Approved','Rejected','Forwarded') DEFAULT 'Pending',
+    review_notes TEXT,
+    forwarded_to INT DEFAULT NULL COMMENT 'FK to staff.id if forwarded',
+    forwarded_to_role VARCHAR(255) DEFAULT NULL,
+    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_app (application_id),
+    INDEX idx_reviewer (reviewer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Default routes: applications → Admissions Director & Secretary
+INSERT IGNORE INTO igangaschoolofl_staffs_db.submission_routes (submission_type, route_to_role_id, route_to_role_name, route_order, is_active) VALUES
+('application', 27, 'Director Admissions', 1, 1),
+('application', 22, 'Secretary', 2, 1),
+('volunteer', 27, 'Director Admissions', 1, 1),
+('volunteer', 22, 'Secretary', 2, 1),
+('donation', 5, 'Director Finance', 1, 1),
+('contact', 1, 'Director General', 1, 1),
+('feedback', 1, 'Director General', 1, 1),
+('complaint', 1, 'Director General', 1, 1);
+
+-- ==============================================================================
+-- Payment Routing & Notification
+-- ==============================================================================
+
+-- Payment notifications routing
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.payment_routes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    payment_type ENUM('fee_payment','registration','other') DEFAULT 'fee_payment',
+    notify_role_id INT NOT NULL COMMENT 'FK to staff_roles.id',
+    notify_role_name VARCHAR(255) NOT NULL,
+    notify_order INT DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_type (payment_type),
+    INDEX idx_role (notify_role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Payment approval workflow
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.payment_approvals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    payment_id INT NOT NULL COMMENT 'FK to payments.id',
+    approved_by INT NOT NULL COMMENT 'FK to staff.id',
+    approval_status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    approval_notes TEXT,
+    approved_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_payment (payment_id),
+    INDEX idx_approver (approved_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Default payment routes: notify Finance, DG, and all directors
+INSERT IGNORE INTO igangaschoolofl_staffs_db.payment_routes (payment_type, notify_role_id, notify_role_name, notify_order, is_active) VALUES
+('fee_payment', 5, 'Director Finance', 1, 1),
+('fee_payment', 1, 'Director General', 2, 1),
+('fee_payment', 4, 'Director Academics', 3, 1),
+('fee_payment', 6, 'Director ICT', 4, 1),
+('fee_payment', 27, 'Director Admissions', 5, 1);
+
+-- ==============================================================================
+-- Profile & Theme Settings
+-- ==============================================================================
+
+-- User theme preferences
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.user_preferences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL UNIQUE COMMENT 'FK to staff.id',
+    theme_id VARCHAR(50) DEFAULT 'default-blue',
+    sidebar_collapsed TINYINT(1) DEFAULT 0,
+    notifications_enabled TINYINT(1) DEFAULT 1,
+    email_notifications TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_staff (staff_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add bio column to staff_profiles if not exists
+ALTER TABLE igangaschoolofl_staffs_db.staff_profiles 
+    ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL AFTER profile_picture,
+    ADD COLUMN IF NOT EXISTS department VARCHAR(255) DEFAULT NULL AFTER bio,
+    ADD COLUMN IF NOT EXISTS phone VARCHAR(50) DEFAULT NULL AFTER department,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER department;
+
+-- ==============================================================================
+-- Enhanced Document Management
+-- ==============================================================================
+
+-- Document print configurations
+CREATE TABLE IF NOT EXISTS igangaschoolofl_staffs_db.document_print_configs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    document_type VARCHAR(100) NOT NULL UNIQUE COMMENT 'e.g. receipt, transcript, certificate',
+    page_size ENUM('A4','A5','Letter','Legal','Receipt') DEFAULT 'A4',
+    orientation ENUM('portrait','landscape') DEFAULT 'portrait',
+    logo_width_px INT DEFAULT 80,
+    show_logo TINYINT(1) DEFAULT 1,
+    show_header TINYINT(1) DEFAULT 1,
+    show_footer TINYINT(1) DEFAULT 1,
+    footer_text TEXT,
+    margin_top_mm INT DEFAULT 15,
+    margin_bottom_mm INT DEFAULT 15,
+    margin_left_mm INT DEFAULT 15,
+    margin_right_mm INT DEFAULT 15,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Default print configs
+INSERT IGNORE INTO igangaschoolofl_staffs_db.document_print_configs (document_type, page_size, orientation, logo_width_px) VALUES
+('receipt', 'A4', 'portrait', 80),
+('transcript', 'A4', 'portrait', 100),
+('certificate', 'A4', 'landscape', 120),
+('invoice', 'A4', 'portrait', 80),
+('payslip', 'A5', 'portrait', 60),
+('report', 'A4', 'portrait', 80),
+('timetable', 'A4', 'landscape', 60),
+('exam_schedule', 'A4', 'landscape', 60),
+('leave_form', 'A4', 'portrait', 60),
+('performance_review', 'A4', 'portrait', 70),
+('id_card', 'A5', 'landscape', 50),
+('contract', 'A4', 'portrait', 80);
+
+-- ==============================================================================
+-- Audit Trail Enhancements
+-- ==============================================================================
+
+-- Staff activity log with soft-delete tracking
+ALTER TABLE igangaschoolofl_staffs_db.staff_activity_log 
+    ADD COLUMN IF NOT EXISTS related_table VARCHAR(255) DEFAULT NULL AFTER activity_description,
+    ADD COLUMN IF NOT EXISTS related_id INT DEFAULT NULL AFTER related_table,
+    ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45) DEFAULT NULL AFTER related_id,
+    ADD INDEX IF NOT EXISTS idx_related (related_table, related_id);
+
+-- ==============================================================================
+-- INDEXES for performance on existing tables
+-- ==============================================================================
+
+ALTER TABLE igangaschoolofl_staffs_db.staff_audit_logs 
+    ADD INDEX IF NOT EXISTS idx_staff_action (staff_id, action);
+
+ALTER TABLE igangaschoolofl_staffs_db.notifications 
+    ADD INDEX IF NOT EXISTS idx_recipient_read (recipient_id, is_read);
+
+ALTER TABLE igangaschoolofl_staffs_db.staff_attendance 
+    ADD INDEX IF NOT EXISTS idx_staff_date (staff_id, date);
+
+-- ==============================================================================
+-- END OF MIGRATION
+-- ==============================================================================
