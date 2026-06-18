@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 09:06 PM
+-- Generation Time: Jun 18, 2026 at 06:33 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -25,6 +25,26 @@ DELIMITER $$
 --
 -- Procedures
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
     ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
@@ -40,16 +60,16 @@ DELIMITER ;
 
 CREATE TABLE `it_support_tickets` (
   `id` int NOT NULL,
-  `ticket_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `requester_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `requester_email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `requester_type` enum('student','staff','faculty') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `issue_type` enum('hardware','software','network','account','other') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `priority` enum('low','medium','high','critical') COLLATE utf8mb4_unicode_ci DEFAULT 'medium',
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('open','in_progress','resolved','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'open',
+  `ticket_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `requester_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `requester_email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `requester_type` enum('student','staff','faculty') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issue_type` enum('hardware','software','network','account','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `priority` enum('low','medium','high','critical') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'medium',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('open','in_progress','resolved','closed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'open',
   `assigned_to` int DEFAULT NULL,
-  `resolution_notes` text COLLATE utf8mb4_unicode_ci,
+  `resolution_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `resolved_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -73,18 +93,18 @@ INSERT INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requ
 
 CREATE TABLE `lab_bookings` (
   `id` int NOT NULL,
-  `booking_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `course_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `instructor_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `instructor_email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `booking_reference` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `instructor_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `instructor_email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `booking_date` date NOT NULL,
-  `time_slot` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `time_slot` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `number_of_students` int NOT NULL,
-  `purpose` text COLLATE utf8mb4_unicode_ci,
-  `special_requirements` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('pending','confirmed','cancelled','completed') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `purpose` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `special_requirements` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','confirmed','cancelled','completed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `approved_by` int DEFAULT NULL,
-  `lab_assigned` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lab_assigned` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -106,18 +126,18 @@ INSERT INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructo
 
 CREATE TABLE `lab_computers` (
   `id` int NOT NULL,
-  `computer_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `computer_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `location` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('online','offline','maintenance','deleted') COLLATE utf8mb4_unicode_ci DEFAULT 'online',
-  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `mac_address` varchar(17) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `specifications` text COLLATE utf8mb4_unicode_ci,
-  `os_installed` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `computer_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `computer_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('online','offline','maintenance','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'online',
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mac_address` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `specifications` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `os_installed` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `last_maintenance` date DEFAULT NULL,
   `next_maintenance` date DEFAULT NULL,
-  `issues_reported` text COLLATE utf8mb4_unicode_ci,
-  `assigned_to` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issues_reported` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `assigned_to` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `purchase_date` date DEFAULT NULL,
   `warranty_expiry` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -143,7 +163,7 @@ INSERT INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `location`, `
 
 CREATE TABLE `lab_usage_stats` (
   `id` int NOT NULL,
-  `lab_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `lab_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `date` date NOT NULL,
   `total_sessions` int DEFAULT '0',
   `total_users` int DEFAULT '0',
@@ -151,7 +171,7 @@ CREATE TABLE `lab_usage_stats` (
   `average_session_duration` int DEFAULT '0',
   `computers_used` int DEFAULT '0',
   `computers_available` int DEFAULT '0',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -173,13 +193,13 @@ INSERT INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `tota
 
 CREATE TABLE `maintenance_logs` (
   `id` int NOT NULL,
-  `computer_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maintenance_type` enum('routine','repair','upgrade','cleaning') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `performed_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `computer_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maintenance_type` enum('routine','repair','upgrade','cleaning') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `performed_by` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `cost` decimal(10,2) DEFAULT '0.00',
-  `parts_replaced` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('scheduled','in_progress','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'scheduled',
+  `parts_replaced` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('scheduled','in_progress','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'scheduled',
   `scheduled_date` date DEFAULT NULL,
   `completed_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -204,16 +224,16 @@ INSERT INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `descri
 
 CREATE TABLE `network_devices` (
   `id` int NOT NULL,
-  `device_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `device_type` enum('router','switch','access_point','firewall','server','other') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `mac_address` varchar(17) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` enum('online','offline','maintenance') COLLATE utf8mb4_unicode_ci DEFAULT 'online',
-  `firmware_version` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `device_type` enum('router','switch','access_point','firewall','server','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mac_address` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('online','offline','maintenance') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'online',
+  `firmware_version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `last_check` timestamp NULL DEFAULT NULL,
   `uptime_hours` int DEFAULT '0',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -244,17 +264,17 @@ INSERT INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`,
 
 CREATE TABLE `software_inventory` (
   `id` int NOT NULL,
-  `software_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `version` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `license_key` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `license_type` enum('free','commercial','educational','trial') COLLATE utf8mb4_unicode_ci DEFAULT 'educational',
+  `software_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_key` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_type` enum('free','commercial','educational','trial') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'educational',
   `license_expiry` date DEFAULT NULL,
   `installation_count` int DEFAULT '0',
   `update_available` tinyint(1) DEFAULT '0',
-  `latest_version` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `download_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `category` enum('os','office','development','design','antivirus','utility','other') COLLATE utf8mb4_unicode_ci DEFAULT 'utility',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `latest_version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `download_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` enum('os','office','development','design','antivirus','utility','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'utility',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -294,12 +314,12 @@ CREATE TABLE `v_active_tickets` (
 -- (See below for the actual view)
 --
 CREATE TABLE `v_computer_availability` (
-`location` varchar(100)
-,`total_computers` bigint
-,`online_count` decimal(23,0)
-,`offline_count` decimal(23,0)
+`availability_percentage` decimal(29,2)
+,`location` varchar(100)
 ,`maintenance_count` decimal(23,0)
-,`availability_percentage` decimal(29,2)
+,`offline_count` decimal(23,0)
+,`online_count` decimal(23,0)
+,`total_computers` bigint
 );
 
 -- --------------------------------------------------------

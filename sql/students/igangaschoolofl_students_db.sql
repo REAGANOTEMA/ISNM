@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 09:07 PM
+-- Generation Time: Jun 18, 2026 at 06:34 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,32 @@ SET time_zone = "+00:00";
 --
 -- Database: `igangaschoolofl_students_db`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -253,6 +279,27 @@ CREATE TABLE `clinical_placements_students` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `contact_submissions`
+--
+
+CREATE TABLE `contact_submissions` (
+  `id` int NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) NOT NULL,
+  `subject` varchar(100) NOT NULL,
+  `message` text NOT NULL,
+  `status` enum('unread','read','replied') DEFAULT 'unread',
+  `notified` tinyint(1) DEFAULT '0',
+  `replied_at` datetime DEFAULT NULL,
+  `replied_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cost_centers`
 --
 
@@ -307,6 +354,31 @@ CREATE TABLE `department_requests` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `donations`
+--
+
+CREATE TABLE `donations` (
+  `id` int NOT NULL,
+  `donor_name` varchar(200) NOT NULL,
+  `donor_email` varchar(255) NOT NULL,
+  `donor_phone` varchar(50) NOT NULL,
+  `donor_address` varchar(500) DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `payment_method` varchar(50) NOT NULL,
+  `payment_provider` varchar(50) DEFAULT NULL,
+  `transaction_reference` varchar(100) DEFAULT NULL,
+  `purpose` varchar(200) DEFAULT 'General Donation',
+  `notes` text,
+  `status` enum('pending','completed','failed','refunded') DEFAULT 'pending',
+  `notified` tinyint(1) DEFAULT '0',
+  `acknowledged_at` datetime DEFAULT NULL,
+  `acknowledged_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -704,6 +776,28 @@ CREATE TABLE `library_fines` (
   `paid` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `news`
+--
+
+CREATE TABLE `news` (
+  `id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `content` longtext,
+  `excerpt` text,
+  `featured_image` varchar(500) DEFAULT NULL,
+  `author_id` int DEFAULT NULL,
+  `author_name` varchar(255) DEFAULT NULL,
+  `author_role` varchar(255) DEFAULT NULL,
+  `status` enum('draft','published','archived') DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1140,17 +1234,17 @@ CREATE TABLE `student_course_registrations` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_dashboard_view` (
-`id` int
-,`student_number` varchar(50)
-,`full_name` varchar(302)
+`attendance_rate` decimal(31,5)
 ,`course` varchar(100)
-,`year` bigint
-,`set_name` varchar(50)
-,`email` varchar(100)
-,`profile_picture` varchar(500)
 ,`current_gpa` decimal(3,2)
+,`email` varchar(100)
 ,`fee_balance` decimal(32,2)
-,`attendance_rate` decimal(31,5)
+,`full_name` varchar(302)
+,`id` int
+,`profile_picture` varchar(500)
+,`set_name` varchar(50)
+,`student_number` varchar(50)
+,`year` bigint
 );
 
 -- --------------------------------------------------------
@@ -1303,16 +1397,16 @@ CREATE TABLE `student_invoices` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_login_view` (
-`id` int
-,`student_number` varchar(50)
-,`full_name` varchar(302)
+`course` varchar(100)
 ,`email` varchar(100)
-,`password` varchar(255)
-,`course` varchar(100)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`full_name` varchar(302)
+,`id` int
+,`is_first_login` tinyint(1)
 ,`last_login` timestamp
 ,`login_attempts` int
-,`is_first_login` tinyint(1)
+,`password` varchar(255)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`student_number` varchar(50)
 );
 
 -- --------------------------------------------------------

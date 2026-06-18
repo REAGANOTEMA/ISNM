@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 09:07 PM
+-- Generation Time: Jun 18, 2026 at 06:34 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -43,6 +43,26 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `academic_update_program_coordinator
     SET program_coordinator = p_coordinator_id,
         updated_at = NOW()
     WHERE program_code = p_program_code;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_new_student` (IN `p_student_number` VARCHAR(50), IN `p_registration_number` VARCHAR(50), IN `p_index_number` VARCHAR(50), IN `p_national_id` VARCHAR(50), IN `p_first_name` VARCHAR(100), IN `p_surname` VARCHAR(100), IN `p_other_name` VARCHAR(100), IN `p_email` VARCHAR(100), IN `p_phone` VARCHAR(20), IN `p_program` VARCHAR(100), IN `p_year` INT, IN `p_set_name` VARCHAR(50), IN `p_intake_date` DATE, IN `p_date_of_birth` DATE, IN `p_gender` ENUM('Male','Female','Other'), IN `p_nationality` VARCHAR(100), IN `p_address` TEXT, IN `p_guardian_name` VARCHAR(200), IN `p_guardian_phone` VARCHAR(20), IN `p_emergency_contact_name` VARCHAR(100), IN `p_emergency_contact_phone` VARCHAR(20), IN `p_status` ENUM('Active','Inactive','Graduated','Suspended','Withdrawn'), IN `p_added_by` INT)   BEGIN
@@ -1062,58 +1082,74 @@ CREATE TABLE `advanced_reports` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `alert_recipients`
+--
+
+CREATE TABLE `alert_recipients` (
+  `id` int NOT NULL,
+  `alert_id` int NOT NULL,
+  `role_id` int DEFAULT NULL COMMENT 'FK to staff_roles.id - NULL for all',
+  `staff_id` int DEFAULT NULL COMMENT 'FK to staff.id - specific person',
+  `is_acknowledged` tinyint(1) DEFAULT '0',
+  `acknowledged_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `all_students_view`
 -- (See below for the actual view)
 --
 CREATE TABLE `all_students_view` (
-`id` int
-,`student_number` varchar(50)
-,`national_id` varchar(50)
-,`index_number` varchar(50)
-,`registration_number` varchar(50)
-,`first_name` varchar(100)
-,`middle_name` varchar(100)
-,`last_name` varchar(100)
-,`full_name` varchar(255)
-,`email` varchar(100)
-,`phone` varchar(20)
-,`date_of_birth` date
-,`gender` enum('Male','Female','Other')
-,`program` varchar(100)
-,`program_type` enum('Certificate','Diploma','Degree')
-,`intake_set` varchar(20)
-,`intake_date` date
-,`year_of_study` int
-,`semester` varchar(50)
-,`academic_year` varchar(20)
+`academic_year` varchar(20)
 ,`address` text
-,`district` varchar(100)
+,`cgpa` decimal(3,2)
 ,`county` varchar(100)
-,`sub_county` varchar(100)
-,`parish` varchar(100)
-,`village` varchar(100)
-,`guardian_name` varchar(200)
-,`guardian_phone` varchar(20)
-,`guardian_relationship` varchar(50)
-,`guardian_address` text
+,`created_at` timestamp
+,`created_by` int
+,`date_of_birth` date
+,`district` varchar(100)
+,`email` varchar(100)
 ,`emergency_contact_name` varchar(100)
 ,`emergency_contact_phone` varchar(20)
 ,`emergency_contact_relationship` varchar(50)
-,`nationality` varchar(50)
-,`religion` varchar(50)
-,`marital_status` enum('Single','Married','Divorced','Widowed')
-,`photo_path` varchar(500)
-,`photo_uploaded` tinyint(1)
-,`photo_upload_date` timestamp
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
 ,`enrollment_status` enum('Full Time','Part Time','Distance')
+,`first_name` varchar(100)
+,`full_name` varchar(255)
+,`gender` enum('Male','Female','Other')
 ,`gpa` decimal(3,2)
-,`cgpa` decimal(3,2)
-,`created_by` int
-,`updated_by` int
-,`created_at` timestamp
-,`updated_at` timestamp
+,`guardian_address` text
+,`guardian_name` varchar(200)
+,`guardian_phone` varchar(20)
+,`guardian_relationship` varchar(50)
+,`id` int
+,`index_number` varchar(50)
+,`intake_date` date
+,`intake_set` varchar(20)
+,`last_name` varchar(100)
+,`marital_status` enum('Single','Married','Divorced','Widowed')
+,`middle_name` varchar(100)
+,`national_id` varchar(50)
+,`nationality` varchar(50)
+,`parish` varchar(100)
+,`phone` varchar(20)
+,`photo_path` varchar(500)
 ,`photo_status` text
+,`photo_upload_date` timestamp
+,`photo_uploaded` tinyint(1)
+,`program` varchar(100)
+,`program_type` enum('Certificate','Diploma','Degree')
+,`registration_number` varchar(50)
+,`religion` varchar(50)
+,`semester` varchar(50)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
+,`student_number` varchar(50)
+,`sub_county` varchar(100)
+,`updated_at` timestamp
+,`updated_by` int
+,`village` varchar(100)
+,`year_of_study` int
 );
 
 -- --------------------------------------------------------
@@ -1157,6 +1193,24 @@ CREATE TABLE `api_keys` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `application_reviews`
+--
+
+CREATE TABLE `application_reviews` (
+  `id` int NOT NULL,
+  `application_id` int NOT NULL COMMENT 'FK to student_applications.id',
+  `reviewer_id` int NOT NULL COMMENT 'FK to staff.id',
+  `review_status` enum('Pending','Reviewed','Approved','Rejected','Forwarded') DEFAULT 'Pending',
+  `review_notes` text,
+  `forwarded_to` int DEFAULT NULL COMMENT 'FK to staff.id if forwarded',
+  `forwarded_to_role` varchar(255) DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `appraisal_periods`
 --
 
@@ -1192,6 +1246,136 @@ CREATE TABLE `appraisal_ratings` (
   `comments` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_actions`
+--
+
+CREATE TABLE `approval_actions` (
+  `id` int NOT NULL,
+  `request_id` int NOT NULL,
+  `stage_id` int NOT NULL,
+  `action_by` int NOT NULL COMMENT 'FK to staff.id',
+  `action_type` enum('submit','review','recommend','approve','reject','escalate','return','cancel') NOT NULL,
+  `comments` text,
+  `notes` text COMMENT 'Internal notes',
+  `decision` enum('Pending','Approved','Rejected','Returned','Escalated') DEFAULT 'Pending',
+  `previous_stage_order` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_requests`
+--
+
+CREATE TABLE `approval_requests` (
+  `id` int NOT NULL,
+  `workflow_id` int NOT NULL,
+  `request_number` varchar(50) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text,
+  `priority` enum('Low','Medium','High','Critical') DEFAULT 'Medium',
+  `requester_id` int NOT NULL COMMENT 'FK to staff.id',
+  `requester_name` varchar(255) DEFAULT NULL,
+  `requester_role` varchar(255) DEFAULT NULL,
+  `current_stage_id` int DEFAULT NULL COMMENT 'FK to approval_stages.id - current stage',
+  `current_stage_order` int DEFAULT '0',
+  `status` enum('Draft','Active','Approved','Rejected','Cancelled','Escalated') DEFAULT 'Draft',
+  `reference_type` varchar(100) DEFAULT NULL COMMENT 'Type of record this relates to',
+  `reference_id` int DEFAULT NULL COMMENT 'ID of related record',
+  `reference_url` varchar(500) DEFAULT NULL COMMENT 'Link to related record',
+  `final_approval_by` int DEFAULT NULL COMMENT 'FK to staff.id',
+  `final_approval_at` datetime DEFAULT NULL,
+  `rejection_reason` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_stages`
+--
+
+CREATE TABLE `approval_stages` (
+  `id` int NOT NULL,
+  `workflow_id` int NOT NULL,
+  `stage_order` int NOT NULL COMMENT 'Sequence number (1,2,3...)',
+  `stage_name` varchar(255) NOT NULL COMMENT 'e.g. Request, Review, Recommendation, Approval',
+  `stage_code` enum('request','review','recommendation','approval','final_approval','rejection') NOT NULL,
+  `assigned_role_id` int DEFAULT NULL COMMENT 'FK to staff_roles.id - which role handles this stage',
+  `assigned_staff_id` int DEFAULT NULL COMMENT 'FK to staff.id - specific person (optional)',
+  `can_escalate` tinyint(1) DEFAULT '0',
+  `escalate_after_hours` int DEFAULT '48' COMMENT 'Auto-escalate after N hours',
+  `escalation_role_id` int DEFAULT NULL COMMENT 'FK to staff_roles.id - escalate to',
+  `required_notes` tinyint(1) DEFAULT '0' COMMENT 'Requires notes/justification',
+  `allow_rejection` tinyint(1) DEFAULT '1',
+  `reject_requires_reason` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `approval_stages`
+--
+
+INSERT INTO `approval_stages` (`id`, `workflow_id`, `stage_order`, `stage_name`, `stage_code`, `assigned_role_id`, `assigned_staff_id`, `can_escalate`, `escalate_after_hours`, `escalation_role_id`, `required_notes`, `allow_rejection`, `reject_requires_reason`, `created_at`) VALUES
+(1, 1, 1, 'Request Submission', 'request', 5, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(2, 1, 2, 'Finance Review', 'review', 5, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(3, 1, 3, 'Director Recommendation', 'recommendation', 5, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(4, 1, 4, 'Executive Approval', 'approval', 1, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(5, 1, 5, 'Final Sign-off', 'final_approval', 1, NULL, 0, 48, NULL, 0, 1, 1, '2026-06-18 06:33:43'),
+(6, 2, 1, 'Issue Reported', 'request', 27, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(7, 2, 2, 'Department Review', 'review', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(8, 2, 3, 'Director Recommendation', 'recommendation', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(9, 2, 4, 'Final Resolution', 'approval', 1, NULL, 0, 48, NULL, 0, 1, 1, '2026-06-18 06:33:43'),
+(10, 3, 1, 'Application Review', 'request', 27, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(11, 3, 2, 'Admissions Recommendation', 'recommendation', 27, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(12, 3, 3, 'Director Approval', 'approval', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(13, 3, 4, 'Final Authorization', 'final_approval', 1, NULL, 0, 48, NULL, 0, 1, 1, '2026-06-18 06:33:43'),
+(14, 4, 1, 'Request Submission', 'request', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(15, 4, 2, 'Academic Review', 'review', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(16, 4, 3, 'Director Approval', 'approval', 4, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(17, 5, 1, 'Change Request', 'request', 6, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(18, 5, 2, 'ICT Review', 'review', 6, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(19, 5, 3, 'Director Approval', 'approval', 6, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(20, 5, 4, 'Executive Authorization', 'final_approval', 1, NULL, 0, 48, NULL, 0, 1, 1, '2026-06-18 06:33:43'),
+(21, 6, 1, 'HR Request', 'request', 7, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(22, 6, 2, 'HR Review', 'review', 7, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43'),
+(23, 6, 3, 'Director Approval', 'approval', 1, NULL, 0, 48, NULL, 1, 1, 1, '2026-06-18 06:33:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_workflows`
+--
+
+CREATE TABLE `approval_workflows` (
+  `id` int NOT NULL,
+  `workflow_name` varchar(255) NOT NULL,
+  `workflow_code` varchar(50) NOT NULL COMMENT 'e.g. FINANCE_REQUEST, STUDENT_ISSUE, ADMISSION_DECISION',
+  `description` text,
+  `category` enum('Finance','Academic','Admissions','Student Affairs','System','HR','Other') NOT NULL DEFAULT 'Other',
+  `requires_final_approval` tinyint(1) DEFAULT '0' COMMENT 'Requires DG final sign-off',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `approval_workflows`
+--
+
+INSERT INTO `approval_workflows` (`id`, `workflow_name`, `workflow_code`, `description`, `category`, `requires_final_approval`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Finance Request', 'FINANCE_REQUEST', 'Budget approvals, expenditure requests, procurement', 'Finance', 1, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43'),
+(2, 'Student Issue Resolution', 'STUDENT_ISSUE', 'Student complaints, disciplinary appeals, special requests', 'Student Affairs', 0, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43'),
+(3, 'Admission Decision', 'ADMISSION_DECISION', 'Admission approvals, special entry, transfers', 'Admissions', 1, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43'),
+(4, 'Academic Decision', 'ACADEMIC_DECISION', 'Curriculum changes, exam adjustments, academic appeals', 'Academic', 0, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43'),
+(5, 'System Change', 'SYSTEM_CHANGE', 'System configuration, data access, security changes', 'System', 1, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43'),
+(6, 'HR Request', 'HR_REQUEST', 'Staff hiring, leave approvals, performance reviews', 'HR', 0, 1, '2026-06-18 06:33:43', '2026-06-18 06:33:43');
 
 -- --------------------------------------------------------
 
@@ -1269,6 +1453,34 @@ CREATE TABLE `attendance` (
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_trail`
+--
+
+CREATE TABLE `audit_trail` (
+  `id` bigint NOT NULL,
+  `staff_id` int NOT NULL COMMENT 'FK to staff.id',
+  `staff_name` varchar(255) DEFAULT NULL,
+  `role_name` varchar(255) DEFAULT NULL,
+  `action` varchar(100) NOT NULL COMMENT 'e.g. CREATE, UPDATE, DELETE, APPROVE, REJECT, LOGIN, LOGOUT',
+  `category` enum('User','Student','Finance','Academic','Admissions','System','Document','Settings','Approval','Alert','Other') DEFAULT 'Other',
+  `description` text,
+  `table_affected` varchar(255) DEFAULT NULL,
+  `record_id` int DEFAULT NULL,
+  `record_identifier` varchar(255) DEFAULT NULL COMMENT 'Human-readable record identifier',
+  `previous_values` json DEFAULT NULL COMMENT 'Previous state of changed fields',
+  `new_values` json DEFAULT NULL COMMENT 'New state of changed fields',
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text,
+  `session_id` varchar(100) DEFAULT NULL,
+  `request_method` varchar(10) DEFAULT NULL,
+  `request_uri` varchar(500) DEFAULT NULL,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1622,6 +1834,40 @@ CREATE TABLE `clinical_placements` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `communication_channels`
+--
+
+CREATE TABLE `communication_channels` (
+  `id` int NOT NULL,
+  `department_code` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `department_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `routing_email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `communication_channels`
+--
+
+INSERT INTO `communication_channels` (`id`, `department_code`, `department_name`, `routing_email`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'EXEC', 'Executive Office', 'exec@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(2, 'ACAD', 'Academic Affairs', 'acad@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(3, 'FIN', 'Finance Department', 'fin@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(4, 'HR', 'Human Resources', 'hr@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(5, 'ICT', 'Information Technology', 'ict@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(6, 'NUR', 'Nursing Department', 'nur@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(7, 'MID', 'Midwifery Department', 'mid@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(8, 'LIB', 'Library Services', 'lib@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(9, 'STU', 'Student Affairs', 'stu@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(10, 'SEC', 'Security Services', 'sec@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(11, 'FAC', 'Facilities Management', 'fac@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15'),
+(12, 'QA', 'Quality Assurance', 'qa@igangaschoolofnursingandmidwifery.ac.ug', 1, '2026-06-18 00:48:15', '2026-06-18 00:48:15');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `communication_log`
 --
 
@@ -1658,6 +1904,30 @@ CREATE TABLE `compliance_records` (
   `notes` text,
   `reminder_sent` tinyint(1) DEFAULT '0',
   `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `compliance_requirements`
+--
+
+CREATE TABLE `compliance_requirements` (
+  `id` int NOT NULL,
+  `requirement_name` varchar(255) NOT NULL,
+  `description` text,
+  `category` enum('accreditation','regulatory','safety','academic','financial','legal','other') DEFAULT 'regulatory',
+  `frequency` enum('once','annual','semester','quarterly','monthly','ongoing') DEFAULT 'annual',
+  `due_date` date DEFAULT NULL,
+  `assigned_role_id` int DEFAULT NULL COMMENT 'FK to staff_roles.id',
+  `assigned_staff_id` int DEFAULT NULL COMMENT 'FK to staff.id',
+  `status` enum('Not Started','In Progress','Compliant','Non-Compliant','Overdue') DEFAULT 'Not Started',
+  `evidence_path` varchar(500) DEFAULT NULL,
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1775,6 +2045,21 @@ CREATE TABLE `course_registrations` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dashboard_configs`
+--
+
+CREATE TABLE `dashboard_configs` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `config_key` varchar(100) NOT NULL,
+  `config_value` json NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dashboard_updates`
 --
 
@@ -1794,6 +2079,45 @@ CREATE TABLE `dashboard_updates` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `data_ownership_rules`
+--
+
+CREATE TABLE `data_ownership_rules` (
+  `id` int NOT NULL,
+  `role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `department_code` varchar(50) NOT NULL,
+  `access_level` enum('full','read','write','none') NOT NULL DEFAULT 'read',
+  `data_category` enum('student','academic','financial','admission','staff','system','all') NOT NULL DEFAULT 'all',
+  `can_export` tinyint(1) DEFAULT '0',
+  `can_delete` tinyint(1) DEFAULT '0',
+  `can_approve` tinyint(1) DEFAULT '0',
+  `is_owner` tinyint(1) DEFAULT '0' COMMENT 'This role owns this data category',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `data_ownership_rules`
+--
+
+INSERT INTO `data_ownership_rules` (`id`, `role_id`, `department_code`, `access_level`, `data_category`, `can_export`, `can_delete`, `can_approve`, `is_owner`, `created_at`) VALUES
+(1, 1, 'EXEC', 'full', 'all', 1, 1, 1, 1, '2026-06-18 06:33:44'),
+(2, 1, 'ACAD', 'full', 'all', 1, 1, 1, 0, '2026-06-18 06:33:44'),
+(3, 1, 'FIN', 'full', 'all', 1, 1, 1, 0, '2026-06-18 06:33:44'),
+(4, 1, 'ADM', 'full', 'all', 1, 1, 1, 0, '2026-06-18 06:33:44'),
+(5, 1, 'ICT', 'full', 'all', 1, 1, 1, 0, '2026-06-18 06:33:44'),
+(6, 3, 'CEO', 'full', 'all', 1, 0, 1, 1, '2026-06-18 06:33:44'),
+(7, 4, 'ACAD', 'full', 'academic', 1, 0, 1, 1, '2026-06-18 06:33:44'),
+(8, 4, 'ACAD', 'read', 'student', 1, 0, 0, 0, '2026-06-18 06:33:44'),
+(9, 5, 'FIN', 'full', 'financial', 1, 0, 1, 1, '2026-06-18 06:33:44'),
+(10, 5, 'FIN', 'read', 'student', 1, 0, 0, 0, '2026-06-18 06:33:44'),
+(11, 6, 'ICT', 'full', 'system', 1, 0, 0, 1, '2026-06-18 06:33:44'),
+(12, 6, 'ICT', 'read', 'all', 1, 0, 0, 0, '2026-06-18 06:33:44'),
+(13, 27, 'ADM', 'full', 'admission', 1, 0, 1, 1, '2026-06-18 06:33:44'),
+(14, 27, 'ADM', 'read', 'student', 1, 0, 0, 0, '2026-06-18 06:33:44');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `data_sync_status`
 --
 
@@ -1805,6 +2129,28 @@ CREATE TABLE `data_sync_status` (
   `sync_details` text,
   `records_synced` int DEFAULT '0',
   `error_count` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `delegation_records`
+--
+
+CREATE TABLE `delegation_records` (
+  `id` int NOT NULL,
+  `delegator_staff_id` int NOT NULL COMMENT 'FK to staff.id - the person delegating authority',
+  `delegate_staff_id` int NOT NULL COMMENT 'FK to staff.id - the person receiving authority',
+  `delegated_role_id` int NOT NULL COMMENT 'FK to staff_roles.id - which role authority is delegated for',
+  `delegation_type` enum('acting','temporary','specific_task') DEFAULT 'temporary',
+  `start_date` datetime NOT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `scope_of_authority` text COMMENT 'What powers are delegated (JSON)',
+  `reason` text,
+  `status` enum('Active','Expired','Revoked') DEFAULT 'Active',
+  `approved_by` int DEFAULT NULL COMMENT 'FK to staff.id - DG approval',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1828,6 +2174,62 @@ CREATE TABLE `departmental_budgets` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `department_targets`
+--
+
+CREATE TABLE `department_targets` (
+  `id` int NOT NULL,
+  `department_code` varchar(50) NOT NULL,
+  `fiscal_year` varchar(20) NOT NULL,
+  `target_name` varchar(255) NOT NULL,
+  `target_category` enum('academic','financial','admissions','staff','operational','compliance','other') NOT NULL DEFAULT 'other',
+  `target_value` decimal(14,2) NOT NULL DEFAULT '0.00',
+  `target_unit` varchar(50) DEFAULT 'count',
+  `achieved_value` decimal(14,2) DEFAULT '0.00',
+  `target_period` enum('monthly','quarterly','semester','annual') DEFAULT 'semester',
+  `period_start` date DEFAULT NULL,
+  `period_end` date DEFAULT NULL,
+  `weight` int DEFAULT '1' COMMENT 'Importance weight for scoring',
+  `status` enum('Not Started','In Progress','Achieved','Exceeded','Missed') DEFAULT 'Not Started',
+  `notes` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `director_departments`
+--
+
+CREATE TABLE `director_departments` (
+  `id` int NOT NULL,
+  `role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `department_name` varchar(255) NOT NULL,
+  `department_code` varchar(50) NOT NULL,
+  `description` text,
+  `is_primary` tinyint(1) DEFAULT '1' COMMENT 'Primary department for this role',
+  `status` enum('Active','Inactive') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `director_departments`
+--
+
+INSERT INTO `director_departments` (`id`, `role_id`, `department_name`, `department_code`, `description`, `is_primary`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Institution-wide Oversight', 'EXEC', 'Overall institutional leadership and strategic direction', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42'),
+(2, 3, 'Executive Management', 'CEO', 'Chief Executive Officer operations', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42'),
+(3, 4, 'Academic Affairs', 'ACAD', 'Academic programs, curriculum, examinations, and quality assurance', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42'),
+(4, 5, 'Finance & Accounts', 'FIN', 'Financial management, budgeting, revenue, and expenditure control', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42'),
+(5, 6, 'ICT & Systems', 'ICT', 'Information technology infrastructure, systems, and cybersecurity', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42'),
+(6, 27, 'Admissions & Enrollment', 'ADM', 'Student admissions, application processing, and enrollment', 1, 'Active', '2026-06-18 06:33:42', '2026-06-18 06:33:42');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `director_news`
 --
 
@@ -1841,6 +2243,57 @@ CREATE TABLE `director_news` (
   `author_id` int NOT NULL,
   `status` enum('draft','published','archived') DEFAULT 'draft',
   `published_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `director_performance_reviews`
+--
+
+CREATE TABLE `director_performance_reviews` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL COMMENT 'FK to staff.id',
+  `role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `review_period` varchar(50) NOT NULL COMMENT 'e.g. Q1 2026, Semester 1 2026',
+  `review_start` date DEFAULT NULL,
+  `review_end` date DEFAULT NULL,
+  `overall_score` decimal(5,2) DEFAULT '0.00' COMMENT '0-100 score',
+  `tasks_completed` int DEFAULT '0',
+  `tasks_pending` int DEFAULT '0',
+  `tasks_delayed` int DEFAULT '0',
+  `reports_submitted` int DEFAULT '0',
+  `issues_resolved` int DEFAULT '0',
+  `performance_rating` enum('Excellent','Good','Satisfactory','Needs Improvement','Poor') DEFAULT 'Satisfactory',
+  `reviewer_id` int DEFAULT NULL COMMENT 'FK to staff.id (usually DG)',
+  `review_notes` text,
+  `status` enum('Active','Under Review','Completed','Appealed') DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `director_reports`
+--
+
+CREATE TABLE `director_reports` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL COMMENT 'FK to staff.id',
+  `report_type` enum('weekly','monthly','quarterly','semester','annual','incident','special') NOT NULL DEFAULT 'monthly',
+  `report_title` varchar(255) NOT NULL,
+  `report_period` varchar(50) DEFAULT NULL,
+  `summary` text,
+  `report_data` json DEFAULT NULL COMMENT 'Structured report data',
+  `file_path` varchar(500) DEFAULT NULL,
+  `is_submitted` tinyint(1) DEFAULT '0',
+  `submitted_at` datetime DEFAULT NULL,
+  `reviewed_by` int DEFAULT NULL,
+  `review_status` enum('Pending','Reviewed','Needs Revision','Accepted') DEFAULT 'Pending',
+  `review_comments` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1917,6 +2370,49 @@ CREATE TABLE `document_generation_log` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `document_print_configs`
+--
+
+CREATE TABLE `document_print_configs` (
+  `id` int NOT NULL,
+  `document_type` varchar(100) NOT NULL COMMENT 'e.g. receipt, transcript, certificate',
+  `page_size` enum('A4','A5','Letter','Legal','Receipt') DEFAULT 'A4',
+  `orientation` enum('portrait','landscape') DEFAULT 'portrait',
+  `logo_width_px` int DEFAULT '80',
+  `show_logo` tinyint(1) DEFAULT '1',
+  `show_header` tinyint(1) DEFAULT '1',
+  `show_footer` tinyint(1) DEFAULT '1',
+  `footer_text` text,
+  `margin_top_mm` int DEFAULT '15',
+  `margin_bottom_mm` int DEFAULT '15',
+  `margin_left_mm` int DEFAULT '15',
+  `margin_right_mm` int DEFAULT '15',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `document_print_configs`
+--
+
+INSERT INTO `document_print_configs` (`id`, `document_type`, `page_size`, `orientation`, `logo_width_px`, `show_logo`, `show_header`, `show_footer`, `footer_text`, `margin_top_mm`, `margin_bottom_mm`, `margin_left_mm`, `margin_right_mm`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'receipt', 'A4', 'portrait', 80, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(2, 'transcript', 'A4', 'portrait', 100, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(3, 'certificate', 'A4', 'landscape', 120, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(4, 'invoice', 'A4', 'portrait', 80, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(5, 'payslip', 'A5', 'portrait', 60, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(6, 'report', 'A4', 'portrait', 80, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(7, 'timetable', 'A4', 'landscape', 60, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(8, 'exam_schedule', 'A4', 'landscape', 60, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(9, 'leave_form', 'A4', 'portrait', 60, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(10, 'performance_review', 'A4', 'portrait', 70, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(11, 'id_card', 'A5', 'landscape', 50, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20'),
+(12, 'contract', 'A4', 'portrait', 80, 1, 1, 1, NULL, 15, 15, 15, 15, 1, '2026-06-18 06:27:20', '2026-06-18 06:27:20');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `document_templates`
 --
 
@@ -1929,21 +2425,23 @@ CREATE TABLE `document_templates` (
   `is_default` tinyint(1) DEFAULT '0',
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `document_templates`
 --
 
-INSERT INTO `document_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_default`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border=\"1\"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(2, 'Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(3, 'Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border=\"1\"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(4, 'Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(5, 'Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style=\"border: 2px solid #000; padding: 20px; width: 300px;\"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(6, 'Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border=\"1\"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(7, 'Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36');
+INSERT INTO `document_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_default`, `created_by`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
+(1, 'Standard Transcript', 'transcript', '<html><body><h1>Academic Transcript</h1><table border=\"1\"><tr><td>Student Name:</td><td>{{student_name}}</td></tr><tr><td>Student ID:</td><td>{{student_id}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(2, 'Professional Certificate', 'certificate', '<html><body><h1>Certificate of Completion</h1><p>This is to certify that <strong>{{student_name}}</strong> has successfully completed the <strong>{{program}}</strong> program.</p></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(3, 'Standard Receipt', 'receipt', '<html><body><h1>Payment Receipt</h1><table border=\"1\"><tr><td>Receipt No:</td><td>{{receipt_number}}</td></tr><tr><td>Amount:</td><td>{{amount}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(4, 'Payslip Template', 'payslip', '<html><body><h1>Payslip</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Net Salary:</td><td>{{net_salary}}</td></tr><tr><td>Tax:</td><td>{{tax}}</td></tr><tr><td>Allowance:</td><td>{{allowance}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(5, 'Student ID Card', 'id_card', '<html><body><h1>Student ID Card</h1><div style=\"border: 2px solid #000; padding: 20px; width: 300px;\"><p><strong>Name:</strong> {{student_name}}</p><p><strong>ID:</strong> {{student_id}}</p><p><strong>Program:</strong> {{program}}</p></div></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(6, 'Leave Request Form', 'leave_form', '<html><body><h1>Leave Request Form</h1><table border=\"1\"><tr><td>Employee Name:</td><td>{{employee_name}}</td></tr><tr><td>Leave Type:</td><td>{{leave_type}}</td></tr><tr><td>Duration:</td><td>{{duration}}</td></tr><tr><td>Reason:</td><td>{{reason}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL),
+(7, 'Performance Review', 'performance_review', '<html><body><h1>Performance Review</h1><table border=\"1\"><tr><td>Employee:</td><td>{{employee_name}}</td></tr><tr><td>Period:</td><td>{{review_period}}</td></tr><tr><td>Rating:</td><td>{{rating}}</td></tr><tr><td>Comments:</td><td>{{comments}}</td></tr></table></body></html>', NULL, 1, NULL, '2026-06-14 19:50:36', '2026-06-14 19:50:36', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -2686,11 +3184,11 @@ CREATE TABLE `hr_activity_logs` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_leave_summary` (
-`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
-,`total_requests` bigint
-,`approved` decimal(23,0)
+`approved` decimal(23,0)
+,`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
 ,`pending` decimal(23,0)
 ,`rejected` decimal(23,0)
+,`total_requests` bigint
 );
 
 -- --------------------------------------------------------
@@ -2700,15 +3198,15 @@ CREATE TABLE `hr_leave_summary` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_performance_summary` (
-`staff_id` int
-,`full_name` varchar(100)
-,`position` varchar(100)
-,`department` varchar(100)
-,`role_name` varchar(100)
+`attendance_rate` decimal(31,5)
 ,`avg_performance_score` decimal(5,2)
+,`department` varchar(100)
+,`full_name` varchar(100)
 ,`latest_rating` enum('Outstanding','Excellent','Good','Satisfactory','Needs Improvement')
+,`position` varchar(100)
+,`role_name` varchar(100)
+,`staff_id` int
 ,`total_leaves` bigint
-,`attendance_rate` decimal(31,5)
 ,`training_completed` bigint
 );
 
@@ -2772,11 +3270,11 @@ INSERT INTO `hr_settings` (`id`, `setting_key`, `setting_value`, `setting_type`,
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_by_department` (
-`department` varchar(100)
-,`total_staff` bigint
-,`active_staff` decimal(23,0)
-,`inactive_staff` decimal(23,0)
+`active_staff` decimal(23,0)
 ,`avg_years_of_service` decimal(16,8)
+,`department` varchar(100)
+,`inactive_staff` decimal(23,0)
+,`total_staff` bigint
 );
 
 -- --------------------------------------------------------
@@ -2786,18 +3284,18 @@ CREATE TABLE `hr_staff_by_department` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_search_view` (
-`id` int
-,`staff_id` varchar(50)
-,`full_name` varchar(100)
+`account_status` varchar(7)
+,`department` varchar(100)
 ,`email` varchar(100)
+,`full_name` varchar(100)
+,`hire_date` date
+,`id` int
+,`last_login` timestamp
 ,`phone` varchar(20)
 ,`position` varchar(100)
-,`department` varchar(100)
 ,`role_name` varchar(100)
+,`staff_id` varchar(50)
 ,`status` enum('Active','Inactive','On Leave','Suspended')
-,`hire_date` date
-,`last_login` timestamp
-,`account_status` varchar(7)
 );
 
 -- --------------------------------------------------------
@@ -2846,6 +3344,54 @@ CREATE TABLE `incident_reports` (
   `reported_date` date DEFAULT NULL,
   `investigation_status` enum('open','under_investigation','closed') DEFAULT 'open',
   `investigation_findings` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `institutional_alerts`
+--
+
+CREATE TABLE `institutional_alerts` (
+  `id` int NOT NULL,
+  `alert_title` varchar(255) NOT NULL,
+  `alert_message` text NOT NULL,
+  `alert_type` enum('warning','danger','info','success','critical') NOT NULL DEFAULT 'info',
+  `priority` enum('Low','Medium','High','Critical') NOT NULL DEFAULT 'Medium',
+  `category` enum('attendance','academic','finance','admissions','system','staff','compliance','approval','other') NOT NULL DEFAULT 'other',
+  `department_code` varchar(50) DEFAULT NULL COMMENT 'NULL = institution-wide',
+  `source` varchar(100) DEFAULT NULL COMMENT 'Auto-generated or manual source identifier',
+  `source_url` varchar(500) DEFAULT NULL COMMENT 'Link to relevant page',
+  `is_auto_generated` tinyint(1) DEFAULT '0',
+  `is_read` tinyint(1) DEFAULT '0',
+  `is_resolved` tinyint(1) DEFAULT '0',
+  `resolved_at` datetime DEFAULT NULL,
+  `resolved_by` int DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `institutional_risks`
+--
+
+CREATE TABLE `institutional_risks` (
+  `id` int NOT NULL,
+  `risk_title` varchar(255) NOT NULL,
+  `risk_description` text,
+  `risk_category` enum('financial','academic','operational','reputational','compliance','strategic','security') NOT NULL DEFAULT 'operational',
+  `likelihood` enum('Rare','Unlikely','Possible','Likely','Almost Certain') DEFAULT 'Possible',
+  `impact` enum('Insignificant','Minor','Moderate','Major','Catastrophic') DEFAULT 'Moderate',
+  `risk_score` int GENERATED ALWAYS AS (((case when (`likelihood` = _utf8mb4'Rare') then 1 when (`likelihood` = _utf8mb4'Unlikely') then 2 when (`likelihood` = _utf8mb4'Possible') then 3 when (`likelihood` = _utf8mb4'Likely') then 4 when (`likelihood` = _utf8mb4'Almost Certain') then 5 else 3 end) * (case when (`impact` = _utf8mb4'Insignificant') then 1 when (`impact` = _utf8mb4'Minor') then 2 when (`impact` = _utf8mb4'Moderate') then 3 when (`impact` = _utf8mb4'Major') then 4 when (`impact` = _utf8mb4'Catastrophic') then 5 else 3 end))) STORED,
+  `mitigation_strategy` text,
+  `contingency_plan` text,
+  `owner_staff_id` int DEFAULT NULL COMMENT 'FK to staff.id',
+  `status` enum('Identified','Assessed','Mitigated','Monitored','Closed') DEFAULT 'Identified',
+  `review_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -3925,6 +4471,379 @@ CREATE TABLE `nursing_students` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `official_duties`
+--
+
+CREATE TABLE `official_duties` (
+  `id` int NOT NULL,
+  `role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `duty_title` varchar(255) NOT NULL,
+  `duty_icon` varchar(100) DEFAULT 'fas fa-tasks',
+  `sort_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `official_duties`
+--
+
+INSERT INTO `official_duties` (`id`, `role_id`, `duty_title`, `duty_icon`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(2, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(3, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(4, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(5, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(6, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(7, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(8, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(9, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(10, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(11, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(12, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(13, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(14, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(15, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(16, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(17, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(18, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(19, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(20, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(21, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(22, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(23, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(24, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(25, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(26, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(27, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(28, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(29, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(30, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(31, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(32, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(33, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(34, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(35, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(36, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(37, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(38, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(39, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(40, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(41, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(42, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(43, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(44, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(45, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(46, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(47, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(48, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(49, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(50, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:24:33', '2026-06-18 06:24:33'),
+(51, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(52, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(53, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(54, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(55, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(56, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(57, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(58, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(59, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(60, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(61, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(62, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(63, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(64, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(65, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(66, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(67, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(68, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(69, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(70, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(71, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(72, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(73, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(74, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(75, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(76, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(77, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(78, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(79, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(80, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(81, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(82, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(83, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(84, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(85, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(86, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(87, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(88, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(89, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(90, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(91, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(92, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(93, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(94, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(95, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(96, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(97, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(98, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(99, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(100, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:27:19', '2026-06-18 06:27:19'),
+(101, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(102, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(103, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(104, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(105, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(106, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(107, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(108, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(109, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(110, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(111, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(112, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(113, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(114, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(115, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(116, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(117, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(118, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(119, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(120, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(121, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(122, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(123, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(124, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(125, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(126, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(127, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(128, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(129, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(130, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(131, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(132, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(133, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(134, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(135, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(136, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(137, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(138, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(139, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(140, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(141, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(142, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(143, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(144, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(145, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(146, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(147, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(148, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(149, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(150, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:29:13', '2026-06-18 06:29:13'),
+(151, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(152, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(153, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(154, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(155, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(156, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(157, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(158, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(159, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(160, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(161, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(162, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(163, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(164, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(165, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(166, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(167, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(168, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(169, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(170, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(171, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(172, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(173, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(174, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(175, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(176, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(177, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(178, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(179, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(180, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(181, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(182, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(183, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(184, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(185, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(186, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(187, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(188, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(189, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(190, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(191, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(192, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(193, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(194, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(195, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(196, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(197, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(198, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(199, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(200, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:33:41', '2026-06-18 06:33:41'),
+(201, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(202, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(203, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(204, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(205, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(206, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(207, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(208, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(209, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(210, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(211, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(212, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(213, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(214, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(215, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(216, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(217, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(218, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(219, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(220, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(221, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(222, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(223, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(224, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(225, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(226, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(227, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(228, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(229, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(230, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(231, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(232, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(233, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(234, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(235, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(236, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(237, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(238, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(239, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(240, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(241, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(242, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(243, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(244, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(245, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(246, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(247, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(248, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(249, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(250, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:33:59', '2026-06-18 06:33:59'),
+(251, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(252, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(253, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(254, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(255, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(256, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(257, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(258, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(259, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(260, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(261, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(262, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(263, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(264, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(265, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(266, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(267, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(268, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(269, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(270, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(271, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(272, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(273, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(274, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(275, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(276, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(277, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(278, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(279, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(280, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(281, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(282, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(283, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(284, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(285, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(286, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(287, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(288, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(289, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(290, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(291, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(292, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(293, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(294, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(295, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(296, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(297, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(298, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(299, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(300, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:34:13', '2026-06-18 06:34:13'),
+(301, 1, 'Overall Institutional Leadership &amp; Strategic Direction', 'fas fa-sitemap', 1, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(302, 1, 'Oversight of All Academic, Administrative &amp; Financial Operations', 'fas fa-eye', 2, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(303, 1, 'Policy Formulation &amp; Implementation', 'fas fa-file-contract', 3, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(304, 1, 'Staff Supervision &amp; Performance Management', 'fas fa-users-cog', 4, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(305, 1, 'Budget Approval &amp; Financial Oversight', 'fas fa-check-double', 5, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(306, 1, 'Stakeholder Engagement &amp; Institutional Representation', 'fas fa-handshake', 6, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(307, 1, 'Quality Assurance &amp; Compliance', 'fas fa-certificate', 7, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(308, 1, 'Student Welfare &amp; Institutional Discipline', 'fas fa-user-shield', 8, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(309, 1, 'Public Relations &amp; Community Engagement', 'fas fa-bullhorn', 9, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(310, 1, 'Strategic Planning &amp; Institutional Development', 'fas fa-chart-line', 10, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(311, 4, 'Curriculum Development &amp; Review', 'fas fa-book-open', 1, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(312, 4, 'Academic Program Oversight', 'fas fa-graduation-cap', 2, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(313, 4, 'Examination Management', 'fas fa-clipboard-list', 3, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(314, 4, 'Academic Calendar Management', 'fas fa-calendar-alt', 4, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(315, 4, 'Quality Assurance of Academic Programs', 'fas fa-check-double', 5, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(316, 4, 'Lecturer Supervision &amp; Evaluation', 'fas fa-chalkboard-teacher', 6, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(317, 4, 'Student Academic Progress Monitoring', 'fas fa-chart-line', 7, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(318, 4, 'Academic Policy Development', 'fas fa-file-alt', 8, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(319, 4, 'Timetable Coordination', 'fas fa-clock', 9, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(320, 4, 'Academic Reporting &amp; Documentation', 'fas fa-print', 10, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(321, 5, 'Financial Planning &amp; Budget Management', 'fas fa-calculator', 1, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(322, 5, 'Revenue Collection &amp; Reconciliation', 'fas fa-money-bill-wave', 2, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(323, 5, 'Expense Tracking &amp; Control', 'fas fa-receipt', 3, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(324, 5, 'Financial Reporting &amp; Analysis', 'fas fa-chart-pie', 4, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(325, 5, 'Audit Coordination &amp; Compliance', 'fas fa-search-dollar', 5, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(326, 5, 'Payroll Management', 'fas fa-wallet', 6, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(327, 5, 'Fee Structure Development', 'fas fa-file-invoice', 7, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(328, 5, 'Procurement Oversight', 'fas fa-truck-loading', 8, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(329, 5, 'Bank Reconciliation', 'fas fa-university', 9, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(330, 5, 'URA Tax Compliance', 'fas fa-file-invoice-dollar', 10, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(331, 6, 'Technology Infrastructure Management', 'fas fa-server', 1, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(332, 6, 'IT Support &amp; Helpdesk Management', 'fas fa-headset', 2, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(333, 6, 'Computer Lab Management', 'fas fa-desktop', 3, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(334, 6, 'Network Administration', 'fas fa-network-wired', 4, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(335, 6, 'Software &amp; License Management', 'fas fa-download', 5, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(336, 6, 'Digital Learning Platform Management', 'fas fa-laptop-code', 6, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(337, 6, 'ICT Policy Development', 'fas fa-shield-alt', 7, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(338, 6, 'Cybersecurity &amp; Data Protection', 'fas fa-lock', 8, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(339, 6, 'System Maintenance &amp; Upgrades', 'fas fa-tools', 9, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(340, 6, 'ICT Asset Management', 'fas fa-boxes', 10, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(341, 27, 'Student Admission &amp; Enrollment Management', 'fas fa-file-signature', 1, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(342, 27, 'Application Processing &amp; Review', 'fas fa-check-circle', 2, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(343, 27, 'Admission Requirements Management', 'fas fa-clipboard-check', 3, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(344, 27, 'Intake Planning &amp; Coordination', 'fas fa-calendar-plus', 4, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(345, 27, 'Admission Letters &amp; Documentation', 'fas fa-envelope-open-text', 5, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(346, 27, 'Enrollment Confirmation &amp; Registration', 'fas fa-user-check', 6, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(347, 27, 'Admission Policy Development', 'fas fa-file-contract', 7, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(348, 27, 'Student Records Management', 'fas fa-folder-open', 8, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(349, 27, 'Orientation Program Coordination', 'fas fa-handshake', 9, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27'),
+(350, 27, 'Admission Reporting &amp; Statistics', 'fas fa-chart-bar', 10, 1, '2026-06-18 06:34:27', '2026-06-18 06:34:27');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `onboarding_checklist`
 --
 
@@ -3999,6 +4918,22 @@ CREATE TABLE `payments` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_approvals`
+--
+
+CREATE TABLE `payment_approvals` (
+  `id` int NOT NULL,
+  `payment_id` int NOT NULL COMMENT 'FK to payments.id',
+  `approved_by` int NOT NULL COMMENT 'FK to staff.id',
+  `approval_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `approval_notes` text,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -4127,6 +5062,58 @@ CREATE TRIGGER `update_fee_account_balance` AFTER INSERT ON `payment_records` FO
 END
 $$
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_routes`
+--
+
+CREATE TABLE `payment_routes` (
+  `id` int NOT NULL,
+  `payment_type` enum('fee_payment','registration','other') DEFAULT 'fee_payment',
+  `notify_role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `notify_role_name` varchar(255) NOT NULL,
+  `notify_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `payment_routes`
+--
+
+INSERT INTO `payment_routes` (`id`, `payment_type`, `notify_role_id`, `notify_role_name`, `notify_order`, `is_active`, `created_at`) VALUES
+(1, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:27:20'),
+(2, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:27:20'),
+(3, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:27:20'),
+(4, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:27:20'),
+(5, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:27:20'),
+(6, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:29:13'),
+(7, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:29:13'),
+(8, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:29:13'),
+(9, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:29:13'),
+(10, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:29:13'),
+(11, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:33:41'),
+(12, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:33:41'),
+(13, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:33:41'),
+(14, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:33:41'),
+(15, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:33:41'),
+(16, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:33:59'),
+(17, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:33:59'),
+(18, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:33:59'),
+(19, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:33:59'),
+(20, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:33:59'),
+(21, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:34:14'),
+(22, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:34:14'),
+(23, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:34:14'),
+(24, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:34:14'),
+(25, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:34:14'),
+(26, 'fee_payment', 5, 'Director Finance', 1, 1, '2026-06-18 06:34:27'),
+(27, 'fee_payment', 1, 'Director General', 2, 1, '2026-06-18 06:34:27'),
+(28, 'fee_payment', 4, 'Director Academics', 3, 1, '2026-06-18 06:34:27'),
+(29, 'fee_payment', 6, 'Director ICT', 4, 1, '2026-06-18 06:34:27'),
+(30, 'fee_payment', 27, 'Director Admissions', 5, 1, '2026-06-18 06:34:27');
 
 -- --------------------------------------------------------
 
@@ -4394,15 +5381,17 @@ CREATE TABLE `receipt_templates` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `receipt_templates`
 --
 
-INSERT INTO `receipt_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{\"date\": \"date\", \"amount\": \"number\", \"student_name\": \"string\", \"payment_method\": \"string\", \"receipt_number\": \"string\"}', 1, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37');
+INSERT INTO `receipt_templates` (`id`, `template_name`, `template_type`, `template_content`, `template_variables`, `is_active`, `created_by`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
+(1, 'Fee Payment Receipt', 'Fee Payment', '<h2>ISNM FEE PAYMENT RECEIPT</h2><p><strong>Receipt No:</strong> {{receipt_number}}</p><p><strong>Student:</strong> {{student_name}}</p><p><strong>Amount:</strong> UGX {{amount}}</p><p><strong>Date:</strong> {{date}}</p><p><strong>Payment Method:</strong> {{payment_method}}</p>', '{\"date\": \"date\", \"amount\": \"number\", \"student_name\": \"string\", \"payment_method\": \"string\", \"receipt_number\": \"string\"}', 1, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -4456,6 +5445,24 @@ CREATE TABLE `recruitment_jobs` (
   `posted_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `recycle_bin`
+--
+
+CREATE TABLE `recycle_bin` (
+  `id` int NOT NULL,
+  `original_table` varchar(255) NOT NULL COMMENT 'Source table where item was deleted from',
+  `original_id_column` varchar(255) NOT NULL DEFAULT 'id' COMMENT 'Primary key column name',
+  `original_id` int NOT NULL COMMENT 'The ID in the original table',
+  `item_title` varchar(500) NOT NULL COMMENT 'Readable title for the trashed item',
+  `item_description` text COMMENT 'Optional description/context',
+  `deleted_by` int DEFAULT '0' COMMENT 'staff.id who deleted it',
+  `deleted_by_name` varchar(255) DEFAULT '',
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -5215,6 +6222,8 @@ CREATE TABLE `staff_activity_log` (
   `staff_id` int NOT NULL,
   `activity_type` enum('Login','Logout','Dashboard Access','Data View','Data Edit','Data Delete','Export','Print','Settings Change','Account Created','Account Updated') NOT NULL,
   `activity_description` text,
+  `related_table` varchar(255) DEFAULT NULL,
+  `related_id` int DEFAULT NULL,
   `module_accessed` varchar(100) DEFAULT NULL,
   `record_id` int DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
@@ -5226,86 +6235,86 @@ CREATE TABLE `staff_activity_log` (
 -- Dumping data for table `staff_activity_log`
 --
 
-INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_description`, `module_accessed`, `record_id`, `ip_address`, `user_agent`, `created_at`) VALUES
-(5, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:24:32'),
-(6, 72, 'Account Created', 'ICT Department official account created/updated', 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:25:07'),
-(7, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
-(8, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
-(9, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
-(10, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
-(11, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
-(12, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
-(13, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
-(14, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
-(15, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
-(16, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
-(17, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
-(18, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
-(19, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:00:03'),
-(20, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
-(21, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
-(22, 51, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
-(23, 51, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
-(24, 57, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
-(25, 57, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
-(26, 59, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
-(27, 59, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
-(28, 52, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
-(29, 52, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
-(30, 70, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
-(31, 70, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
-(32, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
-(33, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
-(34, 74, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
-(35, 74, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
-(36, 54, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
-(37, 54, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
-(38, 56, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:32'),
-(39, 56, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:48'),
-(40, 53, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
-(41, 53, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
-(42, 60, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
-(43, 60, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
-(44, 61, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
-(45, 61, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
-(46, 62, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
-(47, 62, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
-(48, 64, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
-(49, 64, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
-(50, 63, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
-(51, 63, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
-(52, 66, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
-(53, 66, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
-(54, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
-(55, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
-(56, 69, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
-(57, 69, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
-(58, 65, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
-(59, 65, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
-(60, 68, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
-(61, 68, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
-(62, 67, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
-(63, 67, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
-(64, 71, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
-(65, 71, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
-(66, 58, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
-(67, 58, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
-(68, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
-(69, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
-(70, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:49'),
-(71, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
-(72, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
-(73, 72, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:03'),
-(74, 55, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
-(75, 55, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
-(76, 55, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:42'),
-(77, 50, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
-(78, 50, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
-(79, 50, 'Logout', 'User logged out', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:06'),
-(80, 72, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
-(81, 72, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
-(82, 75, 'Login', 'Staff member logged into the system', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28'),
-(83, 75, 'Login', 'User logged in successfully', 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28');
+INSERT INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_description`, `related_table`, `related_id`, `module_accessed`, `record_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(5, 72, 'Account Created', 'ICT Department official account created/updated', NULL, NULL, 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:24:32'),
+(6, 72, 'Account Created', 'ICT Department official account created/updated', NULL, NULL, 'authentication', NULL, 'SYSTEM', 'Account Setup Script', '2026-06-15 04:25:07'),
+(7, 50, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
+(8, 50, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 04:56:44'),
+(9, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(10, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:21:43'),
+(11, 58, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(12, 58, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:33:23'),
+(13, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(14, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:35:44'),
+(15, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(16, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-15 08:52:53'),
+(17, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(18, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 04:41:54'),
+(19, 72, 'Logout', 'User logged out', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:00:03'),
+(20, 50, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(21, 50, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:01:14'),
+(22, 51, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(23, 51, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:02:44'),
+(24, 57, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(25, 57, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:05:15'),
+(26, 59, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(27, 59, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:06:20'),
+(28, 52, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(29, 52, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:07:28'),
+(30, 70, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(31, 70, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:09:20'),
+(32, 55, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(33, 55, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:10:17'),
+(34, 74, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(35, 74, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:19:25'),
+(36, 54, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(37, 54, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:21:24'),
+(38, 56, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:32'),
+(39, 56, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:23:48'),
+(40, 53, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(41, 53, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:25:17'),
+(42, 60, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(43, 60, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:49:17'),
+(44, 61, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(45, 61, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:50:43'),
+(46, 62, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(47, 62, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:51:24'),
+(48, 64, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(49, 64, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:52:48'),
+(50, 63, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(51, 63, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:53:29'),
+(52, 66, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(53, 66, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:56:12'),
+(54, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(55, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 05:57:03'),
+(56, 69, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(57, 69, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:43:52'),
+(58, 65, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(59, 65, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:45:20'),
+(60, 68, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(61, 68, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:52:01'),
+(62, 67, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(63, 67, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:53:02'),
+(64, 71, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(65, 71, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:54:55'),
+(66, 58, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(67, 58, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 13:56:10'),
+(68, 50, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(69, 50, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:43:18'),
+(70, 50, 'Logout', 'User logged out', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:49'),
+(71, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(72, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:44:53'),
+(73, 72, 'Logout', 'User logged out', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:03'),
+(74, 55, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(75, 55, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 14:45:06'),
+(76, 55, 'Logout', 'User logged out', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:42'),
+(77, 50, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
+(78, 50, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 15:41:49'),
+(79, 50, 'Logout', 'User logged out', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:06'),
+(80, 72, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
+(81, 72, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 16:29:12'),
+(82, 75, 'Login', 'Staff member logged into the system', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28'),
+(83, 75, 'Login', 'User logged in successfully', NULL, NULL, 'authentication', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-16 18:33:28');
 
 -- --------------------------------------------------------
 
@@ -5323,7 +6332,9 @@ CREATE TABLE `staff_announcements` (
   `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
   `announcement_date` date NOT NULL,
   `posted_by` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -5420,6 +6431,27 @@ INSERT INTO `staff_categories` (`id`, `category_name`, `category_code`, `descrip
 (2, 'Administrative', 'AD', 'Office and administrative staff', 'active', '2026-05-23 13:27:59'),
 (3, 'Support Staff', 'SS', 'Cleaners, drivers, support personnel', 'active', '2026-05-23 13:27:59'),
 (4, 'Managerial', 'MG', 'Managers, directors, supervisors', 'active', '2026-05-23 13:27:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_communications`
+--
+
+CREATE TABLE `staff_communications` (
+  `id` int NOT NULL,
+  `sender_id` int NOT NULL,
+  `sender_email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `sender_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `recipient_type` enum('department','all_staff') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'department',
+  `recipient_id` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `recipient_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `subject` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `message_body` text COLLATE utf8mb4_general_ci NOT NULL,
+  `priority` enum('Low','Normal','High','Urgent') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Normal',
+  `email_status` enum('pending','sent','failed') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -5667,21 +6699,21 @@ DELIMITER ;
 -- (See below for the actual view)
 --
 CREATE TABLE `staff_login_view` (
-`id` int
-,`staff_id` varchar(50)
-,`full_name` varchar(100)
-,`email` varchar(100)
-,`position` varchar(100)
-,`department` varchar(100)
-,`role_name` varchar(100)
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+`account_status` varchar(7)
 ,`dashboard_path` varchar(255)
-,`status` enum('Active','Inactive','On Leave','Suspended')
-,`last_login` timestamp
-,`login_attempts` int
-,`locked_until` timestamp
+,`department` varchar(100)
+,`email` varchar(100)
+,`full_name` varchar(100)
+,`id` int
 ,`is_first_login` tinyint(1)
-,`account_status` varchar(7)
+,`last_login` timestamp
+,`locked_until` timestamp
+,`login_attempts` int
+,`position` varchar(100)
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`role_name` varchar(100)
+,`staff_id` varchar(50)
+,`status` enum('Active','Inactive','On Leave','Suspended')
 );
 
 -- --------------------------------------------------------
@@ -5785,6 +6817,8 @@ CREATE TABLE `staff_profiles` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `bio` text,
+  `department` varchar(255) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
   `profile_picture` varchar(255) DEFAULT NULL,
   `qualifications` text,
   `experience` text,
@@ -5918,40 +6952,44 @@ CREATE TABLE `staff_roles` (
   `dashboard_path` varchar(255) DEFAULT NULL,
   `permissions` json DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `hierarchy_level` int DEFAULT '99' COMMENT 'Lower = higher authority (1=DG)',
+  `reporting_to_role_id` int DEFAULT NULL COMMENT 'FK to staff_roles.id',
+  `can_approve_level` int DEFAULT '0' COMMENT 'Max approval level this role can authorize',
+  `is_executive` tinyint(1) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `staff_roles`
 --
 
-INSERT INTO `staff_roles` (`id`, `role_name`, `role_description`, `role_level`, `dashboard_path`, `permissions`, `created_at`, `updated_at`) VALUES
-(1, 'Director General', 'Overall school administration and management with full access to all modules and departments', 'Executive', 'dashboards/director-general.php', '{\"all\": true, \"can_view_hr\": true, \"super_admin\": true, \"can_edit_all_data\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_delete_all_data\": true, \"can_manage_all_staff\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_access_all_dashboards\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(2, 'School Principal', 'School academic and administrative leadership with cross-departmental viewing access', 'Executive', 'dashboards/school-principal.php', '{\"staff\": true, \"academic\": true, \"students\": true, \"can_view_hr\": true, \"administrative\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(3, 'CEO', 'Chief Executive Officer for strategic management with cross-departmental viewing access', 'Executive', 'dashboards/ceo.php', '{\"financial\": true, \"strategic\": true, \"can_view_hr\": true, \"operational\": true, \"can_view_reports\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(4, 'Director Academics', 'Academic programs and curriculum oversight with cross-departmental viewing access', 'Management', 'dashboards/director-academics.php', '{\"faculty\": true, \"academic\": true, \"curriculum\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_manage_courses\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(5, 'Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{\"budgeting\": true, \"financial\": true, \"reporting\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_manage_finances\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(6, 'Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{\"ict\": true, \"systems\": true, \"can_view_hr\": true, \"infrastructure\": true, \"can_manage_system\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(7, 'HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{\"hr\": true, \"staff\": true, \"training\": true, \"recruitment\": true, \"can_manage_staff\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(8, 'Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{\"academic\": true, \"students\": true, \"transcripts\": true, \"certificates\": true, \"registration\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(9, 'School Bursar', 'Financial operations and fee management', 'Administrative', 'bursar_dashboard.php', '{\"fees\": true, \"financial\": true, \"collections\": true, \"can_manage_fees\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(10, 'School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{\"catalog\": true, \"library\": true, \"resources\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(11, 'Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{\"faculty\": true, \"nursing\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(12, 'Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{\"faculty\": true, \"midwifery\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(13, 'Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{\"courses\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(14, 'Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{\"senior\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(16, 'Sickbay', 'Medical and healthcare support services', 'Support', 'dashboards/sickbay.php', '{\"medical\": true, \"patient\": true, \"healthcare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(17, 'Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{\"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(18, 'Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{\"safety\": true, \"security\": true, \"emergency\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(19, 'Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{\"vehicles\": true, \"transportation\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(20, 'Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{\"discipline\": true, \"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(21, 'School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{\"documentation\": true, \"administrative\": true, \"can_manage_documents\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(22, 'Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{\"academic\": true, \"administrative\": true, \"can_assist_principal\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(25, 'Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{\"store\": true, \"inventory\": true, \"can_manage_store\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36'),
-(26, 'Guild President', 'Student guild', 'Support', 'dashboards/guild-president.php', '{\"student_affairs\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
-(27, 'Director Admissions & Requirements', 'Admissions management', 'Management', 'dashboards/director-admissions.php', '{\"admissions\": true, \"requirements\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32'),
-(52, 'Computer Lab Manager', 'Computer lab operations and IT support', 'Support', 'computer_lab.php', '{\"ict\": true, \"it_support\": true, \"lab_management\": true}', '2026-06-15 04:24:02', '2026-06-15 04:24:02'),
-(53, 'Skills Lab Manager', 'Skills laboratory management including equipment, practical sessions, skills demonstrations, and consumables', 'Support', 'dashboards/skills-lab.php', '{\"skills\": true, \"checkout\": true, \"sessions\": true, \"equipment\": true, \"incidents\": true, \"attendance\": true, \"consumables\": true}', '2026-06-16 18:28:38', '2026-06-16 18:28:38');
+INSERT INTO `staff_roles` (`id`, `role_name`, `role_description`, `role_level`, `dashboard_path`, `permissions`, `created_at`, `updated_at`, `hierarchy_level`, `reporting_to_role_id`, `can_approve_level`, `is_executive`) VALUES
+(1, 'Director General', 'Overall school administration and management with full access to all modules and departments', 'Executive', 'dashboards/director-general.php', '{\"all\": true, \"can_view_hr\": true, \"super_admin\": true, \"can_edit_all_data\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_delete_all_data\": true, \"can_manage_all_staff\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_access_all_dashboards\": true}', '2026-06-14 19:50:36', '2026-06-18 06:33:42', 1, NULL, 10, 1),
+(2, 'School Principal', 'School academic and administrative leadership with cross-departmental viewing access', 'Executive', 'dashboards/school-principal.php', '{\"staff\": true, \"academic\": true, \"students\": true, \"can_view_hr\": true, \"administrative\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(3, 'CEO', 'Chief Executive Officer for strategic management with cross-departmental viewing access', 'Executive', 'dashboards/ceo.php', '{\"financial\": true, \"strategic\": true, \"can_view_hr\": true, \"operational\": true, \"can_view_reports\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-18 06:33:42', 2, 1, 8, 1),
+(4, 'Director Academics', 'Academic programs and curriculum oversight with cross-departmental viewing access', 'Management', 'dashboards/director-academics.php', '{\"faculty\": true, \"academic\": true, \"curriculum\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_manage_courses\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-18 06:33:42', 3, 1, 6, 1),
+(5, 'Director Finance', 'Financial management and oversight with cross-departmental viewing access', 'Management', 'dashboards/director-finance.php', '{\"budgeting\": true, \"financial\": true, \"reporting\": true, \"can_view_hr\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_manage_finances\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-18 06:33:42', 3, 1, 6, 1),
+(6, 'Director ICT', 'Information Technology management with cross-departmental viewing access', 'Management', 'dashboards/director-ict.php', '{\"ict\": true, \"systems\": true, \"can_view_hr\": true, \"infrastructure\": true, \"can_manage_system\": true, \"can_view_academic\": true, \"can_view_students\": true, \"can_view_financial\": true, \"can_view_all_records\": true, \"can_edit_own_department\": true, \"can_view_all_departments\": true, \"can_view_other_departments\": true}', '2026-06-14 19:50:36', '2026-06-18 06:33:42', 3, 1, 5, 1),
+(7, 'HR Manager', 'Human resources management', 'Management', 'dashboards/hr-manager.php', '{\"hr\": true, \"staff\": true, \"training\": true, \"recruitment\": true, \"can_manage_staff\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(8, 'Academic Registrar', 'Student registration and academic records management', 'Academic', 'dashboards/academic-registrar.php', '{\"academic\": true, \"students\": true, \"transcripts\": true, \"certificates\": true, \"registration\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(9, 'School Bursar', 'Financial operations and fee management', 'Administrative', 'bursar_dashboard.php', '{\"fees\": true, \"financial\": true, \"collections\": true, \"can_manage_fees\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(10, 'School Librarian', 'Library and resource management', 'Support', 'dashboards/school-librarian.php', '{\"catalog\": true, \"library\": true, \"resources\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(11, 'Head Nursing', 'Nursing department management', 'Academic', 'dashboards/head-nursing.php', '{\"faculty\": true, \"nursing\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(12, 'Head Midwifery', 'Midwifery department management', 'Academic', 'dashboards/head-midwifery.php', '{\"faculty\": true, \"midwifery\": true, \"department\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(13, 'Lecturers', 'Teaching and academic staff management', 'Academic', 'dashboards/lecturers.php', '{\"courses\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(14, 'Senior Lecturers', 'Senior teaching staff management', 'Academic', 'dashboards/senior-lecturers.php', '{\"senior\": true, \"teaching\": true, \"lecturers\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(16, 'Sickbay', 'Medical and healthcare support services', 'Support', 'dashboards/sickbay.php', '{\"medical\": true, \"patient\": true, \"healthcare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(17, 'Matrons', 'Student welfare and residential staff management', 'Support', 'dashboards/matrons.php', '{\"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(18, 'Security', 'Campus security and safety management', 'Support', 'dashboards/security.php', '{\"safety\": true, \"security\": true, \"emergency\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(19, 'Drivers', 'Transportation and vehicle management', 'Support', 'dashboards/drivers.php', '{\"vehicles\": true, \"transportation\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(20, 'Wardens', 'Student discipline and residential supervision', 'Support', 'dashboards/wardens.php', '{\"discipline\": true, \"residential\": true, \"student_welfare\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(21, 'School Secretary', 'Administrative support and documentation', 'Administrative', 'dashboards/school-secretary.php', '{\"documentation\": true, \"administrative\": true, \"can_manage_documents\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(22, 'Deputy Principal', 'Assistant to school principal', 'Management', 'dashboards/deputy-principal.php', '{\"academic\": true, \"administrative\": true, \"can_assist_principal\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(25, 'Store Keeper', 'Manage store inventory for general utilities and food supplies', 'Support', 'dashboards/storekeeper.php', '{\"store\": true, \"inventory\": true, \"can_manage_store\": true}', '2026-06-14 19:50:36', '2026-06-14 19:50:36', 99, NULL, 0, 0),
+(26, 'Guild President', 'Student guild', 'Support', 'dashboards/guild-president.php', '{\"student_affairs\": true}', '2026-06-15 03:57:32', '2026-06-15 03:57:32', 99, NULL, 0, 0),
+(27, 'Director Admissions & Requirements', 'Admissions management', 'Management', 'dashboards/director-admissions.php', '{\"admissions\": true, \"requirements\": true}', '2026-06-15 03:57:32', '2026-06-18 06:33:42', 3, 1, 5, 1),
+(52, 'Computer Lab Manager', 'Computer lab operations and IT support', 'Support', 'computer_lab.php', '{\"ict\": true, \"it_support\": true, \"lab_management\": true}', '2026-06-15 04:24:02', '2026-06-15 04:24:02', 99, NULL, 0, 0),
+(53, 'Skills Lab Manager', 'Skills laboratory management including equipment, practical sessions, skills demonstrations, and consumables', 'Support', 'dashboards/skills-lab.php', '{\"skills\": true, \"checkout\": true, \"sessions\": true, \"equipment\": true, \"incidents\": true, \"attendance\": true, \"consumables\": true}', '2026-06-16 18:28:38', '2026-06-16 18:28:38', 99, NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -6810,27 +7848,27 @@ CREATE TABLE `student_search_index` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_search_view` (
-`id` int
-,`student_number` varchar(50)
-,`national_id` varchar(50)
-,`index_number` varchar(50)
-,`registration_number` varchar(50)
-,`full_name` varchar(255)
-,`first_name` varchar(100)
-,`last_name` varchar(100)
-,`email` varchar(100)
-,`phone` varchar(20)
-,`program` varchar(100)
-,`intake_set` varchar(20)
-,`year_of_study` int
-,`semester` varchar(50)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
+`current_photo` varchar(500)
 ,`district` varchar(100)
+,`email` varchar(100)
+,`first_name` varchar(100)
+,`full_name` varchar(255)
 ,`guardian_name` varchar(200)
 ,`guardian_phone` varchar(20)
-,`current_photo` varchar(500)
 ,`has_photo` int
+,`id` int
+,`index_number` varchar(50)
+,`intake_set` varchar(20)
+,`last_name` varchar(100)
+,`national_id` varchar(50)
+,`phone` varchar(20)
+,`program` varchar(100)
+,`registration_number` varchar(50)
+,`semester` varchar(50)
 ,`staff_dashboard` binary(0)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
+,`student_number` varchar(50)
+,`year_of_study` int
 );
 
 -- --------------------------------------------------------
@@ -6855,6 +7893,77 @@ CREATE TABLE `student_welfare_cases` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `submission_routes`
+--
+
+CREATE TABLE `submission_routes` (
+  `id` int NOT NULL,
+  `submission_type` enum('application','volunteer','donation','contact','complaint','feedback') NOT NULL,
+  `route_to_role_id` int NOT NULL COMMENT 'FK to staff_roles.id',
+  `route_to_role_name` varchar(255) NOT NULL,
+  `route_order` int DEFAULT '0' COMMENT 'Routing priority order',
+  `notify_via` enum('email','notification','both') DEFAULT 'both',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `submission_routes`
+--
+
+INSERT INTO `submission_routes` (`id`, `submission_type`, `route_to_role_id`, `route_to_role_name`, `route_order`, `notify_via`, `is_active`, `created_at`) VALUES
+(1, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:27:20'),
+(2, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:27:20'),
+(3, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:27:20'),
+(4, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:27:20'),
+(5, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:27:20'),
+(6, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:27:20'),
+(7, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:27:20'),
+(8, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:27:20'),
+(9, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:29:13'),
+(10, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:29:13'),
+(11, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:29:13'),
+(12, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:29:13'),
+(13, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:29:13'),
+(14, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:29:13'),
+(15, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:29:13'),
+(16, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:29:13'),
+(17, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:33:41'),
+(18, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:33:41'),
+(19, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:33:41'),
+(20, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:33:41'),
+(21, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:33:41'),
+(22, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:41'),
+(23, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:41'),
+(24, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:41'),
+(25, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:33:59'),
+(26, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:33:59'),
+(27, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:33:59'),
+(28, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:33:59'),
+(29, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:33:59'),
+(30, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:59'),
+(31, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:59'),
+(32, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:33:59'),
+(33, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:34:13'),
+(34, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:34:13'),
+(35, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:34:13'),
+(36, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:34:13'),
+(37, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:34:13'),
+(38, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:13'),
+(39, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:13'),
+(40, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:13'),
+(41, 'application', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:34:27'),
+(42, 'application', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:34:27'),
+(43, 'volunteer', 27, 'Director Admissions', 1, 'both', 1, '2026-06-18 06:34:27'),
+(44, 'volunteer', 22, 'Secretary', 2, 'both', 1, '2026-06-18 06:34:27'),
+(45, 'donation', 5, 'Director Finance', 1, 'both', 1, '2026-06-18 06:34:27'),
+(46, 'contact', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:27'),
+(47, 'feedback', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:27'),
+(48, 'complaint', 1, 'Director General', 1, 'both', 1, '2026-06-18 06:34:27');
 
 -- --------------------------------------------------------
 
@@ -7129,27 +8238,27 @@ CREATE TABLE `ura_reports` (
 -- (See below for the actual view)
 --
 CREATE TABLE `users` (
-`id` int
-,`username` varchar(50)
-,`user_name` varchar(100)
-,`email` varchar(100)
-,`password` varchar(255)
-,`position` varchar(100)
-,`department` varchar(100)
-,`role_id` int
-,`role_name` varchar(100)
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
-,`dashboard_path` varchar(255)
-,`status` enum('Active','Inactive','On Leave','Suspended')
-,`phone` varchar(20)
-,`address` text
-,`hire_date` date
-,`last_login` timestamp
-,`login_attempts` int
-,`locked_until` timestamp
-,`is_first_login` tinyint(1)
+`address` text
 ,`created_at` timestamp
+,`dashboard_path` varchar(255)
+,`department` varchar(100)
+,`email` varchar(100)
+,`hire_date` date
+,`id` int
+,`is_first_login` tinyint(1)
+,`last_login` timestamp
+,`locked_until` timestamp
+,`login_attempts` int
+,`password` varchar(255)
+,`phone` varchar(20)
+,`position` varchar(100)
+,`role_id` int
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`role_name` varchar(100)
+,`status` enum('Active','Inactive','On Leave','Suspended')
 ,`updated_at` timestamp
+,`user_name` varchar(100)
+,`username` varchar(50)
 );
 
 -- --------------------------------------------------------
@@ -7453,6 +8562,15 @@ ALTER TABLE `advanced_reports`
   ADD KEY `idx_created_by` (`created_by`);
 
 --
+-- Indexes for table `alert_recipients`
+--
+ALTER TABLE `alert_recipients`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_alert` (`alert_id`),
+  ADD KEY `idx_role` (`role_id`),
+  ADD KEY `idx_staff` (`staff_id`);
+
+--
 -- Indexes for table `analytics_cache`
 --
 ALTER TABLE `analytics_cache`
@@ -7477,6 +8595,14 @@ ALTER TABLE `api_keys`
   ADD KEY `idx_expires_at` (`expires_at`);
 
 --
+-- Indexes for table `application_reviews`
+--
+ALTER TABLE `application_reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app` (`application_id`),
+  ADD KEY `idx_reviewer` (`reviewer_id`);
+
+--
 -- Indexes for table `appraisal_periods`
 --
 ALTER TABLE `appraisal_periods`
@@ -7490,6 +8616,46 @@ ALTER TABLE `appraisal_ratings`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_appraisal` (`appraisal_id`),
   ADD KEY `indicator_id` (`indicator_id`);
+
+--
+-- Indexes for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `stage_id` (`stage_id`),
+  ADD KEY `idx_request` (`request_id`),
+  ADD KEY `idx_action_by` (`action_by`),
+  ADD KEY `idx_decision` (`decision`);
+
+--
+-- Indexes for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `request_number` (`request_number`),
+  ADD KEY `workflow_id` (`workflow_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_requester` (`requester_id`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_ref` (`reference_type`,`reference_id`);
+
+--
+-- Indexes for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_workflow_order` (`workflow_id`,`stage_order`),
+  ADD KEY `idx_role` (`assigned_role_id`),
+  ADD KEY `idx_stage_code` (`stage_code`);
+
+--
+-- Indexes for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `workflow_code` (`workflow_code`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_active` (`is_active`);
 
 --
 -- Indexes for table `assets`
@@ -7523,6 +8689,19 @@ ALTER TABLE `attendance`
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_attendance_date` (`attendance_date`),
   ADD KEY `idx_status` (`attendance_status`);
+
+--
+-- Indexes for table `audit_trail`
+--
+ALTER TABLE `audit_trail`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`),
+  ADD KEY `idx_action` (`action`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_table` (`table_affected`),
+  ADD KEY `idx_record` (`record_id`),
+  ADD KEY `idx_created` (`created_at`),
+  ADD KEY `idx_staff_date` (`staff_id`,`created_at`);
 
 --
 -- Indexes for table `backup_management`
@@ -7653,6 +8832,13 @@ ALTER TABLE `clinical_placements`
   ADD KEY `idx_placement_number` (`placement_number`);
 
 --
+-- Indexes for table `communication_channels`
+--
+ALTER TABLE `communication_channels`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_department_code` (`department_code`);
+
+--
 -- Indexes for table `communication_log`
 --
 ALTER TABLE `communication_log`
@@ -7671,6 +8857,15 @@ ALTER TABLE `compliance_records`
   ADD KEY `idx_compliance_type` (`compliance_type`),
   ADD KEY `idx_expiry_date` (`expiry_date`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `compliance_requirements`
+--
+ALTER TABLE `compliance_requirements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_due` (`due_date`);
 
 --
 -- Indexes for table `compliance_tracking`
@@ -7720,12 +8915,29 @@ ALTER TABLE `course_registrations`
   ADD KEY `idx_registration_number` (`registration_number`);
 
 --
+-- Indexes for table `dashboard_configs`
+--
+ALTER TABLE `dashboard_configs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_staff_key` (`staff_id`,`config_key`),
+  ADD KEY `idx_staff` (`staff_id`);
+
+--
 -- Indexes for table `dashboard_updates`
 --
 ALTER TABLE `dashboard_updates`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_update_type` (`update_type`),
   ADD KEY `idx_is_active` (`is_active`);
+
+--
+-- Indexes for table `data_ownership_rules`
+--
+ALTER TABLE `data_ownership_rules`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_role_dept_category` (`role_id`,`department_code`,`data_category`),
+  ADD KEY `idx_role` (`role_id`),
+  ADD KEY `idx_dept` (`department_code`);
 
 --
 -- Indexes for table `data_sync_status`
@@ -7737,11 +8949,39 @@ ALTER TABLE `data_sync_status`
   ADD KEY `idx_last_sync` (`last_sync`);
 
 --
+-- Indexes for table `delegation_records`
+--
+ALTER TABLE `delegation_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_delegator` (`delegator_staff_id`),
+  ADD KEY `idx_delegate` (`delegate_staff_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `departmental_budgets`
 --
 ALTER TABLE `departmental_budgets`
   ADD PRIMARY KEY (`id`),
   ADD KEY `budget_id` (`budget_id`);
+
+--
+-- Indexes for table `department_targets`
+--
+ALTER TABLE `department_targets`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_dept` (`department_code`),
+  ADD KEY `idx_year` (`fiscal_year`),
+  ADD KEY `idx_category` (`target_category`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `director_departments`
+--
+ALTER TABLE `director_departments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `department_code` (`department_code`),
+  ADD KEY `idx_role` (`role_id`),
+  ADD KEY `idx_dept` (`department_code`);
 
 --
 -- Indexes for table `director_news`
@@ -7753,6 +8993,24 @@ ALTER TABLE `director_news`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_author_id` (`author_id`),
   ADD KEY `idx_published_at` (`published_at`);
+
+--
+-- Indexes for table `director_performance_reviews`
+--
+ALTER TABLE `director_performance_reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`),
+  ADD KEY `idx_period` (`review_period`),
+  ADD KEY `idx_rating` (`performance_rating`);
+
+--
+-- Indexes for table `director_reports`
+--
+ALTER TABLE `director_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`),
+  ADD KEY `idx_type` (`report_type`),
+  ADD KEY `idx_submitted` (`is_submitted`);
 
 --
 -- Indexes for table `disciplinary_actions`
@@ -7784,6 +9042,13 @@ ALTER TABLE `document_generation_log`
   ADD KEY `idx_document_id` (`document_id`),
   ADD KEY `idx_generated_by` (`generated_by`),
   ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `document_print_configs`
+--
+ALTER TABLE `document_print_configs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `document_type` (`document_type`);
 
 --
 -- Indexes for table `document_templates`
@@ -8143,6 +9408,28 @@ ALTER TABLE `incident_reports`
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_incident_date` (`incident_date`),
   ADD KEY `reported_by` (`reported_by`);
+
+--
+-- Indexes for table `institutional_alerts`
+--
+ALTER TABLE `institutional_alerts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`alert_type`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_dept` (`department_code`),
+  ADD KEY `idx_read` (`is_read`),
+  ADD KEY `idx_resolved` (`is_resolved`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
+-- Indexes for table `institutional_risks`
+--
+ALTER TABLE `institutional_risks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_category` (`risk_category`),
+  ADD KEY `idx_score` (`risk_score`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `interview_scheduling`
@@ -8507,7 +9794,8 @@ ALTER TABLE `notifications`
   ADD KEY `idx_notification_type` (`notification_type`),
   ADD KEY `idx_is_read` (`is_read`),
   ADD KEY `idx_priority` (`priority`),
-  ADD KEY `idx_expires_at` (`expires_at`);
+  ADD KEY `idx_expires_at` (`expires_at`),
+  ADD KEY `idx_user_read` (`user_id`,`is_read`);
 
 --
 -- Indexes for table `nursing_clinical_logbook`
@@ -8564,6 +9852,14 @@ ALTER TABLE `nursing_students`
   ADD KEY `idx_intake_set` (`intake_set`);
 
 --
+-- Indexes for table `official_duties`
+--
+ALTER TABLE `official_duties`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_role` (`role_id`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `onboarding_checklist`
 --
 ALTER TABLE `onboarding_checklist`
@@ -8594,6 +9890,14 @@ ALTER TABLE `payments`
   ADD KEY `payment_method_id` (`payment_method_id`);
 
 --
+-- Indexes for table `payment_approvals`
+--
+ALTER TABLE `payment_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_payment` (`payment_id`),
+  ADD KEY `idx_approver` (`approved_by`);
+
+--
 -- Indexes for table `payment_methods`
 --
 ALTER TABLE `payment_methods`
@@ -8621,6 +9925,14 @@ ALTER TABLE `payment_records`
   ADD KEY `idx_payment_number` (`payment_number`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `payment_routes`
+--
+ALTER TABLE `payment_routes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`payment_type`),
+  ADD KEY `idx_role` (`notify_role_id`);
 
 --
 -- Indexes for table `payroll_records`
@@ -8749,6 +10061,14 @@ ALTER TABLE `recruitment_jobs`
   ADD KEY `posted_by` (`posted_by`),
   ADD KEY `idx_job_code` (`job_code`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `recycle_bin`
+--
+ALTER TABLE `recycle_bin`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_original` (`original_table`,`original_id`),
+  ADD KEY `idx_deleted_at` (`deleted_at`);
 
 --
 -- Indexes for table `registrar_academic_calendar`
@@ -9052,7 +10372,8 @@ ALTER TABLE `staff_activity_log`
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_activity_type` (`activity_type`),
   ADD KEY `idx_module_accessed` (`module_accessed`),
-  ADD KEY `idx_created_at` (`created_at`);
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_related` (`related_table`,`related_id`);
 
 --
 -- Indexes for table `staff_announcements`
@@ -9081,7 +10402,8 @@ ALTER TABLE `staff_attendance`
   ADD KEY `recorded_by` (`recorded_by`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_date` (`date`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_staff_date` (`staff_id`,`date`);
 
 --
 -- Indexes for table `staff_audit_logs`
@@ -9090,7 +10412,8 @@ ALTER TABLE `staff_audit_logs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_action` (`action`),
-  ADD KEY `idx_created_at` (`created_at`);
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_staff_action` (`staff_id`,`action`);
 
 --
 -- Indexes for table `staff_categories`
@@ -9098,6 +10421,16 @@ ALTER TABLE `staff_audit_logs`
 ALTER TABLE `staff_categories`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `category_name` (`category_name`);
+
+--
+-- Indexes for table `staff_communications`
+--
+ALTER TABLE `staff_communications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sender_id` (`sender_id`),
+  ADD KEY `idx_recipient_type` (`recipient_type`),
+  ADD KEY `idx_recipient_id` (`recipient_id`),
+  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `staff_contracts`
@@ -9564,6 +10897,14 @@ ALTER TABLE `student_welfare_cases`
   ADD KEY `idx_assigned_warden` (`assigned_warden`);
 
 --
+-- Indexes for table `submission_routes`
+--
+ALTER TABLE `submission_routes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`submission_type`),
+  ADD KEY `idx_role` (`route_to_role_id`);
+
+--
 -- Indexes for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -9777,6 +11118,12 @@ ALTER TABLE `advanced_reports`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `alert_recipients`
+--
+ALTER TABLE `alert_recipients`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `analytics_cache`
 --
 ALTER TABLE `analytics_cache`
@@ -9786,6 +11133,12 @@ ALTER TABLE `analytics_cache`
 -- AUTO_INCREMENT for table `api_keys`
 --
 ALTER TABLE `api_keys`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `application_reviews`
+--
+ALTER TABLE `application_reviews`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -9799,6 +11152,30 @@ ALTER TABLE `appraisal_periods`
 --
 ALTER TABLE `appraisal_ratings`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+
+--
+-- AUTO_INCREMENT for table `approval_workflows`
+--
+ALTER TABLE `approval_workflows`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -9823,6 +11200,12 @@ ALTER TABLE `asset_depreciation`
 --
 ALTER TABLE `attendance`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `audit_trail`
+--
+ALTER TABLE `audit_trail`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `backup_management`
@@ -9915,6 +11298,12 @@ ALTER TABLE `clinical_placements`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `communication_channels`
+--
+ALTER TABLE `communication_channels`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
 -- AUTO_INCREMENT for table `communication_log`
 --
 ALTER TABLE `communication_log`
@@ -9924,6 +11313,12 @@ ALTER TABLE `communication_log`
 -- AUTO_INCREMENT for table `compliance_records`
 --
 ALTER TABLE `compliance_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `compliance_requirements`
+--
+ALTER TABLE `compliance_requirements`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -9957,15 +11352,33 @@ ALTER TABLE `course_registrations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `dashboard_configs`
+--
+ALTER TABLE `dashboard_configs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `dashboard_updates`
 --
 ALTER TABLE `dashboard_updates`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `data_ownership_rules`
+--
+ALTER TABLE `data_ownership_rules`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
 -- AUTO_INCREMENT for table `data_sync_status`
 --
 ALTER TABLE `data_sync_status`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `delegation_records`
+--
+ALTER TABLE `delegation_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -9975,9 +11388,33 @@ ALTER TABLE `departmental_budgets`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `department_targets`
+--
+ALTER TABLE `department_targets`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `director_departments`
+--
+ALTER TABLE `director_departments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
 -- AUTO_INCREMENT for table `director_news`
 --
 ALTER TABLE `director_news`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `director_performance_reviews`
+--
+ALTER TABLE `director_performance_reviews`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `director_reports`
+--
+ALTER TABLE `director_reports`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -9997,6 +11434,12 @@ ALTER TABLE `disciplinary_records`
 --
 ALTER TABLE `document_generation_log`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `document_print_configs`
+--
+ALTER TABLE `document_print_configs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `document_templates`
@@ -10206,6 +11649,18 @@ ALTER TABLE `hr_users`
 -- AUTO_INCREMENT for table `incident_reports`
 --
 ALTER TABLE `incident_reports`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `institutional_alerts`
+--
+ALTER TABLE `institutional_alerts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `institutional_risks`
+--
+ALTER TABLE `institutional_risks`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -10449,6 +11904,12 @@ ALTER TABLE `nursing_students`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `official_duties`
+--
+ALTER TABLE `official_duties`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=351;
+
+--
 -- AUTO_INCREMENT for table `onboarding_checklist`
 --
 ALTER TABLE `onboarding_checklist`
@@ -10464,6 +11925,12 @@ ALTER TABLE `partnerships`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_approvals`
+--
+ALTER TABLE `payment_approvals`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -10483,6 +11950,12 @@ ALTER TABLE `payment_receipts`
 --
 ALTER TABLE `payment_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_routes`
+--
+ALTER TABLE `payment_routes`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `payroll_records`
@@ -10566,6 +12039,12 @@ ALTER TABLE `recruitment_applications`
 -- AUTO_INCREMENT for table `recruitment_jobs`
 --
 ALTER TABLE `recruitment_jobs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `recycle_bin`
+--
+ALTER TABLE `recycle_bin`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -10771,6 +12250,12 @@ ALTER TABLE `staff_audit_logs`
 --
 ALTER TABLE `staff_categories`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `staff_communications`
+--
+ALTER TABLE `staff_communications`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `staff_contracts`
@@ -11055,6 +12540,12 @@ ALTER TABLE `student_welfare_cases`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `submission_routes`
+--
+ALTER TABLE `submission_routes`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+
+--
 -- AUTO_INCREMENT for table `system_logs`
 --
 ALTER TABLE `system_logs`
@@ -11206,6 +12697,12 @@ ALTER TABLE `advanced_reports`
   ADD CONSTRAINT `advanced_reports_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `alert_recipients`
+--
+ALTER TABLE `alert_recipients`
+  ADD CONSTRAINT `alert_recipients_ibfk_1` FOREIGN KEY (`alert_id`) REFERENCES `institutional_alerts` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `analytics_cache`
 --
 ALTER TABLE `analytics_cache`
@@ -11223,6 +12720,25 @@ ALTER TABLE `api_keys`
 ALTER TABLE `appraisal_ratings`
   ADD CONSTRAINT `appraisal_ratings_ibfk_1` FOREIGN KEY (`appraisal_id`) REFERENCES `staff_appraisals` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `appraisal_ratings_ibfk_2` FOREIGN KEY (`indicator_id`) REFERENCES `performance_indicators` (`id`);
+
+--
+-- Constraints for table `approval_actions`
+--
+ALTER TABLE `approval_actions`
+  ADD CONSTRAINT `approval_actions_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `approval_requests` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `approval_actions_ibfk_2` FOREIGN KEY (`stage_id`) REFERENCES `approval_stages` (`id`);
+
+--
+-- Constraints for table `approval_requests`
+--
+ALTER TABLE `approval_requests`
+  ADD CONSTRAINT `approval_requests_ibfk_1` FOREIGN KEY (`workflow_id`) REFERENCES `approval_workflows` (`id`);
+
+--
+-- Constraints for table `approval_stages`
+--
+ALTER TABLE `approval_stages`
+  ADD CONSTRAINT `approval_stages_ibfk_1` FOREIGN KEY (`workflow_id`) REFERENCES `approval_workflows` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `assets`
@@ -11328,6 +12844,12 @@ ALTER TABLE `course_registrations`
 --
 ALTER TABLE `departmental_budgets`
   ADD CONSTRAINT `departmental_budgets_ibfk_1` FOREIGN KEY (`budget_id`) REFERENCES `budgets` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `director_departments`
+--
+ALTER TABLE `director_departments`
+  ADD CONSTRAINT `director_departments_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `staff_roles` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `disciplinary_actions`
@@ -11744,6 +13266,12 @@ ALTER TABLE `nursing_skills_training`
 --
 ALTER TABLE `nursing_students`
   ADD CONSTRAINT `nursing_students_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `universal_student_profiles` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `official_duties`
+--
+ALTER TABLE `official_duties`
+  ADD CONSTRAINT `fk_duties_role` FOREIGN KEY (`role_id`) REFERENCES `staff_roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `onboarding_checklist`

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2026 at 09:07 PM
+-- Generation Time: Jun 18, 2026 at 06:34 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,32 @@ SET time_zone = "+00:00";
 --
 -- Database: `igangaschoolofl_website_db`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
+    IF cnt = 0 THEN
+        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -186,17 +212,7 @@ CREATE TABLE `student_applications` (
   `status` enum('Pending','Shortlisted','Admitted','Rejected','Withdrawn') DEFAULT 'Pending',
   `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `reviewed_by` int DEFAULT NULL,
-  `reviewed_at` datetime DEFAULT NULL,
-  `additional_data` text COMMENT 'JSON-encoded additional form fields',
-  `academic_document_path` varchar(255) DEFAULT NULL,
-  `photo_path` varchar(255) DEFAULT NULL,
-  `uce_certificate_path` varchar(255) DEFAULT NULL,
-  `uace_certificate_path` varchar(255) DEFAULT NULL,
-  `unmeb_result_slip_path` varchar(255) DEFAULT NULL,
-  `unmeb_certificate_path` varchar(255) DEFAULT NULL,
-  `enrolment_certificate_path` varchar(255) DEFAULT NULL,
-  `practicing_license_path` varchar(255) DEFAULT NULL,
-  `academic_transcript_path` varchar(255) DEFAULT NULL
+  `reviewed_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
