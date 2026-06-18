@@ -71,8 +71,6 @@ if ($studentsDb) {
             </div>
         </div>
 
-        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
         <div class="card">
             <h3>Student Leadership Panel</h3>
             <p>Access student related information and manage student affairs.</p>

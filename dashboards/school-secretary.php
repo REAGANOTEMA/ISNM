@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sec_ann_title'])) {
 <body>
 <?php include_once '../includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="page-content content-section dashboard-section active" data-section="overview">
   <div class="top-bar">
     <div>
       <strong><i class="fas fa-user-tie me-2 text-primary"></i>School Secretary – <?= htmlspecialchars($user_name) ?></strong>
@@ -103,8 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sec_ann_title'])) {
       </div>
       <?php endforeach; ?>
     </div>
-
-    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
     <!-- QUICK ACTIONS -->
     <div class="section-card">

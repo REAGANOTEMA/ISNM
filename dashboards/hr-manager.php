@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
     <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
 
-  <div class="content">
+  <div class="content content-section dashboard-section active" data-section="overview">
     <?php if(!empty($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     <?php unset($_SESSION['success']); endif; ?>
@@ -140,8 +140,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
       </div>
       <?php endforeach; ?>
     </div>
-
-    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
     <!-- STORE REQUESTS -->
     <?php

@@ -68,9 +68,18 @@ if ($conn) {
             </header>
 
             <!-- Dashboard Content -->
-            <div class="dashboard-content">
+            <div class="dashboard-content content-section">
+                <div class="section-tabs">
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Student Welfare</a>
+                    <a class="section-tab" data-tab="counseling" onclick="switchToSection('counseling')">Counseling</a>
+                    <a class="section-tab" data-tab="health" onclick="switchToSection('health')">Health</a>
+                    <a class="section-tab" data-tab="accommodation" onclick="switchToSection('accommodation')">Accommodation</a>
+                    <a class="section-tab" data-tab="discipline" onclick="switchToSection('discipline')">Discipline</a>
+                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+                </div>
                 <!-- Welfare Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Student Welfare Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -115,10 +124,8 @@ if ($conn) {
                     </div>
                 </section>
 
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
                 <!-- Student Welfare -->
-                <section id="students" class="content-section">
+                <section id="students" class="content-section dashboard-section" data-section="students">
                     <h2>Student Welfare Management</h2>
                     <div class="welfare-actions">
                         <button class="btn btn-primary" onclick="openModal('studentProfile')">
@@ -192,7 +199,7 @@ if ($conn) {
                 </section>
 
                 <!-- Counseling Services -->
-                <section id="counseling" class="content-section">
+                <section id="counseling" class="content-section dashboard-section" data-section="counseling">
                     <h2>Counseling Services</h2>
                     <div class="counseling-actions">
                         <button class="btn btn-primary" onclick="openModal('scheduleSession')">
@@ -266,7 +273,7 @@ if ($conn) {
                 </section>
 
                 <!-- Health Services -->
-                <section id="health" class="content-section">
+                <section id="health" class="content-section dashboard-section" data-section="health">
                     <h2>Health Services</h2>
                     <div class="health-actions">
                         <button class="btn btn-primary" onclick="openModal('healthCheck')">
@@ -315,7 +322,7 @@ if ($conn) {
                 </section>
 
                 <!-- Accommodation -->
-                <section id="accommodation" class="content-section">
+                <section id="accommodation" class="content-section dashboard-section" data-section="accommodation">
                     <h2>Accommodation Management</h2>
                     <div class="accommodation-actions">
                         <button class="btn btn-primary" onclick="openModal('roomAssignment')">
@@ -360,7 +367,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Discipline -->
-                <section id="discipline" class="content-section">
+                <section id="discipline" class="content-section dashboard-section" data-section="discipline">
                     <h2>Student Discipline</h2>
                     <div class="discipline-actions">
                         <button class="btn btn-primary" onclick="openModal('disciplineCase')">
@@ -409,7 +416,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Activities -->
-                <section id="activities" class="content-section">
+                <section id="activities" class="content-section dashboard-section" data-section="activities">
                     <h2>Student Activities</h2>
                     <div class="activity-actions">
                         <button class="btn btn-primary" onclick="openModal('organizeActivity')">

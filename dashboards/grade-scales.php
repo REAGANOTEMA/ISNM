@@ -44,11 +44,11 @@ $pageTitle = 'Grade Scales & Grading System';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="content-section dashboard-section active" data-section="overview">
 <div class="page-content">
     <div class="content-header no-print">
         <h1><i class="fas fa-chart-simple"></i> Grade Scales & Grading System</h1>
     </div>
-    <?php renderModuleSlider($user_role); ?>
     <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2 no-print"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
     <div class="row mb-4 no-print">
         <div class="col-md-3">
@@ -116,6 +116,7 @@ $pageTitle = 'Grade Scales & Grading System';
         </div>
     </div>
 </div>
+</section>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

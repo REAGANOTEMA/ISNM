@@ -74,9 +74,17 @@ if ($conn) {
             </div>
 
             <!-- Dashboard Content -->
-            <div class="dashboard-content">
+            <div class="dashboard-content content-section">
+                <div class="section-tabs">
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Students</a>
+                    <a class="section-tab" data-tab="programs" onclick="switchToSection('programs')">Programs</a>
+                    <a class="section-tab" data-tab="reports" onclick="switchToSection('reports')">Reports</a>
+                    <a class="section-tab" data-tab="student-records" onclick="switchToSection('student-records')">Student Records</a>
+                    <a class="section-tab" data-tab="activity" onclick="switchToSection('activity')">Activity</a>
+                </div>
                 <!-- Department Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Department Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card success">
@@ -121,10 +129,8 @@ if ($conn) {
                     </div>
                 </section>
 
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
                 <!-- Student Management -->
-                <section id="students" class="content-section">
+                <section id="students" class="content-section dashboard-section" data-section="students">
                     <h2><i class="fas fa-user-graduate me-2"></i>Student Management</h2>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -162,7 +168,7 @@ if ($conn) {
                 </section>
 
                 <!-- Program Management -->
-                <section id="programs" class="content-section">
+                <section id="programs" class="content-section dashboard-section" data-section="programs">
                     <h2><i class="fas fa-book me-2"></i>Program Management</h2>
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
                         <div class="stat-card">
@@ -192,7 +198,7 @@ if ($conn) {
                 </section>
 
                 <!-- Reports -->
-                <section id="reports" class="content-section">
+                <section id="reports" class="content-section dashboard-section" data-section="reports">
                     <h2><i class="fas fa-chart-bar me-2"></i>Reports</h2>
                     <div class="reports-grid">
                         <div class="report-card">
@@ -225,7 +231,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Records -->
-                <section id="student-records" class="content-section">
+                <section id="student-records" class="content-section dashboard-section" data-section="student-records">
                     <?php renderStudentSetViewer($students_conn, [
                         'title' => 'Student Records',
                         'icon' => 'fa-user-graduate',
@@ -236,7 +242,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section id="activity" class="content-section">
+                <section id="activity" class="content-section dashboard-section" data-section="activity">
                     <h2><i class="fas fa-history me-2"></i>Recent Department Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>

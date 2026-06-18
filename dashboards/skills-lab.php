@@ -419,10 +419,7 @@ if ($students) {
 .stats-card-lab:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,.12); }
 .stats-card-lab .card-body { padding: 1.5rem; }
 .stats-card-lab .stats-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-.module-card { border-radius: 16px; border: 1.5px solid rgba(0,0,0,.06); transition: all .3s ease; cursor: pointer; background: linear-gradient(145deg, #fff, #f8faff); }
-.module-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(13,110,253,.15); border-color: var(--sl-primary); }
-.module-card .card-body { padding: 1.75rem; text-align: center; }
-.module-card .module-icon { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1rem; }
+
 .badge-status { padding: .35em .65em; font-size: .78rem; font-weight: 500; border-radius: 50px; }
 .alert-low-stock { border-left: 4px solid var(--sl-warning); }
 .alert-overdue { border-left: 4px solid var(--sl-danger); }
@@ -451,21 +448,18 @@ if ($students) {
         </div>
     </div>
 
-    <div class="container-fluid py-4 px-4">
+    <div class="section-tabs">
+        <a class="section-tab active" data-section="overview" onclick="switchToSection('overview')" href="#overview"><i class="fas fa-home me-1"></i>Home</a>
+        <a class="section-tab" data-section="equipment" onclick="switchToSection('equipment')" href="#equipment"><i class="fas fa-tools me-1"></i>Equipment</a>
+        <a class="section-tab" data-section="checkouts" onclick="switchToSection('checkouts')" href="#checkouts"><i class="fas fa-hand-holding me-1"></i>Check outs</a>
+        <a class="section-tab" data-section="sessions" onclick="switchToSection('sessions')" href="#sessions"><i class="fas fa-calendar-alt me-1"></i>Sessions</a>
+        <a class="section-tab" data-section="skills" onclick="switchToSection('skills')" href="#skills"><i class="fas fa-certificate me-1"></i>Skills</a>
+        <a class="section-tab" data-section="consumables" onclick="switchToSection('consumables')" href="#consumables"><i class="fas fa-boxes me-1"></i>Consumables</a>
+        <a class="section-tab" data-section="attendance" onclick="switchToSection('attendance')" href="#attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a>
+        <a class="section-tab" data-section="incidents" onclick="switchToSection('incidents')" href="#incidents"><i class="fas fa-exclamation-triangle me-1"></i>Incidents</a>
+    </div>
 
-        <!-- Nav tabs -->
-        <ul class="nav nav-tabs nav-fill mb-4 border-0" style="background:rgba(13,110,253,.04); border-radius:14px; padding:6px;">
-            <li class="nav-item"><a class="nav-link <?= $view==='home'?'active fw-bold':'' ?>" href="?view=home"><i class="fas fa-home me-1"></i>Home</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='equipment'?'active fw-bold':'' ?>" href="?view=equipment"><i class="fas fa-tools me-1"></i>Equipment</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='checkouts'?'active fw-bold':'' ?>" href="?view=checkouts"><i class="fas fa-hand-holding me-1"></i>Check outs</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='sessions'?'active fw-bold':'' ?>" href="?view=sessions"><i class="fas fa-calendar-alt me-1"></i>Sessions</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='skills'?'active fw-bold':'' ?>" href="?view=skills"><i class="fas fa-certificate me-1"></i>Skills</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='consumables'?'active fw-bold':'' ?>" href="?view=consumables"><i class="fas fa-boxes me-1"></i>Consumables</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='attendance'?'active fw-bold':'' ?>" href="?view=attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a></li>
-            <li class="nav-item"><a class="nav-link <?= $view==='incidents'?'active fw-bold':'' ?>" href="?view=incidents"><i class="fas fa-exclamation-triangle me-1"></i>Incidents</a></li>
-        </ul>
-
-<?php if ($view === 'home'): ?>
+    <div id="overview" class="content-section dashboard-section active container-fluid py-4 px-4" data-section="overview">
         <!-- Stats Row -->
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-6"><div class="card stats-card-lab"><div class="card-body d-flex align-items-center gap-3">
@@ -504,40 +498,7 @@ if ($students) {
             </div></div></div>
         </div>
 
-        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
-        <!-- Quick Access Modules -->
-        <h5 class="fw-bold mb-3"><i class="fas fa-th-large me-2"></i>Quick Access</h5>
-        <div class="row g-3">
-            <div class="col-md-3"><a href="?view=equipment" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(13,110,253,.1);color:var(--sl-primary)"><i class="fas fa-tools"></i></div>
-                <h6 class="fw-bold">Equipment Inventory</h6><p class="small text-muted mb-0">Manage mannequins, models & instruments</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=checkouts" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(25,135,84,.1);color:var(--sl-success)"><i class="fas fa-hand-holding"></i></div>
-                <h6 class="fw-bold">Check out / Check in</h6><p class="small text-muted mb-0">Track equipment borrowed by students</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=sessions" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(111,66,193,.1);color:#6f42c1"><i class="fas fa-calendar-alt"></i></div>
-                <h6 class="fw-bold">Practical Sessions</h6><p class="small text-muted mb-0">Schedule & manage lab sessions</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=skills" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(255,193,7,.15);color:var(--sl-warning)"><i class="fas fa-certificate"></i></div>
-                <h6 class="fw-bold">Skills Demonstrations</h6><p class="small text-muted mb-0">Record student competency assessments</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=consumables" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(13,202,240,.1);color:var(--sl-info)"><i class="fas fa-boxes"></i></div>
-                <h6 class="fw-bold">Consumables</h6><p class="small text-muted mb-0">Track supplies & reorder levels</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=attendance" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(13,110,253,.1);color:var(--sl-primary)"><i class="fas fa-clipboard-list"></i></div>
-                <h6 class="fw-bold">Lab Attendance</h6><p class="small text-muted mb-0">Record & monitor student attendance</p>
-            </div></div></a></div>
-            <div class="col-md-3"><a href="?view=incidents" class="text-decoration-none"><div class="card module-card h-100"><div class="card-body">
-                <div class="module-icon" style="background:rgba(220,53,69,.1);color:var(--sl-danger)"><i class="fas fa-exclamation-triangle"></i></div>
-                <h6 class="fw-bold">Incident Reports</h6><p class="small text-muted mb-0">Log accidents, damages & hazards</p>
-            </div></div></a></div>
-        </div>
         <script>
         (function loadStats(){ fetch('?view=home&ajax=stats').then(r=>r.json()).then(d=>{
             if(d.equipment!==undefined){ ['equipment','checkouts','overdue','sessions','maintenance'].forEach(k=>{
@@ -548,7 +509,9 @@ if ($students) {
         }).catch(()=>{}); })();
         </script>
 
-<?php elseif ($view === 'equipment'): ?>
+    </div><!-- /overview -->
+
+    <div id="equipment" class="content-section dashboard-section container-fluid py-4 px-4" data-section="equipment">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-tools me-2"></i>Equipment Inventory</h4>
             <div>
@@ -586,8 +549,9 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveEq()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php elseif ($view === 'checkouts'): ?>
+    <div id="checkouts" class="content-section dashboard-section container-fluid py-4 px-4" data-section="checkouts">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-hand-holding me-2"></i>Equipment Check out / Check in</h4>
             <div>
@@ -619,8 +583,9 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveCo()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php elseif ($view === 'sessions'): ?>
+    <div id="sessions" class="content-section dashboard-section container-fluid py-4 px-4" data-section="sessions">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2"></i>Practical Sessions</h4>
             <div>
@@ -656,8 +621,9 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveSes()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php elseif ($view === 'skills'): ?>
+    <div id="skills" class="content-section dashboard-section container-fluid py-4 px-4" data-section="skills">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-certificate me-2"></i>Skills Demonstrations</h4>
             <div>
@@ -687,8 +653,9 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveSk()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php elseif ($view === 'consumables'): ?>
+    <div id="consumables" class="content-section dashboard-section container-fluid py-4 px-4" data-section="consumables">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-boxes me-2"></i>Consumables Inventory</h4>
             <div>
@@ -719,8 +686,9 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveCon()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php elseif ($view === 'attendance'): ?>
+    <div id="attendance" class="content-section dashboard-section container-fluid py-4 px-4" data-section="attendance">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-clipboard-list me-2"></i>Lab Attendance</h4>
             <div>
@@ -743,8 +711,9 @@ if ($students) {
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveBatchAtt()"><i class="fas fa-check me-1"></i>Record Attendance</button></div>
         </div></div></div>
         <button class="btn btn-primary btn-sm mt-2" onclick="openAttBatchModal()"><i class="fas fa-check-double me-1"></i>Take Batch Attendance</button>
+    </div>
 
-<?php elseif ($view === 'incidents'): ?>
+    <div id="incidents" class="content-section dashboard-section container-fluid py-4 px-4" data-section="incidents">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Incident Reports</h4>
             <div>
@@ -775,10 +744,8 @@ if ($students) {
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveInc()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
+    </div>
 
-<?php endif; ?>
-
-    </div><!-- /container-fluid -->
 </div><!-- /margin-left:270px -->
 
 <!-- Student datalist -->
@@ -1184,7 +1151,7 @@ function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.
 
 // ── Init ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-    const view = '<?= $view ?>';
+    const view = window.location.hash.replace('#', '') || 'home';
     if (view==='equipment') loadEq();
     else if (view==='checkouts') { loadCo(); loadCoEquipmentList(); }
     else if (view==='sessions') loadSes();

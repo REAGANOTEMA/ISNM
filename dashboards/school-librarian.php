@@ -143,8 +143,16 @@ if ($conn) {
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <div class="section-tabs">
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="books" onclick="switchToSection('books')">Books</a>
+                    <a class="section-tab" data-tab="circulation" onclick="switchToSection('circulation')">Circulation</a>
+                    <a class="section-tab" data-tab="members" onclick="switchToSection('members')">Members</a>
+                    <a class="section-tab" data-tab="acquisition" onclick="switchToSection('acquisition')">Acquisition</a>
+                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+                </div>
                 <!-- Library Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Library Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -189,10 +197,8 @@ if ($conn) {
                     </div>
                 </section>
 
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
                 <!-- Book Management -->
-                <section id="books" class="content-section">
+                <section id="books" class="content-section dashboard-section" data-section="books">
                     <h2>Book Management</h2>
                     <div class="book-actions">
                         <button class="btn btn-primary" onclick="openModal('addBook')">
@@ -235,7 +241,7 @@ if ($conn) {
                 </section>
 
                 <!-- Circulation -->
-                <section id="circulation" class="content-section">
+                <section id="circulation" class="content-section dashboard-section" data-section="circulation">
                     <h2>Book Circulation</h2>
                     <div class="circulation-actions">
                         <button class="btn btn-primary" onclick="openModal('checkoutBook')">
@@ -321,7 +327,7 @@ if ($conn) {
                 </section>
 
                 <!-- Library Members -->
-                <section id="members" class="content-section">
+                <section id="members" class="content-section dashboard-section" data-section="members">
                     <h2>Library Members</h2>
                     <div class="member-actions">
                         <button class="btn btn-primary" onclick="openModal('registerMember')">
@@ -402,7 +408,7 @@ if ($conn) {
                 </section>
 
                 <!-- Book Acquisition -->
-                <section id="acquisition" class="content-section">
+                <section id="acquisition" class="content-section dashboard-section" data-section="acquisition">
                     <h2>Book Acquisition</h2>
                     <div class="acquisition-actions">
                         <button class="btn btn-primary" onclick="openModal('newAcquisition')">
@@ -457,7 +463,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section class="activities-section">
+                <section id="activities" class="activities-section dashboard-section" data-section="activities">
                     <h2>Recent Library Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>

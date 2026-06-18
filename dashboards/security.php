@@ -114,8 +114,6 @@ if ($conn) {
             </div>
         </div>
 
-        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
         <!-- Security Alerts -->
         <div class="security-alert">
             <h3><i class="fas fa-bell"></i> Recent Security Alerts</h3>

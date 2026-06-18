@@ -18,6 +18,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <meta name="msapplication-config" content="/browserconfig.xml">
   <link rel="manifest" href="manifest.json">
   
+  <script>window.addEventListener('unhandledrejection',function(e){e.preventDefault()});</script>
   <title><?php echo isset($pageTitle) ? $pageTitle : 'Iganga School of Nursing and Midwifery'; ?></title>
   <meta name="description" content="Iganga School of Nursing and Midwifery - Quality Healthcare Education in Uganda">
   <meta name="keywords" content="nursing school, midwifery, healthcare education, ISNM, Uganda">

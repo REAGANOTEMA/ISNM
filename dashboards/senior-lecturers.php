@@ -154,8 +154,19 @@ if ($conn) {
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <div class="section-tabs">
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="courses" onclick="switchToSection('courses')">Courses</a>
+                    <a class="section-tab" data-tab="schedule" onclick="switchToSection('schedule')">Schedule</a>
+                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Students</a>
+                    <a class="section-tab" data-tab="assessments" onclick="switchToSection('assessments')">Assessments</a>
+                    <a class="section-tab" data-tab="grades" onclick="switchToSection('grades')">Grades</a>
+                    <a class="section-tab" data-tab="resources" onclick="switchToSection('resources')">Resources</a>
+                    <a class="section-tab" data-tab="research" onclick="switchToSection('research')">Research</a>
+                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+                </div>
                 <!-- Teaching Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Teaching Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -200,10 +211,8 @@ if ($conn) {
                     </div>
                 </section>
 
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
                 <!-- My Courses -->
-                <section id="courses" class="content-section">
+                <section id="courses" class="content-section dashboard-section" data-section="courses">
                     <h2>My Courses</h2>
                     <div class="course-actions">
                         <button class="btn btn-primary" onclick="openModal('courseMaterials')">
@@ -262,7 +271,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Schedule -->
-                <section id="schedule" class="content-section">
+                <section id="schedule" class="content-section dashboard-section" data-section="schedule">
                     <h2>Teaching Schedule</h2>
                     <div class="schedule-actions">
                         <button class="btn btn-primary" onclick="openModal('addLecture')">
@@ -317,7 +326,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Management -->
-                <section id="students" class="content-section">
+                <section id="students" class="content-section dashboard-section" data-section="students">
                     <h2>Student Management</h2>
                     <div class="student-actions">
                         <button class="btn btn-primary" onclick="openModal('studentList')">
@@ -374,7 +383,7 @@ if ($conn) {
                 </section>
 
                 <!-- Assessments -->
-                <section id="assessments" class="content-section">
+                <section id="assessments" class="content-section dashboard-section" data-section="assessments">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
                         <button class="btn btn-primary" onclick="openModal('createAssessment')">
@@ -429,7 +438,7 @@ if ($conn) {
                 </section>
 
                 <!-- Grade Management -->
-                <section id="grades" class="content-section">
+                <section id="grades" class="content-section dashboard-section" data-section="grades">
                     <h2>Grade Management</h2>
                     <div class="grade-actions">
                         <button class="btn btn-primary" onclick="openModal('gradebook')">
@@ -476,7 +485,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Resources -->
-                <section id="resources" class="content-section">
+                <section id="resources" class="content-section dashboard-section" data-section="resources">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadResource')">
@@ -527,7 +536,7 @@ if ($conn) {
                 </section>
 
                 <!-- Research Activities -->
-                <section id="research" class="content-section">
+                <section id="research" class="content-section dashboard-section" data-section="research">
                     <h2>Research Activities</h2>
                     <div class="research-actions">
                         <button class="btn btn-primary" onclick="openModal('researchProject')">
@@ -577,7 +586,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section class="activities-section">
+                <section id="activities" class="activities-section dashboard-section" data-section="activities">
                     <h2>Recent Teaching Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>

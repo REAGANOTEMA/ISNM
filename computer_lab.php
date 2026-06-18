@@ -57,18 +57,12 @@ if (
 require_once 'config/database.php';
 
 // Try ICT database first, fallback to staff database
-$conn = null;
-try {
-    $conn = getICTConnection();
-} catch (Exception $e) {
-    // ICT database doesn't exist, use staff database as fallback
+$conn = getICTConnection();
+if (!$conn) {
     try {
         $conn = getStaffConnection();
     } catch (Exception $e2) {
         error_log("Computer Lab DB connection failed: " . $e2->getMessage());
-        $_SESSION['error'] = "Database connection error. Please contact administrator.";
-        header('Location: staff-login.php');
-        exit;
     }
 }
 

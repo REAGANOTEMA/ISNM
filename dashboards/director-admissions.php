@@ -1,533 +1,470 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-require_once __DIR__ . '/../views/student_data_loader.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 
 $ctx = bootstrapStaffDashboard(['admissions', 'director']);
-$students_conn = $ctx['students'];
 $staff_conn = $ctx['staff'];
-$user = $ctx['user'];
-$user_role = $_SESSION['role'] ?? '';
-$user_name = $user['full_name'] ?? 'Admissions User';
+$students_conn = $ctx['students'] ?? null;
 $website_conn = $ctx['website'];
+$user = $ctx['user'];
+$user_id = (int)($user['id'] ?? 0);
+$user_role = $_SESSION['role'] ?? '';
+$user_name = $user['full_name'] ?? 'Director Admissions';
 
-$loader = new StudentDataLoader();
-$all_students = $loader->loadAllStudents();
+function safeCount($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
 
-// Define the required items list
-$required_items = [
-    'surgical_gloves' => 'Surgical Gloves',
-    'examination_gloves' => 'Examination Gloves',
-    'photocopying_ream' => 'Photocopying Ream',
-    'ruled_paper_reams' => 'Ruled Paper Reams',
-    'omo' => 'Omo',
-    'toilet_papers' => 'Toilet Papers',
-    'compound_brooms' => 'Compound Brooms',
-    'soft_brooms' => 'Soft Brooms',
-    'rake' => 'Rake',
-    'cobweb_brush' => 'Cobweb Brush',
-    'scrubbing_brush' => 'Scrubbing Brush',
-    'squeezer' => 'Squeezer',
-    'toilet_brush' => 'Toilet Brush',
-    'jik' => 'JIK',
-    'vim' => 'Vim',
-    'mops' => 'Mops',
-    'sanitizer' => 'Sanitizer',
-    'liquid_soap' => 'Liquid Soap',
-    'face_masks' => 'Face Masks',
-    'heavy_duty_gloves' => 'Heavy Duty Gloves',
-];
+// ── Real stats ──
+$total_apps       = $website_conn ? safeCount($website_conn,"SELECT COUNT(*)c FROM student_applications") : 0;
+$pending_apps     = $website_conn ? safeCount($website_conn,"SELECT COUNT(*)c FROM student_applications WHERE status='Pending'") : 0;
+$admitted_students = safeCount($staff_conn,"SELECT COUNT(*)c FROM student_admissions WHERE admission_status='Approved'");
+$enrolled_students = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
+$active_students   = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
 
-// Load or create requirements tracking storage
-$requirements_file = __DIR__ . '/../data/student_requirements.json';
-$requirements_data = [];
-if (file_exists($requirements_file)) {
-    $requirements_data = json_decode(file_get_contents($requirements_file), true) ?? [];
+// ── Load data ──
+$applicants = $website_conn ? [] : []; if($website_conn){ $r=$website_conn->query("SELECT * FROM student_applications ORDER BY submitted_at DESC LIMIT 50");
+if($r) while($row=$r->fetch_assoc()) $applicants[]=$row; }
+
+$programs = []; $r=$staff_conn->query("SELECT program_code,program_name,program_type,department,duration_years,status FROM academic_programs WHERE status='Active' ORDER BY program_name");
+if($r) while($row=$r->fetch_assoc()) $programs[]=$row;
+
+$req_items = []; $r=$staff_conn->query("SELECT * FROM requirement_items ORDER BY display_order");
+if($r) while($row=$r->fetch_assoc()) $req_items[]=$row;
+
+$students_list = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,phone,email,status FROM students ORDER BY full_name LIMIT 200");
+if($r) while($row=$r->fetch_assoc()) $students_list[]=$row; }
+
+$admissions_list = []; $r=$staff_conn->query("SELECT sa.*,s.full_name,s.student_number FROM student_admissions sa LEFT JOIN igangaschoolofl_students_db.students s ON sa.student_id=s.id ORDER BY sa.created_at DESC LIMIT 50");
+if($r) while($row=$r->fetch_assoc()) $admissions_list[]=$row;
+
+$recent_activities = []; $r=$staff_conn->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
+if($r) while($row=$r->fetch_assoc()) $recent_activities[]=$row;
+
+$user_role_id = 0; $ri = $staff_conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+
+// ── Report generation ──
+$report = $_GET['report'] ?? '';
+if ($report) {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
+    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
+    if ($report === 'applications') {
+        echo '<h2>Applications Report</h2>';
+        $r=$website_conn->query("SELECT application_number,CONCAT(first_name,' ',surname) name,program_applied,status,submitted_at FROM student_applications ORDER BY submitted_at DESC");
+        echo '<table><thead><tr><th>App No</th><th>Applicant</th><th>Program</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['name']).'</td><td>'.htmlspecialchars($row['program_applied']).'</td><td>'.$row['submitted_at'].'</td><td>'.$row['status'].'</td></tr>'; }
+        echo '</tbody></table>';
+    } elseif ($report === 'admitted') {
+        echo '<h2>Admitted Students Report</h2>';
+        $r=$staff_conn->query("SELECT sa.*,s.full_name,s.student_number,s.course,s.phone FROM student_admissions sa LEFT JOIN igangaschoolofl_students_db.students s ON sa.student_id=s.id WHERE sa.admission_status='Approved' ORDER BY sa.admission_date DESC");
+        echo '<table><thead><tr><th>Adm No</th><th>Student</th><th>Reg No</th><th>Program</th><th>Year</th><th>Date</th></tr></thead><tbody>';
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['admission_number']).'</td><td>'.htmlspecialchars($row['full_name']??'-').'</td><td>'.htmlspecialchars($row['student_number']??'-').'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['academic_year'].'</td><td>'.$row['admission_date'].'</td></tr>'; }
+        echo '</tbody></table>';
+    } elseif ($report === 'clearance') {
+        echo '<h2>Requirements Clearance Report</h2>';
+        $r=$staff_conn->query("SELECT rc.*,s.full_name student_name,ri.item_name FROM requirement_clearances rc LEFT JOIN igangaschoolofl_students_db.students s ON rc.student_id=s.id LEFT JOIN requirement_items ri ON rc.item_id=ri.id ORDER BY rc.student_id,ri.display_order");
+        echo '<table><thead><tr><th>Student</th><th>Item</th><th>Cleared</th><th>Cleared By</th><th>Date</th></tr></thead><tbody>';
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['student_name']??$row['student_id']).'</td><td>'.htmlspecialchars($row['item_name']).'</td><td>'.($row['cleared']?'Yes':'No').'</td><td>'.$row['cleared_by'].'</td><td>'.$row['cleared_at'].'</td></tr>'; }
+        echo '</tbody></table>';
+    } elseif ($report === 'intake') {
+        echo '<h2>Intake Report</h2>';
+        $r=$staff_conn->query("SELECT program,academic_year,COUNT(*) total FROM student_admissions GROUP BY program,academic_year ORDER BY academic_year DESC");
+        echo '<table><thead><tr><th>Program</th><th>Year</th><th>Admitted</th></tr></thead><tbody>';
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['academic_year'].'</td><td>'.$row['total'].'</td></tr>'; }
+        echo '</tbody></table>';
+    }
+    echo '</body></html>'; exit;
 }
 
-// Handle saving requirements
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'save_requirements') {
-        $student_key = $_POST['student_key'] ?? '';
-        $cleared_items = $_POST['cleared_items'] ?? [];
-        
-        $requirements_data[$student_key] = [
-            'student_key' => $student_key,
-            'cleared_items' => $cleared_items,
-            'updated_at' => date('Y-m-d H:i:s'),
-            'updated_by' => $user_name,
-        ];
-        
-        if (!is_dir(dirname($requirements_file))) {
-            mkdir(dirname($requirements_file), 0755, true);
+// ── AJAX ──
+$ajax = $_GET['ajax'] ?? '';
+$ajaxSid = intval($_GET['student_id'] ?? 0);
+if ($ajax && $ajaxSid > 0) {
+    header('Content-Type: application/json');
+    if ($ajax === 'student_requirements') {
+        $cleared = [];
+        $r=$staff_conn->query("SELECT item_id,cleared FROM requirement_clearances WHERE student_id=$ajaxSid");
+        if($r) while($row=$r->fetch_assoc()) $cleared[$row['item_id']] = $row['cleared'];
+        echo json_encode(['cleared'=>$cleared]); exit;
+    }
+    if ($ajax === 'student_profile') {
+        $info=[];$r=$students_conn->query("SELECT * FROM students WHERE id=$ajaxSid"); if($r)$info=$r->fetch_assoc();
+        $inv=[];if($students_conn){$r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$inv[]=$row;}
+        $pay=[];if($students_conn){$r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$pay[]=$row;}
+        $docs=[];$r=$staff_conn->query("SELECT id,document_type,document_title,file_path,generation_date FROM generated_documents WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$docs[]=$row;
+        echo json_encode(['info'=>$info,'invoices'=>$inv,'payments'=>$pay,'documents'=>$docs]); exit;
+    }
+    echo json_encode([]); exit;
+}
+
+// ── POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    // Add student to SQL instead of JSON
+    if ($action === 'add_student') {
+        $fn  = $students_conn->real_escape_string(trim($_POST['full_name'] ?? ''));
+        $reg = $students_conn->real_escape_string(trim($_POST['registration_number'] ?? ''));
+        $ind = $students_conn->real_escape_string(trim($_POST['index_number'] ?? ''));
+        $ph  = $students_conn->real_escape_string(trim($_POST['phone'] ?? ''));
+        $em  = $students_conn->real_escape_string(trim($_POST['email'] ?? ''));
+        $prog = $students_conn->real_escape_string(trim($_POST['program'] ?? ''));
+        $year = intval($_POST['intake_year'] ?? date('Y'));
+        $gen = $students_conn->real_escape_string(trim($_POST['gender'] ?? 'Female'));
+        $dob = $_POST['date_of_birth'] ?? '';
+        $addr = $students_conn->real_escape_string(trim($_POST['address'] ?? ''));
+        $guardian = $students_conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
+        $gphone = $students_conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
+        $emer = $students_conn->real_escape_string(trim($_POST['emergency_name'] ?? ''));
+        $emer_ph = $students_conn->real_escape_string(trim($_POST['emergency_phone'] ?? ''));
+
+        if ($fn && $prog && $students_conn) {
+            $parts = explode(' ', trim($fn), 2);
+            $first = $students_conn->real_escape_string($parts[0]);
+            $sur = $students_conn->real_escape_string($parts[1] ?? '');
+            $snum = $reg ?: 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
+            $students_conn->query("INSERT INTO students (student_number,registration_number,national_student_id_number,first_name,surname,full_name,gender,date_of_birth,phone,mobile_number,email,address,guardian_name,guardian_phone,emergency_contact_name,emergency_contact_phone,course,program,current_year,intake_date,status,created_at) VALUES ('$snum','$reg','$ind','$first','$sur','$fn','$gen','$dob','$ph','$ph','$em','$addr','$guardian','$gphone','$emer','$emer_ph','$prog','$prog',$year,'$year-01-01','Active',NOW())");
+            if ($students_conn->affected_rows > 0) {
+                $sid = $students_conn->insert_id;
+                $admNo = 'ADM-'.date('Y').'-'.str_pad($sid,4,'0',STR_PAD_LEFT);
+                $staff_conn->query("INSERT INTO student_admissions (admission_number,student_id,academic_year,program,admission_date,admission_status) VALUES ('$admNo',$sid,'$year','$prog',CURDATE(),'Approved')");
+                $_SESSION['success'] = "Student $fn registered. Admission No: $admNo";
+            } else {
+                $_SESSION['error'] = 'Failed: '.$students_conn->error;
+            }
+        } else { $_SESSION['error'] = 'Name and program required.'; }
+        header("Location: director-admissions.php"); exit;
+    }
+
+    // Save requirements to SQL instead of JSON
+    if ($action === 'save_requirements') {
+        $sid = intval($_POST['student_id'] ?? 0);
+        $items = $_POST['cleared_items'] ?? [];
+        if ($sid > 0) {
+            $staff_conn->query("DELETE FROM requirement_clearances WHERE student_id=$sid");
+            foreach ($items as $itemId) {
+                $iid = intval($itemId);
+                if ($iid > 0) $staff_conn->query("INSERT INTO requirement_clearances (student_id,item_id,cleared,cleared_by,cleared_at) VALUES ($sid,$iid,1,$user_id,NOW())");
+            }
+            $_SESSION['success'] = 'Requirements updated.';
         }
-        
-        file_put_contents($requirements_file, json_encode($requirements_data, JSON_PRETTY_PRINT));
-        $_SESSION['success'] = 'Student requirements saved successfully!';
-        header('Location: director-admissions.php');
-        exit;
+        header("Location: director-admissions.php#requirements"); exit;
     }
-    
-    if ($_POST['action'] === 'add_student') {
-        $new_students_file = __DIR__ . '/../data/new_students.json';
-        $new_students = [];
-        if (file_exists($new_students_file)) {
-            $new_students = json_decode(file_get_contents($new_students_file), true) ?? [];
+
+    // Approve application -> create admission
+    if ($action === 'approve_application') {
+        $appId = intval($_POST['application_id'] ?? 0);
+        if ($website_conn && $appId > 0) {
+            $ap = $website_conn->query("SELECT * FROM student_applications WHERE id=$appId")->fetch_assoc();
+            if ($ap) {
+                $fn = $ap['first_name']; $sn = $ap['surname']; $on = $ap['other_name']??'';
+                $full = trim("$fn $on $sn"); $gen = $ap['gender']; $ph = $ap['phone'];
+                $em = $ap['email']??''; $prog = $ap['program_applied'];
+                $dob = $ap['date_of_birth']; $nat = $ap['nationality']??'Ugandan';
+                $addr = $ap['address']??''; $snum = 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
+                $students_conn->query("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,date_of_birth,phone,mobile_number,email,address,nationality,course,program,status,created_at) VALUES ('$snum','$fn','$sn','$on','$full','$gen','$dob','$ph','$ph','$em','$addr','$nat','$prog','$prog','Active',NOW())");
+                if ($students_conn->affected_rows > 0) {
+                    $sid = $students_conn->insert_id;
+                    $admNo = 'ADM-'.date('Y').'-'.str_pad($sid,4,'0',STR_PAD_LEFT);
+                    $currYear = date('Y');
+                    $staff_conn->query("INSERT INTO student_admissions (admission_number,student_id,academic_year,program,admission_date,admission_status) VALUES ('$admNo',$sid,'$currYear','$prog',CURDATE(),'Approved')");
+                    $website_conn->query("UPDATE student_applications SET status='Admitted',reviewed_by=$user_id,reviewed_at=NOW() WHERE id=$appId");
+                    $_SESSION['success'] = "Applicant converted to student: $full";
+                } else { $_SESSION['error'] = 'Failed: '.$students_conn->error; }
+            }
         }
-        
-        $new_student = [
-            'id' => uniqid(),
-            'full_name' => $_POST['full_name'] ?? '',
-            'registration_number' => $_POST['registration_number'] ?? '',
-            'index_number' => $_POST['index_number'] ?? '',
-            'phone' => $_POST['phone'] ?? '',
-            'email' => $_POST['email'] ?? '',
-            'program' => $_POST['program'] ?? '',
-            'intake_year' => $_POST['intake_year'] ?? date('Y'),
-            'gender' => $_POST['gender'] ?? '',
-            'date_of_birth' => $_POST['date_of_birth'] ?? '',
-            'created_at' => date('Y-m-d H:i:s'),
-            'created_by' => $user_name,
-            'source_file' => 'manual_add'
-        ];
-        
-        $new_students[] = $new_student;
-        
-        if (!is_dir(dirname($new_students_file))) {
-            mkdir(dirname($new_students_file), 0755, true);
-        }
-        
-        file_put_contents($new_students_file, json_encode($new_students, JSON_PRETTY_PRINT));
-        $_SESSION['success'] = 'New student added successfully!';
-        header('Location: director-admissions.php');
-        exit;
+        header("Location: director-admissions.php"); exit;
     }
+
+    // Reject application
+    if ($action === 'reject_application') {
+        $appId = intval($_POST['application_id'] ?? 0);
+        if ($website_conn) $website_conn->query("UPDATE student_applications SET status='Rejected',reviewed_by=$user_id,reviewed_at=NOW() WHERE id=$appId");
+        $_SESSION['success'] = 'Application rejected.';
+        header("Location: director-admissions.php"); exit;
+    }
+
+    // Upload document
+    if ($action === 'upload_doc') {
+        $sid = intval($_POST['student_id'] ?? 0);
+        $title = $staff_conn->real_escape_string($_POST['doc_title'] ?? '');
+        $dtype = $staff_conn->real_escape_string($_POST['doc_type'] ?? 'Admission Letter');
+        if ($sid > 0 && $title && isset($_FILES['doc_file']) && $_FILES['doc_file']['error'] === UPLOAD_ERR_OK) {
+            $dir = __DIR__ . '/../uploads/admission_docs/' . $sid;
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $ext = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
+            $fname = time() . '_' . preg_replace('/[^a-z0-9]/i', '_', $title) . '.' . $ext;
+            if (move_uploaded_file($_FILES['doc_file']['tmp_name'], $dir . '/' . $fname)) {
+                $fpath = "uploads/admission_docs/$sid/$fname";
+                $staff_conn->query("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES ('$dtype',$sid,$user_id,'$title','$fpath')");
+                $_SESSION['success'] = "Document '$title' uploaded.";
+            } else { $_SESSION['error'] = 'Upload failed.'; }
+        } else { $_SESSION['error'] = 'Title and file required.'; }
+        header("Location: director-admissions.php"); exit;
+    }
+
+    // Delete document
+    if ($action === 'delete_doc') {
+        $did = intval($_POST['document_id'] ?? 0);
+        $d = $staff_conn->query("SELECT file_path FROM generated_documents WHERE id=$did")->fetch_assoc();
+        if ($d && $d['file_path']) { $fp = __DIR__.'/../'.$d['file_path']; if (file_exists($fp)) @unlink($fp); }
+        $staff_conn->query("DELETE FROM generated_documents WHERE id=$did");
+        $_SESSION['success'] = 'Document deleted.';
+        header("Location: director-admissions.php"); exit;
+    }
+
+    header("Location: director-admissions.php"); exit;
 }
-
-// Load manually added students
-$new_students_file = __DIR__ . '/../data/new_students.json';
-if (file_exists($new_students_file)) {
-    $manual_students = json_decode(file_get_contents($new_students_file), true) ?? [];
-    foreach ($manual_students as $student) {
-        $all_students[] = $student;
-    }
-}
-
-// ── Get current user's role_id for official duties ──
-$user_role_id = 0;
-if ($staff_conn) {
-    $ri = $staff_conn->query("SELECT role_id FROM staff WHERE id = " . (int)($user['id'] ?? 0));
-    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
-}
-
-// Dashboard statistics from database
-$total_applications = 0;
-$pending_applications = 0;
-$admitted_students = 0;
-$enrolled_students = 0;
-$active_students = 0;
-
-try {
-    if ($students_conn) {
-        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students");
-        if ($result) $enrolled_students = (int)$result->fetch_assoc()['cnt'];
-
-        $result = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status = 'Active'");
-        if ($result) $active_students = (int)$result->fetch_assoc()['cnt'];
-    }
-
-    if ($staff_conn) {
-        $result = $staff_conn->query("SELECT COUNT(*) as cnt FROM student_admissions WHERE admission_status = 'Pending'");
-        if ($result) $pending_applications = (int)$result->fetch_assoc()['cnt'];
-
-        $result = $staff_conn->query("SELECT COUNT(*) as cnt FROM student_admissions WHERE admission_status = 'Approved'");
-        if ($result) $admitted_students = (int)$result->fetch_assoc()['cnt'];
-    }
-
-    if ($website_conn) {
-        $result = $website_conn->query("SELECT COUNT(*) as cnt FROM applications");
-        if ($result) $total_applications = (int)$result->fetch_assoc()['cnt'];
-    }
-} catch (Exception $e) {}
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+.btn-outline-purple { color:#8b5cf6; border-color:#8b5cf6; }
+.btn-outline-purple:hover { color:#fff; background:#8b5cf6; border-color:#8b5cf6; }
+.modal-content { max-height:85vh; overflow-y:auto; }
+</style>
 </head>
 <body>
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-4" style="z-index: 9999; animation: slideIn 0.5s ease;">
-            <i class="fas fa-check-circle me-2"></i>
-            <?php echo htmlspecialchars($_SESSION['success']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['success']); ?>
-    <?php endif; ?>
-
     <div class="dashboard-container">
         <?php include_once '../includes/sidebar.php'; ?>
-        
-        <!-- Main Content -->
-        <div class="dashboard-main">
-            <!-- Header -->
-            <div class="dashboard-header">
+        <div class="main-content">
+            <header class="dashboard-header">
                 <div class="header-left">
                     <h1>Director Admissions Dashboard</h1>
-                    <p>Admissions & Requirements Management , Iganga School of Nursing and Midwifery</p>
+                    <p>Admissions Management, Iganga School of Nursing and Midwifery</p>
                 </div>
-                <div class="header-right d-flex gap-3 align-items-center">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span><?php echo date('l, F j, Y'); ?></span>
-                    </div>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-shopping-cart me-1"></i>Store</a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-newspaper me-1"></i>News</a>
+                <div class="header-right">
+                    <div class="date-time"><i class="fas fa-calendar"></i><span id="currentDate"><?php echo date('l, F j, Y'); ?></span></div>
                     <a href="../student-directory.php" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-address-book me-1"></i>Directory</a>
-                    <a href="../index.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-home"></i></a>
-                    <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i class="fas fa-user-plus"></i> Add Student
-                    </button>
+                    <a href="../index.php" class="btn btn-sm btn-outline-secondary ms-1"><i class="fas fa-home"></i></a>
                     <div class="user-menu">
                         <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Dashboard Content -->
+            </header>
+
+            <?php if(!empty($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show m-3 py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <?php unset($_SESSION['success']); endif; ?>
+            <?php if(!empty($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show m-3 py-2"><?= htmlspecialchars($_SESSION['error']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <?php unset($_SESSION['error']); endif; ?>
+
             <div class="dashboard-content">
-                <!-- Overview Section -->
-                <section id="overview" class="content-section">
+                <!-- Overview -->
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Admissions Overview</h2>
                     <div class="stats-grid">
-                        <div class="stat-card primary">
-                            <div class="stat-icon">
-                                <i class="fas fa-file-signature"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($total_applications ?: 0); ?></h3>
-                                <p>Total Applications</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card warning">
-                            <div class="stat-icon">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($pending_applications); ?></h3>
-                                <p>Pending Review</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card success">
-                            <div class="stat-icon">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($admitted_students); ?></h3>
-                                <p>Admitted Students</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card info">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($enrolled_students); ?></h3>
-                                <p>Enrolled Students</p>
-                            </div>
-                        </div>
-                        
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo number_format($active_students); ?></h3>
-                                <p>Active Students</p>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                            <div class="stat-content"><h3><?= $total_apps ?></h3><p>Total Applications</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-content"><h3><?= $pending_apps ?></h3><p>Pending Review</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-content"><h3><?= $admitted_students ?></h3><p>Admitted Students</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                            <div class="stat-content"><h3><?= $enrolled_students ?></h3><p>Enrolled Students</p></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-content"><h3><?= $active_students ?></h3><p>Active Students</p></div>
                         </div>
                     </div>
                 </section>
-                
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
-                <!-- Official Duties & Responsibilities -->
-                <section id="duties" class="content-section">
+                <!-- Official Duties -->
+                <section id="duties" class="content-section dashboard-section" data-section="duties">
                     <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
                     <?php renderOfficialDuties($user_role_id, $staff_conn); ?>
                 </section>
 
                 <!-- Quick Actions -->
-                <section class="content-section">
+                <section id="quick-actions" class="content-section dashboard-section" data-section="quick-actions">
                     <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
                     <div class="d-flex flex-wrap gap-2 mt-2">
-                        <a href="../import_students_excel.php" class="btn btn-outline-info btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
-                        <a href="../student-directory.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
+                        <a href="../import_students_excel.php" class="btn btn-outline-success btn-sm"><i class="fas fa-file-excel me-1"></i>Import Students</a>
+                        <a href="../student-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
                         <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
-                        <a href="../dashboards/school-secretary.php" class="btn btn-outline-info btn-sm"><i class="fas fa-envelope me-1"></i>School Secretary</a>
-                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i>Add Student</button>
-                        <button class="btn btn-outline-primary btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Overview</button>
+                        <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>School Secretary</a>
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-user-plus me-1"></i>Add Student</button>
+                        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="fas fa-print me-1"></i>Print Overview</button>
                     </div>
                 </section>
 
-                <!-- Requirements Portal Section -->
-                <section id="requirements" class="content-section">
-                    <h2><i class="fas fa-clipboard-check me-2"></i>Requirements Portal</h2>
-                    <p class="text-muted mb-4">Track and manage student admission requirements</p>
-                    
-                    <!-- Search and Filter Bar -->
-                    <div class="search-bar">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
-                                    <input type="text" id="studentSearch" class="form-control" placeholder="Search students by name, admission number, or phone...">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <select id="filterName" class="form-select">
-                                    <option value="">All Names</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select id="filterAdmission" class="form-select">
-                                    <option value="">All Admission #</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select id="filterPhone" class="form-select">
-                                    <option value="">All Phones</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button id="clearFilters" class="btn btn-light w-100 d-flex align-items-center justify-content-center gap-2">
-                                    <i class="fas fa-redo"></i> Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Students List -->
-                    <div id="studentsList">
-                        <?php foreach ($all_students as $index => $student): 
-                            $student_key = md5(($student['index_number'] ?? $student['registration_number'] ?? $student['full_name'] ?? $index));
-                            $student_req = $requirements_data[$student_key] ?? ['cleared_items' => []];
-                            $cleared_count = count($student_req['cleared_items'] ?? []);
-                            $total_count = count($required_items);
-                            $progress_percent = $total_count > 0 ? round(($cleared_count / $total_count) * 100) : 0;
-                        ?>
-                        <div class="student-card" data-name="<?php echo htmlspecialchars(strtolower($student['full_name'] ?? '')); ?>" data-admission="<?php echo htmlspecialchars(strtolower($student['registration_number'] ?? $student['index_number'] ?? '')); ?>" data-phone="<?php echo htmlspecialchars(strtolower($student['phone'] ?? '')); ?>">
-                            <form method="POST" class="requirements-form">
-                                <input type="hidden" name="action" value="save_requirements">
-                                <input type="hidden" name="student_key" value="<?php echo htmlspecialchars($student_key); ?>">
-                                
-                                <div class="student-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                    <div class="d-flex gap-4 align-items-center">
-                                        <div class="avatar">
-                                            <?php echo strtoupper(substr($student['full_name'] ?? 'S', 0, 1)); ?>
-                                        </div>
-                                        <div>
-                                            <h4 class="mb-1 fw-bold"><?php echo htmlspecialchars($student['full_name'] ?? 'Unknown Student'); ?></h4>
-                                            <div class="text-muted small">
-                                                <?php if (!empty($student['registration_number'])): ?>
-                                                    <span class="me-3"><i class="fas fa-id-card me-1"></i> <?php echo htmlspecialchars($student['registration_number']); ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($student['index_number'])): ?>
-                                                    <span class="me-3"><i class="fas fa-hashtag me-1"></i> <?php echo htmlspecialchars($student['index_number']); ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($student['phone'])): ?>
-                                                    <span class="me-3"><i class="fas fa-phone me-1"></i> <?php echo htmlspecialchars($student['phone']); ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($student['program'])): ?>
-                                                    <span><i class="fas fa-graduation-cap me-1"></i> <?php echo htmlspecialchars($student['program']); ?></span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="mb-2">
-                                            <strong class="fs-5"><?php echo $cleared_count; ?> / <?php echo $total_count; ?> Cleared</strong>
-                                        </div>
-                                        <div class="progress" style="width: 240px;">
-                                            <div class="progress-bar" style="width: <?php echo $progress_percent; ?>%"></div>
-                                        </div>
-                                        <small class="text-muted fw-semibold"><?php echo $progress_percent; ?>% Complete</small>
-                                    </div>
-                                </div>
-                                
-                                <div class="p-4">
-                                    <div class="requirements-grid">
-                                        <?php foreach ($required_items as $item_key => $item_name): 
-                                            $is_cleared = in_array($item_key, $student_req['cleared_items'] ?? []);
-                                        ?>
-                                        <div class="requirement-item <?php echo $is_cleared ? 'cleared' : ''; ?>">
-                                            <input class="form-check-input" type="checkbox" name="cleared_items[]" value="<?php echo htmlspecialchars($item_key); ?>" id="req_<?php echo $student_key; ?>_<?php echo $item_key; ?>" <?php echo $is_cleared ? 'checked' : ''; ?>>
-                                            <label class="form-check-label mb-0 fw-medium" for="req_<?php echo $student_key; ?>_<?php echo $item_key; ?>">
-                                                <?php echo htmlspecialchars($item_name); ?>
-                                            </label>
-                                        </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                                
-                                <div class="d-flex justify-content-end gap-3 p-4 pt-0">
-                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="window.print()">
-                                        <i class="fas fa-print"></i> Print
-                                    </button>
-                                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
-                                        <i class="fas fa-save"></i> Save Changes
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-                
-                <!-- Applications Section -->
-                <section id="applications" class="content-section">
-                    <h2><i class="fas fa-file-alt me-2"></i>Recent Applications</h2>
-                    <p class="text-muted mb-4">Latest admissions records</p>
+                <!-- Applications Management -->
+                <section id="applications" class="content-section dashboard-section" data-section="applications">
+                    <h2><i class="fas fa-file-alt me-2"></i>Applications Management</h2>
+                    <?php if(empty($applicants)): ?>
+                    <p class="text-muted">No student applications in database.</p>
+                    <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Application #</th>
-                                    <th>Applicant</th>
-                                    <th>Program</th>
-                                    <th>Intake Year</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
+                        <table class="table table-sm table-hover">
+                            <thead><tr><th>App No</th><th>Applicant</th><th>Program</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="6" class="text-muted py-5 text-center">No admissions records available in database.</td>
-                                </tr>
+                            <?php foreach($applicants as $a):
+                                $aname = htmlspecialchars(trim($a['first_name'].' '.$a['surname']));
+                            ?>
+                            <tr>
+                                <td><code><?= htmlspecialchars($a['application_number']) ?></code></td>
+                                <td><?= $aname ?></td>
+                                <td><?= htmlspecialchars($a['program_applied']) ?></td>
+                                <td><?= $a['submitted_at'] ?></td>
+                                <td><span class="badge bg-<?= $a['status']==='Admitted'?'success':($a['status']==='Rejected'?'danger':($a['status']==='Pending'?'warning':'info')) ?>"><?= $a['status'] ?></span></td>
+                                <td>
+                                    <?php if($a['status']==='Pending'): ?>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="approve_application">
+                                        <input type="hidden" name="application_id" value="<?= $a['id'] ?>">
+                                        <button class="btn btn-sm btn-outline-success" onclick="return confirm('Approve and convert to student?')"><i class="fas fa-check"></i></button>
+                                    </form>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="reject_application">
+                                        <input type="hidden" name="application_id" value="<?= $a['id'] ?>">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject application?')"><i class="fas fa-times"></i></button>
+                                    </form>
+                                    <?php endif; ?>
+                                    <button class="btn btn-sm btn-outline-info" onclick="alert('Name: <?= $aname ?>\nProgram: <?= htmlspecialchars($a['program_applied']) ?>\nPhone: <?= htmlspecialchars($a['phone']) ?>\nEmail: <?= htmlspecialchars($a['email']??'-') ?>\nDOB: <?= $a['date_of_birth'] ?>\nNationality: <?= htmlspecialchars($a['nationality']??'-') ?>')"><i class="fas fa-eye"></i></button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+                    <?php endif; ?>
                 </section>
-                
-                <!-- News Section -->
-                <section id="news" class="content-section">
+
+                <!-- Requirements Portal -->
+                <section id="requirements" class="content-section dashboard-section" data-section="requirements">
+                    <h2><i class="fas fa-clipboard-check me-2"></i>Requirements Portal</h2>
+                    <p class="text-muted small">Track admission requirements per student.</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <select id="reqStudentId" class="form-select form-select-sm" onchange="loadStudentRequirements()">
+                                <option value="">Select student…</option>
+                                <?php if($students_conn){ $r=$students_conn->query("SELECT id,full_name,student_number FROM students ORDER BY full_name LIMIT 200"); if($r) while($row=$r->fetch_assoc()): ?>
+                                <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['full_name']?:$row['student_number']) ?></option>
+                                <?php endwhile; } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <form method="POST" id="requirementsForm">
+                        <input type="hidden" name="action" value="save_requirements">
+                        <input type="hidden" name="student_id" id="reqStudentIdHidden">
+                        <div id="requirementsList" class="small text-muted">Select a student to view requirements.</div>
+                        <div id="requirementsSubmitArea" style="display:none" class="mt-2">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i>Save Requirements</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.open('director-admissions.php?report=clearance','_blank')"><i class="fas fa-print me-1"></i>Print Report</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Student Directory -->
+                <section id="directory" class="content-section dashboard-section" data-section="directory">
+                    <h2><i class="fas fa-address-book me-2"></i>Student Directory</h2>
+                    <div class="mb-2">
+                        <input type="text" id="dirSearch" class="form-control form-control-sm" placeholder="Search by name, reg no, program..." onkeyup="filterDirectory()">
+                    </div>
+                    <?php if(empty($students_list)): ?>
+                    <p class="text-muted">No students found.</p>
+                    <?php else: ?>
+                    <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                        <table class="table table-sm table-hover" id="dirTable">
+                            <thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <?php foreach($students_list as $s):
+                                $sdname = htmlspecialchars($s['full_name'] ?: trim($s['first_name'].' '.$s['surname']));
+                                $sdreg = htmlspecialchars($s['registration_number'] ?: $s['student_number']);
+                            ?>
+                            <tr>
+                                <td><code><?= $sdreg ?></code></td>
+                                <td><?= $sdname ?></td>
+                                <td><?= htmlspecialchars($s['course']??'-') ?></td>
+                                <td><?= htmlspecialchars($s['phone']??'-') ?></td>
+                                <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewStudentProfile(<?= $s['id'] ?>)"><i class="fas fa-eye"></i></button>
+                                    <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="window.open('director-academics.php?report=fee_statement&student_id=<?= $s['id'] ?>','_blank')"><i class="fas fa-file-invoice"></i></button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="uploadDoc(<?= $s['id'] ?>, '<?= addslashes($sdname) ?>')"><i class="fas fa-upload"></i></button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+                </section>
+
+                <!-- Reports -->
+                <section id="reports" class="content-section dashboard-section" data-section="reports">
+                    <h2><i class="fas fa-chart-bar me-2"></i>Admissions Reports</h2>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card card-body text-center py-3" style="cursor:pointer" onclick="window.open('director-admissions.php?report=applications','_blank')">
+                                <i class="fas fa-file-alt fa-2x mb-2" style="color:var(--primary)"></i>
+                                <strong class="small">Applications Report</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-body text-center py-3" style="cursor:pointer" onclick="window.open('director-admissions.php?report=admitted','_blank')">
+                                <i class="fas fa-check-circle fa-2x mb-2" style="color:var(--primary)"></i>
+                                <strong class="small">Admitted Students</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-body text-center py-3" style="cursor:pointer" onclick="window.open('director-admissions.php?report=clearance','_blank')">
+                                <i class="fas fa-clipboard-check fa-2x mb-2" style="color:var(--primary)"></i>
+                                <strong class="small">Clearance Report</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-body text-center py-3" style="cursor:pointer" onclick="window.open('director-admissions.php?report=intake','_blank')">
+                                <i class="fas fa-calendar-alt fa-2x mb-2" style="color:var(--primary)"></i>
+                                <strong class="small">Intake Report</strong>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- News -->
+                <section id="news" class="content-section dashboard-section" data-section="news">
                     <h2><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</h2>
-                    <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user_name, $user['role'] ?? 'Director Admissions', 5); ?>
+                    <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user_name, $user_role, 5); ?>
                 </section>
 
-                <!-- Activity Section -->
-                <section id="activity" class="content-section">
+                <!-- Recent Activities -->
+                <section id="activity" class="content-section dashboard-section" data-section="activity">
                     <h2><i class="fas fa-history me-2"></i>Recent Admissions Activity</h2>
-                    <p class="text-muted mb-4">Audit trail from staff logs</p>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="d-flex gap-3 align-items-start">
-                                <div class="timeline-icon" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--isnm-blue), var(--isnm-light-blue)); display: flex; align-items: center; justify-content: center; color: white;">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <strong class="d-block">Dashboard accessed</strong>
-                                    <small class="text-muted"><?php echo date('Y-m-d H:i:s'); ?></small>
-                                </div>
+                    <div class="activities-list">
+                        <?php foreach ($recent_activities as $act): ?>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="activity-content">
+                                <strong><?php echo htmlspecialchars($act['activity'] ?? 'Activity'); ?></strong>
+                                <small class="text-muted d-block"><?php echo date('M j, Y H:i', strtotime($act['created_at'])); ?></small>
                             </div>
                         </div>
+                        <?php endforeach; if(empty($recent_activities)): ?>
+                        <p class="text-muted">No recent activities.</p>
+                        <?php endif; ?>
                     </div>
                 </section>
             </div>
         </div>
     </div>
-    
-    <!-- Add Student Modal -->
-    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="addStudentModalLabel">
-                        <i class="fas fa-user-plus me-2"></i>Add New Student
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST">
-                    <div class="modal-body p-4">
-                        <input type="hidden" name="action" value="add_student">
-                        
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label fw-semibold">Full Name *</label>
-                                <input type="text" class="form-control" name="full_name" required placeholder="Enter student's full name">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Registration Number</label>
-                                <input type="text" class="form-control" name="registration_number" placeholder="Enter registration number">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Index Number</label>
-                                <input type="text" class="form-control" name="index_number" placeholder="Enter index number">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Phone Number *</label>
-                                <input type="text" class="form-control" name="phone" required placeholder="Enter phone number">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Email Address</label>
-                                <input type="email" class="form-control" name="email" placeholder="Enter email address">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Program *</label>
-                                <select class="form-select" name="program" required>
-                                    <option value="">Select program</option>
-                                    <option value="Certificate in Nursing">Certificate in Nursing</option>
-                                    <option value="Certificate in Midwifery">Certificate in Midwifery</option>
-                                    <option value="Diploma in Nursing">Diploma in Nursing</option>
-                                    <option value="Diploma in Midwifery">Diploma in Midwifery</option>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Intake Year</label>
-                                <input type="number" class="form-control" name="intake_year" value="<?php echo date('Y'); ?>" placeholder="Year">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Gender</label>
-                                <select class="form-select" name="gender">
-                                    <option value="">Select gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Date of Birth</label>
-                                <input type="date" class="form-control" name="date_of_birth">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer gap-2 p-4">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
-                            <i class="fas fa-save"></i> Add Student
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <!-- ═══ DEPARTMENT MANAGEMENT (HIERARCHY-AWARE) ═══ -->
+    <!-- Hierarchy, Alerts, Performance, Approvals -->
     <div class="container-fluid px-4 pb-4">
         <div class="row g-3 mb-4">
             <div class="col-lg-6">
@@ -543,9 +480,7 @@ try {
             </div>
             <div class="col-lg-6">
                 <div class="section-card h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Admissions Alerts</h6>
-                    </div>
+                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Admissions Alerts</h6>
                     <?= renderAlertsPanel($staff_conn, 'ADM', 5) ?>
                 </div>
             </div>
@@ -555,10 +490,10 @@ try {
                 <div class="section-card h-100">
                     <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Admissions Department Performance</h6>
                     <?php
-                    $admStaffId = 0; $admRoleId = 27;
-                    $sq = $staff_conn ? $staff_conn->prepare("SELECT id FROM staff WHERE role_id = ? AND status = 'Active' LIMIT 1") : false;
-                    if ($sq) { $sq->bind_param('i', $admRoleId); $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $admStaffId = $sr['id']; }
-                    echo renderDirectorPerformanceCard($admStaffId, $admRoleId, 'Director Admissions', $staff_conn);
+                    $admStaffId = 0;
+                    $sq = $staff_conn ? $staff_conn->prepare("SELECT id FROM staff WHERE role_id = 15 AND status = 'Active' LIMIT 1") : false;
+                    if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $admStaffId = $sr['id']; }
+                    echo renderDirectorPerformanceCard($admStaffId, 15, 'Director Admissions', $staff_conn);
                     ?>
                 </div>
             </div>
@@ -566,9 +501,9 @@ try {
                 <div class="section-card h-100">
                     <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Admissions Approvals</h6>
                     <?php
-                    $admApprovals = getPendingApprovals($staff_conn, 27, 5);
-                    if (!empty($admApprovals)):
-                        foreach ($admApprovals as $apr):
+                    $pendingApprovals = getPendingApprovals($staff_conn, 15, 5);
+                    if (!empty($pendingApprovals)):
+                        foreach ($pendingApprovals as $apr):
                             echo renderApprovalWorkflowCard($apr, $staff_conn);
                             echo renderApprovalActionButtons($apr['id']);
                         endforeach;
@@ -580,121 +515,184 @@ try {
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" class="modal-content">
+                <input type="hidden" name="action" value="add_student">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Student</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label">Full Name *</label><input type="text" name="full_name" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label">Registration Number</label><input type="text" name="registration_number" class="form-control" placeholder="Auto-generated if empty"></div>
+                        <div class="col-md-4"><label class="form-label">Index Number</label><input type="text" name="index_number" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Gender</label><select name="gender" class="form-select"><option>Female</option><option>Male</option></select></div>
+                        <div class="col-md-4"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Phone *</label><input type="text" name="phone" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="1"></textarea></div>
+                        <div class="col-md-6"><label class="form-label">Program *</label>
+                            <select name="program" class="form-select" required>
+                                <option value="">Select Program</option>
+                                <?php foreach($programs as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6"><label class="form-label">Intake Year</label><input type="number" name="intake_year" class="form-control" value="<?= date('Y') ?>"></div>
+                        <div class="col-md-6"><label class="form-label">Guardian Name</label><input type="text" name="guardian_name" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label">Emergency Contact</label><input type="text" name="emergency_name" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label">Emergency Phone</label><input type="text" name="emergency_phone" class="form-control"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Document Modal -->
+    <div class="modal fade" id="uploadDocModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" class="modal-content" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload_doc">
+                <input type="hidden" name="student_id" id="uploadDocStudentId">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Upload Document</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">Document Type</label>
+                        <select name="doc_type" class="form-select">
+                            <option>Admission Letter</option><option>Certificate</option><option>Passport Photo</option><option>Identification</option><option>Medical Form</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-2"><label class="form-label">Title</label><input type="text" name="doc_title" class="form-control" required></div>
+                    <div class="mb-2"><label class="form-label">File</label><input type="file" name="doc_file" class="form-control" required></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info text-white"><i class="fas fa-upload me-1"></i>Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal -->
+    <div class="modal fade" id="studentProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="studentProfileBody"><div class="text-center py-4"><em>Loading...</em></div></div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" onclick="printStudentProfile()"><i class="fas fa-print"></i> Print</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar navigation
-            document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    const target = this.getAttribute('href');
-                    document.querySelectorAll('.content-section').forEach(section => {
-                        section.style.display = 'none';
-                    });
-                    document.querySelector(target).style.display = 'block';
-                });
+    function loadStudentRequirements(){
+        const sid = document.getElementById('reqStudentId').value;
+        const hidden = document.getElementById('reqStudentIdHidden');
+        const list = document.getElementById('requirementsList');
+        const submitArea = document.getElementById('requirementsSubmitArea');
+        if(!sid){ list.innerHTML='<span class="text-muted">Select a student.</span>'; submitArea.style.display='none'; return; }
+        hidden.value=sid;
+        list.innerHTML='<em>Loading...</em>';
+        fetch('director-admissions.php?ajax=student_requirements&student_id='+sid)
+            .then(r=>r.json()).then(d=>{
+                let cleared = d.cleared||{};
+                let h = '<div class="row g-2">';
+                <?php foreach($req_items as $ri): ?>
+                h += `<div class="col-md-4"><div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="cleared_items[]" value="<?= $ri['id'] ?>" id="req_<?= $ri['id'] ?>" ${cleared[<?= $ri['id'] ?>] ? 'checked' : ''}>
+                    <label class="form-check-label small" for="req_<?= $ri['id'] ?>"><?= htmlspecialchars($ri['item_name']) ?></label>
+                </div></div>`;
+                <?php endforeach; ?>
+                h += '</div>';
+                list.innerHTML = h;
+                submitArea.style.display = '';
+            }).catch(()=>{ list.innerHTML='<span class="text-danger">Error loading.</span>'; });
+    }
+
+    function viewStudentProfile(id){
+        const modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
+        document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading...</p></div>';
+        modal.show();
+        fetch('director-admissions.php?ajax=student_profile&student_id='+id)
+            .then(r=>r.json()).then(d=>{
+                let info = d.info||{};
+                let inv = d.invoices||[], pay = d.payments||[], docs = d.documents||[];
+                let tPaid = pay.reduce((s,p)=>s+parseFloat(p.amount_received||0),0);
+                let tInv = inv.reduce((s,iv)=>s+parseFloat(iv.total_amount||0),0);
+                let h = `<ul class="nav nav-tabs mb-3" id="sTabs">
+                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#sPers">Personal</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#sAcad">Academic</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#sFin">Finance</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#sDoc">Documents</a></li>
+                </ul><div class="tab-content">
+                    <div class="tab-pane fade show active" id="sPers"><div class="row g-2 small">
+                        <div class="col-md-6"><strong>Name:</strong> ${info.full_name||''}</div>
+                        <div class="col-md-6"><strong>Reg No:</strong> ${info.registration_number||info.student_number||'-'}</div>
+                        <div class="col-md-6"><strong>National ID:</strong> ${info.national_student_id_number||'-'}</div>
+                        <div class="col-md-6"><strong>Phone:</strong> ${info.phone||'-'}</div>
+                        <div class="col-md-6"><strong>Email:</strong> ${info.email||'-'}</div>
+                        <div class="col-md-6"><strong>DOB:</strong> ${info.date_of_birth||'-'}</div>
+                        <div class="col-md-6"><strong>Gender:</strong> ${info.gender||'-'}</div>
+                        <div class="col-md-6"><strong>Address:</strong> ${info.address||'-'}</div>
+                        <div class="col-md-6"><strong>Guardian:</strong> ${info.guardian_name||'-'}</div>
+                        <div class="col-md-6"><strong>Guardian Phone:</strong> ${info.guardian_phone||'-'}</div>
+                        <div class="col-md-6"><strong>Emergency:</strong> ${info.emergency_contact_name||'-'}</div>
+                        <div class="col-md-6"><strong>Emergency Phone:</strong> ${info.emergency_contact_phone||'-'}</div>
+                    </div></div>
+                    <div class="tab-pane fade" id="sAcad"><div class="row g-2 small">
+                        <div class="col-md-4"><strong>Program:</strong> ${info.course||'-'}</div>
+                        <div class="col-md-4"><strong>Year:</strong> ${info.current_year||'-'}</div>
+                        <div class="col-md-4"><strong>Semester:</strong> ${info.current_semester||'-'}</div>
+                        <div class="col-md-4"><strong>Intake:</strong> ${info.intake_date||'-'}</div>
+                        <div class="col-md-4"><strong>Set:</strong> ${info.set_name||'-'}</div>
+                        <div class="col-md-4"><strong>Status:</strong> <span class="badge bg-success">${info.status||'-'}</span></div>
+                    </div></div>
+                    <div class="tab-pane fade" id="sFin"><div class="row g-2 small">
+                        <div class="col-md-4"><strong>Invoiced:</strong> ${tInv.toLocaleString()}</div>
+                        <div class="col-md-4"><strong>Paid:</strong> ${tPaid.toLocaleString()}</div>
+                        <div class="col-md-4"><strong>Balance:</strong> ${(tInv-tPaid).toLocaleString()}</div>
+                        <div class="col-12 mt-2"><button class="btn btn-sm btn-outline-primary" onclick="window.open('director-academics.php?report=fee_statement&student_id=${id}','_blank')"><i class="fas fa-file-invoice"></i> Full Statement</button></div>
+                    </div></div>
+                    <div class="tab-pane fade" id="sDoc"><div class="small">${docs.length ? docs.map(d=>'<div class="mb-1 d-flex justify-content-between align-items-center">'+(d.file_path ? '<a href="../'+d.file_path+'" target="_blank">'+d.document_title+'</a>' : '<span>'+d.document_title+'</span>')+' <small class="text-muted">('+d.document_type+')</small> <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_doc"><input type="hidden" name="document_id" value="'+d.id+'"><button class="btn btn-sm btn-outline-danger btn-tbl py-0" onclick="return confirm(\'Delete?\')"><i class="fas fa-times"></i></button></form></div>').join('') : '<p class="text-muted">No documents.</p>'}</div></div>
+                </div>`;
+                document.getElementById('studentProfileBody').innerHTML = h;
+                setTimeout(()=>{ document.querySelectorAll('#sTabs a').forEach(t=>{ t.addEventListener('click',e=>{ e.preventDefault(); new bootstrap.Tab(t).show(); }); }); },100);
             });
-            
-            const searchInput = document.getElementById('studentSearch');
-            const filterName = document.getElementById('filterName');
-            const filterAdmission = document.getElementById('filterAdmission');
-            const filterPhone = document.getElementById('filterPhone');
-            const clearBtn = document.getElementById('clearFilters');
-            if (!searchInput || !filterName || !filterAdmission || !filterPhone || !clearBtn) return;
-            
-            const studentCards = document.querySelectorAll('.student-card');
-            
-            // Populate filter options
-            const names = new Set();
-            const admissions = new Set();
-            const phones = new Set();
-            
-            studentCards.forEach(card => {
-                const name = card.dataset.name;
-                const admission = card.dataset.admission;
-                const phone = card.dataset.phone;
-                
-                if (name) names.add(name);
-                if (admission) admissions.add(admission);
-                if (phone) phones.add(phone);
-            });
-            
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-                filterName.appendChild(option);
-            });
-            
-            admissions.forEach(admission => {
-                const option = document.createElement('option');
-                option.value = admission;
-                option.textContent = admission;
-                filterAdmission.appendChild(option);
-            });
-            
-            phones.forEach(phone => {
-                const option = document.createElement('option');
-                option.value = phone;
-                option.textContent = phone;
-                filterPhone.appendChild(option);
-            });
-            
-            function filterStudents() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const nameVal = filterName.value;
-                const admissionVal = filterAdmission.value;
-                const phoneVal = filterPhone.value;
-                
-                studentCards.forEach(card => {
-                    const cardName = card.dataset.name;
-                    const cardAdmission = card.dataset.admission;
-                    const cardPhone = card.dataset.phone;
-                    
-                    let show = true;
-                    
-                    if (searchTerm) {
-                        const haystack = (cardName + ' ' + cardAdmission + ' ' + cardPhone).toLowerCase();
-                        if (!haystack.includes(searchTerm)) {
-                            show = false;
-                        }
-                    }
-                    
-                    if (nameVal && cardName !== nameVal) show = false;
-                    if (admissionVal && cardAdmission !== admissionVal) show = false;
-                    if (phoneVal && cardPhone !== phoneVal) show = false;
-                    
-                    card.style.display = show ? 'block' : 'none';
-                });
-            }
-            
-            searchInput.addEventListener('input', filterStudents);
-            filterName.addEventListener('change', filterStudents);
-            filterAdmission.addEventListener('change', filterStudents);
-            filterPhone.addEventListener('change', filterStudents);
-            
-            clearBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                filterName.value = '';
-                filterAdmission.value = '';
-                filterPhone.value = '';
-                filterStudents();
-            });
-            
-            document.querySelectorAll('.requirement-item input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const item = this.closest('.requirement-item');
-                    if (this.checked) {
-                        item.classList.add('cleared');
-                    } else {
-                        item.classList.remove('cleared');
-                    }
-                });
-            });
-        });
+    }
+
+    function printStudentProfile(){
+        const c = document.getElementById('studentProfileBody').innerHTML;
+        const w = window.open('','_blank');
+        w.document.write('<!DOCTYPE html><html><head><title>Student Profile</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:6px 8px}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}}</style></head><body><h2>Student Profile</h2>'+c+'<script>window.onload=function(){window.print()}<\/script></body></html>');
+        w.document.close();
+    }
+
+    function filterDirectory(){
+        const q = document.getElementById('dirSearch')?.value?.toLowerCase()||'';
+        document.querySelectorAll('#dirTable tbody tr').forEach(r=>{ r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+    }
+
+    function uploadDoc(id, name){
+        document.getElementById('uploadDocStudentId').value = id;
+        new bootstrap.Modal(document.getElementById('uploadDocModal')).show();
+    }
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

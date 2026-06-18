@@ -152,13 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="content-section dashboard-section active" data-section="overview">
 <div class="main" style="margin-left:270px;padding:32px">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <h4 class="fw-bold mb-0"><i class="fas fa-user-plus me-2"></i>Add Student</h4>
         <span class="text-muted small"><?= date('l, d M Y') ?></span>
     </div>
-
-    <?php renderModuleSlider($user_role); ?>
 
     <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2 no-print"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
     <?php if(!empty($_SESSION['error'])): ?><div class="alert alert-danger py-2 no-print"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div><?php endif; ?>
@@ -214,6 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </table>
     </div>
 </div>
+</section>
 
 <!-- Add/Edit Modal -->
 <div class="modal fade" id="studentModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><form method="POST" enctype="multipart/form-data" class="modal-content"><input type="hidden" name="action" id="formAction" value="add"><input type="hidden" name="id" id="studentId" value="0"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="modalTitle">Add Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-3"><div class="col-md-4"><label class="form-label">First Name <span class="text-danger">*</span></label><input type="text" name="first_name" id="f_first_name" class="form-control" required></div><div class="col-md-4"><label class="form-label">Surname <span class="text-danger">*</span></label><input type="text" name="surname" id="f_surname" class="form-control" required></div><div class="col-md-4"><label class="form-label">Other Name</label><input type="text" name="other_name" id="f_other_name" class="form-control"></div><div class="col-md-4"><label class="form-label">Gender</label><select name="gender" id="f_gender" class="form-select"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div><div class="col-md-4"><label class="form-label">Phone</label><input type="text" name="phone" id="f_phone" class="form-control"></div><div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" id="f_email" class="form-control"></div><div class="col-md-3"><label class="form-label">Index Number</label><input type="text" name="index_number" id="f_index_number" class="form-control"></div><div class="col-md-3"><label class="form-label">Registration Number</label><input type="text" name="registration_number" id="f_registration_number" class="form-control"></div><div class="col-md-3"><label class="form-label">Student Number</label><input type="text" name="student_number" id="f_student_number" class="form-control"></div><div class="col-md-3"><label class="form-label">National ID (NSIN)</label><input type="text" name="national_student_id_number" id="f_national_id" class="form-control"></div><div class="col-md-4"><label class="form-label">Program</label><input type="text" name="program" id="f_program" class="form-control" list="progList"><datalist id="progList"><?php foreach($programs as $p): ?><option value="<?= htmlspecialchars($p) ?>"><?php endforeach; ?></datalist></div><div class="col-md-2"><label class="form-label">Level</label><input type="text" name="level" id="f_level" class="form-control" list="levelList"><datalist id="levelList"><?php foreach($levels as $l): ?><option value="<?= htmlspecialchars($l) ?>"><?php endforeach; ?></datalist></div><div class="col-md-3"><label class="form-label">Set Name</label><input type="text" name="set_name" id="f_set_name" class="form-control"></div><div class="col-md-3"><label class="form-label">Year</label><input type="number" name="year" id="f_year" class="form-control" value="<?= date('Y') ?>"></div><div class="col-md-6"><label class="form-label">Photo</label><input type="file" name="photo" class="form-control" accept="image/*"></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Student</button></div></form></div></div>

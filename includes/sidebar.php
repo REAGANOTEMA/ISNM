@@ -69,7 +69,11 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             $hasActiveChild = false;
             if ($hasChildren) {
                 foreach ($parent['children'] as $child) {
-                    if (basename($child['route']) === $currentPage) {
+                    // Strip hash from route before matching
+                    $cr = $child['route'];
+                    $hp = strpos($cr, '#');
+                    $cmp = $hp !== false ? substr($cr, 0, $hp) : $cr;
+                    if (basename($cmp) === $currentPage) {
                         $hasActiveChild = true;
                         break;
                     }
@@ -90,10 +94,21 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <div class="menu-children" id="childGroup-<?= $parentId ?>" style="<?= $hasActiveChild ? '' : 'max-height:0;' ?>">
                 <div class="menu-children-inner">
                     <?php foreach ($parent['children'] as $child):
-                        $childPage = basename($child['route']);
-                        $isActive = ($childPage === $currentPage);
+                        $childRoute = $child['route'];
+                        // Parse the route URL for hash fragment
+                        $childHash = '';
+                        $childPath = $childRoute;
+                        if (($hashPos = strpos($childRoute, '#')) !== false) {
+                            $childHash = substr($childRoute, $hashPos + 1);
+                            $childPath = substr($childRoute, 0, $hashPos);
+                        }
+                        $childPage = basename($childPath);
+                        $isSamePage = ($childPage === $currentPage);
+                        $isActive = $isSamePage && (empty($childHash) || $childHash === ($_GET['section'] ?? ''));
+                        // For same-page routes with a hash, use only the hash (in-page navigation)
+                        $href = $isSamePage && $childHash ? '#' . $childHash : htmlspecialchars($childRoute);
                     ?>
-                    <a href="<?= htmlspecialchars($child['route']) ?>" class="child-link <?= $isActive ? 'active' : '' ?>">
+                    <a href="<?= $href ?>" class="child-link <?= $isActive ? 'active' : '' ?>" <?= $childHash ? 'data-section="'.$childHash.'"' : '' ?>>
                         <span class="child-bullet"></span>
                         <span class="child-label"><?= htmlspecialchars($child['title']) ?></span>
                     </a>
@@ -549,6 +564,43 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 }
 .smgmt-chevron { transition: transform .25s ease; font-size: 10px; }
 .smgmt-chevron.open { transform: rotate(180deg); }
+
+/* ── Section Switching ── */
+.dashboard-section { display: none; }
+.dashboard-section.active { display: block; }
+
+/* ── In-Page Section Tabs ── */
+.section-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.section-tab {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.section-tab:hover {
+    color: #1e293b;
+    background: rgba(37, 99, 235, 0.06);
+    border-color: rgba(37, 99, 235, 0.15);
+}
+.section-tab.active {
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.25);
+    font-weight: 600;
+}
 </style>
 
 <script>
@@ -694,6 +746,78 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             smgmtBlock.style.display = isHidden ? '' : 'none';
             smgmtToggle.querySelector('.smgmt-chevron').classList.toggle('open', isHidden);
         });
+    }
+
+    // ── Section Switching ──
+    // Shows the target .dashboard-section and hides all others.
+    // Called when a sidebar child-link[data-section] is clicked, or on hash change.
+    function switchToSection(sectionId) {
+        if (!sectionId) return;
+        // Update visible section
+        document.querySelectorAll('.dashboard-section').forEach(function(s) {
+            s.classList.toggle('active', s.dataset.section === sectionId);
+        });
+        // Update sidebar active states
+        document.querySelectorAll('.child-link[data-section]').forEach(function(l) {
+            l.classList.toggle('active', l.dataset.section === sectionId);
+        });
+        // Update in-page tab active states
+        document.querySelectorAll('.section-tab').forEach(function(t) {
+            t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === sectionId);
+        });
+        // Update URL hash (replace, not push, to avoid spam in browser history)
+        history.replaceState(null, '', '#' + sectionId);
+    }
+
+    // Expose globally so inline onclick="switchToSection(...)" works in section tabs
+    window.switchToSection = switchToSection;
+
+    // Click handler for sidebar child links that have data-section
+    document.querySelectorAll('.child-link[data-section]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var section = this.dataset.section;
+            if (this.getAttribute('href').charAt(0) === '#') {
+                // In-page navigation — prevent default anchor jump, use smooth switch
+                e.preventDefault();
+                switchToSection(section);
+                // Expand parent group if collapsed
+                var group = this.closest('.menu-group');
+                if (group && !group.classList.contains('expanded')) {
+                    var header = group.querySelector('.menu-group-header');
+                    if (header) toggleGroup(header);
+                }
+            }
+            // If href is a full URL (cross-page), let the browser navigate normally
+        });
+    });
+
+    // On page load: check URL hash and show matching section
+    // Must run after DOMContentLoaded so dashboard-section elements exist
+    function initSection() {
+        var hash = window.location.hash.replace('#', '');
+        if (hash) {
+            var target = document.querySelector('.dashboard-section[data-section="' + hash.replace(/"/g, '') + '"]');
+            if (target) {
+                switchToSection(hash);
+                // Auto-expand the sidebar group containing this section's link
+                document.querySelectorAll('.child-link[data-section="' + hash.replace(/"/g, '') + '"]').forEach(function(l) {
+                    var group = l.closest('.menu-group');
+                    if (group && !group.classList.contains('expanded')) {
+                        var header = group.querySelector('.menu-group-header');
+                        if (header) {
+                            group.classList.add('expanded');
+                            var children = document.getElementById('childGroup-' + group.dataset.group);
+                            if (children) children.style.maxHeight = children.scrollHeight + 'px';
+                        }
+                    }
+                });
+            }
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSection);
+    } else {
+        initSection();
     }
 })();
 </script>

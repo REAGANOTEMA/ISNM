@@ -14,12 +14,7 @@ $user_name = $user['full_name'] ?? 'ICT Director';
 $website_conn = $ctx['website'];
 
 // Connect to ICT database alongside others
-$ict_conn = null;
-try {
-    $ict_conn = getICTConnection();
-} catch (Exception $e) {
-    $ict_conn = null;
-}
+$ict_conn = getICTConnection();
 
 // Helper: safe query
 if (!function_exists('ict_q')) {
@@ -230,18 +225,31 @@ if ($search_term && $students_conn) {
                 </div>
             </div>
 
-            <div class="dashboard-content">
-
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
+            <div class="dashboard-content content-section">
+                <div class="section-tabs">
+                    <a class="section-tab" data-tab="duties" onclick="switchToSection('duties')">Duties</a>
+                    <a class="section-tab" data-tab="actions" onclick="switchToSection('actions')">Actions</a>
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Students</a>
+                    <a class="section-tab" data-tab="computers" onclick="switchToSection('computers')">Computers</a>
+                    <a class="section-tab" data-tab="tickets" onclick="switchToSection('tickets')">Tickets</a>
+                    <a class="section-tab" data-tab="bookings" onclick="switchToSection('bookings')">Bookings</a>
+                    <a class="section-tab" data-tab="network" onclick="switchToSection('network')">Network</a>
+                    <a class="section-tab" data-tab="software" onclick="switchToSection('software')">Software</a>
+                    <a class="section-tab" data-tab="maintenance" onclick="switchToSection('maintenance')">Maintenance</a>
+                    <a class="section-tab" data-tab="news" onclick="switchToSection('news')">News</a>
+                    <a class="section-tab" data-tab="reports" onclick="switchToSection('reports')">Reports</a>
+                    <a class="section-tab" data-tab="dept" onclick="switchToSection('dept')">Dept</a>
+                </div>
 
                 <!-- ═══ OFFICIAL DUTIES ═══ -->
-                <section id="duties" class="content-section">
+                <section id="duties" class="content-section dashboard-section" data-section="duties">
                     <h2><i class="fas fa-tasks" style="color:var(--isnm-blue)"></i> Official Duties &amp; Responsibilities</h2>
                     <?php renderOfficialDuties($user_role_id, $staff_conn); ?>
                 </section>
 
                 <!-- ═══ QUICK ACTIONS ═══ -->
-                <section class="content-section">
+                <section id="actions" class="content-section dashboard-section" data-section="actions">
                     <h2><i class="fas fa-bolt" style="color:var(--isnm-gold)"></i> Quick Actions</h2>
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#addComputerModal"><i class="fas fa-plus me-1"></i>Add Computer</button>
@@ -255,7 +263,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ OVERVIEW ═══ -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2><i class="fas fa-tachometer-alt" style="color:var(--isnm-blue)"></i> System Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card card-blue"><div class="stat-icon"><i class="fas fa-desktop"></i></div><h3><?= $total_computers ?></h3><p>Total Computers</p></div>
@@ -333,7 +341,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ STUDENT MANAGEMENT ═══ -->
-                <section id="students" class="content-section">
+                <section id="students" class="content-section dashboard-section" data-section="students">
                     <h2><i class="fas fa-user-graduate" style="color:var(--isnm-blue)"></i> Student Management</h2>
 
                     <!-- Quick Add + Search row -->
@@ -385,7 +393,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ LAB COMPUTERS ═══ -->
-                <section id="computers" class="content-section">
+                <section id="computers" class="content-section dashboard-section" data-section="computers">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h2 class="mb-0"><i class="fas fa-desktop" style="color:var(--isnm-blue)"></i> Lab Computers</h2>
                         <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#addComputerModal"><i class="fas fa-plus"></i> Add Computer</button>
@@ -419,7 +427,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ IT SUPPORT ═══ -->
-                <section id="tickets" class="content-section">
+                <section id="tickets" class="content-section dashboard-section" data-section="tickets">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h2 class="mb-0"><i class="fas fa-headset" style="color:var(--isnm-blue)"></i> IT Support Tickets</h2>
                         <button class="btn btn-ict btn-sm" data-bs-toggle="modal" data-bs-target="#ticketModal"><i class="fas fa-plus"></i> New Ticket</button>
@@ -458,7 +466,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ BOOKINGS ═══ -->
-                <section id="bookings" class="content-section">
+                <section id="bookings" class="content-section dashboard-section" data-section="bookings">
                     <h2><i class="fas fa-calendar-alt" style="color:var(--isnm-blue)"></i> Lab Bookings</h2>
                     <div class="section-card">
                         <div class="card-body p-0">
@@ -489,7 +497,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ NETWORK ═══ -->
-                <section id="network" class="content-section">
+                <section id="network" class="content-section dashboard-section" data-section="network">
                     <h2><i class="fas fa-network-wired" style="color:var(--isnm-blue)"></i> Network Devices</h2>
                     <div class="section-card">
                         <div class="card-body p-0">
@@ -519,7 +527,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ SOFTWARE ═══ -->
-                <section id="software" class="content-section">
+                <section id="software" class="content-section dashboard-section" data-section="software">
                     <h2><i class="fas fa-download" style="color:var(--isnm-blue)"></i> Software Inventory</h2>
                     <div class="section-card">
                         <div class="card-body p-0">
@@ -549,7 +557,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ MAINTENANCE ═══ -->
-                <section id="maintenance" class="content-section">
+                <section id="maintenance" class="content-section dashboard-section" data-section="maintenance">
                     <h2><i class="fas fa-tools" style="color:var(--isnm-blue)"></i> Maintenance Logs</h2>
                     <div class="section-card">
                         <div class="card-body p-0">
@@ -580,7 +588,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ NEWS ═══ -->
-                <section id="news" class="content-section">
+                <section id="news" class="content-section dashboard-section" data-section="news">
                     <h2><i class="fas fa-newspaper" style="color:var(--isnm-blue)"></i> News &amp; Announcements</h2>
                     <div class="section-card">
                         <?php renderNewsWidget($staff_conn, $website_conn, $user['id'] ?? 0, $user_name, $_SESSION['role'] ?? 'ICT Director', 5); ?>
@@ -588,7 +596,7 @@ if ($search_term && $students_conn) {
                 </section>
 
                 <!-- ═══ REPORTS ═══ -->
-                <section id="reports" class="content-section">
+                <section id="reports" class="content-section dashboard-section" data-section="reports">
                     <h2><i class="fas fa-chart-bar" style="color:var(--isnm-blue)"></i> Lab Usage Reports</h2>
                     <div class="section-card">
                         <div class="card-body p-0">
@@ -622,6 +630,7 @@ if ($search_term && $students_conn) {
         </main>
     </div>
 
+    <section id="dept" class="content-section dashboard-section" data-section="dept">
     <!-- ═══ DEPARTMENT MANAGEMENT (HIERARCHY-AWARE) ═══ -->
     <div class="container-fluid px-4 py-4">
         <div class="row g-3 mb-4">
@@ -675,6 +684,7 @@ if ($search_term && $students_conn) {
             </div>
         </div>
     </div>
+    </section>
 
     <!-- ════ MODALS ════ -->
 
@@ -786,33 +796,6 @@ if ($search_term && $students_conn) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar navigation
-            document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href.startsWith('#')) {
-                        e.preventDefault();
-                        document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
-                        this.classList.add('active');
-                        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-                        document.querySelector(href).style.display = 'block';
-                        // Close sidebar on mobile
-                        const sidebar = document.getElementById('sidebar');
-                        if (sidebar.classList.contains('open')) sidebar.classList.remove('open');
-                    }
-                });
-            });
-
-            // Auto-dismiss alerts
-            setTimeout(() => {
-                document.querySelectorAll('.alert').forEach(a => {
-                    const bs = new bootstrap.Alert(a);
-                    bs.close();
-                });
-            }, 5000);
-        });
-
         function resolveTicket(id) {
             document.getElementById('resolveTicketId').value = id;
             new bootstrap.Modal(document.getElementById('resolveTicketModal')).show();

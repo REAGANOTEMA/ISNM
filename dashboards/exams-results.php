@@ -5,6 +5,7 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $conn = getStaffConnection();
 $pageTitle = 'Exams & Results';
+$uid = $_SESSION['user_id'] ?? 0;
 
 // ── AJAX endpoint for exam student list ────────────────
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['exam'])) {
@@ -118,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: exams-results.php'); exit;
     }
 }
-$uid = $_SESSION['user_id'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,13 +130,12 @@ $uid = $_SESSION['user_id'] ?? 0;
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="content-section dashboard-section active" data-section="overview">
 <div class="main" style="margin-left:270px;padding:32px">
   <div class="d-flex justify-content-between align-items-center mb-4 no-print">
     <h4 class="fw-bold mb-0"><i class="fas fa-file-alt me-2"></i>Exams & Results</h4>
     <span class="text-muted small"><?= date('l, d M Y') ?></span>
   </div>
-
-  <?php renderModuleSlider($user_role); ?>
 
   <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2 no-print"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
   <?php if(!empty($_SESSION['error'])): ?><div class="alert alert-danger py-2 no-print"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div><?php endif; ?>
@@ -211,6 +210,7 @@ $uid = $_SESSION['user_id'] ?? 0;
 <div class="modal fade" id="marksModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Enter Marks</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="marksBody"><p class="text-muted">Loading...</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveMarks()"><i class="fas fa-save me-1"></i>Save Marks</button></div></div></div></div>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</section>
 <script>
 let currentExamNumber = '';
 function viewExam(examNumber) {

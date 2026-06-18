@@ -80,8 +80,18 @@ if ($conn) {
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
+                <div class="section-tabs">
+                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab" data-tab="tasks" onclick="switchToSection('tasks')">Tasks</a>
+                    <a class="section-tab" data-tab="attendance" onclick="switchToSection('attendance')">Attendance</a>
+                    <a class="section-tab" data-tab="leave" onclick="switchToSection('leave')">Leave</a>
+                    <a class="section-tab" data-tab="documents" onclick="switchToSection('documents')">Documents</a>
+                    <a class="section-tab" data-tab="training" onclick="switchToSection('training')">Training</a>
+                    <a class="section-tab" data-tab="communications" onclick="switchToSection('communications')">Communications</a>
+                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+                </div>
                 <!-- Staff Overview -->
-                <section id="overview" class="content-section">
+                <section id="overview" class="content-section dashboard-section active" data-section="overview">
                     <h2>Staff Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -126,10 +136,8 @@ if ($conn) {
                     </div>
                 </section>
 
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
                 <!-- Task Management -->
-                <section id="tasks" class="content-section">
+                <section id="tasks" class="content-section dashboard-section" data-section="tasks">
                     <h2>Task Management</h2>
                     <div class="task-actions">
                         <button class="btn btn-primary" onclick="openModal('newTask')">
@@ -203,7 +211,7 @@ if ($conn) {
                 </section>
 
                 <!-- Attendance -->
-                <section id="attendance" class="content-section">
+                <section id="attendance" class="content-section dashboard-section" data-section="attendance">
                     <h2>Attendance Management</h2>
                     <div class="attendance-actions">
                         <button class="btn btn-primary" onclick="openModal('checkIn')">
@@ -257,7 +265,7 @@ if ($conn) {
                 </section>
 
                 <!-- Leave Management -->
-                <section id="leave" class="content-section">
+                <section id="leave" class="content-section dashboard-section" data-section="leave">
                     <h2>Leave Management</h2>
                     <div class="leave-actions">
                         <button class="btn btn-primary" onclick="openModal('leaveRequest')">
@@ -325,7 +333,7 @@ if ($conn) {
                 </section>
 
                 <!-- Documents -->
-                <section id="documents" class="content-section">
+                <section id="documents" class="content-section dashboard-section" data-section="documents">
                     <h2>Document Management</h2>
                     <div class="document-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadDocument')">
@@ -374,7 +382,7 @@ if ($conn) {
                 </section>
 
                 <!-- Training & Development -->
-                <section id="training" class="content-section">
+                <section id="training" class="content-section dashboard-section" data-section="training">
                     <h2>Training & Development</h2>
                     <div class="training-actions">
                         <button class="btn btn-primary" onclick="openModal('trainingRequest')">
@@ -423,7 +431,7 @@ if ($conn) {
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="content-section">
+                <section id="communications" class="content-section dashboard-section" data-section="communications">
                     <h2>Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('sendMessage')">
@@ -461,7 +469,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section class="activities-section">
+                <section id="activities" class="activities-section dashboard-section" data-section="activities">
                     <h2>Recent Staff Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>

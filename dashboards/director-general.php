@@ -207,9 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     <div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     <?php unset($_SESSION['success']); endif; ?>
 
-    <!-- ═══ MODULE SLIDER ═══ -->
-    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
-
     <!-- ═══ KPI STATS ═══ -->
     <div class="row g-3 mb-4">
       <?php $cards = [
@@ -286,15 +283,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     }
     $totalPending = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
     ?>
-    <!-- ═══ DYNAMIC SECTIONS (hidden, shown via module card click) ═══ -->
+    <!-- ═══ DYNAMIC SECTIONS ═══ -->
     <style>
-    .dg-section { display:none; }
-    .dg-section.active { display:block; }
     .quick-chevron { transition: transform .25s ease; }
     .quick-chevron.rotated { transform: rotate(180deg); }
     </style>
 
-    <div id="section-executive" class="dg-section">
+    <div id="executive" class="content-section dashboard-section active" data-section="executive">
       <div class="executive-section mb-4">
         <div class="section-card">
           <div class="d-flex align-items-center justify-content-between mb-3">
@@ -304,16 +299,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
           <?= renderExecutiveOverview($studentsConn, $conn) ?>
         </div>
       </div>
-      <div class="mb-4"><div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-building me-2 text-warning"></i>Department Performance</h5><small class="text-muted">Status, problems, trends &amp; responsible directors</small></div></div><?= renderDepartmentComparison($conn) ?></div></div>
       <div class="row g-3 mb-4">
         <div class="col-lg-4"><div class="section-card h-100"><h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Institutional Hierarchy</h6><?php echo renderHierarchyChart($conn); ?></div></div>
         <div class="col-lg-4"><div class="section-card h-100"><div class="d-flex align-items-center justify-content-between mb-3"><h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Active Alerts</h6><?php $ac=getAlertCounts($conn); if($ac['critical']>0): ?><span class="badge bg-danger"><?= $ac['critical'] ?> Critical</span><?php endif; if($ac['high']>0): ?><span class="badge bg-warning text-dark"><?= $ac['high'] ?> High</span><?php endif; ?></div><?= renderAlertsPanel($conn,null,5) ?></div></div>
         <div class="col-lg-4"><div class="section-card h-100"><h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-shield-alt me-2 text-success"></i>Compliance &amp; Risk</h6><div class="mb-3"><div class="fw-semibold small mb-2">Compliance Status</div><?= renderComplianceSummary($conn) ?></div><div><div class="fw-semibold small mb-2">Top Risks</div><?= renderRiskRegister($conn,4) ?></div></div></div>
       </div>
-      <div class="mb-4"><div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-chart-bar me-2 text-success"></i>Director Performance Monitoring</h5><small class="text-muted">Dept targets, completed/pending/delayed tasks</small></div></div><div class="row g-3"><?php foreach([1,3,4,5,6,27] as $rid): $rq=$conn?$conn->prepare("SELECT id,role_name FROM igangaschoolofl_staffs_db.staff_roles WHERE id=?"):false; $rn=''; $si=0; if($rq){$rq->bind_param('i',$rid);$rq->execute();$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];} if($rn): $sq=$conn->prepare("SELECT id FROM staff WHERE role_id=? AND status='Active' LIMIT 1"); if($sq){$sq->bind_param('i',$rid);$sq->execute();$sr=$sq->get_result()->fetch_assoc();$sq->close();if($sr)$si=$sr['id'];} ?><div class="col-md-4 col-lg-3"><?= renderDirectorPerformanceCard($si,$rid,$rn,$conn) ?></div><?php endif; endforeach; ?></div></div></div>
     </div>
 
-    <div id="section-financial" class="dg-section">
+    <div id="departments" class="content-section dashboard-section" data-section="departments">
+      <div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-building me-2 text-warning"></i>Department Performance</h5><small class="text-muted">Status, problems, trends &amp; responsible directors</small></div></div><?= renderDepartmentComparison($conn) ?></div>
+    </div>
+
+    <div id="performance" class="content-section dashboard-section" data-section="performance">
+      <div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-chart-bar me-2 text-success"></i>Director Performance Monitoring</h5><small class="text-muted">Dept targets, completed/pending/delayed tasks</small></div></div><div class="row g-3"><?php foreach([1,3,4,5,6,27] as $rid): $rq=$conn?$conn->prepare("SELECT id,role_name FROM igangaschoolofl_staffs_db.staff_roles WHERE id=?"):false; $rn=''; $si=0; if($rq){$rq->bind_param('i',$rid);$rq->execute();$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];} if($rn): $sq=$conn->prepare("SELECT id FROM staff WHERE role_id=? AND status='Active' LIMIT 1"); if($sq){$sq->bind_param('i',$rid);$sq->execute();$sr=$sq->get_result()->fetch_assoc();$sq->close();if($sr)$si=$sr['id'];} ?><div class="col-md-4 col-lg-3"><?= renderDirectorPerformanceCard($si,$rid,$rn,$conn) ?></div><?php endif; endforeach; ?></div></div>
+    </div>
+
+    <div id="financial" class="content-section dashboard-section" data-section="financial">
       <div class="row g-4">
         <div class="col-lg-7">
           <div class="section-card h-100">
@@ -348,7 +349,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
     </div>
 
-    <div id="section-staff" class="dg-section">
+    <div id="staff" class="content-section dashboard-section" data-section="staff">
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="section-card h-100">
@@ -379,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
     </div>
 
-    <div id="section-student" class="dg-section">
+    <div id="student" class="content-section dashboard-section" data-section="student">
       <div class="section-card">
         <div class="d-flex justify-content-between align-items-center mb-0">
           <h2 class="mb-0" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#studentManagementContent" aria-expanded="false"><i class="fas fa-user-graduate me-2"></i>Student Management<i class="fas fa-chevron-down ms-1 small quick-chevron"></i></h2>
@@ -393,18 +394,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
     </div>
 
-    <div id="section-approvals" class="dg-section">
+    <div id="approvals" class="content-section dashboard-section" data-section="approvals">
       <div class="section-card"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h5><small class="text-muted">Workflow items requiring attention</small></div></div><?php $pa=getPendingApprovals($conn,null,8); if(!empty($pa)): ?><div class="row g-2"><?php foreach($pa as $a): ?><div class="col-md-6 col-lg-3"><?= renderApprovalWorkflowCard($a,$conn) ?><?= renderApprovalActionButtons($a['id']) ?></div><?php endforeach; ?></div><?php else: ?><div class="text-center text-muted py-3"><i class="fas fa-check-circle fa-2x mb-2 text-success"></i><div>No pending approvals.</div></div><?php endif; ?></div>
     </div>
 
-    <div id="section-monitoring" class="dg-section">
+    <div id="audit" class="content-section dashboard-section" data-section="audit">
       <div class="row g-4">
         <div class="col-lg-6"><div class="section-card h-100"><h5 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Active Alerts</h5><?php renderAlertsPanel($conn,null,8); ?></div></div>
         <div class="col-lg-6"><div class="section-card h-100"><div class="d-flex align-items-center justify-content-between mb-3"><div><h5 class="fw-bold mb-0" style="font-size:1rem"><i class="fas fa-history me-2 text-secondary"></i>Recent Audit Trail</h5><small class="text-muted">Latest tracked actions</small></div></div><?= renderAuditTrailTable($conn,[],8) ?></div></div>
       </div>
     </div>
 
-    <div id="section-services" class="dg-section">
+    <div id="services" class="content-section dashboard-section" data-section="services">
       <?php if($totalPending>0): ?>
       <div class="section-card mb-4" style="border-left:4px solid #dc2626">
         <div class="d-flex align-items-center justify-content-between mb-3"><h2 class="mb-0"><i class="fas fa-bell me-2" style="color:#dc2626"></i>Pending Submissions</h2><span class="badge bg-danger rounded-pill fs-6"><?= $totalPending ?> New</span></div>
@@ -419,7 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       <?php endif; ?>
     </div>
 
-    <div id="section-store" class="dg-section">
+    <div id="store" class="content-section dashboard-section" data-section="store">
       <div class="row g-4">
         <div class="col-lg-6">
           <div class="section-card h-100"><h2><i class="fas fa-shopping-cart me-2 text-warning"></i>Pending Store Requests</h2><?php $storeReqs=[]; if($conn){$sr=$conn->query("SELECT sr.request_number,sr.urgency,sr.status,sr.created_at,s.full_name as requester FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'),sr.created_at ASC LIMIT 5");if($sr)while($row=$sr->fetch_assoc())$storeReqs[]=$row;} if(empty($storeReqs)): ?><p class="text-muted small">No pending store requests.</p><?php else: foreach($storeReqs as $sr_): ?><div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><code class="fw-bold"><?= htmlspecialchars($sr_['request_number']) ?></code><small class="text-muted ms-2">by <?= htmlspecialchars($sr_['requester']??'') ?></small></div><div class="d-flex align-items-center gap-2"><span class="badge bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span><small class="text-muted"><?= date('d M',strtotime($sr_['created_at'])) ?></small></div></div><?php endforeach; ?><div class="text-center mt-2"><a href="../dashboards/storekeeper.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Go to Store</a></div><?php endif; ?></div>
@@ -430,11 +431,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       </div>
     </div>
 
-    <div id="section-communications" class="dg-section">
+    <div id="communications" class="content-section dashboard-section" data-section="communications">
       <div class="section-card"><?php renderNewsWidget($conn,$websiteConn,$user_id,$user_name,$user_role,5); ?></div>
     </div>
 
-    <div id="section-quick" class="dg-section">
+    <div id="quick" class="content-section dashboard-section" data-section="quick">
       <div class="section-card">
         <h2 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false"><i class="fas fa-bolt me-2"></i>Quick Actions<i class="fas fa-chevron-down float-end mt-1 quick-chevron"></i></h2>
         <div id="quickActionsContent" class="collapse">
@@ -447,68 +448,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     </div>
 
     <script>
-    // Module card → section toggle + hash routing
-    (function () {
-      var sections = document.querySelectorAll('.dg-section');
-      var sectionMap = {
-        'Student Management':'section-student', 'Academic Management':'section-student',
-        'Financial Management':'section-financial', 'Staff & HR Management':'section-staff',
-        'Executive':'section-executive', 'Executive Management':'section-executive',
-        'Student Services':'section-services', 'Store & Assets':'section-store',
-        'Communications':'section-communications', 'Approvals & Workflow':'section-approvals',
-        'Monitoring & Alerts':'section-monitoring',
-        'Quick Access':'section-quick', 'Quick Actions':'section-quick'
-      };
-      var hashMap = {
-        'executive': 'section-executive', 'hierarchy': 'section-executive',
-        'departments': 'section-executive', 'performance': 'section-executive',
-        'financial': 'section-financial',
-        'staff': 'section-staff',
-        'student': 'section-student',
-        'approvals': 'section-approvals',
-        'alerts': 'section-monitoring', 'audit': 'section-monitoring',
-        'compliance': 'section-monitoring', 'risks': 'section-monitoring',
-        'services': 'section-services',
-        'store': 'section-store',
-        'communications': 'section-communications',
-        'quick': 'section-quick'
-      };
-
-      function showSection(id) {
-        sections.forEach(function(s){ s.classList.remove('active'); });
-        var el = document.getElementById(id);
-        if (el) el.classList.add('active');
-      }
-
-      function showSectionFromHash() {
-        var hash = window.location.hash.replace('#', '');
-        if (!hash) return;
-        var sid = hashMap[hash];
-        if (sid) showSection(sid);
-      }
-
-      // Handle hash changes
-      window.addEventListener('hashchange', showSectionFromHash);
-
-      // Add onclick to module cards. Use event delegation on the slider track.
-      document.addEventListener('click', function(e) {
-        var card = e.target.closest('.module-card');
-        if (!card) return;
-        var title = card.querySelector('.module-card-title');
-        if (!title) return;
-        var t = title.textContent.trim();
-        var sid = sectionMap[t];
-        if (sid) {
-          var target = document.getElementById(sid);
-          if (target && target.classList.contains('active')) {
-            target.classList.remove('active');
-          } else {
-            showSection(sid);
-          }
-        }
-      });
-
-      // Collapse chevron rotation
+    // Collapse chevron rotation
+    (function() {
       function bindChevron(cid) {
         var el = document.getElementById(cid);
         if (!el) return;
@@ -519,8 +460,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
       function initChevrons() {
         ['quickActionsContent','employeeAnalysisContent','financialOverviewContent','studentManagementContent','staffTableCollapse'].forEach(bindChevron);
       }
-      if (document.readyState === 'complete') { initChevrons(); showSectionFromHash(); }
-      else document.addEventListener('DOMContentLoaded', function() { initChevrons(); showSectionFromHash(); });
+      if (document.readyState === 'complete') initChevrons();
+      else document.addEventListener('DOMContentLoaded', initChevrons);
     })();
     </script>
     <?php if (function_exists('registerApprovalActionHandler')) registerApprovalActionHandler(); ?>

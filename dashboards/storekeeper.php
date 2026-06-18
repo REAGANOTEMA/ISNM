@@ -212,7 +212,7 @@ $statsOrders = count($orders);
         </div>
     </div>
 
-    <div class="content-area">
+    <div class="content-section dashboard-section active content-area" data-section="overview">
         <?php if ($msg): ?>
         <div class="alert alert-<?= $msg['type'] === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show py-2"><?= $msg['text'] ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endif; ?>
@@ -244,8 +244,6 @@ $statsOrders = count($orders);
                 </div>
             </div>
         </div>
-
-        <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
         <!-- Tab Navigation -->
         <div class="tab-nav">

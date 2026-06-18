@@ -69,13 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="content-section dashboard-section active" data-section="overview">
 <main class="main" style="margin-left:270px;padding:32px;">
 <div class="d-flex justify-content-between align-items-center mb-4 no-print">
 <h4 class="fw-bold mb-0"><i class="fas fa-calendar-check me-2"></i>Student Attendance</h4>
 <span class="text-muted small"><?= date('l, d M Y') ?></span>
 </div>
 
-<?php renderModuleSlider($user_role); ?>
 <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2 no-print"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
 <?php if(!empty($_SESSION['error'])): ?><div class="alert alert-danger py-2 no-print"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div><?php endif; ?>
 
@@ -129,6 +129,7 @@ $bc=$st==='Present'?'bg-success':($st==='Absent'?'bg-danger':($st==='Late'?'bg-w
 </div>
 </div>
 </main>
+</section>
 
 <!-- Record Attendance Modal -->
 <div class="modal fade" id="attendanceModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><form method="POST" class="modal-content"><input type="hidden" name="action" value="record_attendance"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Record Attendance</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body">

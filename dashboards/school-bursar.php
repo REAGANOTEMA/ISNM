@@ -439,7 +439,7 @@ $pageTitle = 'Bursar Dashboard';
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="ma">
+<div class="ma content-section dashboard-section active" data-section="overview">
 
     <div class="ph">
         <div>
@@ -549,8 +549,6 @@ endif;
     </div>
 
     <?php endif; ?><!-- /home -->
-
-    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($role); ?>
 
     <!-- ======================== record_payment ======================== -->
     <?php if ($view === 'record_payment'): ?>

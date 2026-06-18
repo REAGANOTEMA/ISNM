@@ -214,7 +214,7 @@ if ($rs_stmt) { while ($row = $rs_stmt->fetch_assoc()) { $recent_students[] = $r
 
 <?php include_once '../includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="page-content content-section dashboard-section active" data-section="overview">
   <div class="top-bar">
     <div>
       <strong><i class="fas fa-user-tie me-2 text-primary"></i>Secretary Dashboard</strong>
@@ -263,8 +263,6 @@ if ($rs_stmt) { while ($row = $rs_stmt->fetch_assoc()) { $recent_students[] = $r
         </div>
       </div>
     </div>
-
-    <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
     <div class="section-card">
       <h2><i class="fas fa-users me-2"></i>Student Management</h2>

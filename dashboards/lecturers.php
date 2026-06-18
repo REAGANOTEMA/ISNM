@@ -87,7 +87,7 @@ if ($conn) {
         </div>
       </div>
 
-      <div class="content-area">
+      <div class="content-area content-section dashboard-section active" data-section="overview">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Teaching Overview -->
                 <section id="overview" class="section-card">
@@ -134,8 +134,6 @@ if ($conn) {
                         </div>
                     </div>
                 </section>
-
-                <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($user_role); ?>
 
                 <!-- My Courses -->
                 <section id="courses" class="section-card">

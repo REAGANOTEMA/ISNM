@@ -277,8 +277,16 @@ if ($websiteDb) {
             <!-- Student Search Section -->
             <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
 
+            <!-- In-page Section Tabs -->
+            <div class="section-tabs mt-3">
+                <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Student Affairs</a>
+                <a class="section-tab" data-tab="applications" onclick="switchToSection('applications')">Applications</a>
+                <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+            </div>
+
             <!-- Overview Section -->
-            <section id="overview" class="content-section">
+            <section id="overview" class="content-section dashboard-section active" data-section="overview">
                 <div class="section-header">
                     <h2 class="section-title">School Overview</h2>
                 </div>
@@ -326,10 +334,8 @@ if ($websiteDb) {
                 </div>
             </section>
 
-            <?php require_once __DIR__ . '/../includes/dashboard_module_slider.php'; renderModuleSlider($userRole); ?>
-
             <!-- Student Profiles Section -->
-            <section id="students" class="content-section">
+            <section id="students" class="content-section dashboard-section" data-section="students">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="section-title">Student Management</h2>
                     <div>
@@ -359,7 +365,7 @@ if ($websiteDb) {
             </section>
 
             <!-- Applications Review Section -->
-            <section id="applications" class="content-section">
+            <section id="applications" class="content-section dashboard-section" data-section="applications">
                 <div class="section-header">
                     <h2 class="section-title">Pending Applications</h2>
                     <button class="btn btn-primary" onclick="window.location.href='../applications.php'">
@@ -403,7 +409,7 @@ if ($websiteDb) {
             </section>
 
             <!-- Recent Activities -->
-            <section id="activities" class="content-section">
+            <section id="activities" class="content-section dashboard-section" data-section="activities">
                 <div class="section-header">
                     <h2 class="section-title">Recent Activities</h2>
                 </div>
