@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 </head>
 <body>
 
-<?php include_once '../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="page-content">
   <div class="top-bar">

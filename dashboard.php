@@ -291,10 +291,10 @@ $role = $_SESSION['role'] ?? '';
                             <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="profile.php">
+                            <li><a class="dropdown-item" href="includes/profile_settings.php">
                                 <i class="fas fa-user"></i> Profile
                             </a></li>
-                            <li><a class="dropdown-item" href="settings.php">
+                            <li><a class="dropdown-item" href="dashboards/system-admin.php">
                                 <i class="fas fa-cog"></i> Settings
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -436,7 +436,7 @@ $role = $_SESSION['role'] ?? '';
                         </div>
                         <h5>Import Students</h5>
                         <p class="text-muted">Bulk import students from CSV file</p>
-                        <a href="import_student_data.php" class="btn-action">
+                        <a href="bulk_photo_upload.php" class="btn-action">
                             <i class="fas fa-upload me-2"></i> Import Data
                         </a>
                     </div>
@@ -448,7 +448,7 @@ $role = $_SESSION['role'] ?? '';
                         </div>
                         <h5>View Reports</h5>
                         <p class="text-muted">Generate and view student reports</p>
-                        <a href="reports.php" class="btn-action">
+                        <a href="dashboards/director-general.php#reports" class="btn-action">
                             <i class="fas fa-chart-bar me-2"></i> Reports
                         </a>
                     </div>

@@ -8,12 +8,6 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
-      .then(() => {
-        // Tell all open tabs to reload so the new SW takes effect immediately
-        self.clients.matchAll({ type: 'window' }).then((clients) => {
-          clients.forEach((client) => client.navigate(client.url));
-        });
-      })
   );
 });
 

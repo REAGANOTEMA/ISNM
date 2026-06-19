@@ -64,7 +64,7 @@ foreach ($reports as $report) {
 </head>
 <body class="inventory-reports-page">
     <div class="dashboard-container">
-        <?php include_once '../includes/sidebar.php'; ?>
+        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <div class="main-content">
             <header class="dashboard-header">

@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 </head>
 <body>
     <!-- Include Responsive Navigation -->
-    <?php include_once '../includes/sidebar.php'; ?>
+    <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     
     <div class="dashboard-container">
         <!-- Main Content Area -->

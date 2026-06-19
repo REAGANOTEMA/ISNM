@@ -73,7 +73,7 @@ if ($conn) {
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
 <body>
-    <?php include_once '../includes/sidebar.php'; ?>
+    <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     
     <div class="page-content">
       <div class="top-bar">

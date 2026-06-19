@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && !empty($_POST['action'])) {
 </head>
 <body>
 
-<?php include_once '../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="page-wrap">
   <div class="top-bar">

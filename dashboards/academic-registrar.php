@@ -278,6 +278,14 @@ if ($cc_r) while ($row = $cc_r->fetch_assoc()) $courses_catalog[] = $row;
 // Fee types
 $fee_types = ['Tuition','Functional Fee','Accommodation','Library','Lab','Examination','Uniform','Activity Fee','Other'];
 // Handle POST actions
+$redirectSection = $_POST['_section'] ?? '';
+function redirectBack($hash = '') {
+    $section = $GLOBALS['redirectSection'];
+    $loc = 'academic-registrar.php';
+    if ($hash) $loc .= '#' . $hash;
+    elseif ($section) $loc .= '#' . $section;
+    header("Location: $loc");
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -302,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['error'] = "Failed to add student: ".$students_conn->error;
         }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'edit_student') {
@@ -319,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $full = trim("$fn $on $sn");
         $students_conn->query("UPDATE students SET first_name='$fn',surname='$sn',other_name='$on',full_name='$full',course='$crs',program='$crs',current_year=$yr,year=$yr,current_semester='$sem',phone='$ph',mobile_number='$ph',email='$em',status='$st',updated_at=NOW() WHERE id=$id");
         $_SESSION['success'] = "Student updated.";
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'trash_student') {
@@ -389,7 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->close();
             }
         } else { $_SESSION['error'] = 'Valid student and amount required.'; }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'create_invoice') {
@@ -404,7 +412,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) { $_SESSION['success'] = "Invoice $invNo created."; } else { $_SESSION['error'] = 'Invoice failed: '.$stmt->error; }
             $stmt->close();
         } else { $_SESSION['error'] = 'Student and amount required.'; }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'upload_document') {
@@ -429,7 +437,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
             $_SESSION['success'] = "Document '$title' " . ($fpath ? 'uploaded' : 'generated') . ".";
         } else { $_SESSION['error'] = 'Student and title required.'; }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'register_course') {
@@ -441,7 +449,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $students_conn->query("INSERT IGNORE INTO student_course_registrations (student_id,course_id,academic_year,semester,status) VALUES ($sid,$courseId,'$ay','$sem','Registered')");
             $_SESSION['success'] = 'Course registered.';
         } else { $_SESSION['error'] = 'Student and course required.'; }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'add_calendar') {
@@ -842,7 +850,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $staff_conn->query("UPDATE registrar_certificates SET status='Collected',collected_by='$collected_by',collected_date=NOW() WHERE id=$did");
             $_SESSION['success'] = 'Certificate marked as collected.';
         }
-        header("Location: academic-registrar.php"); exit;
+        redirectBack(); exit;
     }
 
     if ($action === 'save_registrar_setting') {
@@ -2965,8 +2973,8 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                     <h5>Add Exam Record</h5>
                     <button class="close" onclick="closeModal('addExamModal')">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <form method="post">
+                <form method="post">
+                    <div class="modal-body">
                         <input type="hidden" name="action" value="update_exam_marks">
                         <div class="form-group">
                             <label>Student</label>
@@ -3010,12 +3018,12 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                                 <option>A</option><option>B+</option><option>B</option><option>C+</option><option>C</option><option>D</option><option>F</option>
                             </select>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addExamModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addExamModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -3963,6 +3971,20 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
             if (!str) return '';
             return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
+
+        // Inject current section into all forms so redirects preserve context
+        document.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (form.tagName !== 'FORM') return;
+            var existing = form.querySelector('input[name="_section"]');
+            if (!existing) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_section';
+                input.value = window.location.hash.replace('#', '') || 'overview';
+                form.appendChild(input);
+            }
+        });
 
         // Close lookup dropdowns on outside click
         document.addEventListener('click', function(e) {

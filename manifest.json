@@ -1,24 +1,41 @@
 {
   "name": "Iganga School of Nursing & Midwifery",
   "short_name": "ISNM",
-  "description": "Iganga School of Nursing and Midwifery — School Management System",
+  "description": "Iganga School of Nursing and Midwifery — School Management System. Quality healthcare education in Uganda.",
   "start_url": "./index.php",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-  "background_color": "#f0f2f5",
+  "background_color": "#fef9e7",
   "theme_color": "#1a237e",
-  "categories": ["education", "business"],
+  "categories": ["education", "medical"],
   "lang": "en-UG",
   "dir": "ltr",
   "icons": [
+    { "src": "images/school-logo.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "images/school-logo.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "images/school-logo.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "images/school-logo.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "images/school-logo.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "images/school-logo.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
     { "src": "images/school-logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "images/school-logo.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
     { "src": "images/school-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "screenshots": [],
   "shortcuts": [
-    { "name": "Dashboard", "short_name": "Home", "url": "./index.php" },
-    { "name": "Staff Login", "short_name": "Login", "url": "./staff-login.php" },
-    { "name": "Student Login", "short_name": "Students", "url": "./student-login.php" }
-  ]
+    { "name": "Home", "short_name": "Home", "url": "./index.php" },
+    { "name": "Staff Login", "short_name": "Staff", "url": "./staff-login.php" },
+    { "name": "Student Login", "short_name": "Students", "url": "./student-login.php" },
+    { "name": "Apply Now", "short_name": "Apply", "url": "./application.php" }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "handle_links": "auto",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {},
+  "iarc_rating_id": ""
 }

@@ -8,14 +8,16 @@ include_once __DIR__ . '/../includes/functions.php';
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ISNM">
   <meta name="application-name" content="ISNM">
   <meta name="theme-color" content="#3E2723">
   <meta name="msapplication-TileColor" content="#3E2723">
   <meta name="msapplication-config" content="/browserconfig.xml">
+  <meta name="apple-touch-fullscreen" content="yes">
   <link rel="manifest" href="manifest.json">
   
   <script>window.addEventListener('unhandledrejection',function(e){e.preventDefault()});</script>

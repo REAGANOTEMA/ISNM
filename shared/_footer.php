@@ -371,6 +371,45 @@
       font-size: 0.75rem;
     }
   }
+
+  @media (max-width: 360px) {
+    .isnm-footer .container {
+      padding: 14px 8px 6px;
+    }
+
+    .footer-logo-img {
+      width: 50px;
+      height: 50px;
+    }
+
+    .footer-links ul li a {
+      font-size: 0.68rem;
+      padding: 3px 0;
+    }
+
+    .developer-info .contact-info p {
+      font-size: 0.7rem;
+    }
+
+    .developer-info .contact-info a {
+      font-size: 0.7rem;
+    }
+
+    .isnm-footer p,
+    .isnm-footer a {
+      font-size: 0.75rem;
+    }
+
+    .footer-bottom p {
+      font-size: 0.7rem;
+    }
+
+    .social-btn {
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+    }
+  }
 </style>
 
 
@@ -381,10 +420,21 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        // Always register from the root scope regardless of current directory
-        navigator.serviceWorker.register('/ISNM/sw.js', { scope: '/ISNM/' }).catch(function () {});
+        var swPath = (window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/') + 'sw.js';
+        var scope = window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/';
+        navigator.serviceWorker.register(swPath, { scope: scope }).catch(function () {});
       });
     }
+
+    // PWA Install Prompt Handler
+    var deferredPrompt;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+    window.addEventListener('appinstalled', function () {
+      deferredPrompt = null;
+    });
   </script>
 </body>
 

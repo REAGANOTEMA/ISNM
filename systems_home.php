@@ -375,7 +375,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <a href="bursar_login.php" class="btn btn-primary">
+                        <a href="staff-login.php" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
                         <a href="bursar_setup.php" class="btn btn-outline">
@@ -411,7 +411,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <a href="hr_login.php" class="btn btn-secondary">
+                        <a href="staff-login.php" class="btn btn-secondary">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
                         <a href="hr_setup.php" class="btn btn-outline">

@@ -93,15 +93,6 @@ $is_head = in_array(strtolower($s_role), [
 
           <!-- Bursar / Finance Settings -->
           <?php if ($is_bursar || $is_admin): ?>
-          <a href="../fee-structure.php" class="settings-card">
-            <div class="sc-icon" style="background:linear-gradient(135deg,#10b981,#047857)">
-              <i class="fas fa-coins"></i>
-            </div>
-            <div class="sc-body">
-              <span class="sc-title">Fee Structure</span>
-              <span class="sc-desc">Manage tuition and other fee items</span>
-            </div>
-          </a>
           <a href="../dashboards/fee-structure.php" class="settings-card">
             <div class="sc-icon" style="background:linear-gradient(135deg,#14b8a6,#0d9488)">
               <i class="fas fa-file-invoice-dollar"></i>

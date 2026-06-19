@@ -254,7 +254,7 @@ if ($websiteDb) {
 </head>
 <body>
     <div class="dashboard-container">
-        <?php include_once '../includes/sidebar.php'; ?>
+        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">

@@ -312,6 +312,9 @@ function getModuleConfig(): array {
                 ['title' => 'Student Requests Desk', 'route' => 'student-requests-desk.php',          'roles' => ['secretary','registrar','director','principal','deputy']],
                 ['title' => 'Scholarships & Sponsorships','route' => 'scholarships-sponsorships.php', 'roles' => ['bursar','finance','director','registrar','secretary']],
                 ['title' => 'Student Announcements', 'route' => 'student-announcements.php',          'roles' => '*'],
+                ['title' => 'Student Management',   'route' => 'student-management.php',             'roles' => ['registrar','secretary','director','principal','deputy','head','lecturer']],
+                ['title' => 'Student Attendance',   'route' => 'student-attendance.php',             'roles' => ['registrar','secretary','lecturer','head']],
+                ['title' => 'Add Student',           'route' => 'student-add.php',                    'roles' => ['registrar','secretary','admissions']],
             ],
         ],
         [
