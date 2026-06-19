@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff8f00"/>
+      <stop offset="50%" stop-color="#ff6f00"/>
+      <stop offset="100%" stop-color="#e65100"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="96" fill="none" stroke="#1a237e" stroke-width="5"/>
+  <circle cx="100" cy="100" r="89" fill="none" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#1a237e" stroke-width="1.5"/>
+
+  <!-- Inner circle background -->
+  <circle cx="100" cy="100" r="75" fill="#f5f5ff"/>
+
+  <!-- Top arc text: ISNM -->
+  <path id="topArc" d="M 30 100 A 70 70 0 0 1 170 100" fill="none"/>
+  <text font-family="'Georgia', 'Times New Roman', serif" font-size="18" font-weight="bold" fill="#1a237e" letter-spacing="6">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">ISNM</textPath>
+  </text>
+
+  <!-- Bottom arc text: INTERNATIONAL SCHOOL OF NURSING &amp; MIDWIFERY -->
+  <path id="bottomArc" d="M 170 100 A 70 70 0 0 1 30 100" fill="none"/>
+  <text font-family="'Georgia', 'Times New Roman', serif" font-size="6.2" font-weight="600" fill="#1a237e" letter-spacing="1.2">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">INTERNATIONAL SCHOOL OF NURSING &amp; MIDWIFERY</textPath>
+  </text>
+
+  <!-- Lamp of Knowledge / Torch symbol -->
+  <!-- Lamp base -->
+  <rect x="92" y="118" width="16" height="6" rx="2" fill="#1a237e"/>
+  <rect x="95" y="124" width="10" height="3" rx="1" fill="#1a237e"/>
+  <rect x="97" y="127" width="6" height="4" rx="1" fill="#1a237e"/>
+
+  <!-- Lamp stem -->
+  <rect x="98" y="70" width="4" height="48" fill="#1a237e"/>
+
+  <!-- Lamp flame -->
+  <ellipse cx="100" cy="84" rx="10" ry="14" fill="url(#goldGrad)" opacity="0.9"/>
+  <ellipse cx="100" cy="82" rx="6" ry="9" fill="#fff8e0" opacity="0.8"/>
+  <ellipse cx="100" cy="80" rx="3" ry="5" fill="#fffde7" opacity="0.9"/>
+
+  <!-- Flame rays -->
+  <line x1="100" y1="58" x2="100" y2="65" stroke="#ff6f00" stroke-width="1.5" opacity="0.6"/>
+  <line x1="93" y1="62" x2="96" y2="68" stroke="#ff6f00" stroke-width="1.5" opacity="0.6"/>
+  <line x1="107" y1="62" x2="104" y2="68" stroke="#ff6f00" stroke-width="1.5" opacity="0.6"/>
+  <line x1="87" y1="70" x2="92" y2="74" stroke="#ff6f00" stroke-width="1.5" opacity="0.6"/>
+  <line x1="113" y1="70" x2="108" y2="74" stroke="#ff6f00" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Open book at base -->
+  <path d="M 72 114 Q 72 104 86 104 L 90 104 L 90 118 L 86 118 Q 72 118 72 114 Z" fill="none" stroke="#1a237e" stroke-width="1.5"/>
+  <path d="M 128 114 Q 128 104 114 104 L 110 104 L 110 118 L 114 118 Q 128 118 128 114 Z" fill="none" stroke="#1a237e" stroke-width="1.5"/>
+  <line x1="90" y1="104" x2="110" y2="104" stroke="#1a237e" stroke-width="1.5"/>
+  <line x1="90" y1="118" x2="110" y2="118" stroke="#1a237e" stroke-width="1.5"/>
+  <line x1="100" y1="104" x2="100" y2="118" stroke="#1a237e" stroke-width="1" opacity="0.5"/>
+  <!-- Book pages -->
+  <text x="100" y="114" text-anchor="middle" font-family="'Georgia', serif" font-size="6" fill="#1a237e" font-style="italic">Knowledge</text>
+
+  <!-- Small stars -->
+  <circle cx="52" cy="52" r="2" fill="url(#goldGrad)"/>
+  <circle cx="148" cy="52" r="2" fill="url(#goldGrad)"/>
+  <circle cx="52" cy="148" r="2" fill="url(#goldGrad)"/>
+  <circle cx="148" cy="148" r="2" fill="url(#goldGrad)"/>
+
+  <!-- Cross/Caduceus small symbol above lamp -->
+  <circle cx="100" cy="48" r="4" fill="#1a237e"/>
+  <line x1="100" y1="40" x2="100" y2="56" stroke="#1a237e" stroke-width="1.5"/>
+  <line x1="93" y1="48" x2="107" y2="48" stroke="#1a237e" stroke-width="1.5"/>
+  <line x1="96" y1="43" x2="104" y2="43" stroke="#1a237e" stroke-width="1"/>
+  <line x1="96" y1="53" x2="104" y2="53" stroke="#1a237e" stroke-width="1"/>
+
+  <!-- Year -->
+  <text x="100" y="178" text-anchor="middle" font-family="'Georgia', serif" font-size="10" font-weight="bold" fill="#1a237e">EST. 2024</text>
+</svg>

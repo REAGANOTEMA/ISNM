@@ -40,18 +40,16 @@ function connectDatabase() {
         // If connection fails, try with alternative configuration
         echo "Attempting alternative database connection...\n";
         try {
-            $conn = new mysqli('localhost', 'root', '', 'isnm_db');
-            if ($conn->connect_error) {
-                throw new Exception("Alternative connection also failed: " . $conn->connect_error);
+            $conn = getStudentsConnection();
+            if (!$conn) {
+                throw new Exception("Alternative connection also failed");
             }
-            $conn->set_charset('utf8mb4');
             echo "Database connected successfully using alternative method.\n";
             return $conn;
         } catch (Exception $e2) {
             die("Database connection failed. Please check:\n" .
-                "1. XAMPP MySQL service is running\n" .
-                "2. Database 'isnm_db' exists\n" .
-                "3. User 'root' has access\n" .
+                "1. MySQL service is running\n" .
+                "2. Database credentials in .env are correct\n" .
                 "Error: " . $e2->getMessage());
         }
     }

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/photo_upload.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 

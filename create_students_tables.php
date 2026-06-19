@@ -1,13 +1,9 @@
 <?php
-$host = '127.0.0.1';
-$user = 'root';
-$pass = '';
-$port = 3307;
-$db = 'igangaschoolofl_students_db';
+require_once __DIR__ . '/config/database.php';
 
-$conn = new mysqli($host, $user, $pass, $db, $port);
-if ($conn->connect_error) {
-    die('Connection failed: ' . $conn->connect_error);
+$conn = getStudentsConnection();
+if (!$conn) {
+    die('Connection failed');
 }
 echo "Connected to students database<br>";
 

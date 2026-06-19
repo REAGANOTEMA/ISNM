@@ -38,7 +38,7 @@ if($r) while($row=$r->fetch_assoc()) $exams[]=$row;
 $lecturers = []; $r=$conn->query("SELECT id,full_name,position,department FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' OR position LIKE '%Head%' ORDER BY full_name");
 if($r) while($row=$r->fetch_assoc()) $lecturers[]=$row;
 
-$students = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,email,status FROM students ORDER BY full_name LIMIT 200");
+$students = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,mobile_number,email,status,index_number,national_student_id_number FROM students ORDER BY full_name LIMIT 200");
 if($r) while($row=$r->fetch_assoc()) $students[]=$row; }
 
 $user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
@@ -385,24 +385,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="mb-2"><input type="text" id="studentSearch" class="form-control form-control-sm" placeholder="Search by name, reg no..." onkeyup="filterStudentTable()"></div>
                     <div class="table-responsive" style="max-height:400px;overflow-y:auto">
                         <table class="table table-sm table-hover" id="studentTable">
-                            <thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Phone/Mobile</th><th>Index No</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
                             <?php foreach($students as $s):
                                 $sname = htmlspecialchars($s['full_name'] ?: trim($s['first_name'].' '.$s['surname']));
                                 $sreg = htmlspecialchars($s['registration_number'] ?: $s['student_number']);
+                                $sphone = htmlspecialchars($s['phone']??'');
+                                $smobile = htmlspecialchars($s['mobile_number']??'');
+                                $sindex = htmlspecialchars($s['index_number']??$s['national_student_id_number']??'');
                             ?>
                             <tr>
                                 <td><code><?= $sreg ?></code></td>
                                 <td><?= $sname ?></td>
                                 <td><?= htmlspecialchars($s['course']??'-') ?></td>
                                 <td><?= $s['current_year']??'-' ?></td>
-                                <td><?= htmlspecialchars($s['phone']??'-') ?></td>
+                                <td><?= $sphone ?: '-' ?><?= ($smobile && $smobile!==$sphone) ? '<br><small>M: '.$smobile.'</small>' : '' ?></td>
+                                <td><?= $sindex ?: '-' ?></td>
                                 <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info" onclick="viewStudentProfile(<?= $s['id'] ?>)"><i class="fas fa-eye"></i></button>
                                     <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
                                     <button class="btn btn-sm btn-outline-warning" onclick="feeStatement(<?= $s['id'] ?>)"><i class="fas fa-money-bill"></i></button>
                                     <button class="btn btn-sm btn-outline-purple" onclick="generateTranscript(<?= $s['id'] ?>, '<?= addslashes($sname) ?>')"><i class="fas fa-file-alt"></i></button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $s['id'] ?>)"><i class="fas fa-edit"></i></button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

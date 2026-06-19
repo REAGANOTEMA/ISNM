@@ -143,8 +143,8 @@ if ($view === 'receipt_print' && $ajax === '1' && $q) {
 // financial_reports (staffs_db)
 if ($view === 'financial_reports' && $ajax === '1') {
     header('Content-Type: application/json');
-    $from   = $_GET['from'] ?? date('Y-m-01');
-    $to     = $_GET['to'] ?? date('Y-m-d');
+    $from   = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01'));
+    $to     = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
     $type   = $_GET['type'] ?? 'daily_collections';
     $result = ['headers' => [], 'rows' => [], 'total' => 0];
     try {
@@ -175,7 +175,7 @@ if ($view === 'financial_reports' && $ajax === '1') {
 // daily_collections (staffs_db)
 if ($view === 'daily_collections' && $ajax === '1') {
     header('Content-Type: application/json');
-    $date = $_GET['date'] ?? date('Y-m-d');
+    $date = $staff->real_escape_string($_GET['date'] ?? date('Y-m-d'));
     $data = ['total' => 0, 'count' => 0, 'methods' => [], 'payments' => []];
     try {
         if ($staff) {

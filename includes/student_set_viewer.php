@@ -307,6 +307,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                             <td>
                                 <?php $profileLink = '?' . http_build_query(array_merge($listQuery, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id'], 'page' => $currentPage])); ?>
                                 <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-primary" title="Full Profile"><i class="fas fa-eye"></i></a>
+                                <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $stu['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -458,6 +459,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                         </small>
                                         <div class="d-flex gap-1">
                                             <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-file-alt"></i></a>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $stu['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -532,6 +534,23 @@ function renderStudentSetViewer($conn, array $options = []) {
             </div>
         <?php endif; ?>
         <?php endif; ?>
+    </div>
+
+    <!-- ── EDIT STUDENT MODAL ── -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div class="modal-dialog" style="background:#fff;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                <h5 style="margin:0;font-size:1.1rem;font-weight:600;"><i class="fas fa-edit"></i> Edit Student</h5>
+                <button class="close" onclick="closeEditStudentModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <div id="editStudentFormContainer"><div class="text-center" style="padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...</div></div>
+            </div>
+            <div class="modal-footer" style="padding:12px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
+                <button class="btn btn-secondary" onclick="closeEditStudentModal()" style="padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEditStudent()" style="padding:8px 20px;border-radius:6px;border:none;cursor:pointer;background:#1e3a8a;color:#fff;"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -723,6 +742,112 @@ function renderStudentSetViewer($conn, array $options = []) {
             });
         }
     });
+    </script>
+    <script>
+    // ── Edit Student Modal Functions ──
+    var editStudentData = {};
+    function openEditStudentModal(id) {
+        var s = null;
+        var allData = <?= json_encode($students ?? []) ?>;
+        if (allData) { s = allData.find(function(st) { return parseInt(st.id) === parseInt(id) || st.student_id == id || st.student_number == id; }); }
+        if (!s) {
+            // If student not in current page data, load via AJAX
+            fetch('ajax/update_student.php?fetch=1&id=' + id)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.id) { buildEditForm(data); }
+                    else { alert('Student not found'); }
+                })
+                .catch(function() { alert('Failed to load student data'); });
+            return;
+        }
+        buildEditForm(s);
+    }
+    function buildEditForm(s) {
+        editStudentData = s;
+        var html = '<form id="editStudentForm" onsubmit="return false">';
+        html += '<input type="hidden" name="id" value="' + (s.id||s.student_id||'') + '">';
+        html += '<div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">First Name</label><input type="text" name="first_name" class="form-control" value="' + escHtml(s.first_name||'') + '" required style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Other Name</label><input type="text" name="other_name" class="form-control" value="' + escHtml(s.other_name||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Surname</label><input type="text" name="surname" class="form-control" value="' + escHtml(s.surname||'') + '" required style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Full Name</label><input type="text" name="full_name" class="form-control" value="' + escHtml(s.full_name||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Gender</label><select name="gender" class="form-control" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"><option value="Male"' + (s.gender==='Male'?' selected':'') + '>Male</option><option value="Female"' + (s.gender==='Female'?' selected':'') + '>Female</option><option value="Other"' + (s.gender==='Other'?' selected':'') + '>Other</option></select></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Date of Birth</label><input type="date" name="date_of_birth" class="form-control" value="' + (s.date_of_birth||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Nationality</label><input type="text" name="nationality" class="form-control" value="' + escHtml(s.nationality||'Ugandan') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Address</label><input type="text" name="address" class="form-control" value="' + escHtml(s.address||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">District</label><input type="text" name="district" class="form-control" value="' + escHtml(s.district||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '</div>';
+        html += '<h6 style="margin:16px 0 8px;font-weight:600;border-bottom:1px solid #e2e8f0;padding-bottom:4px;"><i class="fas fa-graduation-cap"></i> Academic Info</h6>';
+        html += '<div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Student Number</label><input type="text" name="student_number" class="form-control" value="' + escHtml(s.student_number||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Registration Number</label><input type="text" name="registration_number" class="form-control" value="' + escHtml(s.registration_number||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Index Number</label><input type="text" name="index_number" class="form-control" value="' + escHtml(s.index_number||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">National ID Number</label><input type="text" name="national_student_id_number" class="form-control" value="' + escHtml(s.national_student_id_number||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Program</label><input type="text" name="program" class="form-control" value="' + escHtml(s.program||s.course||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Course</label><input type="text" name="course" class="form-control" value="' + escHtml(s.course||s.program||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Level</label><input type="text" name="level" class="form-control" value="' + escHtml(s.level||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Year</label><select name="current_year" class="form-control" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+        for (var y=1;y<=5;y++) { html += '<option value="' + y + '"' + (parseInt(s.current_year||s.year)===y?' selected':'') + '>Year ' + y + '</option>'; }
+        html += '</select></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Semester</label><select name="current_semester" class="form-control" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"><option value="Semester 1"' + (s.current_semester==='Semester 1'?' selected':'') + '>Semester 1</option><option value="Semester 2"' + (s.current_semester==='Semester 2'?' selected':'') + '>Semester 2</option><option value="Semester 3"' + (s.current_semester==='Semester 3'?' selected':'') + '>Semester 3</option></select></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Set Name</label><input type="text" name="set_name" class="form-control" value="' + escHtml(s.set_name||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Status</label><select name="status" class="form-control" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"><option value="Active"' + (s.status==='Active'?' selected':'') + '>Active</option><option value="Pending"' + (s.status==='Pending'?' selected':'') + '>Pending</option><option value="Graduated"' + (s.status==='Graduated'?' selected':'') + '>Graduated</option><option value="Suspended"' + (s.status==='Suspended'?' selected':'') + '>Suspended</option><option value="deleted"' + (s.status==='deleted'?' selected':'') + '>Deleted</option></select></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Intake Year</label><input type="number" name="intake_year" class="form-control" value="' + (s.intake_year||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Intake Period</label><input type="text" name="intake_period" class="form-control" value="' + escHtml(s.intake_period||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Category</label><input type="text" name="student_category" class="form-control" value="' + escHtml(s.student_category||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '</div>';
+        html += '<h6 style="margin:16px 0 8px;font-weight:600;border-bottom:1px solid #e2e8f0;padding-bottom:4px;"><i class="fas fa-phone"></i> Contact Info</h6>';
+        html += '<div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Phone</label><input type="text" name="phone" class="form-control" value="' + escHtml(s.phone||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Mobile Number</label><input type="text" name="mobile_number" class="form-control" value="' + escHtml(s.mobile_number||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Email</label><input type="email" name="email" class="form-control" value="' + escHtml(s.email||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '</div>';
+        html += '<h6 style="margin:16px 0 8px;font-weight:600;border-bottom:1px solid #e2e8f0;padding-bottom:4px;"><i class="fas fa-user-shield"></i> Guardian & Emergency</h6>';
+        html += '<div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Guardian Name</label><input type="text" name="guardian_name" class="form-control" value="' + escHtml(s.guardian_name||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control" value="' + escHtml(s.guardian_phone||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Guardian Email</label><input type="email" name="guardian_email" class="form-control" value="' + escHtml(s.guardian_email||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Emergency Contact</label><input type="text" name="emergency_contact_name" class="form-control" value="' + escHtml(s.emergency_contact_name||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Emergency Phone</label><input type="text" name="emergency_contact_phone" class="form-control" value="' + escHtml(s.emergency_contact_phone||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Emergency Email</label><input type="email" name="emergency_contact_email" class="form-control" value="' + escHtml(s.emergency_contact_email||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Sponsor</label><input type="text" name="sponsor" class="form-control" value="' + escHtml(s.sponsor||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Marital Status</label><input type="text" name="marital_status" class="form-control" value="' + escHtml(s.marital_status||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '<div class="form-group"><label style="font-weight:600;font-size:0.8rem;">Religion</label><input type="text" name="religion" class="form-control" value="' + escHtml(s.religion||'') + '" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;"></div>';
+        html += '</div>';
+        html += '</form>';
+        document.getElementById('editStudentFormContainer').innerHTML = html;
+        document.getElementById('editStudentModal').style.display = 'flex';
+    }
+    function closeEditStudentModal() {
+        document.getElementById('editStudentModal').style.display = 'none';
+    }
+    function saveEditStudent() {
+        var form = document.getElementById('editStudentForm');
+        if (!form) return;
+        var data = new FormData(form);
+        data.set('action', 'update');
+        document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = true;
+        document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        fetch('ajax/update_student.php', { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success) {
+                    alert('Student updated successfully!');
+                    closeEditStudentModal();
+                    location.reload();
+                } else {
+                    alert('Error: ' + (res.error || 'Update failed'));
+                }
+            })
+            .catch(function(err) {
+                alert('Network error: ' + err.message);
+            })
+            .finally(function() {
+                document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = false;
+                document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            });
+    }
     </script>
     <?php
 }

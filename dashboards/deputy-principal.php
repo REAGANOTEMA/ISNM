@@ -800,24 +800,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 title.textContent = 'Student Records';
                 <?php
                 $students = [];
-                if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,email,status FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");
+                if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,mobile_number,email,status,index_number,national_student_id_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");
                 if($r) while($row=$r->fetch_assoc()) $students[]=$row; }
                 ?>
                 html = `<div class="mb-2"><input type="text" id="studentSearchInput" class="form-control form-control-sm" placeholder="Search by name, reg no, phone..." onkeyup="filterStudentTable()"></div>
                     <div class="table-responsive" style="max-height:400px;overflow-y:auto">
-                    <table class="table table-sm table-hover" id="studentRecordsTable"><thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
+                    <table class="table table-sm table-hover" id="studentRecordsTable"><thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Phone/Mobile</th><th>Index No</th><th>Actions</th></tr></thead><tbody>`;
                 <?php foreach($students as $s):
                     $sname = htmlspecialchars($s['full_name'] ?: trim($s['first_name'].' '.$s['surname']));
                     $sreg = htmlspecialchars($s['registration_number'] ?: $s['student_number']);
+                    $sphone = htmlspecialchars($s['phone']??'');
+                    $smobile = htmlspecialchars($s['mobile_number']??'');
+                    $sindex = htmlspecialchars($s['index_number']??$s['national_student_id_number']??'');
                 ?>
                 html += `<tr>
                     <td><code><?= $sreg ?></code></td>
                     <td><?= $sname ?></td>
                     <td><?= htmlspecialchars($s['course']??'-') ?></td>
                     <td><?= $s['current_year']??'-' ?></td>
-                    <td><?= htmlspecialchars($s['phone']??'-') ?></td>
+                    <td><?= $sphone ?><?= ($sphone && $smobile && $smobile!==$sphone) ? '<br><small class="text-muted">M: '.$smobile.'</small>' : ($smobile ? '<br><small class="text-muted">'.$smobile.'</small>' : '-') ?></td>
+                    <td><?= $sindex ?: '-' ?></td>
                     <td><button class="btn btn-sm btn-outline-info" onclick="viewStudentProfile(<?= $s['id'] ?>)"><i class="fas fa-eye"></i></button>
-                    <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a></td>
+                    <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
+                    <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $s['id'] ?>)"><i class="fas fa-edit"></i></button></td>
                 </tr>`;
                 <?php endforeach; ?>
                 html += `</tbody></table></div>`;

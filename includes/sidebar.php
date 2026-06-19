@@ -30,11 +30,23 @@ require_once __DIR__ . '/module_config.php';
 
 $modules = getFilteredModules($user_role);
 
+// When on the Academic Registrar page, only show the Academic Registrar module group
+$currentPage = basename($_SERVER['PHP_SELF']);
+if ($currentPage === 'academic-registrar.php') {
+    $filtered = [];
+    foreach ($modules as $m) {
+        if (strcasecmp($m['title'], 'Academic Registrar') === 0) {
+            $filtered[] = $m;
+            break;
+        }
+    }
+    $modules = !empty($filtered) ? $filtered : $modules;
+}
+
 // Config: set to true to allow only one parent open at a time
 $accordionMode = true;
 
 // Detect current page for active highlighting
-$currentPage = basename($_SERVER['PHP_SELF']);
 $currentDir  = dirname($_SERVER['PHP_SELF']);
 ?>
 <nav class="isnm-sidebar" id="isnmSidebar">
@@ -121,6 +133,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         <?php endforeach; ?>
     </div>
 
+    <?php if ($currentPage !== 'academic-registrar.php'): ?>
     <div class="sidebar-extra">
         <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
         <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
@@ -140,6 +153,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <i class="fas fa-chevron-down smgmt-chevron ms-auto"></i>
         </a>
     </div>
+    <?php endif; ?>
     <script>
     (function() {
         // Fetch alert and approval counts for sidebar badges

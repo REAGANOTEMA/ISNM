@@ -70,8 +70,8 @@ if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 $report = $_GET['report'] ?? '';
 if ($report) {
     header('Content-Type: text/html; charset=utf-8');
-    $from = $_GET['from'] ?? date('Y-m-01');
-    $to = $_GET['to'] ?? date('Y-m-t');
+    $from = $conn->real_escape_string($_GET['from'] ?? date('Y-m-01', strtotime('-1 month')));
+    $to = $conn->real_escape_string($_GET['to'] ?? date('Y-m-d'));
     echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}.text-end{text-align:right}.text-center{text-align:center}.fw-bold{font-weight:700}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
     echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button> <button onclick="location.href=\'director-finance.php?report='.$report.'&from='.$from.'&to='.$to.'&pdf=1\'" style="padding:6px 16px">Export PDF</button></div>';
 
@@ -114,7 +114,7 @@ if ($report) {
         echo '<tr><td><strong>Net Cash Flow</strong></td><td class="text-end fw-bold" style="color:'.($in-$out>=0?'green':'red').'">'.number_format($in-$out,0).'</td></tr>';
         echo '</tbody></table>';
     } elseif ($report === 'expense_report') {
-        $cat = $_GET['category'] ?? '';
+        $cat = $conn->real_escape_string($_GET['category'] ?? '');
         echo '<h2>Expense Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
         if($cat) echo '<p>Category: '.htmlspecialchars($cat).'</p>';
         $wh = "DATE(e.expense_date) BETWEEN '$from' AND '$to'";

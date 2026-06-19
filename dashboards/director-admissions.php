@@ -32,7 +32,7 @@ if($r) while($row=$r->fetch_assoc()) $programs[]=$row;
 $req_items = []; $r=$staff_conn->query("SELECT * FROM requirement_items ORDER BY display_order");
 if($r) while($row=$r->fetch_assoc()) $req_items[]=$row;
 
-$students_list = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,phone,email,status FROM students ORDER BY full_name LIMIT 200");
+$students_list = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,phone,mobile_number,email,status,index_number,national_student_id_number FROM students ORDER BY full_name LIMIT 200");
 if($r) while($row=$r->fetch_assoc()) $students_list[]=$row; }
 
 $admissions_list = []; $r=$staff_conn->query("SELECT sa.*,s.full_name,s.student_number FROM student_admissions sa LEFT JOIN igangaschoolofl_students_db.students s ON sa.student_id=s.id ORDER BY sa.created_at DESC LIMIT 50");
@@ -380,23 +380,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php else: ?>
                     <div class="table-responsive" style="max-height:400px;overflow-y:auto">
                         <table class="table table-sm table-hover" id="dirTable">
-                            <thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Phone/Mobile</th><th>Index No</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
                             <?php foreach($students_list as $s):
                                 $sdname = htmlspecialchars($s['full_name'] ?: trim($s['first_name'].' '.$s['surname']));
                                 $sdreg = htmlspecialchars($s['registration_number'] ?: $s['student_number']);
+                                $sdphone = htmlspecialchars($s['phone']??'');
+                                $sdmobile = htmlspecialchars($s['mobile_number']??'');
+                                $sdindex = htmlspecialchars($s['index_number']??$s['national_student_id_number']??'');
                             ?>
                             <tr>
                                 <td><code><?= $sdreg ?></code></td>
                                 <td><?= $sdname ?></td>
                                 <td><?= htmlspecialchars($s['course']??'-') ?></td>
-                                <td><?= htmlspecialchars($s['phone']??'-') ?></td>
+                                <td><?= $sdphone ?: '-' ?><?= ($sdmobile && $sdmobile!==$sdphone) ? '<br><small>M: '.$sdmobile.'</small>' : '' ?></td>
+                                <td><?= $sdindex ?: '-' ?></td>
                                 <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status']) ?></span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info" onclick="viewStudentProfile(<?= $s['id'] ?>)"><i class="fas fa-eye"></i></button>
                                     <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
                                     <button class="btn btn-sm btn-outline-warning" onclick="window.open('director-academics.php?report=fee_statement&student_id=<?= $s['id'] ?>','_blank')"><i class="fas fa-file-invoice"></i></button>
                                     <button class="btn btn-sm btn-outline-primary" onclick="uploadDoc(<?= $s['id'] ?>, '<?= addslashes($sdname) ?>')"><i class="fas fa-upload"></i></button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $s['id'] ?>)"><i class="fas fa-edit"></i></button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

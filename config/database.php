@@ -126,7 +126,7 @@ if (!defined('ICT_DB_PORT')) {
     define('ICT_DB_PORT', (int) isnm_env('ICT_DB_PORT', DB_PORT));
 }
 if (!defined('ICT_DB_NAME')) {
-    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict_db'));
+    define('ICT_DB_NAME', isnm_env('ICT_DB_NAME', 'igangaschoolofl_ict'));
 }
 if (!defined('ICT_DB_USER')) {
     define('ICT_DB_USER', isnm_env('ICT_DB_USER', 'root'));

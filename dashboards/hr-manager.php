@@ -115,6 +115,23 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
     <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
 
+  <!-- Section Hub Navigation -->
+  <div class="section-nav mb-3" style="overflow-x:auto;white-space:nowrap;padding:8px 0;">
+    <a href="#overview" class="section-tab active" data-section="overview"><i class="fas fa-home me-1"></i>Overview</a>
+    <a href="#staff-records" class="section-tab" data-section="staff-records"><i class="fas fa-id-card me-1"></i>Staff Records</a>
+    <a href="#attendance" class="section-tab" data-section="attendance"><i class="fas fa-calendar-check me-1"></i>Attendance</a>
+    <a href="#leave" class="section-tab" data-section="leave"><i class="fas fa-calendar-alt me-1"></i>Leave</a>
+    <a href="#performance" class="section-tab" data-section="performance"><i class="fas fa-chart-line me-1"></i>Performance</a>
+    <a href="#training" class="section-tab" data-section="training"><i class="fas fa-graduation-cap me-1"></i>Training</a>
+    <a href="#recruitment" class="section-tab" data-section="recruitment"><i class="fas fa-user-plus me-1"></i>Recruitment</a>
+    <a href="#contracts" class="section-tab" data-section="contracts"><i class="fas fa-file-contract me-1"></i>Contracts</a>
+    <a href="#disciplinary" class="section-tab" data-section="disciplinary"><i class="fas fa-gavel me-1"></i>Disciplinary</a>
+    <a href="#payroll" class="section-tab" data-section="payroll"><i class="fas fa-money-check me-1"></i>Payroll</a>
+    <a href="#communications" class="section-tab" data-section="communications"><i class="fas fa-bullhorn me-1"></i>Comms</a>
+    <a href="#reports" class="section-tab" data-section="reports"><i class="fas fa-chart-bar me-1"></i>Reports</a>
+    <a href="#roles" class="section-tab" data-section="roles"><i class="fas fa-user-shield me-1"></i>Roles</a>
+  </div>
+
   <div class="content content-section dashboard-section active" data-section="overview">
     <?php if(!empty($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
@@ -278,6 +295,129 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
     </div>
 
   </div>
+
+  <!-- HR Sections Hub -->
+  <?php
+  $sectionCounts = [];
+  if ($staff_conn) {
+      $sectionCounts['total_staff'] = $active_staff;
+      $sectionCounts['attendance_today'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE()")->fetch_assoc()['c']??0);
+      $sectionCounts['pending_leave'] = $pending_applications;
+      $sectionCounts['pending_appraisals'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'")->fetch_assoc()['c']??0);
+      $sectionCounts['active_trainings'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='In Progress'")->fetch_assoc()['c']??0);
+      $sectionCounts['active_recruitments'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'")->fetch_assoc()['c']??0);
+      $sectionCounts['active_contracts'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active'")->fetch_assoc()['c']??0);
+      $sectionCounts['disciplinary_cases'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Open'")->fetch_assoc()['c']??0);
+  }
+  ?>
+
+  <div class="content content-section dashboard-section" data-section="staff-records">
+    <div class="card-section">
+      <h2><i class="fas fa-id-card me-2"></i>Staff Records & Documentation</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-primary"><?= $sectionCounts['total_staff'] ?></div><small>Total Active Staff</small><a href="staff-directory.php" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-address-book me-1"></i>View Directory</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-user-plus fa-2x text-success mb-2"></i><a href="onboarding.php" class="btn btn-sm btn-outline-success">Onboarding & Orientation</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-upload fa-2x text-info mb-2"></i><a href="staff_profile_management.php" class="btn btn-sm btn-outline-info">Upload Documents</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="attendance">
+    <div class="card-section">
+      <h2><i class="fas fa-calendar-check me-2"></i>Attendance & Time Management</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-success"><?= $sectionCounts['attendance_today'] ?></div><small>Checked In Today</small><a href="staff-attendance.php" class="btn btn-sm btn-outline-success mt-2"><i class="fas fa-clock me-1"></i>Manage Attendance</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-warning"><?= $sectionCounts['pending_leave'] ?></div><small>Pending Leave</small></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i><a href="duty-rosters.php" class="btn btn-sm btn-outline-primary">Duty Rosters</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="performance">
+    <div class="card-section">
+      <h2><i class="fas fa-chart-line me-2"></i>Performance Appraisal</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-warning"><?= $sectionCounts['pending_appraisals'] ?></div><small>Pending Appraisals</small><a href="performance-appraisal.php" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-clipboard-check me-1"></i>Manage Appraisals</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-graduation-cap fa-2x text-info mb-2"></i><div><small>Training & CPD</small></div><a href="training-cpd.php" class="btn btn-sm btn-outline-info">Manage Training</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-primary"><?= $sectionCounts['active_trainings'] ?></div><small>Active Trainings</small></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="recruitment">
+    <div class="card-section">
+      <h2><i class="fas fa-user-plus me-2"></i>Recruitment & Selection</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-success"><?= $sectionCounts['active_recruitments'] ?></div><small>Open Positions</small><a href="recruitment.php" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-briefcase me-1"></i>Manage Recruitment</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-file-alt fa-2x text-info mb-2"></i><a href="onboarding.php" class="btn btn-sm btn-outline-info">Onboarding</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-sign-out-alt fa-2x text-danger mb-2"></i><a href="resignations.php" class="btn btn-sm btn-outline-danger">Resignations & Exit</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="contracts">
+    <div class="card-section">
+      <h2><i class="fas fa-file-contract me-2"></i>Contracts Management</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-success"><?= $sectionCounts['active_contracts'] ?></div><small>Active Contracts</small><a href="contracts-management.php" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-file-signature me-1"></i>Manage Contracts</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-handshake fa-2x text-warning mb-2"></i><a href="professional-licenses.php" class="btn btn-sm btn-outline-warning">Professional Licenses</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-clock fa-2x text-secondary mb-2"></i><div><small>Contract Renewal Tracking</small></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="disciplinary">
+    <div class="card-section">
+      <h2><i class="fas fa-gavel me-2"></i>Disciplinary & Grievance</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><div class="fs-4 fw-bold text-danger"><?= $sectionCounts['disciplinary_cases'] ?></div><small>Open Cases</small><a href="staff-disciplinary.php" class="btn btn-sm btn-outline-danger mt-2"><i class="fas fa-balance-scale me-1"></i>Manage Disciplinary</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-file-alt fa-2x text-muted mb-2"></i><div><small>Grievance Reports</small></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="payroll">
+    <div class="card-section">
+      <h2><i class="fas fa-money-check me-2"></i>Payroll & Benefits</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-wallet fa-2x text-success mb-2"></i><a href="bursar-payroll.php" class="btn btn-sm btn-outline-success">Payroll Processing</a></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-file-invoice fa-2x text-primary mb-2"></i><div><small>Benefits Administration</small></div></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-calculator fa-2x text-warning mb-2"></i><div><small>Salary Structure</small></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="communications">
+    <div class="card-section">
+      <h2><i class="fas fa-bullhorn me-2"></i>Staff Communication</h2>
+      <div class="row g-3">
+        <div class="col-md-6"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-newspaper fa-2x text-primary mb-2"></i><a href="../news.php" class="btn btn-sm btn-outline-primary">Manage News</a></div></div>
+        <div class="col-md-6"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-bullhorn fa-2x text-info mb-2"></i><a href="../messaging.php" class="btn btn-sm btn-outline-info">Send Announcement</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="reports">
+    <div class="card-section">
+      <h2><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h2>
+      <div class="row g-3">
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-users fa-2x text-primary mb-2"></i><div><small>Staff Utilization Reports</small></div></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-calendar-alt fa-2x text-success mb-2"></i><div><small>Attendance Reports</small></div></div></div>
+        <div class="col-md-4"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-file-invoice fa-2x text-warning mb-2"></i><div><small>Payroll Reports</small></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content content-section dashboard-section" data-section="roles">
+    <div class="card-section">
+      <h2><i class="fas fa-user-shield me-2"></i>Role Management & Access Control</h2>
+      <div class="row g-3">
+        <div class="col-md-6"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-user-tag fa-2x text-primary mb-2"></i><a href="staff-directory.php" class="btn btn-sm btn-outline-primary">Staff Roles & Permissions</a></div></div>
+        <div class="col-md-6"><div class="card border shadow-sm p-3 text-center"><i class="fas fa-history fa-2x text-info mb-2"></i><a href="recycle_bin.php" class="btn btn-sm btn-outline-info">Audit Trail</a></div></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ADD STAFF MODAL -->
@@ -315,6 +455,27 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
   </div>
 </div>
 
+<script>
+// Section tab switching
+document.querySelectorAll('.section-tab').forEach(function(tab) {
+    tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        var section = this.getAttribute('data-section');
+        document.querySelectorAll('.section-tab').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        document.querySelectorAll('.dashboard-section').forEach(function(s) { s.classList.remove('active'); });
+        var target = document.querySelector('.dashboard-section[data-section="' + section + '"]');
+        if (target) target.classList.add('active');
+        if (window.location.hash !== '#' + section) history.replaceState(null, '', '#' + section);
+    });
+});
+// Check hash on load
+var hash = window.location.hash.replace('#', '');
+if (hash) {
+    var tab = document.querySelector('.section-tab[data-section="' + hash + '"]');
+    if (tab) tab.click();
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

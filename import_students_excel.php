@@ -137,6 +137,19 @@ function guessFromFilename($filename) {
     return $info;
 }
 
+// ── Helper: validate program value ──
+function isValidProgram($val) {
+    if (empty($val)) return false;
+    $known = ['Certificate in Nursing','Certificate in Midwifery','Diploma in Nursing','Diploma in Midwifery','Diploma in Nursing Education'];
+    if (in_array($val, $known)) return true;
+    if (preg_match('/^[0-9\/]+$/', $val)) return false;
+    if (preg_match('/^[A-Za-z0-9 ]{1,2}$/', trim($val))) return false;
+    $garbage = ['contact','course','id','mtc','sign','signature','students contact','parent/guardan','unmeb certificate','eng','issued back on'];
+    if (in_array(strtolower(trim($val)), $garbage)) return false;
+    if (strlen(trim($val)) > 50) return false;
+    return true;
+}
+
 // ── Helper: split full_name into name parts ──
 function splitName($full) {
     $parts = array_values(array_filter(explode(' ', trim($full))));
@@ -199,6 +212,12 @@ function processFile($path, $conn) {
         }
 
         $fullName = $data['full_name'] ?? '';
+
+        // Build full_name from parts if no full_name column
+        if (empty($fullName)) {
+            $parts = array_filter([$data['first_name'] ?? '', $data['other_name'] ?? '', $data['surname'] ?? '']);
+            $fullName = implode(' ', $parts);
+        }
         if (empty($fullName)) continue;
 
         // Build record
@@ -242,6 +261,15 @@ function processFile($path, $conn) {
             if (empty($rec[$k]) && !empty($v)) {
                 $rec[$k] = $v;
             }
+        }
+
+        // Validate program — if it looks like garbage, use filename guess or level
+        if (!empty($rec['program']) && !isValidProgram($rec['program'])) {
+            $rec['program'] = $fileGuess['program'] ?? '';
+            $rec['course'] = '';
+        }
+        if (!empty($rec['course']) && !isValidProgram($rec['course'])) {
+            $rec['course'] = $fileGuess['program'] ?? '';
         }
 
         // Split full_name into parts if name fields missing
@@ -356,41 +384,43 @@ function processFile($path, $conn) {
             continue;
         }
 
-        $null = null;
-        $st->bind_param('sssssssssssssssssssssssssssssssss',
+        // Prepare values (use empty string for null)
+        $v = [
             $rec['first_name'],
             $rec['surname'],
             $rec['other_name'],
             $rec['full_name'],
-            $rec['student_number'] ?: $null,
-            $rec['registration_number'] ?: $null,
-            $rec['index_number'] ?: $null,
-            $rec['national_student_id_number'] ?: $null,
-            $rec['phone'] ?: $null,
-            $rec['email'] ?: $null,
-            $rec['program'] ?: $null,
-            $rec['level'] ?: $null,
-            $rec['set_name'] ?: $null,
-            $intakeYear,
-            $rec['intake_period'] ?: $null,
-            $intakeDate,
-            $dob,
+            $rec['student_number'] ?? '',
+            $rec['registration_number'] ?? '',
+            $rec['index_number'] ?? '',
+            $rec['national_student_id_number'] ?? '',
+            $rec['phone'] ?? '',
+            $rec['email'] ?? '',
+            $rec['program'] ?? '',
+            $rec['level'] ?? '',
+            $rec['set_name'] ?? '',
+            (string)($intakeYear ?? ''),
+            $rec['intake_period'] ?? '',
+            $intakeDate ?? '',
+            $dob ?? '',
             $rec['gender'],
-            $rec['nationality'] ?: $null,
-            $rec['district'] ?: $null,
-            $rec['address'] ?: $null,
-            $rec['emergency_contact_name'] ?: $null,
-            $rec['emergency_contact_phone'] ?: $null,
-            $rec['emergency_contact_email'] ?: $null,
-            $rec['guardian_name'] ?: $null,
-            $rec['guardian_phone'] ?: $null,
-            $rec['student_category'] ?: $null,
-            $rec['marital_status'] ?: $null,
-            $rec['religion'] ?: $null,
-            $rec['sponsor'] ?: $null,
-            $rec['course_codes'] ?: $null,
-            $rec['no_of_papers'] ?: $null
-        );
+            $rec['nationality'] ?? '',
+            $rec['district'] ?? '',
+            $rec['address'] ?? '',
+            $rec['emergency_contact_name'] ?? '',
+            $rec['emergency_contact_phone'] ?? '',
+            $rec['emergency_contact_email'] ?? '',
+            $rec['guardian_name'] ?? '',
+            $rec['guardian_phone'] ?? '',
+            $rec['student_category'] ?? '',
+            $rec['marital_status'] ?? '',
+            $rec['religion'] ?? '',
+            $rec['sponsor'] ?? '',
+            $rec['course_codes'] ?? '',
+            $rec['no_of_papers'] ?? '',
+        ];
+        $types = str_repeat('s', count($v));
+        $st->bind_param($types, ...$v);
 
         if ($st->execute()) {
             $imported++;

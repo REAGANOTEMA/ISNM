@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
-require_once __DIR__ . '/../includes/module_coming_soon.php';
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
 $websiteDb = $ctx['website'];
