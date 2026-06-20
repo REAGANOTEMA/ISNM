@@ -11,22 +11,17 @@ function getModuleConfig(): array {
         [
             'title'    => 'Executive',
             'icon'     => 'fas fa-crown',
-            'roles'    => '*',
+            'roles'    => ['director general','ceo','principal','deputy','secretary','director'],
             'children' => [
                 ['title' => 'Director General',       'route' => 'director-general.php',              'roles' => ['director general','ceo','system admin']],
                 ['title' => 'CEO Dashboard',          'route' => 'ceo.php',                          'roles' => ['ceo','director general']],
                 ['title' => 'School Principal',       'route' => 'school-principal.php',             'roles' => ['school principal','principal']],
-                ['title' => 'Principal',              'route' => 'principal.php',                    'roles' => ['principal']],
-                ['title' => 'Student Affairs',        'route' => 'principal.php#students',           'roles' => ['principal']],
-                ['title' => 'Applications',           'route' => 'principal.php#applications',        'roles' => ['principal']],
-                ['title' => 'Activities',             'route' => 'principal.php#activities',         'roles' => ['principal']],
                 ['title' => 'Deputy Principal',       'route' => 'deputy-principal.php',             'roles' => ['deputy','principal']],
                 ['title' => 'Teaching & Learning',   'route' => 'deputy-principal.php#teaching',     'roles' => ['deputy','principal']],
                 ['title' => 'Student Affairs',       'route' => 'deputy-principal.php#students',     'roles' => ['deputy','principal']],
                 ['title' => 'Examinations',          'route' => 'deputy-principal.php#examinations', 'roles' => ['deputy','principal']],
                 ['title' => 'Clinical Training',     'route' => 'deputy-principal.php#clinical',     'roles' => ['deputy','principal']],
                 ['title' => 'School Secretary',       'route' => 'school-secretary.php',             'roles' => ['school secretary','secretary']],
-                ['title' => 'Secretary',              'route' => 'secretary.php',                    'roles' => ['school secretary','secretary']],
                 ['title' => 'Institution Overview',   'route' => 'director-general.php#executive',   'roles' => ['director general','ceo','principal']],
                 ['title' => 'Department Monitoring',  'route' => 'director-general.php#departments', 'roles' => ['director general','ceo','principal']],
                 ['title' => 'Director Performance',   'route' => 'director-general.php#performance', 'roles' => ['director general','ceo']],
@@ -44,7 +39,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Academic Management',
             'icon'     => 'fas fa-graduation-cap',
-            'roles'    => '*',
+            'roles'    => ['director','academics','registrar','lecturer','head','senior','principal'],
             'children' => [
                 ['title' => 'Director Academics',     'route' => 'director-academics.php',            'roles' => ['director','academics','principal','ceo']],
                 ['title' => 'Program Management',    'route' => 'director-academics.php#programs',   'roles' => ['director','academics','principal','ceo']],
@@ -77,7 +72,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Admissions',
             'icon'     => 'fas fa-file-signature',
-            'roles'    => '*',
+            'roles'    => ['admissions','director','secretary','registrar'],
             'children' => [
                 ['title' => 'Director Admissions',    'route' => 'director-admissions.php',           'roles' => ['admissions','director','secretary']],
                 ['title' => 'Applications',          'route' => 'director-admissions.php#applications','roles' => ['admissions','director','secretary']],
@@ -93,7 +88,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Academic Registrar',
             'icon'     => 'fas fa-clipboard-list',
-            'roles'    => '*',
+            'roles'    => ['registrar','director','principal','deputy'],
             'children' => [
                 ['title' => 'Overview',             'route' => 'academic-registrar.php#overview',            'roles' => '*'],
                 ['title' => 'Admissions',            'route' => 'academic-registrar.php#admissions',          'roles' => '*'],
@@ -114,7 +109,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Finance',
             'icon'     => 'fas fa-chart-line',
-            'roles'    => '*',
+            'roles'    => ['bursar','director','finance','accountant','ceo','principal'],
             'children' => [
                 ['title' => 'Finance Dashboard',     'route' => 'director-finance.php',               'roles' => ['director','finance','ceo']],
                 ['title' => 'Revenue Management',    'route' => 'director-finance.php#revenue',        'roles' => ['director','finance','ceo']],
@@ -141,17 +136,20 @@ function getModuleConfig(): array {
                 ['title' => 'Procurement Oversight', 'route' => 'procurement-oversight.php',          'roles' => ['director','finance','bursar','store']],
                 ['title' => 'URA/Tax Reporting',     'route' => 'ura-reporting.php',                  'roles' => ['bursar','finance','director','accountant']],
                 ['title' => 'Donations Management',  'route' => 'donations-management.php',           'roles' => ['director','bursar','finance','ceo']],
-                ['title' => 'Student Billing',      'route' => 'bursar-billing.php',                'roles' => ['bursar','finance','accountant']],
-                ['title' => 'Payment Processing',   'route' => 'bursar-payments.php',               'roles' => ['bursar','finance','accountant']],
-                ['title' => 'Bursar Reports',       'route' => 'bursar-reports.php',                'roles' => ['bursar','finance','accountant','director']],
-                ['title' => 'Ledger Management',    'route' => 'bursar-ledger.php',                 'roles' => ['bursar','finance','accountant']],
-                ['title' => 'Tax Reporting',        'route' => 'bursar-tax.php',                    'roles' => ['bursar','finance','accountant','director']],
+                ['title' => 'Bursar Billing',       'route' => 'bursar-billing.php',                 'roles' => ['bursar','accountant','finance']],
+                ['title' => 'Bursar Ledger',        'route' => 'bursar-ledger.php',                  'roles' => ['bursar','accountant','finance']],
+                ['title' => 'Bursar Payments',      'route' => 'bursar-payments.php',                'roles' => ['bursar','accountant','finance']],
+                ['title' => 'Bursar Tax Reporting', 'route' => 'bursar-tax.php',                     'roles' => ['bursar','accountant','finance']],
+                ['title' => 'Bursar Reports',       'route' => 'bursar-reports.php',                 'roles' => ['bursar','accountant','finance']],
+                ['title' => 'Cost Center Management','route' => 'cost-center-management.php',         'roles' => ['bursar','finance','director','accountant']],
+                ['title' => 'Penalty Configurations','route' => 'penalty-configurations.php',          'roles' => ['bursar','finance','director']],
+                ['title' => 'Proof of Payments',     'route' => 'proof-of-payments.php',              'roles' => ['bursar','finance','accountant']],
             ],
         ],
         [
             'title'    => 'Human Resources',
             'icon'     => 'fas fa-users',
-            'roles'    => '*',
+            'roles'    => ['hr','manager','director','principal','head','lecturer','staff'],
             'children' => [
                 ['title' => 'HR Manager',            'route' => 'hr-manager.php',                     'roles' => ['hr','manager','director','principal']],
                 ['title' => 'Staff Records',         'route' => 'hr-manager.php#staff-records',        'roles' => ['hr','manager','director','principal']],
@@ -178,17 +176,17 @@ function getModuleConfig(): array {
                 ['title' => 'Resignations & Exit',   'route' => 'resignations.php',                   'roles' => ['hr','manager','director']],
                 ['title' => 'Duty Rosters',          'route' => 'duty-rosters.php',                   'roles' => ['hr','manager','director','head','matron','warden']],
                 ['title' => 'Professional Licenses', 'route' => 'professional-licenses.php',          'roles' => ['hr','manager','director','head','nursing','midwifery']],
-                ['title' => 'Non-Teaching Staff',    'route' => 'non-teaching-staff.php',             'roles' => ['non teaching','staff','lecturer']],
-                ['title' => 'Task Management',       'route' => 'non-teaching-staff.php#tasks',       'roles' => ['non teaching','staff','lecturer']],
-                ['title' => 'Staff Attendance',      'route' => 'non-teaching-staff.php#attendance',  'roles' => ['non teaching','staff','lecturer']],
-                ['title' => 'Leave Requests',        'route' => 'non-teaching-staff.php#leave',       'roles' => ['non teaching','staff','lecturer']],
-                ['title' => 'Training & Development','route' => 'non-teaching-staff.php#training',    'roles' => ['non teaching','staff','lecturer']],
+                ['title' => 'Non-Teaching Staff',    'route' => 'non-teaching-staff.php',             'roles' => ['non-teaching','non teaching','staff','lecturer']],
+                ['title' => 'Task Management',       'route' => 'non-teaching-staff.php#tasks',       'roles' => ['non-teaching','non teaching','staff','lecturer']],
+                ['title' => 'Staff Attendance',      'route' => 'non-teaching-staff.php#attendance',  'roles' => ['non-teaching','non teaching','staff','lecturer']],
+                ['title' => 'Leave Requests',        'route' => 'non-teaching-staff.php#leave',       'roles' => ['non-teaching','non teaching','staff','lecturer']],
+                ['title' => 'Training & Development','route' => 'non-teaching-staff.php#training',    'roles' => ['non-teaching','non teaching','staff','lecturer']],
             ],
         ],
         [
             'title'    => 'Nursing Department',
             'icon'     => 'fas fa-user-nurse',
-            'roles'    => '*',
+            'roles'    => ['nursing','head','lecturer','midwifery'],
             'children' => [
                 ['title' => 'Head of Nursing',       'route' => 'head-nursing.php',                   'roles' => ['head','nursing']],
                 ['title' => 'Department Overview',   'route' => 'head-nursing.php#overview',           'roles' => ['head','nursing']],
@@ -205,7 +203,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Midwifery Department',
             'icon'     => 'fas fa-baby',
-            'roles'    => '*',
+            'roles'    => ['midwifery','head','lecturer'],
             'children' => [
                 ['title' => 'Head of Midwifery',     'route' => 'head-midwifery.php',                 'roles' => ['head','midwifery']],
                 ['title' => 'Department Overview',   'route' => 'head-midwifery.php#overview',         'roles' => ['head','midwifery']],
@@ -222,7 +220,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'ICT',
             'icon'     => 'fas fa-laptop-code',
-            'roles'    => '*',
+            'roles'    => ['director','ict','it','lab','system admin','principal'],
             'children' => [
                 ['title' => 'Director ICT',          'route' => 'director-ict.php',                   'roles' => ['director','ict','it']],
                 ['title' => 'ICT Overview',          'route' => 'director-ict.php#overview',           'roles' => ['director','ict','it']],
@@ -237,17 +235,19 @@ function getModuleConfig(): array {
                 ['title' => 'Official Duties',       'route' => 'director-ict.php#duties',            'roles' => ['director','ict','it']],
                 ['title' => 'Quick Actions',         'route' => 'director-ict.php#actions',           'roles' => ['director','ict','it']],
                 ['title' => 'ICT Students',          'route' => 'director-ict.php#students',          'roles' => ['director','ict','it']],
-                ['title' => 'Computer Lab',          'route' => '../computer_lab.php',                'roles' => ['director','ict','it','lab']],
+                ['title' => 'Computer Lab',          'route' => 'computer_lab.php',                   'roles' => ['director','ict','it','lab']],
                 ['title' => 'Digital Learning',      'route' => 'digital-learning.php',               'roles' => ['director','ict','it','lecturer']],
                 ['title' => 'Cybersecurity',         'route' => 'cybersecurity.php',                  'roles' => ['director','ict','it']],
                 ['title' => 'ICT Policy',            'route' => 'ict-policy.php',                     'roles' => ['director','ict','it']],
                 ['title' => 'System Administration', 'route' => 'system-admin.php',                   'roles' => ['director','ict','it','system admin']],
+                ['title' => 'IT Support Tickets',    'route' => 'it-support-tickets.php',             'roles' => ['director','ict','it','lab']],
+                ['title' => 'Lab Booking Management','route' => 'lab-booking-management.php',         'roles' => ['director','ict','it','lecturer','lab']],
             ],
         ],
         [
             'title'    => 'Library',
             'icon'     => 'fas fa-book',
-            'roles'    => '*',
+            'roles'    => ['librarian','director','student','lecturer'],
             'children' => [
                 ['title' => 'Librarian Dashboard',   'route' => 'school-librarian.php',               'roles' => ['librarian','director']],
                 ['title' => 'Books Management',      'route' => 'school-librarian.php#books',         'roles' => ['librarian','director']],
@@ -263,30 +263,32 @@ function getModuleConfig(): array {
         [
             'title'    => 'Skills Laboratory',
             'icon'     => 'fas fa-flask',
-            'roles'    => '*',
+            'roles'    => ['skills lab','lab','lecturer','head','nursing','midwifery'],
             'children' => [
                 ['title' => 'Skills Lab Manager',    'route' => 'skills-lab.php',                     'roles' => ['skills lab','lab','director','principal']],
                 ['title' => 'Lab Equipment',          'route' => 'skills-lab.php?view=equipment',     'roles' => ['skills lab','lab','lecturer','head']],
                 ['title' => 'Practical Sessions',     'route' => 'skills-lab.php?view=sessions',      'roles' => ['skills lab','lab','lecturer','head']],
                 ['title' => 'Lab Experiments',        'route' => 'lab-practical.php',                 'roles' => ['lecturer','head','nursing','midwifery','lab']],
                 ['title' => 'Lab Safety',             'route' => 'skills-lab.php?view=safety',        'roles' => ['skills lab','lab','lecturer']],
+                ['title' => 'Chemical Inventory',    'route' => 'chemical-inventory.php',             'roles' => ['lab','lecturer','head','nursing','skills lab']],
             ],
         ],
         [
             'title'    => 'Store & Assets',
             'icon'     => 'fas fa-boxes',
-            'roles'    => '*',
+            'roles'    => ['storekeeper','store','inventory','director','finance','bursar'],
             'children' => [
                 ['title' => 'Storekeeper',           'route' => 'storekeeper.php',                    'roles' => ['storekeeper','store','inventory']],
                 ['title' => 'Inventory Reports',     'route' => 'inventory-reports.php',              'roles' => ['director','principal','hr','store']],
                 ['title' => 'Asset Management',      'route' => 'asset-management.php',               'roles' => ['store','director','manager']],
                 ['title' => 'Procurement Oversight', 'route' => 'procurement-oversight.php',          'roles' => ['director','finance','bursar','store']],
+                ['title' => 'Department Requests',   'route' => 'department-requests.php',            'roles' => ['store','director','manager','head']],
             ],
         ],
         [
             'title'    => 'Security & Transport',
             'icon'     => 'fas fa-shield-alt',
-            'roles'    => '*',
+            'roles'    => ['security','driver','director','principal'],
             'children' => [
                 ['title' => 'Security',              'route' => 'security.php',                       'roles' => ['security','director']],
                 ['title' => 'Visitor Access',         'route' => 'visitor-access.php',                'roles' => ['security','director','manager']],
@@ -297,7 +299,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Student Services',
             'icon'     => 'fas fa-hand-holding-heart',
-            'roles'    => '*',
+            'roles'    => ['matron','warden','sickbay','nursing','director','principal','deputy','secretary','registrar','head','lecturer','bursar','finance'],
             'children' => [
                 ['title' => 'Matrons',               'route' => 'matrons.php',                        'roles' => ['matron','warden']],
                 ['title' => 'Welfare (Matron)',      'route' => 'matrons.php#students',               'roles' => ['matron','warden']],
@@ -327,7 +329,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Communications',
             'icon'     => 'fas fa-bullhorn',
-            'roles'    => '*',
+            'roles'    => ['director','secretary','ict','it','principal'],
             'children' => [
                 ['title' => 'Communications Hub',   'route' => 'communications.php',                 'roles' => ['director','secretary','ict','it']],
                 ['title' => 'News Management',       'route' => '../news.php',                        'roles' => '*'],
@@ -337,6 +339,8 @@ function getModuleConfig(): array {
                 ['title' => 'Website Pages',         'route' => 'website-pages.php',                  'roles' => ['director','ict','it','secretary']],
                 ['title' => 'Portal Messages',        'route' => 'portal-messages.php',               'roles' => ['director','secretary','ict','it']],
                 ['title' => 'Contact Submissions',    'route' => 'contact-submissions.php',           'roles' => ['director','secretary','ict','it']],
+                ['title' => 'Institutional Alerts',  'route' => 'institutional-alerts.php',           'roles' => ['director','secretary','ict','principal']],
+                ['title' => 'Volunteer Applications','route' => 'volunteer-applications.php',          'roles' => ['director','secretary','hr']],
             ],
         ],
         [
@@ -355,7 +359,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Student Self-Service',
             'icon'     => 'fas fa-user-circle',
-            'roles'    => '*',
+            'roles'    => ['student'],
             'children' => [
                 ['title' => 'My Profile',            'route' => 'student.php',                        'roles' => ['student']],
                 ['title' => 'My Fees',               'route' => '../student-fees.php',                'roles' => ['student']],
@@ -371,7 +375,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Student Government',
             'icon'     => 'fas fa-handshake',
-            'roles'    => '*',
+            'roles'    => ['guild president','student'],
             'children' => [
                 ['title' => 'Guild President',       'route' => 'guild-president.php',                'roles' => ['guild president','student']],
             ],
@@ -379,7 +383,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Approvals & Workflow',
             'icon'     => 'fas fa-check-double',
-            'roles'    => '*',
+            'roles'    => ['director general','ceo','director'],
             'children' => [
                 ['title' => 'Pending Approvals',     'route' => 'director-general.php#approvals',     'roles' => ['director general','ceo','director']],
                 ['title' => 'Finance Approvals',     'route' => 'director-finance.php#approvals',     'roles' => ['director general','finance','director']],
@@ -421,6 +425,10 @@ function getFilteredModules(string $userRole): array {
     $all = getModuleConfig();
     $filtered = [];
     foreach ($all as $parent) {
+        // Check parent-level role access before processing children
+        if (!userCanAccessModule($parent['roles'], $userRole)) {
+            continue;
+        }
         $kids = [];
         foreach ($parent['children'] as $child) {
             if (userCanAccessModule($child['roles'], $userRole)) {

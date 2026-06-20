@@ -189,11 +189,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $notes = sb_esc($staff_conn, $_POST['notes']);
         $trans_num = 'MST-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
         if ($mid > 0 && $qty > 0) {
-            $med = $staff_conn->query("SELECT quantity_in_stock FROM medicine_stock WHERE id=$mid")->fetch_assoc();
+            $qrMed = $staff_conn->query("SELECT quantity_in_stock FROM medicine_stock WHERE id=$mid"); $med = $qrMed ? $qrMed->fetch_assoc() : null;
             if ($med) {
                 $cq = (int)$med['quantity_in_stock'];
                 $nq = ($ttype === 'Purchase' || $ttype === 'Return') ? $cq + $qty : max(0, $cq - $qty);
-                $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= (int)$staff_conn->query("SELECT reorder_level FROM medicine_stock WHERE id=$mid")->fetch_row()[0] ? 'Low Stock' : 'In Stock');
+                $qrRl = $staff_conn->query("SELECT reorder_level FROM medicine_stock WHERE id=$mid"); $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0; $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
                 $staff_conn->query("UPDATE medicine_stock SET quantity_in_stock=$nq, status='$ns' WHERE id=$mid");
                 $staff_conn->query("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES ('$trans_num', $mid, '$ttype', $qty, $user_id, '$tdate', '$notes')");
                 $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
@@ -212,6 +212,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $rid = (int)($_POST['id'] ?? 0);
         if ($rid > 0) { $staff_conn->query("DELETE FROM daily_sick_records WHERE id=$rid"); $_SESSION['success'] = 'Record permanently deleted.'; }
         header('Location: sickbay.php?section=recycle-bin'); exit;
+    }
+
+    if ($action === 'save_health_record') {
+        $sid = (int)($_POST['student_id'] ?? 0);
+        $sname = sb_esc($staff_conn, $_POST['student_name']);
+        $snum = sb_esc($staff_conn, $_POST['student_number']);
+        $bt = sb_esc($staff_conn, $_POST['blood_type']);
+        $allergies = sb_esc($staff_conn, $_POST['allergies']);
+        $chronic = sb_esc($staff_conn, $_POST['chronic_conditions']);
+        $meds = sb_esc($staff_conn, $_POST['medications']);
+        $ec_name = sb_esc($staff_conn, $_POST['emergency_contact_name']);
+        $ec_phone = sb_esc($staff_conn, $_POST['emergency_contact_phone']);
+        $ec_rel = sb_esc($staff_conn, $_POST['emergency_contact_relationship']);
+        $insurance = sb_esc($staff_conn, $_POST['insurance_provider']);
+        $ins_num = sb_esc($staff_conn, $_POST['insurance_number']);
+        $notes = sb_esc($staff_conn, $_POST['notes']);
+        $existing = $staff_conn->query("SELECT id FROM student_health_records WHERE student_id=$sid");
+        if ($existing && $existing->num_rows > 0) {
+            $row = $existing->fetch_assoc();
+            $rid = (int)$row['id'];
+            $staff_conn->query("UPDATE student_health_records SET blood_type='$bt', allergies='$allergies', chronic_conditions='$chronic', medications='$meds', emergency_contact_name='$ec_name', emergency_contact_phone='$ec_phone', emergency_contact_relationship='$ec_rel', insurance_provider='$insurance', insurance_number='$ins_num', notes='$notes' WHERE id=$rid");
+            $_SESSION['success'] = 'Health record updated.';
+        } else {
+            $rn = 'HR-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
+            $staff_conn->query("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES ('$rn', $sid, '$bt', '$allergies', '$chronic', '$meds', '$ec_name', '$ec_phone', '$ec_rel', '$insurance', '$ins_num', '$notes')");
+            $_SESSION['success'] = 'Health record created.';
+        }
+        header('Location: sickbay.php?section=health-records'); exit;
+    }
+
+    if ($action === 'save_health_incident') {
+        $inc_num = 'HI-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
+        $sid = (int)($_POST['student_id'] ?? 0);
+        $sname = sb_esc($staff_conn, $_POST['student_name']);
+        $itype = sb_esc($staff_conn, $_POST['incident_type']);
+        $symptoms = sb_esc($staff_conn, $_POST['symptoms']);
+        $severity = sb_esc($staff_conn, $_POST['severity']);
+        $location = sb_esc($staff_conn, $_POST['location']);
+        $action_taken = sb_esc($staff_conn, $_POST['action_taken']);
+        $treatment = sb_esc($staff_conn, $_POST['treatment_given']);
+        $referred = sb_esc($staff_conn, $_POST['referred_to']);
+        $parent_notified = isset($_POST['parent_notified']) ? 1 : 0;
+        $follow_up = !empty($_POST['follow_up_date']) ? "'".sb_esc($staff_conn, $_POST['follow_up_date'])."'" : 'NULL';
+        $notes = sb_esc($staff_conn, $_POST['notes']);
+        $staff_conn->query("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES ('$inc_num', $sid, '$itype', '$symptoms', '$severity', '$location', '$action_taken', '$treatment', '$referred', $parent_notified, $follow_up, 'Reported', $user_id, '$notes')");
+        $_SESSION['success'] = 'Health incident reported. #'.$inc_num;
+        header('Location: sickbay.php?section=health-incidents'); exit;
+    }
+
+    if ($action === 'resolve_incident') {
+        $iid = (int)($_POST['id'] ?? 0);
+        if ($iid > 0) { $staff_conn->query("UPDATE health_incidents SET status='Resolved' WHERE id=$iid"); $_SESSION['success'] = 'Incident resolved.'; }
+        header('Location: sickbay.php?section=health-incidents'); exit;
     }
 
     if ($action === 'save_settings') {
@@ -246,6 +299,14 @@ $sb_settings_rows = sb_fetch($staff_conn, "SELECT setting_key, setting_value FRO
 $sb_settings = [];
 foreach ($sb_settings_rows as $row) { $sb_settings[$row['setting_key']] = $row['setting_value']; }
 
+$health_records_list = []; $health_incidents_list = [];
+if ($staff_conn) {
+    $health_records_list = sb_fetch($staff_conn, "SELECT shr.*, s.full_name, s.student_number, s.program FROM student_health_records shr LEFT JOIN igangaschoolofl_students_db.students s ON shr.student_id = s.id ORDER BY s.full_name ASC LIMIT 200");
+    $health_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM health_incidents hi LEFT JOIN igangaschoolofl_students_db.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $student_incidents_list = sb_fetch($staff_conn, "SELECT hi.*, s.full_name, s.student_number, s.program FROM student_health_incidents hi LEFT JOIN igangaschoolofl_students_db.students s ON hi.student_id = s.id ORDER BY hi.created_at DESC LIMIT 200");
+    $emergency_contacts_list = sb_fetch($staff_conn, "SELECT * FROM emergency_contacts WHERE is_active = 1 ORDER BY priority ASC");
+    $student_contacts_list = sb_fetch($staff_conn, "SELECT sec.*, s.full_name FROM student_emergency_contacts sec LEFT JOIN igangaschoolofl_students_db.students s ON sec.student_id = s.id ORDER BY s.full_name LIMIT 200");
+}
 $recent_activities = [];
 if ($staff_conn) {
     try {
@@ -314,6 +375,8 @@ $pageTitle = 'Sickbay Management System';?>
 <a class="section-tab <?=$active_section==='recycle-bin'?'active':''?>" href="sickbay.php?section=recycle-bin"><i class="fas fa-trash-restore me-1"></i>Recycle Bin</a>
 <a class="section-tab <?=$active_section==='audit'?'active':''?>" href="sickbay.php?section=audit"><i class="fas fa-history me-1"></i>Audit Trail</a>
 <a class="section-tab <?=$active_section==='settings'?'active':''?>" href="sickbay.php?section=settings"><i class="fas fa-cog me-1"></i>Settings</a>
+<a class="section-tab <?=$active_section==='health-records'?'active':''?>" href="sickbay.php?section=health-records"><i class="fas fa-notes-medical me-1"></i>Health Records</a>
+<a class="section-tab <?=$active_section==='health-incidents'?'active':''?>" href="sickbay.php?section=health-incidents"><i class="fas fa-exclamation-triangle me-1"></i>Health Incidents</a>
 </div><!-- DASHBOARD -->
 <div class="sickbay-section <?=$active_section==='dashboard'?'active':''?>" id="sec-dashboard">
 <div class="row g-3 mb-4">
@@ -498,7 +561,62 @@ $pageTitle = 'Sickbay Management System';?>
 <button class="btn btn-outline-purple" onclick="setTheme('purple')" style="border-left:4px solid #6f42c1">Purple</button>
 </div>
 <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i>Current theme: <strong id="currentThemeName">Default Blue</strong></p>
-</div></div></div></div></div><!-- end content-area -->
+</div></div></div></div><!-- HEALTH RECORDS -->
+<div class="sickbay-section <?=$active_section==='health-records'?'active':''?>" id="sec-health-records">
+<div class="row g-4">
+<div class="col-lg-5">
+<div class="health-card"><h2><i class="fas fa-plus-circle me-2 text-primary"></i>Student Health Profile</h2>
+<form method="POST" action="sickbay.php"><input type="hidden" name="action" value="save_health_record">
+<div class="mb-2"><label class="form-label fw-semibold">Student <span class="text-danger">*</span></label><input type="text" name="student_name" class="form-control" required placeholder="Full name" id="hr-name"><input type="hidden" name="student_id" id="hr-sid" value="0"><input type="hidden" name="student_number" id="hr-num"></div>
+<div class="row g-2 mb-2"><div class="col-4"><label class="form-label fw-semibold">Blood Type</label><select name="blood_type" class="form-select"><option value="">--</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div><div class="col-4"><label class="form-label fw-semibold">Insurance</label><input type="text" name="insurance_provider" class="form-control" placeholder="Provider"></div><div class="col-4"><label class="form-label fw-semibold">Insurance #</label><input type="text" name="insurance_number" class="form-control" placeholder="Number"></div></div>
+<div class="mb-2"><label class="form-label fw-semibold">Allergies</label><textarea name="allergies" class="form-control" rows="2" placeholder="List known allergies"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Chronic Conditions</label><textarea name="chronic_conditions" class="form-control" rows="2" placeholder="e.g., Asthma, Diabetes"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Current Medications</label><textarea name="medications" class="form-control" rows="2"></textarea></div>
+<div class="row g-2 mb-2"><div class="col-4"><label class="form-label fw-semibold">Emergency Contact</label><input type="text" name="emergency_contact_name" class="form-control" placeholder="Name"></div><div class="col-4"><label class="form-label fw-semibold">Phone</label><input type="text" name="emergency_contact_phone" class="form-control" placeholder="Phone"></div><div class="col-4"><label class="form-label fw-semibold">Relationship</label><input type="text" name="emergency_contact_relationship" class="form-control" placeholder="e.g., Parent"></div></div>
+<div class="mb-3"><label class="form-label fw-semibold">Notes</label><textarea name="notes" class="form-control" rows="1"></textarea></div>
+<button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-1"></i>Save Health Record</button>
+</form></div></div>
+<div class="col-lg-7">
+<div class="health-card"><h2><i class="fas fa-list me-2 text-primary"></i>Student Health Records</h2>
+<div class="mb-2"><input type="text" class="form-control form-control-sm" style="width:280px" placeholder="Filter by name..." onkeyup="filterTable('hr-tbl',1,this.value)"></div>
+<div class="table-responsive" style="max-height:600px;overflow-y:auto"><table class="table table-sm table-hover align-middle" id="hr-tbl"><thead class="table-light sticky-top"><tr><th>Student</th><th>Blood Type</th><th>Allergies</th><th>Chronic</th><th>Insurance</th><th>Emergency Contact</th></tr></thead><tbody>
+<?php if(empty($health_records_list)):?><tr><td colspan="6" class="text-center text-muted py-4">No health records.</td></tr>
+<?php else:foreach($health_records_list as $hr):?>
+<tr><td><strong><small><?=htmlspecialchars($hr['full_name']??'Unknown')?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($hr['student_number']??'')?></small></td><td><span class="badge bg-danger"><?=htmlspecialchars($hr['blood_type']??'-')?></span></td><td><small><?=htmlspecialchars(substr($hr['allergies']??'-',0,40))?></small></td><td><small><?=htmlspecialchars(substr($hr['chronic_conditions']??'-',0,40))?></small></td><td><small><?=htmlspecialchars($hr['insurance_provider']??'-')?></small></td><td><small><?=htmlspecialchars($hr['emergency_contact_name']??'-')?> <?=$hr['emergency_contact_phone']?'('.htmlspecialchars($hr['emergency_contact_phone']).')':''?></small></td></tr>
+<?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- HEALTH INCIDENTS -->
+<div class="sickbay-section <?=$active_section==='health-incidents'?'active':''?>" id="sec-health-incidents">
+<div class="row g-4">
+<div class="col-lg-5">
+<div class="health-card"><h2><i class="fas fa-plus-circle me-2 text-danger"></i>Report Health Incident</h2>
+<form method="POST" action="sickbay.php"><input type="hidden" name="action" value="save_health_incident">
+<div class="mb-2"><label class="form-label fw-semibold">Student <span class="text-danger">*</span></label><input type="text" name="student_name" class="form-control" required placeholder="Full name" id="hi-name"><input type="hidden" name="student_id" id="hi-sid" value="0"><input type="hidden" name="student_number" id="hi-num"></div>
+<div class="row g-2 mb-2"><div class="col-6"><label class="form-label fw-semibold">Incident Type</label><select name="incident_type" class="form-select"><option>Illness</option><option>Injury</option><option>Accident</option><option>Allergic Reaction</option><option>Other</option></select></div><div class="col-6"><label class="form-label fw-semibold">Severity</label><select name="severity" class="form-select"><option value="Minor">Minor</option><option value="Moderate">Moderate</option><option value="Severe">Severe</option><option value="Critical">Critical</option></select></div></div>
+<div class="mb-2"><label class="form-label fw-semibold">Symptoms</label><textarea name="symptoms" class="form-control" rows="2"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Location</label><input type="text" name="location" class="form-control" placeholder="Where did it occur?"></div>
+<div class="mb-2"><label class="form-label fw-semibold">Action Taken</label><textarea name="action_taken" class="form-control" rows="2"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Treatment Given</label><textarea name="treatment_given" class="form-control" rows="2"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Referred To</label><input type="text" name="referred_to" class="form-control" placeholder="Hospital/Clinic name"></div>
+<div class="row g-2 mb-2"><div class="col-6"><label class="form-label fw-semibold">Parent Notified</label><select name="parent_notified" class="form-select"><option value="0">No</option><option value="1">Yes</option></select></div><div class="col-6"><label class="form-label fw-semibold">Follow-up Date</label><input type="date" name="follow_up_date" class="form-control"></div></div>
+<div class="mb-3"><label class="form-label fw-semibold">Notes</label><textarea name="notes" class="form-control" rows="1"></textarea></div>
+<button type="submit" class="btn btn-danger w-100"><i class="fas fa-save me-1"></i>Report Incident</button>
+</form></div>
+<div class="health-card"><h2><i class="fas fa-phone-alt me-2 text-success"></i>Emergency Contacts</h2>
+<?php if(empty($emergency_contacts_list)):?><p class="text-muted small">No emergency contacts configured.</p>
+<?php else:?>
+<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Priority</th></tr></thead><tbody>
+<?php foreach($emergency_contacts_list as $ec):?>
+<tr><td><strong><small><?=htmlspecialchars($ec['contact_name'])?></small></strong></td><td><span class="badge bg-secondary"><?=htmlspecialchars($ec['contact_type'])?></span></td><td><small><?=htmlspecialchars($ec['phone_number'])?></small></td><td><span class="badge bg-<?=$ec['priority']==='Primary'?'danger':'info'?>"><?=htmlspecialchars($ec['priority'])?></span></td></tr>
+<?php endforeach;?>
+</tbody></table></div><?php endif;?>
+</div></div>
+<div class="col-lg-7">
+<div class="health-card"><h2><i class="fas fa-list me-2 text-danger"></i>Health Incidents</h2>
+<div class="mb-2 d-flex gap-2 flex-wrap"><input type="text" class="form-control form-control-sm" style="width:200px" placeholder="Filter..." onkeyup="filterTable('hi-tbl',1,this.value)"><select class="form-select form-select-sm" style="width:140px" onchange="filterTable('hi-tbl',3,this.value)"><option value="">All Severity</option><option value="Minor">Minor</option><option value="Moderate">Moderate</option><option value="Severe">Severe</option><option value="Critical">Critical</option></select></div>
+<div class="table-responsive" style="max-height:600px;overflow-y:auto"><table class="table table-sm table-hover align-middle" id="hi-tbl"><thead class="table-light sticky-top"><tr><th>Student</th><th>Type</th><th>Severity</th><th>Location</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<?php if(empty($health_incidents_list)):?><tr><td colspan="7" class="text-center text-muted py-4">No incidents reported.</td></tr>
+<?php else:foreach($health_incidents_list as $hi):$hisc=match($hi['severity']){'Minor'=>'bg-success','Moderate'=>'bg-warning text-dark','Severe'=>'bg-orange','Critical'=>'bg-danger',default=>'bg-secondary'};$hist=match($hi['status']){'Reported'=>'bg-warning text-dark','Under Observation'=>'bg-info text-dark','Resolved'=>'bg-success','Referred'=>'bg-primary','Closed'=>'bg-secondary',default=>'bg-secondary'};?>
+<tr><td><strong><small><?=htmlspecialchars($hi['full_name']??'Unknown')?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($hi['student_number']??'')?></small></td><td><small><?=htmlspecialchars($hi['incident_type'])?></small></td><td><span class="badge <?=$hisc?>"><?=htmlspecialchars($hi['severity'])?></span></td><td><small><?=htmlspecialchars($hi['location']??'-')?></small></td><td><small><?=date('d M Y',strtotime($hi['incident_date']))?></small></td><td><span class="badge <?=$hist?>"><?=htmlspecialchars($hi['status'])?></span></td><td><?php if($hi['status']!=='Resolved'&&$hi['status']!=='Closed'):?><form method="POST" class="d-inline" onsubmit="return confirm('Resolve this incident?')"><input type="hidden" name="action" value="resolve_incident"><input type="hidden" name="id" value="<?=$hi['id']?>"><button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button></form><?php endif;?></td></tr>
+<?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- end content-area -->
 </div><!-- end page-content -->
 <script>
 window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
@@ -511,6 +629,6 @@ function resetSickness(){document.getElementById('ed-sk-id').value='0';document.
 function editLeave(id,name,number,program,year,start,end,bed,rec){document.getElementById('ed-lv-id').value=id;document.getElementById('lv-name').value=name;document.getElementById('lv-num').value=number;document.getElementById('lv-prog').value=program;document.getElementById('lv-year').value=year;document.querySelector('[name="start_date"]').value=start;document.querySelector('[name="end_date"]').value=end;document.querySelector('[name="bed_rest_required"]').value=bed;document.querySelector('[name="recommendations"]').value=rec;document.getElementById('sec-leave').scrollIntoView({behavior:'smooth'});}
 function resetLeave(){document.getElementById('ed-lv-id').value='0';document.querySelectorAll('#sec-leave form')[0].reset();}
 function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id='+id).then(r=>r.text()).then(html=>{const w=window.open('','_blank','width=700,height=600');w.document.write('<html><head><title>Transactions: '+name+'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body class="p-4"><h4>'+name+' - Stock Transactions</h4>'+html+'<hr><button class="btn btn-sm btn-secondary" onclick="window.close()">Close</button></body></html>');}).catch(()=>alert('Could not load transactions.'));}
-document.addEventListener('DOMContentLoaded',function(){var els=['sr-name','lv-name'];els.forEach(function(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('blur',function(){searchStudents(el,id==='sr-name'?'sr-sid':'lv-sid',id==='sr-name'?'sr-num':'lv-num',id==='sr-name'?'sr-prog':'lv-prog',id==='sr-name'?'sr-year':'lv-year');});});});
+document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

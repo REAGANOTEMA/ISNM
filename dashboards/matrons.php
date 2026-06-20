@@ -543,180 +543,135 @@ if ($conn) {
                 case 'welfareCase':
                     modalTitle.textContent = 'Create Welfare Case';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="create_welfare_case">
                             <div class="mb-3">
-                                <label class="form-label">Student Name</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student</option>
-                                    <option value="mary-student">Mary Student</option>
-                                    <option value="john-student">John Student</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Case Type</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="case_type" required>
                                     <option value="">Select Case Type</option>
-                                    <option value="emotional">Emotional Support</option>
-                                    <option value="financial">Financial Support</option>
-                                    <option value="academic">Academic Issues</option>
-                                    <option value="health">Health Issues</option>
-                                    <option value="disciplinary">Disciplinary Issues</option>
+                                    <option value="Academic Support">Academic Support</option>
+                                    <option value="Personal Counseling">Personal Counseling</option>
+                                    <option value="Financial Support">Financial Support</option>
+                                    <option value="Health Issues">Health Issues</option>
+                                    <option value="Disciplinary Issues">Disciplinary Issues</option>
+                                    <option value="Homesickness">Homesickness</option>
+                                    <option value="Family Problems">Family Problems</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Priority Level</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Priority</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
+                                <select class="form-control" name="priority" required>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Urgent">Urgent</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Case Description</label>
-                                <textarea class="form-control" rows="4" required></textarea>
+                                <textarea class="form-control" name="case_description" rows="4" required></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Immediate Actions Taken</label>
-                                <textarea class="form-control" rows="3"></textarea>
+                                <textarea class="form-control" name="immediate_actions" rows="3"></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Follow up Required</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Follow up</option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
-                                </select>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="follow_up_required" id="fu" checked>
+                                <label class="form-check-label" for="fu">Follow up Required</label>
                             </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Welfare Case</button>
                         </form>
                     `;
                     break;
                 case 'scheduleSession':
                     modalTitle.textContent = 'Schedule Counseling Session';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="schedule_session">
                             <div class="mb-3">
                                 <label class="form-label">Session Type</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="session_type" required>
                                     <option value="">Select Type</option>
-                                    <option value="individual">Individual Counseling</option>
-                                    <option value="group">Group Counseling</option>
-                                    <option value="family">Family Counseling</option>
+                                    <option value="Individual">Individual Counseling</option>
+                                    <option value="Group">Group Counseling</option>
+                                    <option value="Family">Family Counseling</option>
+                                    <option value="Crisis">Crisis Intervention</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Student(s)</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student(s)</option>
-                                    <option value="mary-student">Mary Student</option>
-                                    <option value="john-student">John Student</option>
-                                    <option value="first-year-group">First Year Students</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Date</label>
-                                        <input type="date" class="form-control" required>
+                                        <input type="date" class="form-control" name="session_date" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Time</label>
-                                        <input type="time" class="form-control" required>
+                                        <input type="time" class="form-control" name="session_time" required>
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Location</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Location</option>
-                                    <option value="counseling-a">Counseling Room A</option>
-                                    <option value="counseling-b">Counseling Room B</option>
-                                    <option value="main-hall">Main Hall</option>
-                                </select>
+                                <label class="form-label">Issues Discussed</label>
+                                <textarea class="form-control" name="issues_discussed" rows="3" required></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Session Topic</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Session Notes</label>
-                                <textarea class="form-control" rows="3"></textarea>
-                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Schedule Session</button>
                         </form>
                     `;
                     break;
                 case 'healthCheck':
                     modalTitle.textContent = 'Student Health Check';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="create_health_incident">
                             <div class="mb-3">
-                                <label class="form-label">Student Name</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student</option>
-                                    <option value="sarah-student">Sarah Student</option>
-                                    <option value="peter-student">Peter Student</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Chief Complaint</label>
-                                <textarea class="form-control" rows="2" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Symptoms</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="fever">
-                                    <label class="form-check-label" for="fever">Fever</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="headache">
-                                    <label class="form-check-label" for="headache">Headache</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="nausea">
-                                    <label class="form-check-label" for="nausea">Nausea</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="fatigue">
-                                    <label class="form-check-label" for="fatigue">Fatigue</label>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Temperature (°C)</label>
-                                <input type="number" class="form-control" step="0.1">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Blood Pressure</label>
-                                <input type="text" class="form-control" placeholder="120/80">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Pulse Rate (bpm)</label>
-                                <input type="number" class="form-control">
+                                <textarea class="form-control" name="description" rows="2" required></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Assessment & Plan</label>
-                                <textarea class="form-control" rows="3" required></textarea>
+                                <textarea class="form-control" name="actions_taken" rows="3" required></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Action Required</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="incident_type" required>
                                     <option value="">Select Action</option>
-                                    <option value="observation">Observation Only</option>
-                                    <option value="medication">Administer Medication</option>
-                                    <option value="referral">Refer to Hospital</option>
-                                    <option value="parent-contact">Contact Parents</option>
+                                    <option value="Injury">Injury</option>
+                                    <option value="Illness">Illness</option>
+                                    <option value="Allergic Reaction">Allergic Reaction</option>
+                                    <option value="Mental Health">Mental Health</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
+                            <button type="submit" class="btn btn-primary w-100">Submit Health Record</button>
                         </form>
                     `;
                     break;
-                // Add more cases as needed
             }
             
             modal.show();
         }
+
+        // Save button submits the form in the modal body
+        document.getElementById('modalAction')?.addEventListener('click', function() {
+            const form = document.querySelector('#modalBody form');
+            if (form) form.submit();
+        });
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

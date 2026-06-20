@@ -2797,3 +2797,66 @@ Stack trace:
 [20-Jun-2026 22:18:08 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
 [20-Jun-2026 22:18:08 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
 [20-Jun-2026 22:18:08 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:15:40 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:15:40 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:15:40 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:15:40 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:15:40 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_staffs_db.programs' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:7
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(7): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 7
+[21-Jun-2026 01:17:34 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:17:34 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:17:34 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:17:34 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:17:34 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10
+[21-Jun-2026 01:17:37 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:17:37 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:17:37 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:17:37 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:17:37 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10
+[21-Jun-2026 01:17:41 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:17:41 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:17:41 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:17:41 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:17:41 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10
+[21-Jun-2026 01:17:44 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:17:44 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:17:44 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:17:44 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:17:44 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10
+[21-Jun-2026 01:20:38 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:20:38 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:20:38 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:20:38 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:20:38 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10
+[21-Jun-2026 01:28:28 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[21-Jun-2026 01:28:28 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[21-Jun-2026 01:28:28 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[21-Jun-2026 01:28:28 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[21-Jun-2026 01:28:28 Africa/Kampala] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'igangaschoolofl_students_db.fee_structure' doesn't exist in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php:10
+Stack trace:
+#0 C:\xampp\htdocs\ISNM\dashboards\fee-structure.php(10): mysqli->query('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\ISNM\dashboards\fee-structure.php on line 10

@@ -7,7 +7,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-  "background_color": "#fef9e7",
+  "background_color": "#f8fafc",
   "theme_color": "#1a237e",
   "categories": ["education", "medical"],
   "lang": "en-UG",

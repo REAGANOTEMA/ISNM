@@ -1,0 +1,183 @@
+<?php
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+$ctx = bootstrapStaffDashboard([]);
+$conn = $ctx['staff'];
+$user = $ctx['user'];
+
+$search = trim($_GET['search'] ?? '');
+$filterPriority = $_GET['priority'] ?? '';
+
+$total = 0; $activeCount = 0; $expiredCount = 0;
+$alerts = [];
+
+if ($conn) {
+    $total = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts")->fetch_assoc()['c'] ?? 0);
+    $activeCount = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE (expires_at IS NULL OR expires_at >= NOW()) AND is_resolved = 0")->fetch_assoc()['c'] ?? 0);
+    $expiredCount = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE expires_at IS NOT NULL AND expires_at < NOW()")->fetch_assoc()['c'] ?? 0);
+
+    $where = ["1=1"];
+    if ($search) $where[] = "(alert_title LIKE '%" . $conn->real_escape_string($search) . "%' OR alert_message LIKE '%" . $conn->real_escape_string($search) . "%')";
+    if ($filterPriority) $where[] = "priority='" . $conn->real_escape_string($filterPriority) . "'";
+    $ws = implode(' AND ', $where);
+    $r = $conn->query("SELECT * FROM institutional_alerts WHERE $ws ORDER BY created_at DESC LIMIT 100");
+    if ($r) while ($row = $r->fetch_assoc()) $alerts[] = $row;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($conn && $action === 'add_alert') {
+        $title = $conn->real_escape_string($_POST['title'] ?? '');
+        $message = $conn->real_escape_string($_POST['alert_message'] ?? '');
+        $priority = $conn->real_escape_string($_POST['priority'] ?? 'Medium');
+        $category = $conn->real_escape_string($_POST['category'] ?? 'other');
+        $expires = $conn->real_escape_string($_POST['expires_at'] ?? '');
+        $expVal = $expires ? "'$expires'" : 'NULL';
+        if ($title && $message) {
+            $conn->query("INSERT INTO institutional_alerts (alert_title, alert_message, priority, category, expires_at, created_at) VALUES ('$title', '$message', '$priority', '$category', $expVal, NOW())");
+            $_SESSION['success'] = 'Alert created and broadcast.';
+        }
+        header('Location: institutional-alerts.php');
+        exit;
+    }
+    if ($conn && $action === 'toggle_resolved') {
+        $id = (int)($_POST['id'] ?? 0);
+        $current = (int)($_POST['current'] ?? 0);
+        $newVal = $current ? 'NULL, resolved_at=NULL, resolved_by=NULL' : '1, resolved_at=NOW(), resolved_by=' . (int)($user['id'] ?? 0);
+        $conn->query("UPDATE institutional_alerts SET is_resolved=$newVal WHERE id=$id");
+        header('Location: institutional-alerts.php');
+        exit;
+    }
+    if ($conn && $action === 'delete_alert') {
+        $id = (int)($_POST['id'] ?? 0);
+        $conn->query("DELETE FROM alert_recipients WHERE alert_id=$id");
+        $conn->query("DELETE FROM institutional_alerts WHERE id=$id");
+        $_SESSION['success'] = 'Alert deleted.';
+        header('Location: institutional-alerts.php');
+        exit;
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+.priority-Low { background:#e3f2fd;color:#1565c0; }
+.priority-Medium { background:#fff8e1;color:#f9a825; }
+.priority-High { background:#fbe9e7;color:#d84315; }
+.priority-Critical { background:#ffebee;color:#c62828; }
+.status-active { background:#e8f5e9;color:#2e7d32; }
+.status-expired { background:#f5f5f5;color:#616161; }
+.status-resolved { background:#ede7f6;color:#4527a0; }
+.alert-row td { vertical-align:middle; }
+</style>
+</head>
+<body>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="main-content" style="margin-left:270px;padding:20px;background:#f0f2f5;min-height:100vh;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center page-header">
+            <h4 class="fw-bold mb-0"><i class="fas fa-broadcast-tower me-2"></i>Institutional Alerts</h4>
+            <div>
+                <span class="text-muted small me-3"><?= date('l, d M Y') ?></span>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAlertModal"><i class="fas fa-plus me-1"></i>New Alert</button>
+            </div>
+        </div>
+
+        <?php if (!empty($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show mt-3"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php unset($_SESSION['success']); endif; ?>
+
+        <div class="row g-3 mt-2">
+            <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body text-center"><div class="fs-1 text-primary mb-2"><i class="fas fa-broadcast-tower"></i></div><h3 class="fw-bold mb-0"><?= $total ?></h3><small class="text-muted">Total Alerts</small></div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body text-center"><div class="fs-1 text-success mb-2"><i class="fas fa-check-circle"></i></div><h3 class="fw-bold mb-0"><?= $activeCount ?></h3><small class="text-muted">Active</small></div></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body text-center"><div class="fs-1 text-secondary mb-2"><i class="fas fa-clock"></i></div><h3 class="fw-bold mb-0"><?= $expiredCount ?></h3><small class="text-muted">Expired</small></div></div></div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center py-3">
+                <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i>Alerts</h5>
+                <form method="GET" class="d-flex flex-wrap gap-2">
+                    <input type="text" name="search" class="form-control form-control-sm" style="width:200px" placeholder="Search alerts..." value="<?= htmlspecialchars($search) ?>">
+                    <select name="priority" class="form-select form-select-sm" style="width:auto">
+                        <option value="">All Priorities</option>
+                        <?php foreach (['Low', 'Medium', 'High', 'Critical'] as $p): ?>
+                        <option value="<?= $p ?>" <?= $filterPriority === $p ? 'selected' : '' ?>><?= $p ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary"><i class="fas fa-search"></i></button>
+                    <a href="institutional-alerts.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
+                </form>
+            </div>
+            <div class="card-body p-0">
+                <?php if (empty($alerts)): ?>
+                <div class="text-center py-5"><i class="fas fa-broadcast-tower fa-3x mb-3 text-muted" style="opacity:.3;"></i><p class="text-muted">No alerts yet. Create the first broadcast alert.</p></div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($alerts as $a):
+                                $isExpired = $a['expires_at'] && strtotime($a['expires_at']) < time();
+                                if ($a['is_resolved']) { $status = 'resolved'; $statusLabel = 'Resolved'; }
+                                elseif ($isExpired) { $status = 'expired'; $statusLabel = 'Expired'; }
+                                else { $status = 'active'; $statusLabel = 'Active'; }
+                            ?>
+                            <tr class="alert-row">
+                                <td class="fw-semibold"><?= htmlspecialchars($a['alert_title'] ?? $a['title'] ?? '') ?></td>
+                                <td><div style="max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($a['alert_message'] ?? '') ?></div></td>
+                                <td><span class="badge priority-<?= $a['priority'] ?>"><?= htmlspecialchars($a['priority']) ?></span></td>
+                                <td><span class="badge status-<?= $status ?>"><?= $statusLabel ?></span></td>
+                                <td class="small"><?= date('d M Y H:i', strtotime($a['created_at'])) ?></td>
+                                <td class="small"><?= $a['expires_at'] ? date('d M Y', strtotime($a['expires_at'])) : '—' ?></td>
+                                <td class="text-end">
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('<?= $a['is_resolved'] ? 'Reactivate' : 'Deactivate' ?> this alert?')">
+                                        <input type="hidden" name="action" value="toggle_resolved">
+                                        <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                                        <input type="hidden" name="current" value="<?= $a['is_resolved'] ?>">
+                                        <button class="btn btn-sm btn-outline-<?= $a['is_resolved'] ? 'success' : 'secondary' ?> py-0 px-1" title="<?= $a['is_resolved'] ? 'Activate' : 'Deactivate' ?>"><i class="fas fa-<?= $a['is_resolved'] ? 'eye' : 'eye-slash' ?>"></i></button>
+                                    </form>
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('Delete this alert permanently?')">
+                                        <input type="hidden" name="action" value="delete_alert">
+                                        <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                                        <button class="btn btn-sm btn-outline-danger py-0 px-1" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Alert Modal -->
+<div class="modal fade" id="addAlertModal" tabindex="-1"><div class="modal-dialog modal-lg"><form method="POST" class="modal-content"><input type="hidden" name="action" value="add_alert">
+<div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-broadcast-tower me-2"></i>Broadcast New Alert</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+<div class="modal-body"><div class="row g-3">
+    <div class="col-12"><label class="form-label fw-semibold">Alert Title *</label><input type="text" name="title" class="form-control" required maxlength="255" placeholder="e.g. System Maintenance"></div>
+    <div class="col-12"><label class="form-label fw-semibold">Alert Message *</label><textarea name="alert_message" class="form-control" rows="4" required placeholder="Describe the alert details..."></textarea></div>
+    <div class="col-md-4"><label class="form-label fw-semibold">Priority</label><select name="priority" class="form-select"><?php foreach (['Low', 'Medium', 'High', 'Critical'] as $p): ?><option value="<?= $p ?>" <?= $p === 'Medium' ? 'selected' : '' ?>><?= $p ?></option><?php endforeach; ?></select></div>
+    <div class="col-md-4"><label class="form-label fw-semibold">Category</label><select name="category" class="form-select"><?php foreach (['attendance', 'academic', 'finance', 'admissions', 'system', 'staff', 'compliance', 'approval', 'other'] as $c): ?><option value="<?= $c ?>" <?= $c === 'other' ? 'selected' : '' ?>><?= ucfirst($c) ?></option><?php endforeach; ?></select></div>
+    <div class="col-md-4"><label class="form-label">Expires At</label><input type="date" name="expires_at" class="form-control"></div>
+</div></div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Broadcast Alert</button></div>
+</form></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</body>
+</html>

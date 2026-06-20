@@ -7,11 +7,11 @@ $user = $ctx['user'];
 $pageTitle = 'Fuel & Trip Management';
 
 $fuel = [];
-$r = $conn->query("SELECT * FROM fuel_management ORDER BY refuel_date DESC LIMIT 100");
+$r = $conn->query("SELECT f.*, v.vehicle_name FROM fuel_management f LEFT JOIN vehicles v ON f.vehicle_id=v.id ORDER BY f.fueling_date DESC LIMIT 100");
 if ($r) while ($row = $r->fetch_assoc()) $fuel[] = $row;
 
 $trips = [];
-$r2 = $conn->query("SELECT * FROM trip_logs ORDER BY trip_date DESC LIMIT 100");
+$r2 = $conn->query("SELECT t.*, v.vehicle_name, s.full_name AS driver_name FROM trip_logs t LEFT JOIN vehicles v ON t.vehicle_id=v.id LEFT JOIN staff s ON t.driver_id=s.id ORDER BY t.trip_date DESC LIMIT 100");
 if ($r2) while ($row = $r2->fetch_assoc()) $trips[] = $row;
 
 $vehicles = [];
@@ -21,7 +21,7 @@ if ($r3) while ($row = $r3->fetch_assoc()) $vehicles[] = $row;
 $totalFuel = count($fuel);
 $totalTrips = count($trips);
 $totalVehicles = count($vehicles);
-$fuelCost = array_sum(array_column($fuel, 'cost'));
+$fuelCost = array_sum(array_column($fuel, 'total_cost'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,8 +48,8 @@ $fuelCost = array_sum(array_column($fuel, 'cost'));
                     <ul class="list-group">
                         <?php foreach ($vehicles as $v): ?>
                         <li class="list-group-item d-flex justify-content-between">
-                            <?= htmlspecialchars($v['vehicle_name'] ?? $v['registration'] ?? '-') ?>
-                            <span class="badge bg-<?= ($v['status'] ?? 'active') === 'active' ? 'success' : 'secondary' ?>"><?= $v['status'] ?? 'active' ?></span>
+                            <?= htmlspecialchars($v['vehicle_name'] ?? $v['license_plate'] ?? '-') ?>
+                            <span class="badge bg-<?= ($v['status'] ?? 'Available') === 'Available' ? 'success' : 'secondary' ?>"><?= $v['status'] ?? 'Available' ?></span>
                         </li>
                         <?php endforeach; ?>
                         <?php if (empty($vehicles)): ?><li class="list-group-item text-center">No vehicles</li><?php endif; ?>
@@ -67,10 +67,10 @@ $fuelCost = array_sum(array_column($fuel, 'cost'));
                             <tbody>
                                 <?php foreach (array_slice($fuel, 0, 10) as $f): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($f['vehicle'] ?? $f['vehicle_name'] ?? '-') ?></td>
-                                    <td><?= $f['liters'] ?? $f['quantity'] ?? '-' ?></td>
-                                    <td><?= number_format($f['cost'] ?? $f['amount'] ?? 0, 0) ?></td>
-                                    <td><?= $f['refuel_date'] ?? $f['created_at'] ?? '-' ?></td>
+                                    <td><?= htmlspecialchars($f['vehicle_name'] ?? $f['vehicle'] ?? '-') ?></td>
+                                    <td><?= number_format($f['fuel_quantity'] ?? 0, 1) ?></td>
+                                    <td><?= number_format($f['total_cost'] ?? 0, 0) ?></td>
+                                    <td><?= $f['fueling_date'] ?? $f['created_at'] ?? '-' ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($fuel)): ?><tr><td colspan="4" class="text-center">No fuel records</td></tr><?php endif; ?>
@@ -90,9 +90,9 @@ $fuelCost = array_sum(array_column($fuel, 'cost'));
                             <tbody>
                                 <?php foreach (array_slice($trips, 0, 10) as $t): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($t['vehicle'] ?? $t['vehicle_name'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($t['driver_name'] ?? $t['driver'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($t['destination'] ?? $t['route'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($t['vehicle_name'] ?? $t['vehicle'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($t['driver_name'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($t['route_name'] ?? $t['end_location'] ?? '-') ?></td>
                                     <td><?= $t['trip_date'] ?? $t['created_at'] ?? '-' ?></td>
                                 </tr>
                                 <?php endforeach; ?>

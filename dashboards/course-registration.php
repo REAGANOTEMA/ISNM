@@ -2,16 +2,18 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
-$conn = getStaffConnection();
+$staffConn = getStaffConnection();
+$studentsConn = getStudentsConnection();
+$conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Course Registration';
 
 $total = 0; $thisSemester = 0; $pending = 0; $completed = 0;
 $registrations = [];
 if ($conn) {
-    $total = $conn->query("SELECT COUNT(*) c FROM course_registrations")->fetch_assoc()['c'] ?? 0;
-    $thisSemester = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE semester LIKE CONCAT('%', QUARTER(CURDATE()), '%') OR created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)")->fetch_assoc()['c'] ?? 0;
-    $pending = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Registered'")->fetch_assoc()['c'] ?? 0;
-    $completed = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Completed'")->fetch_assoc()['c'] ?? 0;
+    $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations"); if ($qr) $total = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE semester LIKE CONCAT('%', QUARTER(CURDATE()), '%') OR created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)"); if ($qr) $thisSemester = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Registered'"); if ($qr) $pending = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM course_registrations WHERE status='Completed'"); if ($qr) $completed = (int)$qr->fetch_assoc()['c'];
     $r = $conn->query("SELECT cr.*, CONCAT(s.first_name,' ',s.last_name) student_name, cc.course_title course_name FROM course_registrations cr LEFT JOIN students s ON cr.student_id=s.id LEFT JOIN academic_course_catalog cc ON cr.course_code=cc.course_code ORDER BY cr.created_at DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $registrations[] = $row;
 }

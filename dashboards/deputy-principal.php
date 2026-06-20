@@ -128,8 +128,7 @@ if ($ajax && $ajaxSid > 0) {
 if ($ajax && $ajaxPid > 0) {
     header('Content-Type: application/json');
     if ($ajax === 'program_courses') {
-        $prog=$conn->query("SELECT program_code FROM academic_programs WHERE id=$ajaxPid")->fetch_assoc();
-        $code=$prog['program_code']??'';
+        $qrProg=$conn->query("SELECT program_code FROM academic_programs WHERE id=$ajaxPid"); $prog=$qrProg?$qrProg->fetch_assoc():[]; $code=$prog['program_code']??'';
         $data=[];$r=$conn->query("SELECT id,course_code,course_title,credits,year_of_study,semester FROM academic_course_catalog WHERE program_code='$code' ORDER BY year_of_study,semester,course_code");
         if($r) while($row=$r->fetch_assoc()) $data[]=$row;
         echo json_encode($data); exit;

@@ -40,12 +40,30 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
-// Get security tasks progress
-$security_tasks = [];
+// Get emergency contacts
+$emergency_contacts = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM security_tasks WHERE assigned_date=CURDATE() OR status='In Progress' ORDER BY priority LIMIT 5");
-        if ($r) $security_tasks = $r->fetch_all(MYSQLI_ASSOC);
+        $r = $conn->query("SELECT * FROM security_emergency_contacts WHERE is_active=1 ORDER BY contact_type");
+        if ($r) $emergency_contacts = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get equipment maintenance status
+$equipment_due = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM security_equipment WHERE status!='Retired' AND (next_maintenance_date <= CURDATE() OR next_maintenance_date IS NULL) ORDER BY next_maintenance_date ASC LIMIT 5");
+        if ($r) $equipment_due = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+$today_visitors = []; $visitor_count = 0;
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM security_visitors WHERE visit_date = CURDATE() ORDER BY expected_arrival ASC LIMIT 20");
+        if ($r) $today_visitors = $r->fetch_all(MYSQLI_ASSOC);
+        $visitor_count = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE visit_date = CURDATE()")->fetch_row()[0] ?? 0;
     } catch (Exception $e) {}
 }
 ?>
@@ -158,19 +176,49 @@ if ($conn) {
             </div>
             <div class="col-md-6">
                 <div class="security-alert">
-                    <h3><i class="fas fa-tasks"></i> Security Tasks</h3>
-                    <?php if (empty($security_tasks)): ?>
-                    <div class="text-center text-muted py-3">No tasks assigned for today</div>
+                    <h3><i class="fas fa-tasks"></i> Equipment Status</h3>
+                    <?php if (empty($equipment_due)): ?>
+                    <div class="text-center text-muted py-3">All equipment is up to date</div>
                     <?php else: ?>
-                    <?php foreach ($security_tasks as $task): $prog = min(100, max(0, (int)($task['progress'] ?? 0))); ?>
+                    <?php foreach ($equipment_due as $eq): ?>
                     <div class="alert-item">
-                        <h6><?= htmlspecialchars($task['title'] ?? $task['task_name'] ?? 'Task') ?></h6>
-                        <small class="text-muted"><?= htmlspecialchars($task['description'] ?? '') ?></small>
-                        <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-<?= $prog >= 80 ? 'success' : ($prog >= 40 ? 'warning' : 'info') ?>" style="width: <?= $prog ?>%"><?= $prog ?>%</div>
+                        <h6><?= htmlspecialchars($eq['equipment_name'] ?? 'Equipment') ?></h6>
+                        <small class="text-muted"><?= htmlspecialchars($eq['equipment_type'] ?? '') ?> @ <?= htmlspecialchars($eq['location'] ?? '') ?></small>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="badge bg-<?= $eq['status']==='Operational'?'success':($eq['status']==='Under Maintenance'?'warning text-dark':'danger') ?>"><?= htmlspecialchars($eq['status']) ?></span>
+                            <small class="text-muted">Next maint: <?= $eq['next_maintenance_date'] ?? 'Not set' ?></small>
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="security-alert">
+                    <h3><i class="fas fa-address-book"></i> Today's Visitors (<?= $visitor_count ?>)</h3>
+                    <?php if (empty($today_visitors)): ?>
+                    <div class="text-center text-muted py-3">No visitors scheduled for today</div>
+                    <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead><tr><th>Name</th><th>Phone</th><th>Nature</th><th>Person to Visit</th><th>Arrival</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <?php foreach ($today_visitors as $v): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($v['visitor_name']) ?></strong></td>
+                                <td><small><?= htmlspecialchars($v['visitor_phone'] ?? '-') ?></small></td>
+                                <td><span class="badge bg-info"><?= htmlspecialchars($v['visitor_nature']) ?></span></td>
+                                <td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td>
+                                <td><small><?= !empty($v['expected_arrival']) ? date('g:i A', strtotime($v['expected_arrival'])) : '-' ?></small></td>
+                                <td><span class="badge bg-<?= match($v['status']){'Checked In'=>'success','On Campus'=>'primary','Checked Out'=>'secondary','Scheduled'=>'warning','No Show'=>'danger',default=>'secondary'} ?>"><?= htmlspecialchars($v['status']) ?></span></td>
+                            </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -183,27 +231,110 @@ if ($conn) {
                     <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
                     <div class="row">
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-danger w-100">
+                            <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#emergencyModal">
                                 <i class="fas fa-phone"></i> Emergency Contact
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-warning w-100">
+                            <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#incidentModal">
                                 <i class="fas fa-exclamation-triangle"></i> Report Incident
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-info w-100">
-                                <i class="fas fa-video"></i> View Cameras
+                            <button class="btn btn-info w-100" onclick="document.getElementById('cameraSection').scrollIntoView({behavior:'smooth'})">
+                                <i class="fas fa-video"></i> View Equipment
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-success w-100">
+                            <button class="btn btn-success w-100" onclick="window.print()">
                                 <i class="fas fa-clipboard"></i> Daily Report
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contacts Modal -->
+    <div class="modal fade" id="emergencyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-phone-alt me-2"></i>Emergency Contacts</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if (empty($emergency_contacts)): ?>
+                    <p class="text-muted">No emergency contacts configured.</p>
+                    <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Email</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($emergency_contacts as $ec): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($ec['contact_name']) ?></td>
+                                    <td><span class="badge bg-danger"><?= htmlspecialchars($ec['contact_type']) ?></span></td>
+                                    <td><a href="tel:<?= htmlspecialchars($ec['phone_number']) ?>"><?= htmlspecialchars($ec['phone_number']) ?></a></td>
+                                    <td><?= htmlspecialchars($ec['email'] ?? '-') ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Incident Modal -->
+    <div class="modal fade" id="incidentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="../handlers/security_handler.php">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Report Incident</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="report_incident">
+                        <div class="mb-3">
+                            <label class="form-label">Incident Type</label>
+                            <select class="form-select" name="incident_type" required>
+                                <option value="">Select...</option>
+                                <option value="Unauthorized Access">Unauthorized Access</option>
+                                <option value="Theft">Theft</option>
+                                <option value="Vandalism">Vandalism</option>
+                                <option value="Assault">Assault</option>
+                                <option value="Parking Violation">Parking Violation</option>
+                                <option value="Emergency">Emergency</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <input class="form-control" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Severity</label>
+                            <select class="form-select" name="severity">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> Submit Report</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

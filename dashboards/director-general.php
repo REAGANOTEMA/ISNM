@@ -1206,7 +1206,7 @@ window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 100
 function viewFullProfile(id){ showStudentProfileModal(id); }
 function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }
 function viewAcademic(id){ window.location.href='../academic_records_management.php?student_id='+id; }
-function viewFees(id){ window.location.href='../bursar_student_fees.php?id='+id; }
+function viewFees(id){ window.location.href='../dashboards/school-bursar.php?section=record_payment&student_id='+id; }
 function sendMessage(id){ alert('Messaging module for student ID: '+id); }
 function printProfile(){ window.print(); }
 </script>

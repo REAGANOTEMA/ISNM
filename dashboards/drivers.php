@@ -19,18 +19,39 @@ $upcoming_trips = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM trip_logs W
 $total_vehicles = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM vehicles")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_routes = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM route_schedules WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// Get recent trips
-$recent_trips = [];
+// Get today's trips with vehicle and driver info
+$today_trips = [];
 if ($conn) {
     try {
-        $result = $conn->query("SELECT vehicle, driver_name, destination, departure_time, status FROM fleet_management ORDER BY departure_time DESC LIMIT 10");
+        $result = $conn->query("SELECT t.*, v.vehicle_name, v.license_plate, s.full_name AS driver_full_name FROM trip_logs t LEFT JOIN vehicles v ON t.vehicle_id=v.id LEFT JOIN staff s ON t.driver_id=s.id WHERE t.trip_date=CURDATE() ORDER BY t.departure_time");
         if ($result) {
             while ($row = $result->fetch_assoc()) {
-                $recent_trips[] = $row;
+                $today_trips[] = $row;
             }
         }
     } catch (Exception $e) {}
 }
+
+// Get route schedules
+$routes = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT rs.*, v.vehicle_name, s.full_name AS driver_name FROM route_schedules rs LEFT JOIN vehicles v ON rs.vehicle_id=v.id LEFT JOIN staff s ON rs.driver_id=s.id WHERE rs.status='Active' ORDER BY rs.departure_time");
+        if ($r) $routes = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get vehicle maintenance status
+$vehicle_statuses = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM vehicles ORDER BY vehicle_name");
+        if ($r) $vehicle_statuses = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+$morning_routes = array_filter($routes, fn($rt) => $rt['route_type']==='Morning' || $rt['route_type']==='Both');
+$evening_routes = array_filter($routes, fn($rt) => $rt['route_type']==='Evening' || $rt['route_type']==='Both');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -103,107 +124,92 @@ if ($conn) {
             <div class="row">
                 <div class="col-md-6">
                     <h5>Morning Routes</h5>
+                    <?php if (empty($morning_routes)): ?>
+                    <div class="route-item"><div class="text-muted text-center py-2">No morning routes scheduled</div></div>
+                    <?php else: ?>
+                    <?php foreach ($morning_routes as $rt): ?>
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Route 1: Iganga Town</h6>
-                                <small class="text-muted">Departure: 6:30 AM | Driver: John Smith</small>
+                                <h6><?= htmlspecialchars($rt['route_name']) ?></h6>
+                                <small class="text-muted">Departure: <?= date('g:i A', strtotime($rt['departure_time'])) ?> | Driver: <?= htmlspecialchars($rt['driver_name'] ?? 'Unassigned') ?></small>
                             </div>
-                            <span class="vehicle-status status-available">Available</span>
+                            <span class="vehicle-status status-available"><?= htmlspecialchars($rt['status']) ?></span>
                         </div>
                     </div>
-                    <div class="route-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Route 2: Jinja Road</h6>
-                                <small class="text-muted">Departure: 6:45 AM | Driver: Michael Johnson</small>
-                            </div>
-                            <span class="vehicle-status status-busy">In Transit</span>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-6">
                     <h5>Evening Routes</h5>
+                    <?php if (empty($evening_routes)): ?>
+                    <div class="route-item"><div class="text-muted text-center py-2">No evening routes scheduled</div></div>
+                    <?php else: ?>
+                    <?php foreach ($evening_routes as $rt): ?>
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Route 1: Iganga Town</h6>
-                                <small class="text-muted">Departure: 5:00 PM | Driver: John Smith</small>
+                                <h6><?= htmlspecialchars($rt['route_name']) ?></h6>
+                                <small class="text-muted">Departure: <?= date('g:i A', strtotime($rt['departure_time'])) ?> | Driver: <?= htmlspecialchars($rt['driver_name'] ?? 'Unassigned') ?></small>
                             </div>
-                            <span class="vehicle-status status-available">Scheduled</span>
+                            <span class="vehicle-status status-available"><?= htmlspecialchars($rt['status']) ?></span>
                         </div>
                     </div>
-                    <div class="route-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Route 2: Jinja Road</h6>
-                                <small class="text-muted">Departure: 5:15 PM | Driver: Michael Johnson</small>
-                            </div>
-                            <span class="vehicle-status status-available">Scheduled</span>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <!-- Vehicle Status -->
+        <!-- Vehicle Status & Today's Trips -->
         <div class="row">
             <div class="col-md-6">
                 <div class="transport-schedule">
                     <h3><i class="fas fa-bus"></i> Vehicle Status</h3>
+                    <?php if (empty($vehicle_statuses)): ?>
+                    <div class="route-item"><div class="text-muted text-center py-2">No vehicles registered</div></div>
+                    <?php else: ?>
+                    <?php foreach ($vehicle_statuses as $v): 
+                        $vstat = strtolower($v['status'] ?? 'available');
+                        $vclass = $vstat==='available'?'status-available':($vstat==='in use'?'status-busy':'status-maintenance');
+                    ?>
                     <div class="route-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6>Bus 1 , Toyota Coaster</h6>
-                                <small class="text-muted">Capacity: 30 | License: UAB 123A</small>
+                                <h6><?= htmlspecialchars($v['vehicle_name']) ?> (<?= htmlspecialchars($v['vehicle_type']) ?>)</h6>
+                                <small class="text-muted">Capacity: <?= $v['capacity'] ?> | License: <?= htmlspecialchars($v['license_plate']) ?></small>
                             </div>
-                            <span class="vehicle-status status-available">Available</span>
+                            <span class="vehicle-status <?= $vclass ?>"><?= htmlspecialchars($v['status']) ?></span>
                         </div>
                     </div>
-                    <div class="route-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Bus 2 , Nissan Civilian</h6>
-                                <small class="text-muted">Capacity: 25 | License: UAB 456B</small>
-                            </div>
-                            <span class="vehicle-status status-busy">In Use</span>
-                        </div>
-                    </div>
-                    <div class="route-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Van 1 , Toyota Hiace</h6>
-                                <small class="text-muted">Capacity: 15 | License: UAB 789C</small>
-                            </div>
-                            <span class="vehicle-status status-maintenance">Maintenance</span>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="transport-schedule">
-                    <h3><i class="fas fa-tasks"></i> Driver Tasks</h3>
+                    <h3><i class="fas fa-tasks"></i> Today's Trips</h3>
+                    <?php if (empty($today_trips)): ?>
+                    <div class="route-item"><div class="text-muted text-center py-2">No trips scheduled for today</div></div>
+                    <?php else: ?>
+                    <?php foreach ($today_trips as $t): 
+                        $tstat = strtolower($t['status'] ?? 'scheduled');
+                        $prog = $tstat==='completed'?100:($tstat==='in transit'?60:($tstat==='scheduled'?10:0));
+                    ?>
                     <div class="route-item">
-                        <h6>Daily Vehicle Check</h6>
-                        <small class="text-muted">Complete pre trip inspection checklist</small>
+                        <h6><?= htmlspecialchars($t['route_name'] ?? $t['start_location'].' → '.$t['end_location']) ?></h6>
+                        <small class="text-muted">
+                            <?= htmlspecialchars($t['vehicle_name'] ?? 'Unknown vehicle') ?> | 
+                            Driver: <?= htmlspecialchars($t['driver_full_name'] ?? 'Unassigned') ?> | 
+                            <?= date('g:i A', strtotime($t['departure_time'])) ?>
+                        </small>
                         <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                            <div class="progress-bar bg-<?= $prog>=80?'success':($prog>=40?'warning':'info') ?>" style="width: <?= $prog ?>%"></div>
                         </div>
+                        <small class="text-muted">Status: <?= htmlspecialchars($t['status']) ?> | Passengers: <?= $t['passengers_count'] ?? 0 ?></small>
                     </div>
-                    <div class="route-item">
-                        <h6>Student Pickup List</h6>
-                        <small class="text-muted">Verify student attendance for all routes</small>
-                        <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-warning" style="width: 60%"></div>
-                        </div>
-                    </div>
-                    <div class="route-item">
-                        <h6>Fuel Management</h6>
-                        <small class="text-muted">Log fuel consumption and refueling</small>
-                        <div class="progress mt-2" style="height: 5px;">
-                            <div class="progress-bar bg-info" style="width: 40%"></div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

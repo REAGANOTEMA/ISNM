@@ -2,16 +2,18 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
-$conn = getStaffConnection();
+$staffConn = getStaffConnection();
+$studentsConn = getStudentsConnection();
+$conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Clinical Placement';
 
 $total = 0; $active = 0; $completed = 0; $upcoming = 0;
 $placements = [];
 if ($conn) {
-    $total = $conn->query("SELECT COUNT(*) c FROM clinical_placements")->fetch_assoc()['c'] ?? 0;
-    $active = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status IN('In Progress','Scheduled')")->fetch_assoc()['c'] ?? 0;
-    $completed = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Completed'")->fetch_assoc()['c'] ?? 0;
-    $upcoming = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Scheduled' AND start_date > CURDATE()")->fetch_assoc()['c'] ?? 0;
+    $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements"); if ($qr) $total = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status IN('In Progress','Scheduled')"); if ($qr) $active = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Completed'"); if ($qr) $completed = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Scheduled' AND start_date > CURDATE()"); if ($qr) $upcoming = (int)$qr->fetch_assoc()['c'];
     $r = $conn->query("SELECT cp.*, CONCAT(s.first_name,' ',s.last_name) student_name, s.program FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id ORDER BY cp.start_date DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $placements[] = $row;
 }

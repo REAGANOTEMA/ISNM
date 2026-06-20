@@ -51,7 +51,7 @@ if (!empty($_SESSION['user_id'])) {
 <link rel="apple-touch-icon" sizes="144x144"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
 <link rel="apple-touch-icon" sizes="152x152"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
 <link rel="apple-touch-icon" sizes="180x180"       href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
-<link rel="manifest"                               href="/ISNM/manifest.json?v=<?= $v ?>">
+<link rel="manifest"                               href="<?= $rootPath ?>/manifest.json?v=<?= $v ?>">
 
 <!-- Bootstrap 5.3 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css?v=<?= $v ?>" rel="stylesheet">
@@ -63,9 +63,19 @@ if (!empty($_SESSION['user_id'])) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-style.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Mobile dashboard styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Modern UI enhancement styles -->
+<link href="<?= $rootPath ?>/css/modern-ui.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>
 <!-- Chart.js 4.x for dashboard analytics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Dashboard Analytics Engine (Chart.js + AI) -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-charts.js?v=<?= $v ?>" defer></script>
+<!-- Service Worker Registration for PWA -->
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>')
+        .then(function(reg) { console.log('SW registered:', reg.scope); })
+        .catch(function(err) { console.warn('SW registration failed:', err); });
+}
+</script>

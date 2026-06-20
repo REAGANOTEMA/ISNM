@@ -16,7 +16,7 @@ $ajax = $_GET['ajax'] ?? '';
 $id = (int)($_GET['id'] ?? 0);
 $q = $_GET['q'] ?? '';
 
-$db = $students ?: $staff;
+$db = $students;
 
 // ── AJAX Endpoints ────────────────────────────────────────────────────
 

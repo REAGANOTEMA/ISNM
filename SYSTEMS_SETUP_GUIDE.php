@@ -415,39 +415,25 @@ mysql -u username -p database_name < sql/staffs/hr_system.sql
                 <h2>📁 File Structure</h2>
                 
                 <div class="subsection">
-                    <h3>Bursar System Files</h3>
+                    <h3>Bursar System</h3>
                     <ul>
-                        <li><code>bursar_login.php</code> - Login page</li>
-                        <li><code>bursar_dashboard.php</code> - Main dashboard (Professional UI)</li>
+                        <li><code>staff-login.php</code> - Staff login (all roles)</li>
+                        <li><code>dashboards/school-bursar.php</code> - Unified Bursar Dashboard with sections: overview, record_payment, generate_invoice, fee_structure, student_statement, receipt_print, financial_reports, budget, daily_collections</li>
                         <li><code>bursar_setup.php</code> - System initialization</li>
                         <li><code>bursar_logout.php</code> - Logout handler</li>
-                        <li><code>bursar_payments.php</code> - Payment recording</li>
-                        <li><code>bursar_student_fees.php</code> - Fee management</li>
-                        <li><code>bursar_invoices.php</code> - Invoice management</li>
-                        <li><code>bursar_receipts.php</code> - Receipt management</li>
-                        <li><code>bursar_reports.php</code> - Financial reports</li>
-                        <li><code>bursar_budgets.php</code> - Budget management</li>
-                        <li><code>bursar_settings.php</code> - System settings</li>
                     </ul>
+                    <p><em>Legacy standalone bursar files have been consolidated into the unified <code>dashboards/school-bursar.php</code> dashboard.</em></p>
                 </div>
                 
                 <div class="subsection">
-                    <h3>HR System Files</h3>
+                    <h3>HR System</h3>
                     <ul>
-                        <li><code>hr_login.php</code> - Login page</li>
-                        <li><code>hr_dashboard.php</code> - Main dashboard (Professional UI)</li>
+                        <li><code>staff-login.php</code> - Staff login (all roles)</li>
+                        <li><code>dashboards/hr-manager.php</code> - Unified HR Dashboard with sections: overview, staff-records, attendance, leave, payroll, performance, training, recruitment, contracts, disciplinary, communications, reports</li>
                         <li><code>hr_setup.php</code> - System initialization</li>
                         <li><code>hr_logout.php</code> - Logout handler</li>
-                        <li><code>hr_staff_records.php</code> - Staff records management</li>
-                        <li><code>hr_recruitment.php</code> - Recruitment module</li>
-                        <li><code>hr_attendance.php</code> - Attendance tracking</li>
-                        <li><code>hr_leave.php</code> - Leave management</li>
-                        <li><code>hr_payroll.php</code> - Payroll support</li>
-                        <li><code>hr_performance.php</code> - Performance management</li>
-                        <li><code>hr_training.php</code> - Training & development</li>
-                        <li><code>hr_reports.php</code> - HR reports</li>
-                        <li><code>hr_settings.php</code> - System settings</li>
                     </ul>
+                    <p><em>Legacy standalone HR files have been consolidated into the unified <code>dashboards/hr-manager.php</code> dashboard.</em></p>
                 </div>
                 
                 <div class="subsection">

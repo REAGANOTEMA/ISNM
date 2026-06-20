@@ -30,6 +30,24 @@ try {
     error_log('head-nursing stats: ' . $e->getMessage());
 }
 
+// Get nursing students
+$nursing_students = [];
+if ($ctx['students']) {
+    try {
+        $r = $ctx['students']->query("SELECT id, first_name, surname, program, current_year, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 50");
+        if ($r) $nursing_students = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get programs
+$programs_data = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT program_name, duration, (SELECT COUNT(*) FROM igangaschoolofl_students_db.students WHERE program LIKE CONCAT('%', program_name, '%')) AS enrolled FROM academic_programs WHERE department LIKE '%Nursing%' AND status='Active'");
+        if ($r) $programs_data = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
 // Get recent activities
 $recent_activities = [];
 if ($conn) {
@@ -144,24 +162,19 @@ if ($conn) {
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php if (empty($nursing_students)): ?>
+                                <tr><td colspan="5" class="text-center text-muted">No nursing students found</td></tr>
+                                <?php else: ?>
+                                <?php foreach ($nursing_students as $s): ?>
                                 <tr>
-                                    <td>Namatovu Sarah</td>
-                                    <td>Certificate in Nursing</td>
-                                    <td>Year 2</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">View</button>
-                                    </td>
+                                    <td><?= htmlspecialchars($s['first_name'] . ' ' . $s['surname']) ?></td>
+                                    <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
+                                    <td>Year <?= htmlspecialchars($s['current_year'] ?? '?') ?></td>
+                                    <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
+                                    <td><button class="btn btn-sm btn-outline-primary">View</button></td>
                                 </tr>
-                                <tr>
-                                    <td>Okello John</td>
-                                    <td>Diploma in Nursing</td>
-                                    <td>Year 3</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">View</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -171,29 +184,23 @@ if ($conn) {
                 <section id="programs" class="content-section dashboard-section" data-section="programs">
                     <h2><i class="fas fa-book me-2"></i>Program Management</h2>
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+                        <?php if (empty($programs_data)): ?>
+                        <div class="stat-card"><p class="text-muted text-center">No nursing programs found</p></div>
+                        <?php else: ?>
+                        <?php foreach ($programs_data as $p): $enrolled = (int)($p['enrolled'] ?? 0); ?>
                         <div class="stat-card">
-                            <h3 class="fw-bold">Certificate in Nursing</h3>
-                            <p class="text-muted mb-2">2 Year Program</p>
+                            <h3 class="fw-bold"><?= htmlspecialchars($p['program_name'] ?? 'Program') ?></h3>
+                            <p class="text-muted mb-2"><?= htmlspecialchars($p['duration'] ?? 'N/A') ?></p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Enrolled:</span>
-                                <strong>85 Students</strong>
+                                <strong><?= $enrolled ?> Students</strong>
                             </div>
                             <div class="progress mt-2" style="height: 8px;">
-                                <div class="progress-bar bg-success" style="width: 70%"></div>
+                                <div class="progress-bar bg-<?= $enrolled > 50 ? 'success' : ($enrolled > 20 ? 'info' : 'warning') ?>" style="width: <?= min(100, $enrolled) ?>%"></div>
                             </div>
                         </div>
-                        
-                        <div class="stat-card">
-                            <h3 class="fw-bold">Diploma in Nursing</h3>
-                            <p class="text-muted mb-2">3 Year Program</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted">Enrolled:</span>
-                                <strong>65 Students</strong>
-                            </div>
-                            <div class="progress mt-2" style="height: 8px;">
-                                <div class="progress-bar bg-info" style="width: 65%"></div>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </section>
 

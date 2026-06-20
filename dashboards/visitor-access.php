@@ -7,15 +7,15 @@ $user = $ctx['user'];
 $pageTitle = 'Visitor & Access Control';
 
 $visitors = [];
-$r = $conn->query("SELECT * FROM visitor_logs ORDER BY check_in DESC LIMIT 100");
+$r = $conn->query("SELECT * FROM visitor_logs ORDER BY check_in_time DESC LIMIT 100");
 if ($r) while ($row = $r->fetch_assoc()) $visitors[] = $row;
 
 $accessLogs = [];
 $r2 = $conn->query("SELECT * FROM access_control_logs ORDER BY access_time DESC LIMIT 100");
 if ($r2) while ($row = $r2->fetch_assoc()) $accessLogs[] = $row;
 
-$loggedIn = count(array_filter($visitors, fn($v) => !($v['check_out'] ?? '')));
-$today = count(array_filter($visitors, fn($v) => substr($v['check_in'] ?? '', 0, 10) === date('Y-m-d')));
+$loggedIn = count(array_filter($visitors, fn($v) => !($v['check_out_time'] ?? '')));
+$today = count(array_filter($visitors, fn($v) => substr($v['check_in_time'] ?? '', 0, 10) === date('Y-m-d')));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,9 +46,9 @@ $today = count(array_filter($visitors, fn($v) => substr($v['check_in'] ?? '', 0,
                                 <tr>
                                     <td><?= htmlspecialchars($v['visitor_name'] ?? $v['name'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($v['purpose'] ?? $v['reason'] ?? '-') ?></td>
-                                    <td><?= $v['check_in'] ?? '-' ?></td>
-                                    <td><?= $v['check_out'] ?? '<span class="badge bg-success">Inside</span>' ?></td>
-                                    <td><?= htmlspecialchars($v['host_name'] ?? $v['host'] ?? '-') ?></td>
+                                    <td><?= ($v['check_in_time'] ?? '') ? date('d M Y g:i A', strtotime($v['check_in_time'])) : '-' ?></td>
+                                    <td><?= $v['check_out_time'] ? date('d M Y g:i A', strtotime($v['check_out_time'])) : '<span class="badge bg-success">Inside</span>' ?></td>
+                                    <td><?= htmlspecialchars($v['person_visiting'] ?? $v['host'] ?? '-') ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($visitors)): ?><tr><td colspan="5" class="text-center">No visitor logs</td></tr><?php endif; ?>
@@ -68,10 +68,10 @@ $today = count(array_filter($visitors, fn($v) => substr($v['check_in'] ?? '', 0,
                             <tbody>
                                 <?php foreach ($accessLogs as $a): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($a['user_name'] ?? $a['user'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($a['action'] ?? $a['event'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($a['location'] ?? $a['area'] ?? '-') ?></td>
-                                    <td><?= $a['access_time'] ?? $a['created_at'] ?? '-' ?></td>
+                                    <td><?= htmlspecialchars($a['person_name'] ?? $a['user'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($a['access_type'] ?? $a['event'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($a['access_point'] ?? $a['area'] ?? '-') ?></td>
+                                    <td><?= $a['access_time'] ? date('d M Y g:i A', strtotime($a['access_time'])) : ($a['created_at'] ?? '-') ?></td>
                                     <td><span class="badge bg-<?= ($a['status'] ?? 'granted') === 'granted' ? 'success' : 'danger' ?>"><?= $a['status'] ?? 'granted' ?></span></td>
                                 </tr>
                                 <?php endforeach; ?>

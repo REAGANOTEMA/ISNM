@@ -296,8 +296,8 @@ function getUserDashboard($role) {
         'Non-Teaching Staff' => 'non-teaching-staff.php',
         
         // Additional roles
-        'principal' => 'principal.php',
-        'secretary' => 'secretary.php',
+        'principal' => 'school-principal.php',
+        'secretary' => 'school-secretary.php',
         'bursar' => 'school-bursar.php',
         'skills lab manager' => 'skills-lab.php'
     ];

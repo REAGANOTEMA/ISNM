@@ -9,9 +9,9 @@ $revenue = 0; $expensesTotal = 0; $netIncome = 0; $pendingInvoices = 0;
 $monthly = [];
 $recentTransactions = [];
 if ($conn) {
-    $revenue = $conn->query("SELECT COALESCE(SUM(amount_received),0) c FROM payments WHERE status IN('approved','verified')")->fetch_assoc()['c'] ?? 0;
-    $expensesTotal = $conn->query("SELECT COALESCE(SUM(amount),0) c FROM expenses WHERE status IN('approved','paid')")->fetch_assoc()['c'] ?? 0;
-    $pendingInvoices = $conn->query("SELECT COUNT(*) c FROM invoice_records WHERE status IN('Sent','Partial','Draft')")->fetch_assoc()['c'] ?? 0;
+    $q1 = $conn->query("SELECT COALESCE(SUM(amount_received),0) c FROM payments WHERE status IN('approved','verified')"); $revenue = $q1 ? (int)($q1->fetch_assoc()['c'] ?? 0) : 0;
+    $q2 = $conn->query("SELECT COALESCE(SUM(amount),0) c FROM expenses WHERE status IN('approved','paid')"); $expensesTotal = $q2 ? (float)($q2->fetch_assoc()['c'] ?? 0) : 0;
+    $q3 = $conn->query("SELECT COUNT(*) c FROM invoice_records WHERE status IN('Sent','Partial','Draft')"); $pendingInvoices = $q3 ? (int)($q3->fetch_assoc()['c'] ?? 0) : 0;
     $netIncome = $revenue - $expensesTotal;
     $r = $conn->query("SELECT DATE_FORMAT(p.payment_date,'%Y-%m') month, COALESCE(SUM(p.amount_received),0) payments, 0 expenses FROM payments p WHERE p.status IN('approved','verified') GROUP BY month UNION ALL SELECT DATE_FORMAT(e.expense_date,'%Y-%m') month, 0 payments, COALESCE(SUM(e.amount),0) expenses FROM expenses e WHERE e.status IN('approved','paid') GROUP BY month ORDER BY month DESC LIMIT 12");
     if ($r) {

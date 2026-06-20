@@ -102,7 +102,7 @@ if ($report) {
     } elseif ($report === 'fee_statement') {
         $sid = intval($_GET['student_id']??0);
         echo '<h2>Fee Statement</h2>';
-        if($sid && $students_conn){ $s=$students_conn->query("SELECT * FROM students WHERE id=$sid")->fetch_assoc(); if($s){ echo '<p><strong>'.htmlspecialchars($s['full_name']).'</strong> ('.htmlspecialchars($s['registration_number']?:$s['student_number']).') - '.htmlspecialchars($s['course']).'</p>'; }
+        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=$sid"); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<p><strong>'.htmlspecialchars($s['full_name']).'</strong> ('.htmlspecialchars($s['registration_number']?:$s['student_number']).') - '.htmlspecialchars($s['course']).'</p>'; }
         $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,due_date,status FROM student_invoices WHERE student_id=$sid");
         echo '<table><thead><tr><th>Invoice</th><th>Type</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Due</th><th>Status</th></tr></thead><tbody>';
         $ttl=0;$tpd=0; if($r) while($row=$r->fetch_assoc()){ $ttl+=$row['total_amount'];$tpd+=$row['amount_paid']; echo '<tr><td>'.$row['invoice_number'].'</td><td>'.$row['fee_type'].'</td><td>'.number_format($row['total_amount'],0).'</td><td>'.number_format($row['amount_paid'],0).'</td><td>'.number_format($row['balance'],0).'</td><td>'.$row['due_date'].'</td><td>'.$row['status'].'</td></tr>'; }
@@ -110,7 +110,7 @@ if ($report) {
     } elseif ($report === 'student_detail') {
         $sid = intval($_GET['student_id']??0);
         echo '<h2>Student Detail Report</h2>';
-        if($sid && $students_conn){ $s=$students_conn->query("SELECT * FROM students WHERE id=$sid")->fetch_assoc(); if($s){ echo '<table>'; foreach($s as $k=>$v){ echo '<tr><td><strong>'.ucwords(str_replace('_',' ',$k)).':</strong></td><td>'.htmlspecialchars($v??'-').'</td></tr>'; } echo '</table>'; } }
+        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=$sid"); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<table>'; foreach($s as $k=>$v){ echo '<tr><td><strong>'.ucwords(str_replace('_',' ',$k)).':</strong></td><td>'.htmlspecialchars($v??'-').'</td></tr>'; } echo '</table>'; } }
     }
     echo '</body></html>'; exit;
 }

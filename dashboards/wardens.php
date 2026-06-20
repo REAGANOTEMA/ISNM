@@ -25,7 +25,7 @@ $discipline_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_d
 $welfare_cases_list = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_welfare_cases wc LEFT JOIN students s ON wc.student_id=s.student_id ORDER BY wc.created_at DESC LIMIT 5");
+        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 5");
         if ($r) $welfare_cases_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -34,7 +34,7 @@ if ($conn) {
 $today_counseling = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN students s ON cs.student_id=s.student_id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
+        $r = $conn->query("SELECT cs.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_counseling_sessions cs LEFT JOIN igangaschoolofl_students_db.students s ON cs.student_id=s.id WHERE DATE(cs.session_date)=CURDATE() ORDER BY cs.session_time LIMIT 5");
         if ($r) $today_counseling = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -43,7 +43,7 @@ if ($conn) {
 $discipline_cases_list = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN students s ON sd.student_id=s.student_id ORDER BY sd.created_at DESC LIMIT 5");
+        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 5");
         if ($r) $discipline_cases_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -202,7 +202,7 @@ if ($conn) {
                                 <div class="case-details">
                                     <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($wc['case_type'] ?? 'General') ?></strong></div>
                                     <div class="detail"><span>Status:</span><strong class="text-<?= ($wc['status']??'Open')==='Resolved'?'success':'warning' ?>"><?= htmlspecialchars($wc['status'] ?? 'Open') ?></strong></div>
-                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['actions'] ?? $wc['description'] ?? '-', 0, 60)) ?></strong></div>
+                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['immediate_actions'] ?? $wc['case_description'] ?? '-', 0, 60)) ?></strong></div>
                                 </div>
                                 <div class="case-actions">
                                     <button class="btn btn-sm btn-outline-primary">View Details</button>
@@ -246,7 +246,7 @@ if ($conn) {
                                     <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '-') ?></span>
                                 </div>
                                 <div class="session-details">
-                                    <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['topic'] ?? $cs['reason'] ?? 'General') ?></strong></div>
+                                    <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['issues_discussed'] ?? $cs['session_type'] ?? 'General') ?></strong></div>
                                     <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($cs['session_type'] ?? 'Individual') ?></strong></div>
                                     <?php if (!empty($cs['location'])): ?>
                                     <div class="detail"><span>Location:</span><strong><?= htmlspecialchars($cs['location']) ?></strong></div>
@@ -294,8 +294,8 @@ if ($conn) {
                                     <span class="discipline-date"><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '-' ?></span>
                                 </div>
                                 <div class="discipline-details">
-                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars(substr($dc['description'] ?? $dc['incident_description'] ?? '-', 0, 50)) ?></strong></div>
-                                    <div class="detail"><span>Action:</span><strong><?= htmlspecialchars($dc['action_taken'] ?? $dc['resolution'] ?? 'Pending') ?></strong></div>
+                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars($dc['incident_type'] ?? '-') ?></strong></div>
+                                    <div class="detail"><span>Action:</span><strong><?= htmlspecialchars($dc['action_taken'] ?? 'Pending') ?></strong></div>
                                     <div class="detail"><span>Status:</span><strong class="text-<?= ($dc['status']??'Pending')==='Resolved'?'success':'danger' ?>"><?= htmlspecialchars($dc['status'] ?? 'Pending') ?></strong></div>
                                 </div>
                                 <div class="discipline-actions">
@@ -492,6 +492,13 @@ if ($conn) {
         </div>
     </div>
 
+    <script>
+    document.getElementById('modalAction')?.addEventListener('click', function() {
+        const form = document.querySelector('#modalBody form');
+        if (form) form.submit();
+    });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Update current date/time
@@ -531,173 +538,125 @@ if ($conn) {
                 case 'welfareCase':
                     modalTitle.textContent = 'Create Welfare Case';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="create_welfare_case">
                             <div class="mb-3">
-                                <label class="form-label">Student Name</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student</option>
-                                    <option value="michael-student">Michael Student</option>
-                                    <option value="david-student">David Student</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Case Type</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="case_type" required>
                                     <option value="">Select Case Type</option>
-                                    <option value="academic">Academic Support</option>
-                                    <option value="personal">Personal Counseling</option>
-                                    <option value="financial">Financial Support</option>
-                                    <option value="health">Health Issues</option>
-                                    <option value="disciplinary">Disciplinary Issues</option>
+                                    <option value="Academic Support">Academic Support</option>
+                                    <option value="Personal Counseling">Personal Counseling</option>
+                                    <option value="Financial Support">Financial Support</option>
+                                    <option value="Health Issues">Health Issues</option>
+                                    <option value="Disciplinary Issues">Disciplinary Issues</option>
+                                    <option value="Homesickness">Homesickness</option>
+                                    <option value="Family Problems">Family Problems</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Priority Level</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Priority</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
+                                <select class="form-control" name="priority" required>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Urgent">Urgent</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Case Description</label>
-                                <textarea class="form-control" rows="4" required></textarea>
+                                <textarea class="form-control" name="case_description" rows="4" required></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Immediate Actions Taken</label>
-                                <textarea class="form-control" rows="3"></textarea>
+                                <textarea class="form-control" name="immediate_actions" rows="3"></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Follow up Required</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Follow up</option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
-                                </select>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="follow_up_required" id="fu" checked>
+                                <label class="form-check-label" for="fu">Follow up Required</label>
                             </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Welfare Case</button>
                         </form>
                     `;
                     break;
                 case 'scheduleSession':
                     modalTitle.textContent = 'Schedule Counseling Session';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="schedule_session">
                             <div class="mb-3">
                                 <label class="form-label">Session Type</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="session_type" required>
                                     <option value="">Select Type</option>
-                                    <option value="individual">Individual Counseling</option>
-                                    <option value="group">Group Counseling</option>
-                                    <option value="family">Family Counseling</option>
+                                    <option value="Individual">Individual Counseling</option>
+                                    <option value="Group">Group Counseling</option>
+                                    <option value="Family">Family Counseling</option>
+                                    <option value="Crisis">Crisis Intervention</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Student(s)</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student(s)</option>
-                                    <option value="michael-student">Michael Student</option>
-                                    <option value="david-student">David Student</option>
-                                    <option value="second-year-boys">Second Year Boys</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Date</label>
-                                        <input type="date" class="form-control" required>
+                                        <input type="date" class="form-control" name="session_date" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Time</label>
-                                        <input type="time" class="form-control" required>
+                                        <input type="time" class="form-control" name="session_time" required>
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Location</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Location</option>
-                                    <option value="counseling-a">Counseling Room A</option>
-                                    <option value="counseling-b">Counseling Room B</option>
-                                    <option value="conference-room">Conference Room</option>
-                                </select>
+                                <label class="form-label">Issues Discussed</label>
+                                <textarea class="form-control" name="issues_discussed" rows="3" required></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Session Topic</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Session Notes</label>
-                                <textarea class="form-control" rows="3"></textarea>
-                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Schedule Session</button>
                         </form>
                     `;
                     break;
                 case 'disciplineCase':
                     modalTitle.textContent = 'Create Discipline Case';
                     modalBody.innerHTML = `
-                        <form>
+                        <form action="../../handlers/welfare_handler.php" method="POST">
+                            <input type="hidden" name="action" value="create_discipline_case">
                             <div class="mb-3">
-                                <label class="form-label">Student Name</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Student</option>
-                                    <option value="james-student">James Student</option>
-                                    <option value="peter-student">Peter Student</option>
-                                </select>
+                                <label class="form-label">Student ID</label>
+                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Incident Type</label>
-                                <select class="form-control" required>
+                                <select class="form-control" name="incident_type" required>
                                     <option value="">Select Incident Type</option>
-                                    <option value="absence">Unauthorized Absence</option>
-                                    <option value="late">Late Arrival</option>
-                                    <option value="misconduct">Misconduct</option>
-                                    <option value="violation">Rule Violation</option>
+                                    <option value="Absence">Unauthorized Absence</option>
+                                    <option value="Misconduct">Misconduct</option>
+                                    <option value="Academic Dishonesty">Academic Dishonesty</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Incident Description</label>
-                                <textarea class="form-control" rows="4" required></textarea>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Date of Incident</label>
-                                        <input type="date" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Time of Incident</label>
-                                        <input type="time" class="form-control" required>
-                                    </div>
-                                </div>
+                                <label class="form-label">Date of Incident</label>
+                                <input type="date" class="form-control" name="incident_date" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Witnesses</label>
-                                <textarea class="form-control" rows="2"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Immediate Action Taken</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Action</option>
-                                    <option value="warning">Verbal Warning</option>
-                                    <option value="written">Written Warning</option>
-                                    <option value="parent-contact">Contact Parents</option>
-                                    <option value="suspension">Temporary Suspension</option>
+                                <label class="form-label">Action Taken</label>
+                                <select class="form-control" name="action_taken" required>
+                                    <option value="Warning">Verbal Warning</option>
+                                    <option value="Probation">Probation</option>
+                                    <option value="Suspension">Suspension</option>
+                                    <option value="Expulsion">Expulsion</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Follow up Required</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Follow up</option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
-                                </select>
-                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Discipline Case</button>
                         </form>
                     `;
                     break;

@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reason = trim($_POST['reason'] ?? '');
             if ($account_id <= 0 || $discount_value <= 0) { $_SESSION['error'] = 'Invalid discount parameters.'; }
             else {
-                $acc = $staff->query("SELECT total_fees, balance, amount_paid FROM student_fee_accounts WHERE id = $account_id")->fetch_assoc();
+                $qrAcc = $staff->query("SELECT total_fees, balance, amount_paid FROM student_fee_accounts WHERE id = $account_id"); $acc = $qrAcc ? $qrAcc->fetch_assoc() : null;
                 if ($acc) {
                     $total = (float)$acc['total_fees'];
                     $discount_amount = $discount_type === 'percentage' ? ($total * $discount_value / 100) : $discount_value;

@@ -80,7 +80,7 @@ $is_head = in_array(strtolower($s_role), [
 
           <!-- HR Settings -->
           <?php if ($is_admin || strtolower($s_role) === 'hr manager'): ?>
-          <a href="../hr_settings.php" class="settings-card">
+          <a href="../dashboards/hr-manager.php" class="settings-card">
             <div class="sc-icon" style="background:linear-gradient(135deg,#f59e0b,#b45309)">
               <i class="fas fa-users-cog"></i>
             </div>

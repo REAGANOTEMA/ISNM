@@ -1,19 +1,15 @@
 <?php
 require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
+$staffConn = getStaffConnection();
+$studentsConn = getStudentsConnection();
+$conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Fee Structure';
 $programs = 0; $structures = 0; $active = 0; $archived = 0; $records = [];
 if ($conn) {
-    $r = $conn->query("SELECT COUNT(*) c FROM programs");
-    if ($r) $programs = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM fee_structure");
-    if ($r) $structures = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COUNT(*) c FROM fee_structure WHERE status='Active'");
-    if ($r) $active = (int)$r->fetch_assoc()['c'];
-    $archived = 0;
-    $rArch = $conn->query("SELECT COUNT(*) c FROM fee_structure_archive");
-    if ($rArch) $archived = (int)$rArch->fetch_assoc()['c'];
-    $q = $conn->query("SELECT p.name program_name, f.year, f.semester, f.fee_category, f.amount FROM fee_structure f JOIN programs p ON f.program_id=p.id ORDER BY p.name, f.year, f.semester");
+    $qr = $conn->query("SELECT COUNT(*) c FROM programs"); if ($qr) $programs = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM fee_structures"); if ($qr) $structures = (int)$qr->fetch_assoc()['c'];
+    $qr = $conn->query("SELECT COUNT(*) c FROM fee_structures WHERE status='Active'"); if ($qr) $active = (int)$qr->fetch_assoc()['c'];
+    $q = $conn->query("SELECT p.name program_name, f.year, f.semester, f.fee_category, f.amount FROM fee_structures f JOIN programs p ON f.program_id=p.id ORDER BY p.name, f.year, f.semester");
     if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
 }
 $totalArchived = $archived;

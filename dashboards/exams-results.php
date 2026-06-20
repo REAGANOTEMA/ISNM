@@ -3,7 +3,9 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard([]);
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
-$conn = getStaffConnection();
+$staffConn = getStaffConnection();
+$studentsConn = getStudentsConnection();
+$conn = $studentsConn ?: $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
 
@@ -24,10 +26,10 @@ $totalExams = 0; $published = 0; $pendingGrading = 0; $current = 0;
 $exams = []; $courses = []; $students = [];
 
 if ($conn) {
-    $totalExams = (int)($conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records")->fetch_assoc()['c'] ?? 0);
-    $published = (int)($conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status='Published'")->fetch_assoc()['c'] ?? 0);
-    $pendingGrading = (int)($conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status IN('Draft','Submitted','Under Review')")->fetch_assoc()['c'] ?? 0);
-    $current = (int)($conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")->fetch_assoc()['c'] ?? 0);
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records"); $totalExams = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status='Published'"); $published = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status IN('Draft','Submitted','Under Review')"); $pendingGrading = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())"); $current = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
 
     $search = trim($_GET['search'] ?? '');
     $filterType = trim($_GET['exam_type'] ?? '');

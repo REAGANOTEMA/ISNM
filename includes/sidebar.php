@@ -38,10 +38,8 @@ $dashboardMap = [
     'director-general.php'  => ['title' => 'Director General',          'icon' => 'fas fa-crown'],
     'ceo.php'               => ['title' => 'CEO',                      'icon' => 'fas fa-crown'],
     'school-principal.php'  => ['title' => 'School Principal',         'icon' => 'fas fa-user-tie'],
-    'principal.php'         => ['title' => 'Principal',                'icon' => 'fas fa-user-graduate'],
     'deputy-principal.php'  => ['title' => 'Deputy Principal',         'icon' => 'fas fa-user-friends'],
     'school-secretary.php'  => ['title' => 'School Secretary',         'icon' => 'fas fa-user-tie'],
-    'secretary.php'         => ['title' => 'Secretary',                'icon' => 'fas fa-user'],
 
     // ── Academic Management ──
     'director-academics.php'=> ['title' => 'Director Academics',       'icon' => 'fas fa-graduation-cap'],
@@ -96,10 +94,18 @@ $dashboardMap = [
     'payment-subscriptions.php'=> ['title' => 'Auto-Deductions',       'icon' => 'fas fa-sync'],
     'audit-management.php'  => ['title' => 'Audit Management',         'icon' => 'fas fa-clipboard-check'],
     'procurement-oversight.php'=> ['title' => 'Procurement',           'icon' => 'fas fa-shopping-cart'],
+    'department-requests.php'=> ['title' => 'Department Requests',     'icon' => 'fas fa-clipboard-list'],
     'ura-reporting.php'     => ['title' => 'URA/Tax Reporting',        'icon' => 'fas fa-file-invoice'],
+    'bursar-billing.php'    => ['title' => 'Bursar Billing',           'icon' => 'fas fa-file-invoice'],
+    'bursar-ledger.php'     => ['title' => 'Bursar Ledger',            'icon' => 'fas fa-book'],
+    'bursar-payments.php'   => ['title' => 'Bursar Payments',          'icon' => 'fas fa-hand-holding-usd'],
+    'bursar-tax.php'        => ['title' => 'Bursar Tax',               'icon' => 'fas fa-file-invoice-dollar'],
+    'bursar-reports.php'    => ['title' => 'Bursar Reports',           'icon' => 'fas fa-chart-bar'],
+    'cost-center-management.php'=> ['title' => 'Cost Centers',         'icon' => 'fas fa-building'],
+    'penalty-configurations.php'=> ['title' => 'Penalty Configurations','icon' => 'fas fa-exclamation-triangle'],
+    'proof-of-payments.php' => ['title' => 'Proof of Payments',        'icon' => 'fas fa-file-invoice'],
     'donations-management.php'=> ['title' => 'Donations',              'icon' => 'fas fa-hand-holding-usd'],
     'staff_receipt_printing.php' => ['title' => 'Receipt Printing',    'icon' => 'fas fa-print'],
-    'bursar.php'            => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave'],
 
     // ── Human Resources ──
     'hr-manager.php'        => ['title' => 'Human Resources',           'icon' => 'fas fa-users'],
@@ -132,6 +138,8 @@ $dashboardMap = [
     'cybersecurity.php'     => ['title' => 'Cybersecurity',            'icon' => 'fas fa-shield'],
     'ict-policy.php'        => ['title' => 'ICT Policy',               'icon' => 'fas fa-file-alt'],
     'computer_lab.php'      => ['title' => 'Computer Lab',             'icon' => 'fas fa-desktop'],
+    'it-support-tickets.php'=> ['title' => 'IT Support Tickets',       'icon' => 'fas fa-ticket-alt'],
+    'lab-booking-management.php'=> ['title' => 'Lab Booking',          'icon' => 'fas fa-calendar-check'],
 
     // ── Library ──
     'school-librarian.php'  => ['title' => 'Library',                  'icon' => 'fas fa-book'],
@@ -140,6 +148,7 @@ $dashboardMap = [
 
     // ── Skills Laboratory ──
     'skills-lab.php'        => ['title' => 'Skills Laboratory',        'icon' => 'fas fa-flask'],
+    'chemical-inventory.php'=> ['title' => 'Chemical Inventory',       'icon' => 'fas fa-flask'],
 
     // ── Store & Assets ──
     'storekeeper.php'       => ['title' => 'Store & Assets',           'icon' => 'fas fa-boxes'],
@@ -173,6 +182,8 @@ $dashboardMap = [
             ['title' => 'Leave Sheet',        'route' => 'sickbay.php?section=leave',         'roles' => '*'],
             ['title' => 'Medicine Stock',     'route' => 'sickbay.php?section=medicine',      'roles' => '*'],
             ['title' => 'Recycle Bin',        'route' => 'sickbay.php?section=recycle-bin',   'roles' => '*'],
+            ['title' => 'Health Records',     'route' => 'sickbay.php?section=health-records', 'roles' => '*'],
+            ['title' => 'Health Incidents',  'route' => 'sickbay.php?section=health-incidents','roles' => '*'],
             ['title' => 'Audit Trail',        'route' => 'sickbay.php?section=audit',         'roles' => '*'],
             ['title' => 'Settings',           'route' => 'sickbay.php?section=settings',      'roles' => '*'],
         ],
@@ -194,6 +205,8 @@ $dashboardMap = [
     'website-pages.php'     => ['title' => 'Website Pages',            'icon' => 'fas fa-globe'],
     'portal-messages.php'   => ['title' => 'Portal Messages',          'icon' => 'fas fa-envelope'],
     'contact-submissions.php'=> ['title' => 'Contact Submissions',     'icon' => 'fas fa-address-card'],
+    'institutional-alerts.php'=> ['title' => 'Institutional Alerts',   'icon' => 'fas fa-bell'],
+    'volunteer-applications.php'=> ['title' => 'Volunteer Applications','icon' => 'fas fa-hands-helping'],
 
     // ── Documents & Printing ──
     'document_management.php'=> ['title' => 'Document Management',     'icon' => 'fas fa-folder'],
@@ -212,46 +225,21 @@ $dashboardMap = [
 if (isset($dashboardMap[$currentPage])) {
     $info = $dashboardMap[$currentPage];
     if (isset($info['children'])) {
-        // Use explicitly defined children (e.g., sickbay with ?section= links)
-        $modules = [[
+        // Merge explicit children (e.g., sickbay, school-bursar sections) into the full module tree
+        $customGroup = [
             'title'    => $info['title'],
             'icon'     => $info['icon'],
             'roles'    => '*',
             'children' => $info['children'],
-        ]];
-    } else {
-        // Auto-collect children from module_config that route to this page
-        $allConfig = getModuleConfig();
-        $children = [];
-        $seenRoutes = [];
-        foreach ($allConfig as $parent) {
-            foreach ($parent['children'] as $child) {
-                $route = $child['route'];
-                if (isset($seenRoutes[$route])) continue;
-                $qp = strpos($route, '?');
-                $hp = strpos($route, '#');
-                $cut = false;
-                if ($qp !== false && $hp !== false) $cut = min($qp, $hp);
-                elseif ($qp !== false) $cut = $qp;
-                elseif ($hp !== false) $cut = $hp;
-                $childPage = $cut !== false ? substr($route, 0, $cut) : $route;
-                if (basename($childPage) === $currentPage && userCanAccessModule($child['roles'], $user_role)) {
-                    $seenRoutes[$route] = true;
-                    $children[] = $child;
-                }
-            }
-        }
-        if (!empty($children)) {
-            $modules = [[
-                'title'    => $info['title'],
-                'icon'     => $info['icon'],
-                'roles'    => '*',
-                'children' => $children,
-            ]];
-        }
+        ];
+        // Prepend custom group to the role-filtered module list
+        array_unshift($modules, $customGroup);
     }
+    // Always keep the full role-filtered module tree so the sidebar shows
+    // all accessible category groups, not just current-page isolation.
+} else {
+    // Pages not in $dashboardMap keep the full role-filtered $modules from module_config
 }
-// If $currentPage is not in $dashboardMap, $modules keeps its role-filtered value
 
 // Config: set to true to allow only one parent open at a time
 $accordionMode = true;
@@ -318,7 +306,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         </div>
         <?php else: ?>
         <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->
-        <div class="menu-divider"><span>Modules</span></div>
+        <div class="menu-divider"><span><i class="fas fa-th-large" style="color:#3b82f6;"></i> Navigation</span></div>
         <?php foreach ($modules as $parent):
             $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
             $hasChildren = !empty($parent['children']);

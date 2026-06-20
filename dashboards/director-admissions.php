@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'approve_application') {
         $appId = intval($_POST['application_id'] ?? 0);
         if ($website_conn && $appId > 0) {
-            $ap = $website_conn->query("SELECT * FROM student_applications WHERE id=$appId")->fetch_assoc();
+            $qrAp = $website_conn->query("SELECT * FROM student_applications WHERE id=$appId"); $ap = $qrAp ? $qrAp->fetch_assoc() : null;
             if ($ap) {
                 $fn = $ap['first_name']; $sn = $ap['surname']; $on = $ap['other_name']??'';
                 $full = trim("$fn $on $sn"); $gen = $ap['gender']; $ph = $ap['phone'];
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Delete document
     if ($action === 'delete_doc') {
         $did = intval($_POST['document_id'] ?? 0);
-        $d = $staff_conn->query("SELECT file_path FROM generated_documents WHERE id=$did")->fetch_assoc();
+        $qrD = $staff_conn->query("SELECT file_path FROM generated_documents WHERE id=$did"); $d = $qrD ? $qrD->fetch_assoc() : null;
         if ($d && $d['file_path']) { $fp = __DIR__.'/../'.$d['file_path']; if (file_exists($fp)) @unlink($fp); }
         $staff_conn->query("DELETE FROM generated_documents WHERE id=$did");
         $_SESSION['success'] = 'Document deleted.';

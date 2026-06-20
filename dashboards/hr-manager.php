@@ -191,11 +191,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
         <a href="../news.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-newspaper me-1"></i>Manage News</a>
         <a href="../student-directory.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStaffModal"><i class="fas fa-user-plus me-1"></i>Add Staff</button>
-        <a href="../hr_staff_records.php" class="btn btn-outline-info btn-sm"><i class="fas fa-id-card me-1"></i>Staff Records</a>
-        <a href="../hr_leave.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-calendar me-1"></i>Leave Management</a>
-        <a href="../hr_payroll.php" class="btn btn-outline-success btn-sm"><i class="fas fa-money-check me-1"></i>Payroll</a>
-        <a href="../hr_performance.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-chart-line me-1"></i>Performance</a>
-        <a href="../hr_reports.php" class="btn btn-outline-dark btn-sm"><i class="fas fa-file-alt me-1"></i>Reports</a>
+        <a href="hr-manager.php#staff-records" class="btn btn-outline-info btn-sm"><i class="fas fa-id-card me-1"></i>Staff Records</a>
+        <a href="#leave" class="btn btn-outline-warning btn-sm section-tab" data-section="leave"><i class="fas fa-calendar me-1"></i>Leave Management</a>
+        <a href="#payroll" class="btn btn-outline-success btn-sm section-tab" data-section="payroll"><i class="fas fa-money-check me-1"></i>Payroll</a>
+        <a href="#performance" class="btn btn-outline-secondary btn-sm section-tab" data-section="performance"><i class="fas fa-chart-line me-1"></i>Performance</a>
+        <a href="#reports" class="btn btn-outline-dark btn-sm section-tab" data-section="reports"><i class="fas fa-file-alt me-1"></i>Reports</a>
       </div>
     </div>
 
