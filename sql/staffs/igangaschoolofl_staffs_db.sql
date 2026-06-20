@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 02:19 PM
+-- Generation Time: Jun 20, 2026 at 09:57 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -125,6 +125,101 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `change_password` (IN `p_staff_id` INT, IN `p_current_password` VARCHAR(255), IN `p_new_password` VARCHAR(255), IN `p_ip_address` VARCHAR(45))   BEGIN
     SELECT 'Password changed' as message, TRUE as success;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `collect_daily_financials` (IN `p_date` DATE)   BEGIN
+    DECLARE total_collected DECIMAL(12,2) DEFAULT 0;
+    DECLARE tx_count INT DEFAULT 0;
+    DECLARE cash_total DECIMAL(12,2) DEFAULT 0;
+    DECLARE mobile_total DECIMAL(12,2) DEFAULT 0;
+    DECLARE bank_total DECIMAL(12,2) DEFAULT 0;
+    DECLARE cheque_total DECIMAL(12,2) DEFAULT 0;
+
+    SELECT COALESCE(SUM(amount), 0), COUNT(*),
+           COALESCE(SUM(CASE WHEN payment_method IN ('cash','Cash') THEN amount ELSE 0 END), 0),
+           COALESCE(SUM(CASE WHEN payment_method IN ('mobile_money','Mobile Money') THEN amount ELSE 0 END), 0),
+           COALESCE(SUM(CASE WHEN payment_method IN ('bank_transfer','Bank Transfer') THEN amount ELSE 0 END), 0),
+           COALESCE(SUM(CASE WHEN payment_method IN ('cheque','Cheque') THEN amount ELSE 0 END), 0)
+    INTO total_collected, tx_count, cash_total, mobile_total, bank_total, cheque_total
+    FROM igangaschoolofl_staffs_db.bursar_payments
+    WHERE DATE(payment_date) = p_date AND status IN ('approved','verified');
+
+    INSERT INTO igangaschoolofl_staffs_db.bursar_daily_collections
+        (collection_date, total_collected, transaction_count, cash_total, mobile_money_total, bank_total, cheque_total)
+    VALUES (p_date, total_collected, tx_count, cash_total, mobile_total, bank_total, cheque_total)
+    ON DUPLICATE KEY UPDATE
+        total_collected = VALUES(total_collected),
+        transaction_count = VALUES(transaction_count),
+        cash_total = VALUES(cash_total),
+        mobile_money_total = VALUES(mobile_money_total),
+        bank_total = VALUES(bank_total),
+        cheque_total = VALUES(cheque_total);
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `collect_staff_payments_daily` (IN `p_date` DATE)   BEGIN
+    DECLARE total_collected DECIMAL(12,2) DEFAULT 0;
+    DECLARE tx_count INT DEFAULT 0;
+
+    SELECT COALESCE(SUM(amount_received), 0), COUNT(*)
+    INTO total_collected, tx_count
+    FROM igangaschoolofl_students_db.payments
+    WHERE DATE(payment_date) = p_date AND status IN ('Completed','verified','approved');
+
+    INSERT INTO igangaschoolofl_staffs_db.bursar_daily_collections
+        (collection_date, total_collected, transaction_count)
+    VALUES (p_date, total_collected, tx_count)
+    ON DUPLICATE KEY UPDATE
+        total_collected = VALUES(total_collected),
+        transaction_count = VALUES(transaction_count);
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_index_if_not_exists` (IN `p_schema` VARCHAR(64), IN `p_table` VARCHAR(64), IN `p_index` VARCHAR(64), IN `p_columns` VARCHAR(256))   BEGIN
+    DECLARE cnt INT DEFAULT 0;
+    DECLARE missing INT DEFAULT 0;
+    DECLARE col_name VARCHAR(64);
+    DECLARE pos INT DEFAULT 1;
+    DECLARE remainder VARCHAR(256) DEFAULT p_columns;
+
+    -- Check each column exists in the table
+    WHILE LENGTH(remainder) > 0 DO
+        SET pos = LOCATE(',', remainder);
+        IF pos = 0 THEN
+            SET col_name = TRIM(remainder);
+            SET remainder = '';
+        ELSE
+            SET col_name = TRIM(SUBSTRING(remainder, 1, pos - 1));
+            SET remainder = TRIM(SUBSTRING(remainder, pos + 1));
+        END IF;
+
+        SELECT COUNT(*) INTO cnt
+        FROM information_schema.columns
+        WHERE table_schema = p_schema
+          AND table_name = p_table
+          AND column_name = col_name;
+
+        IF cnt = 0 THEN
+            SET missing = missing + 1;
+        END IF;
+    END WHILE;
+
+    IF missing > 0 THEN
+        SET @skip_index = CONCAT('SKIP `', p_index, '` — missing column');
+    ELSE
+        SELECT COUNT(*) INTO cnt
+        FROM information_schema.statistics
+        WHERE table_schema = p_schema
+          AND table_name = p_table
+          AND index_name = p_index;
+
+        IF cnt = 0 THEN
+            SET @sql = CONCAT(
+                'CREATE INDEX `', p_index, '` ON `', p_schema, '`.`', p_table, '`(', p_columns, ')'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_student_photo` (IN `p_student_id` INT, IN `p_deleted_by` INT)   BEGIN
@@ -1645,6 +1740,286 @@ CREATE TABLE `budget_records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bursar_allowances`
+--
+
+CREATE TABLE `bursar_allowances` (
+  `id` int NOT NULL,
+  `staff_id` int DEFAULT NULL,
+  `allowance_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `is_recurring` tinyint(1) DEFAULT '0',
+  `pay_period` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_assets`
+--
+
+CREATE TABLE `bursar_assets` (
+  `id` int NOT NULL,
+  `asset_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `purchase_cost` decimal(12,2) DEFAULT NULL,
+  `current_value` decimal(12,2) DEFAULT NULL,
+  `depreciation_method` enum('straight_line','declining','none') COLLATE utf8mb4_unicode_ci DEFAULT 'straight_line',
+  `depreciation_rate` decimal(5,2) DEFAULT NULL,
+  `useful_life_years` int DEFAULT NULL,
+  `salvage_value` decimal(12,2) DEFAULT '0.00',
+  `supplier` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `invoice_reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('active','disposed','sold','written_off') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_budget_items`
+--
+
+CREATE TABLE `bursar_budget_items` (
+  `id` int NOT NULL,
+  `budget_id` int DEFAULT NULL,
+  `category` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `allocated` decimal(12,2) DEFAULT NULL,
+  `spent` decimal(12,2) DEFAULT '0.00',
+  `remaining` decimal(12,2) GENERATED ALWAYS AS ((`allocated` - `spent`)) STORED,
+  `fiscal_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_daily_collections`
+--
+
+CREATE TABLE `bursar_daily_collections` (
+  `id` int NOT NULL,
+  `collection_date` date DEFAULT NULL,
+  `total_collected` decimal(12,2) DEFAULT '0.00',
+  `transaction_count` int DEFAULT '0',
+  `cash_total` decimal(12,2) DEFAULT '0.00',
+  `mobile_money_total` decimal(12,2) DEFAULT '0.00',
+  `bank_total` decimal(12,2) DEFAULT '0.00',
+  `cheque_total` decimal(12,2) DEFAULT '0.00',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_deductions`
+--
+
+CREATE TABLE `bursar_deductions` (
+  `id` int NOT NULL,
+  `staff_id` int DEFAULT NULL,
+  `deduction_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `is_recurring` tinyint(1) DEFAULT '0',
+  `pay_period` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_expenses`
+--
+
+CREATE TABLE `bursar_expenses` (
+  `id` int NOT NULL,
+  `expense_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `budget_item_id` int DEFAULT NULL,
+  `category` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `vendor` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `receipt_attachment` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','approved','rejected','paid') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `requested_by` int DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `expense_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_fee_items`
+--
+
+CREATE TABLE `bursar_fee_items` (
+  `id` int NOT NULL,
+  `item_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` enum('tuition','accommodation','clinical','library','sports','caution','registration','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `program` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_fee_reminders`
+--
+
+CREATE TABLE `bursar_fee_reminders` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reminder_type` enum('email','sms','whatsapp','system') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `sent_date` date DEFAULT NULL,
+  `status` enum('sent','failed','pending') COLLATE utf8mb4_unicode_ci DEFAULT 'sent',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_invoices`
+--
+
+CREATE TABLE `bursar_invoices` (
+  `id` int NOT NULL,
+  `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_amount` decimal(12,2) DEFAULT NULL,
+  `amount_paid` decimal(12,2) DEFAULT '0.00',
+  `balance` decimal(12,2) DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `status` enum('pending','partial','paid','overdue','cancelled','written_off') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_payments`
+--
+
+CREATE TABLE `bursar_payments` (
+  `id` int NOT NULL,
+  `payment_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `invoice_id` int DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `payment_method` enum('cash','bank_transfer','mobile_money','cheque','pos','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mobile_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `transaction_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proof_file` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','verified','approved','rejected','bounced') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `verified_by` int DEFAULT NULL,
+  `approved_by` int DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_payroll`
+--
+
+CREATE TABLE `bursar_payroll` (
+  `id` int NOT NULL,
+  `payroll_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `staff_id` int DEFAULT NULL,
+  `staff_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `basic_salary` decimal(12,2) DEFAULT NULL,
+  `allowances` decimal(12,2) DEFAULT '0.00',
+  `deductions` decimal(12,2) DEFAULT '0.00',
+  `net_pay` decimal(12,2) GENERATED ALWAYS AS (((`basic_salary` + `allowances`) - `deductions`)) STORED,
+  `pay_period` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `status` enum('draft','approved','paid','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_penalties`
+--
+
+CREATE TABLE `bursar_penalties` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `invoice_id` int DEFAULT NULL,
+  `penalty_amount` decimal(12,2) DEFAULT NULL,
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `applied_date` date DEFAULT NULL,
+  `status` enum('pending','waived','paid') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_receipts`
+--
+
+CREATE TABLE `bursar_receipts` (
+  `id` int NOT NULL,
+  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_id` int DEFAULT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `amount_in_words` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `generated_by` int DEFAULT NULL,
+  `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_scholarships`
+--
+
+CREATE TABLE `bursar_scholarships` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sponsor_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sponsor_contact` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sponsorship_type` enum('full','partial','merit','need','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `percentage` decimal(5,2) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` enum('active','expired','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `approved_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `bursar_settings`
 --
 
@@ -1679,6 +2054,24 @@ INSERT INTO `bursar_settings` (`id`, `setting_key`, `setting_value`, `setting_ty
 (14, 'invoice_prefix', 'INV', 'text', 'Invoice number prefix', 1, '2026-05-23 13:25:49'),
 (15, 'grace_period_days', '7', 'number', 'Grace period before penalty in days', 1, '2026-05-23 13:25:49'),
 (16, 'require_payment_verification', 'true', 'boolean', 'Require verification for bank deposits', 1, '2026-05-23 13:25:49');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_tax_records`
+--
+
+CREATE TABLE `bursar_tax_records` (
+  `id` int NOT NULL,
+  `tax_period` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tax_type` enum('withholding','vat','income_tax','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_revenue` decimal(12,2) DEFAULT NULL,
+  `total_tax` decimal(12,2) DEFAULT NULL,
+  `filing_status` enum('not_filed','filed','pending') COLLATE utf8mb4_unicode_ci DEFAULT 'not_filed',
+  `filed_date` date DEFAULT NULL,
+  `filed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -8043,6 +8436,19 @@ CREATE TABLE `student_fee_assignments` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `student_financial_overview`
+-- (See below for the actual view)
+--
+CREATE TABLE `student_financial_overview` (
+`student_id` bigint
+,`total_billed` decimal(34,2)
+,`total_paid` decimal(34,2)
+,`outstanding_balance` decimal(35,2)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student_health_incidents`
 --
 
@@ -8579,6 +8985,23 @@ CREATE TABLE `trip_logs` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `unified_financial_summary`
+-- (See below for the actual view)
+--
+CREATE TABLE `unified_financial_summary` (
+`source` varchar(16)
+,`id` int
+,`student_id` varchar(50)
+,`amount` decimal(12,2)
+,`payment_method` varchar(13)
+,`payment_date` date
+,`status` varchar(9)
+,`created_at` timestamp
+);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `universal_student_profiles`
 --
 
@@ -8900,11 +9323,29 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
+-- Structure for view `student_financial_overview`
+--
+DROP TABLE IF EXISTS `student_financial_overview`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_financial_overview`  AS SELECT coalesce(`si`.`student_id`,`bp`.`student_id`) AS `student_id`, coalesce(sum(`si`.`total_amount`),0) AS `total_billed`, coalesce(sum(`si`.`amount_paid`),0) AS `total_paid`, (coalesce(sum(`si`.`total_amount`),0) - coalesce(sum(`si`.`amount_paid`),0)) AS `outstanding_balance` FROM (`igangaschoolofl_students_db`.`student_invoices` `si` left join `igangaschoolofl_students_db`.`payments` `bp` on((`si`.`student_id` = `bp`.`student_id`))) GROUP BY `si`.`student_id` ;
+
+-- --------------------------------------------------------
+
+--
 -- Structure for view `student_search_view`
 --
 DROP TABLE IF EXISTS `student_search_view`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_search_view`  AS SELECT `sp`.`id` AS `id`, `sp`.`student_number` AS `student_number`, `sp`.`national_id` AS `national_id`, `sp`.`index_number` AS `index_number`, `sp`.`registration_number` AS `registration_number`, `sp`.`full_name` AS `full_name`, `sp`.`first_name` AS `first_name`, `sp`.`last_name` AS `last_name`, `sp`.`email` AS `email`, `sp`.`phone` AS `phone`, `sp`.`program` AS `program`, `sp`.`intake_set` AS `intake_set`, `sp`.`year_of_study` AS `year_of_study`, `sp`.`semester` AS `semester`, `sp`.`status` AS `status`, `sp`.`district` AS `district`, `sp`.`guardian_name` AS `guardian_name`, `sp`.`guardian_phone` AS `guardian_phone`, `sp`.`photo_path` AS `current_photo`, coalesce(`sp`.`photo_uploaded`,false) AS `has_photo`, NULL AS `staff_dashboard` FROM `universal_student_profiles` AS `sp` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `unified_financial_summary`
+--
+DROP TABLE IF EXISTS `unified_financial_summary`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `unified_financial_summary`  AS SELECT 'student_payments' AS `source`, `p`.`id` AS `id`, convert(`p`.`student_id` using utf8mb4) AS `student_id`, `p`.`amount_received` AS `amount`, convert(`p`.`payment_method` using utf8mb4) AS `payment_method`, `p`.`payment_date` AS `payment_date`, convert(`p`.`status` using utf8mb4) AS `status`, `p`.`created_at` AS `created_at` FROM `igangaschoolofl_students_db`.`payments` AS `p` WHERE (`p`.`status` in ('Completed','approved','verified'))union all select 'bursar_payments' AS `source`,`bp`.`id` AS `id`,convert(`bp`.`student_id` using utf8mb4) AS `student_id`,`bp`.`amount` AS `amount`,convert(`bp`.`payment_method` using utf8mb4) AS `payment_method`,`bp`.`payment_date` AS `payment_date`,convert(`bp`.`status` using utf8mb4) AS `status`,`bp`.`created_at` AS `created_at` from `bursar_payments` `bp` where (`bp`.`status` in ('approved','verified'))  ;
 
 -- --------------------------------------------------------
 
@@ -9289,11 +9730,125 @@ ALTER TABLE `budget_records`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `bursar_allowances`
+--
+ALTER TABLE `bursar_allowances`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_allowances_staff_id` (`staff_id`);
+
+--
+-- Indexes for table `bursar_assets`
+--
+ALTER TABLE `bursar_assets`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `bursar_budget_items`
+--
+ALTER TABLE `bursar_budget_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_budget_items_budget_id` (`budget_id`);
+
+--
+-- Indexes for table `bursar_daily_collections`
+--
+ALTER TABLE `bursar_daily_collections`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `collection_date` (`collection_date`);
+
+--
+-- Indexes for table `bursar_deductions`
+--
+ALTER TABLE `bursar_deductions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_deductions_staff_id` (`staff_id`);
+
+--
+-- Indexes for table `bursar_expenses`
+--
+ALTER TABLE `bursar_expenses`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `expense_number` (`expense_number`),
+  ADD KEY `idx_bursar_expenses_budget_item_id` (`budget_item_id`);
+
+--
+-- Indexes for table `bursar_fee_items`
+--
+ALTER TABLE `bursar_fee_items`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `bursar_fee_reminders`
+--
+ALTER TABLE `bursar_fee_reminders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_fee_reminders_student_id` (`student_id`);
+
+--
+-- Indexes for table `bursar_invoices`
+--
+ALTER TABLE `bursar_invoices`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `invoice_number` (`invoice_number`),
+  ADD KEY `idx_bursar_invoices_student_id` (`student_id`),
+  ADD KEY `idx_bursar_invoices_status` (`status`),
+  ADD KEY `idx_bursar_invoices_due_date` (`due_date`);
+
+--
+-- Indexes for table `bursar_payments`
+--
+ALTER TABLE `bursar_payments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `payment_number` (`payment_number`),
+  ADD KEY `idx_bursar_payments_student_id` (`student_id`),
+  ADD KEY `idx_bursar_payments_invoice_id` (`invoice_id`),
+  ADD KEY `idx_bursar_payments_status` (`status`),
+  ADD KEY `idx_bursar_payments_payment_date` (`payment_date`);
+
+--
+-- Indexes for table `bursar_payroll`
+--
+ALTER TABLE `bursar_payroll`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `payroll_number` (`payroll_number`),
+  ADD KEY `idx_bursar_payroll_staff_id` (`staff_id`),
+  ADD KEY `idx_bursar_payroll_status` (`status`);
+
+--
+-- Indexes for table `bursar_penalties`
+--
+ALTER TABLE `bursar_penalties`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_penalties_student_id` (`student_id`),
+  ADD KEY `idx_bursar_penalties_invoice_id` (`invoice_id`);
+
+--
+-- Indexes for table `bursar_receipts`
+--
+ALTER TABLE `bursar_receipts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `receipt_number` (`receipt_number`),
+  ADD KEY `idx_bursar_receipts_payment_id` (`payment_id`);
+
+--
+-- Indexes for table `bursar_scholarships`
+--
+ALTER TABLE `bursar_scholarships`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bursar_scholarships_student_id` (`student_id`);
+
+--
 -- Indexes for table `bursar_settings`
 --
 ALTER TABLE `bursar_settings`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `setting_key` (`setting_key`);
+
+--
+-- Indexes for table `bursar_tax_records`
+--
+ALTER TABLE `bursar_tax_records`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `bursar_users`
@@ -10513,7 +11068,8 @@ ALTER TABLE `payroll_records`
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_month_year` (`month`,`year`),
   ADD KEY `idx_processing_date` (`processing_date`),
-  ADD KEY `idx_payslip_number` (`payslip_number`);
+  ADD KEY `idx_payslip_number` (`payslip_number`),
+  ADD KEY `idx_payroll_records_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `payslips`
@@ -10970,7 +11526,11 @@ ALTER TABLE `staff`
   ADD KEY `idx_position` (`position`),
   ADD KEY `idx_department` (`department`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_role_id` (`role_id`);
+  ADD KEY `idx_role_id` (`role_id`),
+  ADD KEY `idx_staff_role_id` (`role_id`),
+  ADD KEY `idx_staff_email` (`email`),
+  ADD KEY `idx_staff_department` (`department`),
+  ADD KEY `idx_staff_status` (`status`);
 
 --
 -- Indexes for table `staff_access_control`
@@ -11011,7 +11571,8 @@ ALTER TABLE `staff_appraisals`
   ADD UNIQUE KEY `appraisal_number` (`appraisal_number`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_period` (`appraisal_period_id`),
-  ADD KEY `appraiser_id` (`appraiser_id`);
+  ADD KEY `appraiser_id` (`appraiser_id`),
+  ADD KEY `idx_staff_appraisals_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_attendance`
@@ -11022,7 +11583,8 @@ ALTER TABLE `staff_attendance`
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_date` (`date`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_staff_date` (`staff_id`,`date`);
+  ADD KEY `idx_staff_date` (`staff_id`,`date`),
+  ADD KEY `idx_staff_attendance_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_audit_logs`
@@ -11060,7 +11622,8 @@ ALTER TABLE `staff_contracts`
   ADD KEY `signed_by` (`signed_by`),
   ADD KEY `idx_contract_number` (`contract_number`),
   ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_staff_contracts_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_dashboard_access`
@@ -11094,13 +11657,15 @@ ALTER TABLE `staff_documents`
   ADD KEY `uploaded_by` (`uploaded_by`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_document_type` (`document_type`),
-  ADD KEY `idx_upload_date` (`upload_date`);
+  ADD KEY `idx_upload_date` (`upload_date`),
+  ADD KEY `idx_staff_documents_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_leave_records`
 --
 ALTER TABLE `staff_leave_records`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff_leave_records_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_leave_requests`
@@ -11179,7 +11744,8 @@ ALTER TABLE `staff_permissions`
 --
 ALTER TABLE `staff_profiles`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`);
+  ADD KEY `idx_staff_id` (`staff_id`),
+  ADD KEY `idx_staff_profiles_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `staff_promotions`
@@ -11245,7 +11811,8 @@ ALTER TABLE `staff_training`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_staff_id` (`staff_id`),
   ADD KEY `idx_training_type` (`training_type`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_staff_training_staff_id` (`staff_id`);
 
 --
 -- Indexes for table `store_categories`
@@ -11891,10 +12458,100 @@ ALTER TABLE `budget_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `bursar_allowances`
+--
+ALTER TABLE `bursar_allowances`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_assets`
+--
+ALTER TABLE `bursar_assets`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_budget_items`
+--
+ALTER TABLE `bursar_budget_items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_daily_collections`
+--
+ALTER TABLE `bursar_daily_collections`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_deductions`
+--
+ALTER TABLE `bursar_deductions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_expenses`
+--
+ALTER TABLE `bursar_expenses`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_fee_items`
+--
+ALTER TABLE `bursar_fee_items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_fee_reminders`
+--
+ALTER TABLE `bursar_fee_reminders`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_invoices`
+--
+ALTER TABLE `bursar_invoices`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_payments`
+--
+ALTER TABLE `bursar_payments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_payroll`
+--
+ALTER TABLE `bursar_payroll`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_penalties`
+--
+ALTER TABLE `bursar_penalties`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_receipts`
+--
+ALTER TABLE `bursar_receipts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_scholarships`
+--
+ALTER TABLE `bursar_scholarships`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `bursar_settings`
 --
 ALTER TABLE `bursar_settings`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `bursar_tax_records`
+--
+ALTER TABLE `bursar_tax_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `bursar_users`

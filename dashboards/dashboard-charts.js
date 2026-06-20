@@ -5,8 +5,7 @@
 (function() {
     'use strict';
 
-    // Global handler for unhandled promise rejections (e.g. from Chart.js async internals)
-    (function(){function u(e){e.preventDefault();e.stopPropagation();if(e.promise)e.promise.catch(function(){});}window.addEventListener('unhandledrejection',u);window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
+    // Global handler for unhandled promise rejections — already registered in dashboard_head.php
 
     const AI_ENGINE = {
         version: '1.0.0',

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 02:20 PM
+-- Generation Time: Jun 20, 2026 at 09:58 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -2161,7 +2161,9 @@ ALTER TABLE `fee_structures`
   ADD PRIMARY KEY (`id`),
   ADD KEY `program_id` (`program_id`),
   ADD KEY `idx_fee_type` (`fee_type`),
-  ADD KEY `idx_academic_year` (`academic_year`);
+  ADD KEY `idx_academic_year` (`academic_year`),
+  ADD KEY `idx_fee_structures_program_id` (`program_id`),
+  ADD KEY `idx_fee_structures_academic_year` (`academic_year`);
 
 --
 -- Indexes for table `financial_reports`
@@ -2196,7 +2198,8 @@ ALTER TABLE `graduation_candidates`
 -- Indexes for table `hostel_allocations`
 --
 ALTER TABLE `hostel_allocations`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_hostel_allocations_room_id` (`room_id`);
 
 --
 -- Indexes for table `hostel_rooms`
@@ -2278,7 +2281,8 @@ ALTER TABLE `library_books`
 -- Indexes for table `library_borrowing`
 --
 ALTER TABLE `library_borrowing`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_library_borrowing_book_id` (`book_id`);
 
 --
 -- Indexes for table `library_fines`
@@ -2332,7 +2336,12 @@ ALTER TABLE `payments`
   ADD KEY `idx_payment_reference` (`payment_reference`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_payment_date` (`payment_date`);
+  ADD KEY `idx_payment_date` (`payment_date`),
+  ADD KEY `idx_payments_student_id` (`student_id`),
+  ADD KEY `idx_payments_invoice_id` (`invoice_id`),
+  ADD KEY `idx_payments_status` (`status`),
+  ADD KEY `idx_payments_payment_date` (`payment_date`),
+  ADD KEY `idx_payments_received_by` (`received_by`);
 
 --
 -- Indexes for table `payment_receipts`
@@ -2344,7 +2353,9 @@ ALTER TABLE `payment_receipts`
   ADD KEY `voided_by` (`voided_by`),
   ADD KEY `idx_receipt_number` (`receipt_number`),
   ADD KEY `idx_payment_id` (`payment_id`),
-  ADD KEY `idx_student_id` (`student_id`);
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_payment_receipts_payment_id` (`payment_id`),
+  ADD KEY `idx_payment_receipts_student_id` (`student_id`);
 
 --
 -- Indexes for table `payment_subscriptions`
@@ -2434,7 +2445,8 @@ ALTER TABLE `sponsorships`
   ADD KEY `created_by` (`created_by`),
   ADD KEY `idx_sponsorship_code` (`sponsorship_code`),
   ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_sponsorships_student_id` (`student_id`);
 
 --
 -- Indexes for table `staff_salaries`
@@ -2468,7 +2480,11 @@ ALTER TABLE `students`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_full_name` (`full_name`(100)),
   ADD KEY `idx_set_name` (`set_name`),
-  ADD KEY `idx_intake_date` (`intake_date`);
+  ADD KEY `idx_intake_date` (`intake_date`),
+  ADD KEY `idx_students_student_number` (`student_number`),
+  ADD KEY `idx_students_email` (`email`),
+  ADD KEY `idx_students_program` (`program`),
+  ADD KEY `idx_students_status` (`status`);
 
 --
 -- Indexes for table `students_trash`
@@ -2485,7 +2501,8 @@ ALTER TABLE `student_academic_records`
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_semester` (`semester`),
   ADD KEY `idx_academic_year` (`academic_year`),
-  ADD KEY `idx_subject` (`subject`);
+  ADD KEY `idx_subject` (`subject`),
+  ADD KEY `idx_academic_records_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_attendance`
@@ -2495,7 +2512,8 @@ ALTER TABLE `student_attendance`
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_date` (`date`),
   ADD KEY `idx_subject` (`subject`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_student_attendance_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_course_registrations`
@@ -2507,7 +2525,8 @@ ALTER TABLE `student_course_registrations`
 -- Indexes for table `student_discipline`
 --
 ALTER TABLE `student_discipline`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_student_discipline_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_discipline_records`
@@ -2534,7 +2553,8 @@ ALTER TABLE `student_fees`
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_fee_type` (`fee_type`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_due_date` (`due_date`);
+  ADD KEY `idx_due_date` (`due_date`),
+  ADD KEY `idx_student_fees_student_id` (`student_id`);
 
 --
 -- Indexes for table `student_fee_assignments`
@@ -2545,7 +2565,9 @@ ALTER TABLE `student_fee_assignments`
   ADD KEY `assigned_by` (`assigned_by`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_due_date` (`due_date`);
+  ADD KEY `idx_due_date` (`due_date`),
+  ADD KEY `idx_fee_assignments_student_id` (`student_id`),
+  ADD KEY `idx_fee_assignments_fee_structure_id` (`fee_structure_id`);
 
 --
 -- Indexes for table `student_hostel_allocations`
@@ -2565,7 +2587,10 @@ ALTER TABLE `student_invoices`
   ADD KEY `idx_invoice_number` (`invoice_number`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_due_date` (`due_date`);
+  ADD KEY `idx_due_date` (`due_date`),
+  ADD KEY `idx_student_invoices_student_id` (`student_id`),
+  ADD KEY `idx_student_invoices_status` (`status`),
+  ADD KEY `idx_student_invoices_due_date` (`due_date`);
 
 --
 -- Indexes for table `student_messages`

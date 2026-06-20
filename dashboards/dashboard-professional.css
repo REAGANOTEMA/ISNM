@@ -910,3 +910,469 @@ h1, h2, h3, h4, h5, h6,
 .spinner-border {
   border-width: 0.2em !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   BURSAR / FINANCE DASHBOARD SHORTHAND CLASSES
+   Used by school-bursar.php, bursar-payments.php, bursar-billing.php, etc.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Page Header ───────────────────────────────────────────── */
+.ph {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-bottom: 24px !important;
+}
+.ph h1 {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+.ph p {
+  color: #64748b !important;
+  margin: 4px 0 0 !important;
+  font-size: 0.88rem !important;
+}
+
+/* ── Stat Card ─────────────────────────────────────────────── */
+.sc {
+  background: #fff !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-left: 4px solid #1a237e !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    0 12px 30px rgba(15, 23, 42, 0.03) !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 0 16px !important;
+  align-items: center !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  height: 100% !important;
+}
+.sc:hover {
+  transform: translateY(-4px) !important;
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.06),
+    0 24px 48px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ── Stat Icon (inside .sc) ─────────────────────────────────── */
+.sc .si {
+  grid-row: 1 / 3 !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.2rem !important;
+  color: #fff !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Stat Value ────────────────────────────────────────────── */
+.sv {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  align-self: end !important;
+}
+
+/* ── Stat Label ────────────────────────────────────────────── */
+.sl {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  line-height: 1.3 !important;
+  align-self: start !important;
+}
+
+/* ── Action Grid ───────────────────────────────────────────── */
+.ag {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+/* ── Action Button ─────────────────────────────────────────── */
+.ab {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 20px 14px !important;
+  background: #fff !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 14px !important;
+  text-decoration: none !important;
+  color: #1e293b !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 4px 12px rgba(15, 23, 42, 0.04) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease !important;
+  cursor: pointer !important;
+}
+.ab i {
+  font-size: 1.6rem !important;
+  color: #1a237e !important;
+  transition: transform 0.3s ease !important;
+}
+.ab span {
+  line-height: 1.3 !important;
+}
+.ab:hover {
+  transform: translateY(-4px) !important;
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.06),
+    0 24px 48px rgba(15, 23, 42, 0.04) !important;
+  border-color: #1a237e !important;
+  color: #1a237e !important;
+}
+.ab:hover i {
+  transform: scale(1.15) !important;
+}
+
+/* ── Card Container ────────────────────────────────────────── */
+.cc {
+  background: #fff !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    0 12px 30px rgba(15, 23, 42, 0.03) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.cc:hover {
+  transform: translateY(-2px) !important;
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.06),
+    0 24px 48px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ── Card Header ───────────────────────────────────────────── */
+.ch {
+  padding: 16px 20px !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  background: #f8fafc !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* ── Card Body ─────────────────────────────────────────────── */
+.cb {
+  padding: 20px !important;
+}
+.cb.p-0 {
+  padding: 0 !important;
+}
+
+/* ── Table (card variant) ──────────────────────────────────── */
+.tb {
+  margin-bottom: 0 !important;
+  font-size: 0.9rem !important;
+  vertical-align: middle !important;
+}
+.tb thead th {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  padding: 12px 14px !important;
+  white-space: nowrap !important;
+}
+.tb tbody td {
+  padding: 12px 14px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+.tb tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.tb tbody tr:hover {
+  background: rgba(26, 35, 126, 0.04) !important;
+}
+
+/* ── Form Label ────────────────────────────────────────────── */
+.fl {
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+/* ── Form Input ────────────────────────────────────────────── */
+.fc {
+  border-radius: 10px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  font-size: 0.9rem !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.fc:focus {
+  border-color: #1a237e !important;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1) !important;
+}
+
+/* ── Form Select ───────────────────────────────────────────── */
+.fs {
+  border-radius: 10px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  font-size: 0.9rem !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.fs:focus {
+  border-color: #1a237e !important;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1) !important;
+}
+
+/* ── Back Button ───────────────────────────────────────────── */
+.bo {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 6px 14px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  background: #fff !important;
+  color: #475569 !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+.bo:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+/* ── Bursar Primary Button ─────────────────────────────────── */
+.bb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px 22px !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  border: 2px solid #E6A100 !important;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%) !important;
+  color: #0d1442 !important;
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.25) !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease,
+              background 0.25s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+.bb:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(255, 165, 0, 0.35) !important;
+  background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%) !important;
+  border-color: #D49400 !important;
+  color: #0d1442 !important;
+}
+.bb:active {
+  transform: translateY(0) scale(0.97) !important;
+}
+
+/* ── Payment Provider Logos ─────────────────────────────────── */
+.payment-logo {
+  height: 32px !important;
+  background: #fff !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  object-fit: contain !important;
+  border: 1px solid #f1f5f9 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.payment-logo:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* ── Responsive: action grid & cards ────────────────────────── */
+@media (max-width: 768px) {
+  .ag {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .ab {
+    padding: 14px 10px !important;
+    font-size: 0.75rem !important;
+  }
+  .ab i {
+    font-size: 1.3rem !important;
+  }
+  .sc {
+    padding: 14px !important;
+    gap: 0 10px !important;
+  }
+  .sc .si {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+  .sv {
+    font-size: 1.1rem !important;
+  }
+  .sl {
+    font-size: 0.68rem !important;
+  }
+  .ph {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .cc {
+    border-radius: 12px !important;
+  }
+  .ch {
+    padding: 12px 16px !important;
+    font-size: 0.85rem !important;
+  }
+  .cb {
+    padding: 14px !important;
+  }
+  .cb.p-0 {
+    padding: 0 !important;
+  }
+  .tb thead th {
+    padding: 8px 10px !important;
+    font-size: 0.65rem !important;
+  }
+  .tb tbody td {
+    padding: 8px 10px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL SPACING IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Consistent card spacing */
+.card { margin-bottom: 1.25rem; }
+.content-section { padding: 1.5rem; }
+.stat-card { margin-bottom: 1rem; }
+
+/* Table responsiveness */
+.table-responsive { margin-bottom: 0; }
+.table th, .table td {
+  padding: 0.65rem 0.75rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Form spacing */
+.form-label { margin-bottom: 0.35rem; font-weight: 500; }
+.form-control, .form-select { border-radius: 8px; padding: 0.5rem 0.75rem; }
+
+/* Button spacing */
+.btn { border-radius: 8px; padding: 0.45rem 1rem; font-weight: 500; }
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.82rem; }
+
+/* Modal improvements */
+.modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.modal-header { border-radius: 16px 16px 0 0; padding: 1.25rem 1.5rem; }
+.modal-body { padding: 1.5rem; }
+.modal-footer { padding: 1rem 1.5rem; border-radius: 0 0 16px 16px; }
+
+/* Badge consistency */
+.badge { font-weight: 500; padding: 0.35em 0.65em; border-radius: 6px; }
+
+/* Progress bar */
+.progress { border-radius: 10px; height: 8px; }
+.progress-bar { border-radius: 10px; }
+
+/* Alert spacing */
+.alert { border: none; border-radius: 12px; padding: 1rem 1.25rem; }
+
+/* KPI stat cards */
+.kpi-stat {
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kpi-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+/* Page header spacing */
+.page-header { margin-bottom: 1.5rem; }
+.page-header h4 { margin-bottom: 0.25rem; }
+.page-header p { margin-bottom: 0; color: #64748b; }
+
+/* Card header icons */
+.card-header .fas, .card-header .far {
+  margin-right: 0.4rem;
+}
+
+/* ── Loading overlay improvements ───────────────────────────── */
+.isnm-loader {
+  transition: opacity 0.3s ease;
+}
+.isnm-loader.active {
+  opacity: 1;
+}
+.isnm-loader:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Mobile improvements ────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .content-section { padding: 1rem; }
+  .table th, .table td { padding: 0.5rem 0.5rem; font-size: 0.82rem; }
+  .kpi-stat { padding: 0.85rem 1rem; }
+  .btn { padding: 0.4rem 0.75rem; }
+  .modal-body { padding: 1rem; }
+  .card-body { padding: 1rem; }
+  .stat-card { margin-bottom: 0.75rem; }
+  h4 { font-size: 1.1rem; }
+  h5 { font-size: 0.95rem; }
+}
+
+/* ── Tablet improvements ────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .content-section { padding: 1.25rem; }
+  .kpi-stat { padding: 1rem 1.25rem; }
+}
+
+/* ── Print improvements ──────────────────────────────────────── */
+@media print {
+  .sidebar, .main .no-print, .isnm-loader, .comm-floating-btn { display: none !important; }
+  .main { margin-left: 0 !important; padding: 0 !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+}

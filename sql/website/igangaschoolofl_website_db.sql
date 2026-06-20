@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 02:20 PM
+-- Generation Time: Jun 20, 2026 at 09:58 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -524,7 +524,8 @@ ALTER TABLE `medicine_stock_transactions`
 -- Indexes for table `news`
 --
 ALTER TABLE `news`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_news_status_date` (`status`,`created_at`);
 
 --
 -- Indexes for table `notifications`

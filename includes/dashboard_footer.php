@@ -250,33 +250,34 @@ var ISNM_VERSION = '<?= $v ?>';
     var loader = document.getElementById('isnmLoader');
     if (!loader) return;
     var shown = false;
-    function showLoader() { if (!shown) { shown = true; loader.classList.add('active'); } }
-    function hideLoader() { shown = false; loader.classList.remove('active'); }
+    var hideTimer = null;
+    function showLoader() {
+      if (!shown) { shown = true; loader.classList.add('active'); }
+    }
+    function hideLoader() {
+      // Ensure loader shows for at least 600ms for smooth appearance
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(function() {
+        shown = false;
+        loader.classList.remove('active');
+      }, 600);
+    }
 
     document.addEventListener('click', function(e) {
       var link = e.target.closest('a');
       if (!link) return;
       var href = link.getAttribute('href') || '';
-      // Skip external links, hash-only, javascript:, mailto:, tel:
       if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('http')) return;
-      // Skip links that open in new tab
       if (link.getAttribute('target') === '_blank') return;
-      // Skip links with data-no-loader
       if (link.hasAttribute('data-no-loader')) return;
-      // Skip sidebar toggle, mobile toggle buttons
       if (link.closest('.isnm-mobile-toggle') || link.closest('.sidebar-collapse-btn')) return;
-
-      // For form submits, buttons, etc. — don't block
       if (link.closest('form')) return;
-      if (e.button !== 0) return; // left click only
-
+      if (e.button !== 0) return;
       showLoader();
     });
 
-    // Hide loader on page load/restore
     window.addEventListener('pageshow', hideLoader);
     window.addEventListener('load', hideLoader);
-    // Also hide when popstate (back/forward)
     window.addEventListener('popstate', hideLoader);
   }
 
@@ -288,7 +289,8 @@ var ISNM_VERSION = '<?= $v ?>';
     detectPWA();
     initNotificationBell();
     initGlobalLoader();
-    document.getElementById('isnmLoader') && document.getElementById('isnmLoader').classList.remove('active');
+    var el = document.getElementById('isnmLoader');
+    if (el) { setTimeout(function() { el.classList.remove('active'); }, 200); }
   });
 })();
 </script>

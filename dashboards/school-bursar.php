@@ -13,7 +13,9 @@ $staff = $ctx['staff'];
 $students = $ctx['students'];
 $website = $ctx['website'];
 
-$view  = $_GET['view'] ?? 'home';
+$_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
+$view  = $_GET['section'];
+if ($view === 'overview') $view = 'home';
 $ajax  = $_GET['ajax'] ?? '';
 $sid   = $_GET['sid'] ?? '';
 $q     = $_GET['q'] ?? '';
@@ -201,7 +203,7 @@ if ($view === 'generate_invoice' && $ajax === '1' && $sid) {
     $fees = [];
     try {
         if ($students && $staff) {
-            $prog = $students->query("SELECT program FROM students WHERE student_id = '" . $students->real_escape_string($sid) . "' LIMIT 1");
+            $prog = $students->query("SELECT program FROM students WHERE student_number = '" . $students->real_escape_string($sid) . "' OR student_id = '" . $students->real_escape_string($sid) . "' LIMIT 1");
             if ($prog && ($p = $prog->fetch_assoc())) {
                 $program = $p['program'];
                 $fs = $staff->query("SELECT item_name, amount FROM fee_structures WHERE program = '' OR program = '" . $staff->real_escape_string($program) . "' ORDER BY id");
@@ -257,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } catch (Exception $e) { $_SESSION['error'] = 'Error: ' . $e->getMessage(); }
-        header('Location: school-bursar.php?view=record_payment');
+        header('Location: school-bursar.php?section=record_payment');
         exit;
     }
 
@@ -287,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } catch (Exception $e) { $_SESSION['error'] = 'Error: ' . $e->getMessage(); }
-        header('Location: school-bursar.php?view=generate_invoice');
+        header('Location: school-bursar.php?section=generate_invoice');
         exit;
     }
 
@@ -304,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->close();
             }
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
-        header('Location: school-bursar.php?view=fee_structure');
+        header('Location: school-bursar.php?section=fee_structure');
         exit;
     }
 
@@ -314,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $staff->query("DELETE FROM fee_structures WHERE id = $id");
             $_SESSION['success'] = 'Fee item deleted.';
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
-        header('Location: school-bursar.php?view=fee_structure');
+        header('Location: school-bursar.php?section=fee_structure');
         exit;
     }
 
@@ -331,7 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->close();
             }
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
-        header('Location: school-bursar.php?view=budget');
+        header('Location: school-bursar.php?section=budget');
         exit;
     }
 
@@ -341,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $staff->query("DELETE FROM budgets WHERE id = $id");
             $_SESSION['success'] = 'Budget deleted.';
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
-        header('Location: school-bursar.php?view=budget');
+        header('Location: school-bursar.php?section=budget');
         exit;
     }
 }
@@ -439,7 +441,7 @@ $pageTitle = 'Bursar Dashboard';
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="ma content-section dashboard-section active" data-section="overview">
+<div class="ma content-section dashboard-section active" data-section="overview" style="margin-left:270px;padding:24px">
 
     <div class="ph">
         <div>
@@ -471,14 +473,14 @@ $pageTitle = 'Bursar Dashboard';
 
     <!-- ── Action Grid ─────────────────────────────────────────── -->
     <div class="ag mb-4">
-        <a href="?view=record_payment" class="ab"><i class="fas fa-hand-holding-usd"></i><span>Record Payment</span></a>
-        <a href="?view=generate_invoice" class="ab"><i class="fas fa-file-invoice"></i><span>Generate Invoice</span></a>
-        <a href="?view=fee_structure" class="ab"><i class="fas fa-tags"></i><span>Fee Structure</span></a>
-        <a href="?view=student_statement" class="ab"><i class="fas fa-file-alt"></i><span>Student Statement</span></a>
-        <a href="?view=receipt_print" class="ab"><i class="fas fa-receipt"></i><span>Receipt Print</span></a>
-        <a href="?view=financial_reports" class="ab"><i class="fas fa-chart-bar"></i><span>Financial Reports</span></a>
-        <a href="?view=budget" class="ab"><i class="fas fa-wallet"></i><span>Budget</span></a>
-        <a href="?view=daily_collections" class="ab"><i class="fas fa-list-ol"></i><span>Daily Collections</span></a>
+        <a href="?section=record_payment" class="ab"><i class="fas fa-hand-holding-usd"></i><span>Record Payment</span></a>
+        <a href="?section=generate_invoice" class="ab"><i class="fas fa-file-invoice"></i><span>Generate Invoice</span></a>
+        <a href="?section=fee_structure" class="ab"><i class="fas fa-tags"></i><span>Fee Structure</span></a>
+        <a href="?section=student_statement" class="ab"><i class="fas fa-file-alt"></i><span>Student Statement</span></a>
+        <a href="?section=receipt_print" class="ab"><i class="fas fa-receipt"></i><span>Receipt Print</span></a>
+        <a href="?section=financial_reports" class="ab"><i class="fas fa-chart-bar"></i><span>Financial Reports</span></a>
+        <a href="?section=budget" class="ab"><i class="fas fa-wallet"></i><span>Budget</span></a>
+        <a href="?section=daily_collections" class="ab"><i class="fas fa-list-ol"></i><span>Daily Collections</span></a>
         <a href="payment-subscriptions.php" class="ab"><i class="fas fa-sync"></i><span>Auto Deductions</span></a>
     </div>
 
@@ -575,7 +577,7 @@ endif;
                     </div>
                 </div>
                 <div class="col-md-7">
-                    <form method="POST" action="school-bursar.php?view=record_payment">
+                    <form method="POST" action="school-bursar.php?section=record_payment">
                         <input type="hidden" name="action" value="record_payment">
                         <input type="hidden" name="student_id" id="formStudentId">
                         <input type="hidden" name="fee_account_id" id="formFeeAccountId" value="0">
@@ -621,7 +623,7 @@ endif;
     <div class="cc">
         <div class="ch"><i class="fas fa-file-invoice me-2"></i>Generate Invoice</div>
         <div class="cb">
-            <form method="POST" action="school-bursar.php?view=generate_invoice">
+            <form method="POST" action="school-bursar.php?section=generate_invoice">
                 <input type="hidden" name="action" value="generate_invoice">
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -631,8 +633,8 @@ endif;
 <?php
 try {
     if ($students) {
-        $sl = $students->query("SELECT student_id, first_name, surname FROM students WHERE status='Active' ORDER BY surname");
-        if ($sl) while ($s = $sl->fetch_assoc()) echo '<option value="' . htmlspecialchars($s['student_id']) . '">' . htmlspecialchars($s['surname'] . ', ' . $s['first_name'] . ' (' . $s['student_id'] . ')') . '</option>';
+        $sl = $students->query("SELECT student_number, first_name, surname FROM students WHERE status='Active' ORDER BY surname");
+        if ($sl) while ($s = $sl->fetch_assoc()) echo '<option value="' . htmlspecialchars($s['student_number']) . '">' . htmlspecialchars($s['surname'] . ', ' . $s['first_name'] . ' (' . $s['student_number'] . ')') . '</option>';
     }
 } catch (Exception $e) { error_log('student list: ' . $e->getMessage()); }
 ?>
@@ -671,7 +673,7 @@ try {
         <div class="col-md-5">
             <div class="cc"><div class="ch"><i class="fas fa-plus-circle me-2"></i>Add Fee Item</div>
             <div class="cb">
-                <form method="POST" action="school-bursar.php?view=fee_structure">
+                <form method="POST" action="school-bursar.php?section=fee_structure">
                     <input type="hidden" name="action" value="add_fee_item">
                     <div class="row g-3">
                         <div class="col-12"><label class="fl">Item Name *</label><input type="text" name="item_name" class="form-control fc" required></div>
@@ -701,7 +703,7 @@ try {
         if ($fs && $fs->num_rows > 0) {
             while ($f = $fs->fetch_assoc()) {
                 $feeRows .= '<tr><td>' . htmlspecialchars($f['item_name']) . '</td><td>' . currency($f['amount']) . '</td><td>' . htmlspecialchars($f['program'] ?? 'All') . '</td><td>' . htmlspecialchars($f['year_level'] ?? '-') . '</td>
-                <td><form method="POST" action="school-bursar.php?view=fee_structure" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_fee_item"><input type="hidden" name="item_id" value="' . $f['id'] . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
+                <td><form method="POST" action="school-bursar.php?section=fee_structure" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_fee_item"><input type="hidden" name="item_id" value="' . $f['id'] . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
             }
         }
     }
@@ -785,7 +787,7 @@ echo $feeRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No fee
         <div class="col-md-5">
             <div class="cc"><div class="ch"><i class="fas fa-plus-circle me-2"></i>Add Budget</div>
             <div class="cb">
-                <form method="POST" action="school-bursar.php?view=budget">
+                <form method="POST" action="school-bursar.php?section=budget">
                     <input type="hidden" name="action" value="add_budget">
                     <div class="row g-3">
                         <div class="col-12"><label class="fl">Budget Name *</label><input type="text" name="budget_name" class="form-control fc" required placeholder="e.g. Academic Year 2025/26"></div>
@@ -814,7 +816,7 @@ try {
                 $rem = $b['total_budget'] - $b['actual_spent'];
                 $pct = $b['total_budget'] > 0 ? round(($b['actual_spent']/$b['total_budget'])*100) : 0;
                 $budgetRows .= '<tr><td>' . htmlspecialchars($b['name']) . '</td><td>' . htmlspecialchars($b['fiscal_year']) . '</td><td>' . htmlspecialchars($b['department'] ?? '-') . '</td><td>' . currency($b['total_budget']) . '</td><td>' . currency($b['actual_spent']) . '</td><td>' . currency($rem) . ' <small class="text-muted">(' . $pct . '%)</small></td>
-                <td><form method="POST" action="school-bursar.php?view=budget" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_budget"><input type="hidden" name="budget_id" value="' . $b['id'] . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
+                <td><form method="POST" action="school-bursar.php?section=budget" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_budget"><input type="hidden" name="budget_id" value="' . $b['id'] . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
             }
         }
     }

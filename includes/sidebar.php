@@ -69,7 +69,20 @@ $dashboardMap = [
 
     // ── Finance ──
     'director-finance.php'  => ['title' => 'Director Finance',         'icon' => 'fas fa-chart-line'],
-    'school-bursar.php'     => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave'],
+    'school-bursar.php'     => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave',
+        'children' => [
+            ['title' => 'Bursar Dashboard',   'route' => 'school-bursar.php?section=overview',            'roles' => '*'],
+            ['title' => 'Record Payment',     'route' => 'school-bursar.php?section=record_payment',      'roles' => '*'],
+            ['title' => 'Generate Invoice',   'route' => 'school-bursar.php?section=generate_invoice',    'roles' => '*'],
+            ['title' => 'Fee Structure',      'route' => 'school-bursar.php?section=fee_structure',       'roles' => '*'],
+            ['title' => 'Student Statement',  'route' => 'school-bursar.php?section=student_statement',   'roles' => '*'],
+            ['title' => 'Receipt Print',      'route' => 'school-bursar.php?section=receipt_print',       'roles' => '*'],
+            ['title' => 'Financial Reports',  'route' => 'school-bursar.php?section=financial_reports',   'roles' => '*'],
+            ['title' => 'Budget',             'route' => 'school-bursar.php?section=budget',              'roles' => '*'],
+            ['title' => 'Daily Collections',  'route' => 'school-bursar.php?section=daily_collections',   'roles' => '*'],
+            ['title' => 'Auto Deductions',    'route' => 'payment-subscriptions.php',                     'roles' => '*'],
+        ],
+    ],
     'financial-reports.php' => ['title' => 'Financial Reports',        'icon' => 'fas fa-chart-bar'],
     'fee-structure.php'     => ['title' => 'Fee Structure',            'icon' => 'fas fa-money-check-alt'],
     'invoice-generation.php'=> ['title' => 'Invoices',                 'icon' => 'fas fa-file-invoice'],

@@ -39,7 +39,7 @@ if (!empty($_SESSION['user_id'])) {
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
-<script>(function(){function u(e){e.preventDefault();e.stopPropagation();if(e.promise)e.promise.catch(function(){});}window.addEventListener('unhandledrejection',u);window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();</script>
+<script>window.addEventListener('unhandledrejection',function(e){e.preventDefault();if(e.reason)console.warn('[ISNM] Rejection:',e.reason);});window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};</script>
 
 <!-- Favicon — all sizes, all devices -->
 <link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">
