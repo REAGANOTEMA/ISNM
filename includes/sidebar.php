@@ -30,18 +30,215 @@ require_once __DIR__ . '/module_config.php';
 
 $modules = getFilteredModules($user_role);
 
-// When on the Academic Registrar page, only show the Academic Registrar module group
 $currentPage = basename($_SERVER['PHP_SELF']);
-if ($currentPage === 'academic-registrar.php') {
-    $filtered = [];
-    foreach ($modules as $m) {
-        if (strcasecmp($m['title'], 'Academic Registrar') === 0) {
-            $filtered[] = $m;
-            break;
+
+// Per-dashboard module isolation — each page gets only its own section links
+$dashboardMap = [
+    // ── Executive & Leadership ──
+    'director-general.php'  => ['title' => 'Director General',          'icon' => 'fas fa-crown'],
+    'ceo.php'               => ['title' => 'CEO',                      'icon' => 'fas fa-crown'],
+    'school-principal.php'  => ['title' => 'School Principal',         'icon' => 'fas fa-user-tie'],
+    'principal.php'         => ['title' => 'Principal',                'icon' => 'fas fa-user-graduate'],
+    'deputy-principal.php'  => ['title' => 'Deputy Principal',         'icon' => 'fas fa-user-friends'],
+    'school-secretary.php'  => ['title' => 'School Secretary',         'icon' => 'fas fa-user-tie'],
+    'secretary.php'         => ['title' => 'Secretary',                'icon' => 'fas fa-user'],
+
+    // ── Academic Management ──
+    'director-academics.php'=> ['title' => 'Director Academics',       'icon' => 'fas fa-graduation-cap'],
+    'academic-registrar.php'=> ['title' => 'Academic Registrar',       'icon' => 'fas fa-clipboard-list'],
+    'lecturers.php'         => ['title' => 'Lecturers',                'icon' => 'fas fa-chalkboard-teacher'],
+    'senior-lecturers.php'  => ['title' => 'Senior Lecturers',         'icon' => 'fas fa-chalkboard-teacher'],
+    'curriculum-management.php' => ['title' => 'Curriculum',           'icon' => 'fas fa-book-open'],
+    'timetable.php'         => ['title' => 'Timetable',                'icon' => 'fas fa-calendar-week'],
+    'exams-results.php'     => ['title' => 'Exams & Results',          'icon' => 'fas fa-file-alt'],
+    'grade-scales.php'      => ['title' => 'Grade Scales & Grading',   'icon' => 'fas fa-sort-amount-up'],
+    'academic-calendar.php' => ['title' => 'Academic Calendar',        'icon' => 'fas fa-calendar'],
+    'graduation-management.php' => ['title' => 'Graduation',           'icon' => 'fas fa-graduation-cap'],
+    'course-registration.php'=> ['title' => 'Course Registration',     'icon' => 'fas fa-clipboard-list'],
+    'programs.php'          => ['title' => 'Programs',                 'icon' => 'fas fa-layer-group'],
+    'non-teaching-staff.php'=> ['title' => 'Non-Teaching Staff',       'icon' => 'fas fa-users'],
+    'research-projects.php' => ['title' => 'Research Projects',        'icon' => 'fas fa-flask'],
+    'accreditation.php'     => ['title' => 'Accreditation',            'icon' => 'fas fa-certificate'],
+    'quality-assurance.php' => ['title' => 'Quality Assurance',        'icon' => 'fas fa-check-circle'],
+    'partnerships.php'      => ['title' => 'Partnerships & Linkages',  'icon' => 'fas fa-handshake'],
+
+    // ── Admissions ──
+    'director-admissions.php'=> ['title' => 'Director Admissions',     'icon' => 'fas fa-file-signature'],
+    'admission-letters.php' => ['title' => 'Admissions Letters',       'icon' => 'fas fa-file-signature'],
+    'intake-planning.php'   => ['title' => 'Intake Planning',          'icon' => 'fas fa-calendar-alt'],
+
+    // ── Finance ──
+    'director-finance.php'  => ['title' => 'Director Finance',         'icon' => 'fas fa-chart-line'],
+    'school-bursar.php'     => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave'],
+    'financial-reports.php' => ['title' => 'Financial Reports',        'icon' => 'fas fa-chart-bar'],
+    'fee-structure.php'     => ['title' => 'Fee Structure',            'icon' => 'fas fa-money-check-alt'],
+    'invoice-generation.php'=> ['title' => 'Invoices',                 'icon' => 'fas fa-file-invoice'],
+    'payment-recording.php' => ['title' => 'Payment Recording',        'icon' => 'fas fa-hand-holding-usd'],
+    'budget-management.php' => ['title' => 'Budget Management',        'icon' => 'fas fa-chart-pie'],
+    'expenditure-tracking.php'=> ['title' => 'Expenditure Tracking',   'icon' => 'fas fa-file-invoice-dollar'],
+    'bursar-payroll.php'    => ['title' => 'Payroll',                  'icon' => 'fas fa-money-check'],
+    'general-ledger.php'    => ['title' => 'General Ledger',           'icon' => 'fas fa-book'],
+    'bank-reconciliation.php'=> ['title' => 'Bank Reconciliation',     'icon' => 'fas fa-university'],
+    'student-statements.php'=> ['title' => 'Student Statements',       'icon' => 'fas fa-file-invoice'],
+    'payment-subscriptions.php'=> ['title' => 'Auto-Deductions',       'icon' => 'fas fa-sync'],
+    'audit-management.php'  => ['title' => 'Audit Management',         'icon' => 'fas fa-clipboard-check'],
+    'procurement-oversight.php'=> ['title' => 'Procurement',           'icon' => 'fas fa-shopping-cart'],
+    'ura-reporting.php'     => ['title' => 'URA/Tax Reporting',        'icon' => 'fas fa-file-invoice'],
+    'donations-management.php'=> ['title' => 'Donations',              'icon' => 'fas fa-hand-holding-usd'],
+    'staff_receipt_printing.php' => ['title' => 'Receipt Printing',    'icon' => 'fas fa-print'],
+    'bursar.php'            => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave'],
+
+    // ── Human Resources ──
+    'hr-manager.php'        => ['title' => 'Human Resources',           'icon' => 'fas fa-users'],
+    'staff-directory.php'   => ['title' => 'Staff Directory',          'icon' => 'fas fa-address-book'],
+    'staff-attendance.php'  => ['title' => 'Staff Attendance',         'icon' => 'fas fa-clipboard-list'],
+    'leave-management.php'  => ['title' => 'Leave Management',         'icon' => 'fas fa-calendar-check'],
+    'performance-appraisal.php'=> ['title' => 'Performance Appraisal', 'icon' => 'fas fa-chart-bar'],
+    'training-cpd.php'      => ['title' => 'Training & CPD',           'icon' => 'fas fa-chalkboard-teacher'],
+    'recruitment.php'       => ['title' => 'Recruitment',              'icon' => 'fas fa-user-plus'],
+    'contracts-management.php'=> ['title' => 'Contracts',              'icon' => 'fas fa-file-contract'],
+    'staff-disciplinary.php'=> ['title' => 'Staff Disciplinary',       'icon' => 'fas fa-gavel'],
+    'onboarding.php'        => ['title' => 'Onboarding & Orientation', 'icon' => 'fas fa-user-check'],
+    'resignations.php'      => ['title' => 'Resignations & Exit',      'icon' => 'fas fa-user-times'],
+    'duty-rosters.php'      => ['title' => 'Duty Rosters',             'icon' => 'fas fa-calendar-alt'],
+    'professional-licenses.php'=> ['title' => 'Professional Licenses', 'icon' => 'fas fa-certificate'],
+    'staff_profile_management.php'=> ['title' => 'My Profile',         'icon' => 'fas fa-id-card'],
+
+    // ── Nursing Department ──
+    'head-nursing.php'      => ['title' => 'Nursing Department',       'icon' => 'fas fa-user-nurse'],
+    'clinical-placement.php'=> ['title' => 'Clinical Placements',      'icon' => 'fas fa-clinic-medical'],
+    'lab-practical.php'     => ['title' => 'Lab Practical',            'icon' => 'fas fa-flask'],
+
+    // ── Midwifery Department ──
+    'head-midwifery.php'    => ['title' => 'Midwifery Department',     'icon' => 'fas fa-baby'],
+
+    // ── ICT Department ──
+    'director-ict.php'      => ['title' => 'ICT Department',           'icon' => 'fas fa-laptop-code'],
+    'system-admin.php'      => ['title' => 'System Administration',    'icon' => 'fas fa-cogs'],
+    'digital-learning.php'  => ['title' => 'Digital Learning',         'icon' => 'fas fa-laptop'],
+    'cybersecurity.php'     => ['title' => 'Cybersecurity',            'icon' => 'fas fa-shield'],
+    'ict-policy.php'        => ['title' => 'ICT Policy',               'icon' => 'fas fa-file-alt'],
+    'computer_lab.php'      => ['title' => 'Computer Lab',             'icon' => 'fas fa-desktop'],
+
+    // ── Library ──
+    'school-librarian.php'  => ['title' => 'Library',                  'icon' => 'fas fa-book'],
+    'student-library.php'   => ['title' => 'Student Library',          'icon' => 'fas fa-book'],
+    'student-library-portal.php'=> ['title' => 'Library Portal',       'icon' => 'fas fa-book-open'],
+
+    // ── Skills Laboratory ──
+    'skills-lab.php'        => ['title' => 'Skills Laboratory',        'icon' => 'fas fa-flask'],
+
+    // ── Store & Assets ──
+    'storekeeper.php'       => ['title' => 'Store & Assets',           'icon' => 'fas fa-boxes'],
+    'inventory-reports.php' => ['title' => 'Inventory Reports',        'icon' => 'fas fa-clipboard-list'],
+    'asset-management.php'  => ['title' => 'Asset Management',         'icon' => 'fas fa-building'],
+
+    // ── Security & Transport ──
+    'security.php'          => ['title' => 'Security',                 'icon' => 'fas fa-shield-alt'],
+    'visitor-access.php'    => ['title' => 'Visitor Access',           'icon' => 'fas fa-door-open'],
+    'drivers.php'           => ['title' => 'Fleet Management',         'icon' => 'fas fa-truck'],
+    'fuel-trips.php'        => ['title' => 'Fuel & Trip Logs',         'icon' => 'fas fa-gas-pump'],
+
+    // ── Student Services ──
+    'matrons.php'           => ['title' => 'Matrons',                  'icon' => 'fas fa-female'],
+    'wardens.php'           => ['title' => 'Wardens',                  'icon' => 'fas fa-user-shield'],
+    'counseling-welfare.php'=> ['title' => 'Counseling & Welfare',     'icon' => 'fas fa-hand-holding-heart'],
+    'meal-accommodation.php'=> ['title' => 'Meals & Accommodation',    'icon' => 'fas fa-utensils'],
+    'hostel-management.php' => ['title' => 'Hostel Management',        'icon' => 'fas fa-bed'],
+    'student-discipline.php'=> ['title' => 'Student Discipline',       'icon' => 'fas fa-gavel'],
+    'student-requests-desk.php'=> ['title' => 'Student Requests Desk', 'icon' => 'fas fa-inbox'],
+    'scholarships-sponsorships.php'=> ['title' => 'Scholarships & Sponsorships','icon' => 'fas fa-award'],
+    'student-fees.php'      => ['title' => 'Student Fees',             'icon' => 'fas fa-money-bill-wave'],
+    'student-results.php'   => ['title' => 'Student Results',          'icon' => 'fas fa-chart-bar'],
+    'student-timetable.php' => ['title' => 'Student Timetable',        'icon' => 'fas fa-calendar-alt'],
+    'student-course-reg.php'=> ['title' => 'Student Course Registration','icon' => 'fas fa-clipboard-list'],
+    'sickbay.php'           => ['title' => 'Sickbay',                  'icon' => 'fas fa-notes-medical',
+        'children' => [
+            ['title' => 'Dashboard',          'route' => 'sickbay.php?section=dashboard',     'roles' => '*'],
+            ['title' => 'Daily Sick Records', 'route' => 'sickbay.php?section=daily-records', 'roles' => '*'],
+            ['title' => 'Sickness Directory', 'route' => 'sickbay.php?section=sickness',      'roles' => '*'],
+            ['title' => 'Leave Sheet',        'route' => 'sickbay.php?section=leave',         'roles' => '*'],
+            ['title' => 'Medicine Stock',     'route' => 'sickbay.php?section=medicine',      'roles' => '*'],
+            ['title' => 'Recycle Bin',        'route' => 'sickbay.php?section=recycle-bin',   'roles' => '*'],
+            ['title' => 'Audit Trail',        'route' => 'sickbay.php?section=audit',         'roles' => '*'],
+            ['title' => 'Settings',           'route' => 'sickbay.php?section=settings',      'roles' => '*'],
+        ],
+    ],
+
+    // ── Student Management ──
+    'student-management.php'=> ['title' => 'Student Management',       'icon' => 'fas fa-users-cog'],
+    'student-attendance.php'=> ['title' => 'Student Attendance',       'icon' => 'fas fa-clipboard-check'],
+    'student-add.php'       => ['title' => 'Add Student',              'icon' => 'fas fa-user-plus'],
+    'student-announcements.php'=> ['title' => 'Announcements',         'icon' => 'fas fa-bullhorn'],
+    'student-downloads.php' => ['title' => 'Student Downloads',        'icon' => 'fas fa-download'],
+    'student-records.php'   => ['title' => 'Student Records',          'icon' => 'fas fa-folder-open'],
+
+    // ── Communications ──
+    'communications.php'    => ['title' => 'Communications',           'icon' => 'fas fa-bullhorn'],
+    'news.php'              => ['title' => 'News & Updates',           'icon' => 'fas fa-newspaper'],
+    'messaging.php'         => ['title' => 'Messaging',                'icon' => 'fas fa-comments'],
+    'notifications.php'     => ['title' => 'Notifications',            'icon' => 'fas fa-bell'],
+    'website-pages.php'     => ['title' => 'Website Pages',            'icon' => 'fas fa-globe'],
+    'portal-messages.php'   => ['title' => 'Portal Messages',          'icon' => 'fas fa-envelope'],
+    'contact-submissions.php'=> ['title' => 'Contact Submissions',     'icon' => 'fas fa-address-card'],
+
+    // ── Documents & Printing ──
+    'document_management.php'=> ['title' => 'Document Management',     'icon' => 'fas fa-folder'],
+    'recycle_bin.php'       => ['title' => 'Recycle Bin',              'icon' => 'fas fa-trash'],
+    'staff_transcript_generation.php'=> ['title' => 'Transcript Generation','icon' => 'fas fa-file-alt'],
+    'print_certificate.php' => ['title' => 'Print Certificate',        'icon' => 'fas fa-file-pdf'],
+    'print_transcript.php'  => ['title' => 'Print Transcript',         'icon' => 'fas fa-file-alt'],
+
+    // ── Student Government ──
+    'guild-president.php'   => ['title' => 'Guild President',          'icon' => 'fas fa-handshake'],
+
+    // ── Student Self-Service ──
+    'student.php'           => ['title' => 'Student Portal',           'icon' => 'fas fa-user-graduate'],
+];
+
+if (isset($dashboardMap[$currentPage])) {
+    $info = $dashboardMap[$currentPage];
+    if (isset($info['children'])) {
+        // Use explicitly defined children (e.g., sickbay with ?section= links)
+        $modules = [[
+            'title'    => $info['title'],
+            'icon'     => $info['icon'],
+            'roles'    => '*',
+            'children' => $info['children'],
+        ]];
+    } else {
+        // Auto-collect children from module_config that route to this page
+        $allConfig = getModuleConfig();
+        $children = [];
+        $seenRoutes = [];
+        foreach ($allConfig as $parent) {
+            foreach ($parent['children'] as $child) {
+                $route = $child['route'];
+                if (isset($seenRoutes[$route])) continue;
+                $qp = strpos($route, '?');
+                $hp = strpos($route, '#');
+                $cut = false;
+                if ($qp !== false && $hp !== false) $cut = min($qp, $hp);
+                elseif ($qp !== false) $cut = $qp;
+                elseif ($hp !== false) $cut = $hp;
+                $childPage = $cut !== false ? substr($route, 0, $cut) : $route;
+                if (basename($childPage) === $currentPage && userCanAccessModule($child['roles'], $user_role)) {
+                    $seenRoutes[$route] = true;
+                    $children[] = $child;
+                }
+            }
+        }
+        if (!empty($children)) {
+            $modules = [[
+                'title'    => $info['title'],
+                'icon'     => $info['icon'],
+                'roles'    => '*',
+                'children' => $children,
+            ]];
         }
     }
-    $modules = !empty($filtered) ? $filtered : $modules;
 }
+// If $currentPage is not in $dashboardMap, $modules keeps its role-filtered value
 
 // Config: set to true to allow only one parent open at a time
 $accordionMode = true;
@@ -73,18 +270,52 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     </div>
 
     <div class="sidebar-menu" id="sidebarMenu">
-        <div class="menu-divider"><span>Modules</span></div>
+        <?php if ($currentPage === 'director-general.php'): ?>
+        <!-- ═══ DIRECTOR GENERAL — PREMIUM EXECUTIVE SIDEBAR ═══ -->
+        <div class="menu-divider"><span><i class="fas fa-crown" style="color:#e2b714;"></i> Executive Dashboard</span></div>
+        <div class="dg-sidebar-group">
+            <a href="/director/overview" class="menu-link dg-nav-item" data-section="executive"><span class="menu-icon"><i class="fas fa-chart-simple"></i></span><span class="menu-label">Institution Overview</span></a>
+            <a href="/director/departments" class="menu-link dg-nav-item" data-section="departments"><span class="menu-icon"><i class="fas fa-building"></i></span><span class="menu-label">Department Monitoring</span></a>
+            <a href="/director/performance" class="menu-link dg-nav-item" data-section="performance"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Director Performance</span></a>
+        </div>
 
+        <div class="menu-divider"><span><i class="fas fa-users" style="color:#3b82f6;"></i> People Management</span></div>
+        <div class="dg-sidebar-group">
+            <a href="/director/staff" class="menu-link dg-nav-item" data-section="staff"><span class="menu-icon"><i class="fas fa-id-badge"></i></span><span class="menu-label">Staff Management</span><span class="dg-badge"><?= isset($staff_list) ? count($staff_list).'+' : '' ?></span></a>
+            <a href="/director/students" class="menu-link dg-nav-item" data-section="student"><span class="menu-icon"><i class="fas fa-user-graduate"></i></span><span class="menu-label">Student Management</span><span class="dg-badge"><?= isset($total_students) ? number_format($total_students) : '' ?></span></a>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-briefcase" style="color:#059669;"></i> Institution Operations</span></div>
+        <div class="dg-sidebar-group">
+            <a href="/director/finance" class="menu-link dg-nav-item" data-section="financial"><span class="menu-icon"><i class="fas fa-coins"></i></span><span class="menu-label">Financial Overview</span></a>
+            <a href="/director/assets" class="menu-link dg-nav-item" data-section="store"><span class="menu-icon"><i class="fas fa-warehouse"></i></span><span class="menu-label">Store &amp; Assets</span></a>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-check-circle" style="color:#d97706;"></i> Approvals &amp; Tasks</span></div>
+        <div class="dg-sidebar-group">
+            <a href="/director/approvals" class="menu-link dg-nav-item" data-section="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Pending Approvals</span><span class="dg-badge dg-badge-warning" id="approvalBadgeSidebar" style="display:none">0</span></a>
+            <a href="/director/submissions" class="menu-link dg-nav-item" data-section="services"><span class="menu-icon"><i class="fas fa-inbox"></i></span><span class="menu-label">Pending Submissions</span><span class="dg-badge dg-badge-danger"><?= isset($totalPending) && $totalPending > 0 ? $totalPending : '' ?></span></a>
+            <a href="/director/actions" class="menu-link dg-nav-item" data-section="quick"><span class="menu-icon"><i class="fas fa-bolt"></i></span><span class="menu-label">Quick Actions</span></a>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-bullhorn" style="color:#8b5cf6;"></i> Communication &amp; Governance</span></div>
+        <div class="dg-sidebar-group">
+            <a href="/director/communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Communications</span></a>
+            <a href="/director/audit" class="menu-link dg-nav-item" data-section="audit"><span class="menu-icon"><i class="fas fa-history"></i></span><span class="menu-label">Audit Trail</span></a>
+        </div>
+        <?php else: ?>
+        <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->
+        <div class="menu-divider"><span>Modules</span></div>
         <?php foreach ($modules as $parent):
             $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
             $hasChildren = !empty($parent['children']);
             $hasActiveChild = false;
             if ($hasChildren) {
                 foreach ($parent['children'] as $child) {
-                    // Strip hash from route before matching
                     $cr = $child['route'];
                     $hp = strpos($cr, '#');
                     $cmp = $hp !== false ? substr($cr, 0, $hp) : $cr;
+                    if (($qp = strpos($cmp, '?')) !== false) $cmp = substr($cmp, 0, $qp);
                     if (basename($cmp) === $currentPage) {
                         $hasActiveChild = true;
                         break;
@@ -93,7 +324,6 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             }
             $isStudentMgmt = stripos($parent['title'], 'Student Management') !== false;
         ?>
-        <?php if ($isStudentMgmt): ?><div id="hiddenStudentMgmt" style="display:none"><?php endif; ?>
         <div class="menu-group <?= $hasActiveChild ? 'expanded' : '' ?>" data-group="<?= $parentId ?>">
             <div class="menu-group-header" data-target="<?= $parentId ?>">
                 <span class="menu-icon"><i class="<?= $parent['icon'] ?>"></i></span>
@@ -107,20 +337,28 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                 <div class="menu-children-inner">
                     <?php foreach ($parent['children'] as $child):
                         $childRoute = $child['route'];
-                        // Parse the route URL for hash fragment
                         $childHash = '';
+                        $childSection = '';
                         $childPath = $childRoute;
                         if (($hashPos = strpos($childRoute, '#')) !== false) {
                             $childHash = substr($childRoute, $hashPos + 1);
                             $childPath = substr($childRoute, 0, $hashPos);
                         }
+                        if (($qp = strpos($childPath, '?')) !== false) {
+                            parse_str(substr($childPath, $qp + 1), $qparams);
+                            $childSection = $qparams['section'] ?? '';
+                            $childPath = substr($childPath, 0, $qp);
+                        }
                         $childPage = basename($childPath);
                         $isSamePage = ($childPage === $currentPage);
-                        $isActive = $isSamePage && (empty($childHash) || $childHash === ($_GET['section'] ?? ''));
-                        // For same-page routes with a hash, use only the hash (in-page navigation)
+                        $isActive = $isSamePage && (
+                            ($childHash !== '' && $childHash === ($_GET['section'] ?? '')) ||
+                            ($childSection !== '' && $childSection === ($_GET['section'] ?? '')) ||
+                            ($childHash === '' && $childSection === '')
+                        );
                         $href = $isSamePage && $childHash ? '#' . $childHash : htmlspecialchars($childRoute);
                     ?>
-                    <a href="<?= $href ?>" class="child-link <?= $isActive ? 'active' : '' ?>" <?= $childHash ? 'data-section="'.$childHash.'"' : '' ?>>
+                    <a href="<?= $href ?>" class="child-link <?= $isActive ? 'active' : '' ?>" <?= $childHash ? 'data-section="'.$childHash.'"' : ($childSection ? 'data-section="'.$childSection.'"' : '') ?> <?= !empty($child['onclick']) ? 'onclick="'.$child['onclick'].';return false;"' : '' ?>>
                         <span class="child-bullet"></span>
                         <span class="child-label"><?= htmlspecialchars($child['title']) ?></span>
                     </a>
@@ -129,34 +367,15 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             </div>
             <?php endif; ?>
         </div>
-        <?php if ($isStudentMgmt): ?></div><?php endif; ?>
         <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 
-    <?php if ($currentPage !== 'academic-registrar.php'): ?>
-    <div class="sidebar-extra">
-        <a href="../student-directory.php" class="extra-link"><i class="fas fa-address-book"></i> Directory</a>
-        <a href="../store_request.php" class="extra-link"><i class="fas fa-shopping-cart"></i> Store Request</a>
-        <a href="../dashboards/recycle_bin.php" class="extra-link"><i class="fas fa-trash-alt"></i> Recycle Bin</a>
-        <a href="director-general.php#alerts" class="extra-link"><i class="fas fa-bell"></i> <span>Alerts</span><span id="alertBadgeSidebar" class="badge bg-danger ms-auto" style="font-size:8px;display:none">0</span></a>
-        <a href="director-general.php#audit" class="extra-link"><i class="fas fa-history"></i> <span>Audit Trail</span></a>
-        <a href="director-general.php#approvals" class="extra-link"><i class="fas fa-check-double"></i> <span>Approvals</span><span id="approvalBadgeSidebar" class="badge bg-warning ms-auto" style="font-size:8px;display:none">0</span></a>
-        <a href="#" class="extra-link settings-trigger" data-bs-toggle="modal" data-bs-target="#settingsModal">
-            <i class="fas fa-cog"></i> Settings
-        </a>
-        <a href="#" class="extra-link theme-trigger" onclick="event.preventDefault();if(typeof openThemeModal==='function')openThemeModal();">
-            <i class="fas fa-palette"></i> <span>Theme</span>
-            <span class="theme-picker-name ms-auto"><span class="theme-current-name">Default</span></span>
-        </a>
-        <a href="#" class="extra-link" id="toggleStudentMgmt">
-            <i class="fas fa-user-graduate"></i> <span>Student Management</span>
-            <i class="fas fa-chevron-down smgmt-chevron ms-auto"></i>
-        </a>
-    </div>
-    <?php endif; ?>
     <script>
     (function() {
-        // Fetch alert and approval counts for sidebar badges
+        var alertBadge = document.getElementById('alertBadgeSidebar');
+        var approvalBadge = document.getElementById('approvalBadgeSidebar');
+        if (!alertBadge && !approvalBadge) return;
         function updateBadges() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '../ajax/get_counts.php', true);
@@ -164,8 +383,6 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                 if (xhr.status === 200) {
                     try {
                         var data = JSON.parse(xhr.responseText);
-                        var alertBadge = document.getElementById('alertBadgeSidebar');
-                        var approvalBadge = document.getElementById('approvalBadgeSidebar');
                         if (alertBadge && data.critical_alerts > 0) {
                             alertBadge.textContent = data.critical_alerts;
                             alertBadge.style.display = 'inline';
@@ -181,6 +398,41 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         }
         updateBadges();
         setInterval(updateBadges, 60000);
+    })();
+    </script>
+
+    <script>
+    (function() {
+        // Sync URL hash or /director/{page} to sidebar active state
+        function syncHash() {
+            var sectionId = null;
+            var hash = location.hash.replace('#', '');
+            if (hash) {
+                sectionId = hash;
+            } else {
+                var match = window.location.pathname.match(/^\/director\/([a-z]+)/);
+                if (match) {
+                    var pageToSection$1 = {
+                        overview:'executive',departments:'departments',performance:'performance',
+                        finance:'financial',staff:'staff',students:'student',
+                        submissions:'services',approvals:'approvals',assets:'store',
+                        communications:'communications',audit:'audit',actions:'quick'
+                    };
+                    sectionId = pageToSection$1[match[1]] || null;
+                }
+            }
+            if (!sectionId) return;
+            var links = document.querySelectorAll('#sidebarMenu .child-link, #sidebarMenu .dg-nav-item');
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].getAttribute('data-section') === sectionId) {
+                    links[i].classList.add('active');
+                } else {
+                    links[i].classList.remove('active');
+                }
+            }
+        }
+        syncHash();
+        window.addEventListener('hashchange', syncHash);
     })();
     </script>
 
@@ -562,10 +814,13 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     .isnm-sidebar.collapsed .menu-children,
     .isnm-sidebar.collapsed .extra-link span,
     .isnm-sidebar.collapsed .logout-btn span,
-    .isnm-sidebar.collapsed .footer-meta { display: none; }
+    .isnm-sidebar.collapsed .footer-meta,
+    .isnm-sidebar.collapsed .dg-badge,
+    .isnm-sidebar.collapsed .dg-sidebar-group { display: none; }
     .isnm-sidebar.collapsed .sidebar-extra { padding: 4px; align-items: center; }
     .isnm-sidebar.collapsed .menu-group-header,
-    .isnm-sidebar.collapsed .menu-link { justify-content: center; padding: 10px 0; }
+    .isnm-sidebar.collapsed .menu-link,
+    .isnm-sidebar.collapsed .dg-nav-item { justify-content: center; padding: 10px 0; }
     .isnm-sidebar.collapsed .menu-icon,
     .isnm-sidebar.collapsed .extra-link i { width: auto; font-size: 16px; margin: 0; }
     .isnm-sidebar.collapsed .extra-link { justify-content: center; padding: 8px 0; width: 48px; margin: 0 auto; }
@@ -573,11 +828,8 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     .isnm-sidebar.collapsed .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
     .isnm-sidebar.collapsed .sidebar-user { justify-content: center; padding: 14px 8px; }
     .isnm-sidebar.collapsed .brand-logo { margin: 0; }
-    .isnm-sidebar.collapsed .smgmt-chevron { display: none; }
     .sidebar-collapse-btn { display: block; }
 }
-.smgmt-chevron { transition: transform .25s ease; font-size: 10px; }
-.smgmt-chevron.open { transform: rotate(180deg); }
 
 /* ── Section Switching ── */
 .dashboard-section { display: none; }
@@ -610,10 +862,73 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     border-color: rgba(37, 99, 235, 0.15);
 }
 .section-tab.active {
-    color: #2563eb;
+    color: #2563eb !important;
     background: rgba(37, 99, 235, 0.1);
     border-color: rgba(37, 99, 235, 0.25);
     font-weight: 600;
+}
+
+/* ═══ DG EXECUTIVE SIDEBAR STYLES ═══ */
+.dg-sidebar-group {
+    padding: 2px 8px;
+    margin-bottom: 2px;
+}
+.dg-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: var(--sidebar-radius);
+    font-size: 13px;
+    font-weight: 450;
+    transition: all var(--sidebar-transition);
+    position: relative;
+}
+.dg-nav-item:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
+}
+.dg-nav-item.active {
+    background: var(--sidebar-active);
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+.dg-nav-item .menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.dg-nav-item .menu-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dg-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    color: var(--sidebar-text);
+    flex-shrink: 0;
+    line-height: 1.6;
+}
+.dg-badge-warning {
+    background: #d97706;
+    color: #fff;
+}
+.dg-badge-danger {
+    background: #dc2626;
+    color: #fff;
+}
+.menu-divider span i {
+    margin-right: 6px;
+    font-size: 12px;
 }
 </style>
 
@@ -732,7 +1047,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     });
 
     // ── Close mobile on child link click ──
-    document.querySelectorAll('.child-link').forEach(function(link) {
+    document.querySelectorAll('.child-link, .dg-nav-item').forEach(function(link) {
         link.addEventListener('click', function() {
             if (window.innerWidth <= 768) closeMobile();
         });
@@ -750,79 +1065,137 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         }, 200);
     });
 
-    // ── Student Management toggle ──
-    var smgmtToggle = document.getElementById('toggleStudentMgmt');
-    var smgmtBlock = document.getElementById('hiddenStudentMgmt');
-    if (smgmtToggle && smgmtBlock) {
-        smgmtToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            var isHidden = smgmtBlock.style.display === 'none';
-            smgmtBlock.style.display = isHidden ? '' : 'none';
-            smgmtToggle.querySelector('.smgmt-chevron').classList.toggle('open', isHidden);
-        });
-    }
+    // ── Section ↔ page URL mapping ──
+    var sectionToPage = (function() {
+        var m = {
+            executive:     'overview',
+            departments:   'departments',
+            performance:   'performance',
+            financial:     'finance',
+            staff:         'staff',
+            student:       'students',
+            services:      'submissions',
+            approvals:     'approvals',
+            store:         'assets',
+            communications:'communications',
+            audit:         'audit',
+            quick:         'actions'
+        };
+        return function(s) { return m[s] || s; };
+    })();
+    var pageToSection = (function() {
+        var m = {
+            overview:      'executive',
+            departments:   'departments',
+            performance:   'performance',
+            finance:       'financial',
+            staff:         'staff',
+            students:      'student',
+            submissions:   'services',
+            approvals:     'approvals',
+            assets:        'store',
+            communications:'communications',
+            audit:         'audit',
+            actions:       'quick'
+        };
+        return function(p) { return m[p] || p; };
+    })();
 
     // ── Section Switching ──
-    // Shows the target .dashboard-section and hides all others.
-    // Called when a sidebar child-link[data-section] is clicked, or on hash change.
+    // Shows the target .dashboard-section, pushes a clean /director/{page} URL.
     function switchToSection(sectionId) {
         if (!sectionId) return;
-        // Update visible section
         document.querySelectorAll('.dashboard-section').forEach(function(s) {
             s.classList.toggle('active', s.dataset.section === sectionId);
         });
-        // Update sidebar active states
-        document.querySelectorAll('.child-link[data-section]').forEach(function(l) {
+        document.querySelectorAll('.child-link[data-section], .dg-nav-item[data-section]').forEach(function(l) {
             l.classList.toggle('active', l.dataset.section === sectionId);
         });
-        // Update in-page tab active states
         document.querySelectorAll('.section-tab').forEach(function(t) {
             t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === sectionId);
         });
-        // Update URL hash (replace, not push, to avoid spam in browser history)
-        history.replaceState(null, '', '#' + sectionId);
+        var page = sectionToPage(sectionId);
+        if (page && window.location.pathname.indexOf('/director/') === 0) {
+            history.pushState({section: sectionId}, '', '/director/' + page);
+        }
     }
-
-    // Expose globally so inline onclick="switchToSection(...)" works in section tabs
     window.switchToSection = switchToSection;
 
-    // Click handler for sidebar child links that have data-section
-    document.querySelectorAll('.child-link[data-section]').forEach(function(link) {
+    // Click handler for DG nav items
+    document.querySelectorAll('.dg-nav-item[data-section]').forEach(function(link) {
         link.addEventListener('click', function(e) {
-            var section = this.dataset.section;
-            if (this.getAttribute('href').charAt(0) === '#') {
-                // In-page navigation — prevent default anchor jump, use smooth switch
-                e.preventDefault();
-                switchToSection(section);
-                // Expand parent group if collapsed
-                var group = this.closest('.menu-group');
-                if (group && !group.classList.contains('expanded')) {
-                    var header = group.querySelector('.menu-group-header');
-                    if (header) toggleGroup(header);
-                }
-            }
-            // If href is a full URL (cross-page), let the browser navigate normally
+            e.preventDefault();
+            switchToSection(this.dataset.section);
         });
     });
 
-    // On page load: check URL hash and show matching section
-    // Must run after DOMContentLoaded so dashboard-section elements exist
-    function initSection() {
-        var hash = window.location.hash.replace('#', '');
+    // Click handler for standard child links (hash-based)
+    document.querySelectorAll('.child-link[data-section]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('href').charAt(0) === '#') {
+                e.preventDefault();
+                switchToSection(this.dataset.section);
+            }
+        });
+    });
+
+    // ── popstate: back/forward with clean URLs ──
+    window.addEventListener('popstate', function(e) {
+        var match = window.location.pathname.match(/^\/director\/([a-z]+)/);
+        if (match) {
+            var section = pageToSection(match[1]);
+            if (section) {
+                document.querySelectorAll('.dashboard-section').forEach(function(s) {
+                    s.classList.toggle('active', s.dataset.section === section);
+                });
+                document.querySelectorAll('.child-link[data-section], .dg-nav-item[data-section]').forEach(function(l) {
+                    l.classList.toggle('active', l.dataset.section === section);
+                });
+                document.querySelectorAll('.section-tab').forEach(function(t) {
+                    t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === section);
+                });
+            }
+        }
+    });
+
+    // ── Keep hashchange as fallback ──
+    window.addEventListener('hashchange', function() {
+        var hash = location.hash.replace('#', '');
         if (hash) {
-            var target = document.querySelector('.dashboard-section[data-section="' + hash.replace(/"/g, '') + '"]');
+            document.querySelectorAll('.child-link[data-section], .dg-nav-item[data-section]').forEach(function(l) {
+                l.classList.toggle('active', l.dataset.section === hash);
+            });
+        }
+    });
+
+    // On page load: check URL path for /director/{page}, fall back to hash
+    function initSection() {
+        var sectionId = null;
+        var match = window.location.pathname.match(/^\/director\/([a-z]+)/);
+        if (match) sectionId = pageToSection(match[1]);
+        if (!sectionId) {
+            var hash = window.location.hash.replace('#', '');
+            if (hash) sectionId = hash;
+        }
+        if (sectionId) {
+            var safe = sectionId.replace(/"/g, '');
+            var target = document.querySelector('.dashboard-section[data-section="' + safe + '"]');
             if (target) {
-                switchToSection(hash);
-                // Auto-expand the sidebar group containing this section's link
-                document.querySelectorAll('.child-link[data-section="' + hash.replace(/"/g, '') + '"]').forEach(function(l) {
+                document.querySelectorAll('.dashboard-section').forEach(function(s) {
+                    s.classList.toggle('active', s.dataset.section === safe);
+                });
+                document.querySelectorAll('.child-link[data-section], .dg-nav-item[data-section]').forEach(function(l) {
+                    l.classList.toggle('active', l.dataset.section === safe);
+                });
+                document.querySelectorAll('.section-tab').forEach(function(t) {
+                    t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === safe);
+                });
+                document.querySelectorAll('.child-link[data-section="' + safe + '"]').forEach(function(l) {
                     var group = l.closest('.menu-group');
                     if (group && !group.classList.contains('expanded')) {
-                        var header = group.querySelector('.menu-group-header');
-                        if (header) {
-                            group.classList.add('expanded');
-                            var children = document.getElementById('childGroup-' + group.dataset.group);
-                            if (children) children.style.maxHeight = children.scrollHeight + 'px';
-                        }
+                        group.classList.add('expanded');
+                        var children = document.getElementById('childGroup-' + group.dataset.group);
+                        if (children) children.style.maxHeight = children.scrollHeight + 'px';
                     }
                 });
             }

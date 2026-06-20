@@ -37,6 +37,8 @@ function getModuleConfig(): array {
                 ['title' => 'Store & Assets',        'route' => 'director-general.php#store',       'roles' => ['director general','ceo']],
                 ['title' => 'Communications',        'route' => 'director-general.php#communications', 'roles' => ['director general','ceo']],
                 ['title' => 'Quick Actions',         'route' => 'director-general.php#quick',       'roles' => ['director general','ceo']],
+                ['title' => 'Pending Approvals',    'route' => 'director-general.php#approvals',  'roles' => ['director general','ceo']],
+                ['title' => 'Audit Trail',          'route' => 'director-general.php#audit',      'roles' => ['director general','ceo','system admin']],
             ],
         ],
         [

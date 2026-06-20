@@ -679,7 +679,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>`;
                 document.getElementById('studentProfileBody').innerHTML = h;
                 setTimeout(()=>{ document.querySelectorAll('#sTabs a').forEach(t=>{ t.addEventListener('click',e=>{ e.preventDefault(); new bootstrap.Tab(t).show(); }); }); },100);
-            });
+            }).catch(function(){ document.getElementById('studentProfileBody').innerHTML = '<div class="alert alert-danger text-center m-3">Failed to load profile.</div>'; });
     }
 
     function printStudentProfile(){

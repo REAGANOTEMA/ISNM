@@ -56,31 +56,38 @@ class DatabaseConnection {
     public static function getConnection($database) {
         $database = self::resolveDatabaseName($database);
         if (!isset(self::$connections[$database])) {
-            try {
-                $configs = self::getConfigs();
-                $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
-                
-                $conn = new mysqli(
-                    $cfg['host'],
-                    $cfg['username'],
-                    $cfg['password'],
-                    $database,
-                    $cfg['port'] ?? 3306
-                );
-
-                if ($conn->connect_error) {
-                    throw new Exception("Connection to {$database} failed on {$cfg['host']}:" . ($cfg['port'] ?? 3306) . " - " . $conn->connect_error);
+            $configs = self::getConfigs();
+            $cfg = $configs[$database] ?? $configs['igangaschoolofl_students_db'];
+            
+            $host = ($cfg['host'] === 'localhost' ? '127.0.0.1' : $cfg['host']);
+            $username = $cfg['username'];
+            $password = $cfg['password'];
+            $port = $cfg['port'] ?? 3306;
+            
+            // Try configured port first, then common fallbacks
+            $ports = array_values(array_unique(array_filter([$port, 3307, 3306])));
+            
+            $lastError = null;
+            foreach ($ports as $tryPort) {
+                try {
+                    $conn = new mysqli($host, $username, $password, $database, $tryPort);
+                    if ($conn->connect_error) {
+                        $lastError = $conn->connect_error;
+                        continue;
+                    }
+                    $conn->set_charset($cfg['charset']);
+                    self::$connections[$database] = $conn;
+                    error_log("Successfully connected to {$database} database");
+                    break;
+                } catch (Exception $e) {
+                    $lastError = $e->getMessage();
                 }
-
-                $conn->set_charset($cfg['charset']);
-                self::$connections[$database] = $conn;
-
-                // Log successful connection
-                error_log("Successfully connected to {$database} database");
-                
-            } catch (Exception $e) {
-                error_log("Database connection error: " . $e->getMessage());
-                throw $e;
+            }
+            
+            if (!isset(self::$connections[$database])) {
+                $err = "Connection to {$database} failed on {$host}:{$port} - " . ($lastError ?? 'unknown');
+                error_log("Database connection error: " . $err);
+                throw new Exception($err);
             }
         }
         

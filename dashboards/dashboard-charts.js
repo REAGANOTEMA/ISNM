@@ -6,9 +6,7 @@
     'use strict';
 
     // Global handler for unhandled promise rejections (e.g. from Chart.js async internals)
-    window.addEventListener('unhandledrejection', function(e) {
-        e.preventDefault();
-    });
+    (function(){function u(e){e.preventDefault();e.stopPropagation();if(e.promise)e.promise.catch(function(){});}window.addEventListener('unhandledrejection',u);window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
 
     const AI_ENGINE = {
         version: '1.0.0',
@@ -132,10 +130,21 @@
         config = config || {};
         var charts = {};
 
+        function sanitizeData(d) {
+            if (!Array.isArray(d)) return [];
+            return d.map(function(v){ return (typeof v==='number' && isFinite(v)) ? v : 0; });
+        }
+
         function createChart(canvasId, type, data, opts) {
             var canvas = document.getElementById(canvasId);
             if (!canvas) return null;
             var ctx = canvas.getContext('2d');
+            // Sanitize all numeric datasets
+            if (data && data.datasets) {
+                data.datasets.forEach(function(ds) {
+                    if (ds.data) ds.data = sanitizeData(ds.data);
+                });
+            }
             var defaultOpts = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -428,7 +437,7 @@
     // ── Auto-init from data attribute ──
     document.addEventListener('DOMContentLoaded', function () {
         try {
-            var bar = document.querySelector('.analytics-bar');
+            var bar = document.querySelector('.analytics-bar, .analytics-strip');
             if (!bar) return;
             var raw = bar.getAttribute('data-ax');
             if (!raw) return;

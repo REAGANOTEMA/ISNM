@@ -72,6 +72,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header('Location: storekeeper.php'); exit;
     }
 
+    // Submit for DG Approval
+    if ($action === 'submit_for_dg_approval') {
+        require_once __DIR__ . '/../includes/approval_integration.php';
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        if (submitStoreForApproval($reqId, $staffConn)) {
+            $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request submitted for Director General approval.'];
+        } else {
+            $_SESSION['store_msg'] = ['type'=>'error','text'=>'Failed to submit for approval.'];
+        }
+        header('Location: storekeeper.php'); exit;
+    }
+
     // Mark request as fulfilled
     if ($action === 'fulfill_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
@@ -158,7 +170,7 @@ if ($r) while ($row = $r->fetch_assoc()) $lowStock[] = $row;
 
 // Pending requests
 $pendingReqs = [];
-$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name, s.position as requester_role FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded') ORDER BY FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
+$r = $staffConn->query("SELECT sr.*, s.full_name as requester_name, s.position as requester_role FROM store_requests sr LEFT JOIN staff s ON sr.requested_by=s.id WHERE sr.status IN ('pending','forwarded','pending_approval') ORDER BY FIELD(sr.status,'pending','forwarded','pending_approval'), FIELD(sr.urgency,'urgent','high','medium','low'), sr.created_at ASC");
 if ($r) while ($row = $r->fetch_assoc()) $pendingReqs[] = $row;
 
 // Recent fulfilled
@@ -294,9 +306,18 @@ $statsOrders = count($orders);
                         </div>
                         <div class="req-meta"><?= htmlspecialchars($req['requester_name'] ?? 'Unknown') ?> | <?= htmlspecialchars($req['department'] ?? '') ?> | <?= date('d M Y H:i', strtotime($req['created_at'])) ?></div>
                         <div class="req-actions mt-2">
+                            <?php if ($req['status'] === 'pending_approval'): ?>
+                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending DG Approval</span>
+                            <?php else: ?>
                             <button class="btn btn-sm btn-success" onclick="openFulfill(<?= $req['id'] ?>)"><i class="fas fa-check me-1"></i>Fulfill</button>
                             <button class="btn btn-sm btn-info text-white" onclick="openForward(<?= $req['id'] ?>)"><i class="fas fa-forward me-1"></i>Forward</button>
+                            <form method="POST" style="display:inline">
+                                <input type="hidden" name="action" value="submit_for_dg_approval">
+                                <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
+                                <button class="btn btn-sm btn-warning text-dark" type="submit"><i class="fas fa-crown me-1"></i>DG Approve</button>
+                            </form>
                             <button class="btn btn-sm btn-outline-danger" onclick="openReject(<?= $req['id'] ?>)"><i class="fas fa-times me-1"></i>Reject</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php endforeach; endif; ?>
@@ -363,9 +384,19 @@ $statsOrders = count($orders);
                     </tbody>
                 </table>
                 <div class="d-flex gap-2 flex-wrap">
+                    <?php if ($req['status'] === 'pending_approval'): ?>
+                    <span class="badge bg-warning text-dark py-2 px-3"><i class="fas fa-clock me-1"></i>Submitted for DG Approval — awaiting decision</span>
+                    <a href="../dashboards/director-general.php#approvals" class="btn btn-sm btn-outline-primary"><i class="fas fa-external-link-alt me-1"></i>View in Approval Center</a>
+                    <?php else: ?>
                     <button class="btn btn-sm btn-success" onclick="fulfillAll(<?= $req['id'] ?>)"><i class="fas fa-check-double me-1"></i>Mark All Fulfilled</button>
                     <button class="btn btn-sm btn-info text-white" onclick="openForward(<?= $req['id'] ?>)"><i class="fas fa-forward me-1"></i>Forward to HR/Director</button>
+                    <form method="POST" style="display:inline">
+                        <input type="hidden" name="action" value="submit_for_dg_approval">
+                        <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
+                        <button class="btn btn-sm btn-warning text-dark" type="submit"><i class="fas fa-crown me-1"></i>Submit for DG Approval</button>
+                    </form>
                     <button class="btn btn-sm btn-outline-danger" onclick="openReject(<?= $req['id'] ?>)"><i class="fas fa-times me-1"></i>Reject</button>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; endif; ?>

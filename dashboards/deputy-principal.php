@@ -790,7 +790,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 form.onsubmit = function() {
                     const fd = new FormData(this);
                     fd.set('action', 'add_student_deputy');
-                    fetch('deputy-principal.php', { method:'POST', body:fd }).then(r=>{ window.location.reload(); });
+                    fetch('deputy-principal.php', { method:'POST', body:fd }).then(r=>{ window.location.reload(); }).catch(function(){});
                     return false;
                 };
                 break;

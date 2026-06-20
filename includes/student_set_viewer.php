@@ -308,6 +308,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                 <?php $profileLink = '?' . http_build_query(array_merge($listQuery, ['view_student' => $stu['student_id'] ?? $stu['student_number'] ?? $stu['id'], 'page' => $currentPage])); ?>
                                 <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-primary" title="Full Profile"><i class="fas fa-eye"></i></a>
                                 <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $stu['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteStudent(<?= $stu['id'] ?>)" title="Delete"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -460,6 +461,7 @@ function renderStudentSetViewer($conn, array $options = []) {
                                         <div class="d-flex gap-1">
                                             <a href="<?= $profileLink ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-file-alt"></i></a>
                                             <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $stu['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteStudent(<?= $stu['id'] ?>)" title="Delete"><i class="fas fa-trash"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -847,6 +849,18 @@ function renderStudentSetViewer($conn, array $options = []) {
                 document.querySelector('#editStudentModal .modal-footer .btn-primary').disabled = false;
                 document.querySelector('#editStudentModal .modal-footer .btn-primary').innerHTML = '<i class="fas fa-save"></i> Save Changes';
             });
+    }
+    function confirmDeleteStudent(id) {
+        if (!confirm('Are you sure you want to delete this student? This action cannot be undone.')) return;
+        var f = new FormData();
+        f.set('action','delete'); f.set('id',id);
+        fetch('ajax/update_student.php',{method:'POST',body:f})
+        .then(function(r){return r.json()})
+        .then(function(res){
+            if(res.success){alert('Student deleted successfully!');location.reload();}
+            else{alert('Error: '+(res.error||'Delete failed'));}
+        })
+        .catch(function(err){alert('Network error: '+err.message);});
     }
     </script>
     <?php

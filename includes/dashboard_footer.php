@@ -38,8 +38,7 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
 <link href="<?= $rootPath ?>/dashboards/dashboard-professional.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Bootstrap 5.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Font Awesome JS (icons) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" defer></script>
+<!-- Font Awesome (CSS/webfont version — loaded in head, no fetch rejections) -->
 <?php if (function_exists('renderProfileModal')) renderProfileModal(); ?>
 
 <script>
@@ -47,7 +46,7 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
 var ISNM_VERSION = '<?= $v ?>';
 
 // ── Suppress unhandled Promise rejections (e.g. Font Awesome deferred) ──
-window.addEventListener('unhandledrejection', function (e) { e.preventDefault(); });
+(function(){function u(e){e.preventDefault();e.stopPropagation();if(e.promise)e.promise.catch(function(){});}window.addEventListener('unhandledrejection',u);window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
 
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {

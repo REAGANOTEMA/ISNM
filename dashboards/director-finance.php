@@ -989,7 +989,7 @@ function viewExpense(id) {
     fetch('director-finance.php?ajax=expense_detail&expense_id='+id)
         .then(r=>r.json()).then(d=>{
             alert('Expense: '+d.expense_id+'\nCategory: '+d.expense_category+'\nDescription: '+d.description+'\nAmount: UGX '+Number(d.amount).toLocaleString()+'\nDate: '+d.expense_date+'\nSupplier: '+(d.notes||'-')+'\nStatus: '+d.status+'\nRequested By: '+(d.requested_by_name||'-')+'\nApproved By: '+(d.approved_by_name||'-'));
-        });
+        }).catch(function(){});
 }
 
 // Student Fees Module
@@ -1004,7 +1004,7 @@ function searchStudentFees() {
             let h = '<div class="list-group mb-2" style="max-height:200px;overflow-y:auto">';
             data.forEach(s=>{ h+='<button class="list-group-item list-group-item-action py-1 small" onclick="loadStudentFees('+s.id+')"><strong>'+s.full_name+'</strong> <code>'+s.student_number+'</code> – '+s.course+'</button>'; });
             h += '</div>'; c.innerHTML = h;
-        });
+        }).catch(function(){ document.getElementById('feeSearchResults').innerHTML = '<div class="text-danger small">Search failed.</div>'; });
 }
 
 function loadStudentFees(id) {
@@ -1024,7 +1024,7 @@ function loadStudentFees(id) {
             let payHtml = '';
             (d.payments||[]).forEach(p=>{ payHtml+='<tr><td><code>'+p.payment_reference+'</code></td><td>UGX '+Number(p.amount_received).toLocaleString()+'</td><td>'+p.payment_method+'</td><td>'+p.payment_date+'</td><td><span class="badge bg-'+(p.status==='approved'?'success':p.status==='pending'?'warning':'danger')+'">'+p.status+'</span></td></tr>'; });
             document.querySelector('#feePayTable tbody').innerHTML = payHtml || '<tr><td colspan="5" class="text-center text-muted">No payments.</td></tr>';
-        });
+        }).catch(function(){ document.getElementById('feeStudentDetail').style.display='block'; document.getElementById('feeStudentInfo').innerHTML='<div class="alert alert-danger">Failed to load fees.</div>'; });
 }
 
 function generateStatement() {

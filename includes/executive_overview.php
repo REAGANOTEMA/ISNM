@@ -174,7 +174,7 @@ function renderRiskRegister($staffConn, $limit = 5) {
     foreach ($risks as $risk) {
         $html .= '<div class="risk-item d-flex justify-content-between align-items-center py-2 border-bottom">';
         $html .= '  <div>';
-        $html .= '    <div class="fw-semibold">' . htmlspecialchars($risk['risk_title']) . '</div>';
+        $html .= '    <div class="fw-semibold">' . htmlspecialchars($risk['risk_name']) . '</div>';
         $html .= '    <span class="text-muted">' . htmlspecialchars($risk['risk_category']) . '</span>';
         $html .= '  </div>';
         $html .= '  <div class="text-end">';

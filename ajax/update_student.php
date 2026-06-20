@@ -12,6 +12,21 @@ if (!$conn) {
     exit;
 }
 
+// DELETE action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    $id = intval($_POST['id'] ?? 0);
+    if ($id < 1) { echo json_encode(['success' => false, 'error' => 'Invalid ID']); exit; }
+    $stmt = $conn->prepare("DELETE FROM students WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Student deleted successfully.']);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Delete failed: ' . $conn->error]);
+    }
+    $stmt->close();
+    exit;
+}
+
 // GET request: fetch student data
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetch']) && isset($_GET['id'])) {
     $id = intval($_GET['id']);

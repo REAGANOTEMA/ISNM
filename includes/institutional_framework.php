@@ -467,15 +467,15 @@ function renderAlertsPanel($conn, $departmentCode = null, $limit = 10) {
         $html .= '  <div class="d-flex align-items-start gap-3">';
         $html .= '    <i class="fas ' . $icon . ' mt-1" style="font-size:1.1rem"></i>';
         $html .= '    <div class="flex-grow-1">';
-        $html .= '      <div class="fw-semibold small">' . htmlspecialchars($alert['alert_title']) . '</div>';
-        $html .= '      <div class="small text-muted">' . htmlspecialchars($alert['alert_message']) . '</div>';
+        $html .= '      <div class="fw-semibold small">' . htmlspecialchars($alert['title']) . '</div>';
+        $html .= '      <div class="small text-muted">' . htmlspecialchars($alert['description']) . '</div>';
         $html .= '      <div class="mt-1 d-flex gap-2 align-items-center">';
         $html .= '        <span class="' . $pClass . '" style="font-size:8px">' . htmlspecialchars($alert['priority']) . '</span>';
         $html .= '        <span class="text-muted" style="font-size:9px">' . date('d M H:i', strtotime($alert['created_at'])) . '</span>';
-        if ($alert['category']) $html .= '        <span class="badge bg-secondary" style="font-size:8px">' . htmlspecialchars($alert['category']) . '</span>';
+        if ($alert['alert_type']) $html .= '        <span class="badge bg-secondary" style="font-size:8px">' . htmlspecialchars($alert['alert_type']) . '</span>';
         $html .= '      </div>';
         $html .= '    </div>';
-        if ($alert['source_url']) $html .= '    <a href="' . htmlspecialchars($alert['source_url']) . '" class="btn btn-sm btn-outline-secondary" style="font-size:10px"><i class="fas fa-external-link-alt"></i></a>';
+        if ($alert['source']) $html .= '    <a href="' . htmlspecialchars($alert['source']) . '" class="btn btn-sm btn-outline-secondary" style="font-size:10px"><i class="fas fa-external-link-alt"></i></a>';
         $html .= '  </div>';
         $html .= '</div>';
     }
