@@ -123,6 +123,10 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             $ws->execute();
                             $ws->close();
                         }
+                        if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
+                            $nid = createNotification('New News: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
+                            if ($nid) notifyAllStaff($nid);
+                        }
                         $_SESSION['news_success'] = 'News article created successfully.';
                     } else {
                         $errors[] = 'Database error: ' . $stmt->error;
@@ -151,6 +155,10 @@ if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             $ws = $websiteConn->prepare("UPDATE news SET title=?, content=?, excerpt=?, status=?, published_at=COALESCE(?, published_at), author_name=?, author_role=? WHERE id=?");
                             if ($ws) { $ws->bind_param("sssssssi", $title, $allContent, $excerpt, $status, $published_at, $authorName, $authorRole, $news_id); $ws->execute(); $ws->close(); }
                         }
+                    }
+                    if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
+                        $nid = createNotification('News Updated: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
+                        if ($nid) notifyAllStaff($nid);
                     }
                     $_SESSION['news_success'] = 'News article updated successfully.';
                 } elseif ($stmt) {

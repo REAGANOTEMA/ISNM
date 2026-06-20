@@ -450,7 +450,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 <!-- Mobile overlay + toggle -->
 <div class="isnm-overlay" id="isnmOverlay"></div>
 <button class="isnm-mobile-toggle" id="isnmMobileToggle" aria-label="Toggle menu">
-    <span></span><span></span><span></span>
+    <div class="hambox"><span></span><span></span><span></span></div>
 </button>
 
 <style>
@@ -759,7 +759,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     backdrop-filter: blur(2px);
 }
 
-/* ── Mobile Toggle ── */
+/* ── Premium Mobile Toggle (hamburger → X) ── */
 .isnm-mobile-toggle {
     display: none;
     position: fixed;
@@ -768,24 +768,57 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     z-index: 1060;
     background: var(--sidebar-bg);
     border: 1px solid var(--sidebar-border);
-    border-radius: 10px;
-    padding: 10px 11px;
+    border-radius: 12px;
+    padding: 0;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 44px;
+    height: 44px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.isnm-mobile-toggle:hover {
+    background: var(--sidebar-hover);
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35);
+    transform: scale(1.05);
+}
+.isnm-mobile-toggle:active {
+    transform: scale(0.95);
+}
+.isnm-mobile-toggle .hambox {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: flex;
     flex-direction: column;
-    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
 }
-.isnm-mobile-toggle span {
+.isnm-mobile-toggle .hambox span {
     display: block;
-    width: 18px;
-    height: 2px;
+    width: 20px;
+    height: 2.5px;
     background: #fff;
-    border-radius: 2px;
-    transition: all 0.3s ease;
+    border-radius: 3px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
 }
-.isnm-mobile-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
-.isnm-mobile-toggle.active span:nth-child(2) { opacity: 0; }
-.isnm-mobile-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+.isnm-mobile-toggle.active .hambox { gap: 0; }
+.isnm-mobile-toggle.active .hambox span:nth-child(1) {
+    transform: rotate(45deg) translateY(1px);
+    width: 22px;
+}
+.isnm-mobile-toggle.active .hambox span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.isnm-mobile-toggle.active .hambox span:nth-child(3) {
+    transform: rotate(-45deg) translateY(-1px);
+    width: 22px;
+}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

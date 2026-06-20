@@ -2775,3 +2775,17 @@ Stack trace:
 [20-Jun-2026 14:08:42 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
 [20-Jun-2026 14:08:42 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
 [20-Jun-2026 14:08:42 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[20-Jun-2026 21:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[20-Jun-2026 21:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[20-Jun-2026 21:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[20-Jun-2026 21:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[20-Jun-2026 21:14:36 Africa/Kampala] Error fetching news: Unknown column 'author_name' in 'field list'
+[20-Jun-2026 21:15:27 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[20-Jun-2026 21:15:27 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[20-Jun-2026 21:15:27 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[20-Jun-2026 21:15:28 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[20-Jun-2026 21:15:28 Africa/Kampala] Error fetching news: Unknown column 'author_name' in 'field list'
+[20-Jun-2026 21:15:54 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[20-Jun-2026 21:15:54 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[20-Jun-2026 21:15:54 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[20-Jun-2026 21:15:54 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

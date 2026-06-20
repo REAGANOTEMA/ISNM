@@ -245,6 +245,41 @@ var ISNM_VERSION = '<?= $v ?>';
     return new Date(ts).toLocaleDateString();
   }
 
+  // ── Global Link Loading Animation ──────────────────────────────
+  function initGlobalLoader() {
+    var loader = document.getElementById('isnmLoader');
+    if (!loader) return;
+    var shown = false;
+    function showLoader() { if (!shown) { shown = true; loader.classList.add('active'); } }
+    function hideLoader() { shown = false; loader.classList.remove('active'); }
+
+    document.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (!link) return;
+      var href = link.getAttribute('href') || '';
+      // Skip external links, hash-only, javascript:, mailto:, tel:
+      if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('http')) return;
+      // Skip links that open in new tab
+      if (link.getAttribute('target') === '_blank') return;
+      // Skip links with data-no-loader
+      if (link.hasAttribute('data-no-loader')) return;
+      // Skip sidebar toggle, mobile toggle buttons
+      if (link.closest('.isnm-mobile-toggle') || link.closest('.sidebar-collapse-btn')) return;
+
+      // For form submits, buttons, etc. — don't block
+      if (link.closest('form')) return;
+      if (e.button !== 0) return; // left click only
+
+      showLoader();
+    });
+
+    // Hide loader on page load/restore
+    window.addEventListener('pageshow', hideLoader);
+    window.addEventListener('load', hideLoader);
+    // Also hide when popstate (back/forward)
+    window.addEventListener('popstate', hideLoader);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initSidebar();
     setActiveNav();
@@ -252,12 +287,19 @@ var ISNM_VERSION = '<?= $v ?>';
     registerSW();
     detectPWA();
     initNotificationBell();
+    initGlobalLoader();
+    document.getElementById('isnmLoader') && document.getElementById('isnmLoader').classList.remove('active');
   });
 })();
 </script>
 <?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 
 <?php if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff'): ?>
+<div class="isnm-loader" id="isnmLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Please wait<span class="loader-dots"></span></div>
+</div>
+
 <div id="commFloatingBtn" class="comm-floating-btn" title="Send Department Communication" onclick="openCommunicationModal()">
     <i class="fas fa-envelope"></i>
 </div>
@@ -274,6 +316,48 @@ function openCommunicationModal() {
 <?php endif; ?>
 
 <style>
+/* ── Global Loading Overlay ────────────────────────────────────── */
+.isnm-loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+}
+.isnm-loader.active { display: flex; }
+.isnm-loader .loader-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255,255,255,0.12);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: isnmSpin 0.5s linear infinite;
+}
+.isnm-loader .loader-text {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+}
+.isnm-loader .loader-dots::after {
+    content: '';
+    animation: isnmDots 1.5s steps(4, end) infinite;
+}
+@keyframes isnmSpin { to { transform: rotate(360deg); } }
+@keyframes isnmDots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+}
+
 /* ── Communication Floating Button ─────────────────────────────── */
 .comm-floating-btn {
     position: fixed; bottom: 24px; right: 24px; z-index: 1059;

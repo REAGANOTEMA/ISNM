@@ -4,8 +4,8 @@
   <div class="footer-stripes-top"></div>
   
   <div class="container">
-    <div class="row">
-      <div class="col-md-4">
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
         <div class="footer-logo">
           <img src="images/school-logo.png" alt="ISNM Logo" class="footer-logo-img">
           <h4>IGANGA SCHOOL OF NURSING AND MIDWIFERY</h4>
@@ -15,7 +15,7 @@
           <p><i class="fas fa-globe"></i> Website: <a href="https://igangaschoolofnursingandmidwifery.ac.ug" target="_blank" rel="noopener">igangaschoolofnursingandmidwifery.ac.ug</a></p>
           
           <!-- Social Media Links -->
-          <div class="social-links mt-3">
+          <div class="social-links">
             <a href="#" class="social-btn"><i class="fab fa-facebook"></i></a>
             <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
             <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
@@ -24,7 +24,7 @@
         </div>
       </div>
       
-      <div class="col-md-4">
+      <div class="col-lg-4 col-md-6">
         <div class="footer-links">
           <h5><i class="fas fa-link me-2"></i>Quick Links</h5>
           <ul class="list-unstyled">
@@ -43,7 +43,7 @@
         </div>
       </div>
       
-      <div class="col-md-4">
+      <div class="col-lg-4 col-md-12">
         <div class="footer-developer">
           <h5><i class="fas fa-code me-2"></i>Designed and Developed by</h5>
           <div class="developer-info">
@@ -121,7 +121,7 @@
   }
   
   .isnm-footer .container {
-    padding: 35px 15px 15px;
+    padding: 40px 20px 20px;
     text-align: left;
   }
   
@@ -135,17 +135,17 @@
   
   .isnm-footer h4 {
     font-size: 1rem;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   
   .isnm-footer h5 {
     font-size: 0.92rem;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   
   .isnm-footer h6 {
     font-size: 0.88rem;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
   
   .isnm-footer p,
@@ -153,7 +153,7 @@
     color: var(--isnm-cream);
     font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 0.85rem;
-    line-height: 1.6;
+    line-height: 1.7;
   }
   
   .isnm-footer a:hover {
@@ -171,7 +171,7 @@
     height: 75px;
     border-radius: 50%;
     border: 3px solid var(--isnm-yellow);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     transition: all 0.3s ease;
   }
   
@@ -182,27 +182,27 @@
   
   .footer-logo h4 {
     font-size: 0.92rem;
-    margin-bottom: 10px;
-    line-height: 1.35;
+    margin-bottom: 12px;
+    line-height: 1.4;
   }
   
   .footer-logo p {
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     font-size: 0.82rem;
   }
   
   .social-links {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-start;
-    margin-top: 10px !important;
+    margin-top: 14px !important;
   }
   
   .social-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     color: var(--isnm-cream);
     display: flex;
     align-items: center;
@@ -224,36 +224,36 @@
     padding: 0;
     margin: 0;
     columns: 2;
-    column-gap: 12px;
+    column-gap: 16px;
   }
   
   .footer-links ul li {
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     break-inside: avoid;
     display: block;
   }
   
   .footer-links ul li a {
-    font-size: 0.75rem;
-    padding: 1px 0;
+    font-size: 0.73rem;
+    padding: 2px 0;
     display: inline-block;
     text-decoration: none;
   }
   
   .footer-links ul li a i {
-    font-size: 0.55rem;
-    margin-right: 3px !important;
-    width: 11px;
+    font-size: 0.5rem;
+    margin-right: 4px !important;
+    width: 10px;
     text-align: center;
   }
   
   .footer-developer h5 {
     font-size: 0.88rem;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   
   .developer-info .contact-info p {
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     font-size: 0.8rem;
   }
   
@@ -262,8 +262,8 @@
   }
   
   .developer-note {
-    margin-top: 6px;
-    padding: 5px 10px;
+    margin-top: 8px;
+    padding: 8px 12px;
     background: rgba(255, 255, 255, 0.06);
     border-radius: 6px;
   }
@@ -274,18 +274,18 @@
   }
   
   .footer-developer .btn-3d.btn-sm {
-    padding: 5px 14px;
+    padding: 6px 16px;
     font-size: 0.78rem;
   }
   
   .footer-bottom {
     background: rgba(0, 0, 0, 0.25);
-    padding: 14px 0;
+    padding: 16px 0;
     text-align: center;
   }
   
   .footer-bottom p {
-    margin: 2px 0;
+    margin: 3px 0;
     font-size: 0.8rem;
     opacity: 0.9;
   }
@@ -299,7 +299,7 @@
   
   @media (max-width: 991px) {
     .isnm-footer .container {
-      padding: 30px 15px 12px;
+      padding: 32px 20px 16px;
     }
     
     .footer-links ul {
@@ -309,11 +309,11 @@
   
   @media (max-width: 768px) {
     .isnm-footer .container {
-      padding: 25px 15px 10px;
+      padding: 28px 16px 12px;
     }
     
     .isnm-footer .row > div {
-      margin-bottom: 18px;
+      margin-bottom: 24px;
     }
     
     .isnm-footer .row > div:last-child {
@@ -326,7 +326,7 @@
     }
     
     .social-links {
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
     }
     
@@ -338,7 +338,7 @@
     
     .footer-links ul {
       columns: 2;
-      column-gap: 10px;
+      column-gap: 16px;
     }
     
     .footer-links ul li a {
@@ -350,60 +350,56 @@
     }
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 576px) {
     .isnm-footer .container {
-      padding: 18px 12px 8px;
+      padding: 24px 14px 10px;
     }
-    
     .footer-links ul {
       columns: 1;
     }
-    
     .footer-logo h4 {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
     }
-    
     .footer-logo p {
       font-size: 0.78rem;
     }
-    
     .footer-bottom p {
       font-size: 0.75rem;
     }
   }
-
+  
   @media (max-width: 360px) {
     .isnm-footer .container {
-      padding: 14px 8px 6px;
+      padding: 18px 10px 8px;
     }
-
+  
     .footer-logo-img {
       width: 50px;
       height: 50px;
     }
-
+  
     .footer-links ul li a {
       font-size: 0.68rem;
       padding: 3px 0;
     }
-
+  
     .developer-info .contact-info p {
       font-size: 0.7rem;
     }
-
+  
     .developer-info .contact-info a {
       font-size: 0.7rem;
     }
-
+  
     .isnm-footer p,
     .isnm-footer a {
       font-size: 0.75rem;
     }
-
+  
     .footer-bottom p {
       font-size: 0.7rem;
     }
-
+  
     .social-btn {
       width: 28px;
       height: 28px;
@@ -414,10 +410,72 @@
 
 
 
+<div class="isnm-loader" id="isnmLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Please wait<span class="loader-dots"></span></div>
+</div>
+
+<style>
+.isnm-loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+}
+.isnm-loader.active { display: flex; }
+.isnm-loader .loader-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255,255,255,0.12);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: isnmSpin 0.5s linear infinite;
+}
+.isnm-loader .loader-text {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+}
+@keyframes isnmSpin { to { transform: rotate(360deg); } }
+</style>
+
 <!-- Font Awesome loaded as CSS/webfont in _header.php → no fetch rejections -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="shared/app.js"></script>
   <script>
+    // ── Global Link Loading Animation ──
+    (function(){
+      var loader = document.getElementById('isnmLoader');
+      if (loader) {
+        var shown = false;
+        function showLoader() { if (!shown) { shown = true; loader.classList.add('active'); } }
+        function hideLoader() { shown = false; loader.classList.remove('active'); }
+        document.addEventListener('click', function(e) {
+          var link = e.target.closest('a');
+          if (!link) return;
+          var href = link.getAttribute('href') || '';
+          if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('http')) return;
+          if (link.getAttribute('target') === '_blank') return;
+          if (link.hasAttribute('data-no-loader')) return;
+          if (link.closest('form')) return;
+          if (e.button !== 0) return;
+          showLoader();
+        });
+        window.addEventListener('pageshow', hideLoader);
+        window.addEventListener('load', hideLoader);
+        window.addEventListener('popstate', hideLoader);
+        hideLoader();
+      }
+    })();
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         var swPath = (window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/') + 'sw.js';
