@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 18, 2026 at 06:34 PM
+-- Generation Time: Jun 20, 2026 at 02:19 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -1102,54 +1102,54 @@ CREATE TABLE `alert_recipients` (
 -- (See below for the actual view)
 --
 CREATE TABLE `all_students_view` (
-`academic_year` varchar(20)
-,`address` text
-,`cgpa` decimal(3,2)
-,`county` varchar(100)
-,`created_at` timestamp
-,`created_by` int
-,`date_of_birth` date
-,`district` varchar(100)
-,`email` varchar(100)
-,`emergency_contact_name` varchar(100)
-,`emergency_contact_phone` varchar(20)
-,`emergency_contact_relationship` varchar(50)
-,`enrollment_status` enum('Full Time','Part Time','Distance')
+`id` int
+,`student_number` varchar(50)
+,`national_id` varchar(50)
+,`index_number` varchar(50)
+,`registration_number` varchar(50)
 ,`first_name` varchar(100)
+,`middle_name` varchar(100)
+,`last_name` varchar(100)
 ,`full_name` varchar(255)
+,`email` varchar(100)
+,`phone` varchar(20)
+,`date_of_birth` date
 ,`gender` enum('Male','Female','Other')
-,`gpa` decimal(3,2)
-,`guardian_address` text
+,`program` varchar(100)
+,`program_type` enum('Certificate','Diploma','Degree')
+,`intake_set` varchar(20)
+,`intake_date` date
+,`year_of_study` int
+,`semester` varchar(50)
+,`academic_year` varchar(20)
+,`address` text
+,`district` varchar(100)
+,`county` varchar(100)
+,`sub_county` varchar(100)
+,`parish` varchar(100)
+,`village` varchar(100)
 ,`guardian_name` varchar(200)
 ,`guardian_phone` varchar(20)
 ,`guardian_relationship` varchar(50)
-,`id` int
-,`index_number` varchar(50)
-,`intake_date` date
-,`intake_set` varchar(20)
-,`last_name` varchar(100)
-,`marital_status` enum('Single','Married','Divorced','Widowed')
-,`middle_name` varchar(100)
-,`national_id` varchar(50)
+,`guardian_address` text
+,`emergency_contact_name` varchar(100)
+,`emergency_contact_phone` varchar(20)
+,`emergency_contact_relationship` varchar(50)
 ,`nationality` varchar(50)
-,`parish` varchar(100)
-,`phone` varchar(20)
-,`photo_path` varchar(500)
-,`photo_status` text
-,`photo_upload_date` timestamp
-,`photo_uploaded` tinyint(1)
-,`program` varchar(100)
-,`program_type` enum('Certificate','Diploma','Degree')
-,`registration_number` varchar(50)
 ,`religion` varchar(50)
-,`semester` varchar(50)
+,`marital_status` enum('Single','Married','Divorced','Widowed')
+,`photo_path` varchar(500)
+,`photo_uploaded` tinyint(1)
+,`photo_upload_date` timestamp
 ,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
-,`student_number` varchar(50)
-,`sub_county` varchar(100)
-,`updated_at` timestamp
+,`enrollment_status` enum('Full Time','Part Time','Distance')
+,`gpa` decimal(3,2)
+,`cgpa` decimal(3,2)
+,`created_by` int
 ,`updated_by` int
-,`village` varchar(100)
-,`year_of_study` int
+,`created_at` timestamp
+,`updated_at` timestamp
+,`photo_status` text
 );
 
 -- --------------------------------------------------------
@@ -1167,6 +1167,23 @@ CREATE TABLE `analytics_cache` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `announcements`
+--
+
+CREATE TABLE `announcements` (
+  `id` int UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `body` text,
+  `target_audience` varchar(60) DEFAULT 'All',
+  `priority` varchar(20) DEFAULT 'Normal',
+  `posted_by` int UNSIGNED DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1932,6 +1949,32 @@ CREATE TABLE `compliance_requirements` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `compliance_requirements`
+--
+
+INSERT INTO `compliance_requirements` (`id`, `requirement_name`, `description`, `category`, `frequency`, `due_date`, `assigned_role_id`, `assigned_staff_id`, `status`, `evidence_path`, `reviewed_by`, `reviewed_at`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'NCHE Annual Report', NULL, 'academic', 'annual', '2026-09-18', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:08', '2026-06-20 08:43:08'),
+(2, 'UNMC License Renewal', NULL, 'regulatory', 'annual', '2026-12-17', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:08', '2026-06-20 08:43:08'),
+(3, 'Fire Safety Inspection', NULL, 'safety', 'annual', '2026-08-19', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:08', '2026-06-20 08:43:08'),
+(4, 'Tax Filing', NULL, 'financial', 'annual', '2026-08-04', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:08', '2026-06-20 08:43:08'),
+(5, 'NCHE Annual Report', NULL, 'academic', 'annual', '2026-09-18', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:22', '2026-06-20 08:43:22'),
+(6, 'UNMC License Renewal', NULL, 'regulatory', 'annual', '2026-12-17', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:22', '2026-06-20 08:43:22'),
+(7, 'Fire Safety Inspection', NULL, 'safety', 'annual', '2026-08-19', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:22', '2026-06-20 08:43:22'),
+(8, 'Tax Filing', NULL, 'financial', 'annual', '2026-08-04', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:43:22', '2026-06-20 08:43:22'),
+(9, 'NCHE Annual Report', NULL, 'academic', 'annual', '2026-09-18', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:45:38', '2026-06-20 08:45:38'),
+(10, 'UNMC License Renewal', NULL, 'regulatory', 'annual', '2026-12-17', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:45:38', '2026-06-20 08:45:38'),
+(11, 'Fire Safety Inspection', NULL, 'safety', 'annual', '2026-08-19', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:45:38', '2026-06-20 08:45:38'),
+(12, 'Tax Filing', NULL, 'financial', 'annual', '2026-08-04', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:45:38', '2026-06-20 08:45:38'),
+(13, 'NCHE Annual Report', NULL, 'academic', 'annual', '2026-09-18', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:47:27', '2026-06-20 08:47:27'),
+(14, 'UNMC License Renewal', NULL, 'regulatory', 'annual', '2026-12-17', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:47:27', '2026-06-20 08:47:27'),
+(15, 'Fire Safety Inspection', NULL, 'safety', 'annual', '2026-08-19', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:47:27', '2026-06-20 08:47:27'),
+(16, 'Tax Filing', NULL, 'financial', 'annual', '2026-08-04', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 08:47:27', '2026-06-20 08:47:27'),
+(17, 'NCHE Annual Report', NULL, 'academic', 'annual', '2026-09-18', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52'),
+(18, 'UNMC License Renewal', NULL, 'regulatory', 'annual', '2026-12-17', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52'),
+(19, 'Fire Safety Inspection', NULL, 'safety', 'annual', '2026-08-19', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52'),
+(20, 'Tax Filing', NULL, 'financial', 'annual', '2026-08-04', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52');
+
 -- --------------------------------------------------------
 
 --
@@ -2045,6 +2088,43 @@ CREATE TABLE `course_registrations` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `daily_sick_records`
+--
+
+CREATE TABLE `daily_sick_records` (
+  `id` int NOT NULL,
+  `record_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `student_name` varchar(300) NOT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `year_of_study` int DEFAULT NULL,
+  `sickness_id` int DEFAULT NULL,
+  `sickness_name` varchar(255) DEFAULT NULL,
+  `temperature` varchar(20) DEFAULT NULL,
+  `blood_pressure` varchar(20) DEFAULT NULL,
+  `symptoms` text,
+  `diagnosis` text,
+  `treatment_given` text,
+  `medicines_prescribed` text,
+  `severity` enum('Mild','Moderate','Severe','Critical') DEFAULT 'Mild',
+  `status` enum('Treated','Referred','Admitted','Discharged','Follow-up','Critical') DEFAULT 'Treated',
+  `referred_to` varchar(255) DEFAULT NULL,
+  `attended_by` varchar(200) DEFAULT NULL,
+  `visit_date` date NOT NULL,
+  `visit_time` time DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `notes` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dashboard_configs`
 --
 
@@ -2113,7 +2193,10 @@ INSERT INTO `data_ownership_rules` (`id`, `role_id`, `department_code`, `access_
 (11, 6, 'ICT', 'full', 'system', 1, 0, 0, 1, '2026-06-18 06:33:44'),
 (12, 6, 'ICT', 'read', 'all', 1, 0, 0, 0, '2026-06-18 06:33:44'),
 (13, 27, 'ADM', 'full', 'admission', 1, 0, 1, 1, '2026-06-18 06:33:44'),
-(14, 27, 'ADM', 'read', 'student', 1, 0, 0, 0, '2026-06-18 06:33:44');
+(14, 27, 'ADM', 'read', 'student', 1, 0, 0, 0, '2026-06-18 06:33:44'),
+(44, 1, '', 'full', 'all', 0, 0, 0, 1, '2026-06-20 08:30:33'),
+(45, 3, '', 'full', 'all', 0, 0, 0, 1, '2026-06-20 08:30:33'),
+(46, 4, '', 'full', 'all', 0, 0, 0, 1, '2026-06-20 08:30:33');
 
 -- --------------------------------------------------------
 
@@ -3184,11 +3267,11 @@ CREATE TABLE `hr_activity_logs` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_leave_summary` (
-`approved` decimal(23,0)
-,`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
+`leave_type` enum('Annual','Sick','Maternity','Paternity','Study','Compassionate','Unpaid')
+,`total_requests` bigint
+,`approved` decimal(23,0)
 ,`pending` decimal(23,0)
 ,`rejected` decimal(23,0)
-,`total_requests` bigint
 );
 
 -- --------------------------------------------------------
@@ -3198,15 +3281,15 @@ CREATE TABLE `hr_leave_summary` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_performance_summary` (
-`attendance_rate` decimal(31,5)
-,`avg_performance_score` decimal(5,2)
-,`department` varchar(100)
+`staff_id` int
 ,`full_name` varchar(100)
-,`latest_rating` enum('Outstanding','Excellent','Good','Satisfactory','Needs Improvement')
 ,`position` varchar(100)
+,`department` varchar(100)
 ,`role_name` varchar(100)
-,`staff_id` int
+,`avg_performance_score` decimal(5,2)
+,`latest_rating` enum('Outstanding','Excellent','Good','Satisfactory','Needs Improvement')
 ,`total_leaves` bigint
+,`attendance_rate` decimal(31,5)
 ,`training_completed` bigint
 );
 
@@ -3270,11 +3353,11 @@ INSERT INTO `hr_settings` (`id`, `setting_key`, `setting_value`, `setting_type`,
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_by_department` (
-`active_staff` decimal(23,0)
-,`avg_years_of_service` decimal(16,8)
-,`department` varchar(100)
-,`inactive_staff` decimal(23,0)
+`department` varchar(100)
 ,`total_staff` bigint
+,`active_staff` decimal(23,0)
+,`inactive_staff` decimal(23,0)
+,`avg_years_of_service` decimal(16,8)
 );
 
 -- --------------------------------------------------------
@@ -3284,18 +3367,18 @@ CREATE TABLE `hr_staff_by_department` (
 -- (See below for the actual view)
 --
 CREATE TABLE `hr_staff_search_view` (
-`account_status` varchar(7)
-,`department` varchar(100)
-,`email` varchar(100)
+`id` int
+,`staff_id` varchar(50)
 ,`full_name` varchar(100)
-,`hire_date` date
-,`id` int
-,`last_login` timestamp
+,`email` varchar(100)
 ,`phone` varchar(20)
 ,`position` varchar(100)
+,`department` varchar(100)
 ,`role_name` varchar(100)
-,`staff_id` varchar(50)
 ,`status` enum('Active','Inactive','On Leave','Suspended')
+,`hire_date` date
+,`last_login` timestamp
+,`account_status` varchar(7)
 );
 
 -- --------------------------------------------------------
@@ -3356,6 +3439,8 @@ CREATE TABLE `incident_reports` (
 
 CREATE TABLE `institutional_alerts` (
   `id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text,
   `alert_title` varchar(255) NOT NULL,
   `alert_message` text NOT NULL,
   `alert_type` enum('warning','danger','info','success','critical') NOT NULL DEFAULT 'info',
@@ -3373,6 +3458,27 @@ CREATE TABLE `institutional_alerts` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `institutional_alerts`
+--
+
+INSERT INTO `institutional_alerts` (`id`, `title`, `description`, `alert_title`, `alert_message`, `alert_type`, `priority`, `category`, `department_code`, `source`, `source_url`, `is_auto_generated`, `is_read`, `is_resolved`, `resolved_at`, `resolved_by`, `expires_at`, `created_at`) VALUES
+(1, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', '', '', 'info', 'High', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:08'),
+(2, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', '', '', 'info', 'Medium', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:08'),
+(3, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', '', '', 'info', 'Low', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:08'),
+(4, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', '', '', 'info', 'High', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:22'),
+(5, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', '', '', 'info', 'Medium', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:22'),
+(6, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', '', '', 'info', 'Low', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:43:22'),
+(7, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', '', '', 'info', 'High', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:45:38'),
+(8, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', '', '', 'info', 'Medium', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:45:38'),
+(9, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', '', '', 'info', 'Low', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:45:38'),
+(10, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', '', '', 'info', 'High', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:47:27'),
+(11, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', '', '', 'info', 'Medium', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:47:27'),
+(12, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', '', '', 'info', 'Low', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 08:47:27'),
+(13, 'Staff Attendance Drop', 'Staff attendance dropped below 80% this week.', '', '', 'info', 'High', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 10:27:52'),
+(14, 'Fee Collection Target', 'Monthly fee collection at 65% of target.', '', '', 'info', 'Medium', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 10:27:52'),
+(15, 'Exam Preparation', 'Final exams scheduled in 3 weeks.', '', '', 'info', 'Low', 'other', NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, '2026-06-20 10:27:52');
+
 -- --------------------------------------------------------
 
 --
@@ -3381,20 +3487,35 @@ CREATE TABLE `institutional_alerts` (
 
 CREATE TABLE `institutional_risks` (
   `id` int NOT NULL,
+  `risk_name` varchar(255) NOT NULL,
   `risk_title` varchar(255) NOT NULL,
   `risk_description` text,
   `risk_category` enum('financial','academic','operational','reputational','compliance','strategic','security') NOT NULL DEFAULT 'operational',
   `likelihood` enum('Rare','Unlikely','Possible','Likely','Almost Certain') DEFAULT 'Possible',
   `impact` enum('Insignificant','Minor','Moderate','Major','Catastrophic') DEFAULT 'Moderate',
-  `risk_score` int GENERATED ALWAYS AS (((case when (`likelihood` = _utf8mb4'Rare') then 1 when (`likelihood` = _utf8mb4'Unlikely') then 2 when (`likelihood` = _utf8mb4'Possible') then 3 when (`likelihood` = _utf8mb4'Likely') then 4 when (`likelihood` = _utf8mb4'Almost Certain') then 5 else 3 end) * (case when (`impact` = _utf8mb4'Insignificant') then 1 when (`impact` = _utf8mb4'Minor') then 2 when (`impact` = _utf8mb4'Moderate') then 3 when (`impact` = _utf8mb4'Major') then 4 when (`impact` = _utf8mb4'Catastrophic') then 5 else 3 end))) STORED,
   `mitigation_strategy` text,
   `contingency_plan` text,
   `owner_staff_id` int DEFAULT NULL COMMENT 'FK to staff.id',
   `status` enum('Identified','Assessed','Mitigated','Monitored','Closed') DEFAULT 'Identified',
   `review_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `risk_score` int DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `institutional_risks`
+--
+
+INSERT INTO `institutional_risks` (`id`, `risk_name`, `risk_title`, `risk_description`, `risk_category`, `likelihood`, `impact`, `mitigation_strategy`, `contingency_plan`, `owner_staff_id`, `status`, `review_date`, `created_at`, `updated_at`, `risk_score`) VALUES
+(1, 'Student Enrolment Decline', '', NULL, 'operational', 'Possible', 'Major', NULL, NULL, NULL, 'Identified', NULL, '2026-06-20 08:47:28', '2026-06-20 08:47:28', 12),
+(2, 'Staff Retention', '', NULL, '', 'Likely', 'Moderate', NULL, NULL, NULL, '', NULL, '2026-06-20 08:47:28', '2026-06-20 08:47:28', 12),
+(3, 'Budget Shortfall', '', NULL, 'financial', 'Possible', 'Major', NULL, NULL, NULL, 'Identified', NULL, '2026-06-20 08:47:28', '2026-06-20 08:47:28', 12),
+(4, 'Regulatory Non-Compliance', '', NULL, 'compliance', 'Unlikely', 'Major', NULL, NULL, NULL, '', NULL, '2026-06-20 08:47:28', '2026-06-20 08:47:28', 6),
+(5, 'Student Enrolment Decline', '', NULL, 'operational', 'Possible', 'Major', NULL, NULL, NULL, 'Identified', NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52', 12),
+(6, 'Staff Retention', '', NULL, '', 'Likely', 'Moderate', NULL, NULL, NULL, '', NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52', 12),
+(7, 'Budget Shortfall', '', NULL, 'financial', 'Possible', 'Major', NULL, NULL, NULL, 'Identified', NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52', 12),
+(8, 'Regulatory Non-Compliance', '', NULL, 'compliance', 'Unlikely', 'Major', NULL, NULL, NULL, '', NULL, '2026-06-20 10:27:52', '2026-06-20 10:27:52', 6);
 
 -- --------------------------------------------------------
 
@@ -4122,6 +4243,96 @@ CREATE TABLE `meal_tracking` (
   `special_dietary_requirements` text,
   `allergies_noted` text,
   `served_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine_stock`
+--
+
+CREATE TABLE `medicine_stock` (
+  `id` int NOT NULL,
+  `medicine_code` varchar(50) NOT NULL,
+  `medicine_name` varchar(255) NOT NULL,
+  `generic_name` varchar(255) DEFAULT NULL,
+  `category` enum('Antibiotic','Painkiller','Anti-inflammatory','Antimalarial','Antiviral','Antifungal','Vitamins','First Aid','Allergy','Digestive','Respiratory','Dermatological','Ophthalmic','Other') DEFAULT 'Other',
+  `dosage_form` enum('Tablet','Capsule','Syrup','Injection','Cream','Ointment','Drops','Inhaler','Suppository','Powder','Solution','Other') DEFAULT 'Tablet',
+  `strength` varchar(100) DEFAULT NULL,
+  `manufacturer` varchar(200) DEFAULT NULL,
+  `supplier` varchar(200) DEFAULT NULL,
+  `quantity_in_stock` int NOT NULL DEFAULT '0',
+  `unit` varchar(50) NOT NULL DEFAULT 'pcs',
+  `reorder_level` int DEFAULT '10',
+  `unit_cost` decimal(15,2) DEFAULT NULL,
+  `selling_price` decimal(15,2) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT 'UGX',
+  `batch_number` varchar(100) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `storage_location` varchar(100) DEFAULT NULL,
+  `requires_prescription` tinyint(1) DEFAULT '0',
+  `instructions` text,
+  `side_effects` text,
+  `status` enum('In Stock','Low Stock','Out of Stock','Expired','Discontinued') DEFAULT 'In Stock',
+  `last_restocked` date DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `medicine_stock`
+--
+
+INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'PARA001', 'Paracetamol', 'Acetaminophen', 'Painkiller', 'Tablet', '500mg', NULL, NULL, 200, 'tablets', 50, 50.00, NULL, 'UGX', NULL, '2027-12-31', 'Cabinet A1', 0, '1-2 tablets every 4-6 hours as needed for pain/fever', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(2, 'IBU001', 'Ibuprofen', 'Ibuprofen', 'Anti-inflammatory', 'Tablet', '400mg', NULL, NULL, 150, 'tablets', 30, 100.00, NULL, 'UGX', NULL, '2027-10-31', 'Cabinet A1', 0, '1 tablet 3 times daily after meals', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(3, 'AMOX001', 'Amoxicillin', 'Amoxicillin', 'Antibiotic', 'Capsule', '500mg', NULL, NULL, 100, 'capsules', 20, 200.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet B1', 1, '1 capsule 3 times daily for 7 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(4, 'CTM001', 'Chlorpheniramine', 'Chlorpheniramine Maleate', 'Allergy', 'Tablet', '4mg', NULL, NULL, 100, 'tablets', 20, 50.00, NULL, 'UGX', NULL, '2027-11-30', 'Cabinet A2', 0, '1 tablet every 4-6 hours for allergies', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(5, 'ORS001', 'Oral Rehydration Salts', 'ORS', 'Other', 'Powder', '20.5g/sachet', NULL, NULL, 100, 'sachets', 30, 500.00, NULL, 'UGX', NULL, '2028-06-30', 'Cabinet C1', 0, 'Dissolve 1 sachet in 1L water, drink after each loose stool', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(6, 'ART001', 'Artemether/Lumefantrine', 'Coartem', 'Antimalarial', 'Tablet', '20/120mg', NULL, NULL, 60, 'tablets', 20, 1500.00, NULL, 'UGX', NULL, '2027-09-30', 'Cabinet B2', 1, '4 tablets twice daily for 3 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(7, 'VITC001', 'Vitamin C', 'Ascorbic Acid', 'Vitamins', 'Tablet', '500mg', NULL, NULL, 300, 'tablets', 50, 30.00, NULL, 'UGX', NULL, '2028-12-31', 'Cabinet C1', 0, '1 tablet daily for immune support', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(8, 'MET001', 'Metered Dose Inhaler', 'Salbutamol', 'Respiratory', 'Inhaler', '100mcg/dose', NULL, NULL, 10, 'inhalers', 3, 15000.00, NULL, 'UGX', NULL, '2027-06-30', 'Cabinet A3', 1, '1-2 puffs as needed for asthma symptoms', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(9, 'ANT001', 'Antacid', 'Aluminum/Magnesium Hydroxide', 'Digestive', 'Tablet', '500mg', NULL, NULL, 200, 'tablets', 40, 100.00, NULL, 'UGX', NULL, '2027-11-30', 'Cabinet C1', 0, '1-2 tablets after meals or when symptomatic', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(10, 'HYD001', 'Hydrocortisone Cream', 'Hydrocortisone', 'Dermatological', 'Cream', '1%', NULL, NULL, 20, 'tubes', 5, 5000.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet D1', 0, 'Apply thin layer to affected area 2-3 times daily', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(11, 'DIA001', 'Diazepam', 'Diazepam', 'Painkiller', 'Tablet', '5mg', NULL, NULL, 30, 'tablets', 10, 200.00, NULL, 'UGX', NULL, '2026-12-31', 'Cabinet B2', 1, '1 tablet at bedtime for anxiety or muscle spasms', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(12, 'BAN001', 'Bandages', 'Cotton Bandage', 'First Aid', 'Other', '4 inches x 5 meters', NULL, NULL, 50, 'rolls', 10, 1500.00, NULL, 'UGX', NULL, '2029-12-31', 'Shelf E1', 0, 'For wound dressing and injury management', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(13, 'GAU001', 'Gauze Swabs', 'Sterile Gauze', 'First Aid', 'Other', '10x10cm', NULL, NULL, 200, 'packs', 50, 800.00, NULL, 'UGX', NULL, '2029-12-31', 'Shelf E1', 0, 'Sterile swabs for wound cleaning and dressing', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(14, 'GLU001', 'Glucose Powder', 'Dextrose', 'Vitamins', 'Powder', '500g', NULL, NULL, 10, 'packs', 3, 5000.00, NULL, 'UGX', NULL, '2028-06-30', 'Cabinet C1', 0, 'Mix 2 tablespoons in water for energy', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(15, 'ALC001', 'Alcohol Swabs', 'Isopropyl Alcohol', 'First Aid', 'Solution', '70%', NULL, NULL, 300, 'swabs', 50, 100.00, NULL, 'UGX', NULL, '2028-12-31', 'Shelf E1', 0, 'Use for cleaning skin before injections', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(16, 'CLO001', 'Chloroquine', 'Chloroquine Phosphate', 'Antimalarial', 'Tablet', '250mg', NULL, NULL, 50, 'tablets', 15, 300.00, NULL, 'UGX', NULL, '2027-05-31', 'Cabinet B2', 1, 'As prescribed for malaria treatment', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(17, 'MEF001', 'Mefenamic Acid', 'Mefenamic Acid', 'Painkiller', 'Capsule', '500mg', NULL, NULL, 80, 'capsules', 20, 200.00, NULL, 'UGX', NULL, '2027-07-31', 'Cabinet A1', 0, '1 capsule 3 times daily for pain and inflammation', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(18, 'METR001', 'Metronidazole', 'Metronidazole', 'Antibiotic', 'Tablet', '400mg', NULL, NULL, 100, 'tablets', 20, 150.00, NULL, 'UGX', NULL, '2027-09-30', 'Cabinet B1', 1, '1 tablet 3 times daily for 5-7 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(19, 'DIC001', 'Diclofenac Gel', 'Diclofenac Diethylamine', 'Anti-inflammatory', 'Cream', '1%', NULL, NULL, 15, 'tubes', 5, 7000.00, NULL, 'UGX', NULL, '2027-10-31', 'Cabinet D1', 0, 'Apply to affected area 3-4 times daily', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(20, 'CET001', 'Cetirizine', 'Cetirizine Hydrochloride', 'Allergy', 'Tablet', '10mg', NULL, NULL, 100, 'tablets', 20, 100.00, NULL, 'UGX', NULL, '2027-12-31', 'Cabinet A2', 0, '1 tablet daily for allergy symptoms', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(21, 'ASP001', 'Aspirin', 'Acetylsalicylic Acid', 'Painkiller', 'Tablet', '300mg', NULL, NULL, 100, 'tablets', 25, 50.00, NULL, 'UGX', NULL, '2027-06-30', 'Cabinet A1', 0, '1-2 tablets every 4-6 hours for pain/fever', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(22, 'ZIN001', 'Zinc Tablets', 'Zinc Sulfate', 'Vitamins', 'Tablet', '20mg', NULL, NULL, 150, 'tablets', 30, 100.00, NULL, 'UGX', NULL, '2028-09-30', 'Cabinet C1', 0, '1 tablet daily for immune support and wound healing', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(23, 'CLOT001', 'Clotrimazole Cream', 'Clotrimazole', 'Antifungal', 'Cream', '1%', NULL, NULL, 15, 'tubes', 5, 4000.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet D1', 0, 'Apply to affected area twice daily for 2 weeks', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(24, 'EYE001', 'Eye Drops', 'Chloramphenicol', 'Other', 'Drops', '0.5%', NULL, NULL, 20, 'bottles', 5, 5000.00, NULL, 'UGX', NULL, '2027-04-30', 'Cabinet A3', 1, '1-2 drops in affected eye every 2-4 hours', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(25, 'BET001', 'Betadine Solution', 'Povidone-Iodine', 'First Aid', 'Solution', '10%', NULL, NULL, 10, 'bottles', 3, 8000.00, NULL, 'UGX', NULL, '2028-03-31', 'Shelf E1', 0, 'Apply to wounds for disinfection', NULL, 'In Stock', NULL, NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine_stock_transactions`
+--
+
+CREATE TABLE `medicine_stock_transactions` (
+  `id` int NOT NULL,
+  `transaction_number` varchar(50) NOT NULL,
+  `medicine_id` int NOT NULL,
+  `transaction_type` enum('Purchase','Issue','Return','Adjustment','Damage','Expired') NOT NULL,
+  `quantity` int NOT NULL,
+  `unit_cost` decimal(15,2) DEFAULT NULL,
+  `total_cost` decimal(15,2) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT 'UGX',
+  `reference` varchar(200) DEFAULT NULL,
+  `issued_to` varchar(200) DEFAULT NULL,
+  `student_id` int DEFAULT NULL,
+  `purpose` text,
+  `performed_by` int DEFAULT NULL,
+  `transaction_date` date NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -5219,6 +5430,30 @@ INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `cal
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pending_students`
+--
+
+CREATE TABLE `pending_students` (
+  `id` int UNSIGNED NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `middle_name` varchar(100) DEFAULT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `student_number` varchar(50) NOT NULL,
+  `program` varchar(120) DEFAULT NULL,
+  `level` varchar(20) DEFAULT NULL,
+  `intake_year` varchar(10) DEFAULT NULL,
+  `intake_period` varchar(20) DEFAULT NULL,
+  `phone` varchar(30) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `submitted_by` int UNSIGNED DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'pending_approval',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `performance_indicators`
 --
 
@@ -5523,6 +5758,37 @@ CREATE TABLE `registrar_academic_records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `registrar_certificates`
+--
+
+CREATE TABLE `registrar_certificates` (
+  `id` int NOT NULL,
+  `certificate_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `full_name` varchar(255) DEFAULT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `graduation_date` date DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `certificate_type` enum('Certificate','Diploma','Degree','Transcript') DEFAULT 'Certificate',
+  `gpa` decimal(5,2) DEFAULT NULL,
+  `cgpa` decimal(5,2) DEFAULT NULL,
+  `class_of_award` varchar(100) DEFAULT NULL,
+  `status` enum('Draft','Generated','Issued','Collected','Cancelled') DEFAULT 'Draft',
+  `generated_by` int DEFAULT NULL,
+  `generated_date` datetime DEFAULT NULL,
+  `issued_by` int DEFAULT NULL,
+  `issued_date` datetime DEFAULT NULL,
+  `collected_by` varchar(255) DEFAULT NULL,
+  `collected_date` datetime DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `registrar_graduation`
 --
 
@@ -5547,6 +5813,38 @@ CREATE TABLE `registrar_graduation` (
   `payment_status` enum('Paid','Unpaid') DEFAULT 'Unpaid',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `registrar_settings`
+--
+
+CREATE TABLE `registrar_settings` (
+  `id` int NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text,
+  `setting_group` varchar(50) DEFAULT 'general',
+  `description` varchar(500) DEFAULT NULL,
+  `updated_by` int DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `registrar_settings`
+--
+
+INSERT INTO `registrar_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `updated_by`, `updated_at`) VALUES
+(1, 'current_academic_year', '2025', 'academic', 'Current active academic year', NULL, '2026-06-19 06:34:36'),
+(2, 'current_semester', 'Semester 1', 'academic', 'Current active semester', NULL, '2026-06-19 06:34:36'),
+(3, 'institution_name', 'ISNM', 'general', 'Institution Name', NULL, '2026-06-19 06:34:36'),
+(4, 'transcript_fee', '50000', 'fees', 'Transcript processing fee', NULL, '2026-06-19 06:34:36'),
+(5, 'certificate_fee', '100000', 'fees', 'Certificate processing fee', NULL, '2026-06-19 06:34:36'),
+(6, 'grading_system', 'letter', 'academic', 'Grading system (letter/percentage/GPA)', NULL, '2026-06-19 06:34:36'),
+(7, 'pass_mark', '50', 'academic', 'Minimum pass mark', NULL, '2026-06-19 06:34:36'),
+(8, 'currency', 'UGX', 'general', 'Default currency', NULL, '2026-06-19 06:34:36'),
+(9, 'auto_generate_transcripts', '1', 'settings', 'Auto-generate transcripts on grade approval', NULL, '2026-06-19 06:34:36'),
+(10, 'graduation_batch', '2025', 'academic', 'Current graduation batch', NULL, '2026-06-19 06:34:36');
 
 -- --------------------------------------------------------
 
@@ -5606,6 +5904,38 @@ CREATE TABLE `registrar_transcripts` (
   `payment_status` enum('Paid','Unpaid') DEFAULT 'Unpaid',
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `registrar_transcript_requests`
+--
+
+CREATE TABLE `registrar_transcript_requests` (
+  `id` int NOT NULL,
+  `request_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `full_name` varchar(255) DEFAULT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT NULL,
+  `purpose` varchar(500) DEFAULT NULL,
+  `copies_requested` int DEFAULT '1',
+  `copies_issued` int DEFAULT '0',
+  `fee` decimal(10,2) DEFAULT '0.00',
+  `payment_status` enum('Pending','Paid','Waived') DEFAULT 'Pending',
+  `status` enum('Pending','Processing','Ready','Issued','Collected','Rejected') DEFAULT 'Pending',
+  `requested_by` varchar(255) DEFAULT NULL,
+  `request_date` datetime DEFAULT NULL,
+  `processed_by` int DEFAULT NULL,
+  `processed_date` datetime DEFAULT NULL,
+  `issued_by` int DEFAULT NULL,
+  `issued_date` datetime DEFAULT NULL,
+  `collected_by` varchar(255) DEFAULT NULL,
+  `collected_date` datetime DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -6036,6 +6366,81 @@ CREATE TABLE `security_visitors` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sickbay_settings`
+--
+
+CREATE TABLE `sickbay_settings` (
+  `id` int UNSIGNED NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `sickbay_settings`
+--
+
+INSERT INTO `sickbay_settings` (`id`, `setting_key`, `setting_value`, `updated_at`) VALUES
+(1, 'reorder_level', '10', '2026-06-20 08:30:32'),
+(2, 'low_stock_threshold', '10', '2026-06-20 08:30:32'),
+(3, 'auto_status', '1', '2026-06-20 08:30:32'),
+(4, 'notify_low_stock', '1', '2026-06-20 08:30:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sickness_directory`
+--
+
+CREATE TABLE `sickness_directory` (
+  `id` int NOT NULL,
+  `sickness_code` varchar(20) NOT NULL,
+  `sickness_name` varchar(255) NOT NULL,
+  `category` enum('Infectious','Non-Infectious','Chronic','Injury','Mental Health','Nutritional','Other') DEFAULT 'Other',
+  `common_symptoms` text,
+  `description` text,
+  `is_contagious` tinyint(1) DEFAULT '0',
+  `typical_treatment` text,
+  `status` enum('Active','Inactive') DEFAULT 'Active',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `sickness_directory`
+--
+
+INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'MLR', 'Malaria', 'Infectious', 'Fever, chills, headache, sweating, fatigue', 'Mosquito-borne parasitic infection common in tropical regions', 0, 'Artemisinin-based combination therapy, antimalarials', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(2, 'TYP', 'Typhoid', 'Infectious', 'Prolonged fever, abdominal pain, headache, constipation or diarrhea', 'Bacterial infection spread through contaminated food/water', 1, 'Antibiotics (ciprofloxacin, azithromycin), hydration', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(3, 'FLU', 'Influenza', 'Infectious', 'Fever, cough, sore throat, body aches, fatigue', 'Viral respiratory infection spread through droplets', 1, 'Rest, fluids, antipyretics, antivirals if severe', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(4, 'COLD', 'Common Cold', 'Infectious', 'Runny nose, sneezing, sore throat, cough, mild fever', 'Viral upper respiratory tract infection', 1, 'Rest, antihistamines, decongestants, vitamin C', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(5, 'URTI', 'Upper Respiratory Tract Infection', 'Infectious', 'Cough, sore throat, nasal congestion, fever', 'Bacterial or viral infection of upper airways', 1, 'Antibiotics if bacterial, rest, fluids', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(6, 'HDCH', 'Headache/Tension Headache', 'Non-Infectious', 'Head pain, pressure around forehead, neck tension', 'Common tension-type headache from stress or fatigue', 0, 'Rest, analgesics (paracetamol, ibuprofen)', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(7, 'GSTR', 'Gastritis', 'Non-Infectious', 'Abdominal pain, nausea, bloating, indigestion', 'Inflammation of stomach lining from diet, stress, or infection', 0, 'Antacids, dietary changes, proton pump inhibitors', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(8, 'DIAR', 'Diarrhea', 'Infectious', 'Loose watery stools, abdominal cramps, dehydration', 'Common infection from contaminated food/water or viruses', 1, 'ORS, hydration, antidiarrheals, antibiotics if bacterial', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(9, 'ALLG', 'Allergic Reaction', 'Non-Infectious', 'Rash, itching, sneezing, watery eyes, swelling', 'Immune response to allergens (food, dust, pollen, drugs)', 0, 'Antihistamines, corticosteroids, avoid triggers', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(10, 'INJR', 'Injury/Accident', 'Injury', 'Pain, swelling, bruising, bleeding, limited mobility', 'Physical trauma from falls, sports, or accidents', 0, 'First aid, rest, ice, compression, elevation, analgesics', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(11, 'ANEM', 'Anemia', 'Nutritional', 'Fatigue, weakness, pale skin, shortness of breath, dizziness', 'Low red blood cell count from iron deficiency or other causes', 0, 'Iron supplements, dietary changes, B12 if needed', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(12, 'MALN', 'Malnutrition', 'Nutritional', 'Weight loss, fatigue, poor growth, weakened immunity', 'Inadequate nutrient intake affecting overall health', 0, 'Nutritional supplementation, diet counseling', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(13, 'CONS', 'Constipation', 'Non-Infectious', 'Infrequent bowel movements, straining, hard stools', 'Common digestive issue from diet or lifestyle factors', 0, 'Increased fiber intake, hydration, laxatives if needed', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(14, 'SORE', 'Sore Throat', 'Infectious', 'Pain or scratchiness in throat, difficulty swallowing', 'Viral or bacterial throat infection', 1, 'Warm salt water gargle, lozenges, antibiotics if strep', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(15, 'EYEI', 'Eye Infection', 'Infectious', 'Redness, itching, discharge, swollen eyelids', 'Bacterial or viral conjunctivitis', 1, 'Antibiotic or antiviral eye drops, hygiene', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(16, 'SKIN', 'Skin Infection/Rash', 'Infectious', 'Redness, itching, bumps, blisters, peeling', 'Fungal, bacterial, or viral skin infection', 1, 'Topical or oral antibiotics/antifungals, hygiene', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(17, 'FATG', 'Fatigue/General Malaise', 'Non-Infectious', 'Tiredness, low energy, reduced motivation', 'General feeling of being unwell without specific diagnosis', 0, 'Rest, nutrition, hydration, stress management', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(18, 'MSTR', 'Menstrual Cramps', 'Non-Infectious', 'Lower abdominal pain, back pain, nausea during menstruation', 'Painful menstrual periods common in young women', 0, 'Analgesics, heat therapy, rest, NSAIDs', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(19, 'ANXT', 'Anxiety/Stress', 'Mental Health', 'Worry, restlessness, rapid heartbeat, difficulty concentrating', 'Mental health condition common among students under academic pressure', 0, 'Counseling, stress management, relaxation techniques', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(20, 'BACK', 'Back Pain', 'Non-Infectious', 'Lower or upper back pain, stiffness, muscle tension', 'Musculoskeletal pain from poor posture, heavy lifting, or strain', 0, 'Rest, analgesics, physiotherapy, posture correction', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(21, 'THRP', 'Throat Infection/Pharyngitis', 'Infectious', 'Sore throat, red tonsils, swollen lymph nodes, fever', 'Inflammation of the pharynx from viral or bacterial infection', 1, 'Antibiotics if bacterial, rest, warm fluids', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(22, 'TOOT', 'Toothache', 'Non-Infectious', 'Tooth pain, sensitivity, swelling around tooth', 'Dental pain from cavities, infection, or impaction', 0, 'Analgesics, dental referral, antibiotics if infected', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(23, 'URIN', 'Urinary Tract Infection', 'Infectious', 'Painful urination, frequent urination, lower abdominal pain', 'Bacterial infection of the urinary tract', 0, 'Antibiotics, increased fluid intake, cranberry', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(24, 'ACNE', 'Acne/Skin Breakout', 'Non-Infectious', 'Pimples, blackheads, whiteheads, inflamed skin', 'Common skin condition from hormonal changes and stress', 0, 'Topical treatments, hygiene, dietary changes', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05'),
+(25, 'FUNG', 'Fungal Infection', 'Infectious', 'Itching, redness, peeling skin, rash with defined edges', 'Fungal skin infection common in tropical climates', 1, 'Antifungal creams or oral medication, keep area dry', 'Active', NULL, '2026-06-20 05:25:05', '2026-06-20 05:25:05');
 
 -- --------------------------------------------------------
 
@@ -6537,7 +6942,11 @@ INSERT INTO `staff_departments` (`id`, `department_name`, `department_code`, `de
 (9, 'Student Affairs', 'STU', 'Student welfare and support services', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
 (10, 'Security Services', 'SEC', 'Campus security and safety', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
 (11, 'Facilities Management', 'FAC', 'Physical infrastructure management', NULL, NULL, 'Support', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
-(12, 'Quality Assurance', 'QA', 'Academic quality and standards', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37');
+(12, 'Quality Assurance', 'QA', 'Academic quality and standards', NULL, NULL, 'Academic', NULL, NULL, NULL, NULL, '2026-06-14 19:50:37', '2026-06-14 19:50:37'),
+(13, 'Admissions', 'ADM', 'Director Admissions, Admissions Officers', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 07:06:41', '2026-06-20 07:06:41'),
+(14, 'Store & Assets', 'STR', 'Storekeeper, Inventory', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 07:06:41', '2026-06-20 07:06:41'),
+(15, 'Student Services', 'SVS', 'Matrons, Wardens, Counselor', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 07:06:41', '2026-06-20 07:06:41'),
+(16, 'Skills Laboratory', 'SKL', 'Lab Manager, Lab Technicians', NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-06-20 07:06:41', '2026-06-20 07:06:41');
 
 -- --------------------------------------------------------
 
@@ -6699,21 +7108,21 @@ DELIMITER ;
 -- (See below for the actual view)
 --
 CREATE TABLE `staff_login_view` (
-`account_status` varchar(7)
-,`dashboard_path` varchar(255)
-,`department` varchar(100)
-,`email` varchar(100)
-,`full_name` varchar(100)
-,`id` int
-,`is_first_login` tinyint(1)
-,`last_login` timestamp
-,`locked_until` timestamp
-,`login_attempts` int
-,`position` varchar(100)
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
-,`role_name` varchar(100)
+`id` int
 ,`staff_id` varchar(50)
+,`full_name` varchar(100)
+,`email` varchar(100)
+,`position` varchar(100)
+,`department` varchar(100)
+,`role_name` varchar(100)
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`dashboard_path` varchar(255)
 ,`status` enum('Active','Inactive','On Leave','Suspended')
+,`last_login` timestamp
+,`login_attempts` int
+,`locked_until` timestamp
+,`is_first_login` tinyint(1)
+,`account_status` varchar(7)
 );
 
 -- --------------------------------------------------------
@@ -7848,28 +8257,71 @@ CREATE TABLE `student_search_index` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_search_view` (
-`current_photo` varchar(500)
-,`district` varchar(100)
-,`email` varchar(100)
-,`first_name` varchar(100)
-,`full_name` varchar(255)
-,`guardian_name` varchar(200)
-,`guardian_phone` varchar(20)
-,`has_photo` int
-,`id` int
-,`index_number` varchar(50)
-,`intake_set` varchar(20)
-,`last_name` varchar(100)
+`id` int
+,`student_number` varchar(50)
 ,`national_id` varchar(50)
+,`index_number` varchar(50)
+,`registration_number` varchar(50)
+,`full_name` varchar(255)
+,`first_name` varchar(100)
+,`last_name` varchar(100)
+,`email` varchar(100)
 ,`phone` varchar(20)
 ,`program` varchar(100)
-,`registration_number` varchar(50)
-,`semester` varchar(50)
-,`staff_dashboard` binary(0)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
-,`student_number` varchar(50)
+,`intake_set` varchar(20)
 ,`year_of_study` int
+,`semester` varchar(50)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','Transferred')
+,`district` varchar(100)
+,`guardian_name` varchar(200)
+,`guardian_phone` varchar(20)
+,`current_photo` varchar(500)
+,`has_photo` int
+,`staff_dashboard` binary(0)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_sick_leave`
+--
+
+CREATE TABLE `student_sick_leave` (
+  `id` int NOT NULL,
+  `leave_number` varchar(50) NOT NULL,
+  `student_id` int NOT NULL,
+  `student_name` varchar(300) NOT NULL,
+  `student_number` varchar(50) DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `year_of_study` int DEFAULT NULL,
+  `sickness_id` int DEFAULT NULL,
+  `sickness_name` varchar(255) DEFAULT NULL,
+  `diagnosis` text,
+  `leave_from` date NOT NULL,
+  `leave_to` date NOT NULL,
+  `total_days` int GENERATED ALWAYS AS (((to_days(`leave_to`) - to_days(`leave_from`)) + 1)) STORED,
+  `leave_type` enum('Medical','Sick','Maternity','Injury','Quarantine','Other') DEFAULT 'Sick',
+  `recommended_by` varchar(200) DEFAULT NULL,
+  `recommender_title` varchar(100) DEFAULT NULL,
+  `approved_by` varchar(200) DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected','Expired','Extended') DEFAULT 'Pending',
+  `extended_to` date DEFAULT NULL,
+  `extension_reason` text,
+  `doctor_notes` text,
+  `bed_rest_required` tinyint(1) DEFAULT '1',
+  `parent_guardian_notified` tinyint(1) DEFAULT '0',
+  `matron_notified` tinyint(1) DEFAULT '0',
+  `class_teacher_notified` tinyint(1) DEFAULT '0',
+  `documents_submitted` tinyint(1) DEFAULT '0',
+  `documents_path` varchar(500) DEFAULT NULL,
+  `return_date_actual` date DEFAULT NULL,
+  `return_notes` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -8238,27 +8690,27 @@ CREATE TABLE `ura_reports` (
 -- (See below for the actual view)
 --
 CREATE TABLE `users` (
-`address` text
-,`created_at` timestamp
-,`dashboard_path` varchar(255)
-,`department` varchar(100)
-,`email` varchar(100)
-,`hire_date` date
-,`id` int
-,`is_first_login` tinyint(1)
-,`last_login` timestamp
-,`locked_until` timestamp
-,`login_attempts` int
-,`password` varchar(255)
-,`phone` varchar(20)
-,`position` varchar(100)
-,`role_id` int
-,`role_level` enum('Executive','Management','Academic','Support','Administrative')
-,`role_name` varchar(100)
-,`status` enum('Active','Inactive','On Leave','Suspended')
-,`updated_at` timestamp
-,`user_name` varchar(100)
+`id` int
 ,`username` varchar(50)
+,`user_name` varchar(100)
+,`email` varchar(100)
+,`password` varchar(255)
+,`position` varchar(100)
+,`department` varchar(100)
+,`role_id` int
+,`role_name` varchar(100)
+,`role_level` enum('Executive','Management','Academic','Support','Administrative')
+,`dashboard_path` varchar(255)
+,`status` enum('Active','Inactive','On Leave','Suspended')
+,`phone` varchar(20)
+,`address` text
+,`hire_date` date
+,`last_login` timestamp
+,`login_attempts` int
+,`locked_until` timestamp
+,`is_first_login` tinyint(1)
+,`created_at` timestamp
+,`updated_at` timestamp
 );
 
 -- --------------------------------------------------------
@@ -8303,6 +8755,49 @@ CREATE TABLE `vehicles` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `view_document_grouping`
+-- (See below for the actual view)
+--
+CREATE TABLE `view_document_grouping` (
+`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
+,`student_id` int
+,`student_name` varchar(300)
+,`program` varchar(100)
+,`document_count` bigint
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `view_program_grouping`
+-- (See below for the actual view)
+--
+CREATE TABLE `view_program_grouping` (
+`department` varchar(20)
+,`course_code` varchar(20)
+,`course_name` varchar(255)
+,`credit_hours` int
+,`course_level` int
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `view_student_grouping`
+-- (See below for the actual view)
+--
+CREATE TABLE `view_student_grouping` (
+`program` varchar(100)
+,`year_of_study` int
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`set_name` varchar(50)
+,`semester` varchar(20)
+,`student_count` bigint
+);
 
 -- --------------------------------------------------------
 
@@ -8419,6 +8914,33 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `users`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `users`  AS SELECT `s`.`id` AS `id`, `s`.`staff_id` AS `username`, `s`.`full_name` AS `user_name`, `s`.`email` AS `email`, `s`.`password` AS `password`, `s`.`position` AS `position`, `s`.`department` AS `department`, `s`.`role_id` AS `role_id`, `sr`.`role_name` AS `role_name`, `sr`.`role_level` AS `role_level`, `sr`.`dashboard_path` AS `dashboard_path`, `s`.`status` AS `status`, `s`.`phone` AS `phone`, `s`.`address` AS `address`, `s`.`hire_date` AS `hire_date`, `s`.`last_login` AS `last_login`, `s`.`login_attempts` AS `login_attempts`, `s`.`locked_until` AS `locked_until`, `s`.`is_first_login` AS `is_first_login`, `s`.`created_at` AS `created_at`, `s`.`updated_at` AS `updated_at` FROM (`staff` `s` join `staff_roles` `sr` on((`s`.`role_id` = `sr`.`id`))) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `view_document_grouping`
+--
+DROP TABLE IF EXISTS `view_document_grouping`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_document_grouping`  AS SELECT `gd`.`document_type` AS `document_type`, `gd`.`student_id` AS `student_id`, `s`.`full_name` AS `student_name`, `s`.`course` AS `program`, count(0) AS `document_count` FROM (`generated_documents` `gd` left join `igangaschoolofl_students_db`.`students` `s` on((`gd`.`student_id` = `s`.`id`))) WHERE (`gd`.`document_type` is not null) GROUP BY `gd`.`document_type`, `gd`.`student_id`, `s`.`full_name`, `s`.`course` ORDER BY `gd`.`document_type` ASC, `s`.`full_name` ASC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `view_program_grouping`
+--
+DROP TABLE IF EXISTS `view_program_grouping`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_program_grouping`  AS SELECT `academic_course_catalog`.`program_code` AS `department`, `academic_course_catalog`.`course_code` AS `course_code`, `academic_course_catalog`.`course_title` AS `course_name`, `academic_course_catalog`.`credits` AS `credit_hours`, `academic_course_catalog`.`year_of_study` AS `course_level` FROM `academic_course_catalog` WHERE ((`academic_course_catalog`.`course_title` is not null) AND (`academic_course_catalog`.`course_title` <> '')) ORDER BY `academic_course_catalog`.`program_code` ASC, `academic_course_catalog`.`course_title` ASC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `view_student_grouping`
+--
+DROP TABLE IF EXISTS `view_student_grouping`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_grouping`  AS SELECT `igangaschoolofl_students_db`.`students`.`course` AS `program`, `igangaschoolofl_students_db`.`students`.`current_year` AS `year_of_study`, `igangaschoolofl_students_db`.`students`.`status` AS `status`, `igangaschoolofl_students_db`.`students`.`set_name` AS `set_name`, `igangaschoolofl_students_db`.`students`.`current_semester` AS `semester`, count(0) AS `student_count` FROM `igangaschoolofl_students_db`.`students` WHERE ((`igangaschoolofl_students_db`.`students`.`full_name` is not null) AND (`igangaschoolofl_students_db`.`students`.`full_name` <> '') AND (length(`igangaschoolofl_students_db`.`students`.`full_name`) > 3) AND (not((`igangaschoolofl_students_db`.`students`.`full_name` like '%MINISTRY%'))) AND (not((`igangaschoolofl_students_db`.`students`.`full_name` like '%ACCOUNTABILITY%'))) AND (not((`igangaschoolofl_students_db`.`students`.`full_name` like '%VERIFICATION%'))) AND (not((`igangaschoolofl_students_db`.`students`.`full_name` like '%HEALTH EDUCATION%'))) AND (not((`igangaschoolofl_students_db`.`students`.`full_name` like '%……………………………………………………%')))) GROUP BY `igangaschoolofl_students_db`.`students`.`course`, `igangaschoolofl_students_db`.`students`.`current_year`, `igangaschoolofl_students_db`.`students`.`status`, `igangaschoolofl_students_db`.`students`.`set_name`, `igangaschoolofl_students_db`.`students`.`current_semester` ORDER BY `igangaschoolofl_students_db`.`students`.`course` ASC, `igangaschoolofl_students_db`.`students`.`current_year` ASC, `igangaschoolofl_students_db`.`students`.`status` ASC ;
 
 --
 -- Indexes for dumped tables
@@ -8580,6 +9102,13 @@ ALTER TABLE `analytics_cache`
   ADD KEY `idx_cache_key` (`cache_key`),
   ADD KEY `idx_cache_type` (`cache_type`),
   ADD KEY `idx_expiry_time` (`expiry_time`);
+
+--
+-- Indexes for table `announcements`
+--
+ALTER TABLE `announcements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ann_active` (`is_active`);
 
 --
 -- Indexes for table `api_keys`
@@ -8913,6 +9442,22 @@ ALTER TABLE `course_registrations`
   ADD UNIQUE KEY `registration_number` (`registration_number`),
   ADD KEY `student_id` (`student_id`),
   ADD KEY `idx_registration_number` (`registration_number`);
+
+--
+-- Indexes for table `daily_sick_records`
+--
+ALTER TABLE `daily_sick_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `record_number` (`record_number`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `sickness_id` (`sickness_id`),
+  ADD KEY `visit_date` (`visit_date`),
+  ADD KEY `status` (`status`),
+  ADD KEY `severity` (`severity`),
+  ADD KEY `student_name` (`student_name`),
+  ADD KEY `program` (`program`),
+  ADD KEY `dsr_student_date` (`student_id`,`visit_date`),
+  ADD KEY `idx_dsr_deleted` (`is_deleted`);
 
 --
 -- Indexes for table `dashboard_configs`
@@ -9428,7 +9973,6 @@ ALTER TABLE `institutional_alerts`
 ALTER TABLE `institutional_risks`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_category` (`risk_category`),
-  ADD KEY `idx_score` (`risk_score`),
   ADD KEY `idx_status` (`status`);
 
 --
@@ -9728,6 +10272,31 @@ ALTER TABLE `meal_tracking`
   ADD KEY `idx_meal_type` (`meal_type`);
 
 --
+-- Indexes for table `medicine_stock`
+--
+ALTER TABLE `medicine_stock`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `medicine_code` (`medicine_code`),
+  ADD KEY `medicine_name` (`medicine_name`),
+  ADD KEY `category` (`category`),
+  ADD KEY `expiry_date` (`expiry_date`),
+  ADD KEY `status` (`status`),
+  ADD KEY `supplier` (`supplier`),
+  ADD KEY `ms_expiry_status` (`expiry_date`,`status`);
+
+--
+-- Indexes for table `medicine_stock_transactions`
+--
+ALTER TABLE `medicine_stock_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transaction_number` (`transaction_number`),
+  ADD KEY `medicine_id` (`medicine_id`),
+  ADD KEY `transaction_type` (`transaction_type`),
+  ADD KEY `transaction_date` (`transaction_date`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `mst_medicine_date` (`medicine_id`,`transaction_date`);
+
+--
 -- Indexes for table `midwifery_antenatal_care`
 --
 ALTER TABLE `midwifery_antenatal_care`
@@ -9969,6 +10538,14 @@ ALTER TABLE `penalty_configurations`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `pending_students`
+--
+ALTER TABLE `pending_students`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pending_status` (`status`),
+  ADD KEY `idx_pending_submitted_by` (`submitted_by`);
+
+--
 -- Indexes for table `performance_indicators`
 --
 ALTER TABLE `performance_indicators`
@@ -10088,6 +10665,15 @@ ALTER TABLE `registrar_academic_records`
   ADD KEY `idx_academic_year` (`academic_year`);
 
 --
+-- Indexes for table `registrar_certificates`
+--
+ALTER TABLE `registrar_certificates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `certificate_number` (`certificate_number`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `status` (`status`);
+
+--
 -- Indexes for table `registrar_graduation`
 --
 ALTER TABLE `registrar_graduation`
@@ -10095,6 +10681,13 @@ ALTER TABLE `registrar_graduation`
   ADD KEY `approved_by` (`approved_by`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_graduation_status` (`graduation_status`);
+
+--
+-- Indexes for table `registrar_settings`
+--
+ALTER TABLE `registrar_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
 -- Indexes for table `registrar_student_registration`
@@ -10120,6 +10713,15 @@ ALTER TABLE `registrar_transcripts`
   ADD KEY `idx_transcript_number` (`transcript_number`),
   ADD KEY `idx_student_id` (`student_id`),
   ADD KEY `idx_status` (`transcript_status`);
+
+--
+-- Indexes for table `registrar_transcript_requests`
+--
+ALTER TABLE `registrar_transcript_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `request_number` (`request_number`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `status` (`status`);
 
 --
 -- Indexes for table `requirement_clearances`
@@ -10297,6 +10899,23 @@ ALTER TABLE `security_visitors`
   ADD KEY `check_out_by` (`check_out_by`),
   ADD KEY `idx_visitor_id` (`visitor_id`),
   ADD KEY `idx_visit_date` (`visit_date`);
+
+--
+-- Indexes for table `sickbay_settings`
+--
+ALTER TABLE `sickbay_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_setting_key` (`setting_key`);
+
+--
+-- Indexes for table `sickness_directory`
+--
+ALTER TABLE `sickness_directory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `sickness_code` (`sickness_code`),
+  ADD KEY `sickness_name` (`sickness_name`),
+  ADD KEY `category` (`category`),
+  ADD KEY `status` (`status`);
 
 --
 -- Indexes for table `skills_laboratory`
@@ -10884,6 +11503,22 @@ ALTER TABLE `student_search_index`
 ALTER TABLE `student_search_index` ADD FULLTEXT KEY `idx_search_full` (`search_value`);
 
 --
+-- Indexes for table `student_sick_leave`
+--
+ALTER TABLE `student_sick_leave`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `leave_number` (`leave_number`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `sickness_id` (`sickness_id`),
+  ADD KEY `leave_from` (`leave_from`),
+  ADD KEY `leave_to` (`leave_to`),
+  ADD KEY `status` (`status`),
+  ADD KEY `student_name` (`student_name`),
+  ADD KEY `program` (`program`),
+  ADD KEY `ssl_student_status` (`student_id`,`status`),
+  ADD KEY `idx_ssl_deleted` (`is_deleted`);
+
+--
 -- Indexes for table `student_welfare_cases`
 --
 ALTER TABLE `student_welfare_cases`
@@ -11130,6 +11765,12 @@ ALTER TABLE `analytics_cache`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `announcements`
+--
+ALTER TABLE `announcements`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `api_keys`
 --
 ALTER TABLE `api_keys`
@@ -11319,7 +11960,7 @@ ALTER TABLE `compliance_records`
 -- AUTO_INCREMENT for table `compliance_requirements`
 --
 ALTER TABLE `compliance_requirements`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `compliance_tracking`
@@ -11352,6 +11993,12 @@ ALTER TABLE `course_registrations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `daily_sick_records`
+--
+ALTER TABLE `daily_sick_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `dashboard_configs`
 --
 ALTER TABLE `dashboard_configs`
@@ -11367,7 +12014,7 @@ ALTER TABLE `dashboard_updates`
 -- AUTO_INCREMENT for table `data_ownership_rules`
 --
 ALTER TABLE `data_ownership_rules`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `data_sync_status`
@@ -11655,13 +12302,13 @@ ALTER TABLE `incident_reports`
 -- AUTO_INCREMENT for table `institutional_alerts`
 --
 ALTER TABLE `institutional_alerts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `institutional_risks`
 --
 ALTER TABLE `institutional_risks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `interview_scheduling`
@@ -11832,6 +12479,18 @@ ALTER TABLE `meal_tracking`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `medicine_stock`
+--
+ALTER TABLE `medicine_stock`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
+
+--
+-- AUTO_INCREMENT for table `medicine_stock_transactions`
+--
+ALTER TABLE `medicine_stock_transactions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `midwifery_antenatal_care`
 --
 ALTER TABLE `midwifery_antenatal_care`
@@ -11982,6 +12641,12 @@ ALTER TABLE `penalty_configurations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT for table `pending_students`
+--
+ALTER TABLE `pending_students`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `performance_indicators`
 --
 ALTER TABLE `performance_indicators`
@@ -12060,10 +12725,22 @@ ALTER TABLE `registrar_academic_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `registrar_certificates`
+--
+ALTER TABLE `registrar_certificates`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `registrar_graduation`
 --
 ALTER TABLE `registrar_graduation`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `registrar_settings`
+--
+ALTER TABLE `registrar_settings`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `registrar_student_registration`
@@ -12075,6 +12752,12 @@ ALTER TABLE `registrar_student_registration`
 -- AUTO_INCREMENT for table `registrar_transcripts`
 --
 ALTER TABLE `registrar_transcripts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `registrar_transcript_requests`
+--
+ALTER TABLE `registrar_transcript_requests`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -12180,6 +12863,18 @@ ALTER TABLE `security_visitors`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `sickbay_settings`
+--
+ALTER TABLE `sickbay_settings`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `sickness_directory`
+--
+ALTER TABLE `sickness_directory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
+
+--
 -- AUTO_INCREMENT for table `skills_laboratory`
 --
 ALTER TABLE `skills_laboratory`
@@ -12273,7 +12968,7 @@ ALTER TABLE `staff_dashboard_access`
 -- AUTO_INCREMENT for table `staff_departments`
 --
 ALTER TABLE `staff_departments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT for table `staff_documents`
@@ -12531,6 +13226,12 @@ ALTER TABLE `student_room_inspections`
 -- AUTO_INCREMENT for table `student_search_index`
 --
 ALTER TABLE `student_search_index`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_sick_leave`
+--
+ALTER TABLE `student_sick_leave`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -12838,6 +13539,12 @@ ALTER TABLE `course_assignments`
 --
 ALTER TABLE `course_registrations`
   ADD CONSTRAINT `course_registrations_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `daily_sick_records`
+--
+ALTER TABLE `daily_sick_records`
+  ADD CONSTRAINT `daily_sick_records_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `departmental_budgets`
@@ -13196,6 +13903,12 @@ ALTER TABLE `library_transactions`
 ALTER TABLE `meal_tracking`
   ADD CONSTRAINT `meal_tracking_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `meal_tracking_ibfk_2` FOREIGN KEY (`served_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `medicine_stock_transactions`
+--
+ALTER TABLE `medicine_stock_transactions`
+  ADD CONSTRAINT `medicine_stock_transactions_ibfk_1` FOREIGN KEY (`medicine_id`) REFERENCES `medicine_stock` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `midwifery_antenatal_care`
@@ -13779,6 +14492,12 @@ ALTER TABLE `student_room_inspections`
 --
 ALTER TABLE `student_search_index`
   ADD CONSTRAINT `student_search_index_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `universal_student_profiles` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_sick_leave`
+--
+ALTER TABLE `student_sick_leave`
+  ADD CONSTRAINT `student_sick_leave_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student_welfare_cases`
