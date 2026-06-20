@@ -1,3 +1,4 @@
 <?php
-header("Location: director-general.php");
+// CEO dashboard — routes through director-general.php with CEO branding
+header("Location: /ceo/overview");
 exit;

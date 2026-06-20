@@ -2759,3 +2759,7 @@ Stack trace:
 #3 C:\xampp\htdocs\ISNM\dashboards\staff-attendance.php(4): getStaffConnection()
 #4 {main}
   thrown in C:\xampp\htdocs\ISNM\includes\database_connections.php on line 63
+[20-Jun-2026 13:31:06 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[20-Jun-2026 13:31:06 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[20-Jun-2026 13:31:06 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[20-Jun-2026 13:31:06 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

@@ -67,6 +67,11 @@
     RewriteRule ^director/?$ /director/overview [R=301,L]
     # Map /director/{page} → dashboards/director-general.php?page={page}
     RewriteRule ^director/([a-z]+)/?$ dashboards/director-general.php?page=$1 [L,QSA]
+
+    # Redirect /ceo and /ceo/ to overview
+    RewriteRule ^ceo/?$ /ceo/overview [R=301,L]
+    # Map /ceo/{page} → dashboards/director-general.php?page={page}&dg_role=ceo
+    RewriteRule ^ceo/([a-z]+)/?$ dashboards/director-general.php?page=$1&dg_role=ceo [L,QSA]
 </IfModule>
 
 # ── Force HTTPS (uncomment on production) ────────────────────

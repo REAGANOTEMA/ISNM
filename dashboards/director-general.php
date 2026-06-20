@@ -141,6 +141,13 @@ $dgPageToSection = [
 $dgPage  = $_GET['page'] ?? '';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
 
+// ── CEO vs DG branding ──
+$isCEO      = (stripos($user_role, 'ceo') !== false) || (($_GET['dg_role'] ?? '') === 'ceo');
+$dgRole     = $isCEO ? 'CEO' : 'Director General';
+$dgIcon     = $isCEO ? 'fa-chart-line' : 'fa-crown';
+$dgSubtitle = $isCEO ? 'Executive Oversight &amp; Strategy &bull; Iganga School of Nursing &amp; Midwifery' : 'Full Institution Oversight &bull; Iganga School of Nursing &amp; Midwifery';
+$dgRoutePrefix = $isCEO ? '/ceo' : '/director';
+
 // ── Reusable page toolbar (breadcrumb, back, search, export) ──
 function dgToolbar(string $title, string $icon, string $badgeText = '', string $badgeClass = 'bg-primary'): void {
     $sectionLabels = [
@@ -527,10 +534,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <!-- ═══ TOP BAR ═══ -->
 <div class="dg-topbar an-fade">
   <div class="dg-topbar-left">
-    <i class="fas fa-crown crown"></i>
+    <i class="fas <?= $dgIcon ?> crown"></i>
     <div>
-      <h1>Director General – Namugwanya Doris Joy</h1>
-      <p class="subtitle">Full Institution Oversight &bull; Iganga School of Nursing &amp; Midwifery</p>
+      <h1><?= $dgRole ?> – <?= htmlspecialchars($user_name) ?></h1>
+      <p class="subtitle"><?= $dgSubtitle ?></p>
     </div>
   </div>
   <div class="dg-topbar-right">

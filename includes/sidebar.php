@@ -274,34 +274,34 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         <!-- ═══ DIRECTOR GENERAL — PREMIUM EXECUTIVE SIDEBAR ═══ -->
         <div class="menu-divider"><span><i class="fas fa-crown" style="color:#e2b714;"></i> Executive Dashboard</span></div>
         <div class="dg-sidebar-group">
-            <a href="/director/overview" class="menu-link dg-nav-item" data-section="executive"><span class="menu-icon"><i class="fas fa-chart-simple"></i></span><span class="menu-label">Institution Overview</span></a>
-            <a href="/director/departments" class="menu-link dg-nav-item" data-section="departments"><span class="menu-icon"><i class="fas fa-building"></i></span><span class="menu-label">Department Monitoring</span></a>
-            <a href="/director/performance" class="menu-link dg-nav-item" data-section="performance"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Director Performance</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/overview" class="menu-link dg-nav-item" data-section="executive"><span class="menu-icon"><i class="fas fa-chart-simple"></i></span><span class="menu-label">Institution Overview</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/departments" class="menu-link dg-nav-item" data-section="departments"><span class="menu-icon"><i class="fas fa-building"></i></span><span class="menu-label">Department Monitoring</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/performance" class="menu-link dg-nav-item" data-section="performance"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Director Performance</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-users" style="color:#3b82f6;"></i> People Management</span></div>
         <div class="dg-sidebar-group">
-            <a href="/director/staff" class="menu-link dg-nav-item" data-section="staff"><span class="menu-icon"><i class="fas fa-id-badge"></i></span><span class="menu-label">Staff Management</span><span class="dg-badge"><?= isset($staff_list) ? count($staff_list).'+' : '' ?></span></a>
-            <a href="/director/students" class="menu-link dg-nav-item" data-section="student"><span class="menu-icon"><i class="fas fa-user-graduate"></i></span><span class="menu-label">Student Management</span><span class="dg-badge"><?= isset($total_students) ? number_format($total_students) : '' ?></span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/staff" class="menu-link dg-nav-item" data-section="staff"><span class="menu-icon"><i class="fas fa-id-badge"></i></span><span class="menu-label">Staff Management</span><span class="dg-badge"><?= isset($staff_list) ? count($staff_list).'+' : '' ?></span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/students" class="menu-link dg-nav-item" data-section="student"><span class="menu-icon"><i class="fas fa-user-graduate"></i></span><span class="menu-label">Student Management</span><span class="dg-badge"><?= isset($total_students) ? number_format($total_students) : '' ?></span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-briefcase" style="color:#059669;"></i> Institution Operations</span></div>
         <div class="dg-sidebar-group">
-            <a href="/director/finance" class="menu-link dg-nav-item" data-section="financial"><span class="menu-icon"><i class="fas fa-coins"></i></span><span class="menu-label">Financial Overview</span></a>
-            <a href="/director/assets" class="menu-link dg-nav-item" data-section="store"><span class="menu-icon"><i class="fas fa-warehouse"></i></span><span class="menu-label">Store &amp; Assets</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/finance" class="menu-link dg-nav-item" data-section="financial"><span class="menu-icon"><i class="fas fa-coins"></i></span><span class="menu-label">Financial Overview</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/assets" class="menu-link dg-nav-item" data-section="store"><span class="menu-icon"><i class="fas fa-warehouse"></i></span><span class="menu-label">Store &amp; Assets</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-check-circle" style="color:#d97706;"></i> Approvals &amp; Tasks</span></div>
         <div class="dg-sidebar-group">
-            <a href="/director/approvals" class="menu-link dg-nav-item" data-section="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Pending Approvals</span><span class="dg-badge dg-badge-warning" id="approvalBadgeSidebar" style="display:none">0</span></a>
-            <a href="/director/submissions" class="menu-link dg-nav-item" data-section="services"><span class="menu-icon"><i class="fas fa-inbox"></i></span><span class="menu-label">Pending Submissions</span><span class="dg-badge dg-badge-danger"><?= isset($totalPending) && $totalPending > 0 ? $totalPending : '' ?></span></a>
-            <a href="/director/actions" class="menu-link dg-nav-item" data-section="quick"><span class="menu-icon"><i class="fas fa-bolt"></i></span><span class="menu-label">Quick Actions</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/approvals" class="menu-link dg-nav-item" data-section="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Pending Approvals</span><span class="dg-badge dg-badge-warning" id="approvalBadgeSidebar" style="display:none">0</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/submissions" class="menu-link dg-nav-item" data-section="services"><span class="menu-icon"><i class="fas fa-inbox"></i></span><span class="menu-label">Pending Submissions</span><span class="dg-badge dg-badge-danger"><?= isset($totalPending) && $totalPending > 0 ? $totalPending : '' ?></span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/actions" class="menu-link dg-nav-item" data-section="quick"><span class="menu-icon"><i class="fas fa-bolt"></i></span><span class="menu-label">Quick Actions</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-bullhorn" style="color:#8b5cf6;"></i> Communication &amp; Governance</span></div>
         <div class="dg-sidebar-group">
-            <a href="/director/communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Communications</span></a>
-            <a href="/director/audit" class="menu-link dg-nav-item" data-section="audit"><span class="menu-icon"><i class="fas fa-history"></i></span><span class="menu-label">Audit Trail</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Communications</span></a>
+            <a href="<?= $dgRoutePrefix ?? '/director' ?>/audit" class="menu-link dg-nav-item" data-section="audit"><span class="menu-icon"><i class="fas fa-history"></i></span><span class="menu-label">Audit Trail</span></a>
         </div>
         <?php else: ?>
         <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->
@@ -1101,8 +1101,14 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         return function(p) { return m[p] || p; };
     })();
 
+    // ── Detect active route prefix (/director or /ceo) ──
+    function getDgPrefix() {
+        if (window.location.pathname.indexOf('/ceo/') === 0) return '/ceo';
+        return '/director';
+    }
+
     // ── Section Switching ──
-    // Shows the target .dashboard-section, pushes a clean /director/{page} URL.
+    // Shows the target .dashboard-section, pushes a clean /director/{page} or /ceo/{page} URL.
     function switchToSection(sectionId) {
         if (!sectionId) return;
         document.querySelectorAll('.dashboard-section').forEach(function(s) {
@@ -1115,8 +1121,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === sectionId);
         });
         var page = sectionToPage(sectionId);
-        if (page && window.location.pathname.indexOf('/director/') === 0) {
-            history.pushState({section: sectionId}, '', '/director/' + page);
+        if (page) {
+            var prefix = getDgPrefix();
+            history.pushState({section: sectionId}, '', prefix + '/' + page);
         }
     }
     window.switchToSection = switchToSection;
@@ -1141,9 +1148,9 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 
     // ── popstate: back/forward with clean URLs ──
     window.addEventListener('popstate', function(e) {
-        var match = window.location.pathname.match(/^\/director\/([a-z]+)/);
+        var match = window.location.pathname.match(/^\/(director|ceo)\/([a-z]+)/);
         if (match) {
-            var section = pageToSection(match[1]);
+            var section = pageToSection(match[2]);
             if (section) {
                 document.querySelectorAll('.dashboard-section').forEach(function(s) {
                     s.classList.toggle('active', s.dataset.section === section);
@@ -1168,11 +1175,11 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         }
     });
 
-    // On page load: check URL path for /director/{page}, fall back to hash
+    // On page load: check URL path for /director/{page} or /ceo/{page}, fall back to hash
     function initSection() {
         var sectionId = null;
-        var match = window.location.pathname.match(/^\/director\/([a-z]+)/);
-        if (match) sectionId = pageToSection(match[1]);
+        var match = window.location.pathname.match(/^\/(director|ceo)\/([a-z]+)/);
+        if (match) sectionId = pageToSection(match[2]);
         if (!sectionId) {
             var hash = window.location.hash.replace('#', '');
             if (hash) sectionId = hash;
