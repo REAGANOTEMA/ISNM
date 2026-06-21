@@ -301,13 +301,12 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
   $sectionCounts = [];
   if ($staff_conn) {
       $sectionCounts['total_staff'] = $active_staff;
-      $sectionCounts['attendance_today'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE()")->fetch_assoc()['c']??0);
-      $sectionCounts['pending_leave'] = $pending_applications;
-      $sectionCounts['pending_appraisals'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'")->fetch_assoc()['c']??0);
-      $sectionCounts['active_trainings'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='In Progress'")->fetch_assoc()['c']??0);
-      $sectionCounts['active_recruitments'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'")->fetch_assoc()['c']??0);
-      $sectionCounts['active_contracts'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active'")->fetch_assoc()['c']??0);
-      $sectionCounts['disciplinary_cases'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Open'")->fetch_assoc()['c']??0);
+      $sectionCounts['attendance_today'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE()"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['pending_appraisals'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['active_trainings'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='In Progress'"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['active_recruitments'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['active_contracts'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active'"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['disciplinary_cases'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Open'"))&&$r?$r->fetch_assoc()['c']:0);
   }
   ?>
 

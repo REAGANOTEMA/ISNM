@@ -471,7 +471,7 @@
             var score = ISNMAI.calculatePerformanceScore({ attendanceRate: aR, passRate: 82, collectionRate: d.collRate||50, staffMorale: 70 });
             if (typeof renderPerformanceGauge === 'function') renderPerformanceGauge('performanceGauge', score, 'Health');
         } catch(e) {
-            // Silently handle any chart init errors
+            console.warn('[ISNM] Chart init error:', e);
         }
     });
 })();

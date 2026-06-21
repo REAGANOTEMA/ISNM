@@ -171,6 +171,11 @@ class DatabaseConnection {
             $conn = self::getConnection($database);
             $stmt = $conn->prepare($sql);
             
+            if (!$stmt) {
+                error_log("Query prepare failed in {$database}: " . $conn->error);
+                return false;
+            }
+            
             if (!empty($params) && !empty($types)) {
                 $stmt->bind_param($types, ...$params);
             }
@@ -180,7 +185,7 @@ class DatabaseConnection {
             $stmt->close();
             
             return $result;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log("Query execution error in {$database}: " . $e->getMessage());
             return false;
         }

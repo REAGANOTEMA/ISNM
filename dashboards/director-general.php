@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/config_enhanced.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -33,93 +34,140 @@ $pending_apps        = $overview['pending_applications'];
 $loader = new StudentDataLoader();
 $excel_files_summary = $loader->getExcelFileSummary();
 
-$today_collection = 0; $outstanding = 0;
-if ($conn) {
-    $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
-    if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
-    $r2 = $conn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')");
-    if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
-}
+// ── Dashboard stats cache ──
+$dg_cache_key = 'dg_dashboard_stats';
+$dg_use_cache  = function_exists('getCacheData') && function_exists('setCacheData');
+$dg_cached     = $dg_use_cache ? getCacheData($dg_cache_key) : null;
+if ($dg_cached) {
+    $today_collection    = $dg_cached['today_collection'];
+    $outstanding         = $dg_cached['outstanding'];
+    $staff_list          = $dg_cached['staff_list'];
+    $recent_activities   = $dg_cached['recent_activities'];
+    $dept_list           = $dg_cached['dept_list'];
+    $user_role_id        = $dg_cached['user_role_id'];
+    $staffAttendanceToday= $dg_cached['staffAttendanceToday'];
+    $week_collection     = $dg_cached['week_collection'];
+    $month_collection    = $dg_cached['month_collection'];
+    $total_expenses      = $dg_cached['total_expenses'];
+    $total_revenue       = $dg_cached['total_revenue'];
+    $recent_payments     = $dg_cached['recent_payments'];
+    $pendingContacts     = $dg_cached['pendingContacts'];
+    $pendingVolunteers   = $dg_cached['pendingVolunteers'];
+    $pendingDonations    = $dg_cached['pendingDonations'];
+    $pendingApplications = $dg_cached['pendingApplications'];
+    $recentSubmissions   = $dg_cached['recentSubmissions'];
+    $totalPending        = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
+} else {
+    $today_collection = 0; $outstanding = 0;
+    if ($conn) {
+        $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
+        if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
+        $r2 = $conn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')");
+        if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
+    }
 
-$staff_list = [];
-if ($conn) {
-    $sr = $conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.position,s.department,s.status,s.last_login,sr.role_name
-        FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
-    if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
-}
+    $staff_list = [];
+    if ($conn) {
+        $sr = $conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.position,s.department,s.status,s.last_login,sr.role_name
+            FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
+        if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
+    }
 
-$recent_activities = [];
-if ($conn) {
-    $ar = $conn->query("SELECT activity_type,activity_description,created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
-    if ($ar) while ($r = $ar->fetch_assoc()) $recent_activities[] = $r;
-}
+    $recent_activities = [];
+    if ($conn) {
+        $ar = $conn->query("SELECT activity_type,activity_description,created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
+        if ($ar) while ($r = $ar->fetch_assoc()) $recent_activities[] = $r;
+    }
 
-$dept_list = [];
-if ($conn) {
-    $dr = $conn->query("SELECT department_name,department_code,department_level FROM staff_departments ORDER BY department_level,department_name");
-    if ($dr) while ($r = $dr->fetch_assoc()) $dept_list[] = $r;
+    $dept_list = [];
+    if ($conn) {
+        $dr = $conn->query("SELECT id,department_name,department_code,department_level FROM staff_departments ORDER BY department_level,department_name");
+        if ($dr) while ($r = $dr->fetch_assoc()) $dept_list[] = $r;
+    }
+
+    $user_role_id = 0;
+    if ($conn) {
+        $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+        if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
+    }
+
+    $staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0, 'onLeave' => 0];
+    if ($conn) {
+        $sa = $conn->query("SELECT status, COUNT(*) cnt FROM staff_attendance WHERE DATE(date)=CURDATE() GROUP BY status");
+        if ($sa) while ($row = $sa->fetch_assoc()) {
+            $k = strtolower(str_replace(' ', '_', $row['status']));
+            if (isset($staffAttendanceToday[$k])) $staffAttendanceToday[$k] = (int)$row['cnt'];
+        }
+    }
+
+    $week_collection = 0; $month_collection = 0; $total_expenses = 0; $total_revenue = 0;
+    if ($conn) {
+        $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
+        if ($rw) $week_collection = $rw->fetch_assoc()['v'] ?? 0;
+        $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
+        if ($rm) $month_collection = $rm->fetch_assoc()['v'] ?? 0;
+        $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE status IN('approved','paid')");
+        if ($re) $total_expenses = $re->fetch_assoc()['v'] ?? 0;
+        $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('verified','approved')");
+        if ($rr) $total_revenue = $rr->fetch_assoc()['v'] ?? 0;
+    }
+
+    $recent_payments = [];
+    if ($conn) {
+        $rp = $conn->query("SELECT p.*, s.first_name, s.last_name, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
+        if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
+    }
+
+    $pendingContacts = 0; $pendingVolunteers = 0; $pendingDonations = 0; $pendingApplications = 0;
+    $recentSubmissions = [];
+    if ($websiteConn) {
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM contact_submissions WHERE status='unread'");
+        if ($r) $pendingContacts = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM volunteer_applications WHERE status='pending'");
+        if ($r) $pendingVolunteers = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM donations WHERE status='pending'");
+        if ($r) $pendingDonations = (int)$r->fetch_assoc()['c'];
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'");
+        if ($r) $pendingApplications = (int)$r->fetch_assoc()['c'];
+        $union = $websiteConn->query("
+            (SELECT 'contact' as type, id, CONCAT(first_name,' ',last_name) as name, subject as title, created_at FROM contact_submissions WHERE status='unread')
+            UNION ALL
+            (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
+            UNION ALL
+            (SELECT 'donation', id, donor_name, CONCAT('UGX ',FORMAT(amount,0)), created_at FROM donations WHERE status='pending')
+            UNION ALL
+            (SELECT 'application', id, CONCAT(first_name,' ',surname), program_applied, submitted_at FROM student_applications WHERE status='Pending')
+            ORDER BY created_at DESC LIMIT 8
+        ");
+        if ($union) while ($row = $union->fetch_assoc()) $recentSubmissions[] = $row;
+    }
+    $totalPending = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
+
+    if ($dg_use_cache) {
+        setCacheData($dg_cache_key, [
+            'today_collection'    => $today_collection,
+            'outstanding'         => $outstanding,
+            'staff_list'          => $staff_list,
+            'recent_activities'   => $recent_activities,
+            'dept_list'           => $dept_list,
+            'user_role_id'        => $user_role_id,
+            'staffAttendanceToday'=> $staffAttendanceToday,
+            'week_collection'     => $week_collection,
+            'month_collection'    => $month_collection,
+            'total_expenses'      => $total_expenses,
+            'total_revenue'       => $total_revenue,
+            'recent_payments'     => $recent_payments,
+            'pendingContacts'     => $pendingContacts,
+            'pendingVolunteers'   => $pendingVolunteers,
+            'pendingDonations'    => $pendingDonations,
+            'pendingApplications' => $pendingApplications,
+            'recentSubmissions'   => $recentSubmissions,
+        ], '+2 minutes');
+    }
 }
 
 $recent_students = [];
 try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch (Exception $e) {}
-
-$user_role_id = 0;
-if ($conn) {
-    $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
-    if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
-}
-
-$staffAttendanceToday = ['present' => 0, 'late' => 0, 'absent' => 0, 'on_leave' => 0, 'onLeave' => 0];
-if ($conn) {
-    $sa = $conn->query("SELECT status, COUNT(*) cnt FROM staff_attendance WHERE DATE(date)=CURDATE() GROUP BY status");
-    if ($sa) while ($row = $sa->fetch_assoc()) {
-        $k = strtolower(str_replace(' ', '_', $row['status']));
-        if (isset($staffAttendanceToday[$k])) $staffAttendanceToday[$k] = (int)$row['cnt'];
-    }
-}
-
-$week_collection = 0; $month_collection = 0; $total_expenses = 0; $total_revenue = 0;
-if ($conn) {
-    $rw = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE YEARWEEK(payment_date)=YEARWEEK(CURDATE()) AND status IN('verified','approved')");
-    if ($rw) $week_collection = $rw->fetch_assoc()['v'] ?? 0;
-    $rm = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status IN('verified','approved')");
-    if ($rm) $month_collection = $rm->fetch_assoc()['v'] ?? 0;
-    $re = $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE status IN('approved','paid')");
-    if ($re) $total_expenses = $re->fetch_assoc()['v'] ?? 0;
-    $rr = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM payments WHERE status IN('verified','approved')");
-    if ($rr) $total_revenue = $rr->fetch_assoc()['v'] ?? 0;
-}
-
-$recent_payments = [];
-if ($conn) {
-    $rp = $conn->query("SELECT p.*, s.first_name, s.last_name, s.student_number FROM payments p LEFT JOIN students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
-    if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
-}
-
-$pendingContacts = 0; $pendingVolunteers = 0; $pendingDonations = 0; $pendingApplications = 0;
-$recentSubmissions = [];
-if ($websiteConn) {
-    $r = $websiteConn->query("SELECT COUNT(*) c FROM contact_submissions WHERE status='unread'");
-    if ($r) $pendingContacts = (int)$r->fetch_assoc()['c'];
-    $r = $websiteConn->query("SELECT COUNT(*) c FROM volunteer_applications WHERE status='pending'");
-    if ($r) $pendingVolunteers = (int)$r->fetch_assoc()['c'];
-    $r = $websiteConn->query("SELECT COUNT(*) c FROM donations WHERE status='pending'");
-    if ($r) $pendingDonations = (int)$r->fetch_assoc()['c'];
-    $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'");
-    if ($r) $pendingApplications = (int)$r->fetch_assoc()['c'];
-    $union = $websiteConn->query("
-        (SELECT 'contact' as type, id, CONCAT(first_name,' ',last_name) as name, subject as title, created_at FROM contact_submissions WHERE status='unread')
-        UNION ALL
-        (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
-        UNION ALL
-        (SELECT 'donation', id, donor_name, CONCAT('UGX ',FORMAT(amount,0)), created_at FROM donations WHERE status='pending')
-        UNION ALL
-        (SELECT 'application', id, CONCAT(first_name,' ',surname), program_applied, submitted_at FROM student_applications WHERE status='Pending')
-        ORDER BY created_at DESC LIMIT 8
-    ");
-    if ($union) while ($row = $union->fetch_assoc()) $recentSubmissions[] = $row;
-}
-$totalPending = $pendingContacts + $pendingVolunteers + $pendingDonations + $pendingApplications;
 
 // ── DG page routing ──
 // Map /director/{page} to internal section names
@@ -161,7 +209,7 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
     ?>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
         <nav style="font-size:12px;color:#64748b;flex:1;">
-            <a href="/director/overview" style="color:#3b82f6;text-decoration:none;">Dashboard</a>
+            <a href="#executive" style="color:#3b82f6;text-decoration:none;" onclick="switchToSection('executive');return false;">Dashboard</a>
             <span style="margin:0 4px;">›</span>
             <span style="color:#0f172a;font-weight:600;"><?= htmlspecialchars($label) ?></span>
         </nav>
@@ -235,6 +283,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
     } else {
         $_SESSION['error'] = "Please fill all required fields!";
     }
+    header('Location: director-general.php'); exit;
+}
+
+// ── CRUD POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
+    $action = $_POST['dg_action'];
+    $ok = false; $msg = '';
+
+    if ($action === 'add_department' && $conn) {
+        $name = $conn->real_escape_string(trim($_POST['dept_name'] ?? ''));
+        $code = $conn->real_escape_string(strtoupper(trim($_POST['dept_code'] ?? '')));
+        $level = $conn->real_escape_string(trim($_POST['dept_level'] ?? ''));
+        if ($name && $code) {
+            $conn->query("INSERT INTO staff_departments (department_name,department_code,department_level) VALUES ('$name','$code','$level')");
+            $ok = true; $msg = "Department $name added.";
+        } else { $msg = 'Name and code required.'; }
+    }
+
+    if ($action === 'delete_department' && $conn) {
+        $id = (int)($_POST['dept_id'] ?? 0);
+        if ($id) { $conn->query("DELETE FROM staff_departments WHERE id=$id"); $ok = true; $msg = 'Department deleted.'; }
+        else {
+            $code = $conn->real_escape_string($_POST['dept_code'] ?? '');
+            if ($code) { $conn->query("DELETE FROM staff_departments WHERE department_code='$code'"); $ok = true; $msg = 'Department deleted.'; }
+        }
+    }
+
+    if ($action === 'add_staff' && $conn) {
+        $name = $conn->real_escape_string(trim($_POST['staff_name'] ?? ''));
+        $sid = $conn->real_escape_string(trim($_POST['staff_id'] ?? ''));
+        $em = $conn->real_escape_string(trim($_POST['staff_email'] ?? ''));
+        $ph = $conn->real_escape_string(trim($_POST['staff_phone'] ?? ''));
+        $dp = $conn->real_escape_string(trim($_POST['staff_dept'] ?? ''));
+        $ro = $conn->real_escape_string(trim($_POST['staff_role'] ?? 'staff'));
+        $st = $conn->real_escape_string(trim($_POST['staff_status'] ?? 'Active'));
+        if ($name && $sid) {
+            $conn->query("INSERT INTO staff (staff_id,full_name,email,phone,department,position,status) VALUES ('$sid','$name','$em','$ph','$dp','$ro','$st')");
+            $ok = true; $msg = "Staff $name added.";
+        } else { $msg = 'Name and Staff ID required.'; }
+    }
+
+    if ($action === 'delete_staff' && $conn) {
+        $sid = (int)($_POST['staff_id'] ?? 0);
+        if ($sid) { $conn->query("DELETE FROM staff WHERE id=$sid"); $ok = true; $msg = 'Staff removed.'; }
+    }
+
+    if ($action === 'approve_submission' && $websiteConn) {
+        $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
+        $subid = (int)($_POST['sub_id'] ?? 0);
+        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=$subid");
+        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=$subid");
+        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='verified' WHERE id=$subid");
+        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Approved' WHERE id=$subid");
+        if ($subid) { $ok = true; $msg = 'Submission approved.'; }
+    }
+    if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
+        $ref = $conn->real_escape_string($_POST['sub_ref'] ?? '');
+        if ($ref) { $conn->query("UPDATE store_requests SET status='approved',approved_by=$user_id,approved_at=NOW() WHERE request_number='$ref'"); $ok = true; $msg = 'Store request approved.'; }
+    }
+
+    if ($action === 'reject_submission' && $websiteConn) {
+        $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
+        $subid = (int)($_POST['sub_id'] ?? 0);
+        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=$subid");
+        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=$subid");
+        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=$subid");
+        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=$subid");
+        $ok = true; $msg = 'Submission rejected.';
+    }
+
+    if ($action === 'resolve_alert') {
+        $aid = (int)($_POST['alert_id'] ?? 0);
+        $subType = ($_POST['sub_type'] ?? '');
+        $subId = (int)($_POST['sub_id'] ?? 0);
+        // alerts table is in isnm_db via $conn
+        if ($aid && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE id=$aid"); $ok = true; $msg = 'Alert resolved.'; }
+        if ($subType === 'all_alerts' && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE status='active'"); $ok = true; $msg = 'All alerts resolved.'; }
+        // website submissions are in website_db via $websiteConn
+        if ($subType && $subId && $websiteConn) {
+            $t = $websiteConn->real_escape_string($subType);
+            $q = '';
+            if ($t === 'contact') $q = "UPDATE contact_submissions SET status='resolved' WHERE id=$subId";
+            elseif ($t === 'volunteer') $q = "UPDATE volunteer_applications SET status='resolved' WHERE id=$subId";
+            elseif ($t === 'donation') $q = "UPDATE donations SET status='verified' WHERE id=$subId";
+            elseif ($t === 'application') $q = "UPDATE student_applications SET status='Resolved' WHERE id=$subId";
+            if ($q) { $websiteConn->query($q); $ok = true; $msg = 'Submission resolved.'; }
+        }
+    }
+
+    if ($ok) $_SESSION['success'] = $msg;
+    else $_SESSION['error'] = $msg;
     header('Location: director-general.php'); exit;
 }
 
@@ -556,39 +695,39 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <?php unset($_SESSION['success']); endif; ?>
 
-<!-- ═══ KPI CARDS ═══ -->
+<!-- ═══ KPI CARDS (clickable) ═══ -->
 <div class="kpi-grid">
-  <div class="kpi-card kpi-bl an-fade" style="animation-delay:0.05s">
+  <div class="kpi-card kpi-bl an-fade" style="animation-delay:0.05s;cursor:pointer;" onclick="switchToSection('student');return false;" title="Click to view Students">
     <div class="kpi-icon"><i class="fas fa-user-graduate"></i></div>
     <div class="kpi-value"><?= number_format($total_students) ?></div>
     <div class="kpi-label">Total Students</div>
     <span class="kpi-trend" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-arrow-up"></i> Active</span>
   </div>
-  <div class="kpi-card kpi-gr an-fade" style="animation-delay:0.1s">
+  <div class="kpi-card kpi-gr an-fade" style="animation-delay:0.1s;cursor:pointer;" onclick="switchToSection('staff');return false;" title="Click to view Staff">
     <div class="kpi-icon"><i class="fas fa-users"></i></div>
     <div class="kpi-value"><?= number_format($total_staff) ?></div>
     <div class="kpi-label">Total Staff</div>
     <span class="kpi-trend" style="background:#ecfdf5;color:#059669;"><i class="fas fa-check-circle"></i> Active</span>
   </div>
-  <div class="kpi-card kpi-cy an-fade" style="animation-delay:0.15s">
+  <div class="kpi-card kpi-cy an-fade" style="animation-delay:0.15s;cursor:pointer;" onclick="switchToSection('financial');return false;" title="Click to view Financials">
     <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
     <div class="kpi-value">UGX <?= number_format($today_collection) ?></div>
     <div class="kpi-label">Today Collection</div>
     <?php if($today_collection > 0): ?><span class="kpi-trend" style="background:#ecfeff;color:#0891b2;"><i class="fas fa-arrow-up"></i> Today</span><?php endif; ?>
   </div>
-  <div class="kpi-card kpi-rd an-fade" style="animation-delay:0.2s">
+  <div class="kpi-card kpi-rd an-fade" style="animation-delay:0.2s;cursor:pointer;" onclick="switchToSection('financial');return false;" title="Click to manage Fees">
     <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
     <div class="kpi-value">UGX <?= number_format($outstanding) ?></div>
     <div class="kpi-label">Outstanding Fees</div>
     <?php if($outstanding > 0): ?><span class="kpi-trend" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Pending</span><?php endif; ?>
   </div>
-  <div class="kpi-card kpi-or an-fade" style="animation-delay:0.25s">
+  <div class="kpi-card kpi-or an-fade" style="animation-delay:0.25s;cursor:pointer;" onclick="switchToSection('services');return false;" title="Click to review Applications">
     <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>
     <div class="kpi-value"><?= number_format($total_applications) ?></div>
     <div class="kpi-label">Applications</div>
     <span class="kpi-trend" style="background:#fffbeb;color:#d97706;"><i class="fas fa-clock"></i> Received</span>
   </div>
-  <div class="kpi-card kpi-pr an-fade" style="animation-delay:0.3s">
+  <div class="kpi-card kpi-pr an-fade" style="animation-delay:0.3s;cursor:pointer;" onclick="switchToSection('approvals');return false;" title="Click to approve">
     <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
     <div class="kpi-value"><?= number_format($pending_apps) ?></div>
     <div class="kpi-label">Pending Review</div>
@@ -650,7 +789,15 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
           <div class="submission-name"><?= htmlspecialchars($sub['name']) ?></div>
           <div class="submission-detail"><?= htmlspecialchars($sub['title']) ?> <span class="badge badge-soft bg-light text-dark"><?= $labels[$t] ?></span></div>
         </div>
-        <span class="submission-time"><?= date('d M H:i',strtotime($sub['created_at'])) ?></span>
+        <div class="d-flex align-items-center gap-2">
+          <form method="POST" style="display:inline;" onsubmit="return confirm('Resolve this submission?')">
+            <input type="hidden" name="dg_action" value="resolve_alert">
+            <input type="hidden" name="sub_type" value="<?= htmlspecialchars($t) ?>">
+            <input type="hidden" name="sub_id" value="<?= $sub['id'] ?? 0 ?>">
+            <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 4px;" title="Mark resolved"><i class="fas fa-check-circle"></i></button>
+          </form>
+          <span class="submission-time"><?= date('d M H:i',strtotime($sub['created_at'])) ?></span>
+        </div>
       </div>
     <?php endforeach; ?></div><?php endif; ?>
     <?php else: ?>
@@ -661,18 +808,18 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- ═══ SECTION TABS ═══ -->
 <div class="section-tabs mb-3 no-print d-flex flex-wrap gap-1" style="background:#fff;border-radius:10px;padding:6px 8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-  <a class="section-tab<?= $dgSection === 'executive' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/overview" onclick="switchToSection('executive');return false;" data-tab="executive"><i class="fas fa-chart-simple me-1"></i>Executive</a>
-  <a class="section-tab<?= $dgSection === 'departments' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/departments" onclick="switchToSection('departments');return false;" data-tab="departments"><i class="fas fa-building me-1"></i>Departments</a>
-  <a class="section-tab<?= $dgSection === 'performance' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/performance" onclick="switchToSection('performance');return false;" data-tab="performance"><i class="fas fa-chart-bar me-1"></i>Performance</a>
-  <a class="section-tab<?= $dgSection === 'financial' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/finance" onclick="switchToSection('financial');return false;" data-tab="financial"><i class="fas fa-coins me-1"></i>Financial</a>
-  <a class="section-tab<?= $dgSection === 'staff' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/staff" onclick="switchToSection('staff');return false;" data-tab="staff"><i class="fas fa-users me-1"></i>Staff</a>
-  <a class="section-tab<?= $dgSection === 'student' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/students" onclick="switchToSection('student');return false;" data-tab="student"><i class="fas fa-user-graduate me-1"></i>Students</a>
-  <a class="section-tab<?= $dgSection === 'services' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/submissions" onclick="switchToSection('services');return false;" data-tab="services"><i class="fas fa-inbox me-1"></i>Submissions</a>
-  <a class="section-tab<?= $dgSection === 'approvals' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/approvals" onclick="switchToSection('approvals');return false;" data-tab="approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
-  <a class="section-tab<?= $dgSection === 'store' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/assets" onclick="switchToSection('store');return false;" data-tab="store"><i class="fas fa-warehouse me-1"></i>Store</a>
-  <a class="section-tab<?= $dgSection === 'communications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/communications" onclick="switchToSection('communications');return false;" data-tab="communications"><i class="fas fa-bullhorn me-1"></i>Comms</a>
-  <a class="section-tab<?= $dgSection === 'audit' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/audit" onclick="switchToSection('audit');return false;" data-tab="audit"><i class="fas fa-history me-1"></i>Audit</a>
-  <a class="section-tab<?= $dgSection === 'quick' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="/director/actions" onclick="switchToSection('quick');return false;" data-tab="quick"><i class="fas fa-bolt me-1"></i>Quick</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'executive' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#executive" onclick="switchToSection('executive');return false;" data-tab="executive"><i class="fas fa-chart-simple me-1"></i>Executive</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'departments' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#departments" onclick="switchToSection('departments');return false;" data-tab="departments"><i class="fas fa-building me-1"></i>Departments</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'performance' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#performance" onclick="switchToSection('performance');return false;" data-tab="performance"><i class="fas fa-chart-bar me-1"></i>Performance</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'financial' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#financial" onclick="switchToSection('financial');return false;" data-tab="financial"><i class="fas fa-coins me-1"></i>Financial</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'staff' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#staff" onclick="switchToSection('staff');return false;" data-tab="staff"><i class="fas fa-users me-1"></i>Staff</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'student' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#student" onclick="switchToSection('student');return false;" data-tab="student"><i class="fas fa-user-graduate me-1"></i>Students</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'services' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#services" onclick="switchToSection('services');return false;" data-tab="services"><i class="fas fa-inbox me-1"></i>Submissions</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'approvals' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#approvals" onclick="switchToSection('approvals');return false;" data-tab="approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'store' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#store" onclick="switchToSection('store');return false;" data-tab="store"><i class="fas fa-warehouse me-1"></i>Store</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'communications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#communications" onclick="switchToSection('communications');return false;" data-tab="communications"><i class="fas fa-bullhorn me-1"></i>Comms</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'audit' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#audit" onclick="switchToSection('audit');return false;" data-tab="audit"><i class="fas fa-history me-1"></i>Audit</a>
+  <a data-no-loader class="section-tab<?= $dgSection === 'quick' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#quick" onclick="switchToSection('quick');return false;" data-tab="quick"><i class="fas fa-bolt me-1"></i>Quick</a>
 </div>
 
 <!-- ═══ SECTION: EXECUTIVE ═══ -->
@@ -704,8 +851,33 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         <h3 class="section-title"><i class="fas fa-building" style="color:#d97706;"></i>Department Performance</h3>
         <p class="section-subtitle">Status, problems, trends &amp; responsible directors</p>
       </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;" data-bs-toggle="modal" data-bs-target="#addDeptModal"><i class="fas fa-plus me-1"></i>Add Department</button>
+        <a href="../dashboards/hr-manager.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-cog me-1"></i>Manage</a>
+      </div>
     </div>
     <?= renderDepartmentComparison($conn) ?>
+    <?php if(!empty($dept_list)): ?>
+    <hr><h4 class="section-title" style="font-size:13px;margin-bottom:10px;"><i class="fas fa-list" style="color:#64748b;"></i>All Departments</h4>
+    <div class="row g-2">
+      <?php foreach($dept_list as $d): ?>
+      <div class="col-md-4 col-6">
+        <div class="p-2 rounded d-flex justify-content-between align-items-center" style="background:#f8fafc;border:1px solid #f1f5f9;">
+          <div>
+            <div class="fw-bold small"><?= htmlspecialchars($d['department_name']) ?></div>
+            <small style="color:#94a3b8;"><?= htmlspecialchars($d['department_code']??'') ?> &middot; <?= htmlspecialchars($d['department_level']??'') ?></small>
+          </div>
+          <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this department?')">
+            <input type="hidden" name="dg_action" value="delete_department">
+            <input type="hidden" name="dept_id" value="<?= $d['id'] ?? 0 ?>">
+            <input type="hidden" name="dept_code" value="<?= htmlspecialchars($d['department_code']??'') ?>">
+            <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:2px 6px;" title="Delete"><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -759,8 +931,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             <div class="col-6 col-md-3"><div class="stat-block" style="background:linear-gradient(135deg,#faf5ff,#e9d5ff);"><div class="stat-val" style="color:#6b21a8">UGX <?= number_format($month_collection-$total_expenses) ?></div><div class="stat-lbl" style="color:#581c87">Monthly Balance</div></div></div>
           </div>
           <div class="mt-3 d-flex flex-wrap gap-2">
-            <a href="../dashboards/director-finance.php" class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;"><i class="fas fa-coins me-1"></i>Finance Dashboard</a>
-            <a href="../dashboards/school-bursar.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
+            <a href="../dashboards/school-bursar.php?section=record_payment" class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;"><i class="fas fa-plus-circle me-1"></i>Record Payment</a>
+            <a href="../dashboards/school-bursar.php?section=expenses" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;border-radius:8px;"><i class="fas fa-minus-circle me-1"></i>Add Expense</a>
+            <a href="../dashboards/director-finance.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-coins me-1"></i>Finance Dashboard</a>
+            <a href="../dashboards/school-bursar.php" class="btn btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
             <a href="../dashboards/budget-management.php" class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:8px;"><i class="fas fa-chart-line me-1"></i>Budget</a>
           </div>
         </div>
@@ -828,13 +1002,16 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
       <div class="section-card">
         <div class="section-header">
           <h3 class="section-title" style="margin-bottom:0;"><i class="fas fa-id-badge" style="color:#3b82f6;"></i>All Staff (<?= count($staff_list) ?>+)</h3>
-          <a href="../dashboards/hr-manager.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;">HR Dashboard</a>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;" data-bs-toggle="modal" data-bs-target="#addStaffModal"><i class="fas fa-plus me-1"></i>Add Staff</button>
+            <a href="../dashboards/hr-manager.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;">HR Dashboard</a>
+          </div>
         </div>
         <div class="table-scroll">
           <table class="table dg-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
-            <?php if(empty($staff_list)): ?><tr><td colspan="6" class="text-center text-muted py-3">No staff records found.</td></tr>
+            <?php if(empty($staff_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
             <?php else: foreach($staff_list as $s): $bc=$s['status']==='Active'?'bg-success text-white':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger text-white'); ?>
             <tr>
               <td><code style="font-size:11px;"><?= htmlspecialchars($s['staff_id']) ?></code></td>
@@ -843,6 +1020,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
               <td><?= htmlspecialchars($s['department']??'-') ?></td>
               <td><span style="font-size:12px;color:#64748b;"><?= htmlspecialchars($s['email']) ?></span></td>
               <td><span class="badge badge-soft <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
+              <td>
+                <form method="POST" style="display:inline;" onsubmit="return confirm('Remove <?= htmlspecialchars($s['full_name'],ENT_QUOTES) ?> from staff?')">
+                  <input type="hidden" name="dg_action" value="delete_staff">
+                  <input type="hidden" name="staff_id" value="<?= $s['id'] ?>">
+                  <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:0 4px;" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
             </tr>
             <?php endforeach; endif; ?>
             </tbody>
@@ -987,8 +1171,28 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="section-card">
     <?php dgToolbar('Audit Trail', 'fa-history'); ?>
     <div class="row g-3">
-      <div class="col-lg-6"><div class="section-card h-100"><h3 class="section-title" style="font-size:14px;margin-bottom:14px;"><i class="fas fa-bell" style="color:#dc2626;"></i>Active Alerts</h3><?php renderAlertsPanel($conn,null,8); ?></div></div>
-      <div class="col-lg-6"><div class="section-card h-100"><div class="section-header" style="margin-bottom:12px;"><h3 class="section-title" style="font-size:14px;margin-bottom:0;"><i class="fas fa-history" style="color:#64748b;"></i>Recent Audit Trail</h3><span class="badge badge-soft bg-secondary">Latest actions</span></div><?= renderAuditTrailTable($conn,[],8) ?></div></div>
+      <div class="col-lg-6"><div class="section-card h-100">
+        <div class="section-header" style="margin-bottom:12px;">
+          <h3 class="section-title" style="font-size:14px;margin-bottom:0;"><i class="fas fa-bell" style="color:#dc2626;"></i>Active Alerts</h3>
+          <form method="POST" style="display:inline;" onsubmit="return confirm('Mark all alerts as resolved?')">
+            <input type="hidden" name="dg_action" value="resolve_alert">
+            <input type="hidden" name="sub_type" value="all_alerts">
+            <input type="hidden" name="sub_id" value="0">
+            <button class="btn btn-sm" style="color:#64748b;border:1px solid #e2e8f0;background:#fff;border-radius:8px;"><i class="fas fa-check-double me-1"></i>Resolve All</button>
+          </form>
+        </div>
+        <?= renderAlertsPanel($conn,null,8) ?>
+      </div></div>
+      <div class="col-lg-6"><div class="section-card h-100">
+        <div class="section-header" style="margin-bottom:12px;">
+          <h3 class="section-title" style="font-size:14px;margin-bottom:0;"><i class="fas fa-history" style="color:#64748b;"></i>Recent Audit Trail</h3>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm" style="color:#64748b;border:1px solid #e2e8f0;background:#fff;border-radius:8px;" onclick="dgExportCSV()"><i class="fas fa-download me-1"></i>Export</button>
+            <span class="badge badge-soft bg-secondary">Latest actions</span>
+          </div>
+        </div>
+        <?= renderAuditTrailTable($conn,[],8) ?>
+      </div></div>
     </div>
   </div>
 </div>
@@ -1011,6 +1215,14 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f1f5f9;">
           <div><code class="fw-bold" style="font-size:12px;"><?= htmlspecialchars($sr_['request_number']) ?></code><small style="color:#94a3b8;margin-left:8px;">by <?= htmlspecialchars($sr_['requester']??'') ?></small><?= $statusLabel ?></div>
           <div class="d-flex align-items-center gap-2">
+            <?php if($sr_['status']==='pending_approval'): ?>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Approve request <?= htmlspecialchars($sr_['request_number'],ENT_QUOTES) ?>?')">
+              <input type="hidden" name="dg_action" value="approve_submission">
+              <input type="hidden" name="sub_type" value="store">
+              <input type="hidden" name="sub_ref" value="<?= htmlspecialchars($sr_['request_number']) ?>">
+              <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 4px;" title="Approve"><i class="fas fa-check"></i></button>
+            </form>
+            <?php endif; ?>
             <span class="badge badge-soft bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span>
             <small style="color:#94a3b8;"><?= date('d M',strtotime($sr_['created_at'])) ?></small>
           </div>
@@ -1161,6 +1373,58 @@ function dgExportCSV() {
   </div>
 </div>
 
+<!-- ═══ ADD DEPARTMENT MODAL ═══ -->
+<div class="modal fade modern-modal" id="addDeptModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="dg_action" value="add_department">
+      <div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;">
+        <h5 class="modal-title"><i class="fas fa-building me-2"></i>Add Department</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px;">Department Name *</label><input type="text" name="dept_name" class="form-control" required style="border-radius:8px;" placeholder="e.g., Information Technology"></div>
+        <div class="row g-3">
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Code *</label><input type="text" name="dept_code" class="form-control" required style="border-radius:8px;" placeholder="e.g., ICT"></div>
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:13px;">Level</label><select name="dept_level" class="form-select" style="border-radius:8px;"><option value="">Select</option><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#059669;color:#fff;border:none;border-radius:8px;"><i class="fas fa-save me-1"></i>Add Department</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ ADD STAFF MODAL ═══ -->
+<div class="modal fade modern-modal" id="addStaffModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="dg_action" value="add_staff">
+      <div class="modal-header" style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;">
+        <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Staff Member</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Full Name *</label><input type="text" name="staff_name" class="form-control" required style="border-radius:8px;"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Staff ID *</label><input type="text" name="staff_id" class="form-control" required style="border-radius:8px;" placeholder="e.g., EMP001"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Email</label><input type="email" name="staff_email" class="form-control" style="border-radius:8px;"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Phone</label><input type="text" name="staff_phone" class="form-control" style="border-radius:8px;"></div>
+          <div class="col-12"><label class="form-label fw-semibold" style="font-size:13px;">Department</label><select name="staff_dept" class="form-select" style="border-radius:8px;"><option value="">Select</option><?php foreach($dept_list as $dd): ?><option value="<?= htmlspecialchars($dd['department_code']) ?>"><?= htmlspecialchars($dd['department_name']) ?></option><?php endforeach; ?></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Role</label><input type="text" name="staff_role" class="form-control" style="border-radius:8px;" placeholder="e.g., Lecturer"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Status</label><select name="staff_status" class="form-select" style="border-radius:8px;"><option value="Active">Active</option><option value="On Leave">On Leave</option><option value="Inactive">Inactive</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-save me-1"></i>Add Staff</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ═══ ADD NEW STUDENT MODAL ═══ -->
 <div class="modal fade modern-modal" id="addStudentModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
@@ -1195,7 +1459,7 @@ function dgExportCSV() {
 <?php echo displayStudentProfileModal('student_profile_modal'); ?>
 
 <script>
-window.allStudents = [];
+window.allStudents = <?= json_encode($loader->loadAllStudents() ?: []) ?>;
 </script>
 <script>
 function viewFullProfile(id){ showStudentProfileModal(id); }

@@ -19,10 +19,10 @@ $total = 0; $activeCount = 0; $urgentCount = 0; $expiredCount = 0;
 $announcements = [];
 
 if ($conn) {
-    $total = $conn->query("SELECT COUNT(*) c FROM announcements")->fetch_assoc()['c'] ?? 0;
-    $activeCount = $conn->query("SELECT COUNT(*) c FROM announcements WHERE is_active=1 AND (expires_at IS NULL OR expires_at>=CURDATE())")->fetch_assoc()['c'] ?? 0;
-    $urgentCount = $conn->query("SELECT COUNT(*) c FROM announcements WHERE priority='Urgent' AND is_active=1")->fetch_assoc()['c'] ?? 0;
-    $expiredCount = $conn->query("SELECT COUNT(*) c FROM announcements WHERE expires_at IS NOT NULL AND expires_at<CURDATE()")->fetch_assoc()['c'] ?? 0;
+    $total = (int)(($r=$conn->query("SELECT COUNT(*) c FROM announcements"))&&$r?$r->fetch_assoc()['c']:0);
+    $activeCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM announcements WHERE is_active=1 AND (expires_at IS NULL OR expires_at>=CURDATE())"))&&$r?$r->fetch_assoc()['c']:0);
+    $urgentCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM announcements WHERE priority='Urgent' AND is_active=1"))&&$r?$r->fetch_assoc()['c']:0);
+    $expiredCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM announcements WHERE expires_at IS NOT NULL AND expires_at<CURDATE()"))&&$r?$r->fetch_assoc()['c']:0);
 
     $where = ["1=1"];
     if ($search) $where[] = "(title LIKE '%".$conn->real_escape_string($search)."%' OR body LIKE '%".$conn->real_escape_string($search)."%')";

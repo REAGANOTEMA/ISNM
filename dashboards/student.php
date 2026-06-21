@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
 session_start();
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'student') {
-    header('Location: ../login.php?error=student_access_required');
+    header('Location: ../student-login.php?error=student_access_required');
     exit;
 }
 
@@ -37,7 +37,7 @@ if (!function_exists('tableExists')) {
 }
 
         // Get student information
-        $student_id = $_SESSION['user_id'];
+        $student_id = (int)($_SESSION['user_id'] ?? 0);
         $student_result = $studentsDb->query("SELECT * FROM students WHERE id = $student_id LIMIT 1");
         $student_info = ($student_result) ? $student_result->fetch_assoc() : [];
 
@@ -250,10 +250,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     <!-- Quick Actions -->
                     <div class="quick-actions">
-                        <button class="action-btn" onclick="openModal('viewTranscript')">
-                            <i class="fas fa-file-alt"></i>
-                            <span>View Transcript</span>
-                        </button>
+                        <a href="../print_transcript.php" class="action-btn" style="text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:15px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;color:#166534;transition:all 0.2s" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                            <i class="fas fa-file-alt" style="font-size:24px"></i>
+                            <span style="font-size:13px;font-weight:600">View Transcript</span>
+                        </a>
                         <button class="action-btn" onclick="openModal('payFees')">
                             <i class="fas fa-credit-card"></i>
                             <span>Pay Fees</span>
@@ -515,12 +515,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                         </div>
                                     </div>
                                     <div class="transcript-actions">
-                                        <button class="btn btn-primary" onclick="downloadTranscript()">
-                                            <i class="fas fa-download"></i> Download PDF
-                                        </button>
-                                        <button class="btn btn-info" onclick="printTranscript()">
+                                        <a href="../print_transcript.php?action=download&student_id=<?= (int)($student_info['id'] ?? 0) ?>" class="btn btn-primary" target="_blank">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                        <a href="../print_transcript.php?action=print&student_id=<?= (int)($student_info['id'] ?? 0) ?>" class="btn btn-info" target="_blank">
                                             <i class="fas fa-print"></i> Print
-                                        </button>
+                                        </a>
+                                        <a href="../print_transcript.php?student_id=<?= (int)($student_info['id'] ?? 0) ?>" class="btn btn-outline-success">
+                                            <i class="fas fa-external-link-alt"></i> Full Portal
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -1352,11 +1355,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         
         function downloadTranscript() {
-            alert('Transcript download functionality will be implemented here.');
+            var id = <?= (int)($student_info['id'] ?? 0) ?>;
+            if (id) window.open('../print_transcript.php?action=download&student_id=' + id, '_blank');
         }
         
         function printTranscript() {
-            window.print();
+            var id = <?= (int)($student_info['id'] ?? 0) ?>;
+            if (id) window.open('../print_transcript.php?action=print&student_id=' + id, '_blank');
         }
         
         function viewMessage(messageId) {

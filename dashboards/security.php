@@ -63,7 +63,7 @@ if ($conn) {
     try {
         $r = $conn->query("SELECT * FROM security_visitors WHERE visit_date = CURDATE() ORDER BY expected_arrival ASC LIMIT 20");
         if ($r) $today_visitors = $r->fetch_all(MYSQLI_ASSOC);
-        $visitor_count = $conn->query("SELECT COUNT(*) FROM security_visitors WHERE visit_date = CURDATE()")->fetch_row()[0] ?? 0;
+        $visitor_count = (int)(($r=$conn->query("SELECT COUNT(*) FROM security_visitors WHERE visit_date = CURDATE()"))&&$r?$r->fetch_row()[0]:0);
     } catch (Exception $e) {}
 }
 ?>

@@ -14,10 +14,10 @@ $total = 0; $active = 0; $expiring = 0; $expired = 0;
 $contracts = []; $staffList = [];
 
 if ($staffDb) {
-    $total = $staffDb->query("SELECT COUNT(*) c FROM staff_contracts")->fetch_assoc()['c'] ?? 0;
-    $active = $staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active'")->fetch_assoc()['c'] ?? 0;
-    $expiring = $staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active' AND end_date IS NOT NULL AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)")->fetch_assoc()['c'] ?? 0;
-    $expired = $staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Expired'")->fetch_assoc()['c'] ?? 0;
+    $total = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts"))&&$r?$r->fetch_assoc()['c']:0);
+    $active = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active'"))&&$r?$r->fetch_assoc()['c']:0);
+    $expiring = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active' AND end_date IS NOT NULL AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)"))&&$r?$r->fetch_assoc()['c']:0);
+    $expired = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Expired'"))&&$r?$r->fetch_assoc()['c']:0);
 
     $where = [];
     if ($search) $where[] = "(s.full_name LIKE '%".$staffDb->real_escape_string($search)."%' OR c.contract_number LIKE '%".$staffDb->real_escape_string($search)."%')";

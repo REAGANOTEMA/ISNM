@@ -182,9 +182,175 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.btn-outline-purple { color:#8b5cf6; border-color:#8b5cf6; }
-.btn-outline-purple:hover { color:#fff; background:#8b5cf6; border-color:#8b5cf6; }
-.modal-content { max-height:85vh; overflow-y:auto; }
+:root {
+  --card-radius: 16px;
+  --card-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.05), 0 12px 30px rgba(15,23,42,0.03);
+  --card-hover-shadow: 0 4px 8px rgba(15,23,42,0.05), 0 12px 24px rgba(15,23,42,0.06), 0 24px 48px rgba(15,23,42,0.04);
+}
+/* Override chocolate/yellow gradients — clean white cards */
+.content-section,
+.stat-card,
+.report-card,
+.section-card {
+  background: #fff !important;
+  border: 1px solid rgba(148,163,184,0.16) !important;
+}
+/* Override card accent stripes */
+.stat-card,
+.report-card {
+  border-top: 4px solid transparent !important;
+  border-radius: var(--card-radius) !important;
+}
+.stat-card.success { border-top-color: #059669 !important; }
+.stat-card.primary { border-top-color: #1a237e !important; }
+.stat-card.info    { border-top-color: #0284c7 !important; }
+.stat-card.warning { border-top-color: #d97706 !important; }
+/* Disable hover-transform on content sections (too janky) */
+.content-section:hover,
+.stat-card:hover,
+.report-card:hover,
+.section-card:hover {
+  transform: none !important;
+}
+/* Stat card layout fix */
+.stat-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 22px 24px !important;
+  transition: box-shadow 0.3s ease !important;
+}
+.stat-card:hover {
+  box-shadow: 0 4px 8px rgba(15,23,42,0.05), 0 12px 24px rgba(15,23,42,0.06), 0 24px 48px rgba(15,23,42,0.04) !important;
+}
+.stat-content h3 { font-size: 1.7rem !important; font-weight: 800 !important; color: #0f172a !important; }
+.stat-content p  { font-size: 0.82rem !important; color: #64748b !important; font-weight: 500 !important; }
+/* Section card inside content-sections */
+.section-card {
+  background: #fff !important;
+  padding: 20px 22px !important;
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.section-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: var(--card-hover-shadow) !important;
+}
+/* Report cards */
+.report-card {
+  padding: 24px 20px !important;
+  text-align: center !important;
+}
+.report-card h3 { font-size: 1rem !important; font-weight: 700 !important; color: #0f172a !important; margin-bottom: 6px !important; }
+.report-card p  { font-size: 0.82rem !important; color: #64748b !important; margin-bottom: 14px !important; }
+.report-card .btn { border-radius: 8px !important; font-weight: 600 !important; font-size: 0.82rem !important; padding: 6px 18px !important; }
+/* Empty states */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+.empty-state i {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+/* Activities list */
+.activities-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border-left: 3px solid #1a237e;
+  transition: background 0.2s;
+}
+.activity-item:hover { background: #f1f5f9; }
+.activity-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #1a237e, #3949ab);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px; flex-shrink: 0;
+}
+.activity-content { font-size: 0.85rem; }
+.activity-content strong { color: #0f172a; display: block; margin-bottom: 2px; }
+/* Tables */
+.table thead th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 0.78rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  padding: 10px 12px !important;
+}
+.table td {
+  padding: 10px 12px !important;
+  font-size: 0.85rem !important;
+  vertical-align: middle !important;
+}
+.table-hover tbody tr:hover { background: #f1f5f9 !important; }
+/* Badges */
+.badge { font-weight: 600 !important; font-size: 0.75rem !important; padding: 4px 10px !important; border-radius: 6px !important; }
+/* Buttons in tables */
+.table .btn-sm { padding: 4px 8px !important; font-size: 0.78rem !important; border-radius: 6px !important; }
+/* Program cards */
+#programs .stat-card {
+  display: block !important;
+  padding: 20px 22px !important;
+  border-top: 4px solid #1a237e !important;
+}
+#programs .stat-card h3 { font-size: 1.05rem !important; }
+/* Dashboard sections headings */
+.content-section h2 {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 2px solid #f1f5f9 !important;
+}
+.content-section h2 i { color: #1a237e !important; }
+/* Header */
+.dashboard-header h1 { font-size: 1.35rem !important; font-weight: 700 !important; color: #0f172a !important; }
+.dashboard-header p { font-size: 0.85rem !important; color: #64748b !important; margin: 0 !important; }
+/* Search input */
+#studentSearch { border-radius: 8px !important; border: 1px solid #e2e8f0 !important; font-size: 0.85rem !important; padding: 8px 14px !important; }
+#studentSearch:focus { border-color: #1a237e !important; box-shadow: 0 0 0 3px rgba(26,35,126,0.1) !important; }
+/* Hierarchy chart container */
+.section-card .hierarchy-chart { margin-top: 12px; }
+/* Reports grid */
+.reports-grid { gap: 18px !important; }
+/* Quick Actions buttons */
+#quick .btn { border-radius: 8px !important; font-weight: 500 !important; font-size: 0.82rem !important; padding: 6px 16px !important; }
+/* Modal improvements */
+.modal-content { border: none !important; border-radius: 16px !important; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.2) !important; }
+.modal-header { border-radius: 16px 16px 0 0 !important; padding: 14px 20px !important; }
+.modal-header .modal-title { font-weight: 700 !important; font-size: 1rem !important; }
+.modal-footer { border-top: 1px solid #f1f5f9 !important; padding: 12px 20px !important; }
+.modal-body { padding: 20px !important; }
+.form-label { font-weight: 600 !important; font-size: 0.82rem !important; color: #374151 !important; margin-bottom: 4px !important; }
+.form-select, .form-control { border-radius: 8px !important; border: 1px solid #e2e8f0 !important; font-size: 0.85rem !important; padding: 8px 12px !important; }
+.form-select:focus, .form-control:focus { border-color: #1a237e !important; box-shadow: 0 0 0 3px rgba(26,35,126,0.1) !important; }
+/* Alerts panel inside section-card */
+.section-card .alert-item { font-size: 0.85rem !important; }
+/* Responsive: stack stat cards on small screens */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .content-section { padding: 16px !important; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
@@ -196,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Header -->
             <div class="dashboard-header">
                 <div class="header-left">
-                    <h1>Director of Academics Dashboard</h1>
+                    <h1>Academic Director</h1>
                     <p>Academic Programs Oversight, Iganga School of Nursing and Midwifery</p>
                 </div>
                 <div class="header-right">
@@ -223,8 +389,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="dashboard-content">
                 <!-- Academic Overview -->
                 <section id="overview" class="content-section dashboard-section active" data-section="overview">
-                    <h2>Academic Overview</h2>
-                    <div class="stats-grid">
+                    <h2 class="mb-3">Academic Overview</h2>
+                    <div class="stats-grid mb-4">
                         <div class="stat-card success">
                             <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                             <div class="stat-content"><h3><?php echo number_format($total_students); ?></h3><p>Total Students</p></div>
@@ -242,16 +408,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="stat-content"><h3><?php echo number_format($avg_gpa, 1); ?></h3><p>Average GPA</p></div>
                         </div>
                     </div>
+
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="section-card h-100">
+                                <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
+                                <div class="d-flex align-items-center gap-2 mb-2 small">
+                                    <span class="badge bg-primary">Level 3</span>
+                                    <span class="text-muted">You report to:</span>
+                                    <span class="fw-semibold">Director General (Level 1)</span>
+                                </div>
+                                <?= renderHierarchyChart($conn) ?>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="section-card h-100">
+                                <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Department Performance</h6>
+                                <?php
+                                $acadStaffId = 0;
+                                $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = 4 AND status = 'Active' LIMIT 1") : false;
+                                if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
+                                echo renderDirectorPerformanceCard($acadStaffId, 4, 'Director Academics', $conn);
+                                ?>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Official Duties -->
                 <section id="duties" class="content-section dashboard-section" data-section="duties">
                     <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
-                    <?php renderOfficialDuties($user_role_id, $conn); ?>
+                    <?php
+                    ob_start();
+                    renderOfficialDuties($user_role_id, $conn);
+                    $dutyHtml = ob_get_clean();
+                    if (trim($dutyHtml) !== '') {
+                        echo $dutyHtml;
+                    } else {
+                        echo '<div class="empty-state"><i class="fas fa-tasks"></i><p>No duties assigned yet.</p></div>';
+                    }
+                    ?>
                 </section>
 
                 <!-- Quick Actions -->
-                <section class="content-section">
+                <section id="quick" class="content-section dashboard-section" data-section="quick">
                     <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
@@ -268,6 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Program Management -->
                 <section id="programs" class="content-section dashboard-section" data-section="programs">
                     <h2><i class="fas fa-book me-2"></i>Program Management</h2>
+                    <?php if (!empty($programs)): ?>
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
                         <?php foreach($programs as $p):
                             $pcount = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE course='".$conn->real_escape_string($p['program_name'])."' AND status='Active'") : 0;
@@ -290,21 +491,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php else: ?>
+                    <div class="empty-state"><i class="fas fa-book"></i><p>No programs configured yet.</p></div>
+                    <?php endif; ?>
                 </section>
 
                 <!-- Examinations & Assessment -->
                 <section id="exams" class="content-section dashboard-section" data-section="exams">
                     <h2><i class="fas fa-clipboard-list me-2"></i>Examinations & Assessment</h2>
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <button class="btn btn-sm btn-primary" onclick="openExamModal()"><i class="fas fa-plus me-1"></i>Create Exam</button>
                         <button class="btn btn-sm btn-success" onclick="openEnterMarksModal()"><i class="fas fa-edit me-1"></i>Enter Marks</button>
                     </div>
-                    <div class="table-responsive">
+                    <div class="table-responsive mb-4">
                         <table class="table table-hover align-middle">
                             <thead><tr><th>Exam No</th><th>Type</th><th>Course</th><th>Program</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody>
                             <?php if(empty($exams)): ?>
-                            <tr><td colspan="7" class="text-center text-muted py-3">No exams scheduled.</td></tr>
+                            <tr><td colspan="7"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No exams scheduled. Create one above.</p></div></td></tr>
                             <?php else: foreach($exams as $e): ?>
                             <tr>
                                 <td><code><?= htmlspecialchars($e['exam_number']) ?></code></td>
@@ -326,6 +530,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endforeach; endif; ?>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Department Alerts (moved into exams tab) -->
+                    <div class="section-card">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Department Alerts</h6>
+                        </div>
+                        <?= renderAlertsPanel($conn, 'ACAD', 5) ?>
                     </div>
                 </section>
 
@@ -415,7 +627,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </table>
                     </div>
                     <?php else: ?>
-                    <p class="text-muted">No student records available.</p>
+                    <div class="empty-state"><i class="fas fa-user-graduate"></i><p>No student records available.</p></div>
                     <?php endif; ?>
                 </section>
 
@@ -432,64 +644,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
                         <?php endforeach; if(empty($recent_activities)): ?>
-                        <p class="text-muted">No recent activities.</p>
+                        <div class="empty-state"><i class="fas fa-history"></i><p>No recent activities.</p></div>
                         <?php endif; ?>
                     </div>
                 </section>
-            </div>
-        </div>
-    </div>
 
-    <!-- Hierarchy, Alerts, Performance, Approvals -->
-    <div class="container-fluid px-4 pb-4">
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
-                    <div class="d-flex align-items-center gap-2 mb-2 small">
-                        <span class="badge bg-primary">Level 3</span>
-                        <span class="text-muted">You report to:</span>
-                        <span class="fw-semibold">Director General (Level 1)</span>
-                    </div>
-                    <?= renderHierarchyChart($conn) ?>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Department Alerts</h6>
-                    </div>
-                    <?= renderAlertsPanel($conn, 'ACAD', 5) ?>
-                </div>
-            </div>
-        </div>
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Department Performance</h6>
+                <!-- Approvals -->
+                <section id="approvals" class="content-section dashboard-section" data-section="approvals">
+                    <h2><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h2>
                     <?php
-                    $acadStaffId = 0;
-                    $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = 4 AND status = 'Active' LIMIT 1") : false;
-                    if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
-                    echo renderDirectorPerformanceCard($acadStaffId, 4, 'Director Academics', $conn);
-                    ?>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h6>
-                    <?php
-                    $acadApprovals = getPendingApprovals($conn, 4, 5);
+                    $acadApprovals = getPendingApprovals($conn, 4, 10);
                     if (!empty($acadApprovals)):
                         foreach ($acadApprovals as $apr):
                             echo renderApprovalWorkflowCard($apr, $conn);
                             echo renderApprovalActionButtons($apr['id']);
                         endforeach;
                     else:
-                        echo '<div class="text-muted small py-3 text-center">No pending approvals.</div>';
+                        echo '<div class="empty-state"><i class="fas fa-check-double"></i><p>No pending approvals.</p></div>';
                     endif;
                     ?>
-                </div>
+                </section>
             </div>
         </div>
     </div>
@@ -573,20 +747,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                const target = this.getAttribute('href');
-                document.querySelectorAll('.content-section').forEach(section => { section.style.display = 'none'; });
-                const t = document.querySelector(target);
-                if(t) t.style.display = 'block';
-            });
-        });
-    });
-
     function openExamModal(){ new bootstrap.Modal(document.getElementById('createExamModal')).show(); }
     function openEnterMarksModal(){ new bootstrap.Modal(document.getElementById('enterMarksModal')).show(); }
 

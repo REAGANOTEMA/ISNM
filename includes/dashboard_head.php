@@ -39,7 +39,26 @@ if (!empty($_SESSION['user_id'])) {
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
-<script>window.addEventListener('unhandledrejection',function(e){e.preventDefault();if(e.reason)console.warn('[ISNM] Rejection:',e.reason);});window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};</script>
+<script>
+(function(){
+  function logRejection(r) {
+    try {
+      var type = Object.prototype.toString.call(r);
+      var ctor = r && r.constructor ? r.constructor.name : 'none';
+      var info = r && r.message ? r.message : (r && r.stack ? r.stack.slice(0,200) : JSON.stringify(r));
+      console.warn('[ISNM] Rejection caught:', { type: type, constructor: ctor, value: info });
+    } catch(e){}
+  }
+  window.addEventListener('unhandledrejection', function(e){
+    e.preventDefault();
+    logRejection(e.reason);
+  });
+  window.onunhandledrejection = function(e){
+    if(e && e.preventDefault) e.preventDefault();
+    return true;
+  };
+})();
+</script>
 
 <!-- Favicon — all sizes, all devices -->
 <link rel="icon"                  type="image/png" href="<?= $rootPath ?>/images/school-logo.png?v=<?= $v ?>">

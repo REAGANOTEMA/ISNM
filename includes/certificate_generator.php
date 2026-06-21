@@ -6,6 +6,8 @@
 
 if (!function_exists('generateCertificateHTML')) {
 function generateCertificateHTML(array $data): string {
+    $levels = max(0, substr_count(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') - 1);
+    $assets = str_repeat('../', $levels) . 'images/';
     $data = array_merge([
         'certificate_type' => 'Certificate of Completion',
         'student_name' => '_______________________',
@@ -91,7 +93,7 @@ function generateCertificateHTML(array $data): string {
     <div class="corner-ornament corner-br"><svg viewBox="0 0 80 80"><path d="M0 80V0h80v8H8v72H0z" fill="#d4a843" opacity="0.3"/><path d="M0 0h80v4H4v76H0V0z" fill="#d4a843" opacity="0.15"/><circle cx="15" cy="15" r="3" fill="#d4a843" opacity="0.5"/></svg></div>
     <div class="certificate-content">
         <div class="top-section">
-            <img src="../images/school-logo.png" alt="ISNM" class="school-logo">
+            <img src="' . $assets . 'school-logo.png" alt="ISNM" class="school-logo">
             <div class="school-name">Iganga School of Nursing &amp; Midwifery</div>
             <div class="school-motto">&#8220;Chosen to Serve, Based on a Disciplined Mind for Health Action&#8221;</div>
         </div>
@@ -127,7 +129,9 @@ function generateCertificateHTML(array $data): string {
 }
 
 if (!function_exists('generateTranscriptHTML')) {
-function generateTranscriptHTML(array $student, array $records, string $type = 'progress'): string {
+function generateTranscriptHTML(array $student, array $records, string $type = 'progress', array $settings = []): string {
+    $levels = max(0, substr_count(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') - 1);
+    $assets = str_repeat('../', $levels) . 'images/';
     $total_credits = array_sum(array_column($records, 'credits'));
     $total_marks = array_sum(array_column($records, 'marks'));
     $count = count($records);
@@ -136,6 +140,18 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
     $gpa_map = [80 => 4.0, 75 => 3.5, 70 => 3.0, 65 => 2.5, 60 => 2.0, 50 => 1.5, 40 => 1.0, 0 => 0.0];
     $gpa = 0;
     foreach ($gpa_map as $min => $gp) { if ($avg >= $min) { $gpa = $gp; break; } }
+
+    // Load settings
+    $inst_name  = $settings['institution_name'] ?? 'Iganga School of Nursing &amp; Midwifery';
+    $inst_motto = $settings['institution_motto'] ?? '"Chosen to Serve, Based on a Disciplined Mind for Health Action"';
+    $bg_color   = $settings['background_color'] ?? '#0f4c3a';
+    $accent     = $settings['accent_color'] ?? '#d4a843';
+    $font       = $settings['font_family'] ?? '"Georgia", "Times New Roman", serif';
+    $logo       = !empty($settings['logo_path']) && file_exists(__DIR__ . '/../' . $settings['logo_path']) ? $settings['logo_path'] : $assets . 'school-logo.png';
+    $principal  = $settings['principal_name'] ?? '________________';
+    $director   = $settings['director_name'] ?? '________________';
+    $registrar  = $settings['registrar_name'] ?? '________________';
+    $footer_txt = $settings['transcript_footer'] ?? 'This is an electronically generated document.';
 
     $rows = '';
     foreach ($records as $r) {
@@ -151,44 +167,47 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
 
     $standing = $gpa >= 3.5 ? 'Excellent' : ($gpa >= 3.0 ? 'Good' : ($gpa >= 2.0 ? 'Satisfactory' : 'Probation'));
 
+    $bg_gradient = "linear-gradient(135deg, {$bg_color} 0%, #1a6b4e 50%, {$bg_color} 100%)";
+    $accent_gradient = "linear-gradient(135deg, {$accent}, #f5d76e, {$accent})";
+
     return '<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Academic Transcript | ISNM</title>
+<title>Academic Transcript | ' . htmlspecialchars($settings['institution_short_name'] ?? 'ISNM') . '</title>
 <style>
     @page { margin: 15mm; size: A4 portrait; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: "Georgia", "Times New Roman", serif; background: #f0f0f0; padding: 15px; }
-    .transcript-wrapper { max-width: 210mm; margin: 0 auto; background: #fff; border: 2px solid #0f4c3a; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
-    .t-header { background: linear-gradient(135deg, #0f4c3a 0%, #1a6b4e 50%, #0f4c3a 100%); color: #fff; padding: 30px 35px 20px; text-align: center; position: relative; }
-    .t-header::after { content: ""; position: absolute; bottom: 0; left: 10%; right: 10%; height: 3px; background: linear-gradient(90deg, transparent, #d4a843, transparent); border-radius: 2px; }
-    .t-logo { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #d4a843; object-fit: cover; margin-bottom: 8px; }
+    body { font-family: ' . $font . '; background: #f0f0f0; padding: 15px; }
+    .transcript-wrapper { max-width: 210mm; margin: 0 auto; background: #fff; border: 2px solid ' . $bg_color . '; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
+    .t-header { background: ' . $bg_gradient . '; color: #fff; padding: 30px 35px 20px; text-align: center; position: relative; }
+    .t-header::after { content: ""; position: absolute; bottom: 0; left: 10%; right: 10%; height: 3px; background: linear-gradient(90deg, transparent, ' . $accent . ', transparent); border-radius: 2px; }
+    .t-logo { width: 75px; height: 75px; border-radius: 50%; border: 3px solid ' . $accent . '; object-fit: cover; margin-bottom: 8px; }
     .t-school { font-size: 20px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
     .t-motto { font-size: 11px; font-style: italic; opacity: 0.8; margin-top: 3px; }
-    .t-title { text-align: center; padding: 12px; background: linear-gradient(135deg, #d4a843, #f5d76e, #d4a843); color: #0f4c3a; font-size: 16px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+    .t-title { text-align: center; padding: 12px; background: ' . $accent_gradient . '; color: ' . $bg_color . '; font-size: 16px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
     .t-body { padding: 25px 30px; }
     .t-section { margin-bottom: 20px; }
-    .t-section-title { font-size: 14px; font-weight: 700; color: #0f4c3a; border-bottom: 2px solid #d4a843; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .t-section-title { font-size: 14px; font-weight: 700; color: ' . $bg_color . '; border-bottom: 2px solid ' . $accent . '; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
     .t-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .t-info { background: #faf6ee; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #d4a843; }
+    .t-info { background: #faf6ee; padding: 8px 12px; border-radius: 6px; border-left: 3px solid ' . $accent . '; }
     .t-info .lbl { font-size: 10px; text-transform: uppercase; color: #8b7355; letter-spacing: 0.5px; }
-    .t-info .val { font-size: 13px; font-weight: 600; color: #0f4c3a; }
+    .t-info .val { font-size: 13px; font-weight: 600; color: ' . $bg_color . '; }
     table.t-records { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-    table.t-records th { background: #0f4c3a; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    table.t-records th { background: ' . $bg_color . '; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
     table.t-records td { padding: 7px 10px; border-bottom: 1px solid #e8e0d0; }
     table.t-records tr:nth-child(even) td { background: #faf6ee; }
     table.t-records tr:last-child td { border-bottom: none; }
     .t-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-    .t-summary-item { background: linear-gradient(135deg, #0f4c3a, #1a6b4e); color: #fff; padding: 10px; border-radius: 8px; text-align: center; }
+    .t-summary-item { background: ' . $bg_gradient . '; color: #fff; padding: 10px; border-radius: 8px; text-align: center; }
     .t-summary-item .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
     .t-summary-item .val { font-size: 16px; font-weight: 700; }
-    .t-signatures { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 2px solid #d4a843; }
+    .t-signatures { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 2px solid ' . $accent . '; }
     .t-sig { text-align: center; width: 160px; }
     .t-sig-line { width: 120px; height: 1px; background: #333; margin: 0 auto 5px; }
     .t-sig-label { font-size: 10px; color: #8b7355; text-transform: uppercase; letter-spacing: 0.5px; }
-    .t-sig-name { font-size: 11px; font-weight: 700; color: #0f4c3a; }
+    .t-sig-name { font-size: 11px; font-weight: 700; color: ' . $bg_color . '; }
     .t-footer { text-align: center; padding: 12px; font-size: 10px; color: #999; border-top: 1px solid #e8e0d0; margin-top: 10px; }
     .t-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-30deg); font-size: 100px; color: rgba(15,76,58,0.04); font-weight: 700; letter-spacing: 10px; z-index: -1; pointer-events: none; }
     .t-stamp { display: inline-block; background: #dc3545; color: #fff; padding: 4px 14px; border-radius: 12px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
@@ -199,9 +218,9 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
 <div class="t-watermark">OFFICIAL</div>
 <div class="transcript-wrapper">
     <div class="t-header">
-        <img src="../images/school-logo.png" alt="ISNM" class="t-logo">
-        <div class="t-school">Iganga School of Nursing &amp; Midwifery</div>
-        <div class="t-motto">"Chosen to Serve, Based on a Disciplined Mind for Health Action"</div>
+        <img src="' . $logo . '" alt="' . htmlspecialchars($settings['institution_short_name'] ?? 'ISNM') . '" class="t-logo">
+        <div class="t-school">' . htmlspecialchars($inst_name) . '</div>
+        <div class="t-motto">' . htmlspecialchars($inst_motto) . '</div>
     </div>
     <div class="t-title">' . ($type === 'progress' ? 'PROGRESS REPORT' : 'OFFICIAL ACADEMIC TRANSCRIPT') . '</div>
     <div class="t-body">
@@ -232,12 +251,12 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
             <div style="text-align:center;margin-top:10px;"><span class="t-stamp">' . strtoupper($standing) . ' STANDING</span></div>
         </div>
         <div class="t-signatures">
-            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Academic Registrar</div><div class="t-sig-name">________________</div></div>
-            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Principal</div><div class="t-sig-name">________________</div></div>
-            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Director General</div><div class="t-sig-name">________________</div></div>
+            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Academic Registrar</div><div class="t-sig-name">' . htmlspecialchars($registrar) . '</div></div>
+            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Principal</div><div class="t-sig-name">' . htmlspecialchars($principal) . '</div></div>
+            <div class="t-sig"><div class="t-sig-line"></div><div class="t-sig-label">Director General</div><div class="t-sig-name">' . htmlspecialchars($director) . '</div></div>
         </div>
     </div>
-    <div class="t-footer">This is an electronically generated document. Certificate No: ISNM/TR/' . date('Y') . '/' . strtoupper(substr(uniqid(), -6)) . ' | Generated: ' . date('F j, Y, H:i') . '</div>
+    <div class="t-footer">' . htmlspecialchars($footer_txt) . ' | Ref: ISNM/TR/' . date('Y') . '/' . strtoupper(substr(uniqid(), -6)) . ' | Generated: ' . date('F j, Y, H:i') . '</div>
 </div>
 </body>
 </html>';

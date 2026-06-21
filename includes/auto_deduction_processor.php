@@ -119,7 +119,7 @@ if (!function_exists('createSubscription')) {
         $notes = $conn->real_escape_string($data['notes'] ?? '');
 
         $interval = $frequency === 'weekly' ? 'INTERVAL 1 WEEK' : ($frequency === 'quarterly' ? 'INTERVAL 3 MONTH' : 'INTERVAL 1 MONTH');
-        $nextDue = $conn->query("SELECT DATE_ADD(CURDATE(), $interval) AS nd")->fetch_assoc()['nd'];
+        $q = $conn->query("SELECT DATE_ADD(CURDATE(), $interval) AS nd"); $nextDue = ($q && ($r=$q->fetch_assoc())) ? $r['nd'] : null;
 
         $stmt = $conn->prepare("
             INSERT INTO payment_subscriptions (student_id, subscription_type, reference_type, reference_id, total_amount, installment_amount, frequency, total_installments, installments_collected, start_date, next_due_date, payment_method, payment_provider, phone_number, status, notes, created_by)
@@ -181,10 +181,11 @@ if (!function_exists('resumeSubscription')) {
         if (!$conn) return false;
         $id = (int)$subscriptionId;
         $where = $studentId ? "AND student_id = '" . $conn->real_escape_string($studentId) . "'" : '';
-        $interval = $conn->query("SELECT frequency FROM payment_subscriptions WHERE id = $id")->fetch_assoc();
+        $q = $conn->query("SELECT frequency FROM payment_subscriptions WHERE id = $id");
+        $interval = $q ? $q->fetch_assoc() : null;
         $freq = $interval['frequency'] ?? 'monthly';
         $sqlFreq = $freq === 'weekly' ? 'INTERVAL 1 WEEK' : ($freq === 'quarterly' ? 'INTERVAL 3 MONTH' : 'INTERVAL 1 MONTH');
-        $nextDue = $conn->query("SELECT DATE_ADD(CURDATE(), $sqlFreq) AS nd")->fetch_assoc()['nd'];
+        $q = $conn->query("SELECT DATE_ADD(CURDATE(), $sqlFreq) AS nd"); $nextDue = ($q && ($r=$q->fetch_assoc())) ? $r['nd'] : null;
         $conn->query("UPDATE payment_subscriptions SET status = 'active', next_due_date = '$nextDue' WHERE id = $id $where");
         return $conn->affected_rows > 0;
     }

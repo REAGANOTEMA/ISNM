@@ -395,6 +395,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                     } catch(e) {}
                 }
             };
+            xhr.onerror = function(){ console.warn('[ISNM] Badge count fetch failed (network).'); };
             xhr.send();
         }
         updateBadges();
@@ -1154,11 +1155,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         document.querySelectorAll('.section-tab').forEach(function(t) {
             t.classList.toggle('active', (t.dataset.tab || t.dataset.section) === sectionId);
         });
-        var page = sectionToPage(sectionId);
-        if (page) {
-            var prefix = getDgPrefix();
-            history.pushState({section: sectionId}, '', prefix + '/' + page);
-        }
+        location.hash = '#' + sectionId;
     }
     window.switchToSection = switchToSection;
 

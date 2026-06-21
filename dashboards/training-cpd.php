@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+bootstrapStaffDashboard(['hr','manager','director','principal','head']);
 require_once __DIR__ . '/../includes/config_enhanced.php';
 $conn = getStaffConnection();
 $pageTitle = 'Training & CPD';

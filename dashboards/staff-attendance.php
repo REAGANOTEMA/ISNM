@@ -1,5 +1,7 @@
 <?php
 $pageTitle = 'Staff Attendance';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
 require_once __DIR__ . '/../includes/config_enhanced.php';
 $conn = getStaffConnection();
 

@@ -18,18 +18,18 @@ function safeCount($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_ass
 // ── Real SQL stats ──
 $total_students   = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students") : 0;
 $total_staff      = safeCount($conn,"SELECT COUNT(*)c FROM staff WHERE status='Active'");
-$total_revenue    = $students_conn ? (float)($students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed')")->fetch_assoc()['total']??0) : 0;
-$total_expenses   = (float)($conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid')")->fetch_assoc()['total']??0);
-$outstanding_fees = $students_conn ? (float)($students_conn->query("SELECT COALESCE(SUM(balance),0) total FROM student_invoices WHERE status IN('pending','partial','overdue')")->fetch_assoc()['total']??0) : 0;
+$total_revenue    = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed')"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+$total_expenses   = (float)(($r=$conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid')"))&&$r?$r->fetch_assoc()['total']:0);
+$outstanding_fees = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(balance),0) total FROM student_invoices WHERE status IN('pending','partial','overdue')"))&&$r?$r->fetch_assoc()['total']:0) : 0;
 $pending_expenses = safeCount($conn,"SELECT COUNT(*)c FROM expenses WHERE status='pending'");
 $pending_approvals_count = safeCount($conn,"SELECT COUNT(*)c FROM approval_requests WHERE status='Active'");
 $active_budgets   = safeCount($conn,"SELECT COUNT(*)c FROM budgets WHERE status IN('approved','active')");
-$total_payroll    = (float)($conn->query("SELECT COALESCE(SUM(net_salary),0) total FROM salary_structures WHERE status='active'")->fetch_assoc()['total']??0);
+$total_payroll    = (float)(($r=$conn->query("SELECT COALESCE(SUM(net_salary),0) total FROM salary_structures WHERE status='active'"))&&$r?$r->fetch_assoc()['total']:0);
 
 // ── Revenue by category ──
-$tuition_revenue = $students_conn ? (float)($students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments p JOIN student_invoices si ON p.invoice_id=si.id WHERE si.status NOT IN('cancelled','written_off') AND si.tuition_amount>0")->fetch_assoc()['total']??0) : 0;
-$hostel_revenue = $students_conn ? (float)($students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments p JOIN student_invoices si ON p.invoice_id=si.id WHERE si.accommodation_amount>0")->fetch_assoc()['total']??0) : 0;
-$application_revenue = $website_conn ? (float)($website_conn->query("SELECT COALESCE(SUM(amount),0) total FROM donations WHERE purpose='application'")->fetch_assoc()['total']??0) : 0;
+$tuition_revenue = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments p JOIN student_invoices si ON p.invoice_id=si.id WHERE si.status NOT IN('cancelled','written_off') AND si.tuition_amount>0"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+$hostel_revenue = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments p JOIN student_invoices si ON p.invoice_id=si.id WHERE si.accommodation_amount>0"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+$application_revenue = $website_conn ? (float)(($r=$website_conn->query("SELECT COALESCE(SUM(amount),0) total FROM donations WHERE purpose='application'"))&&$r?$r->fetch_assoc()['total']:0) : 0;
 $other_revenue = $total_revenue - $tuition_revenue - $hostel_revenue - $application_revenue;
 if ($other_revenue < 0) $other_revenue = 0;
 
@@ -77,8 +77,8 @@ if ($report) {
 
     if ($report === 'income_statement') {
         echo '<h2>Income Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev = $students_conn ? $students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0 : 0;
-        $exp = $conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0;
+        $rev = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+        $exp = (float)(($r=$conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0);
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount (UGX)</th></tr></thead><tbody>';
         echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
         echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';
@@ -99,8 +99,8 @@ if ($report) {
         echo '</tbody></table>';
     } elseif ($report === 'cash_flow') {
         echo '<h2>Cash Flow Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $in = $students_conn ? $students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0 : 0;
-        $out = $conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0;
+        $in = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+        $out = (float)(($r=$conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0);
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount (UGX)</th></tr></thead><tbody>';
         echo '<tr><td><strong>Cash Inflows</strong></td><td></td></tr>';
         echo '<tr><td>&nbsp;&nbsp;Payments Received</td><td class="text-end">'.number_format($in,0).'</td></tr>';
@@ -132,8 +132,8 @@ if ($report) {
         echo '</tbody></table>';
     } elseif ($report === 'tax_report') {
         echo '<h2>URA Tax Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev = $students_conn ? $students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0 : 0;
-        $exp = $conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'")->fetch_assoc()['total']??0;
+        $rev = $students_conn ? (float)(($r=$students_conn->query("SELECT COALESCE(SUM(amount_received),0) total FROM payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0) : 0;
+        $exp = (float)(($r=$conn->query("SELECT COALESCE(SUM(amount),0) total FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['total']:0);
         $taxable = $rev - $exp; if($taxable<0) $taxable=0;
         $vat18 = $rev * 0.18;
         $wit = $exp * 0.06;
@@ -989,7 +989,7 @@ function viewExpense(id) {
     fetch('director-finance.php?ajax=expense_detail&expense_id='+id)
         .then(r=>r.json()).then(d=>{
             alert('Expense: '+d.expense_id+'\nCategory: '+d.expense_category+'\nDescription: '+d.description+'\nAmount: UGX '+Number(d.amount).toLocaleString()+'\nDate: '+d.expense_date+'\nSupplier: '+(d.notes||'-')+'\nStatus: '+d.status+'\nRequested By: '+(d.requested_by_name||'-')+'\nApproved By: '+(d.approved_by_name||'-'));
-        }).catch(function(){});
+        }).catch(function(e){ console.warn('[ISNM] Expense detail fetch failed:', e); });
 }
 
 // Student Fees Module

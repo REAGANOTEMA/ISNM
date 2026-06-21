@@ -5,7 +5,7 @@ include_once 'includes/functions.php';
 
 // Check if user is logged in
 if (!isLoggedIn()) {
-    header("Location: login.php");
+    header("Location: staff-login.php");
     exit();
 }
 

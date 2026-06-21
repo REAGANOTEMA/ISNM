@@ -26,6 +26,12 @@ if (!function_exists('bootstrapStaffDashboard')) {
             exit();
         }
 
+        // Session timeout enforcement (1hr sliding window)
+        if (!$auth_service->checkSessionValidity()) {
+            header('Location: ../staff-login.php?error=expired');
+            exit();
+        }
+
         $role = $_SESSION['role'] ?? '';
 
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {

@@ -506,7 +506,7 @@ if ($students) {
             });
             document.getElementById('stat-lowstock')&&(document.getElementById('stat-lowstock').textContent=d.low_stock);
             document.getElementById('stat-incidents')&&(document.getElementById('stat-incidents').textContent=d.incidents);}
-        }).catch(()=>{}); })();
+        }).catch(function(e){ console.warn('[ISNM] Stats load failed:', e); }); })();
         </script>
 
     </div><!-- /overview -->

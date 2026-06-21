@@ -11,9 +11,9 @@ $total = 0; $activeCount = 0; $expiredCount = 0;
 $alerts = [];
 
 if ($conn) {
-    $total = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts")->fetch_assoc()['c'] ?? 0);
-    $activeCount = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE (expires_at IS NULL OR expires_at >= NOW()) AND is_resolved = 0")->fetch_assoc()['c'] ?? 0);
-    $expiredCount = (int)($conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE expires_at IS NOT NULL AND expires_at < NOW()")->fetch_assoc()['c'] ?? 0);
+    $total = (int)(($r=$conn->query("SELECT COUNT(*) c FROM institutional_alerts"))&&$r?$r->fetch_assoc()['c']:0);
+    $activeCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE (expires_at IS NULL OR expires_at >= NOW()) AND is_resolved = 0"))&&$r?$r->fetch_assoc()['c']:0);
+    $expiredCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE expires_at IS NOT NULL AND expires_at < NOW()"))&&$r?$r->fetch_assoc()['c']:0);
 
     $where = ["1=1"];
     if ($search) $where[] = "(alert_title LIKE '%" . $conn->real_escape_string($search) . "%' OR alert_message LIKE '%" . $conn->real_escape_string($search) . "%')";

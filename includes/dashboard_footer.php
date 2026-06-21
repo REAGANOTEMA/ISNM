@@ -45,8 +45,8 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
 // Cache-busting version constant
 var ISNM_VERSION = '<?= $v ?>';
 
-// ── Suppress unhandled Promise rejections (e.g. Font Awesome deferred) ──
-(function(){function u(e){e.preventDefault();e.stopPropagation();if(e.promise)e.promise.catch(function(){});}window.addEventListener('unhandledrejection',u);window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
+// ── Log unhandled Promise rejections (prevents console noise, enables debugging) ──
+(function(){window.addEventListener('unhandledrejection',function(e){e.preventDefault();if(e.reason)console.warn('[ISNM] Unhandled rejection:',e.reason);});window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
 
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {
@@ -117,7 +117,7 @@ var ISNM_VERSION = '<?= $v ?>';
   // ── Service Worker ────────────────────────────────────────────
   function registerSW() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/ISNM/sw.js?v=' + ISNM_VERSION, { scope: '/ISNM/' }).catch(function () {});
+      navigator.serviceWorker.register('/ISNM/sw.js?v=' + ISNM_VERSION, { scope: '/ISNM/' }).catch(function (e) { console.warn('[ISNM] SW registration failed:', e); });
     }
   }
 
@@ -168,6 +168,7 @@ var ISNM_VERSION = '<?= $v ?>';
           }
         } catch (e) {}
       };
+      xhr.onerror = function(){ console.warn('[ISNM] Notifications fetch failed (network).'); };
       xhr.send();
     }
 
@@ -206,6 +207,7 @@ var ISNM_VERSION = '<?= $v ?>';
       xhr.open('POST', '../includes/ajax_notifications.php?action=mark_read', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = function () { fetchNotifications(); };
+      xhr.onerror = function(){ console.warn('[ISNM] markRead failed (network).'); };
       xhr.send('id=' + nid);
     }
 
@@ -213,6 +215,7 @@ var ISNM_VERSION = '<?= $v ?>';
       var xhr = new XMLHttpRequest();
       xhr.open('POST', '../includes/ajax_notifications.php?action=mark_all_read', true);
       xhr.onload = function () { fetchNotifications(); };
+      xhr.onerror = function(){ console.warn('[ISNM] markAllRead failed (network).'); };
       xhr.send();
     }
 
@@ -429,5 +432,49 @@ function openCommunicationModal() {
 }
 @media (max-width: 480px) {
   .notif-dropdown { width: calc(100% - 32px); right: 16px; }
+}
+/* ============================================================
+   PADDING / LAYOUT NORMALIZATION
+   Ensures consistent spacing across all dashboards/pages.
+   Overrides conflicting values from dashboard-style.css,
+   dashboard-professional.css, modern-ui.css, etc.
+   ============================================================ */
+.main, .main-content, .dashboard-main,
+.main-wrap, .page-wrap {
+  margin-left: var(--sidebar-w, 270px);
+  padding: 0 !important;
+  min-height: 100vh;
+}
+.dashboard-content {
+  padding: 0 !important;
+}
+.content-section, .dashboard-section.content-section {
+  padding: 24px !important;
+}
+.card-body {
+  padding: 20px !important;
+}
+/* Remove double padding from modern-ui.css conflict */
+.main-content {
+  padding: 0 !important;
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-section, .dashboard-section.content-section {
+    padding: 16px !important;
+  }
+  .card-body {
+    padding: 14px !important;
+  }
+}
+@media print {
+  .main, .main-content, .dashboard-main,
+  .main-wrap, .page-wrap {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+  .content-section {
+    padding: 0 !important;
+  }
 }
 </style>

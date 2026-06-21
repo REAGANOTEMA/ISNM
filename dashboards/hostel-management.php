@@ -1,5 +1,7 @@
 <?php
 $pageTitle = 'Hostel Management';
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+bootstrapStaffDashboard(['hostel','matron','warden','registrar','director','principal']);
 require_once __DIR__ . '/../includes/config_enhanced.php';
 $conn = getStaffConnection();
 $conn2 = null;

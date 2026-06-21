@@ -480,7 +480,7 @@
       window.addEventListener('load', function () {
         var swPath = (window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/') + 'sw.js';
         var scope = window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/';
-        navigator.serviceWorker.register(swPath, { scope: scope }).catch(function () {});
+        navigator.serviceWorker.register(swPath, { scope: scope }).catch(function (e) { console.warn('[ISNM] SW reg failed:', e); });
       });
     }
 

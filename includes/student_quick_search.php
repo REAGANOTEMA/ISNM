@@ -113,6 +113,7 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
                 results.innerHTML = '<div class="alert alert-danger m-3">Search failed</div>';
             }
         };
+        xhr.onerror = function(){ results.innerHTML = '<div class="alert alert-danger m-3">Search failed (network)</div>'; };
         xhr.send();
     }
 
@@ -144,7 +145,7 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
             // Action buttons
             html += '<div class="btn-group btn-group-xs flex-shrink-0" style="white-space:nowrap">';
             html += '<a href="../print_certificate.php?student_id='+encodeURIComponent(sid)+'&print=1" target="_blank" class="btn btn-sm btn-outline-info" title="Print Certificate" onclick="event.stopPropagation()"><i class="fas fa-certificate"></i></a>';
-            html += '<a href="../print_transcript.php?student_id='+encodeURIComponent(sid)+'&print=1" target="_blank" class="btn btn-sm btn-outline-success" title="Print Transcript" onclick="event.stopPropagation()"><i class="fas fa-scroll"></i></a>';
+            html += '<a href="../print_transcript.php?action=print&student_id='+encodeURIComponent(sid)+'" target="_blank" class="btn btn-sm btn-outline-success" title="Print Transcript" onclick="event.stopPropagation()"><i class="fas fa-scroll"></i></a>';
             html += '<button class="btn btn-sm btn-outline-secondary" title="View Profile" onclick="event.stopPropagation();sqs_viewProfile(\''+id+'\',\''+escapeJs(sid)+'\')"><i class="fas fa-eye"></i></button>';
             html += '</div>';
             html += '<span class="badge bg-'+(s.status === 'Active' ? 'success' : 'secondary')+' flex-shrink-0" style="font-size:10px;">'+(s.status||'Active')+'</span>';
@@ -170,6 +171,7 @@ $uqid = 'sqs_' . substr(md5(uniqid()), 0, 6);
                 body.innerHTML = '<div class="alert alert-danger m-3">Failed to load profile</div>';
             }
         };
+        xhr.onerror = function(){ body.innerHTML = '<div class="alert alert-danger m-3">Failed to load profile (network)</div>'; };
         xhr.send();
     };
 

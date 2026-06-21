@@ -2458,6 +2458,7 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                                             <td><span class="badge badge-<?= ($tr['transcript_status']??'')==='Issued'?'success':(($tr['transcript_status']??'')==='Collected'?'info':(in_array($tr['transcript_status']??'',['Processing','Ready'])?'warning':'danger')) ?>"><?= htmlspecialchars($tr['transcript_status']??'Pending') ?></span></td>
                                             <td><?= htmlspecialchars($tr['request_date']??$tr['created_at']??'') ?></td>
                                             <td>
+                                                <a href="../print_transcript.php?student_id=<?= intval($tr['student_id']) ?>" class="btn btn-purple btn-xs" target="_blank" title="View/Edit in Transcript Portal"><i class="fas fa-external-link-alt"></i></a>
                                                 <?php if (!empty($tr['doc_id'])): ?>
                                                     <button class="btn btn-info btn-xs" onclick="previewDocument(<?= intval($tr['doc_id']) ?>)" title="Preview"><i class="fas fa-eye"></i></button>
                                                 <?php endif; ?>
