@@ -290,7 +290,7 @@ var ISNM_VERSION = '<?= $v ?>';
     initNotificationBell();
     initGlobalLoader();
     var el = document.getElementById('isnmLoader');
-    if (el) { setTimeout(function() { el.classList.remove('active'); }, 200); }
+    if (el) { el.classList.remove('active'); }
   });
 })();
 </script>

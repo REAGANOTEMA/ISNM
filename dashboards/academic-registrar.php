@@ -931,10 +931,20 @@ $courseNames = [];
 $cn_r = $students_conn->query("SELECT DISTINCT course FROM students WHERE course IS NOT NULL AND course != '' ORDER BY course");
 if ($cn_r) while ($row = $cn_r->fetch_assoc()) $courseNames[] = $row['course'];
 
-// All students for directory display
+// All students for directory display — search only
 $allStudents = [];
-$as_r = $students_conn->query("SELECT id,student_number,registration_number,national_student_id_number,first_name,surname,other_name,full_name,course,current_year,current_semester,set_name,gender,status,phone,email,intake_date,created_at FROM students WHERE full_name IS NOT NULL AND full_name != '' AND LENGTH(full_name) > 1 ORDER BY surname,first_name");
-if ($as_r) while ($row = $as_r->fetch_assoc()) $allStudents[] = $row;
+$studentDirSearch = trim($_GET['dir_search'] ?? '');
+$studentDirStatus = trim($_GET['dir_status'] ?? '');
+$studentDirCourse = trim($_GET['dir_course'] ?? '');
+$hasDirSearch = $studentDirSearch !== '' || $studentDirStatus !== '' || $studentDirCourse !== '';
+if ($hasDirSearch) {
+    $asWhere = "WHERE full_name IS NOT NULL AND full_name != '' AND LENGTH(full_name) > 1";
+    if ($studentDirSearch !== '') { $sds = $students_conn->real_escape_string($studentDirSearch); $asWhere .= " AND (full_name LIKE '%$sds%' OR first_name LIKE '%$sds%' OR surname LIKE '%$sds%' OR student_number LIKE '%$sds%' OR registration_number LIKE '%$sds%' OR index_number LIKE '%$sds%' OR phone LIKE '%$sds%')"; }
+    if ($studentDirStatus !== '') { $sst = $students_conn->real_escape_string($studentDirStatus); $asWhere .= " AND status='$sst'"; }
+    if ($studentDirCourse !== '') { $sc = $students_conn->real_escape_string($studentDirCourse); $asWhere .= " AND course='$sc'"; }
+    $as_r = $students_conn->query("SELECT id,student_number,registration_number,national_student_id_number,first_name,surname,other_name,full_name,course,current_year,current_semester,set_name,gender,status,phone,email,intake_date,created_at FROM students $asWhere ORDER BY surname,first_name LIMIT 200");
+    if ($as_r) while ($row = $as_r->fetch_assoc()) $allStudents[] = $row;
+}
 $allStudents = $allStudents ?: $students;
 
 // Documents list
@@ -1213,25 +1223,26 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                 <?php include __DIR__ . '/../includes/dashboard_footer.php'; exit; ?>
             <?php endif; ?>
             <!-- Student Search & All Students -->
-            <div class="section-card mb-3">
+            <div class="section-card mb-3" id="students-directory">
                 <div class="card-header"><h5><i class="fas fa-search"></i> Student Directory</h5></div>
                 <div class="card-body">
-                    <div class="search-box">
-                        <input type="text" id="studentSearch" class="form-control" placeholder="Search by name, number, or course..." onkeyup="filterStudents()">
-                        <select id="statusFilter" class="form-control form-control-sm" style="max-width:160px" onchange="filterStudents()">
-                            <option value="">All Status</option>
-                            <option value="Active">Active</option>
-                            <option value="Pending">Pending</option>
-                            <option value="deleted">Deleted</option>
-                            <option value="Graduated">Graduated</option>
-                        </select>
-                        <select id="courseFilter" class="form-control form-control-sm" style="max-width:200px" onchange="filterStudents()">
-                            <option value="">All Courses</option>
-                            <?php foreach ($courseNames as $cn): ?>
-                                <option><?= htmlspecialchars($cn) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <form method="GET" class="search-box mb-3">
+                        <input type="hidden" name="section" value="students-directory">
+                        <div class="row g-2">
+                            <div class="col-md-5"><input type="text" name="dir_search" class="form-control" placeholder="Search by name, number, phone..." value="<?= htmlspecialchars($studentDirSearch) ?>"></div>
+                            <div class="col-md-2"><select name="dir_status" class="form-select form-select-sm"><option value="">All Status</option><option <?= $studentDirStatus==='Active'?'selected':'' ?>>Active</option><option <?= $studentDirStatus==='Pending'?'selected':'' ?>>Pending</option><option <?= $studentDirStatus==='deleted'?'selected':'' ?>>Deleted</option><option <?= $studentDirStatus==='Graduated'?'selected':'' ?>>Graduated</option></select></div>
+                            <div class="col-md-3"><select name="dir_course" class="form-select form-select-sm"><option value="">All Courses</option><?php foreach ($courseNames as $cn): ?><option <?= $studentDirCourse===$cn?'selected':'' ?>><?= htmlspecialchars($cn) ?></option><?php endforeach; ?></select></div>
+                            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button></div>
+                        </div>
+                        <?php if ($hasDirSearch): ?>
+                        <div class="mt-2"><a href="academic-registrar.php?section=students-directory" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i> Clear Search</a></div>
+                        <?php endif; ?>
+                    </form>
+                    <?php if (!$hasDirSearch): ?>
+                    <div class="text-center py-5 text-muted"><i class="fas fa-search fa-3x mb-3"></i><p>Use the search fields above to find students in the directory.</p></div>
+                    <?php elseif (empty($allStudents)): ?>
+                    <div class="text-center py-4 text-muted"><p><i class="fas fa-exclamation-circle me-1"></i>No students match your search criteria.</p></div>
+                    <?php else: ?>
                     <div class="table-responsive">
                         <table class="table" id="studentTable">
                             <thead>
@@ -1240,8 +1251,7 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (count($allStudents) > 0): $cnt=1; ?>
-                                    <?php foreach ($allStudents as $st): ?>
+                                <?php $cnt=1; foreach ($allStudents as $st): ?>
                                         <tr>
                                             <td><?= $cnt++ ?></td>
                                             <td><?= htmlspecialchars($st['student_number']) ?></td>
@@ -1261,13 +1271,12 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                                                 <button class="btn btn-danger btn-xs" onclick="trashStudent(<?= $st['id'] ?>)" title="Trash"><i class="fas fa-trash"></i></button>
                                             </td>
                                         </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr><td colspan="10" class="text-center">No students found.</td></tr>
-                                <?php endif; ?>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+                    <p class="text-muted small mt-2"><?= count($allStudents) ?> student(s) found.</p>
+                    <?php endif; ?>
                 </div>
             </div>
 

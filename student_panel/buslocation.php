@@ -51,7 +51,8 @@ include('../assets/config.php');
   </div>
 </nav>
 <?php
-$sql = "SELECT * FROM bus_root WHERE bus_id='{$_GET['bus_id']}'";
+$busId = isset($_GET['bus_id']) ? (int)$_GET['bus_id'] : 0;
+$sql = "SELECT * FROM bus_root WHERE bus_id=$busId";
 $result = mysqli_query($conn, $sql);
 
 if(mysqli_num_rows($result) > 0) {

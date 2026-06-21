@@ -293,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span id="currentDate"></span>
                     </div>
                     <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
                         <div class="user-dropdown">
                             <span><?php echo $user['first_name'] ?? 'User'; ?></span>
                             <i class="fas fa-chevron-down"></i>

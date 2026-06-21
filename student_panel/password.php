@@ -142,10 +142,14 @@
 
             
                
-             $password=$_POST['current'];
-             $newpassword=$_POST['new'];
-             $confirmnewpassword=$_POST['repeat'];
-            $result = mysqli_query($conn,"SELECT password_hash FROM users WHERE id='$id'");
+            if (isset($_POST['submit'])) {
+             $password=$_POST['current'] ?? '';
+             $newpassword=$_POST['new'] ?? '';
+             $confirmnewpassword=$_POST['repeat'] ?? '';
+            $stmt = $conn->prepare("SELECT password_hash FROM users WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
             if($result->num_rows > 0){
                 $row = $result->fetch_assoc();
 
@@ -154,11 +158,14 @@
                     if(password_verify($password, $pass)){
                     if($newpassword == $confirmnewpassword){
                           $newpasswordhash=password_hash($newpassword, PASSWORD_DEFAULT);
-                        if(mysqli_query($conn,"UPDATE users SET password_hash='$newpasswordhash' where id='$id'")){
+                          $upd = $conn->prepare("UPDATE users SET password_hash=? WHERE id=?");
+                          $upd->bind_param("si", $newpasswordhash, $id);
+                        if($upd->execute()){
                                 echo "<script>alert('Password Updated')</script>";
                         }else{
                             echo "<script>alert('unable to update')</script>";
                         }
+                        $upd->close();
                     }else{
                             echo "<script>alert('new password and confirm passsword are not same')</script>";
                     }

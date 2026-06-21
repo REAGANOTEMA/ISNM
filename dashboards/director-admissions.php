@@ -32,8 +32,15 @@ if($r) while($row=$r->fetch_assoc()) $programs[]=$row;
 $req_items = []; $r=$staff_conn->query("SELECT * FROM requirement_items ORDER BY display_order");
 if($r) while($row=$r->fetch_assoc()) $req_items[]=$row;
 
-$students_list = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,phone,mobile_number,email,status,index_number,national_student_id_number FROM students ORDER BY full_name LIMIT 200");
-if($r) while($row=$r->fetch_assoc()) $students_list[]=$row; }
+$search_student = trim($_GET['search_student'] ?? '');
+$showStudentList = $search_student !== '';
+$students_list = [];
+if ($students_conn && $showStudentList) {
+    $sw = "WHERE 1=1";
+    if ($search_student !== '') { $ss = $students_conn->real_escape_string($search_student); $sw .= " AND (full_name LIKE '%$ss%' OR first_name LIKE '%$ss%' OR surname LIKE '%$ss%' OR index_number LIKE '%$ss%' OR student_number LIKE '%$ss%' OR registration_number LIKE '%$ss%' OR phone LIKE '%$ss%' OR national_student_id_number LIKE '%$ss%')"; }
+    $r = $students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,phone,mobile_number,email,status,index_number,national_student_id_number FROM students $sw ORDER BY full_name LIMIT 200");
+    if ($r) while($row=$r->fetch_assoc()) $students_list[]=$row;
+}
 
 $admissions_list = []; $r=$staff_conn->query("SELECT sa.*,s.full_name,s.student_number FROM student_admissions sa LEFT JOIN igangaschoolofl_students_db.students s ON sa.student_id=s.id ORDER BY sa.created_at DESC LIMIT 50");
 if($r) while($row=$r->fetch_assoc()) $admissions_list[]=$row;
@@ -242,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <a href="../student-directory.php" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-address-book me-1"></i>Directory</a>
                     <a href="../index.php" class="btn btn-sm btn-outline-secondary ms-1"><i class="fas fa-home"></i></a>
                     <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>

@@ -86,12 +86,8 @@ if ($students_conn) {
     if ($mc) $midwifery_count = (int)($mc->fetch_assoc()['v'] ?? 0);
 }
 
-// Students list
+// Students list — search only
 $students_list = [];
-if ($students_conn) {
-    $sl = $students_conn->query("SELECT s.student_number, CONCAT(s.first_name,' ',s.surname) as full_name, s.program, s.current_year, sap.gpa, sap.academic_status FROM students s LEFT JOIN student_academic_profiles sap ON s.id=sap.student_id WHERE s.status='Active' ORDER BY sap.gpa DESC LIMIT 10");
-    if ($sl) $students_list = $sl->fetch_all(MYSQLI_ASSOC);
-}
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD']==='POST' && !empty($_POST['action'])) {
@@ -198,27 +194,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && !empty($_POST['action'])) {
 
     <!-- Students List -->
     <div class="card-section">
-      <h2><i class="fas fa-user-graduate me-2"></i>Top Students by GPA</h2>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle">
-          <thead class="table-light"><tr><th>Student No.</th><th>Name</th><th>Program</th><th>Year</th><th>GPA</th><th>Standing</th></tr></thead>
-          <tbody>
-          <?php if(empty($students_list)): ?>
-            <tr><td colspan="6" class="text-center text-muted">No student records found.</td></tr>
-          <?php else: foreach($students_list as $st):
-            $standing = $st['academic_status'] ?? 'Good Standing';
-            $bc = $standing==='Good Standing'?'bg-success':($standing==='Probation'?'bg-warning text-dark':'bg-danger');
-          ?>
-            <tr>
-              <td><code><?= htmlspecialchars($st['student_number']??'') ?></code></td>
-              <td><?= htmlspecialchars($st['full_name']??'') ?></td>
-              <td><?= htmlspecialchars($st['program']??'') ?></td>
-              <td><?= htmlspecialchars($st['current_year']??'') ?></td>
-              <td><?= number_format((float)($st['gpa']??0),2) ?></td>
-              <td><span class="badge <?= $bc ?>"><?= htmlspecialchars($standing) ?></span></td>
-            </tr>
-          <?php endforeach; endif; ?>
-          </tbody>
+      <h2><i class="fas fa-user-graduate me-2"></i>Student Records</h2>
+      <div class="text-center py-4 text-muted">
+        <i class="fas fa-search fa-2x mb-2"></i>
+        <p>Use <a href="student-management.php" class="fw-bold">Student Management</a> to search and view student records.</p>
+      </div>
         </table>
       </div>
     </div>

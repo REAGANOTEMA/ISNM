@@ -24,22 +24,24 @@ if ($conn) {
         $search = trim($_GET['search'] ?? '');
         $program = trim($_GET['program'] ?? '');
         $level = trim($_GET['level'] ?? '');
-        $where = "WHERE status != 'Deleted'";
-        $params = [];
-        if ($search !== '') {
-            $s = $conn->real_escape_string($search);
-            $where .= " AND (first_name LIKE '%$s%' OR surname LIKE '%$s%' OR other_name LIKE '%$s%' OR full_name LIKE '%$s%' OR index_number LIKE '%$s%' OR registration_number LIKE '%$s%' OR student_number LIKE '%$s%' OR national_student_id_number LIKE '%$s%' OR phone LIKE '%$s%' OR email LIKE '%$s%')";
+        $hasSearch = $search !== '' || $program !== '' || $level !== '';
+        if ($hasSearch) {
+            $where = "WHERE status != 'Deleted'";
+            if ($search !== '') {
+                $s = $conn->real_escape_string($search);
+                $where .= " AND (first_name LIKE '%$s%' OR surname LIKE '%$s%' OR other_name LIKE '%$s%' OR full_name LIKE '%$s%' OR index_number LIKE '%$s%' OR registration_number LIKE '%$s%' OR student_number LIKE '%$s%' OR national_student_id_number LIKE '%$s%' OR phone LIKE '%$s%' OR email LIKE '%$s%')";
+            }
+            if ($program !== '') {
+                $p = $conn->real_escape_string($program);
+                $where .= " AND program='$p'";
+            }
+            if ($level !== '') {
+                $l = $conn->real_escape_string($level);
+                $where .= " AND level='$l'";
+            }
+            $r = $conn->query("SELECT id, first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, email, program, level, set_name, year, status FROM students $where ORDER BY id DESC LIMIT 200");
+            if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
         }
-        if ($program !== '') {
-            $p = $conn->real_escape_string($program);
-            $where .= " AND program='$p'";
-        }
-        if ($level !== '') {
-            $l = $conn->real_escape_string($level);
-            $where .= " AND level='$l'";
-        }
-        $r = $conn->query("SELECT id, first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, email, program, level, set_name, year, status FROM students $where ORDER BY id DESC LIMIT 100");
-        if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
 
         $progR = $conn->query("SELECT DISTINCT program FROM students WHERE status != 'Deleted' ORDER BY program");
         $programs = [];
@@ -189,8 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <table class="table table-striped table-hover">
             <thead><tr><th>Student #</th><th>Full Name</th><th>Program</th><th>Level</th><th>Year</th><th>Phone</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
             <tbody>
-                <?php if (empty($students)): ?>
-                <tr><td colspan="8" class="text-center text-muted py-4">No student records found. Use "Add Student" to add one.</td></tr>
+                <?php if (empty($students) && $hasSearch): ?>
+                <tr><td colspan="8" class="text-center text-muted py-4">No student records match your search.</td></tr>
+                <?php elseif (empty($students) && !$hasSearch): ?>
+                <tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-search me-1"></i>Use the search fields above to find existing students, or click "Add Student" to create a new one.</td></tr>
                 <?php else: ?>
                 <?php foreach ($students as $s): ?>
                 <tr>

@@ -1,6 +1,10 @@
 <?php
-// Universal navigation helper for all ISNM pages
-// Ensures perfect connectivity across all pages
+/**
+ * @deprecated This file is no longer used by any dashboard page.
+ * Navigation is now handled by sidebar.php and module_config.php.
+ * All functions below are preserved for reference only.
+ * Remove this file after verifying no integration exists.
+ */
 
 function getNavigationMenu($current_page = '') {
     $user_role = $_SESSION['role'] ?? '';
@@ -48,7 +52,7 @@ function getNavigationMenu($current_page = '') {
                                 <li><a class="dropdown-item" href="student_communication_system.php">
                                     <i class="fas fa-envelope"></i> Messages
                                 </a></li>
-                                <li><a class="dropdown-item" href="import_student_data.php">
+                                <li><a class="dropdown-item" href="bulk_photo_upload.php">
                                     <i class="fas fa-upload"></i> Import Students
                                 </a></li>
                             </ul>
@@ -61,13 +65,13 @@ function getNavigationMenu($current_page = '') {
                                 <i class="fas fa-money-bill"></i> Finance
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="fee_management.php">
+                                <li><a class="dropdown-item" href="dashboards/school-bursar.php">
                                     <i class="fas fa-credit-card"></i> Fee Management
                                 </a></li>
-                                <li><a class="dropdown-item" href="bulk_photo_upload.php">
-                                    <i class="fas fa-camera"></i> Photo Upload
+                                <li><a class="dropdown-item" href="dashboards/budget-management.php">
+                                    <i class="fas fa-chart-pie"></i> Budget Management
                                 </a></li>
-                                <li><a class="dropdown-item" href="financial_reports.php">
+                                <li><a class="dropdown-item" href="dashboards/financial-reports.php">
                                     <i class="fas fa-chart-line"></i> Financial Reports
                                 </a></li>
                             </ul>
@@ -80,13 +84,13 @@ function getNavigationMenu($current_page = '') {
                                 <i class="fas fa-graduation-cap"></i> Academics
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="applications.php">
-                                    <i class="fas fa-file-alt"></i> Applications
+                                <li><a class="dropdown-item" href="dashboards/director-academics.php">
+                                    <i class="fas fa-file-alt"></i> Academics Dashboard
                                 </a></li>
-                                <li><a class="dropdown-item" href="transcript_management.php">
+                                <li><a class="dropdown-item" href="dashboards/academic-registrar.php">
                                     <i class="fas fa-file-alt"></i> Transcripts
                                 </a></li>
-                                <li><a class="dropdown-item" href="course_management.php">
+                                <li><a class="dropdown-item" href="dashboards/curriculum-management.php">
                                     <i class="fas fa-book"></i> Course Management
                                 </a></li>
                             </ul>
@@ -99,16 +103,16 @@ function getNavigationMenu($current_page = '') {
                                 <i class="fas fa-users-cog"></i> HR
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="staff_management.php">
+                                <li><a class="dropdown-item" href="dashboards/hr-manager.php">
                                     <i class="fas fa-user-tie"></i> Staff Management
                                 </a></li>
-                                <li><a class="dropdown-item" href="staff_applications.php">
+                                <li><a class="dropdown-item" href="dashboards/recruitment.php">
                                     <i class="fas fa-user-plus"></i> Staff Applications
                                 </a></li>
-                                <li><a class="dropdown-item" href="leave_management.php">
+                                <li><a class="dropdown-item" href="dashboards/leave-management.php">
                                     <i class="fas fa-calendar-alt"></i> Leave Management
                                 </a></li>
-                                <li><a class="dropdown-item" href="payroll.php">
+                                <li><a class="dropdown-item" href="dashboards/bursar-payroll.php">
                                     <i class="fas fa-money-check-alt"></i> Payroll
                                 </a></li>
                             </ul>
@@ -129,16 +133,16 @@ function getNavigationMenu($current_page = '') {
                             <i class="fas fa-chart-bar"></i> Reports
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="student_reports.php">
+                            <li><a class="dropdown-item" href="dashboards/student-management.php">
                                 <i class="fas fa-users"></i> Student Reports
                             </a></li>
-                            <li><a class="dropdown-item" href="academic_reports.php">
+                            <li><a class="dropdown-item" href="dashboards/director-academics.php#reports">
                                 <i class="fas fa-graduation-cap"></i> Academic Reports
                             </a></li>
-                            <li><a class="dropdown-item" href="financial_reports.php">
+                            <li><a class="dropdown-item" href="dashboards/financial-reports.php">
                                 <i class="fas fa-money-bill"></i> Financial Reports
                             </a></li>
-                            <li><a class="dropdown-item" href="system_reports.php">
+                            <li><a class="dropdown-item" href="dashboards/system-admin.php">
                                 <i class="fas fa-cog"></i> System Reports
                             </a></li>
                         </ul>
@@ -149,10 +153,10 @@ function getNavigationMenu($current_page = '') {
                             <i class="fas fa-cog"></i> Settings
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="system_settings.php">
+                            <li><a class="dropdown-item" href="dashboards/system-admin.php">
                                 <i class="fas fa-cogs"></i> System Settings
                             </a></li>
-                            <li><a class="dropdown-item" href="user_profile.php">
+                            <li><a class="dropdown-item" href="dashboards/staff_profile_management.php">
                                 <i class="fas fa-user-circle"></i> My Profile
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -169,11 +173,8 @@ function getNavigationMenu($current_page = '') {
                             <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="user_profile.php">
+                            <li><a class="dropdown-item" href="dashboards/staff_profile_management.php">
                                 <i class="fas fa-user"></i> My Profile
-                            </a></li>
-                            <li><a class="dropdown-item" href="change_password.php">
-                                <i class="fas fa-key"></i> Change Password
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="logout.php">

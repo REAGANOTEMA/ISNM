@@ -18,11 +18,6 @@ if ($conn) {
     $r = $conn->query("SELECT COALESCE(SUM(amount_paid),0) total FROM payments"); if ($r) $stats['revenue'] = (float)$r->fetch_assoc()['total'];
 }
 
-$recent_students = [];
-if ($students_conn) {
-    $r = $students_conn->query("SELECT id, first_name, surname, program, status FROM students ORDER BY id DESC LIMIT 10");
-    if ($r) $recent_students = $r->fetch_all(MYSQLI_ASSOC);
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,19 +36,10 @@ if ($students_conn) {
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Revenue</h6><h3>UGX <?= number_format($stats['revenue'], 0) ?></h3></div></div></div>
     </div>
     <div class="card">
-        <div class="card-header"><h5>Recently Enrolled Students</h5></div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead><tr><th>#</th><th>Name</th><th>Program</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <?php if (empty($recent_students)): ?><tr><td colspan="4" class="text-muted text-center">No data</td></tr><?php endif; ?>
-                        <?php foreach ($recent_students as $i => $s): ?>
-                        <tr><td><?= $i+1 ?></td><td><?= htmlspecialchars($s['first_name'].' '.$s['surname']) ?></td><td><?= htmlspecialchars($s['program'] ?? '-') ?></td><td><span class="badge bg-success"><?= htmlspecialchars($s['status']) ?></span></td></tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+        <div class="card-body text-center py-4">
+            <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+            <h5>Student Records</h5>
+            <p class="text-muted">Use the <a href="student-management.php" class="fw-bold">Student Management</a> module to search and view student records.</p>
         </div>
     </div>
 </div>

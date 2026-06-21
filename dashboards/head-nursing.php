@@ -85,7 +85,7 @@ if ($conn) {
                         <span><?php echo date('l, F j, Y'); ?></span>
                     </div>
                     <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
+                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
                         <span><?php echo htmlspecialchars($user_name); ?></span>
                     </div>
                 </div>

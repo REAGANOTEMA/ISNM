@@ -9,6 +9,9 @@ $pageTitle = 'Student Attendance';
 $present = 0; $absent = 0; $late = 0; $total = 0; $records = []; $students = [];
 $dateFilter = $_GET['date'] ?? date('Y-m-d');
 $searchFilter = trim($_GET['search'] ?? '');
+$programFilter = trim($_GET['program'] ?? '');
+$levelFilter = trim($_GET['level'] ?? '');
+$hasAttFilter = $searchFilter !== '' || $programFilter !== '' || $levelFilter !== '';
 if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM student_attendance WHERE attendance_date=CURDATE() AND status='Present'");
     if ($r) $present = (int)$r->fetch_assoc()['c'];
@@ -23,8 +26,13 @@ if ($conn) {
     if ($searchFilter !== '') { $s = $conn->real_escape_string($searchFilter); $w .= " AND (CONCAT(s.first_name,' ',s.surname) LIKE '%$s%' OR s.index_number LIKE '%$s%' OR s.student_number LIKE '%$s%')"; }
     $q = $conn->query("SELECT a.*, CONCAT(s.first_name,' ',s.surname) student_name, s.index_number, s.student_number FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id WHERE $w ORDER BY a.time_in DESC");
     if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
-    $sr = $conn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number FROM students WHERE status='Active' ORDER BY surname LIMIT 300");
-    if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
+    if ($programFilter !== '' || $levelFilter !== '') {
+        $aw = "WHERE status='Active'";
+        if ($programFilter !== '') { $p = $conn->real_escape_string($programFilter); $aw .= " AND program='$p'"; }
+        if ($levelFilter !== '') { $l = $conn->real_escape_string($levelFilter); $aw .= " AND level='$l'"; }
+        $sr = $conn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number FROM students $aw ORDER BY surname LIMIT 300");
+        if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -89,24 +97,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i>Attendance Records</h5>
 <div>
 <button class="btn btn-sm btn-outline-primary me-1" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal"><i class="fas fa-plus me-1"></i>Record Attendance</button>
+<button class="btn btn-sm btn-primary" onclick="openAttendanceModal()"><i class="fas fa-plus me-1"></i>Record Attendance</button>
 </div>
 </div>
+<?php if ($programFilter === '' && $levelFilter === ''): ?>
+<div class="alert alert-info py-2 mb-3 no-print"><i class="fas fa-info-circle me-1"></i> Select a <strong>Program</strong> and/or <strong>Level</strong> filter above to record attendance for a specific group.</div>
+<?php endif; ?>
 
 <form method="GET" class="row g-2 mb-3 no-print">
-<div class="col-md-3"><input type="date" name="date" class="form-control form-control-sm" value="<?= htmlspecialchars($dateFilter) ?>"></div>
-<div class="col-md-5"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search student name, index..." value="<?= htmlspecialchars($searchFilter) ?>"></div>
-<div class="col-md-2"><button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i></button></div>
-<div class="col-md-2"><a href="student-attendance.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-times"></i> Clear</a></div>
+<div class="col-md-2"><input type="date" name="date" class="form-control form-control-sm" value="<?= htmlspecialchars($dateFilter) ?>"></div>
+<div class="col-md-4"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search student name, index..." value="<?= htmlspecialchars($searchFilter) ?>"></div>
+<div class="col-md-2"><select name="program" class="form-select form-select-sm"><option value="">All Programs</option><?php
+if ($conn) { $pr = $conn->query("SELECT DISTINCT program FROM students WHERE status='Active' ORDER BY program"); if ($pr) while ($p = $pr->fetch_assoc()) echo '<option ' . ($programFilter===$p['program']?'selected':'') . '>' . htmlspecialchars($p['program']) . '</option>'; }
+?></select></div>
+<div class="col-md-2"><select name="level" class="form-select form-select-sm"><option value="">All Levels</option><?php
+if ($conn) { $lr = $conn->query("SELECT DISTINCT level FROM students WHERE status='Active' ORDER BY level"); if ($lr) while ($l = $lr->fetch_assoc()) echo '<option ' . ($levelFilter===$l['level']?'selected':'') . '>' . htmlspecialchars($l['level']) . '</option>'; }
+?></select></div>
+<div class="col-md-2"><button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i> Filter</button></div>
 </form>
+<div class="mb-3 no-print">
+<a href="student-attendance.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-times"></i> Clear All</a>
+</div>
 
 <div class="print-area content-section">
 <div class="table-responsive">
 <table class="table table-striped table-hover align-middle">
 <thead class="table-light"><tr><th>#</th><th>Student</th><th>Index</th><th>Date</th><th>Time In</th><th>Time Out</th><th>Status</th><th class="no-print">Action</th></tr></thead>
 <tbody>
-<?php if(empty($records)): ?>
+<?php if(empty($records) && $hasAttFilter): ?>
 <tr><td colspan="8" class="text-center text-muted py-3">No attendance records for this date.</td></tr>
+<?php elseif(empty($records) && !$hasAttFilter): ?>
+<tr><td colspan="8" class="text-center text-muted py-3">Use the filters above to search attendance records.</td></tr>
 <?php else: $i=0; foreach($records as $r): $i++;
 $st=$r['status']??'';
 $bc=$st==='Present'?'bg-success':($st==='Absent'?'bg-danger':($st==='Late'?'bg-warning text-dark':($st==='Excused'?'bg-info':'bg-secondary')));
@@ -134,6 +155,9 @@ $bc=$st==='Present'?'bg-success':($st==='Absent'?'bg-danger':($st==='Late'?'bg-w
 <!-- Record Attendance Modal -->
 <div class="modal fade" id="attendanceModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><form method="POST" class="modal-content"><input type="hidden" name="action" value="record_attendance"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Record Attendance</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body">
 <div class="mb-3"><label class="form-label">Date *</label><input type="date" name="attendance_date" class="form-control" value="<?= date('Y-m-d') ?>" required></div>
+<?php if (empty($students)): ?>
+<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-1"></i> No students loaded. Please select a <strong>Program</strong> and/or <strong>Level</strong> filter from the search form above, then click "Record Attendance" again.</div>
+<?php else: ?>
 <div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th><input type="checkbox" onchange="document.querySelectorAll('.att-check').forEach(c=>c.checked=this.checked)"></th><th>Student</th><th>Index</th><th>Time In</th><th>Time Out</th><th>Status</th></tr></thead><tbody>
 <?php foreach($students as $s): ?>
 <tr>
@@ -146,7 +170,17 @@ $bc=$st==='Present'?'bg-success':($st==='Absent'?'bg-danger':($st==='Late'?'bg-w
 </tr>
 <?php endforeach; ?>
 </tbody></table></div>
-</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="reset" class="btn btn-outline-secondary">Reset</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Attendance</button></div></form></div></div>
+<?php endif; ?>
+</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="reset" class="btn btn-outline-secondary">Reset</button><button type="submit" class="btn btn-primary" <?= empty($students) ? 'disabled' : '' ?>><i class="fas fa-save me-1"></i>Save Attendance</button></div></form></div></div>
+<script>
+function openAttendanceModal() {
+    <?php if ($programFilter === '' && $levelFilter === ''): ?>
+    alert('Please select a Program and/or Level filter first, then click Record Attendance.');
+    <?php else: ?>
+    new bootstrap.Modal(document.getElementById('attendanceModal')).show();
+    <?php endif; ?>
+}
+</script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

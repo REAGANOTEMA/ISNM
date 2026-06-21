@@ -19,6 +19,16 @@ $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'Student';
 $user_role = $user['role'] ?? '';
 
+$profileImageUrl = '../images/username.png';
+$profileSettingsFile = __DIR__ . '/../includes/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    include_once $profileSettingsFile;
+    if (function_exists('getStaffProfileImageUrl')) {
+        $url = getStaffProfileImageUrl($user_id);
+        if ($url) $profileImageUrl = $url;
+    }
+}
+
 if (!function_exists('tableExists')) {
     function tableExists($conn, $tableName) {
         $result = $conn->query("SHOW TABLES LIKE '" . $conn->real_escape_string($tableName) . "'");

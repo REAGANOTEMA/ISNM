@@ -13,7 +13,6 @@ require_once __DIR__ . '/../includes/approval_integration.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
 
 $loader = new StudentDataLoader();
-$allStudentsData = $loader->loadAllStudents();
 
 $ctx          = bootstrapStaffDashboard([]);
 $auth_service = $ctx['auth'];
@@ -891,12 +890,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         <div class="flex-grow-1 me-2" style="max-width:400px;"><?= displayStudentSearchBox('Search by name, ID, phone...', 'dg_search') ?></div>
         <button class="btn" style="background:#2563eb;color:#fff;border:none;border-radius:8px;white-space:nowrap;" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus me-1"></i>Add New Student</button>
       </div>
-      <div class="row g-2 mb-3">
-        <?php $rs=array_slice($allStudentsData,0,6); foreach($rs as $s): $sid=$s['index_number']??$s['student_number']??$s['national_id']??''; ?>
-        <div class="col-md-4 col-lg-2"><div class="cursor-pointer" onclick="showStudentProfileModal('<?= addslashes($sid) ?>')"><?= displayStudentProfileCard($sid,'compact') ?></div></div>
-        <?php endforeach; ?>
-      </div>
-      <div class="mt-2"><?php renderStudentSetViewer($studentsConn,['title'=>'All Student Records','icon'=>'fa-users-gear','super_admin'=>true,'show_all'=>true]); ?></div>
+      <div class="alert alert-info py-2 mb-3"><i class="fas fa-info-circle me-1"></i> Use the search box above or the <strong>Student Set Viewer</strong> below to find student records.</div>
+      <div class="mt-2"><?php renderStudentSetViewer($studentsConn,['title'=>'All Student Records','icon'=>'fa-users-gear','super_admin'=>true,'show_all'=>false]); ?></div>
 <?php
 // Student performance prediction data
 $perfData = ['labels'=>[],'actual'=>[],'predicted'=>[],'courses'=>[]];
@@ -1200,7 +1195,7 @@ function dgExportCSV() {
 <?php echo displayStudentProfileModal('student_profile_modal'); ?>
 
 <script>
-window.allStudents = <?php echo json_encode(array_slice($allStudentsData, 0, 1000)) ?: '[]' ?>;
+window.allStudents = [];
 </script>
 <script>
 function viewFullProfile(id){ showStudentProfileModal(id); }

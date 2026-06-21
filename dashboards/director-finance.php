@@ -313,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="../student-directory.php" class="btn btn-sm btn-outline-info ms-2"><i class="fas fa-address-book me-1"></i>Directory</a>
                 <a href="../index.php" class="btn btn-sm btn-outline-secondary ms-1"><i class="fas fa-home"></i></a>
                 <div class="user-menu">
-                    <img src="<?= $profileImageUrl ?>" alt="User" class="user-avatar">
+                    <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
                     <span><?php echo htmlspecialchars($user_name); ?></span>
                 </div>
             </div>

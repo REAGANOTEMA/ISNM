@@ -1,11 +1,23 @@
 <?php
-require_once __DIR__ . '/includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
-$user = $ctx['user'];
-$staffDb = $ctx['staff'];
-$studentsDb = $ctx['students'];
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/auth-service.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    header('Location: student-login.php');
+    exit;
+}
+$isStaff = ($_SESSION['type'] ?? '') === 'staff';
+$isStudent = ($_SESSION['type'] ?? '') === 'student';
+if (!$isStaff && !$isStudent) {
+    header('Location: student-login.php');
+    exit;
+}
+$auth_service = new AuthenticationService();
+$user = $auth_service->getCurrentUser();
+$staffDb = getStaffConnection();
+$studentsDb = getStudentsConnection();
 
-$studentNumber = $user['student_number'] ?? ($_SESSION['student_number'] ?? '');
+$studentNumber = $user['student_number'] ?? ($_SESSION['student_number'] ?? ($_GET['student'] ?? ''));
 $view = $_GET['view'] ?? 'dashboard';
 
 $studentInfo = null;

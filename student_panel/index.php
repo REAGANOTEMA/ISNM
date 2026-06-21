@@ -184,10 +184,10 @@
                 <div class="top">
                     <?php
 
-                    $id = $_SESSION['uid'];
-                    $query_sql = "SELECT * FROM students WHERE id='$id'";
+                    $id = (int)$_SESSION['uid'];
+                    $query_sql = "SELECT * FROM students WHERE id=$id";
                     $result = mysqli_query($conn, $query_sql);
-                    $row = $result->fetch_assoc();
+                    $row = $result ? $result->fetch_assoc() : [];
                     echo "<div class='profile-photo'>
                         <img src='../studentUploads/" . $row['image'] . "'>
                     </div>";
@@ -195,9 +195,8 @@
 
                     <div class="info">
                         <?php
-                        session_start();
-                        $id = $_SESSION['uid'];
-                        $query = "select * from students where id='$id'";
+                        $id = (int)$_SESSION['uid'];
+                        $query = "select * from students where id=$id";
                         $result = $conn->query($query);
                         if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
@@ -218,9 +217,9 @@
                         ></div>
                 <div class="about">
                     <?php
-                    $query = "select * from students where id='$id'";
+                    $query = "select * from students where id=$id";
                     $result = $conn->query($query);
-                    if ($result->num_rows > 0) {
+                    if ($result && $result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                             echo "<p><h5>Class : " . $row["class"] . "</h5></p>
                     <p>Section " . $row["section"] . "</p>
