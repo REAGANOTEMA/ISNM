@@ -132,7 +132,7 @@
                                         <option value="lkg">lkg</option>
                                         <option value="ukg">ukg</option> -->
                                         <?php
-                                            $id = $_SESSION['uid'];
+                                            $id = intval($_SESSION['uid']);
                                             $query = "SELECT * FROM teachers where id = '$id'";
                                             $result = mysqli_query($conn,$query);
                                             $row = mysqli_fetch_assoc($result);

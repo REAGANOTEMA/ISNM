@@ -41,7 +41,7 @@ if (isset($_POST['teacherid'])) {
             mysqli_stmt_close($stmt);
         }
 
-        if (empty($response)) {
+        if (!isset($response)) {
             // Delete the image file if it exists
             if ($row['image'] != '1701517055user.png' && file_exists($pathToFile)) {
                 if (unlink($pathToFile)) {

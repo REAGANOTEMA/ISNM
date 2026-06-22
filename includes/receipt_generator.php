@@ -7,12 +7,12 @@ require_once __DIR__ . '/../includes/financial_functions.php';
 class ReceiptGenerator {
     
     public static function generateReceiptHTML($payment_id) {
-        $conn = getConnection();
+        $conn = getStudentsConnection();
         
         $stmt = $conn->prepare("
-            SELECT p.*, u.first_name, u.last_name, u.index_number 
+            SELECT p.*, s.first_name, s.surname AS last_name, s.index_number
             FROM payments p 
-            JOIN users u ON p.student_id = u.id 
+            JOIN students s ON p.student_id = s.id 
             WHERE p.id = ?
         ");
         $stmt->bind_param("i", $payment_id);
@@ -125,7 +125,7 @@ class ReceiptGenerator {
                 
                 <div class='info-section'>
                     <div class='info-row'><span class='info-label'>Payment Method:</span> {$method}</div>
-                    <div class='info-row'><span class='info-label'>Reference:</span> {$payment['reference_number']}</div>
+                    <div class='info-row'><span class='info-label'>Reference:</span> {$payment['payment_reference']}</div>
                     <div class='info-row'><span class='info-label'>Processed By:</span> School Bursar</div>
                 </div>
                 
@@ -150,7 +150,7 @@ class ReceiptGenerator {
     }
     
     public static function generatePayslipHTML($staff_id, $month = null, $year = null) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         
         $staff_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
         $staff_stmt->bind_param("i", $staff_id);

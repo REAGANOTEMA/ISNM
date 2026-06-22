@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($action === 'add') {
             $stmt = $conn->prepare("INSERT INTO students (first_name,surname,other_name,full_name,gender,index_number,registration_number,student_number,national_student_id_number,phone,mobile_number,email,program,level,set_name,year,current_year,passport_photo,profile_picture,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");
-            $stmt->bind_param('ssssssssssssssssss', $first_name,$surname,$other_name,$full_name,$gender,$index_number,$registration_number,$student_number,$national_id,$phone,$mobile_number,$email,$program,$level,$set_name,$year,$year,$photo_path,$photo_path);
+            $stmt->bind_param('sssssssssssssssssss', $first_name,$surname,$other_name,$full_name,$gender,$index_number,$registration_number,$student_number,$national_id,$phone,$mobile_number,$email,$program,$level,$set_name,$year,$year,$photo_path,$photo_path);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Student '$full_name' added successfully.";
             } else {

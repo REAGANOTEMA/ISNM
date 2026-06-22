@@ -12,7 +12,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'applicant_detail' && isset($_GET[
     $id = intval($_GET['id']);
     $data = null;
     if ($wconn) {
-        $r = $wconn->query("SELECT * FROM student_applications WHERE id=$id");
+        $r = $wconn->query("SELECT * FROM student_applications WHERE id=" . intval($id));
         if ($r) $data = $r->fetch_assoc();
     }
     echo json_encode($data);
@@ -42,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newStatus = $wconn->real_escape_string($_POST['status'] ?? '');
         $allowed = ['Shortlisted', 'Admitted', 'Rejected', 'Withdrawn'];
         if (in_array($newStatus, $allowed) && $id > 0) {
-            $wconn->query("UPDATE student_applications SET status='$newStatus', reviewed_by={$_SESSION['user_id']}, reviewed_at=NOW() WHERE id=$id");
+            $wconn->query("UPDATE student_applications SET status='$newStatus', reviewed_by=" . intval($_SESSION['user_id']) . ", reviewed_at=NOW() WHERE id=" . intval($id));
             if ($newStatus === 'Admitted') {
-                $app = $wconn->query("SELECT * FROM student_applications WHERE id=$id");
+                $app = $wconn->query("SELECT * FROM student_applications WHERE id=" . intval($id));
                 if ($app && ($a = $app->fetch_assoc())) {
                     $admNo = 'ADM-' . date('Y') . '-' . str_pad($id, 4, '0', STR_PAD_LEFT);
                     $stmt = $staffDb->prepare("INSERT IGNORE INTO students (first_name, surname, other_name, full_name, gender, index_number, phone, email, program, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");

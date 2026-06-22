@@ -93,7 +93,7 @@ error_reporting(0);
   
   $data = "";
 
-  $sql="SELECT * FROM students where id = '{$_GET['id']}'";
+  $sql="SELECT * FROM students where id = " . intval($_GET['id']);
   $result=mysqli_query($conn,$sql);
   if(mysqli_num_rows($result)>0){
     while($row=mysqli_fetch_assoc($result)){

@@ -11,8 +11,8 @@ ini_set('display_errors', 1);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $noticeId = (int) ($_POST["noticeId"]);
     $disks = $_POST["disks"];
-    $body =  mysqli_real_escape_string($conn, $_POST["body"]);;
-    $title =  mysqli_real_escape_string($conn, $_POST["title"]);;
+    $body =  mysqli_real_escape_string($conn, $_POST["body"]);
+    $title =  mysqli_real_escape_string($conn, $_POST["title"]);
     
     $editorId = $_SESSION['uid'];
 
@@ -79,16 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else {
                     $response = "something went wrong!";
                 }
-    
-                $updateFileQuery = "UPDATE notice SET `file`=? WHERE `s_no`=?";
-                $stmt3 = mysqli_prepare($conn, $updateFileQuery);
-                mysqli_stmt_bind_param($stmt3, "si", $newName, $noticeId);
-                if(mysqli_stmt_execute($stmt3)){
-                    $response = "success";
-                }else{
-                    $response = "Something went wrong!";
-                }
-                mysqli_stmt_close($stmt3);
             }else{
                 $response = "Something went wrong!";
             }

@@ -1,3 +1,11 @@
+<?php
+$teachers_salary_query = "SELECT t.*, COALESCE(ss.basic_salary, 0) AS basic_salary FROM teachers t LEFT JOIN staff_salaries ss ON t.id = ss.staff_id ORDER BY t.fname";
+$teachers_salary_result = mysqli_query($conn, $teachers_salary_query);
+if (!$teachers_salary_result) {
+    $teachers_salary_result = mysqli_query($conn, "SELECT t.*, 0 AS basic_salary FROM teachers t ORDER BY t.fname");
+}
+?>
+
 <div class="showAttendence">
 
     <div class="container">
@@ -7,18 +15,6 @@
             <div class="header">
                 <i class='bx bx-credit-card'></i>
                 <h3>Teachers Salary</h3>
-
-                <!--
-                    <a href="#" class="excel">
-                        <i class="fa fa-file-excel-o" aria-hidden="true"></i>
-                            <span>EXCEL</span>
-                    </a>
-
-                    <a href="#" class="report">
-                        <i class='bx bxs-file-pdf'></i>
-                        <span>PDF</span>
-                    </a> 
-                -->
 
                 <div class="_flex-container">
                     <input class="form-control me-2" type="search" placeholder="Search" style="max-width: 225px;height: 40px;" id="search-teacher-name" aria-label="Search">
@@ -40,31 +36,29 @@
                     </thead>
 
                     <tbody id="teacher-salary-table-body">
-                        <tr>
-                            <td class="pe-1">&nbsp;&nbsp;1&nbsp;&nbsp;</td>
-                            <td>T1703574415</td>
-                            <td class="user">
-
-                                <img src="../teacherUploads/1701517055user.png">
-                                <p>Shreya mishra</p>
-
-                            </td>
-                            <td class="flex-center p-3">
-                                <div class="btn-group-vertical" role="group" aria-label="Large button group">
-
-
-                                    <button type="button p-0 m-0" class="btn content-center btn-outline-success text-center" data-bs-toggle="modal" data-bs-target="#show-monthly-salary">
-
-                                        40,000
-                                        <i class='bx ms-1 bx-show-alt'></i>
-                                    </button>
-
-
-                                </div>
-
-                            </td>
-
-                        </tr>
+                        <?php if ($teachers_salary_result && mysqli_num_rows($teachers_salary_result) > 0) {
+                            $i = 1;
+                            while ($trow = mysqli_fetch_assoc($teachers_salary_result)) {
+                                $salary_display = $trow['basic_salary'] > 0 ? number_format($trow['basic_salary']) : 'N/A';
+                                echo "<tr>
+                                    <td class='pe-1'>&nbsp;&nbsp;{$i}&nbsp;&nbsp;</td>
+                                    <td>" . htmlspecialchars($trow['id']) . "</td>
+                                    <td class='user'>
+                                        <img src='../teacherUploads/" . htmlspecialchars($trow['image'] ?? 'default.png') . "'>
+                                        <p>" . htmlspecialchars($trow['fname'] . ' ' . $trow['lname']) . "</p>
+                                    </td>
+                                    <td class='flex-center p-3'>
+                                        <div class='btn-group-vertical' role='group' aria-label='Large button group'>
+                                            <button type='button' class='btn content-center btn-outline-success text-center' data-bs-toggle='modal' data-bs-target='#show-monthly-salary'>
+                                                {$salary_display}
+                                                <i class='bx ms-1 bx-show-alt'></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>";
+                                $i++;
+                            }
+                        } ?>
                     </tbody>
 
                 </table>
@@ -113,20 +107,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div>
-
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Shubham kumar</h1>
-                <small style="font-size : small;">T2342342342</small>
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Teacher Details</h1>
                 </div>
-                
                 <button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i
                         class='bx bx-x'></i></button>
             </div>
             <div class="modal-body">
-
                 <table class="table table-stripped">
                     <thead class="table-dark">
                         <tr>
-
                             <th scope="col">Month</th>
                             <th scope="col">Salary</th>
                             <th scope="col">Bonus</th>
@@ -135,45 +124,20 @@
                         </tr>
                     </thead>
                     <tbody class="no-hover">
-                        <tr>
-                            <td class="p-1 m-0">Jan</td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="text" value="45,000" style="max-width: 100px;" disabled>
-                            </td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="number" value="2000" style="max-width: 100px;" disabled>
-                            </td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="number" value="3000" style="max-width: 100px;" disabled>
-                            </td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="text" value="50,000" style="max-width: 120px;" disabled>
-
-                            </td>
-                        </tr>
-
-
-                        <tr>
-                            <td class="p-1 m-0">Feb</td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="text" value="45,000" style="max-width: 100px;" disabled>
-                            </td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="number" value="2000" style="max-width: 100px;" min="0" oninput="validity.valid||(value='');" placeholder="-">
-                            </td>
-                            <td class="p-1 m-0">
-                                <input class="form-control tableInput srartTime_" type="number" value="2000" style="max-width: 100px;" min="0" oninput="validity.valid||(value='');" placeholder="-">
-                            </td>
-                            <td class="p-1 m-0">
-                                <!-- <input class="form-control tableInput srartTime_" type="number" value="45000" style="max-width: 120px;" disabled> -->
-
-                                <button class="btn btn-success content-center" style="max-width: 100px"><i class="fa-solid fa-question me-1"></i>Paid</button>
-                            </td>
-                        </tr>
-
+                        <?php
+                        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        foreach ($months as $m) {
+                            echo "<tr>
+                                <td class='p-1 m-0'>{$m}</td>
+                                <td class='p-1 m-0'><input class='form-control tableInput' type='text' value='--' style='max-width: 100px;' disabled></td>
+                                <td class='p-1 m-0'><input class='form-control tableInput' type='number' value='0' style='max-width: 100px;' disabled></td>
+                                <td class='p-1 m-0'><input class='form-control tableInput' type='number' value='0' style='max-width: 100px;' disabled></td>
+                                <td class='p-1 m-0'><button class='btn btn-success content-center' style='max-width: 100px'><i class='fa-solid fa-question me-1'></i>Paid</button></td>
+                            </tr>";
+                        }
+                        ?>
                     </tbody>
                 </table>
-
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

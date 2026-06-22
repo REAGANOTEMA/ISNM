@@ -39,7 +39,7 @@ function authenticateStudent($index_number, $full_name, $phone_number) {
                 phone = ? AND 
                 status = 'active'";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssss", $index_number, $index_number, $first_name, $phone_number, $phone_number);
+        $stmt->bind_param("ssss", $index_number, $index_number, $first_name, $phone_number);
         $stmt->execute();
         $result = $stmt->get_result();
         

@@ -37,8 +37,8 @@ function loadDocumentSettings() {
             $db = getStaffConnection();
         } else {
             require_once __DIR__ . '/../config/database.php';
-            if (defined('STAFFS_DB_HOST')) {
-                $db = @new mysqli(STAFFS_DB_HOST, STAFFS_DB_USER, STAFFS_DB_PASS, STAFFS_DB_NAME, STAFFS_DB_PORT);
+            if (defined('STAFF_DB_HOST')) {
+                $db = @new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
             } else {
                 $cache = $defaults;
                 return $cache;
@@ -77,8 +77,8 @@ function saveDocumentSetting($key, $value) {
             $db = getStaffConnection();
         } else {
             require_once __DIR__ . '/../config/database.php';
-            if (defined('STAFFS_DB_HOST')) {
-                $db = @new mysqli(STAFFS_DB_HOST, STAFFS_DB_USER, STAFFS_DB_PASS, STAFFS_DB_NAME, STAFFS_DB_PORT);
+            if (defined('STAFF_DB_HOST')) {
+                $db = @new mysqli(STAFF_DB_HOST, STAFF_DB_USER, STAFF_DB_PASS, STAFF_DB_NAME, STAFF_DB_PORT);
             } else {
                 return false;
             }

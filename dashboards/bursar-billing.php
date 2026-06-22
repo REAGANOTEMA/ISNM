@@ -193,7 +193,7 @@ try { if ($staff) { $r = $staff->query("SELECT * FROM fee_structures ORDER BY ca
 
 // ── Invoices list ──
 $invoices = [];
-try { if ($staff) { $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN students s ON sfa.student_id = s.student_id ORDER BY sfa.created_at DESC LIMIT 100"); if ($r) while ($row = $r->fetch_assoc()) $invoices[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN igangaschoolofl_students_db.students s ON sfa.student_id = s.student_id ORDER BY sfa.created_at DESC LIMIT 100"); if ($r) while ($row = $r->fetch_assoc()) $invoices[] = $row; } } catch (Exception $e) {}
 
 // ── Scholarships ──
 $scholarships = [];
@@ -205,7 +205,7 @@ try { if ($staff) { $r = $staff->query("SELECT * FROM bursar_penalty_config ORDE
 
 // ── Sponsorships ──
 $sponsorships = [];
-try { if ($staff) { $r = $staff->query("SELECT bs.*, s.first_name, s.surname FROM bursar_sponsorships bs LEFT JOIN students s ON bs.student_id = s.student_id ORDER BY bs.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $sponsorships[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT bs.*, s.first_name, s.surname FROM bursar_sponsorships bs LEFT JOIN igangaschoolofl_students_db.students s ON bs.student_id = s.student_id ORDER BY bs.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $sponsorships[] = $row; } } catch (Exception $e) {}
 
 // ── Discounts ──
 $discounts = [];

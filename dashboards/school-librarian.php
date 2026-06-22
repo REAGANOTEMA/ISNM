@@ -16,10 +16,10 @@ $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FR
 $total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$total_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_books")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$available_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_books WHERE status = 'Available'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$borrowed_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_borrowing WHERE return_status = 'Borrowed'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$active_members = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM library_members WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$total_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM igangaschoolofl_students_db.library_books")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$available_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM igangaschoolofl_students_db.library_books WHERE status = 'Available'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$borrowed_books = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM igangaschoolofl_students_db.library_borrowing WHERE return_status = 'Borrowed'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$active_members = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM igangaschoolofl_students_db.library_members WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
 // Get book categories from library_books (if table exists)
 $book_categories = [];
@@ -27,7 +27,7 @@ $book_category_names = ['Nursing', 'Midwifery', 'Medical Sciences', 'General Edu
 $category_colors = ['primary', 'success', 'info', 'warning'];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT category, COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available FROM library_books GROUP BY category ORDER BY category");
+        $r = $conn->query("SELECT category, COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available FROM igangaschoolofl_students_db.library_books GROUP BY category ORDER BY category");
         if ($r) while ($row = $r->fetch_assoc()) $book_categories[] = $row;
     } catch (Exception $e) {}
 }
@@ -42,13 +42,13 @@ if (empty($book_categories)) {
 $checked_out_today = 0; $returned_today = 0; $renewed_today = 0; $overdue_books = 0;
 if ($conn) {
     try {
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE DATE(borrow_date)=CURDATE() AND return_status='Borrowed'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_borrowing WHERE DATE(borrow_date)=CURDATE() AND return_status='Borrowed'");
         if ($r) $checked_out_today = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE DATE(return_date)=CURDATE() AND return_status='Returned'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_borrowing WHERE DATE(return_date)=CURDATE() AND return_status='Returned'");
         if ($r) $returned_today = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE renewals>0 AND DATE(borrow_date)=CURDATE()");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_borrowing WHERE renewals>0 AND DATE(borrow_date)=CURDATE()");
         if ($r) $renewed_today = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_borrowing WHERE due_date<CURDATE() AND return_status='Borrowed'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_borrowing WHERE due_date<CURDATE() AND return_status='Borrowed'");
         if ($r) $overdue_books = (int)$r->fetch_assoc()['c'];
     } catch (Exception $e) {}
 }
@@ -57,7 +57,7 @@ if ($conn) {
 $recent_transactions = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT lb.id, CONCAT(s.first_name,' ',s.surname) as member_name, lb.member_id, lb.book_title, lb.borrow_date as transaction_date, lb.return_status as status, lb.due_date FROM library_borrowing lb LEFT JOIN students s ON lb.student_id=s.student_id ORDER BY lb.borrow_date DESC LIMIT 10");
+        $r = $conn->query("SELECT lb.id, CONCAT(s.first_name,' ',s.surname) as member_name, lb.member_id, lb.book_title, lb.borrow_date as transaction_date, lb.return_status as status, lb.due_date FROM igangaschoolofl_students_db.library_borrowing lb LEFT JOIN igangaschoolofl_students_db.students s ON lb.student_id=s.student_id ORDER BY lb.borrow_date DESC LIMIT 10");
         if ($r) $recent_transactions = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -66,13 +66,13 @@ if ($conn) {
 $member_students = 0; $member_staff = 0; $member_faculty = 0; $new_members_month = 0;
 if ($conn) {
     try {
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Student' AND status='Active'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_members WHERE member_type='Student' AND status='Active'");
         if ($r) $member_students = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Staff' AND status='Active'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_members WHERE member_type='Staff' AND status='Active'");
         if ($r) $member_staff = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE member_type='Faculty' AND status='Active'");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_members WHERE member_type='Faculty' AND status='Active'");
         if ($r) $member_faculty = (int)$r->fetch_assoc()['c'];
-        $r = $conn->query("SELECT COUNT(*) as c FROM library_members WHERE MONTH(registration_date)=MONTH(CURDATE()) AND YEAR(registration_date)=YEAR(CURDATE())");
+        $r = $conn->query("SELECT COUNT(*) as c FROM igangaschoolofl_students_db.library_members WHERE MONTH(registration_date)=MONTH(CURDATE()) AND YEAR(registration_date)=YEAR(CURDATE())");
         if ($r) $new_members_month = (int)$r->fetch_assoc()['c'];
     } catch (Exception $e) {}
 }
@@ -81,7 +81,7 @@ if ($conn) {
 $recent_members = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT lm.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM library_members lm LEFT JOIN students s ON lm.student_id=s.student_id ORDER BY lm.registration_date DESC LIMIT 5");
+        $r = $conn->query("SELECT lm.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM igangaschoolofl_students_db.library_members lm LEFT JOIN igangaschoolofl_students_db.students s ON lm.student_id=s.student_id ORDER BY lm.registration_date DESC LIMIT 5");
         if ($r) $recent_members = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -90,7 +90,7 @@ if ($conn) {
 $recent_acquisitions = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM library_acquisitions ORDER BY acquisition_date DESC LIMIT 5");
+        $r = $conn->query("SELECT * FROM igangaschoolofl_students_db.library_acquisitions ORDER BY acquisition_date DESC LIMIT 5");
         if ($r) $recent_acquisitions = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }

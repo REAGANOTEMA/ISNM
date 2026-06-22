@@ -43,9 +43,10 @@ if ($action === 'student_payment_request') {
         $status = 'pending';
 
         $stmt = $studentsDb->prepare("INSERT INTO payments (student_id, amount, payment_method, transaction_id, mobile_number, proof_file, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([$studentId, $amount, $method, $reference, $phone, $proofFile, $notes, $status]);
+        $stmt->bind_param("isssssss", $studentId, $amount, $method, $reference, $phone, $proofFile, $notes, $status);
+        $stmt->execute();
 
-        $paymentId = $studentsDb->lastInsertId();
+        $paymentId = $studentsDb->insert_id;
 
         if (function_exists('createNotification')) {
             $msg = "New payment request of UGX " . number_format($amount) . " from student #$studentId via $method";

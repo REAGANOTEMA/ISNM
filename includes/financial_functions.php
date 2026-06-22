@@ -141,23 +141,26 @@ if (!function_exists('updateStudentInvoiceBalance')) {
 if (!function_exists('getTotalCollections')) {
     function getTotalCollections($period = 'today') {
         $conn = getStudentsConnection();
-        $where_clause = "";
         $current_date = date('Y-m-d');
-        
+
         switch ($period) {
             case 'today':
-                $where_clause = "WHERE DATE(payment_date) = '$current_date' AND status = 'Completed'";
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments WHERE DATE(payment_date) = ? AND status = 'Completed'");
+                $stmt->bind_param("s", $current_date);
                 break;
             case 'week':
-                $where_clause = "WHERE YEARWEEK(payment_date) = YEARWEEK(NOW()) AND status = 'Completed'";
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments WHERE YEARWEEK(payment_date) = YEARWEEK(NOW()) AND status = 'Completed'");
                 break;
             case 'month':
-                $where_clause = "WHERE MONTH(payment_date) = MONTH(NOW()) AND YEAR(payment_date) = YEAR(NOW()) AND status = 'Completed'";
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments WHERE MONTH(payment_date) = MONTH(NOW()) AND YEAR(payment_date) = YEAR(NOW()) AND status = 'Completed'");
+                break;
+            default:
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments WHERE status = 'Completed'");
                 break;
         }
-        
-        $stmt = $conn->query("SELECT COALESCE(SUM(amount_received), 0) as total FROM payments $where_clause");
-        return $stmt->fetch_assoc()['total'];
+        if (!$stmt) return 0;
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc()['total'];
     }
 }
 

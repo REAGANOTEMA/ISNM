@@ -92,7 +92,7 @@ $templates = ($templates_result) ? $templates_result->fetch_all(MYSQLI_ASSOC) : 
 $receipts_sql = "SELECT gd.*, s.full_name as generated_by_name, st.full_name as student_name 
                  FROM generated_documents gd 
                  JOIN staff s ON gd.generated_by = s.id 
-                 LEFT JOIN students st ON gd.student_id = st.id 
+                 LEFT JOIN igangaschoolofl_students_db.students st ON gd.student_id = st.id 
                  WHERE gd.document_type = 'Receipt' 
                  ORDER BY gd.generation_date DESC 
                  LIMIT 10";

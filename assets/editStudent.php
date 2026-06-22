@@ -32,8 +32,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $relation = $_POST["relation"];
 
 
-    $sql = "SELECT * FROM students WHERE id='$id'";
-    $result = mysqli_query($conn, $sql);
+    $sql = "SELECT * FROM students WHERE id=?";
+    $stmt_check = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt_check, "s", $id);
+    mysqli_stmt_execute($stmt_check);
+    $result = mysqli_stmt_get_result($stmt_check);
 
     if (mysqli_num_rows($result) > 0) {
 

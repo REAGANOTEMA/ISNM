@@ -7,7 +7,7 @@
 
     $userId = $_SESSION['uid'] ?? $_SESSION['user_id'] ?? null;
     if ($userId) {
-        $sql = 'SELECT `role` FROM `users` WHERE `users`.`id`=? ;';
+        $sql = 'SELECT `role` FROM `igangaschoolofl_staffs_db`.`users` WHERE `users`.`id`=? ;';
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "s", $userId);
         mysqli_stmt_execute($stmt);

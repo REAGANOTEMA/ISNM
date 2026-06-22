@@ -1,6 +1,31 @@
 <?php include("../assets/noSessionRedirect.php"); ?>
 
 <?php include("./verifyRoleRedirect.php"); ?>
+
+<?php include("../assets/config.php"); 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
+    $student_id = $_SESSION['uid'];
+    $class = mysqli_real_escape_string($conn, $_POST['class']);
+    $instalment = mysqli_real_escape_string($conn, $_POST['instalment']);
+    $amount = floatval($_POST['amount']);
+    $payment_ref = 'PAY-' . time() . '-' . $student_id;
+    
+    $insert_sql = "INSERT INTO student_invoices (student_id, fee_type, total_amount, amount_paid, balance, status, issue_date, created_by) 
+                   SELECT id, ?, ?, ?, 0, 'Pending', CURDATE(), ? FROM students WHERE id = ? LIMIT 1";
+    $stmt = mysqli_prepare($conn, $insert_sql);
+    if ($stmt) {
+        $fee_type = $instalment;
+        $paid = $amount;
+        mysqli_stmt_bind_param($stmt, "sddii", $fee_type, $paid, $paid, $student_id, $student_id);
+        mysqli_stmt_execute($stmt);
+        $msg = "Payment record submitted successfully!";
+        mysqli_stmt_close($stmt);
+    } else {
+        $msg = "Error processing payment.";
+    }
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -79,19 +104,14 @@ height: 100vh !important;
           <div class="card-body p-4 p-md-5">
             <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Payment Info</h3>
 
-            <form class="px-md-2">
+            <?php if (isset($msg)): ?>
+                <div class="alert alert-info"><?php echo htmlspecialchars($msg); ?></div>
+            <?php endif; ?>
+            <form class="px-md-2" method="post">
                 <div class="row">
-                <!-- <div class="col-md-6 mb-4">
-
-                  <div class="form-outline datepicker">
-                    <input type="text" class="form-control" id="exampleDatepicker1" />
-                    <label for="exampleDatepicker1" class="form-label">Select a date</label>
-                  </div>
-
-                </div> -->
                 <div class="col-md-6 mb-4">
                   
-                  <select class="form-select" aria-label="Default select example" id="select">
+                  <select class="form-select" aria-label="Default select example" id="select" name="class">
   <option selected>Open this select menu</option>
   <option value="nu-ukg">Nur UKG</option>
   <option value="1">Class 1</option>
@@ -111,7 +131,7 @@ height: 100vh !important;
 
 </select>
                   <!-- <label for="exampleDatepicker1" class="form-label">Student Name</label> -->
-                  <select class="instal" aria-label="Default select example" id="instalment">
+                  <select class="instal" aria-label="Default select example" id="instalment" name="instalment">
                       <option selected>Select Instalment</option>
                       <option value="i1">Installment 1 (April)</option>
                       <option value="i2">Installment 2 (July)</option>
@@ -121,14 +141,15 @@ height: 100vh !important;
                       <option value="total">Total</option>
                   </select>
                   <br>
-                  <input type="text" name="" value="Amount" id="money" disabled>
+                  <input type="text" name="amount" value="Amount" id="money" readonly>
+                  <input type="hidden" name="submit_payment" value="1">
                 </div>
               </div>
-               
+                
               <img src="images/qr.jpg" id="qr" style="height: 100%; width: 100%;">
               
               <button type="submit" class="btn btn-success btn-lg mb-1"
-              style="margin-top: 8%;">Scan To Pay</button>
+              style="margin-top: 8%;">Submit Payment</button>
 
             </form>
 

@@ -9,7 +9,7 @@ class DatabaseConnection {
         'staffs'   => 'igangaschoolofl_staffs_db',
         'students' => 'igangaschoolofl_students_db',
         'website'  => 'igangaschoolofl_website_db',
-        'ict'      => 'igangaschoolofl_ict_db',
+        'ict'      => 'igangaschoolofl_ict',
     ];
 
     private static function getConfigs() {

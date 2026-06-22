@@ -17,7 +17,7 @@ if (isset($_POST['noticeId'])) {
         $pathToFile = ".." . DIRECTORY_SEPARATOR . "noticeUploads" . DIRECTORY_SEPARATOR . $row['file'];
 
 
-        if (trim($row['file'] == '')) {
+        if (trim($row['file']) == '') {
             $query = "DELETE FROM `notice` WHERE `notice`.`s_no` = ?";
             $stmt = mysqli_prepare($conn, $query);
 

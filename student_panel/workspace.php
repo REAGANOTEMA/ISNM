@@ -182,7 +182,7 @@ body::-webkit-scrollbar {
   </tr>
   <tr>
     <?php
-        $id = $_SESSION['uid'];
+        $id = intval($_SESSION['uid']);
 
         $sql  = "SELECT * FROM students WHERE id='$id'";
        $result2=mysqli_query($conn,$sql);

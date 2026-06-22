@@ -16,7 +16,7 @@ $website_conn = $ctx['website'];
 $students_conn = $ctx['students'] ?? null;
 $user_id = (int) ($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
-$user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+$user_role_id = 0;     $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . intval($user_id));
 if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
@@ -111,14 +111,14 @@ $ajaxPid = intval($_GET['program_id'] ?? 0);
 if ($ajax && $ajaxSid > 0) {
     header('Content-Type: application/json');
     if ($ajax === 'student_profile') {
-        $info = []; $r=$students_conn->query("SELECT * FROM students WHERE id=$ajaxSid");
+        $info = []; $r=$students_conn->query("SELECT * FROM students WHERE id=" . intval($ajaxSid));
         if($r) $info=$r->fetch_assoc();
         $att=[];
-        if($students_conn){ $r=$students_conn->query("SELECT date,status FROM student_attendance WHERE student_id=$ajaxSid ORDER BY date DESC LIMIT 20");
+        if($students_conn){ $r=$students_conn->query("SELECT date,status FROM student_attendance WHERE student_id=" . intval($ajaxSid) . " ORDER BY date DESC LIMIT 20");
         if($r) while($row=$r->fetch_assoc()) $att[]=$row; }
-        $inv=[]; if($students_conn){ $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=$ajaxSid ORDER BY created_at DESC");
+        $inv=[]; if($students_conn){ $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=" . intval($ajaxSid) . " ORDER BY created_at DESC");
         if($r) while($row=$r->fetch_assoc()) $inv[]=$row; }
-        $pay=[]; if($students_conn){ $r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=$ajaxSid ORDER BY payment_date DESC");
+        $pay=[]; if($students_conn){ $r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=" . intval($ajaxSid) . " ORDER BY payment_date DESC");
         if($r) while($row=$r->fetch_assoc()) $pay[]=$row; }
         echo json_encode(['info'=>$info,'attendance'=>$att,'invoices'=>$inv,'payments'=>$pay]);
         exit;
@@ -128,7 +128,7 @@ if ($ajax && $ajaxSid > 0) {
 if ($ajax && $ajaxPid > 0) {
     header('Content-Type: application/json');
     if ($ajax === 'program_courses') {
-        $qrProg=$conn->query("SELECT program_code FROM academic_programs WHERE id=$ajaxPid"); $prog=$qrProg?$qrProg->fetch_assoc():[]; $code=$prog['program_code']??'';
+        $qrProg=$conn->query("SELECT program_code FROM academic_programs WHERE id=" . intval($ajaxPid)); $prog=$qrProg?$qrProg->fetch_assoc():[]; $code=$prog['program_code']??'';
         $data=[];$r=$conn->query("SELECT id,course_code,course_title,credits,year_of_study,semester FROM academic_course_catalog WHERE program_code='$code' ORDER BY year_of_study,semester,course_code");
         if($r) while($row=$r->fetch_assoc()) $data[]=$row;
         echo json_encode($data); exit;

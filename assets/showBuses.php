@@ -21,7 +21,7 @@ if (isset($_SESSION['uid']) && $_SERVER["REQUEST_METHOD"] == "POST") {
 
             $busID = filter_var($busData['bus_id'], FILTER_SANITIZE_SPECIAL_CHARS);
             $busTitle = filter_var($busData['bus_title'], FILTER_SANITIZE_SPECIAL_CHARS);
-            $busNumber = filter_var($busData['bus_number'], FILTER_SANITIZE_SPECIAL_CHARS);;
+            $busNumber = filter_var($busData['bus_number'], FILTER_SANITIZE_SPECIAL_CHARS);
 
             if($selected){
                 $response['buses'] .= '<option value="'. $busID .'" selected>'. $busTitle .'</option>';

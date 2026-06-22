@@ -5,7 +5,7 @@
  * This script imports student data from Excel files in the 'students_data' folder
  * into the MySQL database using PhpSpreadsheet library.
  * 
- * Database: isnm_db
+ * Database: igangaschoolofl_students_db
  * Table: students(id, full_name, registration_number, national_student_id_number, 
  *              index_number, mobile_number, course, year, set_name, gender)
  */

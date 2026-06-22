@@ -20,8 +20,10 @@ class DepartmentRestrictions {
         
         // Get user department
         if ($this->user_id) {
-            $dept_query = "SELECT department_id FROM users WHERE id = $this->user_id";
-            $dept_result = $conn->query($dept_query);
+            $dept_stmt = $conn->prepare("SELECT department_id FROM users WHERE id = ?");
+            $dept_stmt->bind_param("i", $this->user_id);
+            $dept_stmt->execute();
+            $dept_result = $dept_stmt->get_result();
             $dept_data = $dept_result->fetch_assoc();
             $this->user_department = $dept_data['department_id'] ?? null;
         }

@@ -45,7 +45,7 @@ if ($ajax) {
         if ($r) { $all = []; while ($row = $r->fetch_assoc()) { $all[] = $row; $grand_total += (float)$row['tot']; } foreach ($all as $row) { $pct = $grand_total > 0 ? round(((float)$row['tot']/$grand_total)*100, 1).'%' : '0%'; $result['rows'][] = [ucfirst(str_replace('_',' ',$row['payment_method'])), currency($row['tot']), $pct]; $result['chart_labels'][] = ucfirst(str_replace('_',' ',$row['payment_method'])); $result['chart_values'][] = (float)$row['tot']; } $result['total'] = $grand_total; }
     } elseif ($ajax === 'outstanding') {
         $result['headers'] = ['Student ID', 'Student Name', 'Program', 'Total Fees', 'Paid', 'Balance'];
-        $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN students s ON sfa.student_id = s.student_id WHERE sfa.status NOT IN ('fully_paid','cancelled') ORDER BY sfa.balance DESC LIMIT 100");
+        $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN igangaschoolofl_students_db.students s ON sfa.student_id = s.student_id WHERE sfa.status NOT IN ('fully_paid','cancelled') ORDER BY sfa.balance DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['student_id'], htmlspecialchars(($row['surname']??'').' '.($row['first_name']??'')), htmlspecialchars($row['program']??'-'), currency($row['total_fees']), currency($row['amount_paid']), '<strong class="text-danger">'.currency($row['balance']).'</strong>']; $result['total'] += (float)$row['balance']; }
     } elseif ($ajax === 'statement' && !empty($_GET['sid'])) {
         $sid = $staff->real_escape_string($_GET['sid']);

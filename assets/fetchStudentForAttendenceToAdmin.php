@@ -94,8 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 if ($workingDays != 0) {
                     $percent = (int) (($present / $workingDays) * 100);
                 }
-                // $percent = (int)(($presentCount/$total)*100);
 
+                $attendence_str = '';
 
                 $response[1] .= '<tr>
                                     <td>' . $count . '.&nbsp;&nbsp;</td>

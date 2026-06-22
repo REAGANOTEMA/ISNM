@@ -1,8 +1,9 @@
 <?php
 include("../assets/noSessionRedirect.php"); 
 include('./fetch-data/verfyRoleRedirect.php');
+include('config.php');
 
-$id=$_SESSION['uid'];
+$id=intval($_SESSION['uid']);
 
 error_reporting(0);
 ?>
@@ -129,13 +130,13 @@ background: linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244
 
               </form>
               <?php
-             include('config.php');
-            
-               
              $password=$_POST['current'];
              $newpassword=$_POST['new'];
              $confirmnewpassword=$_POST['repeat'];
-            $result = mysqli_query($conn,"SELECT password_hash FROM users WHERE id='$id'");
+            $stmt = mysqli_prepare($conn, "SELECT password_hash FROM users WHERE id=?");
+            mysqli_stmt_bind_param($stmt, "i", $id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             if($result->num_rows > 0){
                 $row = $result->fetch_assoc();
 
@@ -144,7 +145,9 @@ background: linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244
                     if(password_verify($password, $pass)){
                     if($newpassword == $confirmnewpassword){
                           $newpasswordhash=password_hash($newpassword, PASSWORD_DEFAULT);
-                        if(mysqli_query($conn,"UPDATE users SET password_hash='$newpasswordhash' where id='$id'")){
+                        $upd_stmt = mysqli_prepare($conn, "UPDATE users SET password_hash=? WHERE id=?");
+                        mysqli_stmt_bind_param($upd_stmt, "si", $newpasswordhash, $id);
+                        if(mysqli_stmt_execute($upd_stmt)){
                                 echo "<script>alert('Password Updated')</script>";
                         }else{
                             echo "<script>alert('unable to update')</script>";

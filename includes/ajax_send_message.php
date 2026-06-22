@@ -55,7 +55,7 @@ try {
         $rec_id = $student['sid'];
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        $log_stmt->bind_param('isssisss', $_SESSION['user_id'], $user_role, $desc, $rec_id, $ip, $ua, $_SESSION['user_id']);
+        $log_stmt->bind_param('isssss', $_SESSION['user_id'], $user_role, $desc, $rec_id, $ip, $ua);
         @$log_stmt->execute();
         $inserted = true;
     }

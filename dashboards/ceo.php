@@ -15,7 +15,7 @@ if ($students_conn) {
 if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM staff"); if ($r) $stats['staff'] = (int)$r->fetch_assoc()['c'];
     $r = $conn->query("SELECT COUNT(*) c FROM academic_programs WHERE status='Active'"); if ($r) $stats['programs'] = (int)$r->fetch_assoc()['c'];
-    $r = $conn->query("SELECT COALESCE(SUM(amount_paid),0) total FROM payments"); if ($r) $stats['revenue'] = (float)$r->fetch_assoc()['total'];
+    $r = $conn->query("SELECT COALESCE(SUM(amount_paid),0) total FROM igangaschoolofl_students_db.payments"); if ($r) $stats['revenue'] = (float)$r->fetch_assoc()['total'];
 }
 
 ?>

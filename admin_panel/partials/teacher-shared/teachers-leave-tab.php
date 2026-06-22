@@ -109,65 +109,39 @@
 					</tr>
 				</thead>
 				<tbody id="leaves-table">
-
-					<tr>
-						<td class="text-center">Shubham kumar</td>
-						<td class="text-center">Medical Leave</td>
-						<td class="text-center">12 march 2022</td>
-						<td class="text-center">12 march 2022 - 14 march 2022</td>
-						<td class="content-center">
-							<div class="d-flex small-flex-column">
-								<span data-bs-toggle="modal" data-bs-target="#view-leave-modal">
-									<button class="btn btn-warning me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="View Details">
-										<i class='bx bx-show-alt'></i>
-									</button>
-								</span>
-								<button class="btn btn-success me-1 btn-sm border-0 d-flex justify-content-center text-center">
-									<i class='bx bx-dots-horizontal'></i>
-								</button>
-							</div>
-
-						</td>
-					</tr>
-					<tr>
-						<td class="text-center">Rajat kumar</td>
-						<td class="text-center">Jacob</td>
-						<td class="text-center">Thornton</td>
-						<td class="text-center">@fat</td>
-						<td class="content-center">
-							<div class="d-flex small-flex-column">
-								<span data-bs-toggle="modal" data-bs-target="#view-leave-modal">
-									<button class="btn btn-warning me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="View Details">
-										<i class='bx bx-show-alt'></i>
-									</button>
-								</span>
-								<button class="btn btn-success me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Approve Leave">
-									<i class='bx bx-check'></i>
-								</button>
-								<button class="btn btn-danger me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Reject Leave">
-									<i class='bx bx-x'></i>
-								</button>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td class="text-center">Tushar srivastav</td>
-						<td class="text-center">Larry the Bird</td>
-						<td class="text-center">@twitter</td>
-						<td class="text-center">@twitsdfter</td>
-						<td class="content-center">
-							<div class="d-flex small-flex-column">
-								<span data-bs-toggle="modal" data-bs-target="#view-leave-modal">
-									<button class="btn btn-warning me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="View Details">
-										<i class='bx bx-show-alt'></i>
-									</button>
-								</span>
-								<button class="btn btn-danger me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Delete">
-									<i class='bx bxs-trash'></i>
-								</button>
-							</div>
-						</td>
-					</tr>
+					<?php
+					$leave_query = "SELECT l.*, t.fname, t.lname FROM leaves l LEFT JOIN teachers t ON l.sender_id = t.id WHERE l.status = 'pending' ORDER BY l.s_no DESC LIMIT 10";
+					$leave_result = mysqli_query($conn, $leave_query);
+					if ($leave_result && mysqli_num_rows($leave_result) > 0) {
+						while ($lrow = mysqli_fetch_assoc($leave_result)) {
+							$teacher_name = htmlspecialchars(ucfirst($lrow['fname'] ?? '') . ' ' . ucfirst($lrow['lname'] ?? ''));
+							$send_date = date('d M Y', strtotime($lrow['send_date'] ?? ''));
+							$start_date = date('d M Y', strtotime($lrow['start_date'] ?? ''));
+							$end_date = date('d M Y', strtotime($lrow['end_date'] ?? ''));
+							echo '<tr>
+								<td class="text-center">' . $teacher_name . '</td>
+								<td class="text-center">' . htmlspecialchars($lrow['leave_type'] ?? '') . '</td>
+								<td class="text-center">' . $send_date . '</td>
+								<td class="text-center">' . $start_date . ' - ' . $end_date . '</td>
+								<td class="content-center">
+									<div class="d-flex small-flex-column">
+										<span data-bs-toggle="modal" data-bs-target="#view-leave-modal">
+											<button class="btn btn-warning me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="View Details">
+												<i class="bx bx-show-alt"></i>
+											</button>
+										</span>
+										<button class="btn btn-success me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Approve Leave">
+											<i class="bx bx-check"></i>
+										</button>
+										<button class="btn btn-danger me-1 btn-sm border-0 d-flex justify-content-center text-center" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Reject Leave">
+											<i class="bx bx-x"></i>
+										</button>
+									</div>
+								</td>
+							</tr>';
+						}
+					}
+					?>
 				</tbody>
 			</table>
 

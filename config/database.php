@@ -247,7 +247,7 @@ if (!function_exists('validateIndexNumber')) {
 
 if (!function_exists('studentExistsByIndexNumber')) {
     function studentExistsByIndexNumber($indexNumber) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         if (!$conn) return false;
 
         $stmt = $conn->prepare('SELECT id FROM users WHERE index_number = ? AND role = ?');
@@ -265,7 +265,7 @@ if (!function_exists('studentExistsByIndexNumber')) {
 
 if (!function_exists('userExistsByEmail')) {
     function userExistsByEmail($email) {
-        $conn = getConnection();
+        $conn = getStaffConnection();
         if (!$conn) return false;
 
         $stmt = $conn->prepare('SELECT id FROM users WHERE email = ?');

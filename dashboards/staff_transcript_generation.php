@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_transcript']
                          sr.full_name as lecturer_name
                   FROM academic_records ar
                   LEFT JOIN courses c ON ar.course_code = c.course_code
-                  LEFT JOIN staff sr ON ar.graded_by = sr.id
+                  LEFT JOIN igangaschoolofl_staffs_db.staff sr ON ar.graded_by = sr.id
                   WHERE ar.student_id = ? 
                   ORDER BY ar.academic_year DESC, ar.semester DESC, ar.grading_date DESC";
     

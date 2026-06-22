@@ -6,7 +6,7 @@ error_reporting(0);
 ?>
 <?php
    session_start();
-   $uid=$_SESSION['id'];
+   $uid=$_SESSION['uid'];
 ?>
 <!DOCTYPE html>
 <html>

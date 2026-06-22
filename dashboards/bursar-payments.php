@@ -48,7 +48,7 @@ if ($ajax === 'load_verification') {
     $data = [];
     try {
         if ($staff) {
-            $r = $staff->query("SELECT bv.*, s.first_name, s.surname FROM bursar_payment_verification bv LEFT JOIN students s ON bv.student_id = s.student_id WHERE bv.status = 'pending' ORDER BY bv.created_at DESC LIMIT 50");
+            $r = $staff->query("SELECT bv.*, s.first_name, s.surname FROM bursar_payment_verification bv LEFT JOIN igangaschoolofl_students_db.students s ON bv.student_id = s.student_id WHERE bv.status = 'pending' ORDER BY bv.created_at DESC LIMIT 50");
             if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
         }
     } catch (Exception $e) { error_log('verify load: '.$e->getMessage()); }
@@ -168,7 +168,7 @@ try {
 
 // ── Recent payments ──
 $recent_payments = [];
-try { if ($staff) { $r = $staff->query("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN students s ON fp.student_id = s.student_id ORDER BY fp.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $recent_payments[] = $row; } } catch (Exception $e) {}
+try { if ($staff) { $r = $staff->query("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id ORDER BY fp.created_at DESC LIMIT 50"); if ($r) while ($row = $r->fetch_assoc()) $recent_payments[] = $row; } } catch (Exception $e) {}
 
 $pageTitle = 'Bursar - Payment Processing';
 ?><!DOCTYPE html>

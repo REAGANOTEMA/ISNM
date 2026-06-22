@@ -10,40 +10,20 @@ try { $conn2 = getDatabaseConnection('students'); } catch (Exception $e) { $conn
 $totalRooms = 0; $occupied = 0; $available = 0; $maintenance = 0;
 $rooms = [];
 
-if ($conn) {
-    $t = $conn->query("SELECT COUNT(*) c FROM hostel_rooms");
-    if ($t === false && $conn2) {
-        $c = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms");
-        if ($c) $totalRooms = (int)$c->fetch_assoc()['c'];
-        $o = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Occupied'");
-        if ($o) $occupied = (int)$o->fetch_assoc()['c'];
-        $a = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Available'");
-        if ($a) $available = (int)$a->fetch_assoc()['c'];
-        $m = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Under Maintenance'");
-        if ($m) $maintenance = (int)$m->fetch_assoc()['c'];
-        $r = $conn2->query("SELECT r.room_number, COALESCE(h.name,r.hostel_name) hostel_name, r.capacity, r.occupants, r.status FROM hostel_rooms r LEFT JOIN hostel h ON r.hostel_id=h.id ORDER BY r.room_number");
-        if ($r) while ($row = $r->fetch_assoc()) $rooms[] = $row;
-    } else {
-        if ($t) $totalRooms = (int)$t->fetch_assoc()['c'];
-        $o = $conn->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Occupied'");
-        if ($o) $occupied = (int)$o->fetch_assoc()['c'];
-        $a = $conn->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Available'");
-        if ($a) $available = (int)$a->fetch_assoc()['c'];
-        $m = $conn->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Under Maintenance'");
-        if ($m) $maintenance = (int)$m->fetch_assoc()['c'];
-        $r = $conn->query("SELECT r.room_number, COALESCE(h.name,r.hostel_name) hostel_name, r.capacity, r.occupants, r.status FROM hostel_rooms r LEFT JOIN hostel h ON r.hostel_id=h.id ORDER BY r.room_number");
-        if ($r) while ($row = $r->fetch_assoc()) $rooms[] = $row;
-    }
-} elseif ($conn2) {
-    $t = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms");
+// hostel_rooms and hostel are in students_db — use $conn2 when available
+$hdb = $conn2 ?: $conn;
+$hprefix = ($hdb === $conn && !$conn2) ? 'igangaschoolofl_students_db.' : '';
+
+if ($hdb) {
+    $t = $hdb->query("SELECT COUNT(*) c FROM {$hprefix}hostel_rooms");
     if ($t) $totalRooms = (int)$t->fetch_assoc()['c'];
-    $o = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Occupied'");
+    $o = $hdb->query("SELECT COUNT(*) c FROM {$hprefix}hostel_rooms WHERE status='Occupied'");
     if ($o) $occupied = (int)$o->fetch_assoc()['c'];
-    $a = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Available'");
+    $a = $hdb->query("SELECT COUNT(*) c FROM {$hprefix}hostel_rooms WHERE status='Available'");
     if ($a) $available = (int)$a->fetch_assoc()['c'];
-    $m = $conn2->query("SELECT COUNT(*) c FROM hostel_rooms WHERE status='Under Maintenance'");
+    $m = $hdb->query("SELECT COUNT(*) c FROM {$hprefix}hostel_rooms WHERE status='Under Maintenance'");
     if ($m) $maintenance = (int)$m->fetch_assoc()['c'];
-    $r = $conn2->query("SELECT r.room_number, COALESCE(h.name,r.hostel_name) hostel_name, r.capacity, r.occupants, r.status FROM hostel_rooms r LEFT JOIN hostel h ON r.hostel_id=h.id ORDER BY r.room_number");
+    $r = $hdb->query("SELECT r.room_number, COALESCE(h.name,r.hostel_name) hostel_name, r.capacity, r.occupants, r.status FROM {$hprefix}hostel_rooms r LEFT JOIN {$hprefix}hostel h ON r.hostel_id=h.id ORDER BY r.room_number");
     if ($r) while ($row = $r->fetch_assoc()) $rooms[] = $row;
 }
 ?>
