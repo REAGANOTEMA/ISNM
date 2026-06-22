@@ -178,23 +178,22 @@ if ($ajax === 'search_students') {
     $offset = ($page - 1) * $limit;
 
     $where = [];
-    $esc = function($v) use ($students_conn) { return $students_conn->real_escape_string($v); };
 
     if ($q !== '') {
-        $sq = $esc($q);
+        $sq = $students_conn->real_escape_string($q);
         $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE '%$sq%' OR CONCAT_WS(' ',first_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR registration_number LIKE '%$sq%' OR index_number LIKE '%$sq%' OR national_student_id_number LIKE '%$sq%' OR phone LIKE '%$sq%' OR mobile_number LIKE '%$sq%' OR email LIKE '%$sq%')";
     }
     if ($program !== '') {
-        $where[] = "program LIKE '%" . $esc($program) . "%'";
+        $where[] = "program LIKE '%" . $students_conn->real_escape_string($program) . "%'";
     }
     if ($intake !== '') {
-        $where[] = "intake_period LIKE '%" . $esc($intake) . "%'";
+        $where[] = "intake_period LIKE '%" . $students_conn->real_escape_string($intake) . "%'";
     }
     if ($status !== '') {
-        $where[] = "status = '" . $esc($status) . "'";
+        $where[] = "status = '" . $students_conn->real_escape_string($status) . "'";
     }
     if ($year !== '') {
-        $where[] = "intake_year = '" . $esc($year) . "'";
+        $where[] = "intake_year = '" . $students_conn->real_escape_string($year) . "'";
     }
 
     // If no filters, show ALL students paginated
@@ -204,19 +203,43 @@ if ($ajax === 'search_students') {
     $total = ($countResult && $countResult->num_rows) ? (int)$countResult->fetch_assoc()['total'] : 0;
     $totalPages = max(1, ceil($total / $limit));
 
-    $students = [];
-    // Pre-calc total active requirements
+    // Get requirement totals from staff DB (separate connection)
     $reqTotal = 0;
     $rq = $conn->query("SELECT COUNT(*)c FROM admission_requirements WHERE is_active=1");
     if ($rq) $reqTotal = (int)$rq->fetch_assoc()['c'];
     $reqTotal = max($reqTotal, 1);
 
-    $r = $students_conn->query("SELECT s.id,s.student_number,s.registration_number,s.national_student_id_number,s.first_name,s.other_name,s.surname,s.full_name,s.phone,s.mobile_number,s.email,s.program,s.intake_period,s.intake_year,s.status,s.gender,s.profile_picture,
-        (SELECT COUNT(*) FROM staffs_db.applicant_requirement_status ars JOIN staffs_db.applicants a2 ON ars.applicant_id=a2.id WHERE (a2.application_number LIKE CONCAT('%',s.student_number,'%') OR a2.full_name LIKE CONCAT('%',s.surname,'%')) AND ars.status='Verified') AS req_done
-        FROM students s $whereSql ORDER BY s.surname,s.first_name LIMIT $limit OFFSET $offset");
+    // Simple student query — NO cross-database subquery
+    $students = [];
+    $r = $students_conn->query("SELECT id,student_number,registration_number,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_period,intake_year,status,gender,profile_picture FROM students $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
     if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
 
-        echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages, 'reqTotal' => $reqTotal]);
+    // For each student, count verified requirements via staff DB
+    $studentIds = array_column($students, 'id');
+    $reqDoneMap = [];
+    if (!empty($studentIds) && $conn) {
+        // Build a mapping of student_number -> id from our result set
+        $snMap = [];
+        foreach ($students as $st) {
+            if (!empty($st['student_number'])) {
+                $snMap[] = "'" . $conn->real_escape_string($st['student_number']) . "'";
+            }
+        }
+        if (!empty($snMap)) {
+            $snList = implode(',', $snMap);
+            $rr = $conn->query("SELECT a.application_number, COUNT(*) done FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id WHERE ars.status='Verified' AND a.application_number IN ($snList) GROUP BY a.application_number");
+            if ($rr) while ($rw = $rr->fetch_assoc()) {
+                $reqDoneMap[$rw['application_number']] = (int)$rw['done'];
+            }
+        }
+        // Attach req_done to each student
+        foreach ($students as &$st) {
+            $st['req_done'] = $reqDoneMap[$st['student_number']] ?? 0;
+        }
+        unset($st);
+    }
+
+    echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages, 'reqTotal' => $reqTotal]);
     exit;
 }
 
@@ -578,6 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
         $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
         $dob = $_POST['date_of_birth'] ?? null;
+        $gender = $conn->real_escape_string(trim($_POST['gender'] ?? ''));
         $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? 'January'));
         $intakeYear = intval($_POST['intake_year'] ?? date('Y'));
         $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
@@ -586,7 +610,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($fname && $lname && $studentNo && $students_conn) {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
+            $dobVal = $dob ? "'$dob'" : "NULL";
+            $genderVal = $gender ? "'$gender'" : "'Other'";
+            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, date_of_birth, gender, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', $dobVal, $genderVal, '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
             if ($students_conn->affected_rows > 0) {
                 $newSid = $students_conn->insert_id;
                 logAdmission($conn, $user_id, 'Create Student', 'students', $newSid, "Created student: $fullName ($studentNo)");
@@ -612,6 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
         $status = $conn->real_escape_string(trim($_POST['status'] ?? 'Active'));
         $dob = $_POST['date_of_birth'] ?? null;
+        $gender = $conn->real_escape_string(trim($_POST['gender'] ?? ''));
         $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? ''));
         $intakeYear = intval($_POST['intake_year'] ?? 0);
         $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
@@ -620,7 +647,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($sid && $fname && $lname && $students_conn) {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', intake_period='$intakePeriod', intake_year=$intakeYear, date_of_birth='$dob', guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
+            $dobVal = $dob ? "'$dob'" : "NULL";
+            $genderVal = $gender ? "'$gender'" : "'Other'";
+            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', date_of_birth=$dobVal, gender=$genderVal, intake_period='$intakePeriod', intake_year=$intakeYear, guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
             logAdmission($conn, $user_id, 'Edit Student', 'students', $sid, "Edited student #$sid ($fullName)");
             $_SESSION['success'] = "Student updated.";
         }
@@ -1223,6 +1252,7 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 <div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" class="form-control form-control-sm" required></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Gender</label><select name="gender" class="form-select form-select-sm"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" class="form-control form-control-sm"></div>
 <div class="col-12"><h6 class="fw-semibold mt-2" style="color:#059669"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
@@ -1280,6 +1310,7 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 <div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" id="emn" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" id="esn" class="form-control form-control-sm" required></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="edob" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Gender</label><select name="gender" id="egender" class="form-select form-select-sm"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" id="eph" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" id="eem" class="form-control form-control-sm"></div>
 <div class="col-12"><h6 class="fw-semibold mt-2" style="color:#0284c7"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
@@ -2024,6 +2055,7 @@ function openStudentEdit(){
     document.getElementById('emn').value = s.other_name || '';
     document.getElementById('esn').value = s.surname || '';
     document.getElementById('edob').value = s.date_of_birth || '';
+    document.getElementById('egender').value = s.gender || '';
     document.getElementById('eph').value = s.phone || '';
     document.getElementById('eem').value = s.email || '';
     document.getElementById('estuno').value = s.student_number || '';
