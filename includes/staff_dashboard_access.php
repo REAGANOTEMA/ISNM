@@ -36,6 +36,32 @@ if (!function_exists('bootstrapStaffDashboard')) {
 
         $role = $_SESSION['role'] ?? '';
 
+        // Refresh role from database if session is stale (handles role reassignments)
+        if (!empty($_SESSION['user_id'])) {
+            static $roleRefreshed = false;
+            if (!$roleRefreshed) {
+                $roleRefreshed = true;
+                try {
+                    $sc = getStaffConnection();
+                    if ($sc) {
+                        $rs = $sc->prepare("SELECT sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE s.id=? LIMIT 1");
+                        if ($rs) {
+                            $uid = (int)$_SESSION['user_id'];
+                            $rs->bind_param('i', $uid);
+                            $rs->execute();
+                            $rw = $rs->get_result()->fetch_assoc();
+                            $rs->close();
+                            if ($rw && !empty($rw['role_name']) && $rw['role_name'] !== $role) {
+                                $_SESSION['role'] = $rw['role_name'];
+                                $role = $rw['role_name'];
+                            }
+                        }
+                        $sc->close();
+                    }
+                } catch (Exception $e) {}
+            }
+        }
+
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {
             $allowed = false;
             foreach ($roleKeywords as $keyword) {

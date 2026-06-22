@@ -45,6 +45,20 @@ $intake_stats = []; $r=$conn->query("SELECT intake,COUNT(*)c FROM applicants WHE
 $clearance_levels = ['Not Submitted'=>0,'Submitted'=>0,'Verified'=>0,'Rejected'=>0,'Missing'=>0];
 $r=$conn->query("SELECT status,COUNT(*)c FROM applicant_requirement_status GROUP BY status"); if($r) while($row=$r->fetch_assoc()) $clearance_levels[$row['status']] = intval($row['c']);
 
+// Program clearance stats
+$program_clearance = [];
+$r = $conn->query("SELECT COALESCE(p.program_name,'Unassigned') program,
+    COUNT(DISTINCT a.id) total,
+    SUM(CASE WHEN a.status='Registered' THEN 1 ELSE 0 END) cleared,
+    SUM(CASE WHEN a.status='Approved' THEN 1 ELSE 0 END) approved,
+    SUM(CASE WHEN a.status='Rejected' THEN 1 ELSE 0 END) rejected
+    FROM applicants a LEFT JOIN academic_programs p ON a.program_id=p.id
+    GROUP BY p.program_name ORDER BY total DESC");
+if ($r) while($row=$r->fetch_assoc()) $program_clearance[] = $row;
+
+// Total requirement items count for progress calculation
+$total_req_cols = $total_req_items > 0 ? $total_req_items : 1;
+
 // Reports
 $report = $_GET['report'] ?? '';
 if ($report) {
@@ -147,6 +161,247 @@ if ($ajax === 'mark_all_submitted') {
     }
     echo json_encode(['success'=>false]); exit;
 }
+// New: Student search AJAX (students_db)
+if ($ajax === 'search_students') {
+    header('Content-Type: application/json');
+    if (!$students_conn) {
+        echo json_encode(['error' => 'Students DB not connected', 'students' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
+        exit;
+    }
+    $q = trim($_GET['q'] ?? '');
+    $program = trim($_GET['program'] ?? '');
+    $intake = trim($_GET['intake'] ?? '');
+    $status = trim($_GET['status'] ?? '');
+    $year = trim($_GET['year'] ?? '');
+    $page = max(1, intval($_GET['page'] ?? 1));
+    $limit = 20;
+    $offset = ($page - 1) * $limit;
+
+    $where = [];
+    $esc = function($v) use ($students_conn) { return $students_conn->real_escape_string($v); };
+
+    if ($q !== '') {
+        $sq = $esc($q);
+        $where[] = "(CONCAT_WS(' ',first_name,middle_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR admission_number LIKE '%$sq%' OR phone LIKE '%$sq%' OR email LIKE '%$sq%')";
+    }
+    if ($program !== '') {
+        $where[] = "program LIKE '%" . $esc($program) . "%'";
+    }
+    if ($intake !== '') {
+        $where[] = "intake_period LIKE '%" . $esc($intake) . "%'";
+    }
+    if ($status !== '') {
+        $where[] = "status = '" . $esc($status) . "'";
+    }
+    if ($year !== '') {
+        $where[] = "intake_year = '" . $esc($year) . "'";
+    }
+
+    // If no filters, show ALL students paginated
+    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    $countResult = $students_conn->query("SELECT COUNT(*) total FROM students $whereSql");
+    $total = ($countResult && $countResult->num_rows) ? (int)$countResult->fetch_assoc()['total'] : 0;
+    $totalPages = max(1, ceil($total / $limit));
+
+    $students = [];
+    $r = $students_conn->query("SELECT id,student_number,first_name,middle_name,surname,phone,email,program,intake_period,intake_year,status FROM students $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
+    if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
+
+    echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages]);
+    exit;
+}
+
+// New: Get student full profile
+if ($ajax === 'get_student_profile') {
+    header('Content-Type: application/json');
+    $sid = intval($_GET['student_id'] ?? 0);
+    if (!$sid || !$students_conn) { echo json_encode(['error' => 'Invalid']); exit; }
+
+    $info = [];
+    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid LIMIT 1");
+    if ($r) $info = $r->fetch_assoc() ?: [];
+    if (empty($info)) { echo json_encode(['error' => 'Student not found']); exit; }
+
+    // ---- Match student to applicant record ----
+    $aid = 0;
+    $applicant = [];
+    $studentNo = $conn->real_escape_string($info['student_number'] ?? '');
+    $fullName  = $conn->real_escape_string(trim(($info['first_name'] ?? '') . ' ' . ($info['surname'] ?? '')));
+
+    // Try exact student number match first, then full name
+    $arQuery = '';
+    if ($studentNo) {
+        $arQuery = "SELECT * FROM applicants WHERE application_number LIKE '%$studentNo%' LIMIT 1";
+    }
+    if (!$arQuery || !($ar = $conn->query($arQuery)) || !$ar->num_rows) {
+        $arQuery = "SELECT * FROM applicants WHERE full_name LIKE '%$fullName%' LIMIT 1";
+        $ar = $conn->query($arQuery);
+    }
+    if ($ar && $ar->num_rows) {
+        $applicant = $ar->fetch_assoc();
+        $aid = (int)$applicant['id'];
+    }
+
+    // ---- Requirements (if applicant exists or we need to show available reqs) ----
+    $reqs = [];
+    $rr = $conn->query("SELECT adr.id requirement_id, adr.requirement_name, adr.display_order, ars.status, ars.verified_by, ars.remarks, ars.submitted_at, ars.verified_at
+        FROM admission_requirements adr
+        LEFT JOIN applicant_requirement_status ars ON ars.requirement_id = adr.id AND ars.applicant_id = $aid
+        WHERE adr.is_active=1 ORDER BY adr.display_order");
+    if ($rr) while ($row = $rr->fetch_assoc()) {
+        $row['status'] = $row['status'] ?? 'Not Submitted';
+        $reqs[] = $row;
+    }
+
+    // ---- Documents (linked to applicant) ----
+    $docs = [];
+    $dr = $conn->query("SELECT sd.*, s.full_name uploader_name FROM student_documents sd LEFT JOIN staff s ON sd.uploaded_by=s.id WHERE sd.applicant_id=$aid ORDER BY sd.uploaded_at DESC");
+    if ($dr) while ($row = $dr->fetch_assoc()) $docs[] = $row;
+
+    // ---- Activity ----
+    $activity = [];
+    $ar2 = $conn->query("SELECT al.*, s.full_name performer_name FROM admission_activity_logs al LEFT JOIN staff s ON al.user_id=s.id WHERE al.record_id=$aid OR (al.module='students' AND al.record_id=$sid) ORDER BY al.created_at DESC LIMIT 20");
+    if ($ar2) while ($row = $ar2->fetch_assoc()) $activity[] = $row;
+
+    echo json_encode([
+        'info'         => $info,
+        'applicant'    => $applicant,
+        'applicant_id' => $aid,
+        'requirements' => $reqs,
+        'documents'    => $docs,
+        'activity'     => $activity
+    ]);
+    exit;
+}
+
+// New: Document upload
+if ($ajax === 'upload_document') {
+    header('Content-Type: application/json');
+    $aid = intval($_POST['applicant_id'] ?? 0);
+    $docType = trim($_POST['document_type'] ?? 'Other');
+    $docTitle = trim($_POST['document_title'] ?? '');
+
+    if (!$aid || empty($_FILES['doc_file']['name'])) {
+        echo json_encode(['success' => false, 'error' => 'Missing data']); exit;
+    }
+
+    $uploadDir = __DIR__ . '/../uploads/admissions/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+    $ext = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
+    $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx'];
+    if (!in_array($ext, $allowed)) {
+        echo json_encode(['success' => false, 'error' => 'File type not allowed']); exit;
+    }
+
+    $fname = 'doc_' . $aid . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $fpath = 'uploads/admissions/' . $fname;
+
+    if (move_uploaded_file($_FILES['doc_file']['tmp_name'], __DIR__ . '/../' . $fpath)) {
+        $stmt = $conn->prepare("INSERT INTO student_documents (applicant_id, document_type, document_title, file_name, file_path, file_size, mime_type, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $fn = $fname;
+            $fs = $_FILES['doc_file']['size'];
+            $mt = $_FILES['doc_file']['type'] ?? '';
+            $stmt->bind_param('issssssi', $aid, $docType, $docTitle, $fn, $fpath, $fs, $mt, $user_id);
+            $stmt->execute();
+            $stmt->close();
+            logAdmission($conn, $user_id, 'Upload Document', 'documents', $aid, "Document $docTitle uploaded for applicant #$aid");
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'DB error']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Upload failed']);
+    }
+    exit;
+}
+
+// New: Verify/reject document
+if ($ajax === 'verify_document') {
+    header('Content-Type: application/json');
+    $docId = intval($_POST['doc_id'] ?? 0);
+    $newStatus = $_POST['status'] ?? '';
+    $remarks = $conn->real_escape_string(trim($_POST['remarks'] ?? ''));
+
+    if (!$docId || !in_array($newStatus, ['Verified', 'Rejected'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid']); exit;
+    }
+
+    $conn->query("UPDATE student_documents SET verification_status='$newStatus', verified_by=$user_id, verified_at=NOW(), remarks='$remarks' WHERE id=$docId");
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// New: Import students from Excel
+if ($ajax === 'import_excel') {
+    header('Content-Type: application/json');
+    if (empty($_FILES['import_file']['name'])) {
+        echo json_encode(['success' => false, 'error' => 'No file uploaded']); exit;
+    }
+    $tmp = $_FILES['import_file']['tmp_name'];
+    $ext = strtolower(pathinfo($_FILES['import_file']['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, ['xlsx', 'csv'])) {
+        echo json_encode(['success' => false, 'error' => 'Only .xlsx and .csv files allowed']); exit;
+    }
+
+    require_once __DIR__ . '/../includes/simple_xlsx_reader.php';
+
+    try {
+        if ($ext === 'csv') {
+            $rows = [];
+            if (($handle = fopen($tmp, "r")) !== false) {
+                $headers = fgetcsv($handle);
+                while (($data = fgetcsv($handle)) !== false) {
+                    $row = [];
+                    foreach ($headers as $i => $h) $row[$h] = $data[$i] ?? '';
+                    $rows[] = $row;
+                }
+                fclose($handle);
+            }
+        } else {
+            $reader = new SimpleXLSXReader($tmp);
+            $rows = $reader->getRows();
+        }
+
+        $imported = 0;
+        $duplicates = 0;
+        $errors = [];
+
+        foreach ($rows as $row) {
+            $fname = trim($row['First Name'] ?? $row['first_name'] ?? $row['FIRST NAME'] ?? '');
+            $lname = trim($row['Last Name'] ?? $row['surname'] ?? $row['SURNAME'] ?? $row['Last Name'] ?? '');
+            $mname = trim($row['Middle Name'] ?? $row['middle_name'] ?? $row['MIDDLE NAME'] ?? '');
+            $studentNo = trim($row['Student No'] ?? $row['student_number'] ?? $row['STUDENT NO'] ?? $row['Student Number'] ?? '');
+            $program = trim($row['Program'] ?? $row['program'] ?? $row['PROGRAM'] ?? '');
+            $phone = trim($row['Phone'] ?? $row['phone'] ?? $row['PHONE'] ?? $row['Telephone'] ?? '');
+            $email = trim($row['Email'] ?? $row['email'] ?? $row['EMAIL'] ?? '');
+
+            if (empty($fname) || empty($lname)) continue;
+
+            // Check duplicate
+            $check = $students_conn->query("SELECT id FROM students WHERE student_number='$studentNo' LIMIT 1");
+            if ($check && $check->num_rows > 0) { $duplicates++; continue; }
+
+            $fullName = trim($fname . ' ' . ($mname ? $mname . ' ' : '') . $lname);
+            $students_conn->query("INSERT INTO students (student_number, first_name, middle_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
+            if ($students_conn->affected_rows > 0) $imported++;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'imported' => $imported,
+            'duplicates' => $duplicates,
+            'total' => count($rows),
+            'errors' => $errors
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($ajax === 'reset_requirements') {
     header('Content-Type: application/json');
     $aid = intval($_POST['applicant_id'] ?? 0);
@@ -243,6 +498,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: director-admissions.php"); exit;
     }
 
+    // New: Create student (separate from applicant)
+    if ($action === 'create_student') {
+        $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
+        $mname = $conn->real_escape_string(trim($_POST['middle_name'] ?? ''));
+        $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
+        $studentNo = $conn->real_escape_string(trim($_POST['student_number'] ?? ''));
+        $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
+        $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
+        $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
+        $dob = $_POST['date_of_birth'] ?? null;
+        $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? 'January'));
+        $intakeYear = intval($_POST['intake_year'] ?? date('Y'));
+        $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
+        $guardianPhone = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
+        $guardianRel = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
+
+        if ($fname && $lname && $studentNo && $students_conn) {
+            $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
+            $students_conn->query("INSERT INTO students (student_number, first_name, middle_name, surname, full_name, phone, email, program, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
+            if ($students_conn->affected_rows > 0) {
+                $newSid = $students_conn->insert_id;
+                logAdmission($conn, $user_id, 'Create Student', 'students', $newSid, "Created student: $fullName ($studentNo)");
+                // Notify admissions staff
+                if (function_exists('createNotification')) {
+                    $nid = createNotification("New Student: $fullName", "Student $studentNo has been registered", 'director-admissions.php', 'success', 'fas fa-user-graduate');
+                    if ($nid && function_exists('notifyRoleUsers')) notifyRoleUsers($nid, ['admissions', 'director']);
+                }
+                $_SESSION['success'] = "Student $fullName ($studentNo) created successfully.";
+            } else { $_SESSION['error'] = 'Failed: ' . $students_conn->error; }
+        } else { $_SESSION['error'] = 'First name, surname, and student number required.'; }
+        header("Location: director-admissions.php"); exit;
+    }
+
+    // New: Edit student
+    if ($action === 'edit_student') {
+        $sid = intval($_POST['student_id'] ?? 0);
+        $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
+        $mname = $conn->real_escape_string(trim($_POST['middle_name'] ?? ''));
+        $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
+        $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
+        $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
+        $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
+        $status = $conn->real_escape_string(trim($_POST['status'] ?? 'Active'));
+        $dob = $_POST['date_of_birth'] ?? null;
+        $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? ''));
+        $intakeYear = intval($_POST['intake_year'] ?? 0);
+        $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
+        $guardianPhone = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
+        $guardianRel = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
+
+        if ($sid && $fname && $lname && $students_conn) {
+            $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
+            $students_conn->query("UPDATE students SET first_name='$fname', middle_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', intake_period='$intakePeriod', intake_year=$intakeYear, date_of_birth='$dob', guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
+            logAdmission($conn, $user_id, 'Edit Student', 'students', $sid, "Edited student #$sid ($fullName)");
+            $_SESSION['success'] = "Student updated.";
+        }
+        header("Location: director-admissions.php"); exit;
+    }
+
     if ($action === 'delete_applicant') {
         $aid = intval($_POST['applicant_id'] ?? 0);
         if ($aid) {
@@ -326,6 +640,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .stat-icon{width:32px;height:32px;font-size:0.9rem}
   .stat-content h3{font-size:1rem}
 }
+
+/* Responsive cards */
+@media(max-width:576px){
+  .sec-card{padding:12px 10px}
+  .modal-dialog{margin:0.5rem}
+  .student-avatar{width:36px;height:36px;font-size:0.9rem !important}
+  .upload-zone{padding:20px 12px !important}
+  .upload-zone i.fa-3x{font-size:2rem !important}
+}
 </style>
 </head>
 <body>
@@ -358,6 +681,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <a href="#" data-sec="requirements"><i class="fas fa-clipboard-check"></i>Requirements</a>
 <a href="#" data-sec="clearance"><i class="fas fa-check-double"></i>Clearance</a>
 <a href="#" data-sec="reports"><i class="fas fa-chart-bar"></i>Reports</a>
+<a href="#" data-sec="student-search"><i class="fas fa-search"></i>Students</a>
+<a href="#" data-sec="import"><i class="fas fa-upload"></i>Import</a>
 </div>
 
 <!-- ═══ OVERVIEW ═══ -->
@@ -556,9 +881,59 @@ if ($rpn && $rpn->num_rows) $prog_name = $rpn->fetch_assoc()['program_name'];
 
 <!-- ═══ CLEARANCE ═══ -->
 <section id="sec-clearance" class="cs">
+<!-- Summary Cards -->
+<div class="stats-grid mb-3">
+<div class="stat-card"><div class="stat-icon" style="background:#059669"><i class="fas fa-check-double"></i></div><div class="stat-content"><h3><?= $clearance_levels['Verified'] ?></h3><p>Verified Items</p></div></div>
+<div class="stat-card"><div class="stat-icon" style="background:#f59e0b"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $clearance_levels['Submitted'] ?></h3><p>Pending Review</p></div></div>
+<div class="stat-card"><div class="stat-icon" style="background:#dc2626"><i class="fas fa-times-circle"></i></div><div class="stat-content"><h3><?= $clearance_levels['Rejected'] + $clearance_levels['Missing'] ?></h3><p>Issues</p></div></div>
+<div class="stat-card"><div class="stat-icon" style="background:#8b5cf6"><i class="fas fa-user-check"></i></div><div class="stat-content"><h3><?= $cleared_count ?></h3><p>Fully Cleared</p></div></div>
+</div>
+
+<div class="row g-3">
+<!-- Program Clearance Chart -->
+<div class="col-md-5">
 <div class="sec-card">
-<h2><i class="fas fa-check-double" style="color:#059669"></i>Requirement Clearance</h2>
-<p class="text-muted small mb-3">Overview of requirement completion per item.</p>
+<h2><i class="fas fa-chart-pie" style="color:var(--adm-prim)"></i>Clearance by Program</h2>
+<?php if (!empty($program_clearance)): ?>
+<canvas id="programClearanceChart" height="200"></canvas>
+<?php else: ?>
+<div class="empty-state"><i class="fas fa-chart-pie"></i><p>No program data yet.</p></div>
+<?php endif; ?>
+</div>
+</div>
+
+<!-- Program Table -->
+<div class="col-md-7">
+<div class="sec-card">
+<h2><i class="fas fa-building" style="color:#0284c7"></i>Program Breakdown</h2>
+<div class="table-responsive" style="max-height:320px;overflow-y:auto">
+<table class="table table-sm">
+<thead><tr><th>Program</th><th>Total</th><th>Cleared</th><th>Approved</th><th>Rejected</th><th>Rate</th></tr></thead>
+<tbody>
+<?php foreach($program_clearance as $pc):
+$rate = $pc['total'] > 0 ? round(($pc['cleared']/$pc['total'])*100) : 0;
+$rbar = $rate>=80?'bg-success':($rate>=50?'bg-warning':'bg-danger');
+?>
+<tr>
+<td><?= htmlspecialchars($pc['program']) ?></td>
+<td><?= $pc['total'] ?></td>
+<td><strong><?= $pc['cleared'] ?></strong></td>
+<td><?= $pc['approved'] ?></td>
+<td><?= $pc['rejected'] ?></td>
+<td><div class="progress" style="height:14px"><div class="progress-bar <?= $rbar ?>" style="width:<?= $rate ?>%"><?= $rate ?>%</div></div></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Requirement Detail -->
+<div class="sec-card mt-3">
+<h2><i class="fas fa-list-check" style="color:#059669"></i>Requirement Detail</h2>
+<p class="text-muted small mb-3">Per-item breakdown across all applicants.</p>
 <div class="table-responsive">
 <table class="table table-sm">
 <thead><tr><th>#</th><th>Requirement</th><th>Not Submitted</th><th>Submitted</th><th>Verified</th><th>Rejected</th><th>Missing</th><th>Progress</th></tr></thead>
@@ -600,6 +975,88 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 <div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=clearance','_blank')"><i class="fas fa-clipboard-check fa-2x mb-2" style="color:#8b5cf6"></i><strong class="small">Clearance</strong></div></div>
 <div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=intake','_blank')"><i class="fas fa-calendar-alt fa-2x mb-2" style="color:#0284c7"></i><strong class="small">Intake</strong></div></div>
 </div>
+</div>
+</section>
+
+<!-- ═══ STUDENT SEARCH ═══ -->
+<section id="sec-student-search" class="cs">
+<div class="sec-card">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+<h2 style="margin:0"><i class="fas fa-search" style="color:var(--adm-prim)"></i>Student Search</h2>
+<button class="btn btn-sm btn-outline-primary" onclick="new bootstrap.Modal(document.getElementById('studentCreateModal')).show()"><i class="fas fa-plus me-1"></i>New Student</button>
+</div>
+
+<div class="search-filters mb-3">
+<div class="row g-2">
+<div class="col-md-4">
+<div class="input-group input-group-sm">
+<span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+<input type="text" id="stuSearch" class="form-control" placeholder="Search by name, admission number, phone, email..." autocomplete="off">
+</div>
+</div>
+<div class="col-md-2">
+<select id="stuProgram" class="form-select form-select-sm"><option value="">All Programs</option>
+<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
+</select>
+</div>
+<div class="col-md-2">
+<select id="stuIntake" class="form-select form-select-sm"><option value="">All Intakes</option>
+<option>January</option><option>July</option>
+</select>
+</div>
+<div class="col-md-2">
+<select id="stuStatus" class="form-select form-select-sm"><option value="">All Status</option>
+<option>Active</option><option>Suspended</option><option>Withdrawn</option><option>Graduated</option>
+</select>
+</div>
+<div class="col-md-2">
+<button class="btn btn-sm btn-primary w-100" onclick="searchStudents(1)"><i class="fas fa-search me-1"></i>Search</button>
+</div>
+</div>
+</div>
+
+<div id="stuResults">
+<div class="empty-state"><i class="fas fa-search"></i><p>Use the search fields above to find students in the directory.</p></div>
+</div>
+
+<div id="stuPagination" class="d-flex justify-content-center gap-1 mt-3" style="display:none"></div>
+</div>
+</section>
+
+<!-- ═══ IMPORT ═══ -->
+<section id="sec-import" class="cs">
+<div class="sec-card">
+<h2 style="margin-bottom:16px"><i class="fas fa-upload" style="color:var(--adm-prim)"></i>Import Students</h2>
+<p class="small text-muted mb-3">Upload an Excel (.xlsx) or CSV file containing student records. The system will automatically match and import new students, skipping duplicates.</p>
+
+<form id="importForm" enctype="multipart/form-data" onsubmit="return importExcel(event)">
+<div class="row g-3">
+<div class="col-md-6">
+<div class="upload-zone" id="importDropZone" style="border:2px dashed var(--adm-border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s">
+<i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color:var(--adm-prim)"></i>
+<h6 class="fw-semibold">Drop Excel file here or click to browse</h6>
+<p class="small text-muted mb-0">Supports .xlsx and .csv files</p>
+<input type="file" name="import_file" id="importFileInput" accept=".xlsx,.csv" style="display:none" onchange="document.getElementById('importFileName').textContent = this.files[0]?.name || 'No file selected'">
+</div>
+<div class="mt-2"><small id="importFileName" class="text-muted">No file selected</small></div>
+</div>
+<div class="col-md-6">
+<div class="card bg-light border-0 p-3">
+<h6 class="fw-semibold"><i class="fas fa-info-circle me-1"></i>Expected Columns</h6>
+<small class="text-muted">First Name, Last Name, Middle Name, Student No, Program, Phone, Email</small>
+<hr class="my-2">
+<h6 class="fw-semibold"><i class="fas fa-cog me-1"></i>Options</h6>
+<div class="form-check mb-1">
+<input class="form-check-input" type="checkbox" id="importSkipDupes" checked>
+<label class="form-check-label small">Skip duplicate student numbers</label>
+</div>
+<button type="submit" class="btn btn-primary mt-2" id="importBtn"><i class="fas fa-upload me-1"></i>Import Students</button>
+</div>
+</div>
+</div>
+</form>
+
+<div id="importResults" style="display:none" class="mt-3"></div>
 </div>
 </section>
 
@@ -662,6 +1119,108 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 </div>
 </div>
 
+<!-- Student Create Modal -->
+<div class="modal fade" id="studentCreateModal" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<form method="POST" class="modal-content" id="studentCreateForm">
+<input type="hidden" name="action" value="create_student">
+<div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">
+<h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Register New Student</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="row g-3">
+<div class="col-12"><h6 class="fw-semibold" style="color:#059669"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" class="form-control form-control-sm" required></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="middle_name" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" class="form-control form-control-sm" required></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" class="form-control form-control-sm"></div>
+<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#059669"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Student Number *</label><input type="text" name="student_number" class="form-control form-control-sm" required></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Program</label>
+<select name="program" class="form-select form-select-sm">
+<option value="">Select Program</option>
+<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
+</select></div>
+<div class="col-md-2"><label class="form-label small fw-medium">Intake</label><select name="intake_period" class="form-select form-select-sm"><option>January</option><option>July</option></select></div>
+<div class="col-md-2"><label class="form-label small fw-medium">Year</label><input type="number" name="intake_year" class="form-control form-control-sm" value="<?= date('Y') ?>"></div>
+<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#059669"><i class="fas fa-shield-alt me-1"></i>Guardian Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Guardian Name</label><input type="text" name="guardian_name" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Relationship</label><input type="text" name="guardian_relationship" class="form-control form-control-sm"></div>
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button type="submit" class="btn btn-sm" style="background:#059669;color:#fff"><i class="fas fa-save me-1"></i>Create Student</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Student Profile Modal -->
+<div class="modal fade" id="studentProfileModal" tabindex="-1">
+<div class="modal-dialog modal-xl">
+<div class="modal-content">
+<div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">
+<h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body p-0" id="studentProfileBody">
+<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x" style="color:#059669"></i><p class="mt-2 text-muted small">Loading student profile...</p></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Student Edit Modal -->
+<div class="modal fade" id="studentEditModal" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<form method="POST" class="modal-content" id="studentEditForm">
+<input type="hidden" name="action" value="edit_student">
+<input type="hidden" name="student_id" id="editStudentId" value="">
+<div class="modal-header" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff">
+<h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Student</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="row g-3">
+<div class="col-12"><h6 class="fw-semibold" style="color:#0284c7"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" id="efn" class="form-control form-control-sm" required></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="middle_name" id="emn" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" id="esn" class="form-control form-control-sm" required></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="edob" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" id="eph" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" id="eem" class="form-control form-control-sm"></div>
+<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#0284c7"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Student Number</label><input type="text" name="student_number" id="estuno" class="form-control form-control-sm" readonly style="background:#f8fafc"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Program</label>
+<select name="program" id="eprog" class="form-select form-select-sm">
+<option value="">Select Program</option>
+<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
+</select></div>
+<div class="col-md-2"><label class="form-label small fw-medium">Intake</label><select name="intake_period" id="eintake" class="form-select form-select-sm"><option>January</option><option>July</option></select></div>
+<div class="col-md-2"><label class="form-label small fw-medium">Year</label><input type="number" name="intake_year" id="eintakeyr" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Status</label>
+<select name="status" id="estatus" class="form-select form-select-sm">
+<option>Active</option><option>Suspended</option><option>Withdrawn</option><option>Graduated</option>
+</select></div>
+<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#0284c7"><i class="fas fa-shield-alt me-1"></i>Guardian Details</h6></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Guardian Name</label><input type="text" name="guardian_name" id="egn" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Guardian Phone</label><input type="text" name="guardian_phone" id="egp" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Relationship</label><input type="text" name="guardian_relationship" id="egr" class="form-control form-control-sm"></div>
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button type="submit" class="btn btn-sm" style="background:#0284c7;color:#fff"><i class="fas fa-save me-1"></i>Save Changes</button>
+</div>
+</form>
+</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 // ── Prevent unhandled promise rejections ──
@@ -682,11 +1241,11 @@ navLinks.forEach(function(l){
 });
 (function(){
     var hash = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports'].indexOf(hash) !== -1) switchSec(hash);
+    if (['overview','applications','requirements','clearance','reports','student-search','import'].indexOf(hash) !== -1) switchSec(hash);
 })();
 window.addEventListener('hashchange', function(){
     var h = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports'].indexOf(h) !== -1) switchSec(h);
+    if (['overview','applications','requirements','clearance','reports','student-search','import'].indexOf(h) !== -1) switchSec(h);
 });
 
 // ── Charts ──
@@ -727,6 +1286,30 @@ new Chart(document.getElementById('clearanceChart'), {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}
+    }
+});
+<?php endif; ?>
+
+<?php if (!empty($program_clearance)): ?>
+new Chart(document.getElementById('programClearanceChart'), {
+    type: 'bar',
+    data: {
+        labels: [<?php foreach($program_clearance as $pc){ echo "'".htmlspecialchars($pc['program'])."',"; } ?>],
+        datasets: [
+            {label:'Cleared',data:[<?php foreach($program_clearance as $pc){ echo $pc['cleared'].","; } ?>],backgroundColor:'#059669',borderRadius:3,barThickness:16},
+            {label:'Approved',data:[<?php foreach($program_clearance as $pc){ echo $pc['approved'].","; } ?>],backgroundColor:'#f59e0b',borderRadius:3,barThickness:16},
+            {label:'Pending',data:[<?php foreach($program_clearance as $pc){ echo max(0,$pc['total']-$pc['cleared']-$pc['approved']-$pc['rejected']).","; } ?>],backgroundColor:'#94a3b8',borderRadius:3,barThickness:16},
+            {label:'Rejected',data:[<?php foreach($program_clearance as $pc){ echo $pc['rejected'].","; } ?>],backgroundColor:'#dc2626',borderRadius:3,barThickness:16}
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {legend:{position:'bottom',labels:{boxWidth:10,font:{size:9}}}},
+        scales: {
+            x:{stacked:true,grid:{display:false},ticks:{font:{size:9}}},
+            y:{stacked:true,beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{font:{size:9}}}
+        }
     }
 });
 <?php endif; ?>
@@ -1118,6 +1701,396 @@ function htmlEsc(s){
     if (typeof s !== 'string') return String(s || '');
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
+
+// ═══ STUDENT SEARCH ═══
+function searchStudents(page){
+    page = page || 1;
+    var q = document.getElementById('stuSearch').value.trim();
+    var program = document.getElementById('stuProgram').value;
+    var intake = document.getElementById('stuIntake').value;
+    var status = document.getElementById('stuStatus').value;
+    var url = '?ajax=search_students&q=' + encodeURIComponent(q) + '&program=' + encodeURIComponent(program) + '&intake=' + encodeURIComponent(intake) + '&status=' + encodeURIComponent(status) + '&page=' + page;
+    fetch(url).then(function(r){ return r.json(); }).then(function(d){
+        var container = document.getElementById('stuResults');
+        var pagination = document.getElementById('stuPagination');
+        if (d.error){
+            container.innerHTML = '<div class="empty-state" style="color:#dc2626"><i class="fas fa-exclamation-circle" style="color:#dc2626"></i><p>' + htmlEsc(d.error) + '</p></div>';
+            pagination.style.display = 'none';
+            return;
+        }
+        if (!d.students || d.students.length === 0){
+            var msg = (q || program || intake || status) ? 'No students found matching your criteria.' : 'No students in the directory yet. Add students using the Create or Import options.';
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-user-graduate"></i><p>' + msg + '</p></div>';
+            pagination.style.display = 'none';
+            return;
+        }
+        var html = '<div class="mb-2 small text-muted">Showing ' + d.students.length + ' of ' + d.total + ' students</div><div class="row g-3">';
+        d.students.forEach(function(s){
+            var fullName = [s.first_name, s.middle_name, s.surname].filter(Boolean).join(' ');
+            var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
+            html += '<div class="col-md-6 col-lg-4">' +
+                '<div class="card h-100" style="border:1px solid var(--adm-border);border-radius:10px;overflow:hidden;transition:all 0.15s">' +
+                '<div class="card-body p-3">' +
+                '<div class="d-flex align-items-center gap-3">' +
+                '<div class="student-avatar" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">' + initials + '</div>' +
+                '<div class="flex-grow-1 min-width-0">' +
+                '<h6 class="mb-0 text-truncate fw-semibold" style="font-size:0.9rem">' + htmlEsc(fullName) + '</h6>' +
+                '<div class="small text-muted">' + htmlEsc(s.student_number || '') + '</div>' +
+                '<div class="small text-muted">' + htmlEsc(s.program || '') + '</div>' +
+                '</div>' +
+                '<div><span class="badge bg-success student-status">' + htmlEsc(s.status) + '</span></div>' +
+                '</div>' +
+                '<div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid #f1f5f9">' +
+                '<small class="text-muted"><i class="fas fa-phone me-1"></i>' + htmlEsc(s.phone || '-') + ' <i class="fas fa-envelope ms-2"></i>' + htmlEsc(s.email || '') + '</small>' +
+                '<button class="btn btn-sm btn-outline-success py-0 px-2" onclick="viewStudentProfile(' + s.id + ')" style="font-size:0.75rem"><i class="fas fa-eye me-1"></i>Profile</button>' +
+                '</div>' +
+                '</div></div></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Pagination
+        if (d.totalPages > 1){
+            pagination.style.display = '';
+            var phtml = '<span class="small text-muted me-1">Page:</span>';
+            for (var i = 1; i <= d.totalPages; i++){
+                phtml += '<button class="btn btn-sm ' + (i === d.page ? 'btn-primary' : 'btn-outline-primary') + '" onclick="searchStudents(' + i + ')">' + i + '</button>';
+            }
+            pagination.innerHTML = phtml;
+        } else {
+            pagination.style.display = 'none';
+        }
+    }).catch(function(){
+        document.getElementById('stuResults').innerHTML = '<div class="empty-state" style="color:#dc2626"><i class="fas fa-exclamation-triangle" style="color:#dc2626"></i><p>Search failed — check that the students database is connected.</p></div>';
+    });
+}
+
+// Auto-load students when tab becomes active, and Enter key
+document.addEventListener('DOMContentLoaded', function(){
+    var inp = document.getElementById('stuSearch');
+    if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') searchStudents(1); });
+    // Auto-load on first visit to student-search
+    if (document.getElementById('sec-student-search')) searchStudents(1);
+    // Also reload when switching to the student-search section
+    var origSwitch = window.switchSec;
+    if (typeof origSwitch === 'function'){
+        window._origSwitchSec = origSwitch;
+        window.switchSec = function(sec){
+            window._origSwitchSec(sec);
+            if (sec === 'student-search') searchStudents(1);
+        };
+    }
+});
+
+// ═══ STUDENT PROFILE (full details + editable) ═══
+var _profileStudentData = null; // holds last-loaded student data for edit modal
+
+function viewStudentProfile(id){
+    var modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
+    modal.show();
+    fetch('?ajax=get_student_profile&student_id=' + id).then(function(r){ return r.json(); }).then(function(d){
+        var body = document.getElementById('studentProfileBody');
+        if (d.error || !d.info){
+            body.innerHTML = '<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Failed to load profile: ' + htmlEsc(d.error) + '</p></div>';
+            return;
+        }
+        _profileStudentData = d;
+        var s = d.info, a = d.applicant || {};
+        var fullName = [s.first_name, s.middle_name, s.surname].filter(Boolean).join(' ') || 'N/A';
+        var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
+
+        // ── Header ──
+        var hdrHtml =
+            '<div class="p-4" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">' +
+            '<div class="d-flex align-items-center gap-3 flex-wrap">' +
+            '<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.3rem;flex-shrink:0">' + initials + '</div>' +
+            '<div class="flex-grow-1">' +
+            '<h5 class="mb-0 fw-bold" style="color:#fff">' + htmlEsc(fullName) + '</h5>' +
+            '<div style="color:rgba(255,255,255,0.8);font-size:0.85rem"><strong>' + htmlEsc(s.student_number || '') + '</strong> &middot; ' + htmlEsc(s.program || '') + ' &middot; Intake: ' + htmlEsc(s.intake_period || '') + ' ' + htmlEsc(s.intake_year || '') + '</div></div>' +
+            '<div class="d-flex gap-2 align-items-center">' +
+            '<span class="badge bg-white text-success fs-6">' + htmlEsc(s.status) + '</span>' +
+            '<button class="btn btn-sm btn-light" onclick="openStudentEdit()" title="Edit Student"><i class="fas fa-edit"></i></button>' +
+            (d.applicant_id ? '<button class="btn btn-sm btn-light" onclick="viewApplicant(' + d.applicant_id + ')" title="View Applicant Record"><i class="fas fa-user"></i></button>' : '') +
+            '</div></div></div>';
+
+        // ── Info Tab (full detail, no outer row — container adds it) ──
+        var infoHtml =
+            '<div class="col-md-6"><div class="small text-muted">Student Number</div><div class="fw-medium">' + htmlEsc(s.student_number || '-') + '</div></div>' +
+            '<div class="col-md-6"><div class="small text-muted">Full Name</div><div class="fw-medium">' + htmlEsc(fullName) + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">First Name</div><div class="fw-medium">' + htmlEsc(s.first_name || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Middle Name</div><div class="fw-medium">' + htmlEsc(s.middle_name || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Surname</div><div class="fw-medium">' + htmlEsc(s.surname || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Date of Birth</div><div class="fw-medium">' + htmlEsc(s.date_of_birth || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Phone</div><div class="fw-medium">' + htmlEsc(s.phone || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Email</div><div class="fw-medium">' + htmlEsc(s.email || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Program</div><div class="fw-medium">' + htmlEsc(s.program || '-') + '</div></div>' +
+            '<div class="col-md-2"><div class="small text-muted">Intake Period</div><div class="fw-medium">' + htmlEsc(s.intake_period || '-') + '</div></div>' +
+            '<div class="col-md-2"><div class="small text-muted">Intake Year</div><div class="fw-medium">' + htmlEsc(s.intake_year || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Status</div><div><span class="badge bg-success">' + htmlEsc(s.status) + '</span></div></div>' +
+            '<div class="col-12"><hr class="my-1"><h6 class="fw-semibold" style="color:#059669"><i class="fas fa-shield-alt me-1"></i>Guardian</h6></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Guardian Name</div><div class="fw-medium">' + htmlEsc(s.guardian_name || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Guardian Phone</div><div class="fw-medium">' + htmlEsc(s.guardian_phone || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Relationship</div><div class="fw-medium">' + htmlEsc(s.guardian_relationship || '-') + '</div></div>' +
+            (d.applicant_id ?
+            '<div class="col-12"><hr class="my-1"><h6 class="fw-semibold" style="color:#7c3aed"><i class="fas fa-link me-1"></i>Linked Applicant #' + d.applicant_id + '</h6></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Applicant Name</div><div class="fw-medium">' + htmlEsc(a.full_name || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">App Number</div><div class="fw-medium">' + htmlEsc(a.application_number || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">App Status</div><div><span class="badge bg-info">' + htmlEsc(a.status || '-') + '</span></div></div>'
+            : '<div class="col-12"><hr class="my-1"><div class="alert alert-warning py-2 small mb-0"><i class="fas fa-exclamation-triangle me-1"></i>No applicant record linked for this student.</div></div>');
+
+        // ── Requirements Tab (actionable dropdowns) ──
+        var reqHtml = '';
+        if (d.requirements && d.requirements.length > 0 && d.applicant_id) {
+            reqHtml = '<div class="table-responsive"><table class="table table-sm mb-2"><thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead><tbody>';
+            d.requirements.forEach(function(r, i){
+                var opts = ['Not Submitted','Submitted','Verified','Rejected','Missing'];
+                var sel = '';
+                opts.forEach(function(o){
+                    sel += '<option value="' + o + '"' + (o === r.status ? ' selected' : '') + '>' + o + '</option>';
+                });
+                reqHtml += '<tr>' +
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td class="fw-medium">' + htmlEsc(r.requirement_name || '-') + '</td>' +
+                    '<td><select class="form-select form-select-sm" id="reqStatus_' + r.requirement_id + '" style="font-size:0.72rem;padding:1px 18px 1px 6px;width:auto">' + sel + '</select></td>' +
+                    '<td><input type="text" class="form-control form-control-sm" id="reqRemarks_' + r.requirement_id + '" placeholder="Optional note" value="' + htmlEsc(r.remarks || '') + '" style="font-size:0.72rem;min-width:110px"></td>' +
+                    '<td><button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="toggleReqStatus(' + d.applicant_id + ',' + r.requirement_id + ')" style="font-size:0.7rem"><i class="fas fa-save me-1"></i>Save</button></td></tr>';
+            });
+            reqHtml += '</tbody></table></div>' +
+                '<button class="btn btn-sm btn-outline-success" onclick="markAllSubmitted(' + d.applicant_id + ')"><i class="fas fa-check-double me-1"></i>Mark All Submitted</button> ';
+        } else if (d.requirements && d.requirements.length > 0 && !d.applicant_id) {
+            reqHtml = '<div class="alert alert-warning small py-2 mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Create an applicant record and link it to this student to track requirements.</div>';
+        } else {
+            reqHtml = '<div class="text-center text-muted small py-4"><i class="fas fa-clipboard-list fa-2x mb-2" style="opacity:0.3"></i><br>No requirements have been configured yet.</div>';
+        }
+
+        // ── Documents Tab (upload + existing) ──
+        var docHtml = '';
+        if (d.applicant_id) {
+            docHtml = '<div class="card bg-light border-0 p-3 mb-3">' +
+                '<form id="docUploadForm' + d.applicant_id + '" onsubmit="return uploadDocFromProfile(' + d.applicant_id + ', event)">' +
+                '<div class="row g-2 align-items-end">' +
+                '<div class="col-md-3"><label class="form-label small fw-medium mb-0">Type</label><select name="document_type" class="form-select form-select-sm"><option>Transcript</option><option>Certificate</option><option>ID Card</option><option>Birth Certificate</option><option>Recommendation</option><option>Other</option></select></div>' +
+                '<div class="col-md-4"><label class="form-label small fw-medium mb-0">Title</label><input type="text" name="document_title" class="form-control form-control-sm" placeholder="e.g. KCSE Results"></div>' +
+                '<div class="col-md-3"><label class="form-label small fw-medium mb-0">File</label><input type="file" name="doc_file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></div>' +
+                '<div class="col-md-2"><button type="submit" class="btn btn-sm btn-primary w-100"><i class="fas fa-upload me-1"></i>Upload</button></div>' +
+                '</div></form></div>';
+        }
+        if (d.documents && d.documents.length > 0){
+            docHtml += '<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Type</th><th>File</th><th>Status</th><th>Uploaded By</th><th>Date</th><th>Action</th></tr></thead><tbody>';
+            d.documents.forEach(function(doc){
+                var dbadge = doc.verification_status === 'Verified' ? 'bg-success' : doc.verification_status === 'Rejected' ? 'bg-danger' : 'bg-warning text-dark';
+                docHtml += '<tr><td>' + htmlEsc(doc.document_type) + '</td>' +
+                    '<td><a href="../' + doc.file_path + '" target="_blank" class="small text-decoration-none">' + htmlEsc(doc.file_name) + ' <i class="fas fa-external-link-alt" style="font-size:0.6rem"></i></a></td>' +
+                    '<td><span class="badge ' + dbadge + '">' + htmlEsc(doc.verification_status) + '</span></td>' +
+                    '<td class="small text-muted">' + htmlEsc(doc.uploader_name || '-') + '</td>' +
+                    '<td class="small text-muted">' + (doc.uploaded_at ? doc.uploaded_at.slice(0,10) : '-') + '</td>' +
+                    '<td class="text-nowrap">' +
+                    (doc.verification_status !== 'Verified' ? '<button class="btn btn-sm btn-outline-success py-0 px-1" onclick="verifyDoc(' + doc.id + ',\'Verified\')" title="Verify"><i class="fas fa-check"></i></button> ' : '') +
+                    (doc.verification_status !== 'Rejected' ? '<button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="verifyDoc(' + doc.id + ',\'Rejected\')" title="Reject"><i class="fas fa-times"></i></button>' : '') +
+                    '</td></tr>';
+            });
+            docHtml += '</tbody></table></div>';
+        } else {
+            docHtml += '<div class="text-center text-muted small py-3"><i class="fas fa-file fa-2x mb-2" style="opacity:0.3"></i><br>No documents uploaded yet</div>';
+        }
+
+        // ── Activity Tab ──
+        var actHtml = d.activity && d.activity.length > 0 ?
+            '<div style="max-height:300px;overflow-y:auto">' + d.activity.map(function(a){
+                return '<div class="d-flex gap-2 py-1" style="border-bottom:1px solid #f1f5f9;font-size:0.78rem">' +
+                    '<span class="badge bg-secondary">' + htmlEsc(a.action) + '</span>' +
+                    '<span>' + htmlEsc(a.description || '') + '</span>' +
+                    '<span class="ms-auto text-muted" style="white-space:nowrap">' + (a.created_at ? a.created_at.slice(0,16).replace('T',' ') : '') + '</span></div>';
+            }).join('') + '</div>' :
+            '<div class="text-center text-muted small py-4"><i class="fas fa-history fa-2x mb-2" style="opacity:0.3"></i><br>No activity recorded yet</div>';
+
+        // ── Assemble ──
+        body.innerHTML = hdrHtml +
+            '<div class="p-3">' +
+            '<ul class="nav nav-tabs mb-3" id="profileTabs">' +
+            '<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#proInfo"><i class="fas fa-info-circle me-1"></i>Info</a></li>' +
+            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proReqs"><i class="fas fa-clipboard-check me-1"></i>Requirements</a></li>' +
+            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proDocs"><i class="fas fa-file me-1"></i>Documents</a></li>' +
+            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proActivity"><i class="fas fa-history me-1"></i>Activity</a></li>' +
+            '</ul>' +
+            '<div class="tab-content">' +
+            '<div class="tab-pane fade show active" id="proInfo"><div class="row g-3">' +
+            '<div class="col-12"><p class="text-muted small mb-0"><i class="fas fa-edit me-1"></i>Click <i class="fas fa-edit" style="color:#059669"></i> in the header to edit these details.</p></div>' +
+            infoHtml + '</div></div>' +
+            '<div class="tab-pane fade" id="proReqs">' + reqHtml + '</div>' +
+            '<div class="tab-pane fade" id="proDocs">' + docHtml + '</div>' +
+            '<div class="tab-pane fade" id="proActivity">' + actHtml + '</div>' +
+            '</div></div>';
+    }).catch(function(err){
+        document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Error loading profile.</p></div>';
+    });
+}
+
+// ═══ OPEN STUDENT EDIT (pre-fill from loaded profile data) ═══
+function openStudentEdit(){
+    if (!_profileStudentData || !_profileStudentData.info){
+        showToast('No student data loaded', 'error');
+        return;
+    }
+    var s = _profileStudentData.info;
+    document.getElementById('editStudentId').value = s.id || s.student_id || '';
+    document.getElementById('efn').value = s.first_name || '';
+    document.getElementById('emn').value = s.middle_name || '';
+    document.getElementById('esn').value = s.surname || '';
+    document.getElementById('edob').value = s.date_of_birth || '';
+    document.getElementById('eph').value = s.phone || '';
+    document.getElementById('eem').value = s.email || '';
+    document.getElementById('estuno').value = s.student_number || '';
+    document.getElementById('eprog').value = s.program || '';
+    document.getElementById('eintake').value = s.intake_period || 'January';
+    document.getElementById('eintakeyr').value = s.intake_year || new Date().getFullYear();
+    document.getElementById('estatus').value = s.status || 'Active';
+    document.getElementById('egn').value = s.guardian_name || '';
+    document.getElementById('egp').value = s.guardian_phone || '';
+    document.getElementById('egr').value = s.guardian_relationship || '';
+    new bootstrap.Modal(document.getElementById('studentEditModal')).show();
+}
+
+// ═══ TOGGLE REQUIREMENT STATUS ═══
+function toggleReqStatus(aid, rid){
+    var el = document.getElementById('reqStatus_' + rid);
+    var remarksEl = document.getElementById('reqRemarks_' + rid);
+    if (!el) return;
+    var fd = new FormData();
+    fd.append('ajax', 'toggle_requirement');
+    fd.append('applicant_id', aid);
+    fd.append('requirement_id', rid);
+    fd.append('status', el.value);
+    fd.append('remarks', remarksEl ? remarksEl.value : '');
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.success) { showToast('Requirement status updated', 'success'); }
+        else { showToast(d.error || 'Update failed', 'error'); }
+    })
+    .catch(function(){ showToast('Network error', 'error'); });
+}
+
+// ═══ MARK ALL SUBMITTED ═══
+function markAllSubmitted(aid){
+    if (!confirm('Mark ALL requirements as Submitted?')) return;
+    var fd = new FormData();
+    fd.append('ajax', 'mark_all_submitted');
+    fd.append('applicant_id', aid);
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.success) { showToast('All requirements marked as Submitted', 'success'); }
+        else { showToast('Failed', 'error'); }
+    })
+    .catch(function(){ showToast('Network error', 'error'); });
+}
+
+// ═══ UPLOAD DOCUMENT FROM PROFILE ═══
+function uploadDocFromProfile(aid, e){
+    e.preventDefault();
+    var form = document.getElementById('docUploadForm' + aid);
+    if (!form) return false;
+    var fd = new FormData(form);
+    fd.append('ajax', 'upload_document');
+    fd.append('applicant_id', aid);
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
+        if (d.success) {
+            showToast('Document uploaded', 'success');
+            form.reset();
+        } else {
+            showToast(d.error || 'Upload failed', 'error');
+        }
+    })
+    .catch(function(){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
+        showToast('Network error', 'error');
+    });
+    return false;
+}
+
+// ═══ DOCUMENT VERIFICATION ═══
+function verifyDoc(docId, status){
+    if (!confirm('Mark this document as ' + status + '?')) return;
+    var fd = new FormData();
+    fd.append('ajax', 'verify_document');
+    fd.append('doc_id', docId);
+    fd.append('status', status);
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.success) { showToast('Document ' + status.toLowerCase() + ' successfully', 'success'); }
+        else { showToast('Failed to update document', 'error'); }
+    })
+    .catch(function(){ showToast('Network error', 'error'); });
+}
+
+// ═══ IMPORT ═══
+function importExcel(e){
+    e.preventDefault();
+    var fileInput = document.getElementById('importFileInput');
+    if (!fileInput.files.length){
+        showToast('Please select a file first.', 'error');
+        return;
+    }
+    var btn = document.getElementById('importBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Importing...';
+
+    var fd = new FormData(document.getElementById('importForm'));
+    fd.append('ajax', 'import_excel');
+
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Import Students';
+        if (d.success){
+            var resultsDiv = document.getElementById('importResults');
+            resultsDiv.style.display = '';
+            resultsDiv.innerHTML =
+                '<div class="alert alert-success mb-0"><h6 class="fw-semibold"><i class="fas fa-check-circle me-1"></i>Import Complete</h6>' +
+                '<div class="row g-2 mt-2"><div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5" style="color:#059669">' + (d.imported || 0) + '</div><small>Imported</small></div></div>' +
+                '<div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5" style="color:#f59e0b">' + (d.duplicates || 0) + '</div><small>Duplicates</small></div></div>' +
+                '<div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5">' + (d.total || 0) + '</div><small>Total Processed</small></div></div></div></div>';
+        } else {
+            showToast(d.error || 'Import failed', 'error');
+        }
+    })
+    .catch(function(){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Import Students';
+        showToast('Import failed due to network error.', 'error');
+    });
+    return false;
+}
+
+// Click upload zone
+document.addEventListener('DOMContentLoaded', function(){
+    var zone = document.getElementById('importDropZone');
+    if (zone) {
+        zone.addEventListener('click', function(){ document.getElementById('importFileInput').click(); });
+        zone.addEventListener('dragover', function(e){ e.preventDefault(); this.style.borderColor = '#059669'; this.style.background = '#f0fdf4'; });
+        zone.addEventListener('dragleave', function(){ this.style.borderColor = 'var(--adm-border)'; this.style.background = 'transparent'; });
+        zone.addEventListener('drop', function(e){
+            e.preventDefault();
+            this.style.borderColor = 'var(--adm-border)';
+            this.style.background = 'transparent';
+            if (e.dataTransfer.files.length){
+                document.getElementById('importFileInput').files = e.dataTransfer.files;
+                document.getElementById('importFileName').textContent = e.dataTransfer.files[0].name;
+            }
+        });
+    }
+});
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
