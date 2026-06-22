@@ -50,17 +50,11 @@ if (!empty($_SESSION['user_id'])) {
     } catch(e){}
   }
   window.addEventListener('unhandledrejection', function(e){
-    e.preventDefault();
-    logRejection(e.reason);
-    try { if (e.promise) { e.promise.then(null, function(){}); } } catch(ex){}
+    try { if (e.promise) e.promise.catch(function(){}); } catch(ex){}
   });
   window.addEventListener('rejectionhandled', function(e){
-    e.preventDefault();
+    try { if (e.promise) e.promise.catch(function(){}); } catch(ex){}
   });
-  window.onunhandledrejection = function(e){
-    if(e && e.preventDefault) e.preventDefault();
-    return true;
-  };
 })();
 </script>
 
