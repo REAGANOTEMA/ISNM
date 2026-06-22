@@ -2,8 +2,8 @@
 /**
  * Receipt Printing Endpoint
  */
-require_once __DIR__ . '/../includes/financial_functions.php';
-require_once __DIR__ . '/../includes/receipt_generator.php';
+require_once __DIR__ . '/includes/financial_functions.php';
+require_once __DIR__ . '/includes/receipt_generator.php';
 
 if (!isset($_GET['type'])) {
     header('Location: ../dashboards/school-bursar.php');

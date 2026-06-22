@@ -420,7 +420,7 @@ class AuthenticationService {
     }
 
     public function normalizeRoleKey($value) {
-        return strtolower(preg_replace('/[^a-z0-9]+/i', ' ', trim($value)));
+        return trim(preg_replace('/\s+/', ' ', strtolower(preg_replace('/[^a-z0-9]+/i', ' ', trim($value)))));
     }
 
     public function positionMatchesRole($requestedPosition, $userRole) {

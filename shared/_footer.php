@@ -477,6 +477,8 @@
       }
     })();
 
+    window.addEventListener('unhandledrejection', function (e) { e.preventDefault(); });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         var swPath = (window.location.pathname.includes('/ISNM/') ? '/ISNM/' : '/') + 'sw.js';

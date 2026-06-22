@@ -678,6 +678,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <?php endif; ?>
 
 </div>
+<?php endif; ?>
 
 <script>
 // -----------------------------------------------------------------------

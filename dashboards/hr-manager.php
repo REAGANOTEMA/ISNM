@@ -302,6 +302,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && in_array($_POST['action']??'', ['appr
   if ($staff_conn) {
       $sectionCounts['total_staff'] = $active_staff;
       $sectionCounts['attendance_today'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE()"))&&$r?$r->fetch_assoc()['c']:0);
+      $sectionCounts['pending_leave'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_leave_requests WHERE status='Pending'"))&&$r?$r->fetch_assoc()['c']:0);
       $sectionCounts['pending_appraisals'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'"))&&$r?$r->fetch_assoc()['c']:0);
       $sectionCounts['active_trainings'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='In Progress'"))&&$r?$r->fetch_assoc()['c']:0);
       $sectionCounts['active_recruitments'] = (int)(($r=$staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'"))&&$r?$r->fetch_assoc()['c']:0);

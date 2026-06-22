@@ -114,6 +114,9 @@ var ISNM_VERSION = '<?= $v ?>';
     setInterval(tick, 1000);
   }
 
+  // ── Suppress third-party extension promise rejections ────────
+  window.addEventListener('unhandledrejection', function (e) { e.preventDefault(); });
+
   // ── Service Worker ────────────────────────────────────────────
   function registerSW() {
     if ('serviceWorker' in navigator) {
