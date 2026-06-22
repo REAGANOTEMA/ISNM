@@ -338,7 +338,7 @@ function loadRevenueCategory(){
                 }
             });
         }
-    });
+    }).catch(function(){});
 }
 
 // ── Student Statement ──
