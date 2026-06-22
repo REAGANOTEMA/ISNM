@@ -182,7 +182,7 @@ if ($ajax === 'search_students') {
 
     if ($q !== '') {
         $sq = $esc($q);
-        $where[] = "(CONCAT_WS(' ',first_name,middle_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR admission_number LIKE '%$sq%' OR phone LIKE '%$sq%' OR email LIKE '%$sq%')";
+        $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE '%$sq%' OR CONCAT_WS(' ',first_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR registration_number LIKE '%$sq%' OR index_number LIKE '%$sq%' OR national_student_id_number LIKE '%$sq%' OR phone LIKE '%$sq%' OR mobile_number LIKE '%$sq%' OR email LIKE '%$sq%')";
     }
     if ($program !== '') {
         $where[] = "program LIKE '%" . $esc($program) . "%'";
@@ -205,10 +205,18 @@ if ($ajax === 'search_students') {
     $totalPages = max(1, ceil($total / $limit));
 
     $students = [];
-    $r = $students_conn->query("SELECT id,student_number,first_name,middle_name,surname,phone,email,program,intake_period,intake_year,status FROM students $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
+    // Pre-calc total active requirements
+    $reqTotal = 0;
+    $rq = $conn->query("SELECT COUNT(*)c FROM admission_requirements WHERE is_active=1");
+    if ($rq) $reqTotal = (int)$rq->fetch_assoc()['c'];
+    $reqTotal = max($reqTotal, 1);
+
+    $r = $students_conn->query("SELECT s.id,s.student_number,s.registration_number,s.national_student_id_number,s.first_name,s.other_name,s.surname,s.full_name,s.phone,s.mobile_number,s.email,s.program,s.intake_period,s.intake_year,s.status,s.gender,s.profile_picture,
+        (SELECT COUNT(*) FROM staffs_db.applicant_requirement_status ars JOIN staffs_db.applicants a2 ON ars.applicant_id=a2.id WHERE (a2.application_number LIKE CONCAT('%',s.student_number,'%') OR a2.full_name LIKE CONCAT('%',s.surname,'%')) AND ars.status='Verified') AS req_done
+        FROM students s $whereSql ORDER BY s.surname,s.first_name LIMIT $limit OFFSET $offset");
     if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
 
-    echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages]);
+        echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages, 'reqTotal' => $reqTotal]);
     exit;
 }
 
@@ -372,7 +380,7 @@ if ($ajax === 'import_excel') {
         foreach ($rows as $row) {
             $fname = trim($row['First Name'] ?? $row['first_name'] ?? $row['FIRST NAME'] ?? '');
             $lname = trim($row['Last Name'] ?? $row['surname'] ?? $row['SURNAME'] ?? $row['Last Name'] ?? '');
-            $mname = trim($row['Middle Name'] ?? $row['middle_name'] ?? $row['MIDDLE NAME'] ?? '');
+            $mname = trim($row['Middle Name'] ?? $row['other_name'] ?? $row['MIDDLE NAME'] ?? '');
             $studentNo = trim($row['Student No'] ?? $row['student_number'] ?? $row['STUDENT NO'] ?? $row['Student Number'] ?? '');
             $program = trim($row['Program'] ?? $row['program'] ?? $row['PROGRAM'] ?? '');
             $phone = trim($row['Phone'] ?? $row['phone'] ?? $row['PHONE'] ?? $row['Telephone'] ?? '');
@@ -385,7 +393,7 @@ if ($ajax === 'import_excel') {
             if ($check && $check->num_rows > 0) { $duplicates++; continue; }
 
             $fullName = trim($fname . ' ' . ($mname ? $mname . ' ' : '') . $lname);
-            $students_conn->query("INSERT INTO students (student_number, first_name, middle_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
+            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
             if ($students_conn->affected_rows > 0) $imported++;
         }
 
@@ -399,6 +407,68 @@ if ($ajax === 'import_excel') {
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
+    exit;
+}
+
+// New: Batch import from students_data folder
+if ($ajax === 'import_students_data') {
+    header('Content-Type: application/json');
+    if (!$students_conn) { echo json_encode(['success'=>false,'error'=>'Students DB not connected']); exit; }
+    require_once __DIR__ . '/../includes/simple_xlsx_reader.php';
+
+    $dataDir = __DIR__ . '/../students_data/';
+    $files = glob($dataDir . '*.xlsx');
+    if (empty($files)) { echo json_encode(['success'=>false,'error'=>'No XLSX files found in students_data folder']); exit; }
+
+    $totalImported = 0;
+    $totalDuplicates = 0;
+    $totalFiles = 0;
+    $totalRows = 0;
+    $errorsList = [];
+
+    foreach ($files as $f) {
+        try {
+            $reader = new SimpleXLSXReader($f);
+            $rows = $reader->getRows();
+            if (empty($rows)) continue;
+            $totalFiles++;
+            foreach ($rows as $row) {
+                $totalRows++;
+                $fname = trim($row['First Name'] ?? $row['first_name'] ?? $row['FIRST NAME'] ?? $row['FIRSTNAME'] ?? '');
+                $lname = trim($row['Last Name'] ?? $row['surname'] ?? $row['SURNAME'] ?? $row['LAST NAME'] ?? $row['LASTNAME'] ?? '');
+                $mname = trim($row['Middle Name'] ?? $row['other_name'] ?? $row['MIDDLE NAME'] ?? '');
+                $studentNo = trim($row['Student No'] ?? $row['student_number'] ?? $row['STUDENT NO'] ?? $row['Student Number'] ?? $row['Admission No'] ?? $row['admission_number'] ?? $row['Index Number'] ?? $row['NSIN'] ?? '');
+                $program = trim($row['Program'] ?? $row['program'] ?? $row['PROGRAM'] ?? $row['Course'] ?? $row['course'] ?? '');
+                $phone = trim($row['Phone'] ?? $row['phone'] ?? $row['PHONE'] ?? $row['Mobile'] ?? $row['mobile'] ?? '');
+                $email = trim($row['Email'] ?? $row['email'] ?? $row['EMAIL'] ?? '');
+
+                if (empty($fname) || empty($lname)) continue;
+
+                // Check duplicate by student_number or full_name
+                $escNo = $students_conn->real_escape_string($studentNo);
+                $escFn = $students_conn->real_escape_string($fname);
+                $escLn = $students_conn->real_escape_string($lname);
+                $check = $students_conn->query("SELECT id FROM students WHERE (student_number='$escNo' OR (first_name='$escFn' AND surname='$escLn')) LIMIT 1");
+                if ($check && $check->num_rows > 0) { $totalDuplicates++; continue; }
+
+                $fullName = trim($fname . ' ' . ($mname ? $mname . ' ' : '') . $lname);
+                $escFull = $students_conn->real_escape_string($fullName);
+                $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$escNo', '$escFn', '$mname', '$escLn', '$escFull', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
+                if ($students_conn->affected_rows > 0) $totalImported++;
+            }
+        } catch (Exception $e) {
+            $errorsList[] = basename($f) . ': ' . $e->getMessage();
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'imported' => $totalImported,
+        'duplicates' => $totalDuplicates,
+        'files' => $totalFiles,
+        'rows' => $totalRows,
+        'errors' => $errorsList
+    ]);
     exit;
 }
 
@@ -501,7 +571,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // New: Create student (separate from applicant)
     if ($action === 'create_student') {
         $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $mname = $conn->real_escape_string(trim($_POST['middle_name'] ?? ''));
+        $mname = $conn->real_escape_string(trim($_POST['other_name'] ?? ''));
         $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
         $studentNo = $conn->real_escape_string(trim($_POST['student_number'] ?? ''));
         $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
@@ -516,7 +586,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($fname && $lname && $studentNo && $students_conn) {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $students_conn->query("INSERT INTO students (student_number, first_name, middle_name, surname, full_name, phone, email, program, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
+            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
             if ($students_conn->affected_rows > 0) {
                 $newSid = $students_conn->insert_id;
                 logAdmission($conn, $user_id, 'Create Student', 'students', $newSid, "Created student: $fullName ($studentNo)");
@@ -535,7 +605,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'edit_student') {
         $sid = intval($_POST['student_id'] ?? 0);
         $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $mname = $conn->real_escape_string(trim($_POST['middle_name'] ?? ''));
+        $mname = $conn->real_escape_string(trim($_POST['other_name'] ?? ''));
         $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
         $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
         $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
@@ -550,9 +620,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($sid && $fname && $lname && $students_conn) {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $students_conn->query("UPDATE students SET first_name='$fname', middle_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', intake_period='$intakePeriod', intake_year=$intakeYear, date_of_birth='$dob', guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
+            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', intake_period='$intakePeriod', intake_year=$intakeYear, date_of_birth='$dob', guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
             logAdmission($conn, $user_id, 'Edit Student', 'students', $sid, "Edited student #$sid ($fullName)");
             $_SESSION['success'] = "Student updated.";
+        }
+        header("Location: director-admissions.php"); exit;
+    }
+
+    // Delete student (soft-delete)
+    if ($action === 'delete_student') {
+        $sid = intval($_POST['student_id'] ?? 0);
+        if ($sid && $students_conn) {
+            $students_conn->query("UPDATE students SET status='deleted', updated_at=NOW() WHERE id=$sid");
+            logAdmission($conn, $user_id, 'Delete Student', 'students', $sid, "Student #$sid deleted by $user_name");
+            $_SESSION['success'] = "Student record deleted.";
         }
         header("Location: director-admissions.php"); exit;
     }
@@ -1057,6 +1138,13 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 </form>
 
 <div id="importResults" style="display:none" class="mt-3"></div>
+
+<div class="mt-4 pt-3" style="border-top:1px solid var(--adm-border)">
+<h6 class="fw-semibold"><i class="fas fa-folder-open me-1" style="color:var(--adm-prim)"></i>Batch Import from Students Data Folder</h6>
+<p class="small text-muted mb-2">Scan the pre-loaded data folder and import all missing student records automatically.</p>
+<button class="btn btn-sm btn-outline-primary" id="batchImportBtn" onclick="batchImportStudents()"><i class="fas fa-sync me-1"></i>Scan & Import Missing</button>
+<div id="batchImportResults" class="mt-2"></div>
+</div>
 </div>
 </section>
 
@@ -1132,7 +1220,7 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 <div class="row g-3">
 <div class="col-12"><h6 class="fw-semibold" style="color:#059669"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
 <div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="middle_name" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" class="form-control form-control-sm" required></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" class="form-control form-control-sm"></div>
@@ -1189,7 +1277,7 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 <div class="row g-3">
 <div class="col-12"><h6 class="fw-semibold" style="color:#0284c7"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
 <div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" id="efn" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="middle_name" id="emn" class="form-control form-control-sm"></div>
+<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" id="emn" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" id="esn" class="form-control form-control-sm" required></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="edob" class="form-control form-control-sm"></div>
 <div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" id="eph" class="form-control form-control-sm"></div>
@@ -1726,8 +1814,10 @@ function searchStudents(page){
         }
         var html = '<div class="mb-2 small text-muted">Showing ' + d.students.length + ' of ' + d.total + ' students</div><div class="row g-3">';
         d.students.forEach(function(s){
-            var fullName = [s.first_name, s.middle_name, s.surname].filter(Boolean).join(' ');
+            var fullName = [s.first_name, s.other_name, s.surname].filter(Boolean).join(' ');
             var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
+            var pct = d.reqTotal > 0 ? Math.round((s.req_done || 0) / d.reqTotal * 100) : 0;
+            var barClass = pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-warning' : pct >= 1 ? 'bg-danger' : 'bg-secondary';
             html += '<div class="col-md-6 col-lg-4">' +
                 '<div class="card h-100" style="border:1px solid var(--adm-border);border-radius:10px;overflow:hidden;transition:all 0.15s">' +
                 '<div class="card-body p-3">' +
@@ -1735,13 +1825,17 @@ function searchStudents(page){
                 '<div class="student-avatar" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">' + initials + '</div>' +
                 '<div class="flex-grow-1 min-width-0">' +
                 '<h6 class="mb-0 text-truncate fw-semibold" style="font-size:0.9rem">' + htmlEsc(fullName) + '</h6>' +
-                '<div class="small text-muted">' + htmlEsc(s.student_number || '') + '</div>' +
-                '<div class="small text-muted">' + htmlEsc(s.program || '') + '</div>' +
+                '<div class="small text-muted">' + htmlEsc(s.student_number || s.registration_number || '') + '</div>' +
+                '<div class="small text-muted">' + htmlEsc(s.program || '') + ' ' + htmlEsc(s.intake_period || '') + ' ' + htmlEsc(s.intake_year || '') + '</div>' +
                 '</div>' +
-                '<div><span class="badge bg-success student-status">' + htmlEsc(s.status) + '</span></div>' +
+                '<div class="text-end">' +
+                '<span class="badge bg-success student-status d-block mb-1">' + htmlEsc(s.status) + '</span>' +
+                '<span class="small text-muted">' + (s.req_done || 0) + '/' + d.reqTotal + '</span>' +
                 '</div>' +
+                '</div>' +
+                '<div class="mt-2"><div class="progress" style="height:4px;border-radius:2px"><div class="progress-bar ' + barClass + '" style="width:' + pct + '%"></div></div></div>' +
                 '<div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid #f1f5f9">' +
-                '<small class="text-muted"><i class="fas fa-phone me-1"></i>' + htmlEsc(s.phone || '-') + ' <i class="fas fa-envelope ms-2"></i>' + htmlEsc(s.email || '') + '</small>' +
+                '<small class="text-muted"><i class="fas fa-phone me-1"></i>' + htmlEsc(s.phone || s.mobile_number || '-') + '</small>' +
                 '<button class="btn btn-sm btn-outline-success py-0 px-2" onclick="viewStudentProfile(' + s.id + ')" style="font-size:0.75rem"><i class="fas fa-eye me-1"></i>Profile</button>' +
                 '</div>' +
                 '</div></div></div>';
@@ -1765,21 +1859,10 @@ function searchStudents(page){
     });
 }
 
-// Auto-load students when tab becomes active, and Enter key
+// Enter key triggers search
 document.addEventListener('DOMContentLoaded', function(){
     var inp = document.getElementById('stuSearch');
     if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') searchStudents(1); });
-    // Auto-load on first visit to student-search
-    if (document.getElementById('sec-student-search')) searchStudents(1);
-    // Also reload when switching to the student-search section
-    var origSwitch = window.switchSec;
-    if (typeof origSwitch === 'function'){
-        window._origSwitchSec = origSwitch;
-        window.switchSec = function(sec){
-            window._origSwitchSec(sec);
-            if (sec === 'student-search') searchStudents(1);
-        };
-    }
 });
 
 // ═══ STUDENT PROFILE (full details + editable) ═══
@@ -1796,7 +1879,7 @@ function viewStudentProfile(id){
         }
         _profileStudentData = d;
         var s = d.info, a = d.applicant || {};
-        var fullName = [s.first_name, s.middle_name, s.surname].filter(Boolean).join(' ') || 'N/A';
+        var fullName = [s.first_name, s.other_name, s.surname].filter(Boolean).join(' ') || 'N/A';
         var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
 
         // ── Header ──
@@ -1810,6 +1893,7 @@ function viewStudentProfile(id){
             '<div class="d-flex gap-2 align-items-center">' +
             '<span class="badge bg-white text-success fs-6">' + htmlEsc(s.status) + '</span>' +
             '<button class="btn btn-sm btn-light" onclick="openStudentEdit()" title="Edit Student"><i class="fas fa-edit"></i></button>' +
+            '<button class="btn btn-sm btn-light text-danger" onclick="deleteStudent(' + s.id + ',\'' + htmlEsc(fullName).replace(/'/g,"\\'") + '\')" title="Delete Student"><i class="fas fa-trash"></i></button>' +
             (d.applicant_id ? '<button class="btn btn-sm btn-light" onclick="viewApplicant(' + d.applicant_id + ')" title="View Applicant Record"><i class="fas fa-user"></i></button>' : '') +
             '</div></div></div>';
 
@@ -1818,11 +1902,13 @@ function viewStudentProfile(id){
             '<div class="col-md-6"><div class="small text-muted">Student Number</div><div class="fw-medium">' + htmlEsc(s.student_number || '-') + '</div></div>' +
             '<div class="col-md-6"><div class="small text-muted">Full Name</div><div class="fw-medium">' + htmlEsc(fullName) + '</div></div>' +
             '<div class="col-md-4"><div class="small text-muted">First Name</div><div class="fw-medium">' + htmlEsc(s.first_name || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Middle Name</div><div class="fw-medium">' + htmlEsc(s.middle_name || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Middle Name</div><div class="fw-medium">' + htmlEsc(s.other_name || '-') + '</div></div>' +
             '<div class="col-md-4"><div class="small text-muted">Surname</div><div class="fw-medium">' + htmlEsc(s.surname || '-') + '</div></div>' +
             '<div class="col-md-4"><div class="small text-muted">Date of Birth</div><div class="fw-medium">' + htmlEsc(s.date_of_birth || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Phone</div><div class="fw-medium">' + htmlEsc(s.phone || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Gender</div><div class="fw-medium">' + htmlEsc(s.gender || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Phone</div><div class="fw-medium">' + htmlEsc(s.phone || s.mobile_number || '-') + '</div></div>' +
             '<div class="col-md-4"><div class="small text-muted">Email</div><div class="fw-medium">' + htmlEsc(s.email || '-') + '</div></div>' +
+            '<div class="col-md-4"><div class="small text-muted">Address</div><div class="fw-medium">' + htmlEsc(s.address || '-') + '</div></div>' +
             '<div class="col-md-4"><div class="small text-muted">Program</div><div class="fw-medium">' + htmlEsc(s.program || '-') + '</div></div>' +
             '<div class="col-md-2"><div class="small text-muted">Intake Period</div><div class="fw-medium">' + htmlEsc(s.intake_period || '-') + '</div></div>' +
             '<div class="col-md-2"><div class="small text-muted">Intake Year</div><div class="fw-medium">' + htmlEsc(s.intake_year || '-') + '</div></div>' +
@@ -1935,7 +2021,7 @@ function openStudentEdit(){
     var s = _profileStudentData.info;
     document.getElementById('editStudentId').value = s.id || s.student_id || '';
     document.getElementById('efn').value = s.first_name || '';
-    document.getElementById('emn').value = s.middle_name || '';
+    document.getElementById('emn').value = s.other_name || '';
     document.getElementById('esn').value = s.surname || '';
     document.getElementById('edob').value = s.date_of_birth || '';
     document.getElementById('eph').value = s.phone || '';
@@ -2071,6 +2157,49 @@ function importExcel(e){
         showToast('Import failed due to network error.', 'error');
     });
     return false;
+}
+
+// ═══ BATCH IMPORT FROM FOLDER ═══
+function batchImportStudents(){
+    var btn = document.getElementById('batchImportBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scanning...';
+    fetch('?ajax=import_students_data')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync me-1"></i>Scan & Import Missing';
+        var res = document.getElementById('batchImportResults');
+        if (d.success){
+            var errHtml = '';
+            if (d.errors && d.errors.length){
+                errHtml = '<div class="small text-danger mt-1">' + d.errors.map(function(e){ return '<div>' + htmlEsc(e) + '</div>'; }).join('') + '</div>';
+            }
+            res.innerHTML = '<div class="alert alert-success py-2 small mb-0">' +
+                '<i class="fas fa-check-circle me-1"></i> Scanned ' + (d.files || 0) + ' files, ' + (d.rows || 0) + ' rows. ' +
+                '<strong>' + (d.imported || 0) + '</strong> imported, <strong>' + (d.duplicates || 0) + '</strong> duplicates skipped.' +
+                errHtml + '</div>';
+        } else {
+            res.innerHTML = '<div class="alert alert-warning py-2 small mb-0"><i class="fas fa-exclamation-triangle me-1"></i>' + htmlEsc(d.error || 'Import failed') + '</div>';
+        }
+    })
+    .catch(function(){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync me-1"></i>Scan & Import Missing';
+        document.getElementById('batchImportResults').innerHTML = '<div class="alert alert-danger py-2 small mb-0">Network error during batch import.</div>';
+    });
+}
+
+// ═══ DELETE STUDENT ═══
+function deleteStudent(sid, name){
+    if (!confirm('Permanently delete student "' + name + '" (# ' + sid + ')?\n\nThis will mark the record as deleted and hide it from search.')) return;
+    if (!confirm('Are you sure? This action cannot be undone.')) return;
+    var fd = new FormData();
+    fd.append('action', 'delete_student');
+    fd.append('student_id', sid);
+    fetch('director-admissions.php', { method:'POST', body:fd })
+    .then(function(){ location.reload(); })
+    .catch(function(){ showToast('Delete failed', 'error'); });
 }
 
 // Click upload zone

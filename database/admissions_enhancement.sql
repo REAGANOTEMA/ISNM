@@ -82,3 +82,19 @@ PREPARE stmt FROM @sql_deleted_by; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @exists_idx = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=@db AND TABLE_NAME='applicants' AND INDEX_NAME='idx_deleted');
 SET @sql_idx = IF(@exists_idx = 0, 'ALTER TABLE `applicants` ADD KEY `idx_deleted` (`deleted_at`)', 'SELECT 1');
 PREPARE stmt FROM @sql_idx; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- ── 6. Indexes for students table (students_db) for performance ──
+-- Run these against students_db:
+-- CREATE INDEX IF NOT EXISTS idx_student_number ON students(student_number);
+-- CREATE INDEX IF NOT EXISTS idx_student_name ON students(surname, first_name);
+-- CREATE INDEX IF NOT EXISTS idx_student_phone ON students(phone);
+-- CREATE INDEX IF NOT EXISTS idx_student_program ON students(program);
+-- CREATE INDEX IF NOT EXISTS idx_student_status ON students(status);
+-- CREATE INDEX IF NOT EXISTS idx_student_admission ON students(admission_number);
+-- Since MySQL may not support IF NOT EXISTS for indexes, check manually:
+-- ALTER TABLE students ADD INDEX idx_student_number(student_number(20));
+-- ALTER TABLE students ADD INDEX idx_student_name(surname(30), first_name(30));
+-- ALTER TABLE students ADD INDEX idx_student_phone(phone(15));
+-- ALTER TABLE students ADD INDEX idx_student_program(program(30));
+-- ALTER TABLE students ADD INDEX idx_student_status(status);
+-- These have been applied via script. Add if re-running on fresh DB.
