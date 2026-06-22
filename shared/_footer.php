@@ -76,6 +76,7 @@
         <div class="col-md-12 text-center">
           <p>&copy; <?php echo date('Y'); ?> Iganga School of Nursing and Midwifery. All rights reserved.</p>
           <p class="motto"><i class="fas fa-quote-left me-2"></i>"Chosen to Serve" - Disciplined Mind for Health Action<i class="fas fa-quote-right ms-2"></i></p>
+          <button id="pwaInstallBtn" onclick="installPWA()" style="display:none;margin-top:8px;padding:4px 14px;font-size:0.8rem;background:var(--primary);color:#fff;border:none;border-radius:4px;cursor:pointer"><i class="fas fa-download me-1"></i>Install App</button>
         </div>
       </div>
     </div>
@@ -489,10 +490,24 @@
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredPrompt = e;
+      // Show a small install button in the footer
+      var btn = document.getElementById('pwaInstallBtn');
+      if (btn) btn.style.display = 'inline-block';
     });
     window.addEventListener('appinstalled', function () {
       deferredPrompt = null;
+      var btn = document.getElementById('pwaInstallBtn');
+      if (btn) { btn.style.display = 'none'; btn.textContent = 'Installed'; }
     });
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choiceResult) {
+        deferredPrompt = null;
+        var btn = document.getElementById('pwaInstallBtn');
+        if (btn) btn.style.display = 'none';
+      });
+    }
   </script>
 </body>
 

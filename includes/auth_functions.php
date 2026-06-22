@@ -114,18 +114,15 @@ function authenticateStaff($email, $password) {
 function checkAuth($required_role = null) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
-        // Redirect to appropriate login page based on user type
-        if (strpos($_SERVER['REQUEST_URI'], 'student') !== false || strpos($_SERVER['REQUEST_URI'], 'student_profile') !== false) {
-            header('Location: staff-login.php');        } else {
-            header('Location: staff-login.php');
-        }
+        $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+        header('Location: staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
         exit();
     }
     
     // Check session security
     if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
         session_destroy();
-        header('Location: staff-login.php');
+    header('Location: staff-login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
         exit();
     }
     
@@ -177,12 +174,8 @@ function checkAuth($required_role = null) {
 function protectDashboard($required_role = null) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
-        // Redirect to appropriate login page
-        if (strpos($_SERVER['REQUEST_URI'], 'student') !== false) {
-            header('Location: ../staff-login.php');
-        } else {
-            header('Location: ../staff-login.php');
-        }
+        $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+        header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
         exit();
     }
     

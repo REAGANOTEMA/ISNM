@@ -1229,6 +1229,15 @@ include('shared/_header.php');
                 node.addEventListener('mouseleave', function() {
                     this.style.transform = '';
                 });
+                // Make entire card clickable — find the first link or button
+                node.addEventListener('click', function(e) {
+                    if (e.target.closest('a') || e.target.closest('button')) return;
+                    var link = this.querySelector('a.org-link, a[href*="staff-login"], a[href*="student-login"]');
+                    if (link) { window.location.href = link.href; return; }
+                    var btn = this.querySelector('button[onclick*="location"]');
+                    if (btn) { var m = btn.getAttribute('onclick').match(/location(?:\.href)?='([^']+)'/); if (m) window.location.href = m[1]; }
+                });
+                node.style.cursor = 'pointer';
             });
         });
     </script>

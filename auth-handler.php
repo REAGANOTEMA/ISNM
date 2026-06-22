@@ -194,6 +194,21 @@ switch ($action) {
             $requested_position = $_SESSION['requested_position'];
         }
 
+        // Capture redirect URL from POST or session
+        $redirect_url = trim($_POST['redirect_url'] ?? '');
+        if ($redirect_url === '' && !empty($_SESSION['login_redirect_url'])) {
+            $redirect_url = $_SESSION['login_redirect_url'];
+        }
+        if ($redirect_url) {
+            // Validate: only allow internal paths
+            if (strpos($redirect_url, '..') !== false || strpos($redirect_url, '://') !== false) {
+                $redirect_url = '';
+            }
+        }
+        if ($redirect_url) {
+            $_SESSION['login_redirect_url'] = $redirect_url;
+        }
+
         if ($email === '' || $password === '') {
             $_SESSION['error'] = 'Email and password are required.';
             header('Location: staff-login.php');
@@ -243,6 +258,16 @@ switch ($action) {
             if (!$dashboard) { $dashboard = 'dashboards/director-general.php'; }
 
             unset($_SESSION['staff_login_allowed'], $_SESSION['staff_login_position']);
+
+            // If a redirect URL was requested, go there instead of default dashboard
+            if (!empty($_SESSION['login_redirect_url'])) {
+                $target = $_SESSION['login_redirect_url'];
+                unset($_SESSION['login_redirect_url']);
+                $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
+                header("Location: $target");
+                exit();
+            }
+
             $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
             header('Location: ' . $dashboard);
             exit();
@@ -250,8 +275,11 @@ switch ($action) {
             $_SESSION['error'] = ($result['message'] ?? 'Invalid email or password.');
             $redirectUrl = 'staff-login.php';
             $redirectPosition = $requested_position ?: ($_SESSION['requested_position'] ?? '');
+            $redirectParam = $redirect_url ? '&redirect=' . urlencode($redirect_url) : '';
             if ($redirectPosition !== '') {
-                $redirectUrl .= '?position=' . urlencode($redirectPosition);
+                $redirectUrl .= '?position=' . urlencode($redirectPosition) . $redirectParam;
+            } elseif ($redirect_url) {
+                $redirectUrl .= '?redirect=' . urlencode($redirect_url);
             }
             header("Location: $redirectUrl");
         }

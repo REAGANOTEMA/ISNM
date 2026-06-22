@@ -209,7 +209,6 @@ if ($reportType) {
 }
 // Stats
 $total_students    = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Active'");
-$new_admissions    = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE created_at >= DATE_SUB(NOW(),INTERVAL 30 DAY)");
 $pending_approvals = safeCount($staff_conn,    "SELECT COUNT(*) c FROM grading_approval_workflow WHERE current_stage IN('HOD Review','Registrar Approval','Principal Final Approval')");
 $exam_pending      = safeCount($staff_conn,    "SELECT COUNT(*) c FROM examination_records WHERE grade IS NULL OR grade=''");
 $course_regs       = safeCount($staff_conn,    "SELECT COUNT(*) c FROM course_registrations WHERE status='Registered'");
@@ -467,18 +466,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: academic-registrar.php#academic-calendar"); exit;
     }
 }
-// ── NEW DATA FOR NEW SECTIONS ──
-// New admissions data
-$new_applicants_30d = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE created_at >= DATE_SUB(NOW(),INTERVAL 30 DAY)");
-$approved_applications = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Active'");
-$rejected_applications = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Rejected'");
-$pending_applications_count = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Pending'");
-$total_applications = safeCount($students_conn, "SELECT COUNT(*) c FROM students");
-
-$recent_applications = [];
-$ra_r = $students_conn->query("SELECT id,full_name,student_number,registration_number,course,current_year,gender,status,created_at FROM students ORDER BY created_at DESC LIMIT 20");
-if ($ra_r) while ($row = $ra_r->fetch_assoc()) $recent_applications[] = $row;
-
 // Programs
 $programs_list = [];
 $pl_r = $students_conn->query("SELECT DISTINCT course AS program_name,COUNT(*) AS student_count FROM students WHERE status='Active' GROUP BY course ORDER BY course");
@@ -538,10 +525,6 @@ $academic_years = [];
 $ay_r = $staff_conn->query("SELECT DISTINCT academic_year FROM academic_calendar ORDER BY academic_year DESC");
 if ($ay_r) while ($row = $ay_r->fetch_assoc()) $academic_years[] = $row['academic_year'];
 
-$recent_admissions = [];
-$ra2_r = $students_conn->query("SELECT id,full_name,student_number,registration_number,course,created_at,status FROM students ORDER BY created_at DESC LIMIT 10");
-if ($ra2_r) while ($row = $ra2_r->fetch_assoc()) $recent_admissions[] = $row;
-
 $upcoming_events = $calendars;
 
 // ── NEW DATA FOR GROUPING ──
@@ -586,7 +569,6 @@ $cgd_r = $staff_conn->query("SELECT department,COUNT(*) AS course_count,SUM(cred
 if ($cgd_r) while ($row = $cgd_r->fetch_assoc()) $course_group_by_department[] = $row;
 
 // New stats for expanded overview cards
-$total_pending_applications = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Pending'");
 $total_registered_students = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Active' AND registration_number IS NOT NULL AND registration_number != ''");
 $total_pending_registrations = safeCount($staff_conn, "SELECT COUNT(*) c FROM course_registrations WHERE status IN('Pending','Submitted')");
 $total_transcripts_issued = safeCount($staff_conn, "SELECT COUNT(*) c FROM registrar_transcripts WHERE transcript_status IN('Issued','Collected')");
@@ -673,25 +655,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         header("Location: academic-registrar.php#examinations"); exit;
-    }
-
-    if ($action === 'approve_admission') {
-        $sid = intval($_POST['student_id'] ?? 0);
-        if ($sid > 0) {
-            $students_conn->query("UPDATE students SET status='Active' WHERE id=$sid");
-            $students_conn->query("INSERT INTO academic_registrar_activity_log (activity,created_by,created_at) VALUES ('Approved admission for student ID $sid',{$_SESSION['user_id']},NOW())");
-            $_SESSION['success'] = 'Admission approved.';
-        }
-        header("Location: academic-registrar.php#admissions"); exit;
-    }
-
-    if ($action === 'reject_admission') {
-        $sid = intval($_POST['student_id'] ?? 0);
-        if ($sid > 0) {
-            $students_conn->query("UPDATE students SET status='Rejected' WHERE id=$sid");
-            $_SESSION['success'] = 'Admission rejected.';
-        }
-        header("Location: academic-registrar.php#admissions"); exit;
     }
 
     if ($action === 'approve_course_reg') {
@@ -863,21 +826,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: academic-registrar.php#settings"); exit;
     }
 
-    if ($action === 'bulk_approve_admissions') {
-        $ids = $_POST['student_ids'] ?? [];
-        if (!empty($ids) && is_array($ids)) {
-            $count = 0;
-            foreach ($ids as $sid) {
-                $sid = intval($sid);
-                if ($sid > 0) {
-                    $students_conn->query("UPDATE students SET status='Active' WHERE id=$sid");
-                    $count++;
-                }
-            }
-            $_SESSION['success'] = "$count admissions approved.";
-        }
-        header("Location: academic-registrar.php#admissions"); exit;
-    }
 }
 
 // ── New data for directory section ──
@@ -1144,10 +1092,6 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
             </div>
 
             <div class="stats-grid">
-                <div class="stat-card accent">
-                    <div class="stat-icon" style="background:#ff6f00"><i class="fas fa-file-alt"></i></div>
-                    <div><div class="stat-number"><?= $total_pending_applications ?></div><div class="stat-label">Pending Applications</div></div>
-                </div>
                 <div class="stat-card green">
                     <div class="stat-icon" style="background:#2e7d32"><i class="fas fa-user-check"></i></div>
                     <div><div class="stat-number"><?= $total_registered_students ?></div><div class="stat-label">Registered Students</div></div>
@@ -1209,7 +1153,6 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                     <div class="card-body">
                         <div class="grid-2">
                             <a href="#students-directory" class="btn btn-primary w-100" onclick="switchToSection('students-directory')"><i class="fas fa-user-graduate"></i> Students</a>
-                            <a href="#admissions" class="btn btn-info w-100" onclick="switchToSection('admissions')"><i class="fas fa-user-plus"></i> Admissions</a>
                             <a href="#examinations" class="btn btn-warning w-100" onclick="switchToSection('examinations')"><i class="fas fa-pen"></i> Exams</a>
                             <a href="#results" class="btn btn-success w-100" onclick="switchToSection('results')"><i class="fas fa-check"></i> Results</a>
                             <a href="#reports" class="btn btn-secondary w-100" onclick="switchToSection('reports')"><i class="fas fa-file-alt"></i> Reports</a>
@@ -1367,66 +1310,6 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
             </div>
         </div>
 
-        <!-- Admissions Section -->
-        <div class="main content-section dashboard-section"  data-section="admissions">
-            <div class="page-header">
-                <h1><i class="fas fa-user-plus"></i> Admissions</h1>
-                <div class="header-actions">
-                    <button class="btn btn-primary" onclick="openModal('addStudentModal')"><i class="fas fa-user-plus"></i> New Application</button>
-                    <a href="?report=students" class="btn btn-outline"><i class="fas fa-download"></i> Export</a>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-file"></i></div><div class="stat-number"><?= $total_applications ?></div><div class="stat-label">Total Applications</div></div>
-                <div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-number"><?= $approved_applications ?></div><div class="stat-label">Approved</div></div>
-                <div class="stat-card red"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-number"><?= $rejected_applications ?></div><div class="stat-label">Rejected</div></div>
-                <div class="stat-card accent"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-number"><?= $pending_applications_count ?></div><div class="stat-label">Pending</div></div>
-            </div>
-            <div class="section-card">
-                <div class="card-header"><h5><i class="fas fa-list"></i> Recent Applications</h5></div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead><tr><th>#</th><th>Name</th><th>Student No</th><th>Course</th><th>Year</th><th>Gender</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                <?php if (!empty($recent_applications)): $i=1; ?>
-                                    <?php foreach ($recent_applications as $ap): ?>
-                                        <tr>
-                                            <td><?= $i++ ?></td>
-                                            <td><?= htmlspecialchars($ap['full_name']??'') ?></td>
-                                            <td><?= htmlspecialchars($ap['student_number']??'') ?></td>
-                                            <td><?= htmlspecialchars($ap['course']??'') ?></td>
-                                            <td><?= $ap['current_year']??'' ?></td>
-                                            <td><?= htmlspecialchars($ap['gender']??'') ?></td>
-                                            <td><span class="badge badge-<?= $ap['status']==='Active'?'success':($ap['status']==='Pending'?'warning':'danger') ?>"><?= htmlspecialchars($ap['status']??'') ?></span></td>
-                                            <td><?= htmlspecialchars($ap['created_at']??'') ?></td>
-                                            <td>
-                                                <?php if (($ap['status']??'') === 'Pending'): ?>
-                                                    <form method="post" style="display:inline">
-                                                        <input type="hidden" name="action" value="approve_admission">
-                                                        <input type="hidden" name="student_id" value="<?= $ap['id'] ?>">
-                                                        <button class="btn btn-success btn-xs" type="submit"><i class="fas fa-check"></i> Approve</button>
-                                                    </form>
-                                                    <form method="post" style="display:inline" onsubmit="return confirm('Reject this application?')">
-                                                        <input type="hidden" name="action" value="reject_admission">
-                                                        <input type="hidden" name="student_id" value="<?= $ap['id'] ?>">
-                                                        <button class="btn btn-danger btn-xs" type="submit"><i class="fas fa-times"></i> Reject</button>
-                                                    </form>
-                                                <?php else: ?>
-                                                    <span class="badge badge-info"><?= htmlspecialchars($ap['status']??'') ?></span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr><td colspan="9" class="text-center">No applications found.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
         <!-- Programs Section -->
         <div class="main content-section dashboard-section"  data-section="programs">
             <div class="page-header">

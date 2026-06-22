@@ -25,14 +25,32 @@ if ($requested_position) {
     $_SESSION['requested_position'] = $requested_position;
 }
 
-if (!$requested_position) {
+// Capture redirect URL from query parameter or session
+// Note: $_GET values are already URL-decoded by PHP
+$redirect_url = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+if (!$redirect_url && !empty($_SESSION['login_redirect_url'])) {
+    $redirect_url = $_SESSION['login_redirect_url'];
+}
+if ($redirect_url) {
+    // Validate: only allow internal paths (starts with / or dashboards/ or known prefix)
+    if (strpos($redirect_url, '..') !== false || strpos($redirect_url, '://') !== false) {
+        $redirect_url = '';
+    }
+    if ($redirect_url) {
+        $_SESSION['login_redirect_url'] = $redirect_url;
+    }
+}
+
+if (!$requested_position && !$redirect_url) {
     header('Location: organogram.php');
     exit();
 }
 
 $_SESSION['staff_login_allowed']  = true;
-$_SESSION['staff_login_position'] = $requested_position;
-$_SESSION['requested_position']  = $requested_position;
+if ($requested_position) {
+    $_SESSION['staff_login_position'] = $requested_position;
+    $_SESSION['requested_position']  = $requested_position;
+}
 
 if ($auth_service->isAuthenticated()) {
     if (($_SESSION['type'] ?? '') === 'staff') {
@@ -47,6 +65,18 @@ if ($auth_service->isAuthenticated()) {
             $auth_service->logout();
             // Fall through to show the login form
         } else {
+            // If a redirect URL is stored, check if user can access it first
+            if (!empty($_SESSION['login_redirect_url'])) {
+                $target = $_SESSION['login_redirect_url'];
+                unset($_SESSION['login_redirect_url'], $_SESSION['requested_position']);
+                // Avoid redirect loops: if target is same as current or user is already on it, go to dashboard
+                $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+                $targetPath = parse_url($target, PHP_URL_PATH);
+                if ($targetPath && $targetPath !== $currentPath) {
+                    header("Location: $target");
+                    exit();
+                }
+            }
             $dashboard = $auth_service->getDashboardRoute($sessionRole);
             if (!empty($requestedPositionFromSession)) {
                 $resolvedPosition = $auth_service->resolveOrganogramPosition($requestedPositionFromSession);
@@ -1146,6 +1176,9 @@ $active_staff_tab = 'show active';
           <input type="hidden" name="action" value="staff_login">
           <?php if ($requested_position): ?>
             <input type="hidden" name="requested_position" value="<?php echo htmlspecialchars($requested_position); ?>">
+          <?php endif; ?>
+          <?php if ($redirect_url): ?>
+            <input type="hidden" name="redirect_url" value="<?php echo htmlspecialchars($redirect_url); ?>">
           <?php endif; ?>
 
           <div class="form-group">

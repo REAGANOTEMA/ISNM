@@ -389,7 +389,7 @@ function loadAccounts(){
                 sel.innerHTML += '<option value="'+esc(a.account_code)+'">'+esc(a.account_code)+' - '+esc(a.account_name)+' ('+esc(a.account_type)+')</option>';
             });
         }
-    });
+    }).catch(function(){});
 }
 
 // ── General Ledger ──
@@ -406,7 +406,7 @@ function loadLedgerEntries(){
             h += '<tr><td><small>'+esc(e.entry_date)+'</small></td><td><small>'+esc(e.account_code||'')+'<br>'+esc(e.account_name||'')+'</small></td><td>'+esc(e.description||'')+'</td><td><small>'+esc(e.reference||'-')+'</small></td><td>'+(parseFloat(e.debit_amount||0)>0?currencyRaw(e.debit_amount):'-')+'</td><td>'+(parseFloat(e.credit_amount||0)>0?currencyRaw(e.credit_amount):'-')+'</td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    });
+    }).catch(function(){});
 }
 
 // ── Trial Balance ──
@@ -424,7 +424,7 @@ function loadTrialBalance(){
         });
         h += '<tr class="fw-bold table-light"><td colspan="3" class="text-end">Total</td><td>'+currencyRaw(d.total_debit||0)+'</td><td>'+currencyRaw(d.total_credit||0)+'</td></tr>';
         h += '</tbody></table></div>'; out.innerHTML = h;
-    });
+    }).catch(function(){});
 }
 
 // ── Income Statement ──
@@ -448,7 +448,7 @@ function loadIncomeStatement(){
         var netColor = (d.net_income||0) >= 0 ? 'text-success' : 'text-danger';
         h += '<tr class="fw-bold '+netColor+'"><td><strong>NET INCOME</strong></td><td class="text-end"><strong>'+currencyRaw(d.net_income||0)+'</strong></td></tr>';
         h += '</tbody></table></div>'; out.innerHTML = h;
-    });
+    }).catch(function(){});
 }
 
 // ── Cashbook ──
@@ -469,7 +469,7 @@ function loadCashbook(){
         });
         h += '<tr class="fw-bold table-light"><td colspan="6" class="text-end">Closing Balance</td><td>'+currencyRaw(bal)+'</td></tr>';
         h += '</tbody></table></div>'; out.innerHTML = h;
-    });
+    }).catch(function(){});
 }
 
 // ── Reconciliation ──
@@ -486,7 +486,7 @@ function loadReconciliation(){
             h += '<tr><td><small>'+esc(e.reconciliation_date)+'</small></td><td>'+currencyRaw(e.bank_balance)+'</td><td>'+currencyRaw(e.book_balance)+'</td><td class="'+(Math.abs(diff)<1?'text-success':'text-danger')+'">'+currencyRaw(diff)+'</td><td>'+badgeRaw(e.status||'unreconciled')+'</td><td><small>'+esc(e.notes||'-')+'</small></td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    });
+    }).catch(function(){});
 }
 
 // ── Utility ──

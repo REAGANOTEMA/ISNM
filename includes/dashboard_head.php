@@ -52,6 +52,7 @@ if (!empty($_SESSION['user_id'])) {
   window.addEventListener('unhandledrejection', function(e){
     e.preventDefault();
     logRejection(e.reason);
+    try { if (e.promise) e.promise.catch(function(){}); } catch(ex){}
   });
   window.onunhandledrejection = function(e){
     if(e && e.preventDefault) e.preventDefault();

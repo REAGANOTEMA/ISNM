@@ -22,13 +22,15 @@ if (!function_exists('bootstrapStaffDashboard')) {
         }
 
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
-            header('Location: ../staff-login.php');
+            $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+            header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
             exit();
         }
 
         // Session timeout enforcement (1hr sliding window)
         if (!$auth_service->checkSessionValidity()) {
-            header('Location: ../staff-login.php?error=expired');
+            $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+            header('Location: ../staff-login.php?error=expired' . ($redirect ? "&redirect=$redirect" : ''));
             exit();
         }
 
@@ -43,7 +45,10 @@ if (!function_exists('bootstrapStaffDashboard')) {
                 }
             }
             if (!$allowed) {
-                header('Location: ../staff-login.php?error=unauthorized');
+                // User is authenticated but lacks role — send to their own dashboard, not login (avoids redirect loop)
+                $userDashboard = $auth_service->getDashboardRoute($role);
+                // getDashboardRoute returns e.g. "dashboards/foo.php" — prepend "../" because we're inside /dashboards/
+                header('Location: ../' . ($userDashboard ?: 'index.php'));
                 exit();
             }
         }

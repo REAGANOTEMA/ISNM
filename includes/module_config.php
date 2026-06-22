@@ -72,7 +72,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Admissions',
             'icon'     => 'fas fa-file-signature',
-            'roles'    => ['admissions','director','secretary','registrar'],
+            'roles'    => ['admissions','director','secretary'],
             'children' => [
                 ['title' => 'Director Admissions',    'route' => 'director-admissions.php',           'roles' => ['admissions','director','secretary']],
                 ['title' => 'Applications',          'route' => 'director-admissions.php#applications','roles' => ['admissions','director','secretary']],
@@ -91,7 +91,6 @@ function getModuleConfig(): array {
             'roles'    => ['registrar','director','principal','deputy'],
             'children' => [
                 ['title' => 'Overview',             'route' => 'academic-registrar.php#overview',            'roles' => '*'],
-                ['title' => 'Admissions',            'route' => 'academic-registrar.php#admissions',          'roles' => '*'],
                 ['title' => 'Student Registration',  'route' => 'academic-registrar.php#course-registration', 'roles' => '*'],
                 ['title' => 'Student Records',       'route' => 'academic-registrar.php#student-records',     'roles' => '*'],
                 ['title' => 'Student Records (By Set)','route' => 'student-records.php',                     'roles' => ['director','academics','registrar','principal','head','lecturer']],

@@ -193,6 +193,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: director-admissions.php"); exit;
     }
 
+    // Add requirement item
+    if ($action === 'add_req_item') {
+        $iname = $staff_conn->real_escape_string(trim($_POST['item_name'] ?? ''));
+        $order = intval($_POST['display_order'] ?? 0);
+        if ($iname) {
+            $staff_conn->query("INSERT INTO requirement_items (item_name,display_order) VALUES ('$iname',$order)");
+            $_SESSION['success'] = "Requirement '$iname' added.";
+        }
+        header("Location: director-admissions.php#requirements"); exit;
+    }
+
+    // Delete requirement item
+    if ($action === 'delete_req_item') {
+        $iid = intval($_POST['item_id'] ?? 0);
+        if ($iid > 0) {
+            $staff_conn->query("DELETE FROM requirement_clearances WHERE item_id=$iid");
+            $staff_conn->query("DELETE FROM requirement_items WHERE id=$iid");
+            $_SESSION['success'] = 'Requirement item deleted.';
+        }
+        header("Location: director-admissions.php#requirements"); exit;
+    }
+
     // Upload document
     if ($action === 'upload_doc') {
         $sid = intval($_POST['student_id'] ?? 0);
@@ -354,26 +376,146 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Requirements Portal -->
                 <section id="requirements" class="content-section dashboard-section" data-section="requirements">
                     <h2><i class="fas fa-clipboard-check me-2"></i>Requirements Portal</h2>
-                    <p class="text-muted small">Track admission requirements per student.</p>
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
-                            <select id="reqStudentId" class="form-select form-select-sm" onchange="loadStudentRequirements()">
-                                <option value="">Select student…</option>
-                                <?php if($students_conn){ $r=$students_conn->query("SELECT id,full_name,student_number FROM students ORDER BY full_name LIMIT 200"); if($r) while($row=$r->fetch_assoc()): ?>
-                                <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['full_name']?:$row['student_number']) ?></option>
-                                <?php endwhile; } ?>
-                            </select>
+                    <p class="text-muted small">Manage admission requirements and track student clearance.</p>
+
+                    <?php
+                    $total_students_req = safeCount($students_conn, "SELECT COUNT(*) c FROM students WHERE status='Active'");
+                    $total_req_items = count($req_items);
+                    $total_clearances = safeCount($staff_conn, "SELECT COUNT(*) c FROM requirement_clearances WHERE cleared=1");
+                    $cleared_students = 0;
+                    if ($total_req_items > 0) {
+                        $cr = $staff_conn->query("SELECT COUNT(*) c FROM (SELECT student_id FROM requirement_clearances WHERE cleared=1 GROUP BY student_id HAVING COUNT(DISTINCT item_id) = $total_req_items) sub");
+                        if ($cr) { $crr = $cr->fetch_assoc(); $cleared_students = intval($crr['c'] ?? 0); }
+                    }
+                    ?>
+
+                    <div class="stats-grid small mb-3">
+                        <div class="stat-card p-2">
+                            <div class="stat-icon" style="font-size:1.2rem"><i class="fas fa-list-check"></i></div>
+                            <div class="stat-content"><h4 style="font-size:1.1rem;margin:0"><?= $total_req_items ?></h4><p style="font-size:0.75rem;margin:0">Requirement Items</p></div>
+                        </div>
+                        <div class="stat-card p-2">
+                            <div class="stat-icon" style="font-size:1.2rem"><i class="fas fa-users"></i></div>
+                            <div class="stat-content"><h4 style="font-size:1.1rem;margin:0"><?= $total_students_req ?></h4><p style="font-size:0.75rem;margin:0">Active Students</p></div>
+                        </div>
+                        <div class="stat-card p-2">
+                            <div class="stat-icon" style="font-size:1.2rem"><i class="fas fa-check-double"></i></div>
+                            <div class="stat-content"><h4 style="font-size:1.1rem;margin:0"><?= $total_clearances ?></h4><p style="font-size:0.75rem;margin:0">Total Clearances</p></div>
+                        </div>
+                        <div class="stat-card p-2">
+                            <div class="stat-icon" style="font-size:1.2rem"><i class="fas fa-user-check"></i></div>
+                            <div class="stat-content"><h4 style="font-size:1.1rem;margin:0"><?= $cleared_students ?></h4><p style="font-size:0.75rem;margin:0">Fully Cleared</p></div>
                         </div>
                     </div>
-                    <form method="POST" id="requirementsForm">
-                        <input type="hidden" name="action" value="save_requirements">
-                        <input type="hidden" name="student_id" id="reqStudentIdHidden">
-                        <div id="requirementsList" class="small text-muted">Select a student to view requirements.</div>
-                        <div id="requirementsSubmitArea" style="display:none" class="mt-2">
-                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i>Save Requirements</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.open('director-admissions.php?report=clearance','_blank')"><i class="fas fa-print me-1"></i>Print Report</button>
+
+                    <ul class="nav nav-tabs mb-3" id="reqTabs">
+                        <li class="nav-item"><a class="nav-link active" href="#reqPerStudent" data-bs-toggle="tab">Per-Student Clearance</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#reqOverview" data-bs-toggle="tab">Requirements Overview</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#reqManageItems" data-bs-toggle="tab">Manage Items</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Per-Student Clearance -->
+                        <div class="tab-pane fade show active" id="reqPerStudent">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-5">
+                                    <select id="reqStudentId" class="form-select form-select-sm" onchange="loadStudentRequirements()">
+                                        <option value="">Select student…</option>
+                                        <?php if($students_conn){ $r=$students_conn->query("SELECT id,full_name,student_number FROM students ORDER BY full_name LIMIT 500"); if($r) while($row=$r->fetch_assoc()): ?>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['full_name']?:$row['student_number']) ?></option>
+                                        <?php endwhile; } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" id="reqStudentFilter" class="form-control form-control-sm" placeholder="Type to filter…" onkeyup="filterReqStudentList()">
+                                </div>
+                            </div>
+                            <form method="POST" id="requirementsForm">
+                                <input type="hidden" name="action" value="save_requirements">
+                                <input type="hidden" name="student_id" id="reqStudentIdHidden">
+                                <div id="requirementsList" class="small text-muted">Select a student to view requirements.</div>
+                                <div id="requirementsSubmitArea" style="display:none" class="mt-2">
+                                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i>Save Requirements</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.open('director-admissions.php?report=clearance','_blank')"><i class="fas fa-print me-1"></i>Print Clearance Report</button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+
+                        <!-- Requirements Overview -->
+                        <div class="tab-pane fade" id="reqOverview">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead><tr><th>#</th><th>Requirement Item</th><th>Students Cleared</th><th>Progress</th><th>Order</th></tr></thead>
+                                    <tbody>
+                                        <?php $ri_idx=1; foreach($req_items as $ri):
+                                            $rc = safeCount($staff_conn, "SELECT COUNT(*) c FROM requirement_clearances WHERE item_id={$ri['id']} AND cleared=1");
+                                            $pct = $total_students_req > 0 ? round(($rc/$total_students_req)*100) : 0;
+                                            $bar = $pct >= 80 ? 'bg-success' : ($pct >= 50 ? 'bg-warning' : 'bg-danger');
+                                        ?>
+                                        <tr>
+                                            <td><?= $ri_idx++ ?></td>
+                                            <td><?= htmlspecialchars($ri['item_name']) ?></td>
+                                            <td><?= $rc ?> / <?= $total_students_req ?></td>
+                                            <td style="min-width:180px">
+                                                <div class="progress" style="height:18px">
+                                                    <div class="progress-bar <?= $bar ?>" role="progressbar" style="width:<?= $pct ?>%"><?= $pct ?>%</div>
+                                                </div>
+                                            </td>
+                                            <td><?= $ri['display_order'] ?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Manage Requirement Items -->
+                        <div class="tab-pane fade" id="reqManageItems">
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <div class="card">
+                                        <div class="card-header py-2"><strong>Add New Requirement</strong></div>
+                                        <div class="card-body">
+                                            <form method="POST">
+                                                <input type="hidden" name="action" value="add_req_item">
+                                                <div class="mb-2">
+                                                    <label class="form-label small">Item Name</label>
+                                                    <input type="text" name="item_name" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label small">Display Order</label>
+                                                    <input type="number" name="display_order" class="form-control form-control-sm" value="<?= count($req_items)+1 ?>">
+                                                </div>
+                                                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i>Add Item</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead><tr><th>Item</th><th>Order</th><th>Action</th></tr></thead>
+                                            <tbody>
+                                                <?php foreach($req_items as $ri): ?>
+                                                <tr>
+                                                    <td><?= htmlspecialchars($ri['item_name']) ?></td>
+                                                    <td><?= $ri['display_order'] ?></td>
+                                                    <td>
+                                                        <form method="POST" class="d-inline" onsubmit="return confirm('Delete this requirement item?')">
+                                                            <input type="hidden" name="action" value="delete_req_item">
+                                                            <input type="hidden" name="item_id" value="<?= $ri['id'] ?>">
+                                                            <button class="btn btn-sm btn-outline-danger py-0"><i class="fas fa-trash"></i></button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Student Directory -->
@@ -704,6 +846,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function uploadDoc(id, name){
         document.getElementById('uploadDocStudentId').value = id;
         new bootstrap.Modal(document.getElementById('uploadDocModal')).show();
+    }
+
+    function filterReqStudentList(){
+        const q = document.getElementById('reqStudentFilter')?.value?.toLowerCase()||'';
+        const sel = document.getElementById('reqStudentId');
+        for(let i=0;i<sel.options.length;i++){
+            const opt = sel.options[i];
+            if(i===0) continue;
+            opt.style.display = opt.text.toLowerCase().includes(q) ? '' : 'none';
+        }
     }
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
