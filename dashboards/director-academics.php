@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mk=floatval($_POST['marks']??0);
         $gr=$conn->real_escape_string($_POST['grade']??'');
         $cc=$conn->real_escape_string($_POST['course_code']??'');
-        if($en && $sid){ $conn->query("INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,graded_by) VALUES ($sid,'$cc','','Exam',$mk,'$gr',$user_id)"); $_SESSION['success']='Marks entered.'; }
+        if($en && $sid){ $conn->query("INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,graded_by) VALUES (" . intval($sid) . ",'$cc','','Exam',$mk,'$gr'," . intval($user_id) . ")"); $_SESSION['success']='Marks entered.'; }
         else { $_SESSION['error']='Exam and student required.'; }
         header("Location: director-academics.php"); exit;
     }
@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'transcript_request') {
         $sid=intval($_POST['student_id']??0);
         $dn=$conn->real_escape_string($_POST['document_title']??'Transcript');
-        if($sid){ $conn->query("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES ('Transcript',$sid,$user_id,'$dn','')"); $_SESSION['success']='Transcript generated.'; }
+        if($sid){ $conn->query("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES ('Transcript'," . intval($sid) . "," . intval($user_id) . ",'$dn','')"); $_SESSION['success']='Transcript generated.'; }
         header("Location: director-academics.php"); exit;
     }
 
