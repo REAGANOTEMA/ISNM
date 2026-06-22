@@ -3233,3 +3233,34 @@ Stack trace:
 [22-Jun-2026 10:35:26 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
 [22-Jun-2026 10:35:26 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
 [22-Jun-2026 10:35:26 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 10:46:02 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 10:46:02 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 10:46:02 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 10:46:02 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 10:46:07 Africa/Kampala] Error fetching news: Unknown column 'author_name' in 'field list'
+[22-Jun-2026 10:46:08 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 10:46:09 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 10:46:09 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 10:46:09 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 10:46:10 Africa/Kampala] Error fetching news: Unknown column 'author_name' in 'field list'
+[22-Jun-2026 11:08:21 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 11:08:21 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 11:08:21 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 11:08:21 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 11:08:21 Africa/Kampala] Error fetching news: Unknown column 'author_name' in 'field list'
+[22-Jun-2026 11:08:44 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 11:08:44 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 11:08:44 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 11:08:44 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 11:08:56 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 11:08:56 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 11:08:56 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 11:08:56 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 11:13:40 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 11:13:40 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 11:13:40 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 11:13:40 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[22-Jun-2026 11:19:46 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[22-Jun-2026 11:19:46 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[22-Jun-2026 11:19:46 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[22-Jun-2026 11:19:46 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

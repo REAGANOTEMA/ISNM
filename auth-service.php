@@ -490,6 +490,7 @@ class AuthenticationService {
             'director admissions requirements' => 'dashboards/director-admissions.php',
             'director admissions'             => 'dashboards/director-admissions.php',
             'store keeper'                    => 'dashboards/storekeeper.php',
+            'admissions'                      => 'dashboards/director-admissions.php',
             'guild president'                 => 'dashboards/guild-president.php',
             'skills lab manager'              => 'dashboards/skills-lab.php',
             'skills lab'                      => 'dashboards/skills-lab.php',

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['admissions', 'director']);
+$ctx = bootstrapStaffDashboard(['admissions', 'director', 'registrar']);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
 $website_conn = $ctx['website'];
@@ -478,7 +478,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <tbody>
                             <?php foreach($applicants as $a): $aname = htmlspecialchars(trim($a['first_name'].' '.$a['surname'])); ?>
                             <tr>
-                                <td><code><?= htmlspecialchars($a['application_number']) ?></code></td>
+                                <td><code><?= htmlspecialchars($a['application_number'] ?? 'APP-'.str_pad($a['id']??0,4,'0',STR_PAD_LEFT)) ?></code></td>
                                 <td><?= $aname ?></td>
                                 <td><?= htmlspecialchars($a['program_applied']) ?></td>
                                 <td><?= $a['submitted_at'] ?></td>
@@ -762,24 +762,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ===== Section Navigation =====
 (function(){
     var navLinks = document.querySelectorAll('.section-nav a');
+    function switchSection(section){
+        navLinks.forEach(function(a){ a.classList.remove('active'); if(a.getAttribute('data-section')===section) a.classList.add('active'); });
+        document.querySelectorAll('.content-section').forEach(function(s){ s.classList.remove('active'); });
+        var target = document.getElementById('sec-' + section);
+        if (target) target.classList.add('active');
+        if (section === 'requirements') {
+            var tabEl = document.querySelector('#reqTabs .nav-link');
+            if (tabEl && typeof bootstrap !== 'undefined') {
+                var tab = new bootstrap.Tab(tabEl);
+                if (tab) tab.show();
+            }
+        }
+    }
     navLinks.forEach(function(link){
         link.addEventListener('click', function(e){
             e.preventDefault();
-            var section = this.getAttribute('data-section');
-            navLinks.forEach(function(a){ a.classList.remove('active'); });
-            this.classList.add('active');
-            document.querySelectorAll('.content-section').forEach(function(s){ s.classList.remove('active'); });
-            var target = document.getElementById('sec-' + section);
-            if (target) target.classList.add('active');
-            if (section === 'requirements') {
-                var tabEl = document.querySelector('#reqTabs .nav-link');
-                if (tabEl && typeof bootstrap !== 'undefined') {
-                    var tab = new bootstrap.Tab(tabEl);
-                    if (tab) tab.show();
-                }
-            }
+            switchSection(this.getAttribute('data-section'));
+            history.replaceState(null, '', '#' + this.getAttribute('data-section'));
         });
     });
+    function hashToSection(){
+        var hash = location.hash.replace('#', '');
+        if (['overview','applications','admissions','requirements','directory','reports'].indexOf(hash) !== -1) {
+            switchSection(hash);
+        }
+    }
+    hashToSection();
+    window.addEventListener('hashchange', hashToSection);
 })();
 
 // ===== Toast Notification =====
@@ -959,6 +969,8 @@ function saveReqNotes(sid, iid, notes){
     formData.append('student_id', sid);
     formData.append('item_id', iid);
     formData.append('notes', notes);
+    var cb = document.getElementById('rcb_' + iid);
+    formData.append('cleared', cb ? (cb.checked ? 1 : 0) : 0);
     fetch('director-admissions.php?ajax=save_requirement_item', { method:'POST', body: formData })
         .then(function(r){ return r.json(); })
         .catch(function(){});

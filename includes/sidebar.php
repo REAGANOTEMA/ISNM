@@ -317,6 +317,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <div class="menu-children" id="childGroup-reports" style="max-height:0">
                 <div class="menu-children-inner">
                     <a href="director-admissions.php#reports" class="child-link" data-section="reports"><span class="child-bullet"></span><span class="child-label">Admission Reports</span></a>
+                    <a href="director-admissions.php?report=clearance" class="child-link"><span class="child-bullet"></span><span class="child-label">Clearance Analytics</span></a>
                 </div>
             </div>
         </div>

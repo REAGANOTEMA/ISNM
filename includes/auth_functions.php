@@ -272,6 +272,10 @@ function getUserDashboard($role) {
         'School Secretary' => 'school-secretary.php',
         'School Librarian' => 'school-librarian.php',
         
+        // Admissions
+        'Director Admissions' => 'director-admissions.php',
+        'admissions' => 'director-admissions.php',
+
         // Academic Staff
         'Head of Nursing' => 'head-nursing.php',
         'Head of Midwifery' => 'head-midwifery.php',

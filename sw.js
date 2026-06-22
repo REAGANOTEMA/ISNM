@@ -8,6 +8,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+      .catch(() => self.clients.claim())
   );
 });
 
@@ -36,7 +37,7 @@ self.addEventListener('fetch', (event) => {
           if (response.ok) cache.put(event.request, response.clone());
           return response;
         });
-      })
-    )
+      }).catch(() => fetch(event.request))
+    ).catch(() => fetch(event.request))
   );
 });
