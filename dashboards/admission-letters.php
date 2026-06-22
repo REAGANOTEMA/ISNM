@@ -194,7 +194,7 @@ function printLetter(id) {
         w.document.write('</body></html>');
         w.document.close();
         setTimeout(() => { w.print(); }, 500);
-    });
+    }).catch(function(){});
 }
 function esc(s) { if (!s) return ''; let d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 </script>

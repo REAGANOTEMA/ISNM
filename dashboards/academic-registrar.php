@@ -3638,10 +3638,10 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                             html += '<span class="text-muted" style="font-size:11px;display:block">' + escHtml(s.registration_number||s.student_number) + ' | ' + escHtml(s.course) + '</span>';
                             html += '</div>';
                         });
-                        html += '<div class="lookup-item lookup-create" onclick="openQuickCreate(\'transcript\')"><i class="fas fa-plus-circle"></i> Create new student...</div>';
+                            html += '<div class="lookup-item lookup-create" onclick="openQuickCreate(\'transcript\')"><i class="fas fa-plus-circle"></i> Create new student...</div>';
                         resultsEl.innerHTML = html;
                         resultsEl.style.display = 'block';
-                    });
+                    }).catch(function(){});
             }, 300);
         }
         function transcriptSelectStudent(id, name, reg) {
@@ -3676,10 +3676,10 @@ if ($doc_r) while ($row = $doc_r->fetch_assoc()) $documents[] = $row;
                             html += '<span class="text-muted" style="font-size:11px;display:block">' + escHtml(s.registration_number||s.student_number) + ' | ' + escHtml(s.course) + '</span>';
                             html += '</div>';
                         });
-                        html += '<div class="lookup-item lookup-create" onclick="openQuickCreate(\'cert\')"><i class="fas fa-plus-circle"></i> Create new student...</div>';
+                            html += '<div class="lookup-item lookup-create" onclick="openQuickCreate(\'cert\')"><i class="fas fa-plus-circle"></i> Create new student...</div>';
                         resultsEl.innerHTML = html;
                         resultsEl.style.display = 'block';
-                    });
+                    }).catch(function(){});
             }, 300);
         }
         function certSelectStudent(id, name, reg) {
