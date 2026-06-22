@@ -41,7 +41,7 @@ if($r) while($row=$r->fetch_assoc()) $lecturers[]=$row;
 $students = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,mobile_number,email,status,index_number,national_student_id_number FROM students ORDER BY full_name LIMIT 200");
 if($r) while($row=$r->fetch_assoc()) $students[]=$row; }
 
-$user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+$user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . intval($user_id));
 if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 
 $recent_activities = []; $r=$conn->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
@@ -102,15 +102,15 @@ if ($report) {
     } elseif ($report === 'fee_statement') {
         $sid = intval($_GET['student_id']??0);
         echo '<h2>Fee Statement</h2>';
-        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=$sid"); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<p><strong>'.htmlspecialchars($s['full_name']).'</strong> ('.htmlspecialchars($s['registration_number']?:$s['student_number']).') - '.htmlspecialchars($s['course']).'</p>'; }
-        $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,due_date,status FROM student_invoices WHERE student_id=$sid");
+        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=" . intval($sid)); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<p><strong>'.htmlspecialchars($s['full_name']).'</strong> ('.htmlspecialchars($s['registration_number']?:$s['student_number']).') - '.htmlspecialchars($s['course']).'</p>'; }
+        $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,due_date,status FROM student_invoices WHERE student_id=" . intval($sid));
         echo '<table><thead><tr><th>Invoice</th><th>Type</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Due</th><th>Status</th></tr></thead><tbody>';
         $ttl=0;$tpd=0; if($r) while($row=$r->fetch_assoc()){ $ttl+=$row['total_amount'];$tpd+=$row['amount_paid']; echo '<tr><td>'.$row['invoice_number'].'</td><td>'.$row['fee_type'].'</td><td>'.number_format($row['total_amount'],0).'</td><td>'.number_format($row['amount_paid'],0).'</td><td>'.number_format($row['balance'],0).'</td><td>'.$row['due_date'].'</td><td>'.$row['status'].'</td></tr>'; }
         echo '</tbody></table><p><strong>Total Invoiced:</strong> '.number_format($ttl,0).' | <strong>Total Paid:</strong> '.number_format($tpd,0).' | <strong>Balance:</strong> '.number_format($ttl-$tpd,0).'</p>'; }
     } elseif ($report === 'student_detail') {
         $sid = intval($_GET['student_id']??0);
         echo '<h2>Student Detail Report</h2>';
-        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=$sid"); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<table>'; foreach($s as $k=>$v){ echo '<tr><td><strong>'.ucwords(str_replace('_',' ',$k)).':</strong></td><td>'.htmlspecialchars($v??'-').'</td></tr>'; } echo '</table>'; } }
+        if($sid && $students_conn){ $qs=$students_conn->query("SELECT * FROM students WHERE id=" . intval($sid)); $s=$qs?$qs->fetch_assoc():null; if($s){ echo '<table>'; foreach($s as $k=>$v){ echo '<tr><td><strong>'.ucwords(str_replace('_',' ',$k)).':</strong></td><td>'.htmlspecialchars($v??'-').'</td></tr>'; } echo '</table>'; } }
     }
     echo '</body></html>'; exit;
 }
