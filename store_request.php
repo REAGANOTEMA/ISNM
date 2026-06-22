@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $qty = (float)($item['quantity'] ?? 0);
             if ($itemId > 0 && $qty > 0) {
                 // Verify item exists and is active
-                $check = $staffConn->query("SELECT id FROM store_inventory WHERE id=$itemId AND status='active'");
+                $check = $staffConn->query("SELECT id FROM store_inventory WHERE id=" . intval($itemId) . " AND status='active'");
                 if ($check && $check->num_rows > 0) {
                     $validItems[] = ['item_id' => $itemId, 'quantity' => $qty, 'notes' => substr(trim($item['notes'] ?? ''), 0, 255)];
                 }
@@ -80,7 +80,7 @@ foreach ($allItems as $item) {
 // Get user's recent requests
 $myRequests = [];
 $uid = (int)$_SESSION['user_id'];
-$r = $staffConn->query("SELECT sr.*, COUNT(sri.id) as total_items FROM store_requests sr LEFT JOIN store_request_items sri ON sr.id=sri.request_id WHERE sr.requested_by=$uid GROUP BY sr.id ORDER BY sr.created_at DESC LIMIT 10");
+$r = $staffConn->query("SELECT sr.*, COUNT(sri.id) as total_items FROM store_requests sr LEFT JOIN store_request_items sri ON sr.id=sri.request_id WHERE sr.requested_by=" . intval($uid) . " GROUP BY sr.id ORDER BY sr.created_at DESC LIMIT 10");
 if ($r) while ($row = $r->fetch_assoc()) $myRequests[] = $row;
 
 $userName = $user['full_name'] ?? 'Staff';

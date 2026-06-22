@@ -16,15 +16,15 @@ $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FR
 $total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$pending_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = $user_id AND status IN ('draft','submitted')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$completed_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = $user_id AND status = 'finalized' AND DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$leave_balance = ($conn && ($q = $conn->query("SELECT COALESCE(SUM(remaining_days),0) FROM leave_balance WHERE staff_id = $user_id")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$pending_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = " . intval($user_id) . " AND status IN ('draft','submitted')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$completed_tasks = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff_appraisals WHERE staff_id = " . intval($user_id) . " AND status = 'finalized' AND DATE(created_at) = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$leave_balance = ($conn && ($q = $conn->query("SELECT COALESCE(SUM(remaining_days),0) FROM leave_balance WHERE staff_id = " . intval($user_id))) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $attendance_rate = 0.0;
 if ($conn) {
-    $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = $user_id AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
+    $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = " . intval($user_id) . " AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
     if ($q && $r = $q->fetch_row()) {
         $total = (int) $r[0];
-        $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = $user_id AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = 'Present'");
+        $q = $conn->query("SELECT COUNT(*) FROM staff_attendance WHERE staff_id = " . intval($user_id) . " AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = 'Present'");
         if ($q && $r = $q->fetch_row()) {
             $present = (int) $r[0];
             $attendance_rate = $total > 0 ? round($present / $total, 2) : 0.0;

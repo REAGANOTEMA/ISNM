@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     if ($staffDb && $action==='terminate_contract') {
         $cid = (int)($_POST['contract_id']??0);
         if ($cid) {
-            $staffDb->query("UPDATE staff_contracts SET status='Terminated', updated_at=NOW() WHERE id=$cid");
+            $staffDb->query("UPDATE staff_contracts SET status='Terminated', updated_at=NOW() WHERE id=" . intval($cid));
             if (function_exists('logActivity')) logActivity($staffDb, $user['id']??0, "Terminated contract #$cid");
             $_SESSION['success'] = 'Contract terminated.';
         }
@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $cid = (int)($_POST['contract_id']??0);
         $newEnd = $staffDb->real_escape_string($_POST['new_end_date']??'');
         if ($cid && $newEnd) {
-            $staffDb->query("UPDATE staff_contracts SET status='Renewed', updated_at=NOW() WHERE id=$cid");
-            $r = $staffDb->query("SELECT * FROM staff_contracts WHERE id=$cid");
+            $staffDb->query("UPDATE staff_contracts SET status='Renewed', updated_at=NOW() WHERE id=" . intval($cid));
+            $r = $staffDb->query("SELECT * FROM staff_contracts WHERE id=" . intval($cid));
             $old = $r ? $r->fetch_assoc() : null;
             if ($old) {
                 $stmt = $staffDb->prepare("INSERT INTO staff_contracts (contract_number,staff_id,contract_type,start_date,end_date,job_title,department,salary,probation_period,notice_period,contract_terms,benefits,signed_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");

@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $qty = (float)($_POST['quantity'] ?? 0);
         $reason = $staffConn->real_escape_string(trim($_POST['reason'] ?? $action));
 
-        $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=$itemId");
+        $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=" . intval($itemId));
         $curRow = $cur ? $cur->fetch_assoc() : null;
         $qtyBefore = $curRow ? (float)$curRow['quantity'] : 0;
 
@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $type = 'adjust';
         }
 
-        $staffConn->query("UPDATE store_inventory SET quantity=$qtyAfter WHERE id=$itemId");
-        $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES ($itemId, '$type', $qty, $qtyBefore, $qtyAfter, '$reason', $userId)");
+        $staffConn->query("UPDATE store_inventory SET quantity=$qtyAfter WHERE id=" . intval($itemId));
+        $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (" . intval($itemId) . ", '$type', $qty, $qtyBefore, $qtyAfter, '$reason', " . intval($userId) . ")");
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Stock updated successfully.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -50,14 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $reqId = (int)($_POST['request_id'] ?? 0);
 
         if ($qty > 0) {
-            $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=$itemId");
+            $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=" . intval($itemId));
             $curRow = $cur->fetch_assoc();
             $avail = $curRow ? (float)$curRow['quantity'] : 0;
             $qty = min($qty, $avail);
 
-            $staffConn->query("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+$qty, status='fulfilled' WHERE id=$reqItemId");
-            $staffConn->query("UPDATE store_inventory SET quantity=quantity-$qty WHERE id=$itemId");
-            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ($itemId, 'request_fulfilled', $qty, 'Fulfilled request #$reqId', $userId, 'request', $reqId)");
+            $staffConn->query("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+$qty, status='fulfilled' WHERE id=" . intval($reqItemId));
+            $staffConn->query("UPDATE store_inventory SET quantity=quantity-$qty WHERE id=" . intval($itemId));
+            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (" . intval($itemId) . ", 'request_fulfilled', $qty, 'Fulfilled request #$reqId', " . intval($userId) . ", 'request', " . intval($reqId) . ")");
         }
         header('Location: storekeeper.php'); exit;
     }
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $reqId = (int)($_POST['request_id'] ?? 0);
         $forwardTo = (int)($_POST['forward_to'] ?? 0);
         $forwardRole = $staffConn->real_escape_string($_POST['forward_role'] ?? '');
-        $staffConn->query("UPDATE store_requests SET status='forwarded', forwarded_to=$forwardTo, forwarded_to_role='$forwardRole' WHERE id=$reqId");
+        $staffConn->query("UPDATE store_requests SET status='forwarded', forwarded_to=" . intval($forwardTo) . ", forwarded_to_role='$forwardRole' WHERE id=" . intval($reqId));
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request forwarded for approval.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Mark request as fulfilled
     if ($action === 'fulfill_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
-        $staffConn->query("UPDATE store_requests SET status='fulfilled', fulfilled_by=$userId, fulfilled_at=NOW() WHERE id=$reqId");
+        $staffConn->query("UPDATE store_requests SET status='fulfilled', fulfilled_by=" . intval($userId) . ", fulfilled_at=NOW() WHERE id=" . intval($reqId));
         header('Location: storekeeper.php'); exit;
     }
 
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($action === 'reject_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
         $reason = $staffConn->real_escape_string(trim($_POST['rejection_reason'] ?? 'No reason'));
-        $staffConn->query("UPDATE store_requests SET status='rejected', rejection_reason='$reason' WHERE id=$reqId");
+        $staffConn->query("UPDATE store_requests SET status='rejected', rejection_reason='$reason' WHERE id=" . intval($reqId));
         header('Location: storekeeper.php'); exit;
     }
 
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (!empty($valid)) {
             $ordNum = 'PO-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
             $total = array_sum(array_map(fn($v)=>$v[1]*$v[2], $valid));
-            $staffConn->query("INSERT INTO store_orders (order_number, supplier, notes, total_amount, status, requested_by) VALUES ('$ordNum', '$supplier', '$notes', $total, 'pending_approval', $userId)");
+            $staffConn->query("INSERT INTO store_orders (order_number, supplier, notes, total_amount, status, requested_by) VALUES ('$ordNum', '$supplier', '$notes', $total, 'pending_approval', " . intval($userId) . ")");
             $orderId = $staffConn->insert_id;
 
             $ins = $staffConn->prepare("INSERT INTO store_order_items (order_id, item_id, quantity_ordered, unit_price) VALUES (?, ?, ?, ?)");
@@ -133,12 +133,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Receive order
     if ($action === 'receive_order') {
         $orderId = (int)($_POST['order_id'] ?? 0);
-        $staffConn->query("UPDATE store_orders SET status='received', received_by=$userId, received_at=NOW() WHERE id=$orderId");
-        $items = $staffConn->query("SELECT oi.id, oi.item_id, oi.quantity_ordered FROM store_order_items oi WHERE oi.order_id=$orderId AND oi.status='pending'");
+        $staffConn->query("UPDATE store_orders SET status='received', received_by=" . intval($userId) . ", received_at=NOW() WHERE id=" . intval($orderId));
+        $items = $staffConn->query("SELECT oi.id, oi.item_id, oi.quantity_ordered FROM store_order_items oi WHERE oi.order_id=" . intval($orderId) . " AND oi.status='pending'");
         while ($row = $items->fetch_assoc()) {
             $staffConn->query("UPDATE store_order_items SET quantity_received=quantity_ordered, status='received' WHERE id={$row['id']}");
             $staffConn->query("UPDATE store_inventory SET quantity=quantity+{$row['quantity_ordered']} WHERE id={$row['item_id']}");
-            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ({$row['item_id']}, 'order_received', {$row['quantity_ordered']}, 'Order #$orderId received', $userId, 'order', $orderId)");
+            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ({$row['item_id']}, 'order_received', {$row['quantity_ordered']}, 'Order #$orderId received', " . intval($userId) . ", 'order', " . intval($orderId) . ")");
         }
         header('Location: storekeeper.php'); exit;
     }
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Approve order
     if ($action === 'approve_order') {
         $orderId = (int)($_POST['order_id'] ?? 0);
-        $staffConn->query("UPDATE store_orders SET status='approved', approved_by=$userId, approved_at=NOW() WHERE id=$orderId");
+        $staffConn->query("UPDATE store_orders SET status='approved', approved_by=" . intval($userId) . ", approved_at=NOW() WHERE id=" . intval($orderId));
         header('Location: storekeeper.php'); exit;
     }
 }

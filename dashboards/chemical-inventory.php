@@ -58,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         }
 
         if ($id > 0) {
-            $staff_conn->query("UPDATE chemical_inventory SET chemical_code='$code', chemical_name='$name', chemical_type='$type', cas_number='$cas', hazard_class='$hazard', storage_location='$loc', quantity_on_hand=$qty, unit_of_measure='$unit', reorder_level=$rol, supplier='$supplier', expiry_date=$expiry, date_received=$received, status='$status' WHERE id=$id");
+            $staff_conn->query("UPDATE chemical_inventory SET chemical_code='$code', chemical_name='$name', chemical_type='$type', cas_number='$cas', hazard_class='$hazard', storage_location='$loc', quantity_on_hand=$qty, unit_of_measure='$unit', reorder_level=$rol, supplier='$supplier', expiry_date=$expiry, date_received=$received, status='$status' WHERE id=" . intval($id));
             $_SESSION['success'] = 'Chemical updated successfully.';
         } else {
-            $staff_conn->query("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES ('$code','$name','$type','$cas','$hazard','$loc',$qty,'$unit',$rol,'$supplier',$expiry,$received,$user_id,'$status')");
+            $staff_conn->query("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES ('$code','$name','$type','$cas','$hazard','$loc',$qty,'$unit',$rol,'$supplier',$expiry,$received," . intval($user_id) . ",'$status')");
             $_SESSION['success'] = 'Chemical added successfully.';
         }
         header('Location: chemical-inventory.php'); exit;
@@ -72,14 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $adjust_type = ci_esc($staff_conn, $_POST['adjust_type']);
         $adjust_qty = (float)($_POST['adjust_quantity'] ?? 0);
         if ($id > 0 && $adjust_qty > 0) {
-            $qrChem = $staff_conn->query("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id=$id"); $chem = $qrChem ? $qrChem->fetch_assoc() : null;
+            $qrChem = $staff_conn->query("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id=" . intval($id)); $chem = $qrChem ? $qrChem->fetch_assoc() : null;
             if ($chem) {
                 $cq = (float)$chem['quantity_on_hand'];
                 $nq = ($adjust_type === 'add') ? $cq + $adjust_qty : max(0, $cq - $adjust_qty);
                 $rol = $chem['reorder_level'];
                 $exp = $chem['expiry_date'];
                 $ns = ($exp && $exp <= date('Y-m-d')) ? 'Expired' : ($nq <= 0 ? 'Discontinued' : ($rol !== null && $nq <= (float)$rol ? 'Low Stock' : 'In Stock'));
-                $staff_conn->query("UPDATE chemical_inventory SET quantity_on_hand=$nq, status='$ns' WHERE id=$id");
+                $staff_conn->query("UPDATE chemical_inventory SET quantity_on_hand=$nq, status='$ns' WHERE id=" . intval($id));
                 $_SESSION['success'] = "Stock adjusted. New qty: $nq";
             }
         }
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'mark_disposed') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            $staff_conn->query("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=$id");
+            $staff_conn->query("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=" . intval($id));
             $_SESSION['success'] = 'Chemical marked as disposed.';
         }
         header('Location: chemical-inventory.php'); exit;
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'delete_chemical') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            $staff_conn->query("DELETE FROM chemical_inventory WHERE id=$id");
+            $staff_conn->query("DELETE FROM chemical_inventory WHERE id=" . intval($id));
             $_SESSION['success'] = 'Chemical deleted.';
         }
         header('Location: chemical-inventory.php'); exit;

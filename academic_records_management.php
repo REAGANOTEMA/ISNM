@@ -59,7 +59,7 @@ function handleAddMarks() {
     $sql = "INSERT INTO academic_records (student_id, academic_year, semester, year, course_code, course_name, course_type, credits, assessment_marks, exam_marks, total_marks, grade, grade_points, gpa_contribution, lecturer, entered_by, entry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssddddddssss", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
+    $stmt->bind_param("ssssssssddddddss", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
     
     if ($stmt->execute()) {
         // Update student's cumulative GPA

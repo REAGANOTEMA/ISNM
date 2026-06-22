@@ -55,7 +55,7 @@ if ($view === 'equipment' && $ajax === 'save') {
     $notes = $db->real_escape_string($data['notes'] ?? '');
     try {
         if ($id) {
-            $db->query("UPDATE lab_equipment SET equipment_code='$code', name='$name', description='$desc', category='$cat', quantity=$qty, available_quantity=$avail, condition_status='$cond', location='$loc', serial_number='$serial', purchase_date=$pdate, purchase_cost=$pcost, supplier='$supplier', last_maintenance_date=$lmaint, next_maintenance_date=$nmaint, status='$stat', notes='$notes' WHERE id=$id");
+            $db->query("UPDATE lab_equipment SET equipment_code='$code', name='$name', description='$desc', category='$cat', quantity=$qty, available_quantity=$avail, condition_status='$cond', location='$loc', serial_number='$serial', purchase_date=$pdate, purchase_cost=$pcost, supplier='$supplier', last_maintenance_date=$lmaint, next_maintenance_date=$nmaint, status='$stat', notes='$notes' WHERE id=" . intval($id));
         } else {
             $db->query("INSERT INTO lab_equipment (equipment_code, name, description, category, quantity, available_quantity, condition_status, location, serial_number, purchase_date, purchase_cost, supplier, last_maintenance_date, next_maintenance_date, status, notes) VALUES ('$code','$name','$desc','$cat',$qty,$avail,'$cond','$loc','$serial',$pdate,$pcost,'$supplier',$lmaint,$nmaint,'$stat','$notes')");
         }
@@ -65,7 +65,7 @@ if ($view === 'equipment' && $ajax === 'save') {
 }
 if ($view === 'equipment' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_equipment WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_equipment WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -99,10 +99,10 @@ if ($view === 'checkouts' && $ajax === 'save') {
             $ard = $data['actual_return_date'] ? "'" . $db->real_escape_string($data['actual_return_date']) . "'" : 'NULL';
             $qr = (int)($data['quantity_returned'] ?? 0);
             $stat = $db->real_escape_string($data['status'] ?? 'checked_out');
-            $db->query("UPDATE lab_equipment_checkouts SET expected_return_date='$erd', actual_return_date=$ard, quantity_returned=$qr, status='$stat', notes='$notes' WHERE id=$id");
+            $db->query("UPDATE lab_equipment_checkouts SET expected_return_date='$erd', actual_return_date=$ard, quantity_returned=$qr, status='$stat', notes='$notes' WHERE id=" . intval($id));
         } else {
-            $db->query("INSERT INTO lab_equipment_checkouts (equipment_id, student_id, checked_out_by, expected_return_date, quantity_checked_out, purpose, notes) VALUES ($eid,'$sid',$cb,'$erd',$qty,'$purp','$notes')");
-            $db->query("UPDATE lab_equipment SET available_quantity = GREATEST(available_quantity - $qty, 0) WHERE id=$eid");
+            $db->query("INSERT INTO lab_equipment_checkouts (equipment_id, student_id, checked_out_by, expected_return_date, quantity_checked_out, purpose, notes) VALUES (" . intval($eid) . ",'$sid'," . intval($cb) . ",'$erd'," . intval($qty) . ",'$purp','$notes')");
+            $db->query("UPDATE lab_equipment SET available_quantity = GREATEST(available_quantity - " . intval($qty) . ", 0) WHERE id=" . intval($eid));
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -111,9 +111,9 @@ if ($view === 'checkouts' && $ajax === 'save') {
 if ($view === 'checkouts' && $ajax === 'return' && $id) {
     header('Content-Type: application/json');
     try {
-        $r = $db->query("SELECT equipment_id, quantity_checked_out FROM lab_equipment_checkouts WHERE id=$id");
+        $r = $db->query("SELECT equipment_id, quantity_checked_out FROM lab_equipment_checkouts WHERE id=" . intval($id));
         if ($c = $r->fetch_assoc()) {
-            $db->query("UPDATE lab_equipment_checkouts SET actual_return_date=NOW(), quantity_returned=quantity_checked_out, status='returned' WHERE id=$id");
+            $db->query("UPDATE lab_equipment_checkouts SET actual_return_date=NOW(), quantity_returned=quantity_checked_out, status='returned' WHERE id=" . intval($id));
             $db->query("UPDATE lab_equipment SET available_quantity = available_quantity + {$c['quantity_checked_out']} WHERE id={$c['equipment_id']}");
             echo json_encode(['success' => true]);
         } else {
@@ -124,7 +124,7 @@ if ($view === 'checkouts' && $ajax === 'return' && $id) {
 }
 if ($view === 'checkouts' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_equipment_checkouts WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_equipment_checkouts WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -162,7 +162,7 @@ if ($view === 'sessions' && $ajax === 'save') {
     $notes = $db->real_escape_string($data['notes'] ?? '');
     try {
         if ($id) {
-            $db->query("UPDATE lab_practical_sessions SET session_code='$sc', title='$title', description='$desc', instructor='$inst', program='$prog', year_level='$yl', semester='$sem', session_date='$sdate', start_time=$stime, end_time=$etime, location='$loc', max_students=$max, status='$stat', notes='$notes' WHERE id=$id");
+            $db->query("UPDATE lab_practical_sessions SET session_code='$sc', title='$title', description='$desc', instructor='$inst', program='$prog', year_level='$yl', semester='$sem', session_date='$sdate', start_time=$stime, end_time=$etime, location='$loc', max_students=" . intval($max) . ", status='$stat', notes='$notes' WHERE id=" . intval($id));
         } else {
             $db->query("INSERT INTO lab_practical_sessions (session_code, title, description, instructor, program, year_level, semester, session_date, start_time, end_time, location, max_students, status, notes) VALUES ('$sc','$title','$desc','$inst','$prog','$yl','$sem','$sdate',$stime,$etime,'$loc',$max,'$stat','$notes')");
         }
@@ -172,7 +172,7 @@ if ($view === 'sessions' && $ajax === 'save') {
 }
 if ($view === 'sessions' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_practical_sessions WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_practical_sessions WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -206,9 +206,9 @@ if ($view === 'skills' && $ajax === 'save') {
     $uid = (int)($user['id'] ?? 0);
     try {
         if ($id) {
-            $db->query("UPDATE lab_skills_demonstrations SET student_id='$sid', skill_name='$skn', skill_category='$skc', instructor='$inst', date_demonstrated='$dd', competency='$comp', attempt_number=$att, notes='$notes', next_review_date=$nrd WHERE id=$id");
+            $db->query("UPDATE lab_skills_demonstrations SET student_id='$sid', skill_name='$skn', skill_category='$skc', instructor='$inst', date_demonstrated='$dd', competency='$comp', attempt_number=" . intval($att) . ", notes='$notes', next_review_date=$nrd WHERE id=" . intval($id));
         } else {
-            $db->query("INSERT INTO lab_skills_demonstrations (student_id, skill_name, skill_category, instructor, date_demonstrated, competency, attempt_number, notes, next_review_date, verified_by) VALUES ('$sid','$skn','$skc','$inst','$dd','$comp',$att,'$notes',$nrd,$uid)");
+            $db->query("INSERT INTO lab_skills_demonstrations (student_id, skill_name, skill_category, instructor, date_demonstrated, competency, attempt_number, notes, next_review_date, verified_by) VALUES ('$sid','$skn','$skc','$inst','$dd','$comp'," . intval($att) . ",'$notes',$nrd," . intval($uid) . ")");
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -216,7 +216,7 @@ if ($view === 'skills' && $ajax === 'save') {
 }
 if ($view === 'skills' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_skills_demonstrations WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_skills_demonstrations WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -249,7 +249,7 @@ if ($view === 'consumables' && $ajax === 'save') {
     $notes = $db->real_escape_string($data['notes'] ?? '');
     try {
         if ($id) {
-            $db->query("UPDATE lab_consumables SET item_name='$in', category='$cat', quantity=$qty, unit='$unit', min_stock_level=$msl, unit_cost=$uc, supplier='$supp', last_ordered_date=$lod, notes='$notes' WHERE id=$id");
+            $db->query("UPDATE lab_consumables SET item_name='$in', category='$cat', quantity=$qty, unit='$unit', min_stock_level=$msl, unit_cost=$uc, supplier='$supp', last_ordered_date=$lod, notes='$notes' WHERE id=" . intval($id));
         } else {
             $db->query("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES ('$in','$cat',$qty,'$unit',$msl,$uc,'$supp',$lod,'$notes')");
         }
@@ -259,7 +259,7 @@ if ($view === 'consumables' && $ajax === 'save') {
 }
 if ($view === 'consumables' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_consumables WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_consumables WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -290,7 +290,7 @@ if ($view === 'attendance' && $ajax === 'save') {
         $stat = $db->real_escape_string($s['attendance_status'] ?? 'present');
         if (!$stid) continue;
         try {
-            $db->query("INSERT INTO lab_attendance (session_id, student_id, attendance_status, check_in_time, marked_by) VALUES ($sid, '$stid', '$stat', CURTIME(), $mid) ON DUPLICATE KEY UPDATE attendance_status='$stat', marked_by=$mid");
+            $db->query("INSERT INTO lab_attendance (session_id, student_id, attendance_status, check_in_time, marked_by) VALUES (" . intval($sid) . ", '$stid', '$stat', CURTIME(), " . intval($mid) . ") ON DUPLICATE KEY UPDATE attendance_status='$stat', marked_by=" . intval($mid));
             $success++;
         } catch (Exception $e) {}
     }
@@ -298,7 +298,7 @@ if ($view === 'attendance' && $ajax === 'save') {
 }
 if ($view === 'attendance' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_attendance WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_attendance WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -345,9 +345,9 @@ if ($view === 'incidents' && $ajax === 'save') {
     $uid = (int)($user['id'] ?? 0);
     try {
         if ($id) {
-            $db->query("UPDATE lab_incidents SET incident_date='$idate', incident_time=$itime, incident_type='$itype', severity='$sev', description='$desc', equipment_involved='$ei', student_involved='$si', action_taken='$at', status='$stat' WHERE id=$id");
+            $db->query("UPDATE lab_incidents SET incident_date='$idate', incident_time=$itime, incident_type='$itype', severity='$sev', description='$desc', equipment_involved='$ei', student_involved='$si', action_taken='$at', status='$stat' WHERE id=" . intval($id));
         } else {
-            $db->query("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES ('$idate',$itime,$uid,'$itype','$sev','$desc','$ei','$si','$at','$stat')");
+            $db->query("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES ('$idate',$itime," . intval($uid) . ",'$itype','$sev','$desc','$ei','$si','$at','$stat')");
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -355,7 +355,7 @@ if ($view === 'incidents' && $ajax === 'save') {
 }
 if ($view === 'incidents' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_incidents WHERE id=$id"); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_incidents WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }

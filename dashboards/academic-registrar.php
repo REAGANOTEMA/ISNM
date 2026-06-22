@@ -138,15 +138,15 @@ if ($reportType) {
     } elseif ($reportType === 'print_student') {
         $sid = intval($_GET['student_id'] ?? 0);
         if ($sid > 0) {
-            $sr = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+            $sr = $students_conn->query("SELECT * FROM students WHERE id=" . intval($sid));
             $stu = $sr ? $sr->fetch_assoc() : null;
             if ($stu) {
-                $fin_r = $students_conn->query("SELECT COALESCE(SUM(total_amount),0) ti,COALESCE(SUM(amount_paid),0) ap FROM student_invoices WHERE student_id=$sid");
+                $fin_r = $students_conn->query("SELECT COALESCE(SUM(total_amount),0) ti,COALESCE(SUM(amount_paid),0) ap FROM student_invoices WHERE student_id=" . intval($sid));
                 $fin = $fin_r ? $fin_r->fetch_assoc() : ['ti'=>0,'ap'=>0];
-                $pay_r = $students_conn->query("SELECT COALESCE(SUM(amount_received),0) tp FROM payments WHERE student_id=$sid");
+                $pay_r = $students_conn->query("SELECT COALESCE(SUM(amount_received),0) tp FROM payments WHERE student_id=" . intval($sid));
                 $pay = $pay_r ? $pay_r->fetch_assoc() : ['tp'=>0];
                 $total_inv = $fin['ti']; $total_paid = $pay['tp'] + $fin['ap']; $balance = $total_inv - $total_paid;
-                $exam_r = $staff_conn->query("SELECT course_code,marks_obtained,total_marks,grade FROM examination_records WHERE student_id=$sid ORDER BY created_at DESC LIMIT 10");
+                $exam_r = $staff_conn->query("SELECT course_code,marks_obtained,total_marks,grade FROM examination_records WHERE student_id=" . intval($sid) . " ORDER BY created_at DESC LIMIT 10");
                 $exams = []; if ($exam_r) while ($rw=$exam_r->fetch_assoc()) $exams[] = $rw;
                 echo '<h2>Student Profile: '.htmlspecialchars($stu['full_name']??'').'</h2>';
                 echo '<table style="width:100%;border-collapse:collapse;margin-bottom:16px"><tr><td style="padding:4px 8px"><strong>Student No:</strong> '.htmlspecialchars($stu['student_number']??'').'</td><td style="padding:4px 8px"><strong>Reg No:</strong> '.htmlspecialchars($stu['registration_number']??'').'</td></tr>';
@@ -167,9 +167,9 @@ if ($reportType) {
     header('Content-Type: application/json');
     if ($ajaxAction === 'get_financial') {
         $invoices = []; $payments = [];
-        $r = $students_conn->query("SELECT id,invoice_number,fee_type,total_amount,discount_amount,amount_paid,balance,status,due_date,issue_date FROM student_invoices WHERE student_id=$ajaxSid ORDER BY issue_date DESC");
+        $r = $students_conn->query("SELECT id,invoice_number,fee_type,total_amount,discount_amount,amount_paid,balance,status,due_date,issue_date FROM student_invoices WHERE student_id=" . intval($ajaxSid) . " ORDER BY issue_date DESC");
         if ($r) while ($row = $r->fetch_assoc()) $invoices[] = $row;
-        $r = $students_conn->query("SELECT id,payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=$ajaxSid ORDER BY payment_date DESC");
+        $r = $students_conn->query("SELECT id,payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=" . intval($ajaxSid) . " ORDER BY payment_date DESC");
         if ($r) while ($row = $r->fetch_assoc()) $payments[] = $row;
         $totalInv = array_sum(array_column($invoices,'total_amount'));
         $totalPaid = array_sum(array_column($payments,'amount_received'));
@@ -178,28 +178,28 @@ if ($reportType) {
     }
     if ($ajaxAction === 'get_results') {
         $data = [];
-        $r = $staff_conn->query("SELECT er.exam_number,er.exam_type,er.course_code,er.marks_obtained,er.total_marks,er.grade,er.continuous_assessment_marks,er.final_exam_marks,er.grade_status,er.created_at FROM examination_records er WHERE er.student_id=$ajaxSid ORDER BY er.created_at DESC");
+        $r = $staff_conn->query("SELECT er.exam_number,er.exam_type,er.course_code,er.marks_obtained,er.total_marks,er.grade,er.continuous_assessment_marks,er.final_exam_marks,er.grade_status,er.created_at FROM examination_records er WHERE er.student_id=" . intval($ajaxSid) . " ORDER BY er.created_at DESC");
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
         echo json_encode($data);
         exit;
     }
     if ($ajaxAction === 'get_attendance') {
         $data = [];
-        $r = $students_conn->query("SELECT id,date,subject,course_code,status,remarks FROM student_attendance WHERE student_id=$ajaxSid ORDER BY date DESC LIMIT 100");
+        $r = $students_conn->query("SELECT id,date,subject,course_code,status,remarks FROM student_attendance WHERE student_id=" . intval($ajaxSid) . " ORDER BY date DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
         echo json_encode($data);
         exit;
     }
     if ($ajaxAction === 'get_courses') {
         $data = [];
-        $r = $students_conn->query("SELECT scr.id,scr.course_id,scr.academic_year,scr.semester,scr.status,scr.registration_date,cc.course_code,cc.course_name FROM student_course_registrations scr LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON scr.course_id=cc.id WHERE scr.student_id=$ajaxSid ORDER BY scr.registration_date DESC");
+        $r = $students_conn->query("SELECT scr.id,scr.course_id,scr.academic_year,scr.semester,scr.status,scr.registration_date,cc.course_code,cc.course_name FROM student_course_registrations scr LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON scr.course_id=cc.id WHERE scr.student_id=" . intval($ajaxSid) . " ORDER BY scr.registration_date DESC");
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
         echo json_encode($data);
         exit;
     }
     if ($ajaxAction === 'get_documents') {
         $data = [];
-        $r = $staff_conn->query("SELECT id,document_type,document_title,file_path,generation_date FROM generated_documents WHERE student_id=$ajaxSid ORDER BY generation_date DESC");
+        $r = $staff_conn->query("SELECT id,document_type,document_title,file_path,generation_date FROM generated_documents WHERE student_id=" . intval($ajaxSid) . " ORDER BY generation_date DESC");
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
         echo json_encode($data);
         exit;
@@ -367,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nm = $students_conn->real_escape_string($t['full_name']);
             $students_conn->query("DELETE FROM students WHERE id=$oid");
             $students_conn->query("DELETE FROM students_trash WHERE id=$tid");
-            $students_conn->query("INSERT INTO academic_registrar_activity_log (activity,created_by,created_at) VALUES ('Permanently deleted: $nm',{$_SESSION['user_id']},NOW())");
+            $students_conn->query("INSERT INTO academic_registrar_activity_log (activity,created_by,created_at) VALUES ('Permanently deleted: $nm'," . intval($_SESSION['user_id']) . ",NOW())");
             $_SESSION['success'] = "Student permanently deleted.";
         }
         header("Location: academic-registrar.php#recycle-bin"); exit;
@@ -388,8 +388,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pid = $stmt->insert_id;
                 $stmt->close();
                 $rno = 'RCT-'.date('Ymd').'-'.str_pad($pid,4,'0',STR_PAD_LEFT);
-                $students_conn->query("INSERT INTO payment_receipts (receipt_number,payment_id,student_id,amount,payment_method,issued_by) VALUES ('$rno',$pid,$sid,$amount,'$method',{$_SESSION['user_id']})");
-                $students_conn->query("UPDATE student_invoices SET amount_paid=amount_paid+$amount,status=CASE WHEN (balance-$amount)<=0 THEN 'Paid' WHEN amount_paid+$amount>0 THEN 'Partially Paid' ELSE status END WHERE student_id=$sid AND status IN('Pending','Partially Paid','Overdue')");
+                $students_conn->query("INSERT INTO payment_receipts (receipt_number,payment_id,student_id,amount,payment_method,issued_by) VALUES ('$rno'," . intval($pid) . "," . intval($sid) . "," . floatval($amount) . ",'$method'," . intval($_SESSION['user_id']) . ")");
+                $students_conn->query("UPDATE student_invoices SET amount_paid=amount_paid+" . floatval($amount) . ",status=CASE WHEN (balance-" . floatval($amount) . ")<=0 THEN 'Paid' WHEN amount_paid+" . floatval($amount) . ">0 THEN 'Partially Paid' ELSE status END WHERE student_id=" . intval($sid) . " AND status IN('Pending','Partially Paid','Overdue')");
                 $_SESSION['success'] = "Payment recorded. Receipt: $rno";
             } else {
                 $_SESSION['error'] = 'Payment failed: '.$stmt->error;
@@ -445,7 +445,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ay = $staff_conn->real_escape_string($_POST['academic_year'] ?? date('Y'));
         $sem = $staff_conn->real_escape_string($_POST['semester'] ?? 'Semester 1');
         if ($sid > 0 && $courseId > 0) {
-            $students_conn->query("INSERT IGNORE INTO student_course_registrations (student_id,course_id,academic_year,semester,status) VALUES ($sid,$courseId,'$ay','$sem','Registered')");
+            $students_conn->query("INSERT IGNORE INTO student_course_registrations (student_id,course_id,academic_year,semester,status) VALUES (" . intval($sid) . "," . intval($courseId) . ",'$ay','$sem','Registered')");
             $_SESSION['success'] = 'Course registered.';
         } else { $_SESSION['error'] = 'Student and course required.'; }
         redirectBack(); exit;
@@ -669,7 +669,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'approve_graduation') {
         $sid = intval($_POST['student_id'] ?? 0);
         if ($sid > 0) {
-            $students_conn->query("UPDATE students SET status='Graduated' WHERE id=$sid");
+            $students_conn->query("UPDATE students SET status='Graduated' WHERE id=" . intval($sid));
             $_SESSION['success'] = 'Graduation approved.';
         }
         header("Location: academic-registrar.php#graduation"); exit;
@@ -679,7 +679,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = $students_conn->real_escape_string(trim($_POST['ann_title'] ?? ''));
         $msg = $students_conn->real_escape_string(trim($_POST['ann_message'] ?? ''));
         if ($title && $msg) {
-            $students_conn->query("INSERT INTO announcements (title,message,created_by,created_at) VALUES ('$title','$msg',{$_SESSION['user_id']},NOW())");
+            $students_conn->query("INSERT INTO announcements (title,message,created_by,created_at) VALUES ('$title','$msg'," . intval($_SESSION['user_id']) . ",NOW())");
             $_SESSION['success'] = 'Announcement published.';
         } else { $_SESSION['error'] = 'Title and message required.'; }
         header("Location: academic-registrar.php#notifications"); exit;
@@ -689,7 +689,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sid = intval($_POST['student_id'] ?? 0);
         $gstatus = $staff_conn->real_escape_string($_POST['grade_status'] ?? 'Approved');
         if ($sid > 0) {
-            $staff_conn->query("UPDATE examination_records SET grade_status='$gstatus' WHERE student_id=$sid");
+            $staff_conn->query("UPDATE examination_records SET grade_status='$gstatus' WHERE student_id=" . intval($sid));
             $_SESSION['success'] = 'Results finalized.';
         }
         header("Location: academic-registrar.php#results"); exit;
@@ -699,7 +699,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $skey = $students_conn->real_escape_string($_POST['setting_key'] ?? '');
         $sval = $students_conn->real_escape_string($_POST['setting_value'] ?? '');
         if ($skey) {
-            $students_conn->query("INSERT INTO system_settings (setting_key,setting_value,updated_by,updated_at) VALUES ('$skey','$sval',{$_SESSION['user_id']},NOW()) ON DUPLICATE KEY UPDATE setting_value='$sval',updated_by={$_SESSION['user_id']},updated_at=NOW()");
+            $students_conn->query("INSERT INTO system_settings (setting_key,setting_value,updated_by,updated_at) VALUES ('$skey','$sval',".intval($_SESSION['user_id']).",NOW()) ON DUPLICATE KEY UPDATE setting_value='$sval',updated_by=".intval($_SESSION['user_id']).",updated_at=NOW()");
             $_SESSION['success'] = 'Setting saved.';
         }
         header("Location: academic-registrar.php#settings"); exit;
@@ -712,22 +712,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($sid > 0) {
             $tnum = 'T-'.date('Ymd').'-'.str_pad(mt_rand(1000,9999),4,'0',STR_PAD_LEFT);
             // Fetch student
-            $sr = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+            $sr = $students_conn->query("SELECT * FROM students WHERE id=" . intval($sid));
             $student = $sr ? $sr->fetch_assoc() : null;
             if ($student) {
                 // Fetch courses/exam records
                 $courses = [];
-                $er = $staff_conn->query("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id=$sid AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+                $er = $staff_conn->query("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id=" . intval($sid) . " AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
                 if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
                 if (empty($courses)) {
-                    $cr = $staff_conn->query("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id=$sid AND cr.status='Approved'");
+                    $cr = $staff_conn->query("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id=" . intval($sid) . " AND cr.status='Approved'");
                     if ($cr) while ($row = $cr->fetch_assoc()) $courses[] = $row;
                 }
                 $settings = ['institution_name' => 'ISNM', 'current_academic_year' => date('Y'), 'transcript_fee' => '50000'];
                 $html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
                 $html_escaped = $staff_conn->real_escape_string($html);
                 $title = $staff_conn->real_escape_string("Academic Transcript - ".($student['full_name']??''));
-                $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', $sid, {$_SESSION['user_id']}, '$title', '$html_escaped', NOW())");
+                $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', " . intval($sid) . ", " . intval($_SESSION['user_id']) . ", '$title', '$html_escaped', NOW())");
             }
             $stmt = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number,student_id,purpose,copies_requested,transcript_status,request_date) VALUES (?,?,?,?,'Ready',NOW())");
             $stmt->bind_param("sisi", $tnum, $sid, $purpose, $copies);
@@ -762,7 +762,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $grad_date = $staff_conn->real_escape_string($_POST['graduation_date'] ?? date('Y-m-d'));
         $cnum = 'C-'.date('Ymd').'-'.str_pad(mt_rand(1000,9999),4,'0',STR_PAD_LEFT);
         if ($sid > 0) {
-            $sr = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+            $sr = $students_conn->query("SELECT * FROM students WHERE id=" . intval($sid));
             $srow = $sr ? $sr->fetch_assoc() : null;
             if ($srow) {
                 $settings = ['institution_name' => 'ISNM', 'current_academic_year' => date('Y')];

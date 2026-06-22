@@ -10,24 +10,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'verify') {
         $id = (int)($_POST['id'] ?? 0);
         $notes = $conn->real_escape_string($_POST['notes'] ?? '');
-        $conn->query("UPDATE proof_of_payments SET verified=1, verified_by=$userId, verified_at=NOW(), notes='$notes' WHERE id=$id");
+        $conn->query("UPDATE proof_of_payments SET verified=1, verified_by=" . intval($userId) . ", verified_at=NOW(), notes='$notes' WHERE id=" . intval($id));
         $_SESSION['success'] = 'Payment proof verified.';
         header('Location: proof-of-payments.php'); exit;
     }
     if ($action === 'unverify') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("UPDATE proof_of_payments SET verified=0, verified_by=NULL, verified_at=NULL, notes='' WHERE id=$id");
+        $conn->query("UPDATE proof_of_payments SET verified=0, verified_by=NULL, verified_at=NULL, notes='' WHERE id=" . intval($id));
         $_SESSION['success'] = 'Payment proof unverified.';
         header('Location: proof-of-payments.php'); exit;
     }
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
-        $qrRow = $conn->query("SELECT document_path FROM proof_of_payments WHERE id=$id"); $row = $qrRow ? $qrRow->fetch_assoc() : null;
+        $qrRow = $conn->query("SELECT document_path FROM proof_of_payments WHERE id=" . intval($id)); $row = $qrRow ? $qrRow->fetch_assoc() : null;
         if ($row && $row['document_path']) {
             $file = __DIR__ . '/../' . $row['document_path'];
             if (file_exists($file)) @unlink($file);
         }
-        $conn->query("DELETE FROM proof_of_payments WHERE id=$id");
+        $conn->query("DELETE FROM proof_of_payments WHERE id=" . intval($id));
         $_SESSION['success'] = 'Proof of payment deleted.';
         header('Location: proof-of-payments.php'); exit;
     }

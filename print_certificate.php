@@ -17,22 +17,13 @@ $student_id = $_GET['student_id'] ?? $_GET['id'] ?? null;
 $type = $_GET['type'] ?? 'completion';
 $print = isset($_GET['print']);
 
-// Gather data (default to sample if no student_id)
-$data = [
-    'certificate_type' => $type === 'completion' ? 'Certificate of Completion' : 'Certificate of Achievement',
-    'student_name' => 'Student Name',
-    'registration_number' => 'ISNM/2024/0001',
-    'program' => 'Certificate in Nursing',
-    'program_duration' => '2.5 Years',
-    'academic_year' => date('Y'),
-    'completion_date' => date('F j, Y'),
-    'grade' => 'Pass',
-    'class' => 'Second Class',
-    'principal_name' => 'Principal Name',
-    'director_name' => 'Director General',
-    'certificate_number' => 'ISNM/CERT/' . date('Y') . '/' . strtoupper(substr(uniqid(), -6)),
-    'issue_date' => date('F j, Y'),
-];
+// Gather data (default to error message if no student_id found)
+$data = [];
+$error_msg = '';
+
+if (!$student_id) {
+    $error_msg = 'No student specified. Please provide a valid student ID.';
+}
 
 // Try to lookup student data if ID provided
 if ($student_id) {
@@ -53,16 +44,25 @@ if ($student_id) {
                 $q->close();
                 if ($s) {
                     $data['student_name'] = trim($s['first_name'] . ' ' . ($s['surname'] ?? '') . ($s['other_names'] ? ' ' . $s['other_names'] : ''));
-                    $data['registration_number'] = $s['student_number'] ?? $data['registration_number'];
-                    $data['program'] = $s['program'] ?? $data['program'];
+                    $data['registration_number'] = $s['student_number'] ?? '';
+                    $data['program'] = $s['program'] ?? '';
+                } else {
+                    $error_msg = 'Student not found in the database.';
                 }
             }
-            if (isset($q) && $q) $q->close();
             $studentsDb->close();
+        } else {
+            $error_msg = 'Database connection failed.';
         }
     } catch (Exception $e) {
         error_log('Certificate DB lookup: ' . $e->getMessage());
     }
+}
+
+if ($error_msg) {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#334155;}.error-box{text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:480px;}.error-box h2{color:#dc2626;margin:0 0 8px;}.error-box p{color:#64748b;margin:0;}</style></head><body><div class="error-box"><h2>Certificate Error</h2><p>' . htmlspecialchars($error_msg) . '</p></div></body></html>';
+    exit;
 }
 
 $html = generateCertificateHTML($data);

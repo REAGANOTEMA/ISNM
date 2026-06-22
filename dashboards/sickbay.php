@@ -42,7 +42,7 @@ if ($action_get === 'search_student' && $students_conn) {
 if ($action_get === 'get_transactions' && $staff_conn) {
     $mid = (int)($_GET['id'] ?? 0);
     if ($mid > 0) {
-        $txns = sb_fetch($staff_conn, "SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id WHERE mst.medicine_id = $mid ORDER BY mst.created_at DESC LIMIT 50");
+        $txns = sb_fetch($staff_conn, "SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id WHERE mst.medicine_id = " . intval($mid) . " ORDER BY mst.created_at DESC LIMIT 50");
         if (!empty($txns)) {
             echo '<table class="table table-sm"><thead><tr><th>Date</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead><tbody>';
             foreach ($txns as $t) { echo '<tr><td>'.htmlspecialchars($t['transaction_date']??$t['created_at']??'').'</td><td><span class="badge bg-info">'.htmlspecialchars($t['transaction_type']??'N/A').'</span></td><td>'.(int)($t['quantity']??0).'</td><td>'.htmlspecialchars($t['notes']??'').'</td></tr>'; }
@@ -67,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $treatment = sb_esc($staff_conn, $_POST['typical_treatment']);
         $s = sb_esc($staff_conn, $_POST['status']);
         if ($id > 0) {
-            $staff_conn->query("UPDATE sickness_directory SET sickness_code='$code', sickness_name='$name', category='$cat', common_symptoms='$symptoms', description='$desc', is_contagious=$contagious, typical_treatment='$treatment', status='$s' WHERE id=$id");
+            $staff_conn->query("UPDATE sickness_directory SET sickness_code='$code', sickness_name='$name', category='$cat', common_symptoms='$symptoms', description='$desc', is_contagious=" . intval($contagious) . ", typical_treatment='$treatment', status='$s' WHERE id=" . intval($id));
             $_SESSION['success'] = 'Sickness updated successfully.';
         } else {
-            $staff_conn->query("INSERT INTO sickness_directory (sickness_code, sickness_name, category, common_symptoms, description, is_contagious, typical_treatment, status, created_by) VALUES ('$code','$name','$cat','$symptoms','$desc',$contagious,'$treatment','$s',$user_id)");
+            $staff_conn->query("INSERT INTO sickness_directory (sickness_code, sickness_name, category, common_symptoms, description, is_contagious, typical_treatment, status, created_by) VALUES ('$code','$name','$cat','$symptoms','$desc'," . intval($contagious) . ",'$treatment','$s'," . intval($user_id) . ")");
             $_SESSION['success'] = 'Sickness added successfully.';
         }
         header('Location: sickbay.php?section=sickness'); exit;
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'delete_sickness') {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $staff_conn->query("UPDATE sickness_directory SET status='Inactive' WHERE id=$id"); $_SESSION['success'] = 'Sickness deactivated.'; }
+        if ($id > 0) { $staff_conn->query("UPDATE sickness_directory SET status='Inactive' WHERE id=" . intval($id)); $_SESSION['success'] = 'Sickness deactivated.'; }
         header('Location: sickbay.php?section=sickness'); exit;
     }
 
@@ -104,14 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $vtime = sb_esc($staff_conn, $_POST['visit_time'] ?: date('H:i:s'));
         $fud = !empty($_POST['follow_up_date']) ? "'".sb_esc($staff_conn, $_POST['follow_up_date'])."'" : 'NULL';
         $notes = sb_esc($staff_conn, $_POST['notes']);
-        $staff_conn->query("INSERT INTO daily_sick_records (record_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, temperature, blood_pressure, symptoms, diagnosis, treatment_given, medicines_prescribed, severity, status, referred_to, attended_by, visit_date, visit_time, follow_up_date, notes, created_by) VALUES ('$rec_num', $sid, '$sname', '$snum', '$prog', $year, $sick_id, '$sick_name', '$temp', '$bp', '$symp', '$diag', '$treat', '$meds', '$sev', '$stat', '$ref', '$user_name', '$vdate', '$vtime', $fud, '$notes', $user_id)");
+        $staff_conn->query("INSERT INTO daily_sick_records (record_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, temperature, blood_pressure, symptoms, diagnosis, treatment_given, medicines_prescribed, severity, status, referred_to, attended_by, visit_date, visit_time, follow_up_date, notes, created_by) VALUES ('$rec_num', " . intval($sid) . ", '$sname', '$snum', '$prog', " . intval($year) . ", $sick_id, '$sick_name', '$temp', '$bp', '$symp', '$diag', '$treat', '$meds', '$sev', '$stat', '$ref', '$user_name', '$vdate', '$vtime', $fud, '$notes', " . intval($user_id) . ")");
         $_SESSION['success'] = 'Sick record saved. #'.$rec_num;
         header('Location: sickbay.php?section=daily-records'); exit;
     }
 
     if ($action === 'delete_sick_record') {
         $rid = (int)($_POST['record_id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=1, deleted_at=NOW() WHERE id=$rid"); $_SESSION['success'] = 'Record moved to Recycle Bin.'; }
+        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=1, deleted_at=NOW() WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record moved to Recycle Bin.'; }
         header('Location: sickbay.php?section=daily-records'); exit;
     }
 
@@ -129,14 +129,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $bed = ($_POST['bed_rest_required'] ?? 'Yes') === 'Yes' ? 1 : 0;
         $recs = sb_esc($staff_conn, $_POST['recommendations']);
         $recommender = sb_esc($staff_conn, $_POST['recommended_by'] ?? $user_name);
-        $staff_conn->query("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES ('$leave_num', $sid, '$sname', '$snum', '$prog', $year, $sick_id, '$other_sick', '$from', '$to', 'Pending', '$recommender', $bed, '$recs', $user_id)");
+        $staff_conn->query("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES ('$leave_num', " . intval($sid) . ", '$sname', '$snum', '$prog', " . intval($year) . ", $sick_id, '$other_sick', '$from', '$to', 'Pending', '$recommender', " . intval($bed) . ", '$recs', " . intval($user_id) . ")");
         $_SESSION['success'] = 'Sick leave issued. #'.$leave_num;
         header('Location: sickbay.php?section=leave'); exit;
     }
 
     if ($action === 'delete_leave') {
         $lid = (int)($_POST['id'] ?? 0);
-        if ($lid > 0) { $staff_conn->query("UPDATE student_sick_leave SET is_deleted=1, deleted_at=NOW() WHERE id=$lid"); $_SESSION['success'] = 'Leave moved to Recycle Bin.'; }
+        if ($lid > 0) { $staff_conn->query("UPDATE student_sick_leave SET is_deleted=1, deleted_at=NOW() WHERE id=" . intval($lid)); $_SESSION['success'] = 'Leave moved to Recycle Bin.'; }
         header('Location: sickbay.php?section=leave'); exit;
     }
 
@@ -166,10 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $restocked = !empty($_POST['last_restocked']) ? "'".sb_esc($staff_conn, $_POST['last_restocked'])."'" : 'NULL';
         $status_calc = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
-            $staff_conn->query("UPDATE medicine_stock SET medicine_code='$code', medicine_name='$mname', generic_name='$generic', category='$cat', dosage_form='$form', strength='$strength', manufacturer='$mfr', supplier='$sup', quantity_in_stock=$qty, unit='$unit', reorder_level=$rol, unit_cost=$uc, selling_price=$sp, currency='$cur', batch_number='$batch', expiry_date=$exp, storage_location='$loc', requires_prescription=$rx, instructions='$inst', side_effects='$se', status='$status_calc', last_restocked=$restocked WHERE id=$id");
+            $staff_conn->query("UPDATE medicine_stock SET medicine_code='$code', medicine_name='$mname', generic_name='$generic', category='$cat', dosage_form='$form', strength='$strength', manufacturer='$mfr', supplier='$sup', quantity_in_stock=" . intval($qty) . ", unit='$unit', reorder_level=" . intval($rol) . ", unit_cost=$uc, selling_price=$sp, currency='$cur', batch_number='$batch', expiry_date=$exp, storage_location='$loc', requires_prescription=" . intval($rx) . ", instructions='$inst', side_effects='$se', status='$status_calc', last_restocked=$restocked WHERE id=" . intval($id));
             $_SESSION['success'] = 'Medicine updated.';
         } else {
-            $staff_conn->query("INSERT INTO medicine_stock (medicine_code, medicine_name, generic_name, category, dosage_form, strength, manufacturer, supplier, quantity_in_stock, unit, reorder_level, unit_cost, selling_price, currency, batch_number, expiry_date, storage_location, requires_prescription, instructions, side_effects, status, last_restocked, created_by) VALUES ('$code','$mname','$generic','$cat','$form','$strength','$mfr','$sup',$qty,'$unit',$rol,$uc,$sp,'$cur','$batch',$exp,'$loc',$rx,'$inst','$se','$status_calc',$restocked,$user_id)");
+            $staff_conn->query("INSERT INTO medicine_stock (medicine_code, medicine_name, generic_name, category, dosage_form, strength, manufacturer, supplier, quantity_in_stock, unit, reorder_level, unit_cost, selling_price, currency, batch_number, expiry_date, storage_location, requires_prescription, instructions, side_effects, status, last_restocked, created_by) VALUES ('$code','$mname','$generic','$cat','$form','$strength','$mfr','$sup'," . intval($qty) . ",'$unit'," . intval($rol) . ",$uc,$sp,'$cur','$batch',$exp,'$loc'," . intval($rx) . ",'$inst','$se','$status_calc',$restocked," . intval($user_id) . ")");
             $_SESSION['success'] = 'Medicine added.';
         }
         header('Location: sickbay.php?section=medicine'); exit;
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'delete_medicine') {
         $mid = (int)($_POST['medicine_id'] ?? 0);
-        if ($mid > 0) { $staff_conn->query("DELETE FROM medicine_stock WHERE id=$mid"); $_SESSION['success'] = 'Medicine deleted.'; }
+        if ($mid > 0) { $staff_conn->query("DELETE FROM medicine_stock WHERE id=" . intval($mid)); $_SESSION['success'] = 'Medicine deleted.'; }
         header('Location: sickbay.php?section=medicine'); exit;
     }
 
@@ -189,13 +189,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $notes = sb_esc($staff_conn, $_POST['notes']);
         $trans_num = 'MST-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
         if ($mid > 0 && $qty > 0) {
-            $qrMed = $staff_conn->query("SELECT quantity_in_stock FROM medicine_stock WHERE id=$mid"); $med = $qrMed ? $qrMed->fetch_assoc() : null;
+            $qrMed = $staff_conn->query("SELECT quantity_in_stock FROM medicine_stock WHERE id=" . intval($mid)); $med = $qrMed ? $qrMed->fetch_assoc() : null;
             if ($med) {
                 $cq = (int)$med['quantity_in_stock'];
                 $nq = ($ttype === 'Purchase' || $ttype === 'Return') ? $cq + $qty : max(0, $cq - $qty);
-                $qrRl = $staff_conn->query("SELECT reorder_level FROM medicine_stock WHERE id=$mid"); $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0; $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
-                $staff_conn->query("UPDATE medicine_stock SET quantity_in_stock=$nq, status='$ns' WHERE id=$mid");
-                $staff_conn->query("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES ('$trans_num', $mid, '$ttype', $qty, $user_id, '$tdate', '$notes')");
+                $qrRl = $staff_conn->query("SELECT reorder_level FROM medicine_stock WHERE id=" . intval($mid)); $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0; $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
+                $staff_conn->query("UPDATE medicine_stock SET quantity_in_stock=$nq, status='$ns' WHERE id=" . intval($mid));
+                $staff_conn->query("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES ('$trans_num', " . intval($mid) . ", '$ttype', $qty, " . intval($user_id) . ", '$tdate', '$notes')");
                 $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
             }
         }
@@ -204,13 +204,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'restore_record') {
         $rid = (int)($_POST['id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=0, deleted_at=NULL WHERE id=$rid"); $_SESSION['success'] = 'Record restored.'; }
+        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=0, deleted_at=NULL WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record restored.'; }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
 
     if ($action === 'purge_record') {
         $rid = (int)($_POST['id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("DELETE FROM daily_sick_records WHERE id=$rid"); $_SESSION['success'] = 'Record permanently deleted.'; }
+        if ($rid > 0) { $staff_conn->query("DELETE FROM daily_sick_records WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record permanently deleted.'; }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
 
@@ -228,15 +228,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $insurance = sb_esc($staff_conn, $_POST['insurance_provider']);
         $ins_num = sb_esc($staff_conn, $_POST['insurance_number']);
         $notes = sb_esc($staff_conn, $_POST['notes']);
-        $existing = $staff_conn->query("SELECT id FROM student_health_records WHERE student_id=$sid");
+        $existing = $staff_conn->query("SELECT id FROM student_health_records WHERE student_id=" . intval($sid));
         if ($existing && $existing->num_rows > 0) {
             $row = $existing->fetch_assoc();
             $rid = (int)$row['id'];
-            $staff_conn->query("UPDATE student_health_records SET blood_type='$bt', allergies='$allergies', chronic_conditions='$chronic', medications='$meds', emergency_contact_name='$ec_name', emergency_contact_phone='$ec_phone', emergency_contact_relationship='$ec_rel', insurance_provider='$insurance', insurance_number='$ins_num', notes='$notes' WHERE id=$rid");
+            $staff_conn->query("UPDATE student_health_records SET blood_type='$bt', allergies='$allergies', chronic_conditions='$chronic', medications='$meds', emergency_contact_name='$ec_name', emergency_contact_phone='$ec_phone', emergency_contact_relationship='$ec_rel', insurance_provider='$insurance', insurance_number='$ins_num', notes='$notes' WHERE id=" . intval($rid));
             $_SESSION['success'] = 'Health record updated.';
         } else {
             $rn = 'HR-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
-            $staff_conn->query("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES ('$rn', $sid, '$bt', '$allergies', '$chronic', '$meds', '$ec_name', '$ec_phone', '$ec_rel', '$insurance', '$ins_num', '$notes')");
+            $staff_conn->query("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES ('$rn', " . intval($sid) . ", '$bt', '$allergies', '$chronic', '$meds', '$ec_name', '$ec_phone', '$ec_rel', '$insurance', '$ins_num', '$notes')");
             $_SESSION['success'] = 'Health record created.';
         }
         header('Location: sickbay.php?section=health-records'); exit;
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $parent_notified = isset($_POST['parent_notified']) ? 1 : 0;
         $follow_up = !empty($_POST['follow_up_date']) ? "'".sb_esc($staff_conn, $_POST['follow_up_date'])."'" : 'NULL';
         $notes = sb_esc($staff_conn, $_POST['notes']);
-        $staff_conn->query("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES ('$inc_num', $sid, '$itype', '$symptoms', '$severity', '$location', '$action_taken', '$treatment', '$referred', $parent_notified, $follow_up, 'Reported', $user_id, '$notes')");
+        $staff_conn->query("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES ('$inc_num', " . intval($sid) . ", '$itype', '$symptoms', '$severity', '$location', '$action_taken', '$treatment', '$referred', " . intval($parent_notified) . ", $follow_up, 'Reported', " . intval($user_id) . ", '$notes')");
         $_SESSION['success'] = 'Health incident reported. #'.$inc_num;
         header('Location: sickbay.php?section=health-incidents'); exit;
     }

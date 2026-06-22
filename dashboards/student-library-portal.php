@@ -31,13 +31,13 @@ if ($staffDb) {
         }
         $r = $staffDb->query("SELECT COUNT(*) c FROM library_books $where");
         if ($r) $totalBooks = (int)$r->fetch_assoc()['c'];
-        $r = $staffDb->query("SELECT b.*, COALESCE(br.return_status, 'Available') as avail_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.return_status IN ('Borrowed','Overdue') $where ORDER BY b.title LIMIT $limit OFFSET $offset");
+        $r = $staffDb->query("SELECT b.*, COALESCE(br.return_status, 'Available') as avail_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.return_status IN ('Borrowed','Overdue') $where ORDER BY b.title LIMIT " . intval($limit) . " OFFSET " . intval($offset));
         if ($r) $books = $r->fetch_all(MYSQLI_ASSOC);
 
         if ($userId) {
-            $r = $staffDb->query("SELECT b.title, b.author, b.isbn, br.borrow_date, br.due_date, br.return_status, br.late_fee FROM library_borrowing br JOIN library_books b ON br.book_id=b.id WHERE (br.student_id=$userId OR br.borrower_id=$userId) AND br.return_status IN ('Borrowed','Overdue') ORDER BY br.due_date ASC");
+            $r = $staffDb->query("SELECT b.title, b.author, b.isbn, br.borrow_date, br.due_date, br.return_status, br.late_fee FROM library_borrowing br JOIN library_books b ON br.book_id=b.id WHERE (br.student_id=" . intval($userId) . " OR br.borrower_id=" . intval($userId) . ") AND br.return_status IN ('Borrowed','Overdue') ORDER BY br.due_date ASC");
             if ($r) $myBorrows = $r->fetch_all(MYSQLI_ASSOC);
-            $r = $staffDb->query("SELECT COALESCE(SUM(late_fee),0) total FROM library_borrowing WHERE (student_id=$userId OR borrower_id=$userId) AND fine_paid=0");
+            $r = $staffDb->query("SELECT COALESCE(SUM(late_fee),0) total FROM library_borrowing WHERE (student_id=" . intval($userId) . " OR borrower_id=" . intval($userId) . ") AND fine_paid=0");
             if ($r) $myFines = (float)$r->fetch_row()[0];
         }
     } catch (Exception $e) {}

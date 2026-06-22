@@ -87,7 +87,7 @@ if ($dg_cached) {
 
     $user_role_id = 0;
     if ($conn) {
-        $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+        $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . intval($user_id));
         if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
     }
 
@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                     $snConn = getStudentsConnection();
                     if ($snConn) {
                         // Get the news title for the notification
-                        $nt = $conn->query("SELECT title FROM director_news WHERE id=$news_id");
+                        $nt = $conn->query("SELECT title FROM director_news WHERE id=" . intval($news_id));
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
                         $snConn->query("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news','" . $snConn->real_escape_string($nwTitle) . "','A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
                         $snConn->close();
@@ -364,7 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     $target   = $conn ? $conn->real_escape_string($_POST['ann_target'] ?? 'All') : 'All';
     $priority = $conn ? $conn->real_escape_string($_POST['ann_priority'] ?? 'Normal') : 'Normal';
     if ($title && $body && $studentsConn) {
-        $studentsConn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$title','$body','$target','$priority',$user_id,1,NOW())");
+        $studentsConn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$title','$body','$target','$priority'," . intval($user_id) . ",1,NOW())");
         $_SESSION['success'] = "Announcement published to all $target.";
         $nid = createNotification('New Announcement: ' . $title, $body, 'director-general.php', 'announcement', 'fas fa-bullhorn');
         if ($nid) {
@@ -435,7 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
 
     if ($action === 'delete_department' && $conn) {
         $id = (int)($_POST['dept_id'] ?? 0);
-        if ($id) { $conn->query("DELETE FROM staff_departments WHERE id=$id"); $ok = true; $msg = 'Department deleted.'; }
+        if ($id) { $conn->query("DELETE FROM staff_departments WHERE id=" . intval($id)); $ok = true; $msg = 'Department deleted.'; }
         else {
             $code = $conn->real_escape_string($_POST['dept_code'] ?? '');
             if ($code) { $conn->query("DELETE FROM staff_departments WHERE department_code='$code'"); $ok = true; $msg = 'Department deleted.'; }
@@ -458,30 +458,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
 
     if ($action === 'delete_staff' && $conn) {
         $sid = (int)($_POST['staff_id'] ?? 0);
-        if ($sid) { $conn->query("DELETE FROM staff WHERE id=$sid"); $ok = true; $msg = 'Staff removed.'; }
+        if ($sid) { $conn->query("DELETE FROM staff WHERE id=" . intval($sid)); $ok = true; $msg = 'Staff removed.'; }
     }
 
     if ($action === 'approve_submission' && $websiteConn) {
         $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
-        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=$subid");
-        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=$subid");
-        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='verified' WHERE id=$subid");
-        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Approved' WHERE id=$subid");
+        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subid));
+        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=" . intval($subid));
+        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='verified' WHERE id=" . intval($subid));
+        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Approved' WHERE id=" . intval($subid));
         if ($subid) { $ok = true; $msg = 'Submission approved.'; }
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
         $ref = $conn->real_escape_string($_POST['sub_ref'] ?? '');
-        if ($ref) { $conn->query("UPDATE store_requests SET status='approved',approved_by=$user_id,approved_at=NOW() WHERE request_number='$ref'"); $ok = true; $msg = 'Store request approved.'; }
+        if ($ref) { $conn->query("UPDATE store_requests SET status='approved',approved_by=" . intval($user_id) . ",approved_at=NOW() WHERE request_number='$ref'"); $ok = true; $msg = 'Store request approved.'; }
     }
 
     if ($action === 'reject_submission' && $websiteConn) {
         $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
-        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=$subid");
-        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=$subid");
-        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=$subid");
-        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=$subid");
+        if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=" . intval($subid));
+        elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=" . intval($subid));
+        elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=" . intval($subid));
+        elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=" . intval($subid));
         $ok = true; $msg = 'Submission rejected.';
     }
 
@@ -490,16 +490,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $subType = ($_POST['sub_type'] ?? '');
         $subId = (int)($_POST['sub_id'] ?? 0);
         // alerts table is in staffs_db via $conn
-        if ($aid && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE id=$aid"); $ok = true; $msg = 'Alert resolved.'; }
+        if ($aid && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE id=" . intval($aid)); $ok = true; $msg = 'Alert resolved.'; }
         if ($subType === 'all_alerts' && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE status='active'"); $ok = true; $msg = 'All alerts resolved.'; }
         // website submissions are in website_db via $websiteConn
         if ($subType && $subId && $websiteConn) {
             $t = $websiteConn->real_escape_string($subType);
             $q = '';
-            if ($t === 'contact') $q = "UPDATE contact_submissions SET status='resolved' WHERE id=$subId";
-            elseif ($t === 'volunteer') $q = "UPDATE volunteer_applications SET status='resolved' WHERE id=$subId";
-            elseif ($t === 'donation') $q = "UPDATE donations SET status='verified' WHERE id=$subId";
-            elseif ($t === 'application') $q = "UPDATE student_applications SET status='Resolved' WHERE id=$subId";
+            if ($t === 'contact') $q = "UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subId);
+            elseif ($t === 'volunteer') $q = "UPDATE volunteer_applications SET status='resolved' WHERE id=" . intval($subId);
+            elseif ($t === 'donation') $q = "UPDATE donations SET status='verified' WHERE id=" . intval($subId);
+            elseif ($t === 'application') $q = "UPDATE student_applications SET status='Resolved' WHERE id=" . intval($subId);
             if ($q) { $websiteConn->query($q); $ok = true; $msg = 'Submission resolved.'; }
         }
     }

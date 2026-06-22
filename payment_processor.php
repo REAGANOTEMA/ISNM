@@ -15,7 +15,8 @@ class PaymentProcessor {
     /**
      * Process MTN Mobile Money Payment
      */
-    public function processMTNPayment($phone, $amount, $reference, $student_id) {
+    public function processMTNPayment($phone, $amount, $reference, $student_id, $invoiceId = null) {
+        $invoice_id = $invoiceId ?? null;
         // In production, integrate with actual MTN MoMo API
         // This is a placeholder implementation
         
@@ -61,7 +62,8 @@ class PaymentProcessor {
     /**
      * Process Airtel Money Payment
      */
-    public function processAirtelPayment($phone, $amount, $reference, $student_id) {
+    public function processAirtelPayment($phone, $amount, $reference, $student_id, $invoiceId = null) {
+        $invoice_id = $invoiceId ?? null;
         $payment_reference = generatePaymentReference();
         
         $conn = getConnection();
@@ -173,7 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['phone'],
                     $_POST['amount'],
                     $_POST['reference'],
-                    $_POST['student_id']
+                    $_POST['student_id'],
+                    $_POST['invoice_id'] ?? null
                 );
                 echo json_encode($result);
                 break;
@@ -183,7 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['phone'],
                     $_POST['amount'],
                     $_POST['reference'],
-                    $_POST['student_id']
+                    $_POST['student_id'],
+                    $_POST['invoice_id'] ?? null
                 );
                 echo json_encode($result);
                 break;

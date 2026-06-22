@@ -63,7 +63,7 @@ if($r) while($row=$r->fetch_assoc()) $payroll_records_list[]=$row;
 $recent_activities = []; $r=$conn->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
 if($r) while($row=$r->fetch_assoc()) $recent_activities[]=$row;
 
-$user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = $user_id");
+$user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . intval($user_id));
 if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 
 // ── Report generation ──
@@ -198,8 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dept=$conn->real_escape_string($_POST['department']??'');
         $pm=$conn->real_escape_string($_POST['payment_method']??'cash');
         $eid='EXP-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $conn->query("INSERT INTO expenses (expense_id,description,expense_category,department,amount,expense_date,payment_method,status,requested_by,notes) VALUES ('$eid','$desc','$cat','$dept',$amt,'$dt','$pm','pending',$user_id,'$supplier')");
-        if($conn->affected_rows>0){ $_SESSION['success']="Expense $eid created."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES ($user_id,'Created expense $eid: $desc','create')"); }
+        $conn->query("INSERT INTO expenses (expense_id,description,expense_category,department,amount,expense_date,payment_method,status,requested_by,notes) VALUES ('$eid','$desc','$cat','$dept',$amt,'$dt','$pm','pending'," . intval($user_id) . ",'$supplier')");
+        if($conn->affected_rows>0){ $_SESSION['success']="Expense $eid created."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES (" . intval($user_id) . ",'Created expense $eid: $desc','create')"); }
         else { $_SESSION['error']='Failed: '.$conn->error; }
         header("Location: director-finance.php#expenses"); exit;
     }
@@ -211,21 +211,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $amt=floatval($_POST['amount']??0);
         $dt=$_POST['expense_date']??date('Y-m-d');
         $supplier=$conn->real_escape_string($_POST['supplier']??'');
-        $conn->query("UPDATE expenses SET expense_category='$cat',description='$desc',amount=$amt,expense_date='$dt',notes='$supplier' WHERE id=$did AND status='pending'");
+        $conn->query("UPDATE expenses SET expense_category='$cat',description='$desc',amount=$amt,expense_date='$dt',notes='$supplier' WHERE id=" . intval($did) . " AND status='pending'");
         $_SESSION['success']='Expense updated.';
         header("Location: director-finance.php#expenses"); exit;
     }
 
     if ($action === 'approve_expense') {
         $did=intval($_POST['expense_id']??0);
-        $conn->query("UPDATE expenses SET status='approved',approved_by=$user_id,approval_date=NOW() WHERE id=$did AND status='pending'");
-        if($conn->affected_rows>0){ $_SESSION['success']='Expense approved.'; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES ($user_id,'Approved expense #$did','approve')"); }
+        $conn->query("UPDATE expenses SET status='approved',approved_by=" . intval($user_id) . ",approval_date=NOW() WHERE id=" . intval($did) . " AND status='pending'");
+        if($conn->affected_rows>0){ $_SESSION['success']='Expense approved.'; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES (" . intval($user_id) . ",'Approved expense #$did','approve')"); }
         header("Location: director-finance.php#expenses"); exit;
     }
 
     if ($action === 'reject_expense') {
         $did=intval($_POST['expense_id']??0);
-        $conn->query("UPDATE expenses SET status='rejected',approved_by=$user_id,approval_date=NOW() WHERE id=$did AND status='pending'");
+        $conn->query("UPDATE expenses SET status='rejected',approved_by=" . intval($user_id) . ",approval_date=NOW() WHERE id=" . intval($did) . " AND status='pending'");
         $_SESSION['success']='Expense rejected.';
         header("Location: director-finance.php#expenses"); exit;
     }
@@ -238,15 +238,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fy=$conn->real_escape_string($_POST['fiscal_year']??date('Y'));
         $amt=floatval($_POST['allocated_amount']??0);
         $desc=$conn->real_escape_string($_POST['description']??'');
-        $conn->query("INSERT INTO budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES ('$code','$name','$cat','$dept','$fy',$amt,0,'Draft',$user_id)");
-        if($conn->affected_rows>0){ $_SESSION['success']="Budget $code created."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES ($user_id,'Created budget $code: $name','create')"); }
+        $conn->query("INSERT INTO budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES ('$code','$name','$cat','$dept','$fy',$amt,0,'Draft'," . intval($user_id) . ")");
+        if($conn->affected_rows>0){ $_SESSION['success']="Budget $code created."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES (" . intval($user_id) . ",'Created budget $code: $name','create')"); }
         else { $_SESSION['error']='Failed: '.$conn->error; }
         header("Location: director-finance.php#budget"); exit;
     }
 
     if ($action === 'approve_budget') {
         $bid=intval($_POST['budget_id']??0);
-        $conn->query("UPDATE budget_records SET status='Approved',approved_by=$user_id WHERE id=$bid");
+        $conn->query("UPDATE budget_records SET status='Approved',approved_by=" . intval($user_id) . " WHERE id=" . intval($bid));
         $_SESSION['success']='Budget approved.';
         header("Location: director-finance.php#budget"); exit;
     }
@@ -257,8 +257,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pm=$conn->real_escape_string($_POST['payment_method']??'cash');
         $ref='RCT-'.date('Ymd').'-'.mt_rand(1000,9999);
         if($students_conn && $sid>0 && $amt>0){
-            $students_conn->query("INSERT INTO payments (payment_reference,student_id,student_index_number,amount_received,payment_method,payment_date,status,processed_by) VALUES ('$ref',$sid,'',$amt,'$pm',CURDATE(),'pending',$user_id)");
-            if($students_conn->affected_rows>0){ $_SESSION['success']="Payment $ref recorded."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES ($user_id,'Recorded payment $ref','create')"); }
+            $students_conn->query("INSERT INTO payments (payment_reference,student_id,student_index_number,amount_received,payment_method,payment_date,status,processed_by) VALUES ('$ref'," . intval($sid) . ",'',$amt,'$pm',CURDATE(),'pending'," . intval($user_id) . ")");
+            if($students_conn->affected_rows>0){ $_SESSION['success']="Payment $ref recorded."; $conn->query("INSERT INTO staff_activity_log (staff_id,activity_description,activity_type) VALUES (" . intval($user_id) . ",'Recorded payment $ref','create')"); }
             else { $_SESSION['error']='Failed: '.$students_conn->error; }
         } else { $_SESSION['error']='Student and amount required.'; }
         header("Location: director-finance.php#payments"); exit;
@@ -266,13 +266,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'approve_payment') {
         $pid=intval($_POST['payment_id']??0);
-        if($students_conn){ $students_conn->query("UPDATE payments SET status='approved',verified_by=$user_id WHERE id=$pid AND status='pending'"); if($students_conn->affected_rows>0) $_SESSION['success']='Payment approved.'; }
+        if($students_conn){ $students_conn->query("UPDATE payments SET status='approved',verified_by=" . intval($user_id) . " WHERE id=" . intval($pid) . " AND status='pending'"); if($students_conn->affected_rows>0) $_SESSION['success']='Payment approved.'; }
         header("Location: director-finance.php#payments"); exit;
     }
 
     if ($action === 'reject_payment') {
         $pid=intval($_POST['payment_id']??0);
-        if($students_conn){ $students_conn->query("UPDATE payments SET status='rejected' WHERE id=$pid"); $_SESSION['success']='Payment rejected.'; }
+        if($students_conn){ $students_conn->query("UPDATE payments SET status='rejected' WHERE id=" . intval($pid)); $_SESSION['success']='Payment rejected.'; }
         header("Location: director-finance.php#payments"); exit;
     }
 

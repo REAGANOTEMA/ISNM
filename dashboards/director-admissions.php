@@ -14,7 +14,7 @@ function logAdmission($conn, $uid, $action, $module, $rid, $desc) {
     $a = $conn->real_escape_string($action);
     $m = $conn->real_escape_string($module);
     $d = $conn->real_escape_string($desc);
-    $conn->query("INSERT INTO admission_activity_logs (user_id,action,module,record_id,description) VALUES ($uid,'$a','$m',".intval($rid).",'$d')");
+    $conn->query("INSERT INTO admission_activity_logs (user_id,action,module,record_id,description) VALUES (".intval($uid).",'$a','$m',".intval($rid).",'$d')");
 }
 
 // Stats
@@ -109,9 +109,9 @@ if ($ajax === 'get_requirements') {
     header('Content-Type: application/json');
     $aid = intval($_GET['applicant_id'] ?? 0);
     if (!$aid) { echo json_encode([]); exit; }
-    $info = []; $rn = $conn->query("SELECT * FROM applicants WHERE id=$aid"); if ($rn) $info = $rn->fetch_assoc() ?: [];
-    $req = []; $rr = $conn->query("SELECT ars.*, adr.requirement_name, adr.display_order FROM applicant_requirement_status ars RIGHT JOIN admission_requirements adr ON ars.requirement_id=adr.id AND ars.applicant_id=$aid WHERE adr.is_active=1 ORDER BY adr.display_order"); if ($rr) { while($row=$rr->fetch_assoc()) $req[] = $row; }
-    $hist = []; $rh = $conn->query("SELECT rh.*, s.full_name performed_by_name FROM requirement_history rh LEFT JOIN staff s ON rh.performed_by=s.id WHERE rh.applicant_id=$aid ORDER BY rh.created_at DESC LIMIT 50"); if ($rh) { while($row=$rh->fetch_assoc()) $hist[] = $row; }
+    $info = []; $rn = $conn->query("SELECT * FROM applicants WHERE id=" . intval($aid)); if ($rn) $info = $rn->fetch_assoc() ?: [];
+    $req = []; $rr = $conn->query("SELECT ars.*, adr.requirement_name, adr.display_order FROM applicant_requirement_status ars RIGHT JOIN admission_requirements adr ON ars.requirement_id=adr.id AND ars.applicant_id=" . intval($aid) . " WHERE adr.is_active=1 ORDER BY adr.display_order"); if ($rr) { while($row=$rr->fetch_assoc()) $req[] = $row; }
+    $hist = []; $rh = $conn->query("SELECT rh.*, s.full_name performed_by_name FROM requirement_history rh LEFT JOIN staff s ON rh.performed_by=s.id WHERE rh.applicant_id=" . intval($aid) . " ORDER BY rh.created_at DESC LIMIT 50"); if ($rh) { while($row=$rh->fetch_assoc()) $hist[] = $row; }
     echo json_encode(['info'=>$info,'requirements'=>$req,'history'=>$hist]); exit;
 }
 if ($ajax === 'toggle_requirement') {
@@ -124,23 +124,24 @@ if ($ajax === 'toggle_requirement') {
     if (!in_array($new_status, $valid_statuses)) { echo json_encode(['success'=>false,'error'=>'Invalid status']); exit; }
     if ($aid && $rid) {
         // Check current status for history
-        $cr = $conn->query("SELECT status FROM applicant_requirement_status WHERE applicant_id=$aid AND requirement_id=$rid");
+        $cr = $conn->query("SELECT status FROM applicant_requirement_status WHERE applicant_id=" . intval($aid) . " AND requirement_id=" . intval($rid));
         $old_status = ($cr && $cr->num_rows) ? $cr->fetch_assoc()['status'] : 'Not Submitted';
         // Map actions
         $action_map = ['Submitted'=>'Submitted','Verified'=>'Verified','Rejected'=>'Rejected'];
         $action = $action_map[$new_status] ?? 'Updated';
         if ($old_status === $new_status && $new_status === 'Not Submitted') $action = 'Updated';
         // Upsert
-        $sub_by = ($new_status === 'Submitted') ? ",submitted_by=$user_id,submitted_at=NOW()" : '';
-        $ver_by = ($new_status === 'Verified') ? ",verified_by=$user_id,verified_at=NOW()" : '';
-        $rej_by = ($new_status === 'Rejected') ? ",rejected_by=$user_id" : '';
+        $uid = intval($user_id);
+        $sub_by = ($new_status === 'Submitted') ? ",submitted_by=$uid,submitted_at=NOW()" : '';
+        $ver_by = ($new_status === 'Verified') ? ",verified_by=$uid,verified_at=NOW()" : '';
+        $rej_by = ($new_status === 'Rejected') ? ",rejected_by=$uid" : '';
         $remarks_sql = $remarks ? ",remarks='$remarks'" : '';
-        $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES ($aid,$rid,'$new_status',$user_id,NOW(),NULL,NULL,NULL,'$remarks') ON DUPLICATE KEY UPDATE status='$new_status'$sub_by$ver_by$rej_by$remarks_sql");
+        $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES (" . intval($aid) . "," . intval($rid) . ",'$new_status',$uid,NOW(),NULL,NULL,NULL,'$remarks') ON DUPLICATE KEY UPDATE status='$new_status'$sub_by$ver_by$rej_by$remarks_sql");
         // Log history
         $hist_remarks = $conn->real_escape_string($remarks ? "$action: $remarks" : "$action");
-        $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES ($aid,$rid,'$action',$user_id,'$hist_remarks')");
+        $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES (" . intval($aid) . "," . intval($rid) . ",'$action'," . intval($user_id) . ",'$hist_remarks')");
         // Log activity
-        $rn = $conn->query("SELECT requirement_name FROM admission_requirements WHERE id=$rid");
+        $rn = $conn->query("SELECT requirement_name FROM admission_requirements WHERE id=" . intval($rid));
         $req_name = ($rn && $rn->num_rows) ? $rn->fetch_assoc()['requirement_name'] : "requirement #$rid";
         logAdmission($conn, $user_id, "Requirement $new_status", 'requirements', $rid, "$req_name $new_status for applicant #$aid");
         echo json_encode(['success'=>true]); exit;
@@ -153,8 +154,8 @@ if ($ajax === 'mark_all_submitted') {
     if ($aid) {
         foreach ($req_items as $ri) {
             $iid = $ri['id'];
-            $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES ($aid,$iid,'Submitted',$user_id,NOW()) ON DUPLICATE KEY UPDATE status='Submitted',submitted_by=$user_id,submitted_at=NOW()");
-            $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES ($aid,$iid,'Submitted',$user_id,'Bulk submitted')");
+            $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES (" . intval($aid) . "," . intval($iid) . ",'Submitted'," . intval($user_id) . ",NOW()) ON DUPLICATE KEY UPDATE status='Submitted',submitted_by=" . intval($user_id) . ",submitted_at=NOW()");
+            $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES (" . intval($aid) . "," . intval($iid) . ",'Submitted'," . intval($user_id) . ",'Bulk submitted')");
         }
         logAdmission($conn, $user_id, 'Bulk Submitted', 'requirements', $aid, "All requirements submitted for applicant #$aid");
         echo json_encode(['success'=>true]); exit;
@@ -250,7 +251,7 @@ if ($ajax === 'get_student_profile') {
     if (!$sid || !$students_conn) { echo json_encode(['error' => 'Invalid']); exit; }
 
     $info = [];
-    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid LIMIT 1");
+    $r = $students_conn->query("SELECT * FROM students WHERE id=" . intval($sid) . " LIMIT 1");
     if ($r) $info = $r->fetch_assoc() ?: [];
     if (empty($info)) { echo json_encode(['error' => 'Student not found']); exit; }
 
@@ -278,7 +279,7 @@ if ($ajax === 'get_student_profile') {
     $reqs = [];
     $rr = $conn->query("SELECT adr.id requirement_id, adr.requirement_name, adr.display_order, ars.status, ars.verified_by, ars.remarks, ars.submitted_at, ars.verified_at
         FROM admission_requirements adr
-        LEFT JOIN applicant_requirement_status ars ON ars.requirement_id = adr.id AND ars.applicant_id = $aid
+        LEFT JOIN applicant_requirement_status ars ON ars.requirement_id = adr.id AND ars.applicant_id = " . intval($aid) . "
         WHERE adr.is_active=1 ORDER BY adr.display_order");
     if ($rr) while ($row = $rr->fetch_assoc()) {
         $row['status'] = $row['status'] ?? 'Not Submitted';
@@ -287,12 +288,12 @@ if ($ajax === 'get_student_profile') {
 
     // ---- Documents (linked to applicant) ----
     $docs = [];
-    $dr = $conn->query("SELECT sd.*, s.full_name uploader_name FROM student_documents sd LEFT JOIN staff s ON sd.uploaded_by=s.id WHERE sd.applicant_id=$aid ORDER BY sd.uploaded_at DESC");
+    $dr = $conn->query("SELECT sd.*, s.full_name uploader_name FROM student_documents sd LEFT JOIN staff s ON sd.uploaded_by=s.id WHERE sd.applicant_id=" . intval($aid) . " ORDER BY sd.uploaded_at DESC");
     if ($dr) while ($row = $dr->fetch_assoc()) $docs[] = $row;
 
     // ---- Activity ----
     $activity = [];
-    $ar2 = $conn->query("SELECT al.*, s.full_name performer_name FROM admission_activity_logs al LEFT JOIN staff s ON al.user_id=s.id WHERE al.record_id=$aid OR (al.module='students' AND al.record_id=$sid) ORDER BY al.created_at DESC LIMIT 20");
+    $ar2 = $conn->query("SELECT al.*, s.full_name performer_name FROM admission_activity_logs al LEFT JOIN staff s ON al.user_id=s.id WHERE al.record_id=" . intval($aid) . " OR (al.module='students' AND al.record_id=" . intval($sid) . ") ORDER BY al.created_at DESC LIMIT 20");
     if ($ar2) while ($row = $ar2->fetch_assoc()) $activity[] = $row;
 
     echo json_encode([
@@ -360,7 +361,7 @@ if ($ajax === 'verify_document') {
         echo json_encode(['success' => false, 'error' => 'Invalid']); exit;
     }
 
-    $conn->query("UPDATE student_documents SET verification_status='$newStatus', verified_by=$user_id, verified_at=NOW(), remarks='$remarks' WHERE id=$docId");
+    $conn->query("UPDATE student_documents SET verification_status='$newStatus', verified_by=" . intval($user_id) . ", verified_at=NOW(), remarks='$remarks' WHERE id=" . intval($docId));
     echo json_encode(['success' => true]);
     exit;
 }
@@ -499,8 +500,8 @@ if ($ajax === 'reset_requirements') {
     header('Content-Type: application/json');
     $aid = intval($_POST['applicant_id'] ?? 0);
     if ($aid) {
-        $conn->query("UPDATE applicant_requirement_status SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=$aid");
-        $conn->query("INSERT INTO requirement_history (applicant_id,action,performed_by,remarks) VALUES ($aid,'Reset',$user_id,'All requirements reset')");
+        $conn->query("UPDATE applicant_requirement_status SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=" . intval($aid));
+        $conn->query("INSERT INTO requirement_history (applicant_id,action,performed_by,remarks) VALUES (" . intval($aid) . ",'Reset'," . intval($user_id) . ",'All requirements reset')");
         logAdmission($conn, $user_id, 'Reset All', 'requirements', $aid, "All requirements reset for applicant #$aid");
         echo json_encode(['success'=>true]); exit;
     }
@@ -525,12 +526,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $intake = $conn->real_escape_string(trim($_POST['intake'] ?? ''));
         $app_num = 'APP-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
         if ($fn) {
-            $conn->query("INSERT INTO applicants (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES ('$fn','$dob','$gen','$ph','$em','$addr','$gn','$gp','$gr','$app_num',$prog_id,'$intake',CURDATE(),'New Applicant')");
+            $conn->query("INSERT INTO applicants (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES ('$fn','$dob','$gen','$ph','$em','$addr','$gn','$gp','$gr','$app_num'," . intval($prog_id) . ",'$intake',CURDATE(),'New Applicant')");
             if ($conn->affected_rows > 0) {
                 $aid = $conn->insert_id;
                 // Auto-create requirement entries
                 foreach ($req_items as $ri) {
-                    $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status) VALUES ($aid,{$ri['id']},'Not Submitted')");
+                    $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status) VALUES (" . intval($aid) . "," . intval($ri['id']) . ",'Not Submitted')");
                 }
                 logAdmission($conn, $user_id, 'Add Applicant', 'applicants', $aid, "Added applicant: $fn ($app_num)");
                 $_SESSION['success'] = "Applicant '$fn' added. App No: $app_num";
@@ -554,7 +555,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $intake = $conn->real_escape_string(trim($_POST['intake'] ?? ''));
         $status = $conn->real_escape_string(trim($_POST['status'] ?? 'New Applicant'));
         if ($aid && $fn) {
-            $conn->query("UPDATE applicants SET full_name='$fn',date_of_birth='$dob',gender='$gen',phone='$ph',email='$em',address='$addr',guardian_name='$gn',guardian_phone='$gp',guardian_relationship='$gr',program_id=$prog_id,intake='$intake',status='$status' WHERE id=$aid");
+            $conn->query("UPDATE applicants SET full_name='$fn',date_of_birth='$dob',gender='$gen',phone='$ph',email='$em',address='$addr',guardian_name='$gn',guardian_phone='$gp',guardian_relationship='$gr',program_id=" . intval($prog_id) . ",intake='$intake',status='$status' WHERE id=" . intval($aid));
             logAdmission($conn, $user_id, 'Edit Applicant', 'applicants', $aid, "Edited applicant: $fn");
             $_SESSION['success'] = "Applicant updated.";
         }
@@ -564,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'approve_applicant') {
         $aid = intval($_POST['applicant_id'] ?? 0);
         if ($aid) {
-            $conn->query("UPDATE applicants SET status='Approved' WHERE id=$aid");
+            $conn->query("UPDATE applicants SET status='Approved' WHERE id=" . intval($aid));
             logAdmission($conn, $user_id, 'Approve Applicant', 'applicants', $aid, "Applicant approved");
             $_SESSION['success'] = 'Applicant approved.';
         }
@@ -574,7 +575,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'reject_applicant') {
         $aid = intval($_POST['applicant_id'] ?? 0);
         if ($aid) {
-            $conn->query("UPDATE applicants SET status='Rejected' WHERE id=$aid");
+            $conn->query("UPDATE applicants SET status='Rejected' WHERE id=" . intval($aid));
             logAdmission($conn, $user_id, 'Reject Applicant', 'applicants', $aid, "Applicant rejected");
             $_SESSION['success'] = 'Applicant rejected.';
         }
@@ -584,7 +585,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'register_applicant') {
         $aid = intval($_POST['applicant_id'] ?? 0);
         if ($aid) {
-            $conn->query("UPDATE applicants SET status='Registered' WHERE id=$aid");
+            $conn->query("UPDATE applicants SET status='Registered' WHERE id=" . intval($aid));
             logAdmission($conn, $user_id, 'Register Applicant', 'applicants', $aid, "Applicant registered");
             $_SESSION['success'] = 'Applicant registered as student.';
         }
@@ -612,7 +613,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
             $dobVal = $dob ? "'$dob'" : "NULL";
             $genderVal = $gender ? "'$gender'" : "'Other'";
-            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, date_of_birth, gender, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', $dobVal, $genderVal, '$intakePeriod', $intakeYear, 'Active', NOW(), NOW())");
+            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, date_of_birth, gender, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', $dobVal, $genderVal, '$intakePeriod', " . intval($intakeYear) . ", 'Active', NOW(), NOW())");
             if ($students_conn->affected_rows > 0) {
                 $newSid = $students_conn->insert_id;
                 logAdmission($conn, $user_id, 'Create Student', 'students', $newSid, "Created student: $fullName ($studentNo)");
@@ -649,7 +650,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
             $dobVal = $dob ? "'$dob'" : "NULL";
             $genderVal = $gender ? "'$gender'" : "'Other'";
-            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', date_of_birth=$dobVal, gender=$genderVal, intake_period='$intakePeriod', intake_year=$intakeYear, guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=$sid");
+            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', date_of_birth=$dobVal, gender=$genderVal, intake_period='$intakePeriod', intake_year=" . intval($intakeYear) . ", guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=" . intval($sid));
             logAdmission($conn, $user_id, 'Edit Student', 'students', $sid, "Edited student #$sid ($fullName)");
             $_SESSION['success'] = "Student updated.";
         }
@@ -660,7 +661,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_student') {
         $sid = intval($_POST['student_id'] ?? 0);
         if ($sid && $students_conn) {
-            $students_conn->query("UPDATE students SET status='deleted', updated_at=NOW() WHERE id=$sid");
+            $students_conn->query("UPDATE students SET status='deleted', updated_at=NOW() WHERE id=" . intval($sid));
             logAdmission($conn, $user_id, 'Delete Student', 'students', $sid, "Student #$sid deleted by $user_name");
             $_SESSION['success'] = "Student record deleted.";
         }
@@ -670,9 +671,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_applicant') {
         $aid = intval($_POST['applicant_id'] ?? 0);
         if ($aid) {
-            $conn->query("DELETE FROM requirement_history WHERE applicant_id=$aid");
-            $conn->query("DELETE FROM applicant_requirement_status WHERE applicant_id=$aid");
-            $conn->query("DELETE FROM applicants WHERE id=$aid");
+            $conn->query("DELETE FROM requirement_history WHERE applicant_id=" . intval($aid));
+            $conn->query("DELETE FROM applicant_requirement_status WHERE applicant_id=" . intval($aid));
+            $conn->query("DELETE FROM applicants WHERE id=" . intval($aid));
             logAdmission($conn, $user_id, 'Delete Applicant', 'applicants', $aid, "Applicant deleted");
             $_SESSION['success'] = 'Applicant deleted.';
         }

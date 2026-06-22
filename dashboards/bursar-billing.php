@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete_fee_item' && $staff) {
-        try { $id = (int)($_POST['item_id'] ?? 0); $staff->query("DELETE FROM fee_structures WHERE id = $id"); $_SESSION['success'] = 'Fee item deleted.'; } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
+        try { $id = (int)($_POST['item_id'] ?? 0); $staff->query("DELETE FROM fee_structures WHERE id = " . intval($id)); $_SESSION['success'] = 'Fee item deleted.'; } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }
         header("Location: $redirect"); exit;
     }
 
@@ -116,12 +116,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reason = trim($_POST['reason'] ?? '');
             if ($account_id <= 0 || $discount_value <= 0) { $_SESSION['error'] = 'Invalid discount parameters.'; }
             else {
-                $qrAcc = $staff->query("SELECT total_fees, balance, amount_paid FROM student_fee_accounts WHERE id = $account_id"); $acc = $qrAcc ? $qrAcc->fetch_assoc() : null;
+                $qrAcc = $staff->query("SELECT total_fees, balance, amount_paid FROM student_fee_accounts WHERE id = " . intval($account_id)); $acc = $qrAcc ? $qrAcc->fetch_assoc() : null;
                 if ($acc) {
                     $total = (float)$acc['total_fees'];
                     $discount_amount = $discount_type === 'percentage' ? ($total * $discount_value / 100) : $discount_value;
                     $new_balance = max(0, (float)$acc['balance'] - $discount_amount);
-                    $staff->query("UPDATE student_fee_accounts SET balance = $new_balance, total_fees = total_fees - $discount_amount, discounts = COALESCE(discounts,0) + $discount_amount WHERE id = $account_id");
+                    $staff->query("UPDATE student_fee_accounts SET balance = $new_balance, total_fees = total_fees - $discount_amount, discounts = COALESCE(discounts,0) + $discount_amount WHERE id = " . intval($account_id));
                     $stmt = $staff->prepare("INSERT INTO bursar_discounts (fee_account_id, discount_type, discount_value, discount_amount, reason, applied_by, applied_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
                     if ($stmt) { $uid = (int)($user['id'] ?? 0); $stmt->bind_param('isddsi', $account_id, $discount_type, $discount_value, $discount_amount, $reason, $uid); $stmt->execute(); $stmt->close(); }
                     $_SESSION['success'] = 'Discount of '.currency($discount_amount).' applied.';
