@@ -121,11 +121,11 @@ $ajaxSid = intval($_GET['student_id'] ?? 0);
 if ($ajax && $ajaxSid > 0) {
     header('Content-Type: application/json');
     if ($ajax === 'student_profile') {
-        $info=[];$r=$students_conn->query("SELECT * FROM students WHERE id=$ajaxSid"); if($r)$info=$r->fetch_assoc();
-        $att=[];if($students_conn){$r=$students_conn->query("SELECT date,status FROM student_attendance WHERE student_id=$ajaxSid ORDER BY date DESC LIMIT 30");if($r)while($row=$r->fetch_assoc())$att[]=$row;}
-        $inv=[];if($students_conn){$r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$inv[]=$row;}
-        $pay=[];if($students_conn){$r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$pay[]=$row;}
-        $docs=[];$r=$conn->query("SELECT id,document_type,document_title,file_path,generation_date FROM generated_documents WHERE student_id=$ajaxSid");if($r)while($row=$r->fetch_assoc())$docs[]=$row;
+        $info=[];$r=$students_conn->query("SELECT * FROM students WHERE id=" . intval($ajaxSid)); if($r)$info=$r->fetch_assoc();
+        $att=[];if($students_conn){$r=$students_conn->query("SELECT date,status FROM student_attendance WHERE student_id=" . intval($ajaxSid) . " ORDER BY date DESC LIMIT 30");if($r)while($row=$r->fetch_assoc())$att[]=$row;}
+        $inv=[];if($students_conn){$r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=" . intval($ajaxSid));if($r)while($row=$r->fetch_assoc())$inv[]=$row;}
+        $pay=[];if($students_conn){$r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=" . intval($ajaxSid));if($r)while($row=$r->fetch_assoc())$pay[]=$row;}
+        $docs=[];$r=$conn->query("SELECT id,document_type,document_title,file_path,generation_date FROM generated_documents WHERE student_id=" . intval($ajaxSid));if($r)while($row=$r->fetch_assoc())$docs[]=$row;
         echo json_encode(['info'=>$info,'attendance'=>$att,'invoices'=>$inv,'payments'=>$pay,'documents'=>$docs]); exit;
     }
     echo json_encode([]); exit;
@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
         $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
         $en='EXM-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $conn->query("INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES ('$en','$et','$cc','$pc','$sd','$rm','$sem','$ay','Scheduled',$user_id)");
+        $conn->query("INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES ('$en','$et','$cc','$pc','$sd','$rm','$sem','$ay','Scheduled'," . intval($user_id) . ")");
         if($conn->affected_rows>0)$_SESSION['success']="Exam $en created."; else $_SESSION['error']=$conn->error;
         header("Location: director-academics.php"); exit;
     }
