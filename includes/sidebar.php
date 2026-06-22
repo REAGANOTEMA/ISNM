@@ -271,88 +271,83 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     </div>
 
     <div class="sidebar-menu" id="sidebarMenu">
-        <?php if ($currentPage === 'director-admissions.php'): ?>
-        <!-- ═══ DIRECTOR ADMISSIONS — ADMISSIONS SIDEBAR ═══ -->
+        <?php if (in_array($currentPage, ['director-admissions.php', 'admission-letters.php', 'intake-planning.php'])): ?>
+        <!-- ═══ DIRECTOR ADMISSIONS — PROFESSIONAL SIDEBAR ═══ -->
         <div class="menu-divider"><span><i class="fas fa-file-signature" style="color:#7c3aed;"></i> ADMISSIONS</span></div>
-        <div class="menu-group expanded">
-            <div class="menu-group-header"><span class="menu-icon"><i class="fas fa-chart-pie"></i></span><span class="menu-label">Dashboard</span></div>
-            <div class="menu-children" style="">
-                <div class="menu-children-inner">
-                    <a href="director-admissions.php" class="child-link <?= basename($_SERVER['PHP_SELF'])==='director-admissions.php' && !isset($_GET['section']) ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Overview</span></a>
-                </div>
-            </div>
+        <div class="menu-group expanded" data-group="dashboard">
+            <a href="director-admissions.php" class="child-link <?= basename($_SERVER['PHP_SELF'])==='director-admissions.php' && !isset($_GET['section']) ? 'active' : '' ?>"><span class="menu-icon" style="font-size:0.8rem"><i class="fas fa-chart-pie"></i></span><span class="child-label">Overview</span></a>
         </div>
-        <div class="menu-group">
-            <div class="menu-group-header" data-target="applications"><span class="menu-icon"><i class="fas fa-file-alt"></i></span><span class="menu-label">Applications</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
-            <div class="menu-children" id="childGroup-applications" style="max-height:0">
+        <div class="menu-group <?= in_array($currentPage, ['admission-letters.php', 'intake-planning.php']) ? 'expanded' : '' ?>" data-group="applications">
+            <div class="menu-group-header" data-target="applications"><span class="menu-icon"><i class="fas fa-file-alt"></i></span><span class="menu-label">Applicants</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-applications" style="<?= in_array($currentPage, ['admission-letters.php', 'intake-planning.php']) ? '' : 'max-height:0' ?>">
                 <div class="menu-children-inner">
-                    <a href="director-admissions.php#applications" class="child-link" data-section="applications"><span class="child-bullet"></span><span class="child-label">Student Applications</span></a>
-                    <a href="admission-letters.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Admission Letters</span></a>
-                    <a href="intake-planning.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Intake Planning</span></a>
-                </div>
-            </div>
-        </div>
-        <div class="menu-group">
-            <div class="menu-group-header" data-target="admissions"><span class="menu-icon"><i class="fas fa-check-circle"></i></span><span class="menu-label">Admissions</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
-            <div class="menu-children" id="childGroup-admissions" style="max-height:0">
-                <div class="menu-children-inner">
-                    <a href="director-admissions.php#admissions" class="child-link" data-section="admissions"><span class="child-bullet"></span><span class="child-label">Admission Records</span></a>
-                    <a href="director-admissions.php#directory" class="child-link" data-section="directory"><span class="child-bullet"></span><span class="child-label">Student Directory</span></a>
+                    <a href="director-admissions.php#applications" class="child-link" data-section="applications"><span class="child-bullet"></span><span class="child-label">Applicant Records</span></a>
+                    <a href="admission-letters.php" class="child-link <?= $currentPage==='admission-letters.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Admission Letters</span></a>
+                    <a href="intake-planning.php" class="child-link <?= $currentPage==='intake-planning.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Intake Planning</span></a>
                 </div>
             </div>
         </div>
         <div class="menu-divider"><span><i class="fas fa-clipboard-check" style="color:#059669;"></i> REQUIREMENTS</span></div>
-        <div class="menu-group">
+        <div class="menu-group" data-group="requirements">
             <div class="menu-group-header" data-target="requirements"><span class="menu-icon"><i class="fas fa-list-check"></i></span><span class="menu-label">Requirements</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
             <div class="menu-children" id="childGroup-requirements" style="max-height:0">
                 <div class="menu-children-inner">
                     <a href="director-admissions.php#requirements" class="child-link" data-section="requirements"><span class="child-bullet"></span><span class="child-label">Requirement Portal</span></a>
-                    <a href="director-admissions.php?report=clearance" class="child-link"><span class="child-bullet"></span><span class="child-label">Clearance Reports</span></a>
+                    <a href="director-admissions.php#clearance" class="child-link" data-section="clearance"><span class="child-bullet"></span><span class="child-label">Clearance Overview</span></a>
                 </div>
             </div>
         </div>
         <div class="menu-divider"><span><i class="fas fa-chart-bar" style="color:#7c3aed;"></i> REPORTS</span></div>
-        <div class="menu-group">
+        <div class="menu-group" data-group="reports">
             <div class="menu-group-header" data-target="reports"><span class="menu-icon"><i class="fas fa-chart-pie"></i></span><span class="menu-label">Reports</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
             <div class="menu-children" id="childGroup-reports" style="max-height:0">
                 <div class="menu-children-inner">
                     <a href="director-admissions.php#reports" class="child-link" data-section="reports"><span class="child-bullet"></span><span class="child-label">Admission Reports</span></a>
-                    <a href="director-admissions.php?report=clearance" class="child-link"><span class="child-bullet"></span><span class="child-label">Clearance Analytics</span></a>
+                    <a href="director-admissions.php?report=clearance" target="_blank" class="child-link"><span class="child-bullet"></span><span class="child-label">Clearance Analytics</span></a>
                 </div>
             </div>
         </div>
         <?php elseif ($currentPage === 'director-general.php'): ?>
-        <!-- ═══ DIRECTOR GENERAL — PREMIUM EXECUTIVE SIDEBAR ═══ -->
+        <!-- ═══ DIRECTOR GENERAL — EXECUTIVE SIDEBAR ═══ -->
         <div class="menu-divider"><span><i class="fas fa-crown" style="color:#e2b714;"></i> Executive Dashboard</span></div>
         <div class="dg-sidebar-group">
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/overview" class="menu-link dg-nav-item" data-section="executive"><span class="menu-icon"><i class="fas fa-chart-simple"></i></span><span class="menu-label">Institution Overview</span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/departments" class="menu-link dg-nav-item" data-section="departments"><span class="menu-icon"><i class="fas fa-building"></i></span><span class="menu-label">Department Monitoring</span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/performance" class="menu-link dg-nav-item" data-section="performance"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Director Performance</span></a>
+            <a href="director-general.php?page=overview" class="menu-link dg-nav-item" data-section="executive"><span class="menu-icon"><i class="fas fa-chart-simple"></i></span><span class="menu-label">Institution Overview</span></a>
+            <a href="director-general.php?page=departments" class="menu-link dg-nav-item" data-section="departments"><span class="menu-icon"><i class="fas fa-building"></i></span><span class="menu-label">Department Monitoring</span></a>
+            <a href="director-general.php?page=performance" class="menu-link dg-nav-item" data-section="performance"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Director Performance</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-users" style="color:#3b82f6;"></i> People Management</span></div>
         <div class="dg-sidebar-group">
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/staff" class="menu-link dg-nav-item" data-section="staff"><span class="menu-icon"><i class="fas fa-id-badge"></i></span><span class="menu-label">Staff Management</span><span class="dg-badge"><?= isset($staff_list) ? count($staff_list).'+' : '' ?></span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/students" class="menu-link dg-nav-item" data-section="student"><span class="menu-icon"><i class="fas fa-user-graduate"></i></span><span class="menu-label">Student Management</span><span class="dg-badge"><?= isset($total_students) ? number_format($total_students) : '' ?></span></a>
+            <a href="director-general.php?page=staff" class="menu-link dg-nav-item" data-section="staff"><span class="menu-icon"><i class="fas fa-id-badge"></i></span><span class="menu-label">Staff Management</span></a>
+            <a href="director-general.php?page=students" class="menu-link dg-nav-item" data-section="student"><span class="menu-icon"><i class="fas fa-user-graduate"></i></span><span class="menu-label">Student Management</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-briefcase" style="color:#059669;"></i> Institution Operations</span></div>
         <div class="dg-sidebar-group">
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/finance" class="menu-link dg-nav-item" data-section="financial"><span class="menu-icon"><i class="fas fa-coins"></i></span><span class="menu-label">Financial Overview</span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/assets" class="menu-link dg-nav-item" data-section="store"><span class="menu-icon"><i class="fas fa-warehouse"></i></span><span class="menu-label">Store &amp; Assets</span></a>
+            <a href="director-general.php?page=finance" class="menu-link dg-nav-item" data-section="financial"><span class="menu-icon"><i class="fas fa-coins"></i></span><span class="menu-label">Financial Overview</span></a>
+            <a href="director-general.php?page=assets" class="menu-link dg-nav-item" data-section="store"><span class="menu-icon"><i class="fas fa-warehouse"></i></span><span class="menu-label">Store &amp; Assets</span></a>
         </div>
 
         <div class="menu-divider"><span><i class="fas fa-check-circle" style="color:#d97706;"></i> Approvals &amp; Tasks</span></div>
         <div class="dg-sidebar-group">
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/approvals" class="menu-link dg-nav-item" data-section="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Pending Approvals</span><span class="dg-badge dg-badge-warning" id="approvalBadgeSidebar" style="display:none">0</span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/submissions" class="menu-link dg-nav-item" data-section="services"><span class="menu-icon"><i class="fas fa-inbox"></i></span><span class="menu-label">Pending Submissions</span><span class="dg-badge dg-badge-danger"><?= isset($totalPending) && $totalPending > 0 ? $totalPending : '' ?></span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/actions" class="menu-link dg-nav-item" data-section="quick"><span class="menu-icon"><i class="fas fa-bolt"></i></span><span class="menu-label">Quick Actions</span></a>
+            <a href="director-general.php?page=approvals" class="menu-link dg-nav-item" data-section="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Pending Approvals</span></a>
+            <a href="director-general.php?page=submissions" class="menu-link dg-nav-item" data-section="services"><span class="menu-icon"><i class="fas fa-inbox"></i></span><span class="menu-label">Pending Submissions</span></a>
+            <a href="director-general.php?page=actions" class="menu-link dg-nav-item" data-section="quick"><span class="menu-icon"><i class="fas fa-bolt"></i></span><span class="menu-label">Quick Actions</span></a>
         </div>
 
-        <div class="menu-divider"><span><i class="fas fa-bullhorn" style="color:#8b5cf6;"></i> Communication &amp; Governance</span></div>
+        <div class="menu-divider"><span><i class="fas fa-cogs" style="color:#8b5cf6;"></i> System Management</span></div>
         <div class="dg-sidebar-group">
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Communications</span></a>
-            <a href="<?= $dgRoutePrefix ?? '/director' ?>/audit" class="menu-link dg-nav-item" data-section="audit"><span class="menu-icon"><i class="fas fa-history"></i></span><span class="menu-label">Audit Trail</span></a>
+            <a href="director-general.php?page=users" class="menu-link dg-nav-item" data-section="system-users"><span class="menu-icon"><i class="fas fa-user-shield"></i></span><span class="menu-label">User Management</span></a>
+            <a href="director-general.php?page=roles" class="menu-link dg-nav-item" data-section="system-roles"><span class="menu-icon"><i class="fas fa-user-tag"></i></span><span class="menu-label">Role Management</span></a>
+            <a href="director-general.php?page=audit" class="menu-link dg-nav-item" data-section="audit"><span class="menu-icon"><i class="fas fa-history"></i></span><span class="menu-label">Audit Logs</span></a>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-bullhorn" style="color:#8b5cf6;"></i> Communication</span></div>
+        <div class="dg-sidebar-group">
+            <a href="director-general.php?page=news" class="menu-link dg-nav-item" data-section="news-management"><span class="menu-icon"><i class="fas fa-newspaper"></i></span><span class="menu-label">News Management</span></a>
+            <a href="director-general.php?page=messaging" class="menu-link dg-nav-item" data-section="messaging"><span class="menu-icon"><i class="fas fa-comments"></i></span><span class="menu-label">Staff Messaging</span></a>
+            <a href="director-general.php?page=broadcast" class="menu-link dg-nav-item" data-section="broadcast"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Broadcast Messages</span></a>
+            <a href="director-general.php?page=communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-envelope"></i></span><span class="menu-label">Message History</span></a>
         </div>
         <?php else: ?>
         <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->
@@ -1164,7 +1159,11 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             store:         'assets',
             communications:'communications',
             audit:         'audit',
-            quick:         'actions'
+            quick:         'actions',
+            'system-users':'users',
+            'system-roles':'roles',
+            messaging:     'messaging',
+            broadcast:     'broadcast'
         };
         return function(s) { return m[s] || s; };
     })();
@@ -1181,7 +1180,11 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             assets:        'store',
             communications:'communications',
             audit:         'audit',
-            actions:       'quick'
+            actions:       'quick',
+            users:         'system-users',
+            roles:         'system-roles',
+            messaging:     'messaging',
+            broadcast:     'broadcast'
         };
         return function(p) { return m[p] || p; };
     })();

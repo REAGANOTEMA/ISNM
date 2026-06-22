@@ -120,7 +120,26 @@ var ISNM_VERSION = '<?= $v ?>';
   // ── Service Worker ────────────────────────────────────────────
   function registerSW() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/ISNM/sw.js?v=' + ISNM_VERSION, { scope: '/ISNM/' }).catch(function (e) { console.warn('[ISNM] SW registration failed:', e); });
+      navigator.serviceWorker.register('/ISNM/sw.js?v=' + ISNM_VERSION, { scope: '/ISNM/' }).then(function(reg) {
+        // Try to subscribe for push notifications
+        if ('PushManager' in window) {
+          reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: null // No VAPID key needed for local/dev; falls back to basic
+          }).then(function(sub) {
+            if (sub) {
+              var data = new URLSearchParams();
+              data.append('endpoint', sub.endpoint);
+              data.append('auth_key', sub.toJSON().keys?.auth || '');
+              data.append('p256dh_key', sub.toJSON().keys?.p256dh || '');
+              data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
+              fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
+            }
+          }).catch(function(e) {
+            // Permission denied or not supported — silently ignore
+          });
+        }
+      }).catch(function (e) { console.warn('[ISNM] SW registration failed:', e); });
     }
   }
 

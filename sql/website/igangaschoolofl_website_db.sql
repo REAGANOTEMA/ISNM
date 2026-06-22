@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 09:58 PM
+-- Generation Time: Jun 22, 2026 at 08:30 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -31,16 +31,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VAR
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
     IF cnt = 0 THEN
         SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
-        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
-    DECLARE cnt INT DEFAULT 0;
-    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
-    IF cnt = 0 THEN
-        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
         PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END IF;
 END$$
@@ -315,6 +305,26 @@ CREATE TABLE `portal_messages` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `push_subscriptions`
+--
+
+CREATE TABLE `push_subscriptions` (
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `user_type` enum('staff','student') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `endpoint` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `auth_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `p256dh_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'browser',
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sickness_directory`
 --
 
@@ -470,7 +480,9 @@ CREATE TABLE `volunteer_applications` (
 ALTER TABLE `contact_submissions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_created` (`created_at`);
+  ADD KEY `idx_created` (`created_at`),
+  ADD KEY `idx_cs_status` (`status`),
+  ADD KEY `idx_cs_date` (`created_at`);
 
 --
 -- Indexes for table `daily_sick_records`
@@ -525,7 +537,9 @@ ALTER TABLE `medicine_stock_transactions`
 --
 ALTER TABLE `news`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_news_status_date` (`status`,`created_at`);
+  ADD KEY `idx_news_status_date` (`status`,`created_at`),
+  ADD KEY `idx_news_date` (`created_at`),
+  ADD KEY `idx_news_status` (`status`);
 
 --
 -- Indexes for table `notifications`
@@ -558,6 +572,14 @@ ALTER TABLE `portal_messages`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ps_user` (`user_id`,`user_type`),
+  ADD KEY `idx_ps_active` (`is_active`);
+
+--
 -- Indexes for table `sickness_directory`
 --
 ALTER TABLE `sickness_directory`
@@ -572,7 +594,9 @@ ALTER TABLE `sickness_directory`
 --
 ALTER TABLE `student_applications`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `application_number` (`application_number`);
+  ADD UNIQUE KEY `application_number` (`application_number`),
+  ADD KEY `idx_sa_status` (`status`),
+  ADD KEY `idx_sa_date` (`submitted_at`);
 
 --
 -- Indexes for table `student_sick_leave`
@@ -653,6 +677,12 @@ ALTER TABLE `pages`
 -- AUTO_INCREMENT for table `portal_messages`
 --
 ALTER TABLE `portal_messages`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --

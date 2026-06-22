@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 09:58 PM
+-- Generation Time: Jun 22, 2026 at 08:28 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -31,16 +31,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VAR
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
     IF cnt = 0 THEN
         SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
-        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
-    DECLARE cnt INT DEFAULT 0;
-    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
-    IF cnt = 0 THEN
-        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
         PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END IF;
 END$$
@@ -532,12 +522,12 @@ CREATE TABLE `v_active_tickets` (
 -- (See below for the actual view)
 --
 CREATE TABLE `v_computer_availability` (
-`location` varchar(100)
-,`total_computers` bigint
-,`online_count` decimal(23,0)
-,`offline_count` decimal(23,0)
+`availability_percentage` decimal(29,2)
+,`location` varchar(100)
 ,`maintenance_count` decimal(23,0)
-,`availability_percentage` decimal(29,2)
+,`offline_count` decimal(23,0)
+,`online_count` decimal(23,0)
+,`total_computers` bigint
 );
 
 -- --------------------------------------------------------
@@ -586,7 +576,9 @@ ALTER TABLE `it_support_tickets`
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_priority` (`priority`),
   ADD KEY `idx_requester` (`requester_name`),
-  ADD KEY `idx_type` (`issue_type`);
+  ADD KEY `idx_type` (`issue_type`),
+  ADD KEY `idx_ist_status` (`status`),
+  ADD KEY `idx_ist_priority` (`priority`);
 
 --
 -- Indexes for table `lab_bookings`
@@ -596,7 +588,8 @@ ALTER TABLE `lab_bookings`
   ADD UNIQUE KEY `booking_reference` (`booking_reference`),
   ADD KEY `idx_date` (`booking_date`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_instructor` (`instructor_name`);
+  ADD KEY `idx_instructor` (`instructor_name`),
+  ADD KEY `idx_lb_date` (`booking_date`);
 
 --
 -- Indexes for table `lab_computers`
@@ -605,7 +598,8 @@ ALTER TABLE `lab_computers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `computer_id` (`computer_id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_location` (`location`);
+  ADD KEY `idx_location` (`location`),
+  ADD KEY `idx_lc_status` (`status`);
 
 --
 -- Indexes for table `lab_usage_stats`

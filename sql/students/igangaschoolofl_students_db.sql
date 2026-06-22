@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2026 at 09:58 PM
+-- Generation Time: Jun 22, 2026 at 08:29 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -31,16 +31,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VAR
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
     IF cnt = 0 THEN
         SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD COLUMN `', p_col, '` ', p_def);
-        PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddIdxIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_idx` VARCHAR(255), IN `p_cols` TEXT)   BEGIN
-    DECLARE cnt INT DEFAULT 0;
-    SELECT COUNT(*) INTO cnt FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND INDEX_NAME = p_idx;
-    IF cnt = 0 THEN
-        SET @s = CONCAT('ALTER TABLE `', p_schema, '`.`', p_table, '` ADD INDEX `', p_idx, '` (', p_cols, ')');
         PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END IF;
 END$$
@@ -503,6 +493,25 @@ CREATE TABLE `fee_structures` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `financial_clearance`
+--
+
+CREATE TABLE `financial_clearance` (
+  `id` int NOT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Annual',
+  `clearance_status` enum('Cleared','Not Cleared','Pending Review') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending Review',
+  `cleared_by` int DEFAULT NULL,
+  `cleared_at` timestamp NULL DEFAULT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `financial_reports`
 --
 
@@ -754,6 +763,31 @@ CREATE TABLE `lab_skills_demonstrations` (
   `verified_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `late_payment_settings`
+--
+
+CREATE TABLE `late_payment_settings` (
+  `id` int NOT NULL,
+  `setting_key` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_by` int DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `late_payment_settings`
+--
+
+INSERT INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
+(1, 'grace_period_days', '15', 'Days after due date before late fee applies', NULL, '2026-06-21 08:58:13'),
+(2, 'late_fee_percentage', '5', 'Percentage penalty on outstanding amount', NULL, '2026-06-21 08:58:13'),
+(3, 'late_fee_fixed', '20000', 'Fixed late fee amount (UGX)', NULL, '2026-06-21 08:58:13'),
+(4, 'max_late_fee', '100000', 'Maximum late fee cap (UGX)', NULL, '2026-06-21 08:58:13');
 
 -- --------------------------------------------------------
 
@@ -1506,17 +1540,17 @@ CREATE TABLE `student_course_registrations` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_dashboard_view` (
-`id` int
-,`student_number` varchar(50)
-,`full_name` varchar(302)
+`attendance_rate` decimal(31,5)
 ,`course` varchar(100)
-,`year` bigint
-,`set_name` varchar(50)
-,`email` varchar(100)
-,`profile_picture` varchar(500)
 ,`current_gpa` decimal(3,2)
+,`email` varchar(100)
 ,`fee_balance` decimal(32,2)
-,`attendance_rate` decimal(31,5)
+,`full_name` varchar(302)
+,`id` int
+,`profile_picture` varchar(500)
+,`set_name` varchar(50)
+,`student_number` varchar(50)
+,`year` bigint
 );
 
 -- --------------------------------------------------------
@@ -1669,16 +1703,16 @@ CREATE TABLE `student_invoices` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_login_view` (
-`id` int
-,`student_number` varchar(50)
-,`full_name` varchar(302)
+`course` varchar(100)
 ,`email` varchar(100)
-,`password` varchar(255)
-,`course` varchar(100)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`full_name` varchar(302)
+,`id` int
+,`is_first_login` tinyint(1)
 ,`last_login` timestamp
 ,`login_attempts` int
-,`is_first_login` tinyint(1)
+,`password` varchar(255)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`student_number` varchar(50)
 );
 
 -- --------------------------------------------------------
@@ -1715,8 +1749,10 @@ CREATE TABLE `student_notifications` (
   `priority` enum('Low','Medium','High','Urgent') DEFAULT 'Medium',
   `is_read` tinyint(1) DEFAULT '0',
   `action_url` varchar(500) DEFAULT NULL,
+  `link_type` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `link_id` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1907,11 +1943,11 @@ CREATE TABLE `timetable` (
 -- (See below for the actual view)
 --
 CREATE TABLE `view_document_grouping` (
-`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
+`document_count` bigint
+,`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
+,`program` varchar(100)
 ,`student_id` int
 ,`student_name` varchar(300)
-,`program` varchar(100)
-,`document_count` bigint
 );
 
 -- --------------------------------------------------------
@@ -1921,11 +1957,11 @@ CREATE TABLE `view_document_grouping` (
 -- (See below for the actual view)
 --
 CREATE TABLE `view_program_grouping` (
-`department` varchar(20)
-,`course_code` varchar(20)
+`course_code` varchar(20)
+,`course_level` int
 ,`course_name` varchar(255)
 ,`credit_hours` int
-,`course_level` int
+,`department` varchar(20)
 );
 
 -- --------------------------------------------------------
@@ -1936,11 +1972,11 @@ CREATE TABLE `view_program_grouping` (
 --
 CREATE TABLE `view_student_grouping` (
 `program` varchar(100)
-,`year_of_study` int
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
-,`set_name` varchar(50)
 ,`semester` varchar(20)
+,`set_name` varchar(50)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
 ,`student_count` bigint
+,`year_of_study` int
 );
 
 -- --------------------------------------------------------
@@ -2016,7 +2052,9 @@ ALTER TABLE `assets`
   ADD KEY `assigned_to` (`assigned_to`),
   ADD KEY `created_by` (`created_by`),
   ADD KEY `idx_asset_tag` (`asset_tag`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_assets_status` (`status`),
+  ADD KEY `idx_assets_category` (`category_id`);
 
 --
 -- Indexes for table `asset_categories`
@@ -2031,7 +2069,9 @@ ALTER TABLE `asset_categories`
 ALTER TABLE `budgets`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_fiscal_year` (`fiscal_year`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_budgets_fiscal_year` (`fiscal_year`),
+  ADD KEY `idx_budgets_status` (`status`);
 
 --
 -- Indexes for table `budget_records`
@@ -2039,7 +2079,8 @@ ALTER TABLE `budgets`
 ALTER TABLE `budget_records`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_budget_id` (`budget_id`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_br_budget` (`budget_id`);
 
 --
 -- Indexes for table `bursar_users`
@@ -2060,7 +2101,8 @@ ALTER TABLE `cash_book`
   ADD KEY `recorded_by` (`recorded_by`),
   ADD KEY `idx_entry_number` (`entry_number`),
   ADD KEY `idx_entry_type` (`entry_type`),
-  ADD KEY `idx_transaction_date` (`transaction_date`);
+  ADD KEY `idx_transaction_date` (`transaction_date`),
+  ADD KEY `idx_cb_date` (`transaction_date`);
 
 --
 -- Indexes for table `chart_of_accounts`
@@ -2070,7 +2112,8 @@ ALTER TABLE `chart_of_accounts`
   ADD UNIQUE KEY `account_code` (`account_code`),
   ADD KEY `parent_account_id` (`parent_account_id`),
   ADD KEY `idx_account_code` (`account_code`),
-  ADD KEY `idx_account_type` (`account_type`);
+  ADD KEY `idx_account_type` (`account_type`),
+  ADD KEY `idx_coa_type` (`account_type`);
 
 --
 -- Indexes for table `clinical_placements`
@@ -2127,7 +2170,9 @@ ALTER TABLE `expenditure_records`
   ADD KEY `approved_by` (`approved_by`),
   ADD KEY `idx_expenditure_number` (`expenditure_number`),
   ADD KEY `idx_expenditure_date` (`expenditure_date`),
-  ADD KEY `idx_recorded_by` (`recorded_by`);
+  ADD KEY `idx_recorded_by` (`recorded_by`),
+  ADD KEY `idx_er_date` (`expenditure_date`),
+  ADD KEY `idx_er_budget` (`budget_record_id`);
 
 --
 -- Indexes for table `fee_adjustments`
@@ -2140,7 +2185,8 @@ ALTER TABLE `fee_adjustments`
   ADD KEY `created_by` (`created_by`),
   ADD KEY `idx_adjustment_number` (`adjustment_number`),
   ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_fa_student` (`student_id`);
 
 --
 -- Indexes for table `fee_reminders`
@@ -2152,7 +2198,8 @@ ALTER TABLE `fee_reminders`
   ADD KEY `sent_by` (`sent_by`),
   ADD KEY `idx_reminder_number` (`reminder_number`),
   ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_reminder_date` (`reminder_date`);
+  ADD KEY `idx_reminder_date` (`reminder_date`),
+  ADD KEY `idx_fr_student` (`student_id`);
 
 --
 -- Indexes for table `fee_structures`
@@ -2163,7 +2210,19 @@ ALTER TABLE `fee_structures`
   ADD KEY `idx_fee_type` (`fee_type`),
   ADD KEY `idx_academic_year` (`academic_year`),
   ADD KEY `idx_fee_structures_program_id` (`program_id`),
-  ADD KEY `idx_fee_structures_academic_year` (`academic_year`);
+  ADD KEY `idx_fee_structures_academic_year` (`academic_year`),
+  ADD KEY `idx_fs_academic_year` (`academic_year`),
+  ADD KEY `idx_fs_program` (`program_id`);
+
+--
+-- Indexes for table `financial_clearance`
+--
+ALTER TABLE `financial_clearance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_clearance` (`student_id`,`academic_year`,`semester`),
+  ADD KEY `idx_fc_student` (`student_id`),
+  ADD KEY `idx_fc_status` (`clearance_status`),
+  ADD KEY `idx_fc_year` (`academic_year`);
 
 --
 -- Indexes for table `financial_reports`
@@ -2184,7 +2243,10 @@ ALTER TABLE `general_ledger`
   ADD KEY `posted_by` (`posted_by`),
   ADD KEY `idx_entry_number` (`entry_number`),
   ADD KEY `idx_account_id` (`account_id`),
-  ADD KEY `idx_transaction_date` (`transaction_date`);
+  ADD KEY `idx_transaction_date` (`transaction_date`),
+  ADD KEY `idx_gl_date` (`transaction_date`),
+  ADD KEY `idx_gl_account` (`account_id`),
+  ADD KEY `idx_gl_type` (`transaction_type`);
 
 --
 -- Indexes for table `graduation_candidates`
@@ -2199,14 +2261,17 @@ ALTER TABLE `graduation_candidates`
 --
 ALTER TABLE `hostel_allocations`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_hostel_allocations_room_id` (`room_id`);
+  ADD KEY `idx_hostel_allocations_room_id` (`room_id`),
+  ADD KEY `idx_ha_student` (`student_id`),
+  ADD KEY `idx_ha_status` (`status`);
 
 --
 -- Indexes for table `hostel_rooms`
 --
 ALTER TABLE `hostel_rooms`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `room_number` (`room_number`);
+  ADD UNIQUE KEY `room_number` (`room_number`),
+  ADD KEY `idx_hr_status` (`status`);
 
 --
 -- Indexes for table `lab_attendance`
@@ -2270,6 +2335,13 @@ ALTER TABLE `lab_skills_demonstrations`
   ADD KEY `idx_student` (`student_id`),
   ADD KEY `idx_skill` (`skill_name`),
   ADD KEY `idx_competency` (`competency`);
+
+--
+-- Indexes for table `late_payment_settings`
+--
+ALTER TABLE `late_payment_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
 -- Indexes for table `library_books`
@@ -2341,7 +2413,10 @@ ALTER TABLE `payments`
   ADD KEY `idx_payments_invoice_id` (`invoice_id`),
   ADD KEY `idx_payments_status` (`status`),
   ADD KEY `idx_payments_payment_date` (`payment_date`),
-  ADD KEY `idx_payments_received_by` (`received_by`);
+  ADD KEY `idx_payments_received_by` (`received_by`),
+  ADD KEY `idx_payments_student` (`student_id`),
+  ADD KEY `idx_payments_date` (`payment_date`),
+  ADD KEY `idx_payments_ref` (`payment_reference`);
 
 --
 -- Indexes for table `payment_receipts`
@@ -2392,7 +2467,8 @@ ALTER TABLE `proof_of_payments`
   ADD KEY `verified_by` (`verified_by`),
   ADD KEY `idx_proof_number` (`proof_number`),
   ADD KEY `idx_payment_id` (`payment_id`),
-  ADD KEY `idx_student_id` (`student_id`);
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_pop_student` (`student_id`);
 
 --
 -- Indexes for table `registrar_certificates`
@@ -2484,7 +2560,8 @@ ALTER TABLE `students`
   ADD KEY `idx_students_student_number` (`student_number`),
   ADD KEY `idx_students_email` (`email`),
   ADD KEY `idx_students_program` (`program`),
-  ADD KEY `idx_students_status` (`status`);
+  ADD KEY `idx_students_status` (`status`),
+  ADD KEY `idx_students_name` (`surname`,`first_name`);
 
 --
 -- Indexes for table `students_trash`
@@ -2519,7 +2596,9 @@ ALTER TABLE `student_attendance`
 -- Indexes for table `student_course_registrations`
 --
 ALTER TABLE `student_course_registrations`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_cr_student` (`student_id`),
+  ADD KEY `idx_cr_status` (`status`);
 
 --
 -- Indexes for table `student_discipline`
@@ -2554,7 +2633,9 @@ ALTER TABLE `student_fees`
   ADD KEY `idx_fee_type` (`fee_type`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_due_date` (`due_date`),
-  ADD KEY `idx_student_fees_student_id` (`student_id`);
+  ADD KEY `idx_student_fees_student_id` (`student_id`),
+  ADD KEY `idx_sf_student_id` (`student_id`),
+  ADD KEY `idx_sf_status` (`status`);
 
 --
 -- Indexes for table `student_fee_assignments`
@@ -2590,7 +2671,11 @@ ALTER TABLE `student_invoices`
   ADD KEY `idx_due_date` (`due_date`),
   ADD KEY `idx_student_invoices_student_id` (`student_id`),
   ADD KEY `idx_student_invoices_status` (`status`),
-  ADD KEY `idx_student_invoices_due_date` (`due_date`);
+  ADD KEY `idx_student_invoices_due_date` (`due_date`),
+  ADD KEY `idx_si_student_id` (`student_id`),
+  ADD KEY `idx_si_status` (`status`),
+  ADD KEY `idx_si_created` (`created_at`),
+  ADD KEY `idx_si_student_status` (`student_id`,`status`);
 
 --
 -- Indexes for table `student_messages`
@@ -2801,6 +2886,12 @@ ALTER TABLE `fee_structures`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `financial_clearance`
+--
+ALTER TABLE `financial_clearance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `financial_reports`
 --
 ALTER TABLE `financial_reports`
@@ -2871,6 +2962,12 @@ ALTER TABLE `lab_practical_sessions`
 --
 ALTER TABLE `lab_skills_demonstrations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `late_payment_settings`
+--
+ALTER TABLE `late_payment_settings`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `library_books`

@@ -489,6 +489,8 @@ class AuthenticationService {
             'head of midwifery'       => 'dashboards/head-midwifery.php',
             'director admissions requirements' => 'dashboards/director-admissions.php',
             'director admissions'             => 'dashboards/director-admissions.php',
+            'admissions officer'              => 'dashboards/director-admissions.php',
+            'admissions clerk'                => 'dashboards/director-admissions.php',
             'store keeper'                    => 'dashboards/storekeeper.php',
             'admissions'                      => 'dashboards/director-admissions.php',
             'guild president'                 => 'dashboards/guild-president.php',
@@ -522,7 +524,16 @@ class AuthenticationService {
                 }
             } catch (Exception $e) { error_log('getDashboardRoute DB: ' . $e->getMessage()); }
         }
-        return $this->getDashboardRouteFromKey($role) ?? 'dashboards/director-general.php';
+        $exact = $this->getDashboardRouteFromKey($role);
+        if ($exact) return $exact;
+
+        // Partial fallback: any role containing "admissions" → director-admissions.php
+        $normalized = $this->normalizeRoleKey($role);
+        if (strpos($normalized, 'admissions') !== false) {
+            return 'dashboards/director-admissions.php';
+        }
+
+        return 'dashboards/director-general.php';
     }
 
     public function canSearchStudentProfiles($role) {

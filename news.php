@@ -7,12 +7,18 @@ session_start();
 $user = null;
 $is_admin = false;
 
-// Check for authenticated staff (any staff can manage news)
+// Check for authorized staff (DG, Directors, Principal only)
 if (isset($_SESSION['user_id']) && isset($_SESSION['type']) && $_SESSION['type'] === 'staff') {
     $auth = new AuthenticationService();
     if ($auth->isAuthenticated()) {
         $user = $auth->getCurrentUser();
-        $is_admin = true;
+        $role = $user['role'] ?? '';
+        $canManageNews = stripos($role, 'director') !== false
+                      || stripos($role, 'principal') !== false
+                      || stripos($role, 'ceo') !== false;
+        if ($canManageNews) {
+            $is_admin = true;
+        }
     }
 }
 
@@ -257,6 +263,18 @@ if ($view === 'single' && $slug) {
             $singleNews = $result->fetch_assoc();
         }
         $s->close();
+    }
+    // Track the view
+    if ($singleNews) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $viewerId = $user['id'] ?? null;
+        $viewerType = $is_admin ? 'staff' : 'public';
+        $stmtV = $staffConn->prepare("INSERT INTO news_views (news_id, user_id, user_type, ip_address, viewed_at) VALUES (?, ?, ?, ?, NOW())");
+        if ($stmtV) {
+            $stmtV->bind_param('iiss', $singleNews['id'], $viewerId, $viewerType, $ip);
+            $stmtV->execute();
+            $stmtV->close();
+        }
     }
 } elseif ($view === 'list') {
     if ($is_admin) {
