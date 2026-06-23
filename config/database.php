@@ -145,7 +145,7 @@ if (!function_exists('isnm_mysqli_connect')) {
         // Force TCP by using 127.0.0.1 — avoids socket issues on Windows/XAMPP
         $tcpHost = ($host === 'localhost') ? '127.0.0.1' : $host;
 
-        $ports = array_values(array_unique(array_filter([$port, 3307, 3306])));
+        $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
         $errors = [];
 
         foreach ($ports as $tryPort) {
