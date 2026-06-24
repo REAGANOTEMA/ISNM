@@ -78,6 +78,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
             $ins->close();
         }
 
+        // Also update staff.profile_photo for backward compatibility
+        $updStaff = $staffDb->prepare("UPDATE staff SET profile_photo = ? WHERE id = ?");
+        $updStaff->bind_param('si', $relativePath, $staffId);
+        $updStaff->execute();
+        $updStaff->close();
+
         $response = ['success' => true, 'path' => '../' . $relativePath, 'error' => ''];
     } catch (Exception $e) {
         $response = ['success' => false, 'error' => $e->getMessage()];
@@ -116,6 +122,22 @@ if (!function_exists('getStaffProfileImageUrl')) {
                         }
                     }
                 }
+                // Fallback to staff.profile_photo
+                $s2 = $staffDb->prepare("SELECT profile_photo FROM staff WHERE id = ?");
+                if ($s2) {
+                    $s2->bind_param('i', $staffId);
+                    $s2->execute();
+                    $row2 = $s2->get_result()->fetch_assoc();
+                    $s2->close();
+                    if ($row2 && $row2['profile_photo']) {
+                        $path = '../' . $row2['profile_photo'];
+                        $fullPath = __DIR__ . '/../' . $row2['profile_photo'];
+                        if (file_exists($fullPath)) {
+                            $urls[$staffId] = $path;
+                            return $path;
+                        }
+                    }
+                }
             }
         } catch (Exception $e) {}
         $urls[$staffId] = '../images/username.png';
@@ -139,26 +161,32 @@ function getStaffProfileData($staffId) {
             $staffDb = getStaffConnection();
         }
         if ($staffDb) {
-            $s = $staffDb->prepare("SELECT first_name, surname, other_names, email, phone, department, bio FROM staff WHERE id = ?");
+            $s = $staffDb->prepare("SELECT full_name, email, phone, department FROM staff WHERE id = ?");
             if ($s) {
                 $s->bind_param('i', $staffId);
                 $s->execute();
                 $row = $s->get_result()->fetch_assoc();
                 $s->close();
                 if ($row) {
-                    $data = array_merge($data, $row);
+                    // Parse full_name into first_name/surname/other_names
+                    $parts = explode(' ', trim($row['full_name'] ?? ''), 3);
+                    $data['first_name'] = $parts[0] ?? '';
+                    $data['surname'] = count($parts) >= 2 ? $parts[count($parts) === 2 ? 1 : 1] : '';
+                    $data['other_names'] = count($parts) === 3 ? $parts[2] : '';
+                    $data['email'] = $row['email'] ?? '';
+                    $data['phone'] = $row['phone'] ?? '';
+                    $data['department'] = $row['department'] ?? '';
                 }
             }
             // Also try staff_profiles for bio
-            $sp = $staffDb->prepare("SELECT bio, department FROM staff_profiles WHERE staff_id = ?");
+            $sp = $staffDb->prepare("SELECT bio FROM staff_profiles WHERE staff_id = ?");
             if ($sp) {
                 $sp->bind_param('i', $staffId);
                 $sp->execute();
                 $row2 = $sp->get_result()->fetch_assoc();
                 $sp->close();
-                if ($row2) {
-                    if (!empty($row2['bio'])) $data['bio'] = $row2['bio'];
-                    if (!empty($row2['department'])) $data['department'] = $row2['department'];
+                if ($row2 && !empty($row2['bio'])) {
+                    $data['bio'] = $row2['bio'];
                 }
             }
         }
@@ -192,10 +220,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_profile_fields') {
         $phone = trim($_POST['phone'] ?? '');
         $bio = trim($_POST['bio'] ?? '');
 
+        // Build full_name from components
+        $full_name = trim($first_name . ' ' . $surname . ($other_names ? ' ' . $other_names : ''));
+
         // Update staff table
-        $upd = $staffDb->prepare("UPDATE staff SET first_name = ?, surname = ?, other_names = ?, email = ?, phone = ? WHERE id = ?");
+        $upd = $staffDb->prepare("UPDATE staff SET full_name = ?, email = ?, phone = ? WHERE id = ?");
         if (!$upd) { throw new Exception('Prepare failed: ' . $staffDb->error); }
-        $upd->bind_param('sssssi', $first_name, $surname, $other_names, $email, $phone, $staffId);
+        $upd->bind_param('sssi', $full_name, $email, $phone, $staffId);
         if (!$upd->execute()) { throw new Exception('Update failed: ' . $upd->error); }
         $upd->close();
 

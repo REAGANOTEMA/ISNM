@@ -14,9 +14,35 @@ $user_type = $_SESSION['type'];
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
-// Load profile image from staff_profiles
+// Load profile image
 $profileImage = '../images/username.png';
-if ($user_id) {
+$profileClickHandler = "if(typeof openProfileModal==='function')openProfileModal();";
+if ($user_type === 'student') {
+    $profileClickHandler = "window.location.href='../student_profile.php'";
+    // Try to load student profile photo
+    try {
+        $rootPath_sb = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
+        $studentConn = getStudentsConnection();
+        if ($studentConn) {
+            $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
+            $q->bind_param('i', $user_id);
+            $q->execute();
+            $photoRow = $q->get_result()->fetch_assoc();
+            $q->close();
+            $photoFile = '';
+            if ($photoRow) {
+                if (!empty($photoRow['profile_picture'])) $photoFile = $photoRow['profile_picture'];
+                elseif (!empty($photoRow['passport_photo'])) $photoFile = $photoRow['passport_photo'];
+            }
+            if ($photoFile && file_exists(__DIR__ . '/../studentUploads/profile_images/' . $photoFile)) {
+                $profileImage = $rootPath_sb . '/studentUploads/profile_images/' . $photoFile . '?v=' . time();
+            } elseif ($photoFile && file_exists(__DIR__ . '/../' . $photoFile)) {
+                $profileImage = $rootPath_sb . '/' . $photoFile . '?v=' . time();
+            }
+        }
+    } catch (Exception $e) {}
+} else {
+    // Staff: load from staff_profiles
     $profileFile = __DIR__ . '/profile_settings.php';
     if (file_exists($profileFile)) {
         include_once $profileFile;
@@ -259,7 +285,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         </div>
     </div>
 
-    <div class="sidebar-user" onclick="if(typeof openProfileModal==='function')openProfileModal();" style="cursor:pointer" title="Click to update profile">
+    <div class="sidebar-user" onclick="<?= $profileClickHandler ?>" style="cursor:pointer" title="Click to update profile">
         <div class="user-avatar-wrap">
             <img src="<?= $profileImage ?>" alt="" class="user-avatar">
             <span class="user-dot"></span>

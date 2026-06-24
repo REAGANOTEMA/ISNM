@@ -123,13 +123,18 @@ function processPassportPhoto($image_path, $mime_type) {
 }
 
 function deletePassportPhoto($filename) {
-    $file_path = 'uploads/passport_photos/' . $filename;
+    $possible_paths = [
+        'uploads/passport_photos/' . $filename,
+        'studentUploads/profile_images/' . $filename,
+    ];
     
-    if (file_exists($file_path)) {
-        return unlink($file_path);
+    foreach ($possible_paths as $file_path) {
+        if (file_exists($file_path)) {
+            @unlink($file_path);
+        }
     }
     
-    return true; // File doesn't exist, consider it deleted
+    return true;
 }
 
 function getPassportPhotoUrl($filename) {
@@ -137,9 +142,16 @@ function getPassportPhotoUrl($filename) {
         return 'images/username.png';
     }
     
-    $file_path = 'uploads/passport_photos/' . $filename;
-    if (file_exists($file_path)) {
-        return $file_path;
+    // Check multiple possible locations
+    $possible_paths = [
+        'uploads/passport_photos/' . $filename,
+        'studentUploads/profile_images/' . $filename,
+    ];
+    
+    foreach ($possible_paths as $file_path) {
+        if (file_exists($file_path)) {
+            return $file_path;
+        }
     }
     
     return 'images/username.png';
@@ -161,10 +173,10 @@ function updateStudentPhoto($student_id, $filename) {
         }
     }
     
-    // Update database with new photo
-    $update_sql = "UPDATE students SET profile_image = ? WHERE student_id = ?";
+    // Update database with new photo (both columns for consistency)
+    $update_sql = "UPDATE students SET profile_image = ?, profile_picture = ? WHERE student_id = ?";
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("ss", $filename, $student_id);
+    $stmt->bind_param("sss", $filename, $filename, $student_id);
     
     if ($stmt->execute()) {
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Photo Updated', "Updated passport photo for student: $student_id", 'students', $student_id);

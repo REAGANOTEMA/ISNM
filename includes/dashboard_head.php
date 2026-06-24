@@ -13,13 +13,38 @@ $v = '2.0.1';
 
 // Profile image URL for dashboard header avatars (falls back to username.png)
 $profileImageUrl = '../images/username.png';
+$userType = $_SESSION['type'] ?? '';
 if (!empty($_SESSION['user_id'])) {
-    $pf = __DIR__ . '/profile_settings.php';
-    if (file_exists($pf)) {
-        include_once $pf;
-        if (function_exists('getStaffProfileImageUrl')) {
-            $url = getStaffProfileImageUrl((int)$_SESSION['user_id']);
-            if ($url) $profileImageUrl = $url;
+    if ($userType === 'student') {
+        try {
+            $studentConn = getStudentsConnection();
+            if ($studentConn) {
+                $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");
+                $q->bind_param('i', (int)$_SESSION['user_id']);
+                $q->execute();
+                $photoRow = $q->get_result()->fetch_assoc();
+                $q->close();
+                if ($photoRow) {
+                    $photoFile = '';
+                    if (!empty($photoRow['profile_picture'])) $photoFile = $photoRow['profile_picture'];
+                    elseif (!empty($photoRow['passport_photo'])) $photoFile = $photoRow['passport_photo'];
+                    if ($photoFile) {
+                        $checkPath = __DIR__ . '/../studentUploads/profile_images/' . $photoFile;
+                        if (file_exists($checkPath)) {
+                            $profileImageUrl = '../studentUploads/profile_images/' . $photoFile . '?v=' . time();
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {}
+    } else {
+        $pf = __DIR__ . '/profile_settings.php';
+        if (file_exists($pf)) {
+            include_once $pf;
+            if (function_exists('getStaffProfileImageUrl')) {
+                $url = getStaffProfileImageUrl((int)$_SESSION['user_id']);
+                if ($url) $profileImageUrl = $url;
+            }
         }
     }
 }

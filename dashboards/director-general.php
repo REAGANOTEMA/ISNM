@@ -189,6 +189,10 @@ $dgPageToSection = [
     'messaging'     => 'messaging',
     'broadcast'     => 'broadcast',
     'news'          => 'news-management',
+    'reports'       => 'reports',
+    'system-health' => 'system-health',
+    'notifications' => 'notifications',
+    'kpi'           => 'kpi',
 ];
 $dgPage  = $_GET['page'] ?? '';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
@@ -212,6 +216,10 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
         'store'=>'Store & Assets','communications'=>'Communications',
         'audit'=>'Audit Trail','quick'=>'Quick Actions',
         'news-management'=>'News Management',
+        'reports'=>'Reports Center',
+        'system-health'=>'System Health',
+        'notifications'=>'Notifications Center',
+        'kpi'=>'Strategic KPI Dashboard',
     ];
     $label = $sectionLabels[$GLOBALS['dgSection']] ?? 'Dashboard';
     ?>
@@ -953,6 +961,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <a data-no-loader class="section-tab<?= $dgSection === 'communications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#communications" onclick="switchToSection('communications');return false;" data-tab="communications"><i class="fas fa-bullhorn me-1"></i>Comms</a>
   <a data-no-loader class="section-tab<?= $dgSection === 'audit' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#audit" onclick="switchToSection('audit');return false;" data-tab="audit"><i class="fas fa-history me-1"></i>Audit</a>
   <a data-no-loader class="section-tab<?= $dgSection === 'quick' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#quick" onclick="switchToSection('quick');return false;" data-tab="quick"><i class="fas fa-bolt me-1"></i>Quick</a>
+<a data-no-loader class="section-tab<?= $dgSection === 'reports' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#reports" onclick="switchToSection('reports');return false;" data-tab="reports"><i class="fas fa-chart-pie me-1"></i>Reports</a>
+<a data-no-loader class="section-tab<?= $dgSection === 'kpi' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#kpi" onclick="switchToSection('kpi');return false;" data-tab="kpi"><i class="fas fa-bullseye me-1"></i>KPI</a>
+<a data-no-loader class="section-tab<?= $dgSection === 'notifications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#notifications" onclick="switchToSection('notifications');return false;" data-tab="notifications"><i class="fas fa-bell me-1"></i>Alerts</a>
+<a data-no-loader class="section-tab<?= $dgSection === 'system-health' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#system-health" onclick="switchToSection('system-health');return false;" data-tab="system-health"><i class="fas fa-heartbeat me-1"></i>Health</a>
 </div>
 
 <!-- ═══ SECTION: EXECUTIVE ═══ -->
@@ -1843,6 +1855,31 @@ function dgExportCSV() {
 <?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
 </div><!-- /dg-content -->
+
+<!-- ═══ SECTION: REPORTS CENTER ═══ -->
+<div id="reports" class="content-section dashboard-section<?= $dgSection === 'reports' ? ' active' : '' ?>" data-section="reports">
+  <?php include_once __DIR__ . '/../includes/dg_reports_center.php'; ?>
+</div>
+
+<!-- ═══ SECTION: STRATEGIC KPI ═══ -->
+<div id="kpi" class="content-section dashboard-section<?= $dgSection === 'kpi' ? ' active' : '' ?>" data-section="kpi">
+  <?php include_once __DIR__ . '/../includes/dg_strategic_kpi.php'; ?>
+</div>
+
+<!-- ═══ SECTION: NOTIFICATIONS CENTER ═══ -->
+<div id="notifications" class="content-section dashboard-section<?= $dgSection === 'notifications' ? ' active' : '' ?>" data-section="notifications">
+  <?php 
+  include_once __DIR__ . '/../includes/dg_notifications_center.php';
+  if (function_exists('renderNotificationsCenter')) {
+      renderNotificationsCenter($conn, $studentsConn, $websiteConn, $user_id);
+  }
+  ?>
+</div>
+
+<!-- ═══ SECTION: SYSTEM HEALTH ═══ -->
+<div id="system-health" class="content-section dashboard-section<?= $dgSection === 'system-health' ? ' active' : '' ?>" data-section="system-health">
+  <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
+</div>
 
 <!-- ═══ SEND ANNOUNCEMENT MODAL ═══ -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">

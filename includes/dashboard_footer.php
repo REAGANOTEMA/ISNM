@@ -39,7 +39,7 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
 <!-- Bootstrap 5.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Font Awesome (CSS/webfont version — loaded in head, no fetch rejections) -->
-<?php if (function_exists('renderProfileModal')) renderProfileModal(); ?>
+<?php if (function_exists('renderProfileModal') && ($_SESSION['type'] ?? '') === 'staff') renderProfileModal(); ?>
 
 <script>
 // Cache-busting version constant

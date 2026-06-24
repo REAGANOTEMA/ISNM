@@ -140,6 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($stmt->execute()) {
                     $_SESSION['success'] = "Profile updated successfully!";
+                    // Sync session for sidebar/header consistency
+                    $parts = array_filter([$_POST['first_name'] ?? '', $_POST['other_name'] ?? '', $_POST['surname'] ?? '']);
+                    $syncedFullName = implode(' ', $parts);
+                    if (trim($syncedFullName)) {
+                        $_SESSION['full_name'] = $syncedFullName;
+                    }
                 } else {
                     $_SESSION['error'] = "Error updating profile: " . $conn->error;
                 }
@@ -179,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($_FILES['profile_photo']['size'] > $max_size) {
                         $_SESSION['error'] = "File too large. Maximum size is 5MB.";
                     } else {
-                        $upload_dir = 'studentUploads/profile_images/';
+                        $upload_dir = __DIR__ . '/studentUploads/profile_images/';
                         if (!is_dir($upload_dir)) {
                             mkdir($upload_dir, 0755, true);
                         }
@@ -188,9 +194,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $filepath = $upload_dir . $filename;
                         
                         if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $filepath)) {
-                            $update_photo_sql = "UPDATE students SET profile_picture = ? WHERE student_id = ?";
+                            $update_photo_sql = "UPDATE students SET profile_picture = ?, profile_image = ? WHERE student_id = ?";
                             $stmt = $conn->prepare($update_photo_sql);
-                            $stmt->bind_param("ss", $filename, $student_id);
+                            $stmt->bind_param("sss", $filename, $filename, $student_id);
                             
                             if ($stmt->execute()) {
                                 $_SESSION['success'] = "Profile image updated successfully!";
@@ -341,18 +347,19 @@ function handlePhotoDelete() {
     
     $student_id = $_SESSION['user_id'];
     
-    // Get current photo
-    $current_photo_sql = "SELECT profile_image FROM students WHERE student_id = ?";
+    // Get current photo from profile_picture column
+    $current_photo_sql = "SELECT profile_picture, profile_image FROM students WHERE student_id = ?";
     $current_result = executeQuery($current_photo_sql, [$student_id], 's');
-    $current_photo = $current_result[0]['profile_image'] ?? '';
+    $current_row = $current_result[0] ?? [];
+    $current_photo = $current_row['profile_picture'] ?: $current_row['profile_image'] ?: '';
     
     // Delete photo file if it's not default
-    if ($current_photo !== 'default-student.png') {
+    if ($current_photo && $current_photo !== 'default-student.png') {
         deletePassportPhoto($current_photo);
     }
     
-    // Update database to default
-    $update_sql = "UPDATE students SET profile_image = 'default-student.png' WHERE student_id = ?";
+    // Update both columns to default
+    $update_sql = "UPDATE students SET profile_picture = 'default-student.png', profile_image = 'default-student.png' WHERE student_id = ?";
     $stmt = $conn->prepare($update_sql);
     $stmt->bind_param("s", $student_id);
     
@@ -943,12 +950,13 @@ function handlePasswordChange() {
         <!-- Profile Header -->
         <div class="profile-header fade-in">
             <div class="profile-photo-container">
-                <img src="<?php echo getPassportPhotoUrl($student['profile_image']); ?>" alt="Profile Photo" class="profile-photo" onclick="document.getElementById('photoInput').click()">
+                <?php $photoForDisplay = $student['profile_picture'] ?: $student['profile_image'] ?: 'default-student.png'; ?>
+                <img src="<?php echo getPassportPhotoUrl($photoForDisplay); ?>" alt="Profile Photo" class="profile-photo" onclick="document.getElementById('photoInput').click()">
                 <div class="mt-3">
                     <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('photoInput').click()">
                         <i class="fas fa-camera"></i> Change Photo
                     </button>
-                    <?php if ($student['profile_image'] !== 'default-student.png'): ?>
+                    <?php if ($photoForDisplay !== 'default-student.png'): ?>
                     <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeletePhoto()">
                         <i class="fas fa-trash"></i> Remove
                     </button>

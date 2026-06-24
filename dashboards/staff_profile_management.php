@@ -77,6 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
                 $i->close();
             }
 
+            // Also update staff.profile_photo for backward compatibility
+            $updStaff = $staffDb->prepare("UPDATE staff SET profile_photo = ? WHERE id = ?");
+            $updStaff->bind_param("si", $relative_path, $staff_id);
+            $updStaff->execute();
+            $updStaff->close();
+
             // Delete old photo file
             if ($old_photo && file_exists(__DIR__ . '/../' . $old_photo) && $old_photo !== $relative_path) {
                 @unlink(__DIR__ . '/../' . $old_photo);
@@ -117,6 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $u->bind_param("ssssssi", $full_name, $email, $phone, $address, $department, $position, $staff_id);
         if ($u->execute()) {
             $_SESSION['success'] = "Profile updated successfully!";
+
+            // Sync session for sidebar/header consistency
+            $_SESSION['full_name'] = $full_name;
 
             // Refresh staff data
             $stmt = $staffDb->prepare("SELECT * FROM staff WHERE id = ?");
