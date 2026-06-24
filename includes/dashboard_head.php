@@ -9,7 +9,7 @@ $rootPath  = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2
 if ($rootPath === '') $rootPath = '.';
 
 // Cache-busting version — bump on every deploy
-$v = '2.0.1';
+$v = '2.1.0';
 
 // Profile image URL for dashboard header avatars (falls back to username.png)
 $profileImageUrl = '../images/username.png';
@@ -66,20 +66,7 @@ if (!empty($_SESSION['user_id'])) {
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
 <script>
 (function(){
-  function logRejection(r) {
-    try {
-      var type = Object.prototype.toString.call(r);
-      var ctor = r && r.constructor ? r.constructor.name : 'none';
-      var info = r && r.message ? r.message : (r && r.stack ? r.stack.slice(0,200) : JSON.stringify(r));
-      console.warn('[ISNM] Rejection caught:', { type: type, constructor: ctor, value: info });
-    } catch(e){}
-  }
-  window.addEventListener('unhandledrejection', function(e){
-    try { if (e.promise) e.promise.catch(function(){}); } catch(ex){}
-  });
-  window.addEventListener('rejectionhandled', function(e){
-    try { if (e.promise) e.promise.catch(function(){}); } catch(ex){}
-  });
+  window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
 })();
 </script>
 
@@ -101,11 +88,15 @@ if (!empty($_SESSION['user_id'])) {
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Dashboard base styles -->
+<!-- Dashboard Base — normalized foundation (resolves cross-file conflicts) -->
+<link href="<?= $rootPath ?>/dashboards/dashboard-base.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Dashboard Layout -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-style.css?v=<?= $v ?>" rel="stylesheet">
-<!-- Mobile dashboard styles -->
+<!-- Dashboard Professional Design System (cards, tables, badges, KPI) -->
+<link href="<?= $rootPath ?>/dashboards/dashboard-professional.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Mobile Dashboard Styles -->
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
-<!-- Modern UI enhancement styles -->
+<!-- Modern UI Enhancement Styles -->
 <link href="<?= $rootPath ?>/css/modern-ui.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>
@@ -113,11 +104,23 @@ if (!empty($_SESSION['user_id'])) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Dashboard Analytics Engine (Chart.js + AI) -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-charts.js?v=<?= $v ?>" defer></script>
-<!-- Service Worker Registration for PWA -->
+<!-- Service Worker + Push Notification Registration -->
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>')
-        .then(function(reg) { console.log('SW registered:', reg.scope); })
-        .catch(function(err) { console.warn('SW registration failed:', err); });
+    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>', { scope: '/ISNM/' })
+        .then(function(reg) {
+            if ('PushManager' in window && 'Notification' in window && Notification.permission === 'granted') {
+                reg.pushManager.subscribe({ userVisibleOnly: true }).then(function(sub) {
+                    if (sub) {
+                        var data = new URLSearchParams();
+                        data.append('endpoint', sub.endpoint);
+                        data.append('auth_key', (sub.toJSON().keys && sub.toJSON().keys.auth) || '');
+                        data.append('p256dh_key', (sub.toJSON().keys && sub.toJSON().keys.p256dh) || '');
+                        data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
+                        fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
+                    }
+                }).catch(function(){});
+            }
+        }).catch(function(err) { console.warn('[ISNM] SW registration failed:', err); });
 }
 </script>

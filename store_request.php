@@ -41,8 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $userId = (int)$_SESSION['user_id'];
             $dept = $staffConn->real_escape_string($_POST['department'] ?? $user['department'] ?? '');
 
-            $stmt = $staffConn->prepare("INSERT INTO store_requests (request_number, requested_by, department, notes, urgency, status) VALUES (?, ?, ?, ?, ?, 'pending')");
-            $stmt->bind_param("sisss", $reqNum, $userId, $dept, $notes, $urgency);
+            $submitDg = !empty($_POST['submit_for_dg']);
+            $status = $submitDg ? 'pending_approval' : 'pending';
+            $stmt = $staffConn->prepare("INSERT INTO store_requests (request_number, requested_by, department, notes, urgency, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sissss", $reqNum, $userId, $dept, $notes, $urgency, $status);
             if ($stmt->execute()) {
                 $requestId = $stmt->insert_id;
                 $stmt->close();
@@ -54,7 +56,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 $ins->close();
 
-                $success = "Request <strong>$reqNum</strong> submitted successfully! The storekeeper will process it.";
+                // If submitting directly for DG approval, create the approval workflow record
+                if ($submitDg) {
+                    require_once __DIR__ . '/includes/approval_integration.php';
+                    if (submitStoreForApproval($requestId, $staffConn)) {
+                        $success = "Request <strong>$reqNum</strong> submitted for <strong>Director General Approval</strong>! Track its status in the Approval Center.";
+                    } else {
+                        $success = "Request <strong>$reqNum</strong> saved. Submitting for DG approval failed — the storekeeper can forward it manually.";
+                    }
+                } else {
+                    $success = "Request <strong>$reqNum</strong> submitted successfully! The storekeeper will process it.";
+                }
             } else {
                 $errors[] = 'Database error: ' . $stmt->error;
             }
@@ -197,14 +209,16 @@ footer a { color:var(--accent); text-decoration:none; }
                     <tbody>
                         <?php foreach ($myRequests as $req):
                             $ubadge = $req['urgency']==='urgent'?'bg-danger':($req['urgency']==='high'?'bg-warning text-dark':($req['urgency']==='medium'?'bg-info':'bg-secondary'));
-                            $sbadge = $req['status']==='fulfilled'?'bg-success':($req['status']==='pending'?'bg-warning text-dark':($req['status']==='rejected'?'bg-danger':'bg-info'));
+                            $status = $req['status'];
+                            $sbadge = $status==='fulfilled'?'bg-success':($status==='approved'?'bg-success':($status==='pending_approval'?'bg-warning text-dark':($status==='pending'?'bg-warning text-dark':($status==='rejected'?'bg-danger':'bg-info'))));
+                            $statusLabel = $status==='pending_approval'?'Pending DG Approval':($status==='pending'?'Pending':($status==='approved'?'Approved':$status));
                         ?>
                         <tr>
                             <td><?= $req['id'] ?></td>
                             <td><code><?= htmlspecialchars($req['request_number']) ?></code></td>
                             <td><?= $req['total_items'] ?></td>
                             <td><span class="badge <?= $ubadge ?>"><?= $req['urgency'] ?></span></td>
-                            <td><span class="badge <?= $sbadge ?>"><?= $req['status'] ?></span></td>
+                            <td><span class="badge <?= $sbadge ?>"><?= ucfirst($statusLabel) ?></span></td>
                             <td><small><?= date('d M Y H:i', strtotime($req['created_at'])) ?></small></td>
                         </tr>
                         <?php endforeach; ?>
@@ -285,6 +299,14 @@ footer a { color:var(--accent); text-decoration:none; }
                             <div id="selectedList" class="mt-2 small"></div>
                         </div>
 
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="submit_for_dg" id="submitForDg" class="form-check-input" value="1">
+                            <label class="form-check-label fw-semibold" for="submitForDg" style="font-size:13px;">
+                                <i class="fas fa-crown text-warning me-1"></i>Submit directly for <strong>Director General Approval</strong>
+                            </label>
+                            <div class="text-muted small mt-1" style="font-size:11px;">If checked, this request bypasses the store and goes directly to the Director General for final approval.</div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary btn-lg w-100"><i class="fas fa-paper-plane me-2"></i>Submit Request</button>
                     </form>
                 </div>
@@ -317,12 +339,14 @@ footer a { color:var(--accent); text-decoration:none; }
                     <?php else: ?>
                     <div class="list-group list-group-flush" style="max-height:400px;overflow-y:auto">
                         <?php foreach ($myRequests as $req):
-                            $badge = $req['status'] === 'fulfilled' ? 'bg-success' : ($req['status'] === 'pending' ? 'bg-warning text-dark' : ($req['status'] === 'rejected' ? 'bg-danger' : 'bg-info'));
+                            $st = $req['status'];
+                            $badge = $st === 'fulfilled' ? 'bg-success' : ($st === 'approved' ? 'bg-success' : ($st === 'pending_approval' ? 'bg-warning text-dark' : ($st === 'pending' ? 'bg-warning text-dark' : ($st === 'rejected' ? 'bg-danger' : 'bg-info'))));
+                            $statusLabel = $st === 'pending_approval' ? 'Pending DG Approval' : ($st === 'pending' ? 'Pending' : ($st === 'approved' ? 'Approved' : $st));
                         ?>
                         <div class="list-group-item py-2">
                             <div class="d-flex justify-content-between">
                                 <small class="fw-bold"><?= htmlspecialchars($req['request_number']) ?></small>
-                                <span class="badge <?= $badge ?>"><?= $req['status'] ?></span>
+                                <span class="badge <?= $badge ?>"><?= ucfirst($statusLabel) ?></span>
                             </div>
                             <small class="text-muted"><?= $req['total_items'] ?> item(s) | <?= date('d M Y', strtotime($req['created_at'])) ?></small>
                         </div>

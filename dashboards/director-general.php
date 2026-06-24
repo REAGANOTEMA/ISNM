@@ -11,7 +11,9 @@ require_once __DIR__ . '/../views/student_data_loader.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 require_once __DIR__ . '/../includes/approval_integration.php';
+require_once __DIR__ . '/../includes/approval_center.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
+require_once __DIR__ . '/../includes/dashboard_analytics.php';
 
 $loader = new StudentDataLoader();
 
@@ -517,23 +519,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     header('Location: director-general.php'); exit;
 }
 
-// ── Monthly data for charts ──
-$mn = []; $rv = []; $ex = [];
-for ($m = 5; $m >= 0; $m--) {
-    $ts = strtotime("-$m months"); $mn[] = date('M Y', $ts);
-    $mo = date('m', $ts); $yr = date('Y', $ts);
-    $r = $conn ? $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE MONTH(payment_date)=$mo AND YEAR(payment_date)=$yr AND status IN('verified','approved')") : null;
-    $e = $conn ? $conn->query("SELECT COALESCE(SUM(amount),0) v FROM expenses WHERE MONTH(expense_date)=$mo AND YEAR(expense_date)=$yr AND status IN('approved','paid')") : null;
-    $rv[] = $r ? (float)$r->fetch_assoc()['v'] : 0; $ex[] = $e ? (float)$e->fetch_assoc()['v'] : 0;
-}
-$ml = []; $mv = [];
-if ($conn) {
-    $mr = $conn->query("SELECT payment_method, COALESCE(SUM(amount_received),0) t FROM igangaschoolofl_students_db.payments WHERE status IN('verified','approved') GROUP BY payment_method ORDER BY t DESC LIMIT 5");
-    if ($mr) while ($row = $mr->fetch_assoc()) { $ml[] = $row['payment_method'] ?: 'Other'; $mv[] = (float)$row['t']; }
-}
-$collRate = $total_revenue > 0 ? round(min(100, ($today_collection / max(1, $total_revenue / 365)) * 100)) : 50;
-$attTotal = ($staffAttendanceToday['present']??0)+($staffAttendanceToday['late']??0)+($staffAttendanceToday['absent']??0)+($staffAttendanceToday['on_leave']??0);
-$presentPct = $attTotal > 0 ? round(($staffAttendanceToday['present']??0)/$attTotal*100) : 0;
 ?>
 <?php $pageTitle = 'Director General Dashboard'; ?>
 <!DOCTYPE html>
@@ -835,70 +820,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <?php unset($_SESSION['success']); endif; ?>
 
-<!-- ═══ KPI CARDS (clickable) ═══ -->
-<div class="kpi-grid">
-  <div class="kpi-card kpi-bl an-fade" style="animation-delay:0.05s;cursor:pointer;" onclick="switchToSection('student');return false;" title="Click to view Students">
-    <div class="kpi-icon"><i class="fas fa-user-graduate"></i></div>
-    <div class="kpi-value"><?= number_format($total_students) ?></div>
-    <div class="kpi-label">Total Students</div>
-    <span class="kpi-trend" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-arrow-up"></i> Active</span>
-  </div>
-  <div class="kpi-card kpi-gr an-fade" style="animation-delay:0.1s;cursor:pointer;" onclick="switchToSection('staff');return false;" title="Click to view Staff">
-    <div class="kpi-icon"><i class="fas fa-users"></i></div>
-    <div class="kpi-value"><?= number_format($total_staff) ?></div>
-    <div class="kpi-label">Total Staff</div>
-    <span class="kpi-trend" style="background:#ecfdf5;color:#059669;"><i class="fas fa-check-circle"></i> Active</span>
-  </div>
-  <div class="kpi-card kpi-cy an-fade" style="animation-delay:0.15s;cursor:pointer;" onclick="switchToSection('financial');return false;" title="Click to view Financials">
-    <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
-    <div class="kpi-value">UGX <?= number_format($today_collection) ?></div>
-    <div class="kpi-label">Today Collection</div>
-    <?php if($today_collection > 0): ?><span class="kpi-trend" style="background:#ecfeff;color:#0891b2;"><i class="fas fa-arrow-up"></i> Today</span><?php endif; ?>
-  </div>
-  <div class="kpi-card kpi-rd an-fade" style="animation-delay:0.2s;cursor:pointer;" onclick="switchToSection('financial');return false;" title="Click to manage Fees">
-    <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
-    <div class="kpi-value">UGX <?= number_format($outstanding) ?></div>
-    <div class="kpi-label">Outstanding Fees</div>
-    <?php if($outstanding > 0): ?><span class="kpi-trend" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Pending</span><?php endif; ?>
-  </div>
-  <div class="kpi-card kpi-or an-fade" style="animation-delay:0.25s;cursor:pointer;" onclick="switchToSection('services');return false;" title="Click to review Applications">
-    <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>
-    <div class="kpi-value"><?= number_format($total_applications) ?></div>
-    <div class="kpi-label">Applications</div>
-    <span class="kpi-trend" style="background:#fffbeb;color:#d97706;"><i class="fas fa-clock"></i> Received</span>
-  </div>
-  <div class="kpi-card kpi-pr an-fade" style="animation-delay:0.3s;cursor:pointer;" onclick="switchToSection('approvals');return false;" title="Click to approve">
-    <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
-    <div class="kpi-value"><?= number_format($pending_apps) ?></div>
-    <div class="kpi-label">Pending Review</div>
-    <span class="kpi-trend" style="background:#f5f3ff;color:#7c3aed;"><i class="fas fa-spinner"></i> Awaiting</span>
-  </div>
-</div>
-
-<!-- ═══ ANALYTICS STRIP ═══ -->
-<div class="analytics-strip an-fade" style="animation-delay:0.35s" data-ax='<?= json_encode(['months'=>$mn,'rev'=>$rv,'exp'=>$ex,'methods'=>['l'=>$ml,'v'=>$mv],'attendance'=>$staffAttendanceToday,'collRate'=>$collRate]) ?>'>
-  <div class="ax">
-    <div class="ax-title"><i class="fas fa-chart-line me-1" style="color:#3b82f6;"></i>Revenue vs Expenses</div>
-    <canvas id="chartRevenue" height="80"></canvas>
-  </div>
-  <div class="ax">
-    <div class="ax-title"><i class="fas fa-chart-pie me-1" style="color:#8b5cf6;"></i>Payment Methods</div>
-    <canvas id="chartPaymentMethods" height="80"></canvas>
-  </div>
-  <div class="ax">
-    <div class="ax-title"><i class="fas fa-user-clock me-1" style="color:#10b981;"></i>Staff Attendance</div>
-    <canvas id="chartStaffAttendance" height="80"></canvas>
-  </div>
-  <div class="ax">
-    <div class="ax-title"><i class="fas fa-heartbeat me-1" style="color:#ef4444;"></i>Health Score</div>
-    <div id="performanceGauge" style="height:80px;"></div>
-  </div>
-  <div class="ax">
-    <div class="ax-title"><i class="fas fa-robot me-1" style="color:#f59e0b;"></i>AI Insights</div>
-    <div id="aiInsightsPanel" style="font-size:10px;min-height:60px;line-height:1.4;"><span class="text-muted">Analyzing...</span></div>
-    <div id="aiPredictionPanel" style="font-size:10px;margin-top:4px;"></div>
-  </div>
-</div>
+<!-- ═══ ANALYTICS / KPI CENTER ═══ -->
+<?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
 
 <!-- ═══ SECTION: SERVICES (Pending Submissions) ═══ -->
 <div id="services" class="content-section dashboard-section<?= $dgSection === 'services' ? ' active' : '' ?>" data-section="services">
@@ -1294,22 +1217,14 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: APPROVALS (COMPREHENSIVE HUB) ═══ -->
+<!-- ═══ SECTION: APPROVALS — DIRECTOR GENERAL APPROVAL CENTER ═══ -->
 <div id="approvals" class="content-section dashboard-section<?= $dgSection === 'approvals' ? ' active' : '' ?>" data-section="approvals">
   <div class="section-card">
     <?php dgToolbar('Approval Center', 'fa-check-double'); ?>
-    <div class="section-header">
-      <div>
-        <h3 class="section-title"><i class="fas fa-check-double" style="color:#3b82f6;"></i>Approval Center</h3>
-        <p class="section-subtitle">Director General — final approval authority for all institution requests</p>
-      </div>
-      <div class="d-flex gap-2">
-        <span class="badge bg-warning text-dark rounded-pill px-3 py-1" style="font-size:11px;"><i class="fas fa-clock me-1"></i><?php $ac=getAlertCounts($conn); echo ($ac['critical']+$ac['high']); ?> Urgent</span>
-      </div>
-    </div>
-    <?= renderApprovalTabs($conn, $studentsConn) ?>
+    <?= renderApprovalCenter($conn) ?>
   </div>
 </div>
+<?php renderApprovalModalsAndScripts(); ?>
 
 <!-- ═══ SECTION: AUDIT ═══ -->
 <div id="audit" class="content-section dashboard-section<?= $dgSection === 'audit' ? ' active' : '' ?>" data-section="audit">
@@ -1854,8 +1769,6 @@ function dgExportCSV() {
 </script>
 <?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
-</div><!-- /dg-content -->
-
 <!-- ═══ SECTION: REPORTS CENTER ═══ -->
 <div id="reports" class="content-section dashboard-section<?= $dgSection === 'reports' ? ' active' : '' ?>" data-section="reports">
   <?php include_once __DIR__ . '/../includes/dg_reports_center.php'; ?>
@@ -1880,6 +1793,8 @@ function dgExportCSV() {
 <div id="system-health" class="content-section dashboard-section<?= $dgSection === 'system-health' ? ' active' : '' ?>" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
 </div>
+
+</div><!-- /dg-content -->
 
 <!-- ═══ SEND ANNOUNCEMENT MODAL ═══ -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">

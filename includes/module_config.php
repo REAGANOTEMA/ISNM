@@ -430,9 +430,21 @@ if (!function_exists('userCanAccessModule')) {
 function userCanAccessModule($moduleRoles, string $userRole): bool {
     if ($moduleRoles === '*' || $moduleRoles === true) return true;
     if (!is_array($moduleRoles)) return false;
+    $userRoleLower = strtolower(trim($userRole));
     foreach ($moduleRoles as $keyword) {
-        if ($keyword !== '' && stripos($userRole, $keyword) !== false) {
-            return true;
+        $kw = strtolower(trim($keyword));
+        if ($kw === '') continue;
+        // Exact match first
+        if ($userRoleLower === $kw) return true;
+        // Word-boundary match (prevents "lab" matching "skills lab")
+        if (strpos($userRoleLower, $kw) !== false) {
+            $pos = strpos($userRoleLower, $kw);
+            $before = $pos === 0 ? '' : $userRoleLower[$pos - 1];
+            $after = $pos + strlen($kw) < strlen($userRoleLower) ? $userRoleLower[$pos + strlen($kw)] : '';
+            // Must be at word boundary (space, start, or end)
+            if (($before === '' || $before === ' ') && ($after === '' || $after === ' ')) {
+                return true;
+            }
         }
     }
     return false;

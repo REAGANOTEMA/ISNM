@@ -93,7 +93,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         elseif ($actionType === 'escalate') $decision = 'Escalated';
         elseif ($actionType === 'return') $decision = 'Returned';
         $prevOrder = $currentOrder;
-        $actStmt->bind_param('iiiissi', $requestId, $currentStageId, $staffId, $actionType, $comments, $notes, $decision, $prevOrder);
+        $actStmt->bind_param('iiissssi', $requestId, $currentStageId, $staffId, $actionType, $comments, $notes, $decision, $prevOrder);
         $actStmt->execute();
         $actStmt->close();
 
@@ -102,6 +102,12 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
             $newStatus = $actionType === 'reject' ? 'Rejected' : 'Cancelled';
             if (!$updStmt) return false;
             $updStmt->bind_param('ssi', $newStatus, $comments, $requestId);
+            $updStmt->execute();
+            $updStmt->close();
+        } elseif ($actionType === 'return') {
+            $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = 'Returned', rejection_reason = ?, current_stage_id = (SELECT id FROM igangaschoolofl_staffs_db.approval_stages WHERE workflow_id = ? ORDER BY stage_order ASC LIMIT 1), current_stage_order = 1, updated_at = NOW() WHERE id = ?");
+            if (!$updStmt) return false;
+            $updStmt->bind_param('sii', $comments, $request['workflow_id'], $requestId);
             $updStmt->execute();
             $updStmt->close();
         } elseif ($actionType === 'approve' && $currentOrder >= $totalStages) {
@@ -135,6 +141,44 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         return true;
     } catch (Exception $e) {
         error_log('processApprovalAction error: ' . $e->getMessage());
+        return false;
+    }
+}
+}
+
+if (!function_exists('resubmitApprovalRequest')) {
+function resubmitApprovalRequest($requestId, $staffId, $comments = null, $conn = null) {
+    if (!$conn) {
+        if (function_exists('getStaffConnection')) $conn = getStaffConnection();
+    }
+    if (!$conn) return false;
+    try {
+        $reqStmt = $conn->prepare("SELECT ar.* FROM igangaschoolofl_staffs_db.approval_requests ar WHERE ar.id = ? AND ar.status = 'Returned' AND ar.requester_id = ?");
+        if (!$reqStmt) return false;
+        $reqStmt->bind_param('ii', $requestId, $staffId);
+        $reqStmt->execute();
+        $request = $reqStmt->get_result()->fetch_assoc();
+        $reqStmt->close();
+        if (!$request) return false;
+
+        $actStmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'resubmit', ?, 'Resubmitted', ?, NOW())");
+        if (!$actStmt) return false;
+        $actStmt->bind_param('iiisi', $requestId, $request['current_stage_id'], $staffId, $comments, $request['current_stage_order']);
+        $actStmt->execute();
+        $actStmt->close();
+
+        $updStmt = $conn->prepare("UPDATE igangaschoolofl_staffs_db.approval_requests SET status = 'Active', rejection_reason = NULL, updated_at = NOW() WHERE id = ?");
+        if (!$updStmt) return false;
+        $updStmt->bind_param('i', $requestId);
+        $updStmt->execute();
+        $updStmt->close();
+
+        if (function_exists('recordAuditTrail')) {
+            recordAuditTrail($staffId, 'RESUBMIT', 'Approval', 'Approval request resubmitted: ' . $request['title'], 'approval_requests', $requestId, $request['request_number'], null, ['action' => 'resubmit', 'comments' => $comments], $conn);
+        }
+        return true;
+    } catch (Exception $e) {
+        error_log('resubmitApprovalRequest error: ' . $e->getMessage());
         return false;
     }
 }

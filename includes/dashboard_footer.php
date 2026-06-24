@@ -3,7 +3,7 @@ $rootPath = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2)
 if ($rootPath === '') $rootPath = '.';
 
 // Cache-busting version — bump on every deploy
-$v = '2.0.1';
+$v = '2.1.0';
 
 // Profile Settings — universal staff profile image upload
 $profileSettingsFile = __DIR__ . '/profile_settings.php';
@@ -32,14 +32,30 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
         renderCommunicationModal();
     }
 }
+
+// Universal Department Approval Request — every staff dashboard gets Submit-to-DG capability
+if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
+    $depApprovalFile = __DIR__ . '/department_approval_request.php';
+    if (file_exists($depApprovalFile)) {
+        require_once $depApprovalFile;
+        renderDepartmentApprovalModal();
+    }
+}
+
+// Shared Component Library — available to ALL dashboards
+$compFile = __DIR__ . '/dashboard_components.php';
+if (file_exists($compFile)) { try { include_once $compFile; } catch (Exception $e) {} }
+
+// Shared Dashboard Toolbar — available to ALL dashboards
+$toolFile = __DIR__ . '/dashboard_toolbar.php';
+if (file_exists($toolFile)) { try { include_once $toolFile; } catch (Exception $e) {} }
 ?>
 <?php if (function_exists('renderProfileStyles')) renderProfileStyles(); ?>
-<!-- Dashboard professional styles -->
-<link href="<?= $rootPath ?>/dashboards/dashboard-professional.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Bootstrap 5.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Font Awesome (CSS/webfont version — loaded in head, no fetch rejections) -->
 <?php if (function_exists('renderProfileModal') && ($_SESSION['type'] ?? '') === 'staff') renderProfileModal(); ?>
+<?php if (function_exists('renderDepartmentApprovalScripts') && ($_SESSION['type'] ?? '') === 'staff') renderDepartmentApprovalScripts(); ?>
 
 <script>
 // Cache-busting version constant
@@ -112,35 +128,6 @@ var ISNM_VERSION = '<?= $v ?>';
     }
     tick();
     setInterval(tick, 1000);
-  }
-
-  // ── Suppress third-party extension promise rejections ────────
-  window.addEventListener('unhandledrejection', function (e) { e.preventDefault(); });
-
-  // ── Service Worker ────────────────────────────────────────────
-  function registerSW() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/ISNM/sw.js?v=' + ISNM_VERSION, { scope: '/ISNM/' }).then(function(reg) {
-        // Try to subscribe for push notifications
-        if ('PushManager' in window) {
-          reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: null // No VAPID key needed for local/dev; falls back to basic
-          }).then(function(sub) {
-            if (sub) {
-              var data = new URLSearchParams();
-              data.append('endpoint', sub.endpoint);
-              data.append('auth_key', sub.toJSON().keys?.auth || '');
-              data.append('p256dh_key', sub.toJSON().keys?.p256dh || '');
-              data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
-              fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
-            }
-          }).catch(function(e) {
-            // Permission denied or not supported — silently ignore
-          });
-        }
-      }).catch(function (e) { console.warn('[ISNM] SW registration failed:', e); });
-    }
   }
 
   // ── iOS / Android install banner detection ────────────────────
@@ -310,7 +297,6 @@ var ISNM_VERSION = '<?= $v ?>';
     initSidebar();
     setActiveNav();
     startClock();
-    registerSW();
     detectPWA();
     initNotificationBell();
     initGlobalLoader();
@@ -498,5 +484,37 @@ function openCommunicationModal() {
   .content-section {
     padding: 0 !important;
   }
+  .dep-approval-fab { display: none !important; }
+}
+/* ── Department Approval FAB (Floating Action Button) ── */
+.dep-approval-fab {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a237e, #283593);
+  color: #fff; border: none; box-shadow: 0 4px 16px rgba(26,35,126,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer; transition: all 0.25s;
+}
+.dep-approval-fab:hover {
+  transform: scale(1.08); box-shadow: 0 6px 24px rgba(26,35,126,0.45);
+}
+.dep-approval-fab-tooltip {
+  position: absolute; right: 60px; top: 50%; transform: translateY(-50%);
+  background: #1e293b; color: #fff; padding: 6px 12px; border-radius: 6px;
+  font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.dep-approval-fab:hover .dep-approval-fab-tooltip { opacity: 1; }
+@media (max-width: 768px) {
+  .dep-approval-fab { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
 }
 </style>
+
+<!-- Department Approval FAB (staff only) -->
+<?php if (($GLOBALS['_dep_fab_rendered'] ?? false) === false && ($_SESSION['type'] ?? '') === 'staff'): ?>
+<?php $GLOBALS['_dep_fab_rendered'] = true; ?>
+<button class="dep-approval-fab" onclick="openDepartmentApprovalModal()" title="Submit for DG Approval" aria-label="Submit for DG Approval">
+    <i class="fas fa-file-signature"></i>
+    <span class="dep-approval-fab-tooltip">Submit for Approval</span>
+</button>
+<?php endif; ?>
