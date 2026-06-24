@@ -67,6 +67,21 @@ function createApprovalRequest($workflowId, $title, $description, $requesterId, 
 }
 }
 
+if (!function_exists('getUserHierarchyLevel')) {
+function getUserHierarchyLevel($staffId, $conn) {
+    if (!$conn) return 99;
+    try {
+        $stmt = $conn->prepare("SELECT sr.hierarchy_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
+        if (!$stmt) return 99;
+        $stmt->bind_param('i', $staffId);
+        $stmt->execute();
+        $r = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $r ? (int)$r['hierarchy_level'] : 99;
+    } catch (Exception $e) { return 99; }
+}
+}
+
 if (!function_exists('processApprovalAction')) {
 function processApprovalAction($requestId, $staffId, $actionType, $comments = null, $notes = null, $conn = null) {
     if (!$conn) {
@@ -81,6 +96,30 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $request = $reqStmt->get_result()->fetch_assoc();
         $reqStmt->close();
         if (!$request || $request['status'] !== 'Active') return false;
+
+        // Role enforcement: user must have equal or higher authority (lower hierarchy_level number)
+        $userLevel = getUserHierarchyLevel($staffId, $conn);
+        $stageStmt = $conn->prepare("SELECT assigned_role_id, stage_name, stage_order, required_hierarchy_level FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ?");
+        if ($stageStmt) {
+            $stageStmt->bind_param('i', $request['current_stage_id']);
+            $stageStmt->execute();
+            $stage = $stageStmt->get_result()->fetch_assoc();
+            $stageStmt->close();
+            if ($stage && !empty($stage['required_hierarchy_level'])) {
+                $reqLevel = (int)$stage['required_hierarchy_level'];
+                if ($userLevel > $reqLevel) {
+                    error_log("processApprovalAction: User $staffId level $userLevel cannot act on stage requiring level <= $reqLevel");
+                    return false;
+                }
+            }
+            // Only Director General (hierarchy_level=1) can process final approval stage
+            $currentOrder = (int)$request['current_stage_order'];
+            $totalStages = (int)$request['total_stages'];
+            if ($currentOrder >= $totalStages && $actionType === 'approve' && $userLevel > 1) {
+                error_log("processApprovalAction: Only hierarchy_level=1 can approve final stage. User $staffId has level $userLevel");
+                return false;
+            }
+        }
 
         $currentStageId = $request['current_stage_id'];
         $currentOrder = (int)$request['current_stage_order'];

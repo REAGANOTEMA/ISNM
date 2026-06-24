@@ -793,6 +793,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endif; ?>
                 </div>
             </section>
+
+            <!-- Approvals Section -->
+            <section id="approvals" class="content-section dashboard-section" data-section="approvals">
+                <h2><i class="fas fa-check-double me-2 text-primary"></i>Finance Approvals</h2>
+                <p class="text-muted small mb-3">Review and manage pending financial approval requests.</p>
+                <?php
+                $finApprovals = getPendingApprovals($conn, 5, 20);
+                if (!empty($finApprovals)):
+                    foreach ($finApprovals as $apr):
+                        echo renderApprovalWorkflowCard($apr, $conn);
+                        echo renderApprovalActionButtons($apr['id']);
+                    endforeach;
+                else:
+                    echo '<div class="text-muted small py-4 text-center">No pending approvals.</div>';
+                endif;
+                ?>
+            </section>
         </div>
     </div>
 </div>
@@ -835,10 +852,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="col-lg-6">
             <div class="section-card h-100">
                 <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Finance Approvals</h6>
+                <p class="small text-muted mb-2"><a href="#approvals" onclick="switchToSection('approvals');return false" class="text-decoration-none">View full approvals section &rarr;</a></p>
                 <?php
-                $finApprovals = getPendingApprovals($conn, 5, 10);
-                if (!empty($finApprovals)):
-                    foreach ($finApprovals as $apr):
+                $finApprovalsMini = getPendingApprovals($conn, 5, 5);
+                if (!empty($finApprovalsMini)):
+                    foreach ($finApprovalsMini as $apr):
                         echo renderApprovalWorkflowCard($apr, $conn);
                         echo renderApprovalActionButtons($apr['id']);
                     endforeach;

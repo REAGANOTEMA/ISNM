@@ -87,10 +87,10 @@ if ($conn) {
         </div>
       </div>
 
-      <div class="content-area content-section dashboard-section active" data-section="overview">
+      <div class="content-area">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Teaching Overview -->
-                <section id="overview" class="section-card">
+                <section id="overview" class="content-section dashboard-section section-card active" data-section="overview">
                     <h2>Teaching Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -136,7 +136,7 @@ if ($conn) {
                 </section>
 
                 <!-- My Courses -->
-                <section id="courses" class="section-card">
+                <section id="courses" class="content-section dashboard-section section-card" data-section="courses">
                     <h2>My Courses</h2>
                     <div class="course-actions">
                         <button class="btn btn-primary" onclick="openModal('courseMaterials')">
@@ -218,7 +218,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Schedule -->
-                <section id="schedule" class="section-card">
+                <section id="schedule" class="content-section dashboard-section section-card" data-section="schedule">
                     <h2>Teaching Schedule</h2>
                     <div class="schedule-actions">
                         <button class="btn btn-primary" onclick="openModal('addLecture')">
@@ -292,7 +292,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Management -->
-                <section id="students" class="section-card">
+                <section id="students" class="content-section dashboard-section section-card" data-section="students">
                     <h2>Student Management</h2>
                     <div class="student-actions">
                         <button class="btn btn-primary" onclick="openModal('studentList')">
@@ -382,7 +382,7 @@ if ($conn) {
                 </section>
 
                 <!-- Assessments -->
-                <section id="assessments" class="section-card">
+                <section id="assessments" class="content-section dashboard-section section-card" data-section="assessments">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
                         <button class="btn btn-primary" onclick="openModal('createAssessment')">
@@ -456,7 +456,7 @@ if ($conn) {
                 </section>
 
                 <!-- Grade Management -->
-                <section id="grades" class="section-card">
+                <section id="grades" class="content-section dashboard-section section-card" data-section="grades">
                     <h2>Grade Management</h2>
                     <div class="grade-actions">
                         <button class="btn btn-primary" onclick="openModal('gradebook')">
@@ -509,7 +509,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Resources -->
-                <section id="resources" class="section-card">
+                <section id="resources" class="content-section dashboard-section section-card" data-section="resources">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadResource')">
@@ -559,7 +559,7 @@ if ($conn) {
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="section-card">
+                <section id="communications" class="content-section dashboard-section section-card" data-section="communications">
                     <h2>Student Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('sendMessage')">
@@ -619,7 +619,7 @@ if ($conn) {
 
     <!-- Student Records -->
     <div class="content-area" style="padding-top:0">
-        <section id="student-records" class="section-card">
+        <section id="student-records" class="content-section dashboard-section section-card" data-section="student-records">
             <?php renderStudentSetViewer($studentsConn, [
                 'title' => 'Student Records',
                 'icon' => 'fa-user-graduate',
@@ -660,22 +660,36 @@ if ($conn) {
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Navigation
+        // Section navigation - use global switchToSection for sidebar compatibility
         document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.section-card').forEach(section => {
-                    section.style.display = 'none';
-                });
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
+                var sec = this.getAttribute('href').substring(1);
+                if (typeof switchToSection === 'function') {
+                    switchToSection(sec);
+                } else {
+                    document.querySelectorAll('.section-card').forEach(function(s) { s.style.display = 'none'; });
+                    var t = document.getElementById(sec);
+                    if (t) t.style.display = 'block';
                 }
             });
+        });
+        // Handle hash-based deep linking from sidebar
+        (function() {
+            var hash = location.hash.replace('#', '');
+            if (hash && document.getElementById(hash)) {
+                if (typeof switchToSection === 'function') {
+                    switchToSection(hash);
+                }
+            }
+        })();
+        window.addEventListener('hashchange', function() {
+            var h = location.hash.replace('#', '');
+            if (h && document.getElementById(h)) {
+                if (typeof switchToSection === 'function') {
+                    switchToSection(h);
+                }
+            }
         });
 
         // Modal functions

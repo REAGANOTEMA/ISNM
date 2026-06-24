@@ -7,6 +7,9 @@ $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Admission Letters';
 
+$view = $_GET['view'] ?? '';
+$allowedViews = ['applications', 'clearance'];
+
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'applicant_detail' && isset($_GET['id'])) {
     header('Content-Type: application/json');
     $id = intval($_GET['id']);
@@ -21,7 +24,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'applicant_detail' && isset($_GET[
 
 $search = trim($_GET['search'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
-$applicants = []; $pendingCount = 0; $admittedCount = 0; $rejectedCount = 0;
+$applicants = []; $pendingCount = 0; $admittedCount = 0; $rejectedCount = 0; $shortlistedCount = 0;
+$clearanceData = []; $totalReqs = 0;
 
 if ($wconn) {
     $where = "1=1";
@@ -30,8 +34,17 @@ if ($wconn) {
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'"); $pendingCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Admitted'"); $admittedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Rejected'"); $rejectedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
+    $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Shortlisted'"); $shortlistedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT 150");
     if ($r) while ($row = $r->fetch_assoc()) $applicants[] = $row;
+
+    if ($view === 'clearance') {
+        $r = $wconn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1"); if ($r) $totalReqs = (int)$r->fetch_assoc()['c'];
+        $rc = $wconn->query("SELECT sa.id, sa.application_number, sa.first_name, sa.surname, sa.program_applied, sa.status,
+            (SELECT COUNT(*) FROM applicant_requirement_status ars WHERE ars.applicant_id=sa.id AND ars.status='Verified') verified_reqs
+            FROM student_applications sa ORDER BY sa.submitted_at DESC LIMIT 100");
+        if ($rc) while ($row = $rc->fetch_assoc()) $clearanceData[] = $row;
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -63,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $_SESSION['success'] = "Applicant status updated to '$newStatus'.";
         }
-        header('Location: admission-letters.php'); exit;
+        header('Location: admission-letters.php' . ($view ? '?view=' . urlencode($view) : '')); exit;
     }
 }
 ?>
@@ -71,32 +84,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>@media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } .main { margin-left: 0 !important; padding: 20px !important; } }
+.sec-nav{display:flex;gap:2px;margin-bottom:18px;padding:6px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0}
+.sec-nav a{text-decoration:none;padding:7px 16px;border-radius:6px;font-size:0.85rem;color:#475569;transition:all 0.15s}
+.sec-nav a:hover{background:#e2e8f0}
+.sec-nav a.active{background:#3b82f6;color:#fff;font-weight:500}
+.cs{display:none}.cs.active{display:block}
 </style>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<section class="content-section dashboard-section active" data-section="overview">
 <div class="main" style="margin-left:270px;padding:32px">
-<div class="d-flex justify-content-between align-items-center mb-4 no-print"><h4 class="fw-bold mb-0"><i class="fas fa-envelope-open-text me-2"></i>Admission Letters</h4><span class="text-muted small"><?= date('l, d M Y') ?></span></div>
+
+<div class="d-flex justify-content-between align-items-center mb-2 no-print">
+  <h4 class="fw-bold mb-0"><i class="fas fa-envelope-open-text me-2"></i>Admission Letters</h4>
+  <span class="text-muted small"><?= date('l, d M Y') ?></span>
+</div>
+
+<nav class="sec-nav no-print">
+  <a href="admission-letters.php" class="<?= !$view ? 'active' : '' ?>"><i class="fas fa-home me-1"></i>Overview</a>
+  <a href="admission-letters.php?view=applications" class="<?= $view === 'applications' ? 'active' : '' ?>"><i class="fas fa-file-alt me-1"></i>Applications</a>
+  <a href="admission-letters.php?view=clearance" class="<?= $view === 'clearance' ? 'active' : '' ?>"><i class="fas fa-clipboard-check me-1"></i>Clearance</a>
+</nav>
+
 <?php if(!empty($_SESSION['success'])): ?><div class="alert alert-success py-2 no-print"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div><?php endif; ?>
 <?php if(!empty($_SESSION['error'])): ?><div class="alert alert-danger py-2 no-print"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div><?php endif; ?>
 
+<!-- ═══ OVERVIEW ═══ -->
+<section class="cs <?= !$view ? 'active' : '' ?>" id="sec-overview">
+<div class="row g-3 mb-4 no-print">
+  <div class="col-md-3"><div class="stat-card primary"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $pendingCount ?></h3><p>Pending Review</p></div></div></div>
+  <div class="col-md-3"><div class="stat-card info"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="stat-content"><h3><?= $shortlistedCount ?></h3><p>Shortlisted</p></div></div></div>
+  <div class="col-md-3"><div class="stat-card success"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3><?= $admittedCount ?></h3><p>Admitted</p></div></div></div>
+  <div class="col-md-3"><div class="stat-card danger"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-content"><h3><?= $rejectedCount ?></h3><p>Rejected</p></div></div></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body text-center py-4">
+    <i class="fas fa-envelope-open-text fa-3x mb-3" style="color:#3b82f6"></i>
+    <h5 class="fw-bold">Admission Letters Management</h5>
+    <p class="text-muted small mb-3">Manage student applications, generate admission letters, and track clearance status.</p>
+    <div class="d-flex justify-content-center gap-2">
+      <a href="admission-letters.php?view=applications" class="btn btn-sm btn-primary"><i class="fas fa-file-alt me-1"></i>View Applications</a>
+      <a href="admission-letters.php?view=clearance" class="btn btn-sm btn-outline-primary"><i class="fas fa-clipboard-check me-1"></i>Check Clearance</a>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ APPLICATIONS ═══ -->
+<section class="cs <?= $view === 'applications' ? 'active' : '' ?>" id="sec-applications">
 <div class="row g-3 mb-4 no-print">
   <div class="col-md-4"><div class="stat-card primary"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $pendingCount ?></h3><p>Pending Review</p></div></div></div>
   <div class="col-md-4"><div class="stat-card success"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3><?= $admittedCount ?></h3><p>Admitted</p></div></div></div>
   <div class="col-md-4"><div class="stat-card danger"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-content"><h3><?= $rejectedCount ?></h3><p>Rejected</p></div></div></div>
 </div>
 
-<div class="no-print d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
   <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i>Applicants</h5>
   <button class="btn btn-sm btn-outline-primary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
 </div>
 
 <form method="GET" class="row g-2 mb-3 no-print">
+  <input type="hidden" name="view" value="applications">
   <div class="col-md-5"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search name, application #, phone, program..." value="<?= htmlspecialchars($search) ?>"></div>
   <div class="col-md-2"><select name="status" class="form-select form-select-sm"><option value="">All Status</option><option <?= $statusFilter==='Pending'?'selected':''?>>Pending</option><option <?= $statusFilter==='Shortlisted'?'selected':''?>>Shortlisted</option><option <?= $statusFilter==='Admitted'?'selected':''?>>Admitted</option><option <?= $statusFilter==='Rejected'?'selected':''?>>Rejected</option><option <?= $statusFilter==='Withdrawn'?'selected':''?>>Withdrawn</option></select></div>
   <div class="col-md-2"><button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i> Search</button></div>
-  <div class="col-md-2"><a href="admission-letters.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-times"></i> Clear</a></div>
+  <div class="col-md-2"><a href="admission-letters.php?view=applications" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-times"></i> Clear</a></div>
 </form>
 
 <div class="print-area card"><div class="card-body p-0">
@@ -127,12 +180,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </tr>
 <?php endforeach; endif; ?>
 </tbody></table></div></div></div>
+</section>
+
+<!-- ═══ CLEARANCE ═══ -->
+<section class="cs <?= $view === 'clearance' ? 'active' : '' ?>" id="sec-clearance">
+<div class="row g-3 mb-4 no-print">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="fw-bold mb-3"><i class="fas fa-clipboard-check me-2 text-success"></i>Requirements Clearance Status</h5>
+        <p class="text-muted small mb-3">Track which applicants have fulfilled all admission requirements. Total requirements: <strong><?= $totalReqs ?></strong></p>
+        <?php if (empty($clearanceData)): ?>
+        <div class="table-responsive">
+          <table class="table table-hover small mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Application #</th><th>Applicant</th><th>Program</th><th>Verified Reqs</th><th>Total Reqs</th><th>Progress</th><th>Status</th></tr></thead>
+            <tbody>
+              <?php if (!empty($applicants)): $i=1; foreach ($applicants as $a):
+                $vr = 0;
+                if ($wconn) { $qvr = $wconn->query("SELECT COUNT(*) c FROM applicant_requirement_status ars JOIN student_applications sa ON ars.applicant_id=sa.id WHERE sa.id=" . intval($a['id']) . " AND ars.status='Verified'"); if ($qvr) $vr = (int)$qvr->fetch_assoc()['c']; }
+                $pct = $totalReqs > 0 ? min(100, round($vr/$totalReqs*100)) : 0;
+              ?><tr>
+                <td><?= $i++ ?></td>
+                <td><code><?= htmlspecialchars($a['application_number'] ?? 'APP-'.$a['id']) ?></code></td>
+                <td><strong><?= htmlspecialchars($a['surname'] . ', ' . $a['first_name']) ?></strong></td>
+                <td><?= htmlspecialchars($a['program_applied'] ?? '') ?></td>
+                <td><span class="fw-bold"><?= $vr ?></span></td>
+                <td><?= $totalReqs ?></td>
+                <td style="min-width:120px"><div class="progress" style="height:8px"><div class="progress-bar bg-<?= $pct>=100?'success':($pct>=50?'primary':'warning') ?>" style="width:<?= $pct ?>%"></div></div><small class="text-muted"><?= $pct ?>%</small></td>
+                <td><span class="badge bg-<?= $a['status']==='Admitted'?'success':($a['status']==='Rejected'?'danger':'warning text-dark') ?>"><?= htmlspecialchars($a['status']) ?></span></td>
+              </tr><?php endforeach; else: ?><tr><td colspan="8" class="text-center text-muted py-3">No applicant data available for clearance tracking.</td></tr><?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php else: ?>
+        <div class="table-responsive">
+          <table class="table table-hover small mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Application #</th><th>Applicant</th><th>Program</th><th>Verified Reqs</th><th>Total Reqs</th><th>Progress</th><th>Status</th></tr></thead>
+            <tbody><?php $i=1; foreach ($clearanceData as $c): $pct = $totalReqs > 0 ? min(100, round($c['verified_reqs']/$totalReqs*100)) : 0; ?><tr>
+              <td><?= $i++ ?></td>
+              <td><code><?= htmlspecialchars($c['application_number'] ?? 'APP-'.$c['id']) ?></code></td>
+              <td><strong><?= htmlspecialchars($c['surname'] . ', ' . $c['first_name']) ?></strong></td>
+              <td><?= htmlspecialchars($c['program_applied'] ?? '') ?></td>
+              <td><span class="fw-bold"><?= (int)$c['verified_reqs'] ?></span></td>
+              <td><?= $totalReqs ?></td>
+              <td style="min-width:120px"><div class="progress" style="height:8px"><div class="progress-bar bg-<?= $pct>=100?'success':($pct>=50?'primary':'warning') ?>" style="width:<?= $pct ?>%"></div></div><small class="text-muted"><?= $pct ?>%</small></td>
+              <td><span class="badge bg-<?= $c['status']==='Admitted'?'success':($c['status']==='Rejected'?'danger':'warning text-dark') ?>"><?= htmlspecialchars($c['status']) ?></span></td>
+            </tr><?php endforeach; ?></tbody>
+          </table>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
 
 <!-- Applicant Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Applicant Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailBody"><p class="text-muted">Loading...</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-</section>
+</div>
 <script>
 function viewApplicant(id) {
     document.getElementById('detailBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';

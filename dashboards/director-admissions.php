@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/institutional_framework.php';
+require_once __DIR__ . '/../includes/approval_workflow.php';
 $ctx = bootstrapStaffDashboard(['admissions', 'director']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
@@ -94,7 +96,7 @@ if ($report) {
 }
 
 // AJAX handlers
-$ajax = $_GET['ajax'] ?? '';
+$ajax = $_REQUEST['ajax'] ?? '';
 if ($ajax === 'search_applicants') {
     header('Content-Type: application/json');
     $q = trim($_GET['q'] ?? '');
@@ -794,6 +796,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <a href="#" data-sec="reports"><i class="fas fa-chart-bar"></i>Reports</a>
 <a href="#" data-sec="student-search"><i class="fas fa-search"></i>Students</a>
 <a href="#" data-sec="import"><i class="fas fa-upload"></i>Import</a>
+<a href="#" data-sec="directory"><i class="fas fa-address-book"></i>Directory</a>
+<a href="#" data-sec="approvals"><i class="fas fa-check-double"></i>Approvals</a>
 </div>
 
 <!-- ═══ OVERVIEW ═══ -->
@@ -1178,6 +1182,37 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 </div>
 </section>
 
+<!-- ═══ DIRECTORY ═══ -->
+<section id="sec-directory" class="cs">
+<div class="sec-card">
+<h2><i class="fas fa-address-book" style="color:var(--adm-prim)"></i>Student Directory</h2>
+<p class="small text-muted mb-3">Use the student search section to find and manage student records.</p>
+<div class="d-flex gap-2">
+<button class="btn btn-sm btn-primary" onclick="switchSec('student-search')"><i class="fas fa-search me-1"></i>Go to Student Search</button>
+<button class="btn btn-sm btn-outline-success" onclick="new bootstrap.Modal(document.getElementById('studentCreateModal')).show()"><i class="fas fa-plus me-1"></i>Register New Student</button>
+</div>
+</div>
+</section>
+
+<!-- ═══ APPROVALS ═══ -->
+<section id="sec-approvals" class="cs">
+<div class="sec-card">
+<h2><i class="fas fa-check-double" style="color:var(--adm-prim)"></i>Admission Approvals</h2>
+<p class="small text-muted mb-3">Review and manage admission approval requests.</p>
+<?php
+$admApprovals = getPendingApprovals($conn, null, 20);
+if (!empty($admApprovals)):
+    foreach ($admApprovals as $apr):
+        echo renderApprovalWorkflowCard($apr, $conn);
+        echo renderApprovalActionButtons($apr['id']);
+    endforeach;
+else:
+    echo '<div class="text-muted small py-4 text-center">No pending approvals.</div>';
+endif;
+?>
+</div>
+</section>
+
 </div><!-- /p-3 -->
 </div><!-- /main-content -->
 </div><!-- /dashboard-container -->
@@ -1343,8 +1378,8 @@ $bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-// ── Prevent unhandled promise rejections ──
-window.addEventListener('unhandledrejection', function(e){ e.promise.catch(function(){}); });
+// ── Suppress unhandled promise rejections ──
+window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
 
 // ── Section switching ──
 var navLinks = document.querySelectorAll('.sec-nav a');
@@ -1361,11 +1396,11 @@ navLinks.forEach(function(l){
 });
 (function(){
     var hash = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports','student-search','import'].indexOf(hash) !== -1) switchSec(hash);
+    if (['overview','applications','requirements','clearance','reports','student-search','import','directory','approvals'].indexOf(hash) !== -1) switchSec(hash);
 })();
 window.addEventListener('hashchange', function(){
     var h = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports','student-search','import'].indexOf(h) !== -1) switchSec(h);
+    if (['overview','applications','requirements','clearance','reports','student-search','import','directory','approvals'].indexOf(h) !== -1) switchSec(h);
 });
 
 // ── Charts ──
@@ -1737,7 +1772,7 @@ function loadReq(aid){
                     '<option value="Rejected"'+(sts==='Rejected'?' selected':'')+'>Rejected</option>'+
                     '<option value="Missing"'+(sts==='Missing'?' selected':'')+'>Missing</option>'+
                     '</select>'+
-                    '<input type="text" class="req-remarks-input" placeholder="Remarks..." value="'+htmlEsc(remarksMap[r.requirement_id]||'')+'" onblur="setRemarks('+aid+','+r.requirement_id+',this.value)">'+
+                    '<input type="text" class="req-remarks-input" placeholder="Remarks..." value="'+htmlEsc(remarksMap[r.requirement_id]||'')+'" onblur="toggleReq('+aid+','+r.requirement_id+',this.parentElement.querySelector(\'select\').value)">'+
                     '</div></div>';
             });
             ch += '</div>';
@@ -1765,29 +1800,19 @@ function loadReq(aid){
 
 function toggleReq(aid, rid, status){
     var fd = new FormData();
+    fd.append('ajax', 'toggle_requirement');
     fd.append('applicant_id', aid);
     fd.append('requirement_id', rid);
     fd.append('status', status);
-    fetch('director-admissions.php?ajax=toggle_requirement', { method:'POST', body: fd })
+    var remarksInput = document.querySelector('.req-card[data-rid="'+rid+'"] .req-remarks-input');
+    fd.append('remarks', remarksInput ? remarksInput.value : '');
+    fetch('director-admissions.php', { method:'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(d){
-            if (d.success) {
-                showToast('Requirement updated to: ' + status, 'info');
-                loadReq(aid);
-            } else { showToast('Failed to update', 'error'); }
+            if (d.success) { showToast('Requirement updated to: ' + status, 'info'); loadReq(aid); }
+            else { showToast('Failed to update', 'error'); }
         })
         .catch(function(){ showToast('Network error', 'error'); });
-}
-
-function setRemarks(aid, rid, remarks){
-    var fd = new FormData();
-    fd.append('applicant_id', aid);
-    fd.append('requirement_id', rid);
-    fd.append('status', document.querySelector('.req-card[data-rid="'+rid+'"] select')?.value || 'Not Submitted');
-    fd.append('remarks', remarks);
-    fetch('director-admissions.php?ajax=toggle_requirement', { method:'POST', body: fd })
-        .then(function(r){ return r.json(); })
-        .catch(function(){});
 }
 
 function markAllSub(aid){

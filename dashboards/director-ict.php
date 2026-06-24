@@ -240,6 +240,7 @@ if ($search_term && $students_conn) {
                     <a class="section-tab" data-tab="news" onclick="switchToSection('news')">News</a>
                     <a class="section-tab" data-tab="reports" onclick="switchToSection('reports')">Reports</a>
                     <a class="section-tab" data-tab="dept" onclick="switchToSection('dept')">Dept</a>
+                    <a class="section-tab" data-tab="approvals" onclick="switchToSection('approvals')">Approvals</a>
                 </div>
 
                 <!-- ═══ OFFICIAL DUTIES ═══ -->
@@ -626,6 +627,23 @@ if ($search_term && $students_conn) {
                     </div>
                 </section>
 
+                <!-- ═══ APPROVALS ═══ -->
+                <section id="approvals" class="content-section dashboard-section" data-section="approvals">
+                    <h2><i class="fas fa-check-double" style="color:var(--isnm-blue)"></i> System Approvals</h2>
+                    <p class="text-muted small mb-3">Review and manage pending system approval requests.</p>
+                    <?php
+                    $ictApprovals = getPendingApprovals($staff_conn, 6, 20);
+                    if (!empty($ictApprovals)):
+                        foreach ($ictApprovals as $apr):
+                            echo renderApprovalWorkflowCard($apr, $staff_conn);
+                            echo renderApprovalActionButtons($apr['id']);
+                        endforeach;
+                    else:
+                        echo '<div class="text-muted small py-4 text-center">No pending approvals.</div>';
+                    endif;
+                    ?>
+                </section>
+
             </div>
         </main>
     </div>
@@ -669,10 +687,11 @@ if ($search_term && $students_conn) {
             <div class="col-lg-6">
                 <div class="section-card h-100">
                     <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending System Approvals</h6>
+                    <p class="small text-muted mb-2"><a href="#approvals" onclick="switchToSection('approvals');return false" class="text-decoration-none">View full approvals section &rarr;</a></p>
                     <?php
-                    $ictApprovals = getPendingApprovals($staff_conn, 6, 5);
-                    if (!empty($ictApprovals)):
-                        foreach ($ictApprovals as $apr):
+                    $ictApprovalsMini = getPendingApprovals($staff_conn, 6, 5);
+                    if (!empty($ictApprovalsMini)):
+                        foreach ($ictApprovalsMini as $apr):
                             echo renderApprovalWorkflowCard($apr, $staff_conn);
                             echo renderApprovalActionButtons($apr['id']);
                         endforeach;

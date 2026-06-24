@@ -17,7 +17,7 @@ require_once __DIR__ . '/../includes/dashboard_analytics.php';
 
 $loader = new StudentDataLoader();
 
-$ctx          = bootstrapStaffDashboard([]);
+$ctx          = bootstrapStaffDashboard(['director general', 'ceo', 'system admin', 'principal']);
 $auth_service = $ctx['auth'];
 $conn         = $ctx['staff'];
 $studentsConn = $ctx['students'];
