@@ -307,6 +307,40 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 </script>
 <?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 
+<!-- ── Session Idle Auto-Lock (20 min inactivity) ── -->
+<script>
+(function() {
+    var IDLE_TIMEOUT_MS = 1200000; // 20 minutes
+    var WARNING_MS = 1140000;      // 19 minutes (1 min warning)
+    var idleTimer = null;
+    var warningShown = false;
+    var lockScreenUrl = '../dashboards/lock-screen.php';
+
+    function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        warningShown = false;
+        idleTimer = setTimeout(function() {
+            window.location.href = lockScreenUrl;
+        }, IDLE_TIMEOUT_MS);
+    }
+
+    function pingActivity() {
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(window.location.pathname + '?ajax=ping_activity');
+        }
+    }
+
+    var events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    for (var i = 0; i < events.length; i++) {
+        document.addEventListener(events[i], resetIdleTimer);
+    }
+
+    resetIdleTimer();
+    setInterval(pingActivity, 300000); // ping every 5 min
+})();
+</script>
+<!-- ── End Session Auto-Lock ── -->
+
 <?php if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff'): ?>
 <div class="isnm-loader" id="isnmLoader">
     <div class="loader-spinner"></div>

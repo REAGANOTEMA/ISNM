@@ -64,6 +64,8 @@ if (!empty($_SESSION['user_id'])) {
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
+<!-- jQuery 3.6 — MUST load before any $ usage -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 (function(){
   window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });

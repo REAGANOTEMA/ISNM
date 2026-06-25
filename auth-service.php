@@ -341,6 +341,8 @@ class AuthenticationService {
         $_SESSION['department']     = $user['department'] ?? '';
         $_SESSION['logged_in']      = true;
         $_SESSION['login_time']     = time();
+        $_SESSION['last_activity']  = time();
+        $_SESSION['session_locked'] = false;
         $_SESSION['can_access_all'] = $this->hasFullInstitutionAccess($user['role'] ?? '');
         $_SESSION['dashboard_path'] = $this->getDashboardRoute($user['role'] ?? '');
 
@@ -369,12 +371,50 @@ class AuthenticationService {
     public function checkSessionValidity() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) return false;
-        $timeout = 3600;
-        if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > $timeout) {
+        return $this->checkAndLockSession();
+    }
+
+    /**
+     * Check for idle timeout (20 min) and lock the session if exceeded.
+     * Also enforces the 1-hour absolute session timeout.
+     */
+    public function checkAndLockSession() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) return false;
+
+        // 1-hour absolute session timeout (destroy session entirely)
+        if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 3600) {
             $this->logout();
             return false;
         }
-        $_SESSION['login_time'] = time();
+
+        // 20-minute idle lock
+        $idleTimeout = 1200;
+        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $idleTimeout) {
+            $_SESSION['session_locked'] = true;
+            return false;
+        }
+
+        // Update activity timestamp
+        $_SESSION['last_activity'] = time();
+        return true;
+    }
+
+    public function isSessionLocked() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        return !empty($_SESSION['session_locked']);
+    }
+
+    public function lockSession() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['session_locked'] = true;
+        return true;
+    }
+
+    public function unlockSession() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['session_locked'] = false;
+        $_SESSION['last_activity']  = time();
         return true;
     }
 
@@ -636,3 +676,11 @@ class AuthenticationService {
 }
 
 $auth_service = new AuthenticationService();
+
+// ── Lightweight session activity ping ──────────────────────────────
+if (!empty($_GET['ajax']) && $_GET['ajax'] === 'ping_activity' && $auth_service->isAuthenticated() && !$auth_service->isSessionLocked()) {
+    $auth_service->checkAndLockSession();
+    header('Content-Type: application/json');
+    echo '{"ok":true,"t":' . time() . '}';
+    exit();
+}

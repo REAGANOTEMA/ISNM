@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
@@ -11,2274 +11,1783 @@ $user_id = (int)($user['id'] ?? 0);
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Director Admissions';
 
-function sc($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
-function logAdmission($conn, $uid, $action, $module, $rid, $desc) {
-    $a = $conn->real_escape_string($action);
-    $m = $conn->real_escape_string($module);
-    $d = $conn->real_escape_string($desc);
-    $conn->query("INSERT INTO admission_activity_logs (user_id,action,module,record_id,description) VALUES (".intval($uid).",'$a','$m',".intval($rid).",'$d')");
+$students_db = defined('STUDENTS_DB') ? STUDENTS_DB : 'igangaschoolofl_students_db';
+$staff_db = defined('STAFF_DB') ? STAFF_DB : 'igangaschoolofl_staffs_db';
+
+// ── Auto-migration ──
+$migrate_tables = [
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`admission_requirements` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      requirement_name VARCHAR(300) NOT NULL,
+      is_active TINYINT(1) DEFAULT 1,
+      display_order INT DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`applicants` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      full_name VARCHAR(300) NOT NULL,
+      date_of_birth DATE NULL,
+      gender VARCHAR(20) DEFAULT 'Other',
+      phone VARCHAR(50) DEFAULT '',
+      email VARCHAR(200) DEFAULT '',
+      address TEXT,
+      guardian_name VARCHAR(300) DEFAULT '',
+      guardian_phone VARCHAR(50) DEFAULT '',
+      guardian_relationship VARCHAR(100) DEFAULT '',
+      application_number VARCHAR(50) UNIQUE,
+      program_id INT DEFAULT 0,
+      intake VARCHAR(100) DEFAULT '',
+      admission_date DATE NULL,
+      status VARCHAR(50) DEFAULT 'New Applicant',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`applicant_requirement_status` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      applicant_id INT NOT NULL,
+      requirement_id INT NOT NULL,
+      status ENUM('Not Submitted','Submitted','Verified','Rejected','Missing') DEFAULT 'Not Submitted',
+      submitted_by INT NULL, verified_by INT NULL, rejected_by INT NULL,
+      remarks TEXT,
+      submitted_at DATETIME NULL, verified_at DATETIME NULL,
+      received_by INT NULL, received_at DATETIME NULL,
+      UNIQUE KEY uq_app_req (applicant_id,requirement_id),
+      KEY idx_applicant_id (applicant_id),
+      KEY idx_requirement_id (requirement_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`requirement_history` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      applicant_id INT NOT NULL, requirement_id INT NULL,
+      action VARCHAR(100) NOT NULL, performed_by INT NULL,
+      remarks TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_hist_applicant (applicant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`student_documents` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      applicant_id INT NOT NULL,
+      document_type VARCHAR(100) DEFAULT 'Other',
+      document_title VARCHAR(300) DEFAULT '',
+      file_name VARCHAR(300) DEFAULT '', file_path VARCHAR(500) DEFAULT '',
+      file_size INT DEFAULT 0, mime_type VARCHAR(100) DEFAULT '',
+      verification_status ENUM('Pending','Verified','Rejected') DEFAULT 'Pending',
+      verified_by INT NULL, verified_at DATETIME NULL, remarks TEXT,
+      uploaded_by INT NOT NULL, uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_doc_applicant (applicant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`admission_activity_logs` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL, action VARCHAR(200) NOT NULL,
+      module VARCHAR(100) NOT NULL, record_id INT DEFAULT 0,
+      description TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_log_module (module),
+      KEY idx_log_record (record_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`admission_notifications` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      applicant_id INT NULL, recipient_type VARCHAR(50) DEFAULT 'applicant',
+      recipient_id INT NULL, title VARCHAR(300) NOT NULL,
+      message TEXT NOT NULL, channel VARCHAR(50) DEFAULT 'portal',
+      sent_by INT NOT NULL, is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_notif_applicant (applicant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    "CREATE TABLE IF NOT EXISTS `{$staff_db}`.`applicant_messages` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      applicant_id INT NOT NULL, sender_id INT NOT NULL,
+      recipient_type VARCHAR(50) DEFAULT 'applicant',
+      subject VARCHAR(300) NOT NULL, message TEXT NOT NULL,
+      is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_msg_applicant (applicant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+];
+foreach ($migrate_tables as $sql) { $conn->query($sql); }
+
+// Add missing columns if they don't exist
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`student_documents` LIKE 'requirement_id'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`student_documents` ADD COLUMN requirement_id INT NULL AFTER applicant_id, ADD KEY idx_doc_requirement (requirement_id)");
+}
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`student_documents` LIKE 'document_status'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`student_documents` ADD COLUMN document_status VARCHAR(50) DEFAULT 'Pending' AFTER remarks");
+}
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`applicant_requirement_status` LIKE 'updated_at'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`applicant_requirement_status` ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER received_at");
+}
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`admission_requirements` LIKE 'type'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`admission_requirements` ADD COLUMN type VARCHAR(50) DEFAULT 'Document' AFTER requirement_name");
+}
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`admission_requirements` LIKE 'is_mandatory'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`admission_requirements` ADD COLUMN is_mandatory TINYINT(1) DEFAULT 1 AFTER is_active");
 }
 
-// Stats
-$total_applicants    = sc($conn, "SELECT COUNT(*)c FROM applicants");
-$new_applicants      = sc($conn, "SELECT COUNT(*)c FROM applicants WHERE status='New Applicant'");
-$approved_applicants = sc($conn, "SELECT COUNT(*)c FROM applicants WHERE status='Approved'");
-$pending_verify      = sc($conn, "SELECT COUNT(*)c FROM applicants WHERE status='Under Review'");
-$cleared_count       = sc($conn, "SELECT COUNT(*)c FROM applicants WHERE status='Registered'");
-$missing_req_count   = 0;
-$total_reqs = sc($conn, "SELECT COUNT(*)c FROM admission_requirements WHERE is_active=1");
-$total_apps_ws       = $website_conn ? sc($website_conn, "SELECT COUNT(*)c FROM student_applications") : 0;
+// Seed default 20 requirements if empty
+$reqCheck = $conn->query("SELECT COUNT(*)c FROM `{$staff_db}`.`admission_requirements`");
+if ($reqCheck) {
+    $rc = (int)$reqCheck->fetch_assoc()['c'];
+    if ($rc === 0) {
+        $defaultReqs = [
+            'Surgical Gloves','Examination Gloves','Photocopying Ream','Ruled Paper Reams',
+            'Omo','Toilet Papers','Compound Brooms','Soft Brooms','Rake','Cobweb Brush',
+            'Scrubbing Brush','Squeezer','Toilet Brush','JIK','Vim','Mops','Sanitizer',
+            'Liquid Soap','Face Masks','Heavy Duty Gloves'
+        ];
+        $order = 1;
+        foreach ($defaultReqs as $rname) {
+            $esc = $conn->real_escape_string($rname);
+            $conn->query("INSERT INTO `{$staff_db}`.`admission_requirements` (requirement_name,is_active,display_order) VALUES ('$esc',1,$order)");
+            $order++;
+        }
+    }
+}
 
-// Count applicants with missing requirements
-$mr = $conn->query("SELECT COUNT(DISTINCT a.id)c FROM applicants a LEFT JOIN applicant_requirement_status ars ON a.id=ars.applicant_id AND ars.status='Verified' GROUP BY a.id HAVING COUNT(ars.id) < $total_reqs");
-if ($mr) $missing_req_count = $mr->num_rows;
+function safeCount($c, $q) { $r=$c->query($q); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
+function logAdmission($conn, $uid, $action, $module, $rid, $desc) {
+    global $staff_db;
+    $a=($conn)->real_escape_string($action); $m=($conn)->real_escape_string($module); $d=($conn)->real_escape_string($desc);
+    ($conn)->query("INSERT INTO `{$staff_db}`.`admission_activity_logs` (user_id,action,module,record_id,description) VALUES (".intval($uid).",'$a','$m',".intval($rid).",'$d')");
+}
+function _r($s){return $s;}
 
-// Load data
-$applicants_list = []; $r=$conn->query("SELECT a.*,COALESCE((SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=a.id AND status='Verified'),0) verified_count,$total_reqs total_reqs FROM applicants a ORDER BY a.created_at DESC LIMIT 100"); if($r) while($row=$r->fetch_assoc()) $applicants_list[]=$row;
-$programs_list = []; $r=$conn->query("SELECT program_code,program_name,program_type,department,duration_years,status FROM academic_programs WHERE status='Active' ORDER BY program_name"); if($r) while($row=$r->fetch_assoc()) $programs_list[]=$row;
-$req_items = []; $r=$conn->query("SELECT * FROM admission_requirements WHERE is_active=1 ORDER BY display_order"); if($r) while($row=$r->fetch_assoc()) $req_items[]=$row;
-$total_req_items = count($req_items);
-$recent_activity = []; $r=$conn->query("SELECT al.*,s.full_name performer_name FROM admission_activity_logs al LEFT JOIN staff s ON al.user_id=s.id ORDER BY al.created_at DESC LIMIT 20"); if($r) while($row=$r->fetch_assoc()) $recent_activity[]=$row;
+// ── Stats ──
+$total_applicants    = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants`");
+$new_applicants      = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE status='New Applicant'");
+$approved_applicants = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE status='Approved'");
+$pending_verify      = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE status IN('Under Review','Pending')");
+$cleared_count       = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE status='Registered'");
+$rejected_count      = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE status='Rejected'");
+$pending_count       = $total_applicants - $approved_applicants - $rejected_count - $cleared_count;
+if ($pending_count < 0) $pending_count = 0;
+$total_students      = $students_conn ? safeCount($students_conn, "SELECT COUNT(*)c FROM `{$students_db}`.`students` WHERE status!='deleted'") : 0;
+$total_reqs          = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1");
+$total_req_items     = max($total_reqs, 1);
 
-// Intake stats for chart
-$intake_stats = []; $r=$conn->query("SELECT intake,COUNT(*)c FROM applicants WHERE intake IS NOT NULL AND intake!='' GROUP BY intake ORDER BY intake"); if($r) while($row=$r->fetch_assoc()) $intake_stats[]=$row;
+// ── Intake counts for charts ──
+$jan_count = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake='January'");
+$may_count = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake='May'");
+$aug_count = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake='August'");
 
-// Clearance progress for chart
+// ── Program counts for program pie chart ──
+$program_counts = [];
+$r=$conn->query("SELECT program_id,COUNT(*)c FROM `{$staff_db}`.`applicants` GROUP BY program_id");
+if($r) while($row=$r->fetch_assoc()) $program_counts[$row['program_id']] = (int)$row['c'];
+
+// ── Students awaiting / fully cleared / missing requirements ──
+$students_awaiting_reqs = safeCount($conn, "SELECT COUNT(DISTINCT applicant_id)c FROM `{$staff_db}`.`applicant_requirement_status` WHERE status='Submitted'");
+$students_fully_cleared  = safeCount($conn, "SELECT COUNT(DISTINCT applicant_id)c FROM `{$staff_db}`.`applicant_requirement_status` WHERE status='Verified'");
+$students_missing_reqs   = safeCount($conn, "SELECT COUNT(DISTINCT applicant_id)c FROM `{$staff_db}`.`applicant_requirement_status` WHERE status IN('Missing','Rejected')");
+
 $clearance_levels = ['Not Submitted'=>0,'Submitted'=>0,'Verified'=>0,'Rejected'=>0,'Missing'=>0];
-$r=$conn->query("SELECT status,COUNT(*)c FROM applicant_requirement_status GROUP BY status"); if($r) while($row=$r->fetch_assoc()) $clearance_levels[$row['status']] = intval($row['c']);
+$r=$conn->query("SELECT status,COUNT(*)c FROM `{$staff_db}`.`applicant_requirement_status` GROUP BY status");
+if($r) while($row=$r->fetch_assoc()) $clearance_levels[$row['status']] = intval($row['c']);
 
-// Program clearance stats
 $program_clearance = [];
-$r = $conn->query("SELECT COALESCE(p.program_name,'Unassigned') program,
+$r=$conn->query("SELECT COALESCE(p.program_name,'Unassigned') program,
     COUNT(DISTINCT a.id) total,
     SUM(CASE WHEN a.status='Registered' THEN 1 ELSE 0 END) cleared,
     SUM(CASE WHEN a.status='Approved' THEN 1 ELSE 0 END) approved,
     SUM(CASE WHEN a.status='Rejected' THEN 1 ELSE 0 END) rejected
-    FROM applicants a LEFT JOIN academic_programs p ON a.program_id=p.id
+    FROM `{$staff_db}`.`applicants` a LEFT JOIN `{$staff_db}`.`academic_programs` p ON a.program_id=p.id
     GROUP BY p.program_name ORDER BY total DESC");
-if ($r) while($row=$r->fetch_assoc()) $program_clearance[] = $row;
-
-// Total requirement items count for progress calculation
-$total_req_cols = $total_req_items > 0 ? $total_req_items : 1;
-
-// Reports
-$report = $_GET['report'] ?? '';
-if ($report) {
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
-    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
-    if ($report === 'applications') {
-        echo '<h2>Applicants Report</h2>';
-        $r=$conn->query("SELECT application_number,full_name,COALESCE((SELECT program_name FROM academic_programs WHERE id=a.program_id),'N/A') program,intake,status,created_at FROM applicants a ORDER BY created_at DESC");
-        echo '<table><thead><tr><th>App No</th><th>Applicant</th><th>Program</th><th>Intake</th><th>Date</th><th>Status</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['intake']??'-').'</td><td>'.$row['created_at'].'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '</tbody></table>';
-    } elseif ($report === 'cleared') {
-        echo '<h2>Fully Cleared Applicants</h2>';
-        $r=$conn->query("SELECT a.*,COALESCE((SELECT COUNT(*) FROM applicant_requirement_status WHERE applicant_id=a.id AND status='Verified'),0) vc FROM applicants a HAVING vc>=$total_req_items ORDER BY a.full_name");
-        echo '<table><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['phone']??'-').'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '</tbody></table>';
-    } elseif ($report === 'clearance') {
-        echo '<h2>Requirements Clearance Report</h2>';
-        $r=$conn->query("SELECT ars.*,a.full_name applicant_name,adr.requirement_name FROM applicant_requirement_status ars LEFT JOIN applicants a ON ars.applicant_id=a.id LEFT JOIN admission_requirements adr ON ars.requirement_id=adr.id ORDER BY ars.applicant_id,adr.display_order");
-        echo '<table><thead><tr><th>Applicant</th><th>Requirement</th><th>Status</th><th>Verified By</th><th>Date</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['applicant_name']??$row['applicant_id']).'</td><td>'.htmlspecialchars($row['requirement_name']??'-').'</td><td>'.$row['status'].'</td><td>'.$row['verified_by'].'</td><td>'.$row['verified_at'].'</td></tr>'; }
-        echo '</tbody></table>';
-    } elseif ($report === 'intake') {
-        echo '<h2>Intake Report</h2>';
-        $r=$conn->query("SELECT intake,COUNT(*) total FROM applicants WHERE intake IS NOT NULL AND intake!='' GROUP BY intake ORDER BY intake");
-        echo '<table><thead><tr><th>Intake</th><th>Applicants</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['intake']).'</td><td>'.$row['total'].'</td></tr>'; }
-        echo '</tbody></table>';
-    }
-    echo '</body></html>'; exit;
+if($r) while($row=$r->fetch_assoc()){
+    $row['pct'] = $row['total'] > 0 ? round(($row['cleared']/$row['total'])*100, 1) : 0;
+    $program_clearance[]=$row;
 }
 
-// AJAX handlers
+$intake_stats = []; $r=$conn->query("SELECT intake,COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!='' GROUP BY intake ORDER BY intake");
+if($r) while($row=$r->fetch_assoc()) $intake_stats[]=$row;
+
+$req_items=[]; $r=$conn->query("SELECT * FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1 ORDER BY display_order");
+if($r) while($row=$r->fetch_assoc()) $req_items[]=$row;
+$requirements = $req_items;
+$active_reqs = count($req_items);
+
+$recent_activity=[]; $r=$conn->query("SELECT al.*,s.full_name performer_name FROM `{$staff_db}`.`admission_activity_logs` al LEFT JOIN `{$staff_db}`.`staff` s ON al.user_id=s.id ORDER BY al.created_at DESC LIMIT 20");
+if($r) while($row=$r->fetch_assoc()) $recent_activity[]=$row;
+
+$programs_list=[]; $r=$conn->query("SELECT id,program_code,program_name,program_type,department,duration_years,status FROM `{$staff_db}`.`academic_programs` WHERE status='Active' ORDER BY program_name");
+if($r) while($row=$r->fetch_assoc()) $programs_list[]=$row;
+
+// ── Get all applicants for listing ──
+$applicants = [];
+$r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a ORDER BY a.created_at DESC LIMIT 100");
+if($r) while($row=$r->fetch_assoc()) $applicants[]=$row;
+
+// ── Get pending applicants for approvals ──
+$pending_applicants = [];
+$r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved') ORDER BY a.created_at DESC LIMIT 50");
+if($r) while($row=$r->fetch_assoc()) $pending_applicants[]=$row;
+
+$view = $_GET['section'] ?? 'overview';
 $ajax = $_REQUEST['ajax'] ?? '';
+
+// ══════════════════════════════════════════════════════════════════════
+// AJAX ENDPOINTS
+// ══════════════════════════════════════════════════════════════════════
+
 if ($ajax === 'search_applicants') {
     header('Content-Type: application/json');
-    $q = trim($_GET['q'] ?? '');
-    if (strlen($q) < 2) { echo json_encode([]); exit; }
-    $sq = $conn->real_escape_string($q);
-    $r = $conn->query("SELECT id,full_name,application_number,phone,COALESCE((SELECT program_name FROM academic_programs WHERE id=a.program_id),'N/A') program,status FROM applicants a WHERE full_name LIKE '%$sq%' OR application_number LIKE '%$sq%' OR phone LIKE '%$sq%' ORDER BY full_name LIMIT 30");
-    $out = [];
-    if ($r) { while($row = $r->fetch_assoc()) $out[] = $row; }
+    $q = trim($_POST['q'] ?? ($_GET['q'] ?? ''));
+    $statusFilter = trim($_POST['status'] ?? ($_GET['status'] ?? ''));
+    $intakeFilter = trim($_POST['intake'] ?? ($_GET['intake'] ?? ''));
+    $where = [];
+    if ($q !== '') {
+        $sq = $conn->real_escape_string($q);
+        $where[] = "(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%' OR a.phone LIKE '%$sq%' OR a.email LIKE '%$sq%')";
+    }
+    if ($statusFilter !== '') {
+        $statuses = array_map('trim', explode(',', $statusFilter));
+        $escaped = [];
+        foreach ($statuses as $s) { $escaped[] = "'".$conn->real_escape_string($s)."'"; }
+        $where[] = "a.status IN (".implode(',', $escaped).")";
+    }
+    if ($intakeFilter !== '') {
+        $where[] = "a.intake = '".$conn->real_escape_string($intakeFilter)."'";
+    }
+    $whereSql = $where ? 'WHERE '.implode(' AND ', $where) : '1';
+    $r = $conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,a.intake,a.status FROM `{$staff_db}`.`applicants` a $whereSql ORDER BY a.created_at DESC LIMIT 100");
+    $out = ['data'=>[]];
+    if ($r) { while($row = $r->fetch_assoc()) $out['data'][] = $row; }
     echo json_encode($out); exit;
 }
-if ($ajax === 'get_requirements') {
-    header('Content-Type: application/json');
-    $aid = intval($_GET['applicant_id'] ?? 0);
-    if (!$aid) { echo json_encode([]); exit; }
-    $info = []; $rn = $conn->query("SELECT * FROM applicants WHERE id=" . intval($aid)); if ($rn) $info = $rn->fetch_assoc() ?: [];
-    $req = []; $rr = $conn->query("SELECT ars.*, adr.requirement_name, adr.display_order FROM applicant_requirement_status ars RIGHT JOIN admission_requirements adr ON ars.requirement_id=adr.id AND ars.applicant_id=" . intval($aid) . " WHERE adr.is_active=1 ORDER BY adr.display_order"); if ($rr) { while($row=$rr->fetch_assoc()) $req[] = $row; }
-    $hist = []; $rh = $conn->query("SELECT rh.*, s.full_name performed_by_name FROM requirement_history rh LEFT JOIN staff s ON rh.performed_by=s.id WHERE rh.applicant_id=" . intval($aid) . " ORDER BY rh.created_at DESC LIMIT 50"); if ($rh) { while($row=$rh->fetch_assoc()) $hist[] = $row; }
-    echo json_encode(['info'=>$info,'requirements'=>$req,'history'=>$hist]); exit;
-}
-if ($ajax === 'toggle_requirement') {
-    header('Content-Type: application/json');
-    $aid = intval($_POST['applicant_id'] ?? 0);
-    $rid = intval($_POST['requirement_id'] ?? 0);
-    $new_status = $conn->real_escape_string(trim($_POST['status'] ?? 'Not Submitted'));
-    $remarks = $conn->real_escape_string(trim($_POST['remarks'] ?? ''));
-    $valid_statuses = ['Not Submitted','Submitted','Verified','Rejected','Missing'];
-    if (!in_array($new_status, $valid_statuses)) { echo json_encode(['success'=>false,'error'=>'Invalid status']); exit; }
-    if ($aid && $rid) {
-        // Check current status for history
-        $cr = $conn->query("SELECT status FROM applicant_requirement_status WHERE applicant_id=" . intval($aid) . " AND requirement_id=" . intval($rid));
-        $old_status = ($cr && $cr->num_rows) ? $cr->fetch_assoc()['status'] : 'Not Submitted';
-        // Map actions
-        $action_map = ['Submitted'=>'Submitted','Verified'=>'Verified','Rejected'=>'Rejected'];
-        $action = $action_map[$new_status] ?? 'Updated';
-        if ($old_status === $new_status && $new_status === 'Not Submitted') $action = 'Updated';
-        // Upsert
-        $uid = intval($user_id);
-        $sub_by = ($new_status === 'Submitted') ? ",submitted_by=$uid,submitted_at=NOW()" : '';
-        $ver_by = ($new_status === 'Verified') ? ",verified_by=$uid,verified_at=NOW()" : '';
-        $rej_by = ($new_status === 'Rejected') ? ",rejected_by=$uid" : '';
-        $remarks_sql = $remarks ? ",remarks='$remarks'" : '';
-        $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES (" . intval($aid) . "," . intval($rid) . ",'$new_status',$uid,NOW(),NULL,NULL,NULL,'$remarks') ON DUPLICATE KEY UPDATE status='$new_status'$sub_by$ver_by$rej_by$remarks_sql");
-        // Log history
-        $hist_remarks = $conn->real_escape_string($remarks ? "$action: $remarks" : "$action");
-        $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES (" . intval($aid) . "," . intval($rid) . ",'$action'," . intval($user_id) . ",'$hist_remarks')");
-        // Log activity
-        $rn = $conn->query("SELECT requirement_name FROM admission_requirements WHERE id=" . intval($rid));
-        $req_name = ($rn && $rn->num_rows) ? $rn->fetch_assoc()['requirement_name'] : "requirement #$rid";
-        logAdmission($conn, $user_id, "Requirement $new_status", 'requirements', $rid, "$req_name $new_status for applicant #$aid");
-        echo json_encode(['success'=>true]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>'Invalid IDs']); exit;
-}
-if ($ajax === 'mark_all_submitted') {
-    header('Content-Type: application/json');
-    $aid = intval($_POST['applicant_id'] ?? 0);
-    if ($aid) {
-        foreach ($req_items as $ri) {
-            $iid = $ri['id'];
-            $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES (" . intval($aid) . "," . intval($iid) . ",'Submitted'," . intval($user_id) . ",NOW()) ON DUPLICATE KEY UPDATE status='Submitted',submitted_by=" . intval($user_id) . ",submitted_at=NOW()");
-            $conn->query("INSERT INTO requirement_history (applicant_id,requirement_id,action,performed_by,remarks) VALUES (" . intval($aid) . "," . intval($iid) . ",'Submitted'," . intval($user_id) . ",'Bulk submitted')");
-        }
-        logAdmission($conn, $user_id, 'Bulk Submitted', 'requirements', $aid, "All requirements submitted for applicant #$aid");
-        echo json_encode(['success'=>true]); exit;
-    }
-    echo json_encode(['success'=>false]); exit;
-}
-// New: Student search AJAX (students_db)
+
 if ($ajax === 'search_students') {
     header('Content-Type: application/json');
-    if (!$students_conn) {
-        echo json_encode(['error' => 'Students DB not connected', 'students' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
-        exit;
-    }
-    $q = trim($_GET['q'] ?? '');
-    $program = trim($_GET['program'] ?? '');
-    $intake = trim($_GET['intake'] ?? '');
-    $status = trim($_GET['status'] ?? '');
-    $year = trim($_GET['year'] ?? '');
-    $page = max(1, intval($_GET['page'] ?? 1));
-    $limit = 20;
+    if (!$students_conn) { echo json_encode(['data'=>[],'total'=>0]); exit; }
+    $q = trim($_GET['q'] ?? ($_POST['q'] ?? ''));
+    $program = trim($_GET['program'] ?? ($_POST['program'] ?? ''));
+    $intake = trim($_GET['intake'] ?? ($_POST['intake'] ?? ''));
+    $status = trim($_GET['status'] ?? ($_POST['status'] ?? ''));
+    $year = trim($_GET['year'] ?? ($_POST['year'] ?? ''));
+    $phone = trim($_GET['phone'] ?? ($_POST['phone'] ?? ''));
+    $national_id = trim($_GET['national_id'] ?? ($_POST['national_id'] ?? ''));
+    $admission_no = trim($_GET['admission_no'] ?? ($_POST['admission_no'] ?? ''));
+    $reg_no = trim($_GET['reg_no'] ?? ($_POST['reg_no'] ?? ''));
+    $page = max(1, intval($_GET['page'] ?? ($_POST['page'] ?? 1)));
+    $limit = max(1, min(100, intval($_GET['limit'] ?? ($_POST['limit'] ?? 20))));
     $offset = ($page - 1) * $limit;
 
     $where = [];
-
+    $students_db_esc = $students_db;
     if ($q !== '') {
         $sq = $students_conn->real_escape_string($q);
-        $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE '%$sq%' OR CONCAT_WS(' ',first_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR registration_number LIKE '%$sq%' OR index_number LIKE '%$sq%' OR national_student_id_number LIKE '%$sq%' OR phone LIKE '%$sq%' OR mobile_number LIKE '%$sq%' OR email LIKE '%$sq%')";
+        $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE '%$sq%' OR CONCAT_WS(' ',first_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR registration_number LIKE '%$sq%' OR index_number LIKE '%$sq%' OR full_name LIKE '%$sq%' OR email LIKE '%$sq%')";
     }
-    if ($program !== '') {
-        $where[] = "program LIKE '%" . $students_conn->real_escape_string($program) . "%'";
-    }
-    if ($intake !== '') {
-        $where[] = "intake_period LIKE '%" . $students_conn->real_escape_string($intake) . "%'";
-    }
-    if ($status !== '') {
-        $where[] = "status = '" . $students_conn->real_escape_string($status) . "'";
-    }
-    if ($year !== '') {
-        $where[] = "intake_year = '" . $students_conn->real_escape_string($year) . "'";
-    }
+    if ($admission_no !== '') { $where[] = "student_number LIKE '%".$students_conn->real_escape_string($admission_no)."%'"; }
+    if ($reg_no !== '') { $where[] = "registration_number LIKE '%".$students_conn->real_escape_string($reg_no)."%'"; }
+    if ($phone !== '') { $sph=$students_conn->real_escape_string($phone); $where[] = "(phone LIKE '%$sph%' OR mobile_number LIKE '%$sph%')"; }
+    if ($national_id !== '') { $where[] = "national_student_id_number LIKE '%".$students_conn->real_escape_string($national_id)."%'"; }
+    if ($program !== '') { $where[] = "program LIKE '%".$students_conn->real_escape_string($program)."%'"; }
+    if ($intake !== '') { $where[] = "intake_date LIKE '%".$students_conn->real_escape_string($intake)."%'"; }
+    if ($status !== '') { $where[] = "status = '".$students_conn->real_escape_string($status)."'"; }
+    if ($year !== '') { $where[] = "year = '".$students_conn->real_escape_string($year)."'"; }
 
-    // If no filters, show ALL students paginated
-    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-
-    $countResult = $students_conn->query("SELECT COUNT(*) total FROM students $whereSql");
+    $whereSql = $where ? 'WHERE '.implode(' AND ', $where) : '';
+    $countResult = $students_conn->query("SELECT COUNT(*) total FROM `{$students_db_esc}`.`students` $whereSql");
     $total = ($countResult && $countResult->num_rows) ? (int)$countResult->fetch_assoc()['total'] : 0;
-    $totalPages = max(1, ceil($total / $limit));
 
-    // Get requirement totals from staff DB (separate connection)
-    $reqTotal = 0;
-    $rq = $conn->query("SELECT COUNT(*)c FROM admission_requirements WHERE is_active=1");
-    if ($rq) $reqTotal = (int)$rq->fetch_assoc()['c'];
-    $reqTotal = max($reqTotal, 1);
-
-    // Simple student query — NO cross-database subquery
+    $r = $students_conn->query("SELECT id AS student_id,student_number AS admission_no,registration_number AS reg_no,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_date AS intake_period,year AS intake_year,status,gender,date_of_birth,address FROM `{$students_db_esc}`.`students` $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
     $students = [];
-    $r = $students_conn->query("SELECT id,student_number,registration_number,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_period,intake_year,status,gender,profile_picture FROM students $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
     if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
-
-    // For each student, count verified requirements via staff DB
-    $studentIds = array_column($students, 'id');
-    $reqDoneMap = [];
-    if (!empty($studentIds) && $conn) {
-        // Build a mapping of student_number -> id from our result set
-        $snMap = [];
-        foreach ($students as $st) {
-            if (!empty($st['student_number'])) {
-                $snMap[] = "'" . $conn->real_escape_string($st['student_number']) . "'";
-            }
-        }
-        if (!empty($snMap)) {
-            $snList = implode(',', $snMap);
-            $rr = $conn->query("SELECT a.application_number, COUNT(*) done FROM applicant_requirement_status ars JOIN applicants a ON ars.applicant_id=a.id WHERE ars.status='Verified' AND a.application_number IN ($snList) GROUP BY a.application_number");
-            if ($rr) while ($rw = $rr->fetch_assoc()) {
-                $reqDoneMap[$rw['application_number']] = (int)$rw['done'];
-            }
-        }
-        // Attach req_done to each student
-        foreach ($students as &$st) {
-            $st['req_done'] = $reqDoneMap[$st['student_number']] ?? 0;
-        }
-        unset($st);
-    }
-
-    echo json_encode(['students' => $students, 'total' => $total, 'page' => $page, 'totalPages' => $totalPages, 'reqTotal' => $reqTotal]);
+    echo json_encode(['data'=>$students,'total'=>$total,'page'=>$page,'totalPages'=>max(1,ceil($total/$limit))]);
     exit;
 }
 
-// New: Get student full profile
 if ($ajax === 'get_student_profile') {
     header('Content-Type: application/json');
-    $sid = intval($_GET['student_id'] ?? 0);
-    if (!$sid || !$students_conn) { echo json_encode(['error' => 'Invalid']); exit; }
-
-    $info = [];
-    $r = $students_conn->query("SELECT * FROM students WHERE id=" . intval($sid) . " LIMIT 1");
+    $sid = intval($_GET['student_id'] ?? ($_POST['student_id'] ?? 0));
+    if (!$sid || !$students_conn) { echo json_encode(['success'=>false,'error'=>'Invalid student ID']); exit; }
+    $info = []; $r = $students_conn->query("SELECT * FROM `{$students_db}`.`students` WHERE id=".intval($sid)." LIMIT 1");
     if ($r) $info = $r->fetch_assoc() ?: [];
-    if (empty($info)) { echo json_encode(['error' => 'Student not found']); exit; }
+    if (empty($info)) { echo json_encode(['success'=>false,'error'=>'Student not found']); exit; }
 
-    // ---- Match student to applicant record ----
-    $aid = 0;
-    $applicant = [];
-    $studentNo = $conn->real_escape_string($info['student_number'] ?? '');
-    $fullName  = $conn->real_escape_string(trim(($info['first_name'] ?? '') . ' ' . ($info['surname'] ?? '')));
+    $aid=0; $applicant=[];
+    $studentNo = $conn->real_escape_string($info['student_number']??'');
+    $fullName  = $conn->real_escape_string(trim($info['full_name']??''));
+    if ($studentNo) { $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE application_number LIKE '%$studentNo%' LIMIT 1"); if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];} }
+    if (!$aid&&$fullName){ $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE full_name LIKE '%$fullName%' LIMIT 1"); if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];} }
 
-    // Try exact student number match first, then full name
-    $arQuery = '';
-    if ($studentNo) {
-        $arQuery = "SELECT * FROM applicants WHERE application_number LIKE '%$studentNo%' LIMIT 1";
-    }
-    if (!$arQuery || !($ar = $conn->query($arQuery)) || !$ar->num_rows) {
-        $arQuery = "SELECT * FROM applicants WHERE full_name LIKE '%$fullName%' LIMIT 1";
-        $ar = $conn->query($arQuery);
-    }
-    if ($ar && $ar->num_rows) {
-        $applicant = $ar->fetch_assoc();
-        $aid = (int)$applicant['id'];
-    }
+    $reqs=[];
+    $rr=$conn->query("SELECT adr.id requirement_id,adr.requirement_name,adr.display_order,ars.status,ars.verified_by,ars.remarks,ars.submitted_at,ars.verified_at,ars.received_by,ars.received_at FROM `{$staff_db}`.`admission_requirements` adr LEFT JOIN `{$staff_db}`.`applicant_requirement_status` ars ON ars.requirement_id=adr.id AND ars.applicant_id=".intval($aid)." WHERE adr.is_active=1 ORDER BY adr.display_order");
+    if($rr) while($row=$rr->fetch_assoc()){$row['status']=$row['status']??'Not Submitted';$reqs[]=$row;}
 
-    // ---- Requirements (if applicant exists or we need to show available reqs) ----
-    $reqs = [];
-    $rr = $conn->query("SELECT adr.id requirement_id, adr.requirement_name, adr.display_order, ars.status, ars.verified_by, ars.remarks, ars.submitted_at, ars.verified_at
-        FROM admission_requirements adr
-        LEFT JOIN applicant_requirement_status ars ON ars.requirement_id = adr.id AND ars.applicant_id = " . intval($aid) . "
-        WHERE adr.is_active=1 ORDER BY adr.display_order");
-    if ($rr) while ($row = $rr->fetch_assoc()) {
-        $row['status'] = $row['status'] ?? 'Not Submitted';
-        $reqs[] = $row;
-    }
+    $docs=[];
+    $dr=$conn->query("SELECT sd.*,s.full_name uploader_name FROM `{$staff_db}`.`student_documents` sd LEFT JOIN `{$staff_db}`.`staff` s ON sd.uploaded_by=s.id WHERE sd.applicant_id=".intval($aid)." ORDER BY sd.uploaded_at DESC");
+    if($dr) while($row=$dr->fetch_assoc())$docs[]=$row;
 
-    // ---- Documents (linked to applicant) ----
-    $docs = [];
-    $dr = $conn->query("SELECT sd.*, s.full_name uploader_name FROM student_documents sd LEFT JOIN staff s ON sd.uploaded_by=s.id WHERE sd.applicant_id=" . intval($aid) . " ORDER BY sd.uploaded_at DESC");
-    if ($dr) while ($row = $dr->fetch_assoc()) $docs[] = $row;
+    $activity=[];
+    $ar2=$conn->query("SELECT al.*,s.full_name performer_name FROM `{$staff_db}`.`admission_activity_logs` al LEFT JOIN `{$staff_db}`.`staff` s ON al.user_id=s.id WHERE al.record_id=".intval($aid)." OR (al.module='students' AND al.record_id=".intval($sid).") ORDER BY al.created_at DESC LIMIT 20");
+    if($ar2) while($row=$ar2->fetch_assoc())$activity[]=$row;
 
-    // ---- Activity ----
-    $activity = [];
-    $ar2 = $conn->query("SELECT al.*, s.full_name performer_name FROM admission_activity_logs al LEFT JOIN staff s ON al.user_id=s.id WHERE al.record_id=" . intval($aid) . " OR (al.module='students' AND al.record_id=" . intval($sid) . ") ORDER BY al.created_at DESC LIMIT 20");
-    if ($ar2) while ($row = $ar2->fetch_assoc()) $activity[] = $row;
+    $completed=0;$rejected=0;
+    $reqs_total = count($reqs);
+    foreach($reqs as $r){if($r['status']==='Verified')$completed++;elseif($r['status']==='Rejected')$rejected++;}
+    $pending=$reqs_total-$completed-$rejected;
+    $clearance_pct=$total_req_items>0?round(($completed/$total_req_items)*100):0;
 
-    echo json_encode([
-        'info'         => $info,
-        'applicant'    => $applicant,
-        'applicant_id' => $aid,
-        'requirements' => $reqs,
-        'documents'    => $docs,
-        'activity'     => $activity
-    ]);
+    echo json_encode(['success'=>true,'data'=>['info'=>$info,'applicant'=>$applicant,'applicant_id'=>$aid,'requirements'=>$reqs,'documents'=>$docs,'activity'=>$activity,'completed'=>$completed,'pending'=>$pending,'rejected'=>$rejected,'clearance_pct'=>$clearance_pct,'total_reqs'=>$total_req_items,'full_name'=>$info['full_name']??'', 'admission_no'=>$info['student_number']??'', 'phone'=>$info['phone']??'', 'email'=>$info['email']??'', 'program_name'=>$info['program']??'', 'status'=>$info['status']??'', 'national_id'=>$info['national_student_id_number']??'', 'date_of_birth'=>$info['date_of_birth']??'']]);
     exit;
 }
 
-// New: Document upload
-if ($ajax === 'upload_document') {
+if ($ajax === 'get_requirements') {
     header('Content-Type: application/json');
-    $aid = intval($_POST['applicant_id'] ?? 0);
-    $docType = trim($_POST['document_type'] ?? 'Other');
-    $docTitle = trim($_POST['document_title'] ?? '');
-
-    if (!$aid || empty($_FILES['doc_file']['name'])) {
-        echo json_encode(['success' => false, 'error' => 'Missing data']); exit;
-    }
-
-    $uploadDir = __DIR__ . '/../uploads/admissions/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-    $ext = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
-    $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx'];
-    if (!in_array($ext, $allowed)) {
-        echo json_encode(['success' => false, 'error' => 'File type not allowed']); exit;
-    }
-
-    $fname = 'doc_' . $aid . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $fpath = 'uploads/admissions/' . $fname;
-
-    if (move_uploaded_file($_FILES['doc_file']['tmp_name'], __DIR__ . '/../' . $fpath)) {
-        $stmt = $conn->prepare("INSERT INTO student_documents (applicant_id, document_type, document_title, file_name, file_path, file_size, mime_type, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt) {
-            $fn = $fname;
-            $fs = $_FILES['doc_file']['size'];
-            $mt = $_FILES['doc_file']['type'] ?? '';
-            $stmt->bind_param('issssssi', $aid, $docType, $docTitle, $fn, $fpath, $fs, $mt, $user_id);
-            $stmt->execute();
-            $stmt->close();
-            logAdmission($conn, $user_id, 'Upload Document', 'documents', $aid, "Document $docTitle uploaded for applicant #$aid");
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'DB error']);
-        }
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Upload failed']);
-    }
-    exit;
+    $aid=intval($_GET['applicant_id']??0);
+    if(!$aid){echo json_encode([]);exit;}
+    $info=[];$rn=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE id=".intval($aid));if($rn)$info=$rn->fetch_assoc()?:[];
+    $req=[];$rr=$conn->query("SELECT ars.*,adr.requirement_name,adr.display_order FROM `{$staff_db}`.`applicant_requirement_status` ars RIGHT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id AND ars.applicant_id=".intval($aid)." WHERE adr.is_active=1 ORDER BY adr.display_order");
+    if($rr) while($row=$rr->fetch_assoc())$req[]=$row;
+    $hist=[];$rh=$conn->query("SELECT rh.*,s.full_name performed_by_name FROM `{$staff_db}`.`requirement_history` rh LEFT JOIN `{$staff_db}`.`staff` s ON rh.performed_by=s.id WHERE rh.applicant_id=".intval($aid)." ORDER BY rh.created_at DESC LIMIT 50");
+    if($rh) while($row=$rh->fetch_assoc())$hist[]=$row;
+    $docs=[];$dr=$conn->query("SELECT sd.*,s.full_name uploader_name FROM `{$staff_db}`.`student_documents` sd LEFT JOIN `{$staff_db}`.`staff` s ON sd.uploaded_by=s.id WHERE sd.applicant_id=".intval($aid)." ORDER BY sd.uploaded_at DESC");
+    if($dr) while($row=$dr->fetch_assoc())$docs[]=$row;
+    echo json_encode(['info'=>$info,'requirements'=>$req,'history'=>$hist,'documents'=>$docs]);exit;
 }
 
-// New: Verify/reject document
-if ($ajax === 'verify_document') {
+if ($ajax === 'toggle_requirement') {
     header('Content-Type: application/json');
-    $docId = intval($_POST['doc_id'] ?? 0);
-    $newStatus = $_POST['status'] ?? '';
-    $remarks = $conn->real_escape_string(trim($_POST['remarks'] ?? ''));
-
-    if (!$docId || !in_array($newStatus, ['Verified', 'Rejected'])) {
-        echo json_encode(['success' => false, 'error' => 'Invalid']); exit;
-    }
-
-    $conn->query("UPDATE student_documents SET verification_status='$newStatus', verified_by=" . intval($user_id) . ", verified_at=NOW(), remarks='$remarks' WHERE id=" . intval($docId));
-    echo json_encode(['success' => true]);
-    exit;
+    $rid=intval($_POST['id']??$_POST['requirement_id']??0);
+    if(!$rid){echo json_encode(['success'=>false,'error'=>'ID required']);exit;}
+    $cr=$conn->query("SELECT is_active FROM `{$staff_db}`.`admission_requirements` WHERE id=".intval($rid));
+    if(!$cr||!$cr->num_rows){echo json_encode(['success'=>false,'error'=>'Not found']);exit;}
+    $cur=(int)$cr->fetch_assoc()['is_active'];
+    $new=$cur?0:1;
+    $conn->query("UPDATE `{$staff_db}`.`admission_requirements` SET is_active=$new WHERE id=".intval($rid));
+    logAdmission($conn,$user_id,'Toggle Requirement','requirements',$rid,"Requirement #$rid "._r($new?'activated':'deactivated'));
+    echo json_encode(['success'=>true,'is_active'=>$new]);exit;
 }
 
-// New: Import students from Excel
-if ($ajax === 'import_excel') {
+if ($ajax === 'set_requirement_status') {
     header('Content-Type: application/json');
-    if (empty($_FILES['import_file']['name'])) {
-        echo json_encode(['success' => false, 'error' => 'No file uploaded']); exit;
-    }
-    $tmp = $_FILES['import_file']['tmp_name'];
-    $ext = strtolower(pathinfo($_FILES['import_file']['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['xlsx', 'csv'])) {
-        echo json_encode(['success' => false, 'error' => 'Only .xlsx and .csv files allowed']); exit;
-    }
-
-    require_once __DIR__ . '/../includes/simple_xlsx_reader.php';
-
-    try {
-        if ($ext === 'csv') {
-            $rows = [];
-            if (($handle = fopen($tmp, "r")) !== false) {
-                $headers = fgetcsv($handle);
-                while (($data = fgetcsv($handle)) !== false) {
-                    $row = [];
-                    foreach ($headers as $i => $h) $row[$h] = $data[$i] ?? '';
-                    $rows[] = $row;
-                }
-                fclose($handle);
-            }
-        } else {
-            $reader = new SimpleXLSXReader($tmp);
-            $rows = $reader->getRows();
-        }
-
-        $imported = 0;
-        $duplicates = 0;
-        $errors = [];
-
-        foreach ($rows as $row) {
-            $fname = trim($row['First Name'] ?? $row['first_name'] ?? $row['FIRST NAME'] ?? '');
-            $lname = trim($row['Last Name'] ?? $row['surname'] ?? $row['SURNAME'] ?? $row['Last Name'] ?? '');
-            $mname = trim($row['Middle Name'] ?? $row['other_name'] ?? $row['MIDDLE NAME'] ?? '');
-            $studentNo = trim($row['Student No'] ?? $row['student_number'] ?? $row['STUDENT NO'] ?? $row['Student Number'] ?? '');
-            $program = trim($row['Program'] ?? $row['program'] ?? $row['PROGRAM'] ?? '');
-            $phone = trim($row['Phone'] ?? $row['phone'] ?? $row['PHONE'] ?? $row['Telephone'] ?? '');
-            $email = trim($row['Email'] ?? $row['email'] ?? $row['EMAIL'] ?? '');
-
-            if (empty($fname) || empty($lname)) continue;
-
-            // Check duplicate
-            $check = $students_conn->query("SELECT id FROM students WHERE student_number='$studentNo' LIMIT 1");
-            if ($check && $check->num_rows > 0) { $duplicates++; continue; }
-
-            $fullName = trim($fname . ' ' . ($mname ? $mname . ' ' : '') . $lname);
-            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
-            if ($students_conn->affected_rows > 0) $imported++;
-        }
-
-        echo json_encode([
-            'success' => true,
-            'imported' => $imported,
-            'duplicates' => $duplicates,
-            'total' => count($rows),
-            'errors' => $errors
-        ]);
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-    exit;
+    $aid=intval($_POST['applicant_id']??0);
+    $rid=intval($_POST['requirement_id']??0);
+    $new_status=$conn->real_escape_string(trim($_POST['status']??'Not Submitted'));
+    $remarks=$conn->real_escape_string(trim($_POST['remarks']??''));
+    $valid_statuses=['Not Submitted','Submitted','Verified','Rejected','Missing'];
+    if(!in_array($new_status,$valid_statuses)){echo json_encode(['success'=>false,'error'=>'Invalid status']);exit;}
+    if(!$aid||!$rid){echo json_encode(['success'=>false,'error'=>'Invalid IDs']);exit;}
+    $uid=intval($user_id);
+    $sub_by=($new_status==='Submitted')?",submitted_by=$uid,submitted_at=NOW()":'';
+    $ver_by=($new_status==='Verified')?",verified_by=$uid,verified_at=NOW()":'';
+    $rej_by=($new_status==='Rejected')?",rejected_by=$uid":'';
+    $remarks_sql=$remarks?",remarks='$remarks'":'';
+    $conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES (".intval($aid).",".intval($rid).",'$new_status',$uid,NOW(),NULL,NULL,NULL,'$remarks') ON DUPLICATE KEY UPDATE status='$new_status'$sub_by$ver_by$rej_by$remarks_sql");
+    $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES (".intval($aid).",".intval($rid).",'$new_status',".intval($user_id).",'$remarks')");
+    $rn=$conn->query("SELECT requirement_name FROM `{$staff_db}`.`admission_requirements` WHERE id=".intval($rid));
+    $req_name=($rn&&$rn->num_rows)?$rn->fetch_assoc()['requirement_name']:"requirement #$rid";
+    logAdmission($conn,$user_id,"Requirement $new_status",'requirements',$rid,"$req_name $new_status for applicant #$aid");
+    echo json_encode(['success'=>true]);exit;
 }
 
-// New: Batch import from students_data folder
-if ($ajax === 'import_students_data') {
+if ($ajax === 'receive_requirement') {
     header('Content-Type: application/json');
-    if (!$students_conn) { echo json_encode(['success'=>false,'error'=>'Students DB not connected']); exit; }
-    require_once __DIR__ . '/../includes/simple_xlsx_reader.php';
-
-    $dataDir = __DIR__ . '/../students_data/';
-    $files = glob($dataDir . '*.xlsx');
-    if (empty($files)) { echo json_encode(['success'=>false,'error'=>'No XLSX files found in students_data folder']); exit; }
-
-    $totalImported = 0;
-    $totalDuplicates = 0;
-    $totalFiles = 0;
-    $totalRows = 0;
-    $errorsList = [];
-
-    foreach ($files as $f) {
-        try {
-            $reader = new SimpleXLSXReader($f);
-            $rows = $reader->getRows();
-            if (empty($rows)) continue;
-            $totalFiles++;
-            foreach ($rows as $row) {
-                $totalRows++;
-                $fname = trim($row['First Name'] ?? $row['first_name'] ?? $row['FIRST NAME'] ?? $row['FIRSTNAME'] ?? '');
-                $lname = trim($row['Last Name'] ?? $row['surname'] ?? $row['SURNAME'] ?? $row['LAST NAME'] ?? $row['LASTNAME'] ?? '');
-                $mname = trim($row['Middle Name'] ?? $row['other_name'] ?? $row['MIDDLE NAME'] ?? '');
-                $studentNo = trim($row['Student No'] ?? $row['student_number'] ?? $row['STUDENT NO'] ?? $row['Student Number'] ?? $row['Admission No'] ?? $row['admission_number'] ?? $row['Index Number'] ?? $row['NSIN'] ?? '');
-                $program = trim($row['Program'] ?? $row['program'] ?? $row['PROGRAM'] ?? $row['Course'] ?? $row['course'] ?? '');
-                $phone = trim($row['Phone'] ?? $row['phone'] ?? $row['PHONE'] ?? $row['Mobile'] ?? $row['mobile'] ?? '');
-                $email = trim($row['Email'] ?? $row['email'] ?? $row['EMAIL'] ?? '');
-
-                if (empty($fname) || empty($lname)) continue;
-
-                // Check duplicate by student_number or full_name
-                $escNo = $students_conn->real_escape_string($studentNo);
-                $escFn = $students_conn->real_escape_string($fname);
-                $escLn = $students_conn->real_escape_string($lname);
-                $check = $students_conn->query("SELECT id FROM students WHERE (student_number='$escNo' OR (first_name='$escFn' AND surname='$escLn')) LIMIT 1");
-                if ($check && $check->num_rows > 0) { $totalDuplicates++; continue; }
-
-                $fullName = trim($fname . ' ' . ($mname ? $mname . ' ' : '') . $lname);
-                $escFull = $students_conn->real_escape_string($fullName);
-                $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, status, created_at, updated_at) VALUES ('$escNo', '$escFn', '$mname', '$escLn', '$escFull', '$phone', '$email', '$program', 'Active', NOW(), NOW())");
-                if ($students_conn->affected_rows > 0) $totalImported++;
-            }
-        } catch (Exception $e) {
-            $errorsList[] = basename($f) . ': ' . $e->getMessage();
+    $rid=intval($_POST['id']??$_POST['requirement_id']??0);
+    $aid=intval($_POST['applicant_id']??0);
+    if($aid&&$rid){
+        $conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,received_by,received_at,submitted_by,submitted_at) VALUES ($aid,$rid,'Submitted',$user_id,NOW(),$user_id,NOW()) ON DUPLICATE KEY UPDATE status='Submitted',received_by=$user_id,received_at=NOW(),submitted_by=$user_id,submitted_at=NOW()");
+        $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES ($aid,$rid,'Received',$user_id,'Item received at receiving center')");
+        logAdmission($conn,$user_id,'Receive Requirement','receiving',$aid,"Requirement #$rid received for applicant");
+    }elseif($rid){
+        $r=$conn->query("SELECT id FROM `{$staff_db}`.`applicants` WHERE status IN('New Applicant','Under Review','Approved','Registered')");
+        if($r) while($row=$r->fetch_assoc()){
+            $aaid=(int)$row['id'];
+            $conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,received_by,received_at,submitted_by,submitted_at) VALUES ($aaid,$rid,'Submitted',$user_id,NOW(),$user_id,NOW()) ON DUPLICATE KEY UPDATE status='Submitted',received_by=$user_id,received_at=NOW(),submitted_by=$user_id,submitted_at=NOW()");
         }
-    }
+        logAdmission($conn,$user_id,'Receive Requirement','receiving',$rid,"Requirement #$rid received for all applicants");
+    }else{echo json_encode(['success'=>false,'error'=>'ID required']);exit;}
+    echo json_encode(['success'=>true]);exit;
+}
 
-    echo json_encode([
-        'success' => true,
-        'imported' => $totalImported,
-        'duplicates' => $totalDuplicates,
-        'files' => $totalFiles,
-        'rows' => $totalRows,
-        'errors' => $errorsList
-    ]);
-    exit;
+if ($ajax === 'reopen_requirement') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    $rid=intval($_POST['requirement_id']??0);
+    if(!$aid||!$rid){echo json_encode(['success'=>false,'error'=>'Invalid IDs']);exit;}
+    $conn->query("UPDATE `{$staff_db}`.`applicant_requirement_status` SET status='Not Submitted',received_by=NULL,received_at=NULL,submitted_by=NULL,submitted_at=NULL,verified_by=NULL,verified_at=NULL,rejected_by=NULL,remarks='' WHERE applicant_id=$aid AND requirement_id=$rid");
+    $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES ($aid,$rid,'Reopened',$user_id,'Requirement reopened for resubmission')");
+    logAdmission($conn,$user_id,'Reopen Requirement','receiving',$rid,"Requirement #$rid reopened for applicant $aid");
+    echo json_encode(['success'=>true]);exit;
+}
+
+if ($ajax === 'mark_all_submitted') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    if(!$aid){echo json_encode(['success'=>false]);exit;}
+    foreach($req_items as $ri){
+        $iid=$ri['id'];
+        $conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,submitted_by,submitted_at) VALUES (".intval($aid).",".intval($iid).",'Submitted',".intval($user_id).",NOW()) ON DUPLICATE KEY UPDATE status='Submitted',submitted_by=".intval($user_id).",submitted_at=NOW()");
+        $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES (".intval($aid).",".intval($iid).",'Submitted',".intval($user_id).",'Bulk submitted')");
+    }
+    logAdmission($conn,$user_id,'Bulk Submitted','requirements',$aid,"All requirements submitted for applicant #$aid");
+    echo json_encode(['success'=>true]);exit;
 }
 
 if ($ajax === 'reset_requirements') {
     header('Content-Type: application/json');
-    $aid = intval($_POST['applicant_id'] ?? 0);
-    if ($aid) {
-        $conn->query("UPDATE applicant_requirement_status SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=" . intval($aid));
-        $conn->query("INSERT INTO requirement_history (applicant_id,action,performed_by,remarks) VALUES (" . intval($aid) . ",'Reset'," . intval($user_id) . ",'All requirements reset')");
-        logAdmission($conn, $user_id, 'Reset All', 'requirements', $aid, "All requirements reset for applicant #$aid");
-        echo json_encode(['success'=>true]); exit;
-    }
-    echo json_encode(['success'=>false]); exit;
+    $aid=intval($_POST['applicant_id']??0);
+    if(!$aid){echo json_encode(['success'=>false]);exit;}
+    $conn->query("UPDATE `{$staff_db}`.`applicant_requirement_status` SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=".intval($aid));
+    $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,action,performed_by,remarks) VALUES (".intval($aid).",'Reset',".intval($user_id).",'All requirements reset')");
+    logAdmission($conn,$user_id,'Reset All','requirements',$aid,"All requirements reset for applicant #$aid");
+    echo json_encode(['success'=>true]);exit;
 }
 
-// POST handlers
+if ($ajax === 'upload_document') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    $rid=intval($_POST['requirement_id']??0);
+    $docType=trim($_POST['document_type']??'Other');
+    $docTitle=trim($_POST['document_title']??($docType));
+    if(!$aid||empty($_FILES['doc_file']['name'])){echo json_encode(['success'=>false,'error'=>'Missing data']);exit;}
+    $uploadDir=__DIR__.'/../uploads/admissions/';
+    if(!is_dir($uploadDir))mkdir($uploadDir,0755,true);
+    $ext=strtolower(pathinfo($_FILES['doc_file']['name'],PATHINFO_EXTENSION));
+    if(!in_array($ext,['pdf','jpg','jpeg','png','gif','doc','docx'])){echo json_encode(['success'=>false,'error'=>'File type not allowed']);exit;}
+    $fname='doc_'.$aid.'_'.time().'_'.bin2hex(random_bytes(4)).'.'.$ext;
+    $fpath='uploads/admissions/'.$fname;
+    if(move_uploaded_file($_FILES['doc_file']['tmp_name'],__DIR__.'/../'.$fpath)){
+        $stmt=$conn->prepare("INSERT INTO `{$staff_db}`.`student_documents` (applicant_id,requirement_id,document_type,document_title,file_name,file_path,file_size,mime_type,uploaded_by) VALUES (?,?,?,?,?,?,?,?,?)");
+        if($stmt){$fn=$fname;$fs=$_FILES['doc_file']['size'];$mt=$_FILES['doc_file']['type']??'';$stmt->bind_param('iissssssi',$aid,$rid,$docType,$docTitle,$fn,$fpath,$fs,$mt,$user_id);$stmt->execute();$stmt->close();logAdmission($conn,$user_id,'Upload Document','documents',$aid,"Document uploaded");echo json_encode(['success'=>true]);}
+        else{echo json_encode(['success'=>false,'error'=>'DB error']);}
+    }else{echo json_encode(['success'=>false,'error'=>'Upload failed']);}
+    exit;
+}
+
+if ($ajax === 'send_notification') {
+    header('Content-Type: application/json');
+    $title=$conn->real_escape_string(trim($_POST['title']??''));
+    $message=$conn->real_escape_string(trim($_POST['message']??''));
+    $recipientType=$conn->real_escape_string(trim($_POST['recipient_type']??'applicant'));
+    $applicantId=intval($_POST['applicant_id']??0);
+    $channel=$conn->real_escape_string(trim($_POST['channel']??'portal'));
+    if(!$title||!$message){echo json_encode(['success'=>false,'error'=>'Title and message required']);exit;}
+    $conn->query("INSERT INTO `{$staff_db}`.`admission_notifications` (applicant_id,recipient_type,title,message,channel,sent_by) VALUES ($applicantId,'$recipientType','$title','$message','$channel',$user_id)");
+    logAdmission($conn,$user_id,'Send Notification','communication',$applicantId,"Notification sent: $title");
+    echo json_encode(['success'=>true]);exit;
+}
+
+if ($ajax === 'send_message') {
+    header('Content-Type: application/json');
+    $applicantId=intval($_POST['applicant_id']??$_POST['id']??0);
+    $subject=$conn->real_escape_string(trim($_POST['subject']??'Admissions Message'));
+    $message=$conn->real_escape_string(trim($_POST['message']??''));
+    $recipientType=$conn->real_escape_string(trim($_POST['recipient_type']??'applicant'));
+    if(!$applicantId||!$message){echo json_encode(['success'=>false,'error'=>'Message required']);exit;}
+    $conn->query("INSERT INTO `{$staff_db}`.`applicant_messages` (applicant_id,sender_id,recipient_type,subject,message) VALUES ($applicantId,$user_id,'$recipientType','$subject','$message')");
+    logAdmission($conn,$user_id,'Send Message','communication',$applicantId,"Message sent");
+    echo json_encode(['success'=>true]);exit;
+}
+
+if ($ajax === 'get_messages') {
+    header('Content-Type: application/json');
+    $aid=intval($_GET['applicant_id']??0);
+    if(!$aid){echo json_encode([]);exit;}
+    $r=$conn->query("SELECT m.*,s.full_name sender_name FROM `{$staff_db}`.`applicant_messages` m LEFT JOIN `{$staff_db}`.`staff` s ON m.sender_id=s.id WHERE m.applicant_id=$aid ORDER BY m.created_at DESC LIMIT 50");
+    $out=[];if($r)while($row=$r->fetch_assoc())$out[]=$row;
+    echo json_encode($out);exit;
+}
+
+if ($ajax === 'get_notifications') {
+    header('Content-Type: application/json');
+    $type=$conn->real_escape_string(trim($_GET['type']??'all'));
+    $where=$type!=='all'?"WHERE recipient_type='$type'":'';
+    $r=$conn->query("SELECT n.*,s.full_name sender_name FROM `{$staff_db}`.`admission_notifications` n LEFT JOIN `{$staff_db}`.`staff` s ON n.sent_by=s.id $where ORDER BY n.created_at DESC LIMIT 50");
+    $out=[];if($r)while($row=$r->fetch_assoc())$out[]=$row;
+    echo json_encode($out);exit;
+}
+
+if ($ajax === 'registration_readiness') {
+    header('Content-Type: application/json');
+    $r=$conn->query("SELECT a.id,a.full_name,a.application_number,a.status,
+        (SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,
+        (SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Submitted') submitted_count,
+        (SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Not Submitted') not_submitted_count,
+        (SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Missing') missing_count,
+        (SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Rejected') rejected_count
+        FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved','Registered') ORDER BY a.created_at DESC LIMIT 200");
+    $out=[];
+    if($r)while($row=$r->fetch_assoc()){
+        $row['total']=$total_req_items;
+        $ready=$row['verified_count']>=$total_req_items;
+        if($row['status']==='Registered'){$row['readiness']='Registered';}
+        elseif($ready){$row['readiness']='Fully Ready';}
+        elseif($row['submitted_count']>0){$row['readiness']='Awaiting Verification';}
+        elseif($row['not_submitted_count']==$total_req_items){$row['readiness']='Not Started';}
+        else{$row['readiness']='Missing Requirements';}
+        $row['progress_pct']=$total_req_items>0?round(($row['verified_count']/$total_req_items)*100):0;
+        $out[]=$row;
+    }
+    echo json_encode($out);exit;
+}
+
+if ($ajax === 'convert_to_student') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    if(!$aid||!$students_conn){echo json_encode(['success'=>false,'error'=>'Invalid']);exit;}
+    $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE id=$aid LIMIT 1");
+    if(!$ar||!$ar->num_rows){echo json_encode(['success'=>false,'error'=>'Applicant not found']);exit;}
+    $app=$ar->fetch_assoc();
+    $check_no=$students_conn->real_escape_string($app['application_number']);
+    $check=$students_conn->query("SELECT id FROM `{$students_db}`.`students` WHERE student_number='$check_no' LIMIT 1");
+    if($check&&$check->num_rows){echo json_encode(['success'=>false,'error'=>'Student already exists']);exit;}
+    $fullName=$conn->real_escape_string($app['full_name']);
+    $phone=$conn->real_escape_string($app['phone']);
+    $email=$conn->real_escape_string($app['email']);
+    $gender=$conn->real_escape_string($app['gender']?:'Other');
+    $dob=$app['date_of_birth']?"'".$conn->real_escape_string($app['date_of_birth'])."'":"NULL";
+    $intakePeriod=$conn->real_escape_string($app['intake']?:'January');
+    $studentNo=$conn->real_escape_string($app['application_number']);
+    $conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Registered' WHERE id=$aid");
+    $students_conn->query("INSERT INTO `{$students_db}`.`students` (student_number,full_name,phone,email,gender,date_of_birth,intake_period,status,created_at,updated_at) VALUES ('$studentNo','$fullName','$phone','$email','$gender',$dob,'$intakePeriod','Active',NOW(),NOW())");
+    if($students_conn->affected_rows>0){$newSid=$students_conn->insert_id;logAdmission($conn,$user_id,'Convert to Student','students',$newSid,"Applicant #$aid converted");echo json_encode(['success'=>true,'student_id'=>$newSid]);}
+    else{echo json_encode(['success'=>false,'error'=>$students_conn->error]);}
+    exit;
+}
+
+if ($ajax === 'approve_applicant_ajax') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    if($aid){$conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Approved' WHERE id=".intval($aid));logAdmission($conn,$user_id,'Approve','applicants',$aid,"Applicant approved");echo json_encode(['success'=>true]);exit;}
+    echo json_encode(['success'=>false]);exit;
+}
+if ($ajax === 'reject_applicant_ajax') {
+    header('Content-Type: application/json');
+    $aid=intval($_POST['applicant_id']??0);
+    if($aid){$conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Rejected' WHERE id=".intval($aid));logAdmission($conn,$user_id,'Reject','applicants',$aid,"Applicant rejected");echo json_encode(['success'=>true]);exit;}
+    echo json_encode(['success'=>false]);exit;
+}
+if ($ajax === 'get_applicant_data') {
+    header('Content-Type: application/json');
+    $aid=intval($_GET['id']??($_POST['id']??0));
+    if(!$aid){echo json_encode(['success'=>false,'error'=>'ID required']);exit;}
+    $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.id=$aid LIMIT 1");
+    $data=$r?($r->fetch_assoc()?:[]):[];
+    if(empty($data)){echo json_encode(['success'=>false,'error'=>'Not found']);exit;}
+    echo json_encode(['success'=>true,'data'=>$data]);exit;
+}
+
+if ($ajax === 'get_applicant_reqs') {
+    header('Content-Type: application/json');
+    $aid=intval($_GET['applicant_id']??($_POST['id']??$_POST['applicant_id']??0));
+    if(!$aid){echo json_encode(['data'=>[]]);exit;}
+    $info=[];$rn=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.id=$aid");if($rn)$info=$rn->fetch_assoc()?:[];
+    $req=[];$rr=$conn->query("SELECT adr.id,adr.requirement_name,adr.display_order,ars.status,ars.remarks,ars.submitted_at,ars.verified_at,ars.received_at,ars.received_by FROM `{$staff_db}`.`admission_requirements` adr LEFT JOIN `{$staff_db}`.`applicant_requirement_status` ars ON ars.requirement_id=adr.id AND ars.applicant_id=$aid WHERE adr.is_active=1 ORDER BY adr.display_order");
+    if($rr)while($row=$rr->fetch_assoc()){$row['status']=$row['status']??'Not Submitted';$req[]=$row;}
+    $docs=[];$dr=$conn->query("SELECT sd.*,s.full_name uploader_name FROM `{$staff_db}`.`student_documents` sd LEFT JOIN `{$staff_db}`.`staff` s ON sd.uploaded_by=s.id WHERE sd.applicant_id=$aid ORDER BY sd.uploaded_at DESC");
+    if($dr)while($row=$dr->fetch_assoc())$docs[]=$row;
+    $hist=[];$rh=$conn->query("SELECT rh.*,s.full_name performed_by_name FROM `{$staff_db}`.`requirement_history` rh LEFT JOIN `{$staff_db}`.`staff` s ON rh.performed_by=s.id WHERE rh.applicant_id=$aid ORDER BY rh.created_at DESC LIMIT 50");
+    if($rh)while($row=$rh->fetch_assoc())$hist[]=$row;
+    echo json_encode(['success'=>true,'data'=>['info'=>$info,'requirements'=>$req,'documents'=>$docs,'history'=>$hist]]);exit;
+}
+
+if ($ajax === 'reports_data') {
+    header('Content-Type: application/json');
+    $type=trim($_GET['type']??($_POST['type']??'admission'));
+    $format=trim($_GET['format']??($_POST['format']??'json'));
+    $from=trim($_GET['from']??($_POST['from']??''));
+    $to=trim($_GET['to']??($_POST['to']??''));
+    $dateWhere='';
+    if($from&&$to){$fromEsc=$conn->real_escape_string($from);$toEsc=$conn->real_escape_string($to);$dateWhere=" AND DATE(a.created_at) BETWEEN '$fromEsc' AND '$toEsc'";}
+    elseif($from){$fromEsc=$conn->real_escape_string($from);$dateWhere=" AND DATE(a.created_at) >= '$fromEsc'";}
+    elseif($to){$toEsc=$conn->real_escape_string($to);$dateWhere=" AND DATE(a.created_at) <= '$toEsc'";}
+    $data=[];
+    if($type==='admission'){
+        $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.created_at DESC LIMIT 500");
+        if($r)while($row=$r->fetch_assoc())$data[]=$row;
+    }elseif($type==='requirements'){
+        $r=$conn->query("SELECT a.id,a.full_name,a.application_number,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Submitted') submitted,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Not Submitted') not_submitted,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Missing') missing,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Rejected') rejected FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved','Registered')$dateWhere ORDER BY a.full_name LIMIT 500");
+        if($r)while($row=$r->fetch_assoc()){$row['total']=$total_req_items;$row['clearance_pct']=$total_req_items>0?round(($row['verified']/$total_req_items)*100):0;$data[]=$row;}
+    }elseif($type==='registration'){
+        $r=$conn->query("SELECT status,COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE 1=1$dateWhere GROUP BY status");
+        if($r)while($row=$r->fetch_assoc())$data[]=$row;
+    }elseif($type==='intake'){
+        $r=$conn->query("SELECT intake,COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!=''$dateWhere GROUP BY intake ORDER BY intake");
+        if($r)while($row=$r->fetch_assoc())$data[]=$row;
+    }elseif($type==='clearance'){
+        $r=$conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,a.status,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,(SELECT COUNT(*) FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1) total_req FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.full_name LIMIT 500");
+        if($r)while($row=$r->fetch_assoc()){$data[]=$row;}
+    }
+    if($format==='csv'){
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="admissions_report_'.date('Ymd').'.csv"');
+        $out=fopen('php://output','w');
+        if(!empty($data)){fputcsv($out,array_keys($data[0]));foreach($data as $row)fputcsv($out,$row);}
+        fclose($out);exit;
+    }
+    echo json_encode(['data'=>$data,'total'=>count($data)]);exit;
+}
+
+if ($ajax === 'toggle_student_status') {
+    header('Content-Type: application/json');
+    $sid=intval($_POST['student_id']??0);
+    $ns=trim($_POST['new_status']??'');
+    if(!$sid||!$ns||!$students_conn){echo json_encode(['success'=>false,'error'=>'Invalid']);exit;}
+    $students_conn->query("UPDATE `{$students_db}`.`students` SET status='".$students_conn->real_escape_string($ns)."' WHERE id=".intval($sid));
+    echo json_encode(['success'=>true,'message'=>'Student '.strtolower($ns)]);exit;
+}
+if ($ajax === 'clear_notifications') {
+    header('Content-Type: application/json');
+    $conn->query("DELETE FROM `{$staff_db}`.`admission_notifications`");
+    echo json_encode(['success'=>true]);exit;
+}
+if ($ajax === 'get_requirements_tracking') {
+    header('Content-Type: application/json');
+    $q=trim($_GET['q']??($_POST['q']??''));
+    $st=trim($_GET['status']??($_POST['status']??''));
+    $w=[];$j="";
+    if($q!==''){$sq=$conn->real_escape_string($q);$w[]="(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%')";}
+    if($st!==''){$w[]="ars.status='".$conn->real_escape_string($st)."'";}
+    $ws=$w?'WHERE '.implode(' AND ',$w):'';
+    $r=$conn->query("SELECT ars.*,a.full_name,a.application_number,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id $ws ORDER BY ars.updated_at DESC LIMIT 200");
+    $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
+    echo json_encode(['data'=>$out]);exit;
+}
+if ($ajax === 'get_verification_list') {
+    header('Content-Type: application/json');
+    $r=$conn->query("SELECT sd.*,a.full_name,adr.requirement_name FROM `{$staff_db}`.`student_documents` sd LEFT JOIN `{$staff_db}`.`applicants` a ON sd.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON sd.requirement_id=adr.id WHERE sd.verification_status='Pending' ORDER BY sd.uploaded_at DESC LIMIT 100");
+    $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
+    echo json_encode(['data'=>$out]);exit;
+}
+if ($ajax === 'get_documents_list') {
+    header('Content-Type: application/json');
+    $r=$conn->query("SELECT sd.*,a.full_name,adr.requirement_name FROM `{$staff_db}`.`student_documents` sd LEFT JOIN `{$staff_db}`.`applicants` a ON sd.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON sd.requirement_id=adr.id ORDER BY sd.uploaded_at DESC LIMIT 200");
+    $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
+    echo json_encode(['data'=>$out]);exit;
+}
+if ($ajax === 'get_registration_list') {
+    header('Content-Type: application/json');
+    $q=trim($_POST['q']??'');$intake=trim($_POST['intake']??'');
+    $w=[];$w[]="a.status IN('Approved','Registered')";
+    if($q!==''){$sq=$conn->real_escape_string($q);$w[]="(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%')";}
+    if($intake!==''){$w[]="a.intake='".$conn->real_escape_string($intake)."'";}
+    $ws='WHERE '.implode(' AND ',$w);
+    $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(CASE WHEN a.status='Registered' THEN 1 ELSE 0 END) is_registered FROM `{$staff_db}`.`applicants` a $ws ORDER BY a.full_name LIMIT 200");
+    $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
+    echo json_encode(['data'=>$out]);exit;
+}
+if ($ajax === 'get_requirement_alerts') {
+    header('Content-Type: application/json');
+    $r=$conn->query("SELECT ars.*,a.full_name,a.application_number,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id WHERE ars.status IN('Missing','Rejected','Not Submitted') AND a.status NOT IN('Registered','Rejected') ORDER BY ars.updated_at DESC LIMIT 100");
+    $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
+    echo json_encode(['data'=>$out]);exit;
+}
+if ($ajax === 'verify_document') {
+    header('Content-Type: application/json');
+    $docId=intval($_POST['doc_id']??$_POST['id']??0);
+    $newStatus=$_POST['status']??'';
+    $remarks=$conn->real_escape_string(trim($_POST['remarks']??''));
+    if(!$docId||!in_array($newStatus,['Verified','Rejected'])){echo json_encode(['success'=>false,'error'=>'Invalid']);exit;}
+    $conn->query("UPDATE `{$staff_db}`.`student_documents` SET verification_status='$newStatus',verified_by=".intval($user_id).",verified_at=NOW(),remarks='$remarks' WHERE id=".intval($docId));
+    echo json_encode(['success'=>true]);exit;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// POST HANDLERS
+// ══════════════════════════════════════════════════════════════════════
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-
     if ($action === 'add_applicant') {
-        $fn  = $conn->real_escape_string(trim($_POST['full_name'] ?? ''));
-        $dob = $_POST['date_of_birth'] ?? null;
-        $gen = $conn->real_escape_string(trim($_POST['gender'] ?? 'Other'));
-        $ph  = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
-        $em  = $conn->real_escape_string(trim($_POST['email'] ?? ''));
-        $addr = $conn->real_escape_string(trim($_POST['address'] ?? ''));
-        $gn  = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $gp  = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-        $gr  = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
-        $prog_id = intval($_POST['program_id'] ?? 0);
-        $intake = $conn->real_escape_string(trim($_POST['intake'] ?? ''));
-        $app_num = 'APP-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
-        if ($fn) {
-            $conn->query("INSERT INTO applicants (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES ('$fn','$dob','$gen','$ph','$em','$addr','$gn','$gp','$gr','$app_num'," . intval($prog_id) . ",'$intake',CURDATE(),'New Applicant')");
-            if ($conn->affected_rows > 0) {
-                $aid = $conn->insert_id;
-                // Auto-create requirement entries
-                foreach ($req_items as $ri) {
-                    $conn->query("INSERT INTO applicant_requirement_status (applicant_id,requirement_id,status) VALUES (" . intval($aid) . "," . intval($ri['id']) . ",'Not Submitted')");
-                }
-                logAdmission($conn, $user_id, 'Add Applicant', 'applicants', $aid, "Added applicant: $fn ($app_num)");
-                $_SESSION['success'] = "Applicant '$fn' added. App No: $app_num";
-            } else { $_SESSION['error'] = 'Failed: '.$conn->error; }
-        } else { $_SESSION['error'] = 'Full name required.'; }
-        header("Location: director-admissions.php"); exit;
+        $fn=$conn->real_escape_string(trim($_POST['full_name']??''));
+        $dob=$_POST['date_of_birth']??null;$gen=$conn->real_escape_string(trim($_POST['gender']??'Other'));
+        $ph=$conn->real_escape_string(trim($_POST['phone']??''));$em=$conn->real_escape_string(trim($_POST['email']??''));
+        $addr=$conn->real_escape_string(trim($_POST['address']??''));$gn=$conn->real_escape_string(trim($_POST['guardian_name']??''));
+        $gp=$conn->real_escape_string(trim($_POST['guardian_phone']??''));$gr=$conn->real_escape_string(trim($_POST['guardian_relationship']??''));
+        $prog_id=intval($_POST['program_id']??0);$intake=$conn->real_escape_string(trim($_POST['intake']??''));
+        $app_num='APP-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
+        if(!$fn){$_SESSION['error']='Full name required.';header("Location: director-admissions.php");exit;}
+        if($ph){$dup=$conn->query("SELECT id FROM `{$staff_db}`.`applicants` WHERE phone='$ph' LIMIT 1");if($dup&&$dup->num_rows){$_SESSION['error']='Phone already exists.';header("Location: director-admissions.php");exit;}}
+        if($em){$dup=$conn->query("SELECT id FROM `{$staff_db}`.`applicants` WHERE email='$em' LIMIT 1");if($dup&&$dup->num_rows){$_SESSION['error']='Email already exists.';header("Location: director-admissions.php");exit;}}
+        $conn->query("INSERT INTO `{$staff_db}`.`applicants` (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES ('$fn','$dob','$gen','$ph','$em','$addr','$gn','$gp','$gr','$app_num',".intval($prog_id).",'$intake',CURDATE(),'New Applicant')");
+        if($conn->affected_rows>0){$aid=$conn->insert_id;foreach($req_items as $ri){$conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status) VALUES (".intval($aid).",".intval($ri['id']).",'Not Submitted')");}logAdmission($conn,$user_id,'Add Applicant','applicants',$aid,"Added applicant: $fn ($app_num)");$_SESSION['success']="Applicant '$fn' added. App No: $app_num";}
+        else{$_SESSION['error']='Failed: '.$conn->error;}
+        header("Location: director-admissions.php");exit;
     }
-
     if ($action === 'edit_applicant') {
-        $aid = intval($_POST['id'] ?? 0);
-        $fn  = $conn->real_escape_string(trim($_POST['full_name'] ?? ''));
-        $dob = $_POST['date_of_birth'] ?? null;
-        $gen = $conn->real_escape_string(trim($_POST['gender'] ?? 'Other'));
-        $ph  = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
-        $em  = $conn->real_escape_string(trim($_POST['email'] ?? ''));
-        $addr = $conn->real_escape_string(trim($_POST['address'] ?? ''));
-        $gn  = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $gp  = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-        $gr  = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
-        $prog_id = intval($_POST['program_id'] ?? 0);
-        $intake = $conn->real_escape_string(trim($_POST['intake'] ?? ''));
-        $status = $conn->real_escape_string(trim($_POST['status'] ?? 'New Applicant'));
-        if ($aid && $fn) {
-            $conn->query("UPDATE applicants SET full_name='$fn',date_of_birth='$dob',gender='$gen',phone='$ph',email='$em',address='$addr',guardian_name='$gn',guardian_phone='$gp',guardian_relationship='$gr',program_id=" . intval($prog_id) . ",intake='$intake',status='$status' WHERE id=" . intval($aid));
-            logAdmission($conn, $user_id, 'Edit Applicant', 'applicants', $aid, "Edited applicant: $fn");
-            $_SESSION['success'] = "Applicant updated.";
-        }
-        header("Location: director-admissions.php"); exit;
+        $aid=intval($_POST['id']??$_POST['applicant_id']??0);$fn=$conn->real_escape_string(trim($_POST['full_name']??''));
+        $dob=$_POST['date_of_birth']??$conn->real_escape_string(trim($_POST['dob']??''));
+        $gen=$conn->real_escape_string(trim($_POST['gender']??'Other'));$ph=$conn->real_escape_string(trim($_POST['phone']??''));
+        $em=$conn->real_escape_string(trim($_POST['email']??''));$addr=$conn->real_escape_string(trim($_POST['address']??''));
+        $gn=$conn->real_escape_string(trim($_POST['guardian_name']??''));$gp=$conn->real_escape_string(trim($_POST['guardian_phone']??''));
+        $gr=$conn->real_escape_string(trim($_POST['guardian_relationship']??''));$prog_id=intval($_POST['program_id']??0);
+        $intake=$conn->real_escape_string(trim($_POST['intake']??''));$status=$conn->real_escape_string(trim($_POST['status']??'New Applicant'));
+        if($aid&&$fn){$conn->query("UPDATE `{$staff_db}`.`applicants` SET full_name='$fn',date_of_birth='$dob',gender='$gen',phone='$ph',email='$em',address='$addr',guardian_name='$gn',guardian_phone='$gp',guardian_relationship='$gr',program_id=".intval($prog_id).",intake='$intake',status='$status' WHERE id=".intval($aid));logAdmission($conn,$user_id,'Edit Applicant','applicants',$aid,"Edited applicant: $fn");$_SESSION['success']="Applicant updated.";}
+        else{$_SESSION['error']='Edit failed: missing data.';}
+        header("Location: director-admissions.php");exit;
     }
-
-    if ($action === 'approve_applicant') {
-        $aid = intval($_POST['applicant_id'] ?? 0);
-        if ($aid) {
-            $conn->query("UPDATE applicants SET status='Approved' WHERE id=" . intval($aid));
-            logAdmission($conn, $user_id, 'Approve Applicant', 'applicants', $aid, "Applicant approved");
-            $_SESSION['success'] = 'Applicant approved.';
-        }
-        header("Location: director-admissions.php"); exit;
-    }
-
-    if ($action === 'reject_applicant') {
-        $aid = intval($_POST['applicant_id'] ?? 0);
-        if ($aid) {
-            $conn->query("UPDATE applicants SET status='Rejected' WHERE id=" . intval($aid));
-            logAdmission($conn, $user_id, 'Reject Applicant', 'applicants', $aid, "Applicant rejected");
-            $_SESSION['success'] = 'Applicant rejected.';
-        }
-        header("Location: director-admissions.php"); exit;
-    }
-
-    if ($action === 'register_applicant') {
-        $aid = intval($_POST['applicant_id'] ?? 0);
-        if ($aid) {
-            $conn->query("UPDATE applicants SET status='Registered' WHERE id=" . intval($aid));
-            logAdmission($conn, $user_id, 'Register Applicant', 'applicants', $aid, "Applicant registered");
-            $_SESSION['success'] = 'Applicant registered as student.';
-        }
-        header("Location: director-admissions.php"); exit;
-    }
-
-    // New: Create student (separate from applicant)
-    if ($action === 'create_student') {
-        $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $mname = $conn->real_escape_string(trim($_POST['other_name'] ?? ''));
-        $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
-        $studentNo = $conn->real_escape_string(trim($_POST['student_number'] ?? ''));
-        $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
-        $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
-        $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
-        $dob = $_POST['date_of_birth'] ?? null;
-        $gender = $conn->real_escape_string(trim($_POST['gender'] ?? ''));
-        $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? 'January'));
-        $intakeYear = intval($_POST['intake_year'] ?? date('Y'));
-        $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $guardianPhone = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-        $guardianRel = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
-
-        if ($fname && $lname && $studentNo && $students_conn) {
-            $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $dobVal = $dob ? "'$dob'" : "NULL";
-            $genderVal = $gender ? "'$gender'" : "'Other'";
-            $students_conn->query("INSERT INTO students (student_number, first_name, other_name, surname, full_name, phone, email, program, date_of_birth, gender, intake_period, intake_year, status, created_at, updated_at) VALUES ('$studentNo', '$fname', '$mname', '$lname', '$fullName', '$phone', '$email', '$program', $dobVal, $genderVal, '$intakePeriod', " . intval($intakeYear) . ", 'Active', NOW(), NOW())");
-            if ($students_conn->affected_rows > 0) {
-                $newSid = $students_conn->insert_id;
-                logAdmission($conn, $user_id, 'Create Student', 'students', $newSid, "Created student: $fullName ($studentNo)");
-                // Notify admissions staff
-                if (function_exists('createNotification')) {
-                    $nid = createNotification("New Student: $fullName", "Student $studentNo has been registered", 'director-admissions.php', 'success', 'fas fa-user-graduate');
-                    if ($nid && function_exists('notifyRoleUsers')) notifyRoleUsers($nid, ['admissions', 'director']);
-                }
-                $_SESSION['success'] = "Student $fullName ($studentNo) created successfully.";
-            } else { $_SESSION['error'] = 'Failed: ' . $students_conn->error; }
-        } else { $_SESSION['error'] = 'First name, surname, and student number required.'; }
-        header("Location: director-admissions.php"); exit;
-    }
-
-    // New: Edit student
-    if ($action === 'edit_student') {
-        $sid = intval($_POST['student_id'] ?? 0);
-        $fname = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $mname = $conn->real_escape_string(trim($_POST['other_name'] ?? ''));
-        $lname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
-        $program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
-        $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
-        $email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
-        $status = $conn->real_escape_string(trim($_POST['status'] ?? 'Active'));
-        $dob = $_POST['date_of_birth'] ?? null;
-        $gender = $conn->real_escape_string(trim($_POST['gender'] ?? ''));
-        $intakePeriod = $conn->real_escape_string(trim($_POST['intake_period'] ?? ''));
-        $intakeYear = intval($_POST['intake_year'] ?? 0);
-        $guardianName = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $guardianPhone = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-        $guardianRel = $conn->real_escape_string(trim($_POST['guardian_relationship'] ?? ''));
-
-        if ($sid && $fname && $lname && $students_conn) {
-            $fullName = trim("$fname " . ($mname ? "$mname " : "") . $lname);
-            $dobVal = $dob ? "'$dob'" : "NULL";
-            $genderVal = $gender ? "'$gender'" : "'Other'";
-            $students_conn->query("UPDATE students SET first_name='$fname', other_name='$mname', surname='$lname', full_name='$fullName', phone='$phone', email='$email', program='$program', date_of_birth=$dobVal, gender=$genderVal, intake_period='$intakePeriod', intake_year=" . intval($intakeYear) . ", guardian_name='$guardianName', guardian_phone='$guardianPhone', guardian_relationship='$guardianRel', status='$status', updated_at=NOW() WHERE id=" . intval($sid));
-            logAdmission($conn, $user_id, 'Edit Student', 'students', $sid, "Edited student #$sid ($fullName)");
-            $_SESSION['success'] = "Student updated.";
-        }
-        header("Location: director-admissions.php"); exit;
-    }
-
-    // Delete student (soft-delete)
-    if ($action === 'delete_student') {
-        $sid = intval($_POST['student_id'] ?? 0);
-        if ($sid && $students_conn) {
-            $students_conn->query("UPDATE students SET status='deleted', updated_at=NOW() WHERE id=" . intval($sid));
-            logAdmission($conn, $user_id, 'Delete Student', 'students', $sid, "Student #$sid deleted by $user_name");
-            $_SESSION['success'] = "Student record deleted.";
-        }
-        header("Location: director-admissions.php"); exit;
-    }
-
     if ($action === 'delete_applicant') {
-        $aid = intval($_POST['applicant_id'] ?? 0);
-        if ($aid) {
-            $conn->query("DELETE FROM requirement_history WHERE applicant_id=" . intval($aid));
-            $conn->query("DELETE FROM applicant_requirement_status WHERE applicant_id=" . intval($aid));
-            $conn->query("DELETE FROM applicants WHERE id=" . intval($aid));
-            logAdmission($conn, $user_id, 'Delete Applicant', 'applicants', $aid, "Applicant deleted");
-            $_SESSION['success'] = 'Applicant deleted.';
-        }
-        header("Location: director-admissions.php"); exit;
+        $aid=intval($_POST['applicant_id']??$_POST['id']??0);
+        if($aid){$conn->query("DELETE FROM `{$staff_db}`.`requirement_history` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicants` WHERE id=".intval($aid));logAdmission($conn,$user_id,'Delete Applicant','applicants',$aid,"Applicant deleted");$_SESSION['success']='Applicant deleted.';}
+        else{$_SESSION['error']='Delete failed: invalid ID.';}
+        header("Location: director-admissions.php");exit;
     }
-
-    header("Location: director-admissions.php"); exit;
+    if ($action === 'edit_student') {
+        $sid=intval($_POST['student_id']??0);$status=$conn->real_escape_string(trim($_POST['status']??''));
+        if($sid&&$students_conn){$students_conn->query("UPDATE `{$students_db}`.`students` SET status='$status' WHERE id=$sid");}
+        echo json_encode(['success'=>true]);exit;
+    }
+    header("Location: director-admissions.php");exit;
 }
-?>
-<!DOCTYPE html>
+
+// ══════════════════════════════════════════════════════════════════════
+// PRINT REPORTS
+// ══════════════════════════════════════════════════════════════════════
+$report=$_GET['report']??'';
+if($report){
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
+    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
+    if($report==='applications'){echo '<h2>All Applicants Report</h2>';$r=$conn->query("SELECT application_number,full_name,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program,intake,status,created_at FROM `{$staff_db}`.`applicants` a ORDER BY created_at DESC");echo '<table><thead><tr><th>App No</th><th>Name</th><th>Program</th><th>Intake</th><th>Date</th><th>Status</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['intake']??'-').'</td><td>'.$row['created_at'].'</td><td>'.$row['status'].'</td></tr>';}echo '</tbody></table>';}
+    elseif($report==='cleared'){echo '<h2>Fully Cleared Applicants</h2>';$r=$conn->query("SELECT a.*,COALESCE((SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified'),0) vc FROM `{$staff_db}`.`applicants` a HAVING vc>=$total_req_items ORDER BY a.full_name");echo '<table><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['phone']??'-').'</td><td>'.$row['status'].'</td></tr>';}echo '</tbody></table>';}
+    elseif($report==='clearance'){echo '<h2>Requirements Clearance Report</h2>';$r=$conn->query("SELECT ars.*,a.full_name applicant_name,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id ORDER BY ars.applicant_id,adr.display_order");echo '<table><thead><tr><th>Applicant</th><th>Requirement</th><th>Status</th><th>Verified By</th><th>Date</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['applicant_name']??$row['applicant_id']).'</td><td>'.htmlspecialchars($row['requirement_name']??'-').'</td><td>'.$row['status'].'</td><td>'.$row['verified_by'].'</td><td>'.$row['verified_at'].'</td></tr>';}echo '</tbody></table>';}
+    elseif($report==='intake'){echo '<h2>Intake Report</h2>';$r=$conn->query("SELECT intake,COUNT(*) total FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!='' GROUP BY intake ORDER BY intake");echo '<table><thead><tr><th>Intake</th><th>Applicants</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['intake']).'</td><td>'.$row['total'].'</td></tr>';}echo '</tbody></table>';}
+    echo '</body></html>';exit;
+}
+
+?><!DOCTYPE html>
 <html lang="en">
 <head>
-<?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<?php include_once __DIR__ . "/../includes/dashboard_head.php"; ?>
 <style>
-:root{--adm-prim:#7c3aed;--adm-sec:#6d28d9;--adm-bg:#f8fafc;--adm-card: #ffffff;--adm-border:#e2e8f0;}
+:root{--adm-prim:#7c3aed;--adm-sec:#6d28d9;--adm-bg:#f8fafc;--adm-card:#ffffff;--adm-border:#e2e8f0;}
 .da-header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:16px 24px;border-radius:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .da-header h1{font-size:1.35rem;font-weight:700;color:#fff;margin:0;letter-spacing:-0.3px}
 .da-header p{font-size:0.78rem;color:rgba(255,255,255,0.7);margin:2px 0 0 0}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:16px}
 .stat-card{background:var(--adm-card);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);border:1px solid var(--adm-border);transition:all 0.15s}
 .stat-card:hover{box-shadow:0 3px 10px rgba(0,0,0,0.06)}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;flex-shrink:0}
-.stat-content h3{font-size:1.4rem;font-weight:700;margin:0;color:#1e293b;line-height:1.1}
-.stat-content p{font-size:0.7rem;margin:2px 0 0;color:#64748b}
-.sec-card{background:var(--adm-card);border-radius:10px;padding:18px 20px;border:1px solid var(--adm-border);box-shadow:0 1px 2px rgba(0,0,0,0.03);margin-bottom:14px}
-.sec-card h2{font-size:1rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:#1e293b}
-.sec-nav{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:12px;padding:0 2px}
-.sec-nav a{padding:5px 12px;border-radius:6px;font-size:0.78rem;color:#64748b;background:#f1f5f9;text-decoration:none;font-weight:500;transition:all 0.12s;white-space:nowrap}
-.sec-nav a:hover,.sec-nav a.active{background:var(--adm-prim);color:#fff}
-.sec-nav a i{margin-right:4px;font-size:0.75rem}
-.cs{display:none}.cs.active{display:block}
-.table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:#64748b;border-bottom:2px solid var(--adm-border);padding:8px 10px}
-.table td{font-size:0.82rem;vertical-align:middle;color:#334155;padding:8px 10px}
-.btn-sm{border-radius:6px;font-size:0.75rem;padding:3px 9px}
-.form-control,.form-select{border-radius:7px;font-size:0.82rem;border-color:var(--adm-border)}
-.form-control:focus,.form-select:focus{border-color:var(--adm-prim);box-shadow:0 0 0 2px rgba(124,58,237,0.12)}
-.badge{font-size:0.68rem;padding:2px 8px;border-radius:5px;font-weight:500}
-.modal-content{border-radius:12px;border:none;box-shadow:0 16px 48px rgba(0,0,0,0.12)}
-.search-dd{position:absolute;z-index:1000;width:100%;max-height:260px;overflow-y:auto;background:#fff;border:1px solid var(--adm-border);border-radius:7px;box-shadow:0 6px 20px rgba(0,0,0,0.1)}
-.search-dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.08s}
-.search-dd-item:hover{background:#f5f3ff}.search-dd-item:last-child{border-bottom:none}
-.sr-name{font-weight:600;color:#1e293b;font-size:0.82rem}
-.sr-meta{font-size:0.72rem;color:#64748b}
-.app-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--adm-prim),#a78bfa);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem}
-.app-info-card{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #c4b5fd;border-radius:10px;padding:14px 16px}
-.req-card{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--adm-border);border-radius:8px;transition:all 0.12s;position:relative}
-.req-card:hover{border-color:#c4b5fd;background:#fafaff}
-.req-card .req-name{flex:1;font-size:0.82rem;font-weight:500;color:#1e293b;min-width:0}
-.req-card select.form-select{border-radius:5px;font-size:0.72rem;padding:2px 20px 2px 6px;width:auto;min-width:95px;border:1px solid #d1d5db}
-.req-card .req-remarks-input{font-size:0.72rem;border:1px solid var(--adm-border);border-radius:5px;padding:2px 6px;width:130px}
-.req-card .req-remarks-input:focus{border-color:var(--adm-prim);outline:none}
-.req-hist-item{font-size:0.75rem;padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px;align-items:flex-start}
-.req-hist-item:last-child{border-bottom:none}
-.toast-fixed{position:fixed;top:20px;right:20px;z-index:999999;padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:500;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,0.12);transform:translateX(120%);transition:transform 0.25s ease}
-.toast-fixed.show{transform:translateX(0)}
-.toast-fixed.success{background:#059669}.toast-fixed.error{background:#dc2626}.toast-fixed.info{background:#0284c7}
-.chart-container{position:relative;height:200px;width:100%}
-.loading-dots{text-align:center;padding:30px;color:#94a3b8}
+.stat-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
+.stat-content h3{font-size:1.25rem;font-weight:700;margin:0;color:#1e293b;line-height:1.2}
+.stat-content p{font-size:0.72rem;color:#64748b;margin:0}
+.section-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:0;padding:8px 12px;border-bottom:1px solid var(--adm-border);background:#fff;position:sticky;top:0;z-index:10}
+.section-tab{padding:7px 16px;font-size:12px;font-weight:500;color:#64748b;background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;text-decoration:none;transition:all 0.2s;white-space:nowrap}
+.section-tab:hover{color:#1e293b;background:rgba(124,58,237,0.06);border-color:rgba(124,58,237,0.15)}
+.section-tab.active{color:#7c3aed!important;background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25);font-weight:600}
+.dashboard-section{display:none}.dashboard-section.active{display:block}
+.scard{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px;overflow:hidden}
+.sch{padding:12px 16px;font-size:14px;font-weight:600;color:#1e293b;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+.scb{padding:14px 16px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;text-transform:uppercase}
+.badge-success{background:#d1fae5;color:#065f46}.badge-warning{background:#fef3c7;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}.badge-info{background:#dbeafe;color:#1e40af}
+.badge-secondary{background:#f1f5f9;color:#475569}.badge-primary{background:#ede9fe;color:#5b21b6}
 .empty-state{text-align:center;padding:40px 20px;color:#94a3b8}
-.empty-state i{font-size:2.5rem;margin-bottom:12px;opacity:0.3}
+.empty-state i{font-size:3rem;display:block;margin-bottom:12px;color:#cbd5e1}
+.req-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.req-card{border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#fff;transition:all 0.15s}
+.req-card:hover{border-color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.1)}
+.req-card .req-name{font-size:12px;font-weight:500;color:#1e293b;margin-bottom:4px}
+.req-card .req-status{font-size:10px}
+.req-select{width:100%;font-size:11px;padding:3px 4px;border:1px solid #e2e8f0;border-radius:4px}
+.progress-bar-wrap{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin:4px 0}
+.progress-bar-fill{height:100%;background:#7c3aed;border-radius:3px;transition:width 0.3s}
+.filter-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.filter-group input,.filter-group select{padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px}
+.filter-group .btn{padding:6px 14px;border-radius:6px;font-size:12px}
+.pagination{display:flex;gap:4px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.pagination button{padding:4px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer}
+.pagination button.active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.pagination button:hover:not(.active){background:#f5f3ff}
+.readiness-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.readiness-card{text-align:center;padding:20px 16px;border-radius:10px;border:1px solid #e2e8f0;background:#fff}
+.readiness-card .rc-num{font-size:2rem;font-weight:700;margin:4px 0}
+.student-result-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;cursor:pointer;transition:all 0.15s;margin-bottom:8px}
+.student-result-card:hover{border-color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.1)}
+.student-result-card.selected{border-color:#7c3aed;background:#f5f3ff}
+.student-result-card .s-name{font-weight:600;color:#1e293b;font-size:13px}
+.student-result-card .s-meta{font-size:11px;color:#64748b}
+.modal-xl{max-width:900px!important}
+.notif-item{padding:10px 14px;border-bottom:1px solid #e2e8f0}
+.notif-item:last-child{border-bottom:none}
+.notif-title{font-weight:600;font-size:13px;color:#1e293b}
+.notif-meta{font-size:10px;color:#94a3b8}
+.profile-sidebar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.psh{padding:10px 14px;font-weight:600;font-size:13px;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.psb{padding:10px 14px}
+.psb dl{margin:0}
+.psb dt{font-size:10px;color:#64748b;text-transform:uppercase;margin-top:6px}
+.psb dd{font-size:13px;color:#1e293b;margin:0 0 4px 0}
+.search-filters-wrap{background:#f8fafc;border-radius:8px;padding:12px;border:1px solid #e2e8f0;margin-bottom:12px}
+.form-label{font-size:12px;font-weight:500;color:#374151;margin-bottom:2px}
 @media(max-width:768px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-card{padding:10px 12px}
-  .stat-content h3{font-size:1.1rem}
-  .sec-nav{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
-  .sec-nav a{font-size:0.72rem;padding:4px 10px}
-  .da-header{flex-direction:column;align-items:flex-start}
-  .req-card{flex-wrap:wrap}
-  .req-card select.form-select{width:100%}
-  .req-card .req-remarks-input{width:100%}
+    .section-tabs{overflow-x:auto;flex-wrap:nowrap;padding:8px 8px}
+    .section-tab{font-size:11px;padding:6px 10px}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
+    .filter-group input,.filter-group select{min-width:100%}
+    .req-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
-@media(max-width:480px){
-  .stats-grid{grid-template-columns:1fr 1fr;gap:6px}
-  .stat-card{padding:8px 10px;gap:8px}
-  .stat-icon{width:32px;height:32px;font-size:0.9rem}
-  .stat-content h3{font-size:1rem}
-}
-
-/* Responsive cards */
-@media(max-width:576px){
-  .sec-card{padding:12px 10px}
-  .modal-dialog{margin:0.5rem}
-  .student-avatar{width:36px;height:36px;font-size:0.9rem !important}
-  .upload-zone{padding:20px 12px !important}
-  .upload-zone i.fa-3x{font-size:2rem !important}
-}
-</style>
-</head>
-<body>
-<div class="dashboard-container">
-<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="main-content">
-<header class="da-header">
-<div>
-<h1><i class="fas fa-file-signature me-2"></i>Director Admissions & Requirements</h1>
-<p>Applications &middot; Requirements Clearance &middot; Admission Reports</p>
+</style></head><body>
+<?php include_once __DIR__ . "/../includes/sidebar.php"; ?>
+<div class="dashboard-content">
+<div class="da-header">
+<div><h1><i class="fas fa-file-signature me-2"></i>Director Admissions &amp; Requirements</h1>
+<p>Admissions management &middot; applicant tracking &middot; requirement clearance &middot; student registration</p></div>
+<div><span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;font-size:11px"><?=htmlspecialchars($user_name)?></span></div></div>
+<?php if(!empty($_SESSION["success"])):?><div class="alert alert-success m-3"><?=htmlspecialchars($_SESSION["success"]);unset($_SESSION["success"]);?></div><?php endif;?>
+<?php if(!empty($_SESSION["error"])):?><div class="alert alert-danger m-3"><?=htmlspecialchars($_SESSION["error"]);unset($_SESSION["error"]);?></div><?php endif;?>
+<div class="section-tabs">
+<a href="#overview" class="section-tab<?=$view==="overview"?" active":""?>" data-section="overview"><i class="fas fa-chart-pie me-1"></i>Dashboard</a>
+<a href="#new_applicant" class="section-tab" data-section="new_applicant"><i class="fas fa-user-plus me-1"></i>New Applicant</a>
+<a href="#applicant_records" class="section-tab" data-section="applicant_records"><i class="fas fa-users me-1"></i>Applicant Records</a>
+<a href="#student_search" class="section-tab" data-section="student_search"><i class="fas fa-search me-1"></i>Student Search</a>
+<a href="#intake_management" class="section-tab" data-section="intake_management"><i class="fas fa-calendar me-1"></i>Intake</a>
+<a href="#admission_approvals" class="section-tab" data-section="admission_approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
+<a href="#requirement_portal" class="section-tab" data-section="requirement_portal"><i class="fas fa-list-check me-1"></i>Requirement Portal</a>
+<a href="#requirement_clearance" class="section-tab" data-section="requirement_clearance"><i class="fas fa-clipboard-check me-1"></i>Clearance</a>
+<a href="#requirement_verification" class="section-tab" data-section="requirement_verification"><i class="fas fa-certificate me-1"></i>Verification</a>
+<a href="#requirement_tracking" class="section-tab" data-section="requirement_tracking"><i class="fas fa-tasks me-1"></i>Tracking</a>
+<a href="#registration_readiness" class="section-tab" data-section="registration_readiness"><i class="fas fa-flag-checkered me-1"></i>Readiness</a>
+<a href="#student_registration" class="section-tab" data-section="student_registration"><i class="fas fa-user-graduate me-1"></i>Registration</a>
+<a href="#student_activation" class="section-tab" data-section="student_activation"><i class="fas fa-toggle-on me-1"></i>Activation</a>
+<a href="#document_verification" class="section-tab" data-section="document_verification"><i class="fas fa-file-alt me-1"></i>Documents</a>
+<a href="#admission_reports" class="section-tab" data-section="admission_reports"><i class="fas fa-chart-bar me-1"></i>Reports</a>
+<a href="#intake_statistics" class="section-tab" data-section="intake_statistics"><i class="fas fa-chart-line me-1"></i>Intake Stats</a>
+<a href="#applicant_messaging" class="section-tab" data-section="applicant_messaging"><i class="fas fa-envelope me-1"></i>Messaging</a>
+<a href="#notifications" class="section-tab" data-section="notifications"><i class="fas fa-bell me-1"></i>Notifications</a>
+<a href="#requirement_alerts" class="section-tab" data-section="requirement_alerts"><i class="fas fa-exclamation-triangle me-1"></i>Alerts</a>
 </div>
-<div class="d-flex align-items-center gap-2">
-<span style="font-size:0.76rem;color:rgba(255,255,255,0.7)"><i class="fas fa-calendar me-1"></i><?= date('l, F j, Y') ?></span>
-<a href="../index.php" class="btn btn-sm btn-outline-light"><i class="fas fa-home"></i></a>
-</div>
-</header>
-
-<?php if(!empty($_SESSION['success'])): ?>
-<div class="alert alert-success alert-dismissible fade show mx-3 mt-3 mb-0 py-2 small"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-<?php unset($_SESSION['success']); endif; ?>
-<?php if(!empty($_SESSION['error'])): ?>
-<div class="alert alert-danger alert-dismissible fade show mx-3 mt-3 mb-0 py-2 small"><?= htmlspecialchars($_SESSION['error']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-<?php unset($_SESSION['error']); endif; ?>
-
 <div class="p-3">
 
-<div class="sec-nav">
-<a href="#" class="active" data-sec="overview"><i class="fas fa-chart-pie"></i>Overview</a>
-<a href="#" data-sec="applications"><i class="fas fa-file-alt"></i>Applications</a>
-<a href="#" data-sec="requirements"><i class="fas fa-clipboard-check"></i>Requirements</a>
-<a href="#" data-sec="clearance"><i class="fas fa-check-double"></i>Clearance</a>
-<a href="#" data-sec="reports"><i class="fas fa-chart-bar"></i>Reports</a>
-<a href="#" data-sec="student-search"><i class="fas fa-search"></i>Students</a>
-<a href="#" data-sec="import"><i class="fas fa-upload"></i>Import</a>
-<a href="#" data-sec="directory"><i class="fas fa-address-book"></i>Directory</a>
-<a href="#" data-sec="approvals"><i class="fas fa-check-double"></i>Approvals</a>
-</div>
-
-<!-- ═══ OVERVIEW ═══ -->
-<section id="sec-overview" class="cs active">
+<!-- OVERVIEW / DASHBOARD -->
+<div id="overview" class="dashboard-section<?=$view==='overview'?' active':''?>" data-section="overview">
 <div class="stats-grid">
-<div class="stat-card"><div class="stat-icon" style="background:var(--adm-prim)"><i class="fas fa-file-alt"></i></div><div class="stat-content"><h3><?= $total_applicants ?></h3><p>Total Applicants</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#f59e0b"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $new_applicants ?></h3><p>New Applications</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#059669"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3><?= $approved_applicants ?></h3><p>Approved</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#0284c7"><i class="fas fa-search"></i></div><div class="stat-content"><h3><?= $pending_verify ?></h3><p>Pending Verification</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#8b5cf6"><i class="fas fa-user-check"></i></div><div class="stat-content"><h3><?= $cleared_count ?></h3><p>Fully Cleared</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#dc2626"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-content"><h3><?= $missing_req_count ?></h3><p>Missing Requirements</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#7c3aed"><i class="fas fa-users"></i></div><div class="stat-content"><h3><?=number_format($total_applicants??0)?></h3><p>Total Applicants</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#2563eb"><i class="fas fa-user-clock"></i></div><div class="stat-content"><h3><?=number_format($new_applicants??0)?></h3><p>New Applicants</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#059669"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3><?=number_format($approved_applicants??0)?></h3><p>Approved</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#d97706"><i class="fas fa-spinner"></i></div><div class="stat-content"><h3><?=number_format($pending_verify??0)?></h3><p>Under Review</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#0891b2"><i class="fas fa-user-graduate"></i></div><div class="stat-content"><h3><?=number_format($cleared_count??0)?></h3><p>Registered</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dc2626"><i class="fas fa-times-circle"></i></div><div class="stat-content"><h3><?=number_format($rejected_count??0)?></h3><p>Rejected</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#7c3aed"><i class="fas fa-clipboard-list"></i></div><div class="stat-content"><h3><?=number_format($total_reqs??0)?></h3><p>Requirements</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#65a30d"><i class="fas fa-hourglass-half"></i></div><div class="stat-content"><h3><?=number_format($students_awaiting_reqs??0)?></h3><p>Awaiting Req</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#0891b2"><i class="fas fa-check-double"></i></div><div class="stat-content"><h3><?=number_format($students_fully_cleared??0)?></h3><p>Fully Cleared</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#be185d"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-content"><h3><?=number_format($students_missing_reqs??0)?></h3><p>Missing Req</p></div></div>
 </div>
-
 <div class="row g-3">
-<div class="col-md-8">
-<div class="sec-card">
-<h2><i class="fas fa-chart-bar" style="color:var(--adm-prim)"></i>Applications by Intake</h2>
-<?php if (!empty($intake_stats)): ?>
-<canvas id="intakeChart" height="160"></canvas>
-<?php else: ?>
-<div class="empty-state"><i class="fas fa-chart-bar"></i><p>No intake data yet.</p></div>
-<?php endif; ?>
+    <div class="col-md-8"><div class="scard"><div class="sch"><i class="fas fa-chart-bar me-2"></i>Intake Overview</div><div class="scb"><canvas id="intakeChart" height="250"></canvas></div></div></div>
+    <div class="col-md-4"><div class="scard"><div class="sch"><i class="fas fa-chart-doughnut me-2"></i>Clearance Status</div><div class="scb"><canvas id="clearanceChart" height="250"></canvas></div></div></div>
 </div>
 </div>
-<div class="col-md-4">
-<div class="sec-card">
-<h2><i class="fas fa-clipboard-check" style="color:#059669"></i>Clearance Progress</h2>
-<?php if (array_sum($clearance_levels) > 0): ?>
-<canvas id="clearanceChart" height="160"></canvas>
-<?php else: ?>
-<div class="empty-state"><i class="fas fa-clipboard-check"></i><p>No clearance data yet.</p></div>
-<?php endif; ?>
-</div>
-</div>
-</div>
-
-<div class="sec-card">
-<h2><i class="fas fa-bolt" style="color:#f59e0b"></i>Quick Actions</h2>
-<div class="d-flex flex-wrap gap-2">
-<button class="btn btn-sm btn-primary" onclick="openAddModal()"><i class="fas fa-user-plus me-1"></i>Add Applicant</button>
-<button class="btn btn-sm btn-outline-info" onclick="switchSec('applications')"><i class="fas fa-list me-1"></i>View All</button>
-<button class="btn btn-sm btn-outline-success" onclick="switchSec('requirements')"><i class="fas fa-clipboard-check me-1"></i>Requirements</button>
-<a href="admission-letters.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-envelope me-1"></i>Letters</a>
-<a href="intake-planning.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-calendar me-1"></i>Intake Planning</a>
-</div>
+<!-- NEW APPLICANT -->
+<div id="new_applicant" class="dashboard-section" data-section="new_applicant">
+<div class="scard"><div class="sch"><i class="fas fa-user-plus me-2"></i>Register New Applicant</div><div class="scb">
+<form method="post" class="row g-3">
+<input type="hidden" name="action" value="add_applicant">
+<div class="col-md-4"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" class="form-control form-control-sm" required></div>
+<div class="col-md-2"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" class="form-control form-control-sm"></div>
+<div class="col-md-2"><label class="form-label">Gender</label><select name="gender" class="form-select form-select-sm"><option>Male</option><option>Female</option></select></div>
+<div class="col-md-2"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control form-control-sm"></div>
+<div class="col-md-2"><label class="form-label">Email</label><input type="email" name="email" class="form-control form-control-sm"></div>
+<div class="col-md-3"><label class="form-label">Program</label><select name="program_id" class="form-select form-select-sm"><option value="">Select Program</option><?php foreach($programs_list as $p):?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select></div>
+<div class="col-md-2"><label class="form-label">Intake Period</label><select name="intake" class="form-select form-select-sm"><option>January</option><option>May</option><option>August</option></select></div>
+<div class="col-md-3"><label class="form-label">Guardian Name</label><input type="text" name="guardian_name" class="form-control form-control-sm"></div>
+<div class="col-md-2"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control form-control-sm"></div>
+<div class="col-md-2"><label class="form-label">Guardian Relationship</label><input type="text" name="guardian_relationship" class="form-control form-control-sm"></div>
+<div class="col-md-3"><label class="form-label">Address</label><textarea name="address" class="form-control form-control-sm" rows="1"></textarea></div>
+<div class="col-12"><button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px"><i class="fas fa-save me-1"></i>Save Applicant</button></div>
+</form>
+</div></div>
 </div>
 
-<div class="sec-card">
-<h2><i class="fas fa-history" style="color:#64748b"></i>Recent Activity</h2>
-<?php if (empty($recent_activity)): ?>
-<div class="empty-state" style="padding:20px"><i class="fas fa-history" style="font-size:1.5rem"></i><p class="small mb-0">No activity yet.</p></div>
-<?php else: ?>
-<div style="max-height:300px;overflow-y:auto">
-<?php foreach($recent_activity as $act): ?>
-<div class="d-flex align-items-center gap-2 px-1 py-1" style="border-bottom:1px solid #f1f5f9;font-size:0.78rem">
-<span class="badge bg-<?= strpos($act['action'],'Add')!==false?'primary':(strpos($act['action'],'Approve')!==false?'success':(strpos($act['action'],'Reject')!==false?'danger':(strpos($act['action'],'Register')!==false?'info':'secondary'))) ?> me-1"><?= htmlspecialchars($act['action']) ?></span>
-<span class="text-muted"><?= htmlspecialchars($act['description'] ?? '') ?></span>
-<span class="ms-auto text-muted" style="font-size:0.7rem;white-space:nowrap"><?= date('M j, g:ia', strtotime($act['created_at'])) ?></span>
+<!-- APPLICANT RECORDS -->
+<div id="applicant_records" class="dashboard-section" data-section="applicant_records">
+<div class="scard"><div class="sch"><i class="fas fa-users me-2"></i>Applicant Records</div><div class="scb">
+<div class="filter-group">
+<input type="text" id="applicantSearch" placeholder="Search applicants..." style="max-width:300px">
+<select id="filterStatus" style="width:auto" onchange="applyFilter()"><option value="">All</option><option value="New Applicant">New</option><option value="Under Review">Under Review</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Registered">Registered</option></select>
+<select id="filterIntake" style="width:auto" onchange="applyFilter()"><option value="">All Intake</option><option value="January">January</option><option value="May">May</option><option value="August">August</option></select>
 </div>
-<?php endforeach; ?>
-</div>
-<?php endif; ?>
-</div>
-</section>
-
-<!-- ═══ APPLICATIONS ═══ -->
-<section id="sec-applications" class="cs">
-<div class="sec-card">
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-<h2 style="margin:0"><i class="fas fa-file-alt" style="color:var(--adm-prim)"></i>Applicant Records</h2>
-<button class="btn btn-sm btn-primary" onclick="openAddModal()"><i class="fas fa-plus me-1"></i>Add Applicant</button>
-</div>
-
-<div class="search-box mb-3" style="position:relative">
-<div class="input-group input-group-sm">
-<span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted" style="font-size:0.8rem"></i></span>
-<input type="text" id="appSearch" class="form-control border-start-0" placeholder="Search by name, application number, or phone..." autocomplete="off">
-<button class="btn btn-primary" onclick="searchApps()"><i class="fas fa-search me-1"></i>Search</button>
-</div>
-<div id="appSearchResults" class="search-dd mt-1" style="display:none"></div>
-<div class="mt-1 d-flex gap-2 flex-wrap">
-<small class="text-muted">Search by:</small>
-<span class="badge bg-light text-dark border">Full Name</span>
-<span class="badge bg-light text-dark border">Application Number</span>
-<span class="badge bg-light text-dark border">Phone Number</span>
-</div>
-</div>
-
-<div id="appListContainer">
-<?php if (empty($applicants_list)): ?>
-<div class="empty-state"><i class="fas fa-users"></i><p>No applicants yet. Click "Add Applicant" to create one.</p></div>
-<?php else: ?>
-<div class="table-responsive">
-<table class="table table-sm table-hover" id="appsTable">
-<thead><tr><th>App No</th><th>Applicant</th><th>Program</th><th>Intake</th><th>Status</th><th>Date</th><th style="width:120px">Actions</th></tr></thead>
-<tbody>
-<?php foreach($applicants_list as $a):
-$sts = $a['status'];
-$badge = $sts==='Approved'?'success':($sts==='Rejected'?'danger':($sts==='Registered'?'info':($sts==='Under Review'?'warning':'secondary')));
-$prog_name = '';
-$rpn = $conn->query("SELECT program_name FROM academic_programs WHERE id={$a['program_id']}");
-if ($rpn && $rpn->num_rows) $prog_name = $rpn->fetch_assoc()['program_name'];
-?>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Program</th><th>Intake</th><th>Status</th><th>Actions</th></tr></thead><tbody id="applicantList">
+<?php if (!empty($applicants)): foreach ($applicants as $a): ?>
 <tr>
-<td><code><?= htmlspecialchars($a['application_number']) ?></code></td>
-<td><strong><?= htmlspecialchars($a['full_name']) ?></strong></td>
-<td><?= htmlspecialchars($prog_name ?: 'N/A') ?></td>
-<td><?= htmlspecialchars($a['intake'] ?? '-') ?></td>
-<td><span class="badge bg-<?= $badge ?>"><?= $sts ?></span></td>
-<td><?= date('M j, Y', strtotime($a['created_at'])) ?></td>
+<td><?=htmlspecialchars($a['application_number']??'')?></td>
+<td><?=htmlspecialchars($a['full_name'])?></td>
+<td><?=htmlspecialchars($a['phone']??'')?></td>
+<td><?=htmlspecialchars($a['program_name']??'')?></td>
+<td><?=htmlspecialchars($a['intake']??'')?></td>
+<td><span class="badge badge-<?=$a['status']==='Approved'?'success':($a['status']==='Rejected'?'danger':($a['status']==='Registered'?'info':'primary'))?>"><?=htmlspecialchars($a['status'])?></span></td>
 <td>
-<div class="d-flex gap-1">
-<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="viewApplicant(<?= $a['id'] ?>)" title="View"><i class="fas fa-eye"></i></button>
-<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editApplicant(<?= $a['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
-<?php if ($sts==='New Applicant'||$sts==='Under Review'): ?>
-<form method="POST" class="d-inline" onsubmit="return confirm('Approve this applicant?')"><input type="hidden" name="action" value="approve_applicant"><input type="hidden" name="applicant_id" value="<?= $a['id'] ?>"><button class="btn btn-sm btn-outline-success py-0 px-1"><i class="fas fa-check"></i></button></form>
-<form method="POST" class="d-inline" onsubmit="return confirm('Reject this applicant?')"><input type="hidden" name="action" value="reject_applicant"><input type="hidden" name="applicant_id" value="<?= $a['id'] ?>"><button class="btn btn-sm btn-outline-danger py-0 px-1"><i class="fas fa-times"></i></button></form>
-<?php elseif ($sts==='Approved'): ?>
-<form method="POST" class="d-inline" onsubmit="return confirm('Register as student?')"><input type="hidden" name="action" value="register_applicant"><input type="hidden" name="applicant_id" value="<?= $a['id'] ?>"><button class="btn btn-sm btn-outline-success py-0 px-1" title="Register"><i class="fas fa-user-graduate"></i></button></form>
-<?php endif; ?>
-</div>
+<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" onclick='editApplicant(<?=$a['id']?>)'><i class="fas fa-edit"></i></button>
+<button class="btn btn-sm btn-outline-<?=$a['status']==='Approved'?'secondary':'success'?> py-0 px-2" style="font-size:10px" onclick='approveApplicant(<?=$a['id']?>)' <?=$a['status']==='Approved'||$a['status']==='Registered'?'disabled':''?>><i class="fas fa-check"></i></button>
+<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" onclick='rejectApplicant(<?=$a['id']?>)' <?=$a['status']==='Approved'||$a['status']==='Registered'?'disabled':''?>><i class="fas fa-times"></i></button>
+<button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" onclick='convertToStudent(<?=$a['id']?>)' <?=$a['status']!=='Approved'?'disabled':''?>><i class="fas fa-user-graduate"></i></button>
+<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" onclick='deleteApplicant(<?=$a['id']?>)' <?=$a['status']==='Registered'?'disabled':''?>><i class="fas fa-trash"></i></button>
 </td>
 </tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-</div>
+<?php endforeach; else: ?>
+<tr><td colspan="7" class="text-muted text-center">No applicants found</td></tr>
 <?php endif; ?>
-</div>
-</div>
-</section>
-
-<!-- ═══ REQUIREMENTS PORTAL ═══ -->
-<section id="sec-requirements" class="cs">
-<div class="sec-card">
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-<h2 style="margin:0"><i class="fas fa-clipboard-check" style="color:var(--adm-prim)"></i>Requirements Portal</h2>
-</div>
-<div class="stats-grid small mb-2">
-<div class="stat-card p-2"><div class="stat-icon" style="font-size:0.9rem;width:32px;height:32px;background:var(--adm-prim)"><i class="fas fa-list"></i></div><div class="stat-content"><h4 style="font-size:1rem;margin:0"><?= $total_req_items ?></h4><p style="font-size:0.65rem;margin:0;color:#64748b">Requirement Items</p></div></div>
-<div class="stat-card p-2"><div class="stat-icon" style="font-size:0.9rem;width:32px;height:32px;background:#0284c7"><i class="fas fa-users"></i></div><div class="stat-content"><h4 style="font-size:1rem;margin:0"><?= $total_applicants ?></h4><p style="font-size:0.65rem;margin:0;color:#64748b">Total Applicants</p></div></div>
-<div class="stat-card p-2"><div class="stat-icon" style="font-size:0.9rem;width:32px;height:32px;background:#059669"><i class="fas fa-check-double"></i></div><div class="stat-content"><h4 style="font-size:1rem;margin:0"><?= $clearance_levels['Verified'] ?></h4><p style="font-size:0.65rem;margin:0;color:#64748b">Verified Items</p></div></div>
-<div class="stat-card p-2"><div class="stat-icon" style="font-size:0.9rem;width:32px;height:32px;background:#8b5cf6"><i class="fas fa-user-check"></i></div><div class="stat-content"><h4 style="font-size:1rem;margin:0"><?= $cleared_count ?> / <?= $total_applicants ?></h4><p style="font-size:0.65rem;margin:0;color:#64748b">Fully Cleared</p></div></div>
+</tbody></table></div>
+</div></div>
 </div>
 
-<div class="mb-3" style="position:relative">
-<div class="input-group input-group-sm">
-<span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-<input type="text" id="reqAppSearch" class="form-control border-start-0" placeholder="Search applicant by name, app number, or phone..." autocomplete="off">
-<button class="btn btn-primary" onclick="searchReqApps()"><i class="fas fa-search me-1"></i>Search</button>
+<!-- STUDENT SEARCH -->
+<div id="student_search" class="dashboard-section" data-section="student_search">
+<div class="scard"><div class="sch"><i class="fas fa-search me-2"></i>Student Search</div><div class="scb">
+<div class="search-filters-wrap">
+<div class="filter-group">
+<input type="text" id="ssQuery" placeholder="Search by name, email, phone..." style="flex:1;min-width:160px">
+<input type="text" id="ssAdmissionNo" placeholder="Admission No" style="width:130px">
+<input type="text" id="ssRegNo" placeholder="Reg No" style="width:130px">
+<input type="text" id="ssPhone" placeholder="Phone" style="width:120px">
+<input type="text" id="ssNationalId" placeholder="National ID" style="width:120px">
 </div>
-<div id="reqSearchResults" class="search-dd mt-1" style="display:none"></div>
-</div>
-
-<div id="reqAppInfoCard" class="app-info-card mb-3" style="display:none">
-<div class="d-flex align-items-center gap-3 flex-wrap">
-<div class="app-avatar"><i class="fas fa-user-graduate"></i></div>
-<div class="flex-grow-1">
-<h5 class="mb-0" id="reqAppName" style="font-size:0.95rem">-</h5>
-<div class="d-flex gap-3 small text-muted flex-wrap">
-<span><i class="fas fa-id-card me-1"></i><span id="reqAppNo">-</span></span>
-<span><i class="fas fa-phone me-1"></i><span id="reqAppPhone">-</span></span>
-<span><i class="fas fa-tag me-1"></i><span id="reqAppStatus">-</span></span>
-</div>
-</div>
-<div class="text-end">
-<div id="reqProgressCircle">
-<svg width="52" height="52" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="#e5e7eb" stroke-width="4"/><circle id="reqArc" cx="30" cy="30" r="26" fill="none" stroke="#7c3aed" stroke-width="4" stroke-dasharray="163.36" stroke-dashoffset="163.36" transform="rotate(-90 30 30)"/><text x="30" y="30" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="bold" fill="#1e293b" id="reqPct">0%</text></svg>
+<div class="filter-group">
+<select id="ssProgram" style="width:140px"><option value="">All Programs</option><?php foreach($programs_list as $p):?><option value="<?=htmlspecialchars($p['program_name'])?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select>
+<select id="ssIntake" style="width:100px"><option value="">Intake</option><option>January</option><option>May</option><option>August</option></select>
+<input type="text" id="ssYear" placeholder="Year" style="width:80px">
+<select id="ssStatus" style="width:110px"><option value="">All Status</option><option>Active</option><option>Inactive</option><option>Suspended</option><option>Graduated</option></select>
+<button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="searchStudents(1)"><i class="fas fa-search me-1"></i>Search</button>
+<button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()"><i class="fas fa-undo me-1"></i>Clear</button>
 </div>
 </div>
-</div>
-<div class="progress mt-2" style="height:5px">
-<div id="reqBar" class="progress-bar bg-purple" role="progressbar" style="width:0%"></div>
-</div>
-<div class="d-flex gap-2 mt-2 flex-wrap">
-<span class="badge bg-success" id="reqBadgeVerified">0 Verified</span>
-<span class="badge bg-warning text-dark" id="reqBadgePending">0 Pending</span>
-<span class="badge bg-secondary" id="reqBadgeMissing">0 Missing</span>
-</div>
+<div class="d-flex justify-content-between align-items-center mb-2"><small id="ssCount">0 results</small></div>
+<div id="ssResults"><div class="empty-state"><i class="fas fa-search"></i><div>Use the filters above to search for students. Results appear here.</div></div></div>
+<div id="ssPagination" class="pagination"></div>
+</div></div>
 </div>
 
-<div id="reqListContainer">
-<div class="empty-state"><i class="fas fa-search"></i><p>Search for an applicant above to manage their requirements.</p></div>
-</div>
-
-<ul class="nav nav-tabs mt-3" id="reqDetailTabs" style="display:none">
-<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#reqChecklistTab">Checklist</a></li>
-<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reqHistoryTab">History</a></li>
-</ul>
-<div class="tab-content mt-2" id="reqDetailContent" style="display:none">
-<div class="tab-pane fade show active" id="reqChecklistTab"></div>
-<div class="tab-pane fade" id="reqHistoryTab"></div>
-</div>
-</div>
-</section>
-
-<!-- ═══ CLEARANCE ═══ -->
-<section id="sec-clearance" class="cs">
-<!-- Summary Cards -->
-<div class="stats-grid mb-3">
-<div class="stat-card"><div class="stat-icon" style="background:#059669"><i class="fas fa-check-double"></i></div><div class="stat-content"><h3><?= $clearance_levels['Verified'] ?></h3><p>Verified Items</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#f59e0b"><i class="fas fa-clock"></i></div><div class="stat-content"><h3><?= $clearance_levels['Submitted'] ?></h3><p>Pending Review</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#dc2626"><i class="fas fa-times-circle"></i></div><div class="stat-content"><h3><?= $clearance_levels['Rejected'] + $clearance_levels['Missing'] ?></h3><p>Issues</p></div></div>
-<div class="stat-card"><div class="stat-icon" style="background:#8b5cf6"><i class="fas fa-user-check"></i></div><div class="stat-content"><h3><?= $cleared_count ?></h3><p>Fully Cleared</p></div></div>
-</div>
-
+<!-- INTAKE MANAGEMENT -->
+<div id="intake_management" class="dashboard-section" data-section="intake_management">
+<div class="scard"><div class="sch"><i class="fas fa-calendar me-2"></i>Intake Management</div><div class="scb">
 <div class="row g-3">
-<!-- Program Clearance Chart -->
-<div class="col-md-5">
-<div class="sec-card">
-<h2><i class="fas fa-chart-pie" style="color:var(--adm-prim)"></i>Clearance by Program</h2>
-<?php if (!empty($program_clearance)): ?>
-<canvas id="programClearanceChart" height="200"></canvas>
-<?php else: ?>
-<div class="empty-state"><i class="fas fa-chart-pie"></i><p>No program data yet.</p></div>
-<?php endif; ?>
-</div>
+<div class="col-md-6"><h6 class="fw-semibold">Intake Distribution</h6><canvas id="intakeChart2" height="250"></canvas></div>
+<div class="col-md-6"><h6 class="fw-semibold">Intake Records</h6>
+<table class="table table-sm"><thead><tr><th>Intake</th><th>Count</th></tr></thead><tbody>
+<?php if(!empty($intake_stats)): foreach($intake_stats as $is):?><tr><td><?=htmlspecialchars($is['intake'])?></td><td><?=(int)$is['c']?></td></tr><?php endforeach; endif;?>
+</tbody></table></div>
+</div></div></div>
 </div>
 
-<!-- Program Table -->
+<!-- ADMISSION APPROVALS -->
+<div id="admission_approvals" class="dashboard-section" data-section="admission_approvals">
+<div class="scard"><div class="sch"><i class="fas fa-check-double me-2"></i>Admission Approvals</div><div class="scb">
+<p class="text-muted small">Review and approve/reject applicants.</p>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>App No</th><th>Program</th><th>Intake</th><th>Status</th><th>Actions</th></tr></thead><tbody id="approvalList">
+<?php if(!empty($pending_applicants)): foreach($pending_applicants as $a): ?>
+<tr><td><?=htmlspecialchars($a['full_name'])?></td><td><?=htmlspecialchars($a['application_number'])?></td><td><?=htmlspecialchars($a['program_name']??'')?></td><td><?=htmlspecialchars($a['intake']??'')?></td>
+<td><span class="badge badge-<?=$a['status']==='Approved'?'success':($a['status']==='Rejected'?'danger':'warning')?>"><?=htmlspecialchars($a['status'])?></span></td>
+<td>
+<button class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:4px;font-size:10px" onclick='approveApplicant(<?=$a['id']?>)' <?=$a['status']==='Approved'||$a['status']==='Registered'?'disabled':''?>><i class="fas fa-check me-1"></i>Approve</button>
+<button class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;border-radius:4px;font-size:10px" onclick='rejectApplicant(<?=$a['id']?>)' <?=$a['status']==='Approved'||$a['status']==='Registered'?'disabled':''?>><i class="fas fa-times me-1"></i>Reject</button>
+<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" onclick='editApplicant(<?=$a['id']?>)'><i class="fas fa-edit"></i></button>
+</td></tr>
+<?php endforeach; else: ?><tr><td colspan="6" class="text-muted text-center">No pending applicants</td></tr><?php endif; ?>
+</tbody></table></div>
+</div></div>
+</div>
+<!-- REQUIREMENT PORTAL -->
+<div id="requirement_portal" class="dashboard-section" data-section="requirement_portal">
+<div class="scard"><div class="sch"><i class="fas fa-list-check me-2"></i>Requirement Portal</div><div class="scb">
+<div class="row g-3">
 <div class="col-md-7">
-<div class="sec-card">
-<h2><i class="fas fa-building" style="color:#0284c7"></i>Program Breakdown</h2>
-<div class="table-responsive" style="max-height:320px;overflow-y:auto">
-<table class="table table-sm">
-<thead><tr><th>Program</th><th>Total</th><th>Cleared</th><th>Approved</th><th>Rejected</th><th>Rate</th></tr></thead>
-<tbody>
-<?php foreach($program_clearance as $pc):
-$rate = $pc['total'] > 0 ? round(($pc['cleared']/$pc['total'])*100) : 0;
-$rbar = $rate>=80?'bg-success':($rate>=50?'bg-warning':'bg-danger');
-?>
-<tr>
-<td><?= htmlspecialchars($pc['program']) ?></td>
-<td><?= $pc['total'] ?></td>
-<td><strong><?= $pc['cleared'] ?></strong></td>
-<td><?= $pc['approved'] ?></td>
-<td><?= $pc['rejected'] ?></td>
-<td><div class="progress" style="height:14px"><div class="progress-bar <?= $rbar ?>" style="width:<?= $rate ?>%"><?= $rate ?>%</div></div></td>
-</tr>
+<h6 class="fw-semibold mb-2">All Requirements</h6>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>#</th><th>Requirement</th><th>Type</th><th>Mandatory</th><th>Actions</th></tr></thead><tbody>
+<?php foreach($requirements as $r): ?>
+<tr><td><?=(int)$r['id']?></td><td><?=htmlspecialchars($r['requirement_name'])?></td><td><?=htmlspecialchars($r['type']??'Document')?></td>
+<td><?=$r['is_mandatory']?'<span class="badge bg-danger">Yes</span>':'<span class="badge bg-secondary">No</span>'?></td>
+<td>
+<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" onclick='toggleRequirement(<?=(int)$r['id']?>)'><i class="fas <?=$r['is_active']?'fa-toggle-on text-success':'fa-toggle-off text-muted'?>"></i></button>
+<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" onclick='receiveRequirement(<?=(int)$r['id']?>)' title="Mark all submitted"><i class="fas fa-check-double"></i></button>
+</td></tr>
 <?php endforeach; ?>
-</tbody>
-</table>
+</tbody></table></div>
+</div>
+<div class="col-md-5">
+<h6 class="fw-semibold mb-2">Quick Stats</h6>
+<div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+<div class="stat-card" style="padding:10px"><div class="stat-icon" style="background:#7c3aed;width:32px;height:32px;font-size:12px"><i class="fas fa-list"></i></div><div class="stat-content"><h3 style="font-size:16px"><?=$total_reqs??0?></h3><p style="font-size:10px">Total</p></div></div>
+<div class="stat-card" style="padding:10px"><div class="stat-icon" style="background:#059669;width:32px;height:32px;font-size:12px"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3 style="font-size:16px"><?=$active_reqs??0?></h3><p style="font-size:10px">Active</p></div></div>
+</div>
+<div class="mt-3">
+<button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick='resetAllRequirements()'><i class="fas fa-undo me-1"></i>Reset All Requirements</button>
+<button class="btn btn-sm btn-outline-success" onclick="alert('Already seeded with defaults.')"><i class="fas fa-database me-1"></i>Re-seed Defaults</button>
 </div>
 </div>
 </div>
+</div></div>
 </div>
 
-<!-- Requirement Detail -->
-<div class="sec-card mt-3">
-<h2><i class="fas fa-list-check" style="color:#059669"></i>Requirement Detail</h2>
-<p class="text-muted small mb-3">Per-item breakdown across all applicants.</p>
-<div class="table-responsive">
-<table class="table table-sm">
-<thead><tr><th>#</th><th>Requirement</th><th>Not Submitted</th><th>Submitted</th><th>Verified</th><th>Rejected</th><th>Missing</th><th>Progress</th></tr></thead>
-<tbody>
-<?php $idx=1; foreach($req_items as $ri):
-$n = sc($conn,"SELECT COUNT(*)c FROM applicant_requirement_status WHERE requirement_id={$ri['id']} AND status='Not Submitted'");
-$s = sc($conn,"SELECT COUNT(*)c FROM applicant_requirement_status WHERE requirement_id={$ri['id']} AND status='Submitted'");
-$v = sc($conn,"SELECT COUNT(*)c FROM applicant_requirement_status WHERE requirement_id={$ri['id']} AND status='Verified'");
-$rj = sc($conn,"SELECT COUNT(*)c FROM applicant_requirement_status WHERE requirement_id={$ri['id']} AND status='Rejected'");
-$m = sc($conn,"SELECT COUNT(*)c FROM applicant_requirement_status WHERE requirement_id={$ri['id']} AND status='Missing'");
-$total_s = $n+$s+$v+$rj+$m;
-$pct = $total_s > 0 ? round(($v/$total_s)*100) : 0;
-$bar = $pct>=80?'bg-success':($pct>=50?'bg-warning':'bg-danger');
-?>
-<tr>
-<td><?= $idx++ ?></td>
-<td><?= htmlspecialchars($ri['requirement_name']) ?></td>
-<td><?= $n ?></td>
-<td><?= $s ?></td>
-<td><strong><?= $v ?></strong></td>
-<td><?= $rj ?></td>
-<td><?= $m ?></td>
-<td style="min-width:140px"><div class="progress" style="height:16px"><div class="progress-bar <?= $bar ?>" style="width:<?= $pct ?>%"><?= $pct ?>%</div></div></td>
+<!-- REQUIREMENT CLEARANCE -->
+<div id="requirement_clearance" class="dashboard-section" data-section="requirement_clearance">
+<div class="scard"><div class="sch"><i class="fas fa-clipboard-check me-2"></i>Requirement Clearance</div><div class="scb">
+<div class="filter-group">
+<select id="clrProgram" style="width:auto" onchange="loadClearance()"><option value="">All Programs</option><?php foreach($programs_list as $p):?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select>
+<select id="clrIntake" style="width:auto" onchange="loadClearance()"><option value="">All Intake</option><option>January</option><option>May</option><option>August</option></select>
+</div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Name</th><th>Program</th><th>Intake</th><th>Progress</th><th>Actions</th></tr></thead><tbody id="clearanceList">
+<?php if(!empty($program_clearance)): foreach($program_clearance as $pc): ?>
+<tr><td><?=htmlspecialchars($pc['application_number']??'')?></td><td><?=htmlspecialchars($pc['full_name'])?></td><td><?=htmlspecialchars($pc['program_name']??'')?></td><td><?=htmlspecialchars($pc['intake']??'')?></td>
+<td>
+<div class="progress" style="height:16px;border-radius:8px"><div class="progress-bar" style="width:<?=(int)($pc['pct']??0)?>%;background:<?=($pc['pct']??0)>=100?'#059669':(($pc['pct']??0)>=50?'#d97706':'#dc2626')?>;font-size:10px"><?=(int)($pc['pct']??0)?>%</div></div>
+</td>
+<td><button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" onclick='viewApplicantReqs(<?=$pc['id']?>)'><i class="fas fa-eye"></i></button></td>
 </tr>
-<?php endforeach; ?>
-</tbody>
-</table>
+<?php endforeach; else: ?><tr><td colspan="6" class="text-muted text-center">No clearance data</td></tr><?php endif; ?>
+</tbody></table></div>
+</div></div>
 </div>
-</div>
-</section>
 
-<!-- ═══ REPORTS ═══ -->
-<section id="sec-reports" class="cs">
-<div class="sec-card">
-<h2><i class="fas fa-chart-bar" style="color:var(--adm-prim)"></i>Admission Reports</h2>
+<!-- REQUIREMENT VERIFICATION -->
+<div id="requirement_verification" class="dashboard-section" data-section="requirement_verification">
+<div class="scard"><div class="sch"><i class="fas fa-certificate me-2"></i>Requirement Verification</div><div class="scb">
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Requirement</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead><tbody id="verificationList">
+<tr><td colspan="5" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- REQUIREMENT TRACKING -->
+<div id="requirement_tracking" class="dashboard-section" data-section="requirement_tracking">
+<div class="scard"><div class="sch"><i class="fas fa-tasks me-2"></i>Requirement Tracking</div><div class="scb">
+<div class="filter-group">
+<input type="text" id="trkSearch" placeholder="Search applicant..." style="max-width:200px" onkeyup="loadReqTracking()">
+<select id="trkStatus" style="width:auto" onchange="loadReqTracking()"><option value="">All</option><option>Submitted</option><option>Verified</option><option>Pending</option><option>Rejected</option></select>
+</div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Requirement</th><th>Status</th><th>Remarks</th><th>Updated</th></tr></thead><tbody id="trackingList">
+<tr><td colspan="5" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- REGISTRATION READINESS -->
+<div id="registration_readiness" class="dashboard-section" data-section="registration_readiness">
+<div class="scard"><div class="sch"><i class="fas fa-flag-checkered me-2"></i>Registration Readiness</div><div class="scb">
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Program</th><th>Requirements Met</th><th>Status</th><th>Actions</th></tr></thead><tbody id="readinessList">
+<tr><td colspan="5" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- STUDENT REGISTRATION -->
+<div id="student_registration" class="dashboard-section" data-section="student_registration">
+<div class="scard"><div class="sch"><i class="fas fa-user-graduate me-2"></i>Student Registration</div><div class="scb">
+<div class="filter-group">
+<input type="text" id="regSearch" placeholder="Search applicant..." style="max-width:200px" onkeyup="loadRegList()">
+<select id="regIntake" style="width:auto" onchange="loadRegList()"><option value="">All Intake</option><option>January</option><option>May</option><option>August</option></select>
+</div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Name</th><th>Program</th><th>Intake</th><th>Registered</th><th>Action</th></tr></thead><tbody id="regList">
+<tr><td colspan="6" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- STUDENT ACTIVATION -->
+<div id="student_activation" class="dashboard-section" data-section="student_activation">
+<div class="scard"><div class="sch"><i class="fas fa-toggle-on me-2"></i>Student Activation</div><div class="scb">
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Admission No</th><th>Name</th><th>Program</th><th>Status</th><th>Action</th></tr></thead><tbody id="activationList">
+<tr><td colspan="5" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- DOCUMENT VERIFICATION -->
+<div id="document_verification" class="dashboard-section" data-section="document_verification">
+<div class="scard"><div class="sch"><i class="fas fa-file-alt me-2"></i>Document Verification</div><div class="scb">
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Document</th><th>Status</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="docList">
+<tr><td colspan="5" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+<!-- ADMISSION REPORTS -->
+<div id="admission_reports" class="dashboard-section" data-section="admission_reports">
+<div class="scard"><div class="sch"><i class="fas fa-chart-bar me-2"></i>Admission Reports</div><div class="scb">
+<div class="row g-3 mb-3">
+<div class="col-md-3"><label class="form-label">From</label><input type="date" id="rptFrom" class="form-control form-control-sm"></div>
+<div class="col-md-3"><label class="form-label">To</label><input type="date" id="rptTo" class="form-control form-control-sm"></div>
+<div class="col-md-2"><label class="form-label">&nbsp;</label><br><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="loadReport()"><i class="fas fa-sync me-1"></i>Load</button></div>
+<div class="col-md-2"><label class="form-label">&nbsp;</label><br><button class="btn btn-sm btn-success" onclick="exportCSV()"><i class="fas fa-file-csv me-1"></i>Export CSV</button></div>
+<div class="col-md-2"><label class="form-label">&nbsp;</label><br><form method="post" style="display:inline" target="_blank"><input type="hidden" name="print_report" value="1"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="fas fa-print me-1"></i>Print</button></form></div>
+</div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Applicant</th><th>Program</th><th>Status</th><th>Intake</th></tr></thead><tbody id="reportTable">
+<tr><td colspan="5" class="text-muted text-center">Select date range and load</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
+<!-- INTAKE STATISTICS -->
+<div id="intake_statistics" class="dashboard-section" data-section="intake_statistics">
+<div class="scard"><div class="sch"><i class="fas fa-chart-line me-2"></i>Intake Statistics</div><div class="scb">
 <div class="row g-3">
-<div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=applications','_blank')"><i class="fas fa-file-alt fa-2x mb-2" style="color:var(--adm-prim)"></i><strong class="small">Applications</strong></div></div>
-<div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=cleared','_blank')"><i class="fas fa-user-check fa-2x mb-2" style="color:#059669"></i><strong class="small">Cleared</strong></div></div>
-<div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=clearance','_blank')"><i class="fas fa-clipboard-check fa-2x mb-2" style="color:#8b5cf6"></i><strong class="small">Clearance</strong></div></div>
-<div class="col-md-3 col-6"><div class="card card-body text-center py-3" style="cursor:pointer;border-radius:8px;border:1px solid var(--adm-border);transition:all 0.15s" onclick="window.open('director-admissions.php?report=intake','_blank')"><i class="fas fa-calendar-alt fa-2x mb-2" style="color:#0284c7"></i><strong class="small">Intake</strong></div></div>
+<div class="col-md-6"><canvas id="intakeBarChart" height="250"></canvas></div>
+<div class="col-md-6"><canvas id="programPieChart" height="250"></canvas></div>
 </div>
-</div>
-</section>
-
-<!-- ═══ STUDENT SEARCH ═══ -->
-<section id="sec-student-search" class="cs">
-<div class="sec-card">
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-<h2 style="margin:0"><i class="fas fa-search" style="color:var(--adm-prim)"></i>Student Search</h2>
-<button class="btn btn-sm btn-outline-primary" onclick="new bootstrap.Modal(document.getElementById('studentCreateModal')).show()"><i class="fas fa-plus me-1"></i>New Student</button>
+<div class="table-responsive mt-3"><table class="table table-sm"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>
+<tr><td>Total Applicants</td><td><?=$total_applicants??0?></td></tr>
+<tr><td>Approved</td><td><?=$approved_applicants??0?></td></tr>
+<tr><td>Rejected</td><td><?=$rejected_count??0?></td></tr>
+<tr><td>Under Review</td><td><?=$pending_verify??0?></td></tr>
+<tr><td>Registered</td><td><?=$cleared_count??0?></td></tr>
+</tbody></table></div>
+</div></div>
 </div>
 
-<div class="search-filters mb-3">
-<div class="row g-2">
+<!-- APPLICANT MESSAGING -->
+<div id="applicant_messaging" class="dashboard-section" data-section="applicant_messaging">
+<div class="scard"><div class="sch"><i class="fas fa-envelope me-2"></i>Applicant Messaging</div><div class="scb">
+<div class="row g-3">
 <div class="col-md-4">
-<div class="input-group input-group-sm">
-<span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-<input type="text" id="stuSearch" class="form-control" placeholder="Search by name, admission number, phone, email..." autocomplete="off">
-</div>
-</div>
-<div class="col-md-2">
-<select id="stuProgram" class="form-select form-select-sm"><option value="">All Programs</option>
-<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
+<select id="msgApplicant" class="form-select form-select-sm" style="max-width:100%"><option value="">Select applicant...</option>
+<?php if(!empty($applicants)): foreach($applicants as $a):?><option value="<?=$a['id']?>"><?=htmlspecialchars($a['full_name'])?> (<?=htmlspecialchars($a['application_number']??'')?>)</option><?php endforeach; endif;?>
 </select>
+<textarea id="msgText" class="form-control form-control-sm mt-2" rows="3" placeholder="Type message..."></textarea>
+<button class="btn btn-sm mt-2" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="sendMessage()"><i class="fas fa-paper-plane me-1"></i>Send</button>
 </div>
-<div class="col-md-2">
-<select id="stuIntake" class="form-select form-select-sm"><option value="">All Intakes</option>
-<option>January</option><option>July</option>
-</select>
-</div>
-<div class="col-md-2">
-<select id="stuStatus" class="form-select form-select-sm"><option value="">All Status</option>
-<option>Active</option><option>Suspended</option><option>Withdrawn</option><option>Graduated</option>
-</select>
-</div>
-<div class="col-md-2">
-<button class="btn btn-sm btn-primary w-100" onclick="searchStudents(1)"><i class="fas fa-search me-1"></i>Search</button>
+<div class="col-md-8">
+<h6 class="fw-semibold">Conversation</h6>
+<div id="msgConversation" style="max-height:300px;overflow-y:auto;background:#f8f9fa;padding:10px;border-radius:8px">
+<p class="text-muted text-center">Select an applicant to view messages</p>
 </div>
 </div>
+</div>
+</div></div>
 </div>
 
-<div id="stuResults">
-<div class="empty-state"><i class="fas fa-search"></i><p>Use the search fields above to find students in the directory.</p></div>
+<!-- NOTIFICATIONS -->
+<div id="notifications" class="dashboard-section" data-section="notifications">
+<div class="scard"><div class="sch"><i class="fas fa-bell me-2"></i>Notifications</div><div class="scb">
+<div class="d-flex justify-content-between mb-2">
+<select id="notifType" class="form-select form-select-sm" style="width:auto" onchange="loadNotifications()"><option value="">All Types</option><option>info</option><option>success</option><option>warning</option><option>danger</option></select>
+<button class="btn btn-sm btn-outline-danger" id="clearAllNotifBtn"><i class="fas fa-trash me-1"></i>Clear All</button>
+</div>
+<div id="notificationList"><p class="text-muted text-center">Loading...</p></div>
+</div></div>
 </div>
 
-<div id="stuPagination" class="d-flex justify-content-center gap-1 mt-3" style="display:none"></div>
-</div>
-</section>
-
-<!-- ═══ IMPORT ═══ -->
-<section id="sec-import" class="cs">
-<div class="sec-card">
-<h2 style="margin-bottom:16px"><i class="fas fa-upload" style="color:var(--adm-prim)"></i>Import Students</h2>
-<p class="small text-muted mb-3">Upload an Excel (.xlsx) or CSV file containing student records. The system will automatically match and import new students, skipping duplicates.</p>
-
-<form id="importForm" enctype="multipart/form-data" onsubmit="return importExcel(event)">
-<div class="row g-3">
-<div class="col-md-6">
-<div class="upload-zone" id="importDropZone" style="border:2px dashed var(--adm-border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s">
-<i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color:var(--adm-prim)"></i>
-<h6 class="fw-semibold">Drop Excel file here or click to browse</h6>
-<p class="small text-muted mb-0">Supports .xlsx and .csv files</p>
-<input type="file" name="import_file" id="importFileInput" accept=".xlsx,.csv" style="display:none" onchange="document.getElementById('importFileName').textContent = this.files[0]?.name || 'No file selected'">
-</div>
-<div class="mt-2"><small id="importFileName" class="text-muted">No file selected</small></div>
-</div>
-<div class="col-md-6">
-<div class="card bg-light border-0 p-3">
-<h6 class="fw-semibold"><i class="fas fa-info-circle me-1"></i>Expected Columns</h6>
-<small class="text-muted">First Name, Last Name, Middle Name, Student No, Program, Phone, Email</small>
-<hr class="my-2">
-<h6 class="fw-semibold"><i class="fas fa-cog me-1"></i>Options</h6>
-<div class="form-check mb-1">
-<input class="form-check-input" type="checkbox" id="importSkipDupes" checked>
-<label class="form-check-label small">Skip duplicate student numbers</label>
-</div>
-<button type="submit" class="btn btn-primary mt-2" id="importBtn"><i class="fas fa-upload me-1"></i>Import Students</button>
-</div>
-</div>
-</div>
-</form>
-
-<div id="importResults" style="display:none" class="mt-3"></div>
-
-<div class="mt-4 pt-3" style="border-top:1px solid var(--adm-border)">
-<h6 class="fw-semibold"><i class="fas fa-folder-open me-1" style="color:var(--adm-prim)"></i>Batch Import from Students Data Folder</h6>
-<p class="small text-muted mb-2">Scan the pre-loaded data folder and import all missing student records automatically.</p>
-<button class="btn btn-sm btn-outline-primary" id="batchImportBtn" onclick="batchImportStudents()"><i class="fas fa-sync me-1"></i>Scan & Import Missing</button>
-<div id="batchImportResults" class="mt-2"></div>
-</div>
-</div>
-</section>
-
-<!-- ═══ DIRECTORY ═══ -->
-<section id="sec-directory" class="cs">
-<div class="sec-card">
-<h2><i class="fas fa-address-book" style="color:var(--adm-prim)"></i>Student Directory</h2>
-<p class="small text-muted mb-3">Use the student search section to find and manage student records.</p>
-<div class="d-flex gap-2">
-<button class="btn btn-sm btn-primary" onclick="switchSec('student-search')"><i class="fas fa-search me-1"></i>Go to Student Search</button>
-<button class="btn btn-sm btn-outline-success" onclick="new bootstrap.Modal(document.getElementById('studentCreateModal')).show()"><i class="fas fa-plus me-1"></i>Register New Student</button>
-</div>
-</div>
-</section>
-
-<!-- ═══ APPROVALS ═══ -->
-<section id="sec-approvals" class="cs">
-<div class="sec-card">
-<h2><i class="fas fa-check-double" style="color:var(--adm-prim)"></i>Admission Approvals</h2>
-<p class="small text-muted mb-3">Review and manage admission approval requests.</p>
-<?php
-$admApprovals = getPendingApprovals($conn, null, 20);
-if (!empty($admApprovals)):
-    foreach ($admApprovals as $apr):
-        echo renderApprovalWorkflowCard($apr, $conn);
-        echo renderApprovalActionButtons($apr['id']);
-    endforeach;
-else:
-    echo '<div class="text-muted small py-4 text-center">No pending approvals.</div>';
-endif;
-?>
-</div>
-</section>
-
-</div><!-- /p-3 -->
-</div><!-- /main-content -->
-</div><!-- /dashboard-container -->
-
-<!-- Add/Edit Modal -->
-<div class="modal fade" id="appModal" tabindex="-1">
-<div class="modal-dialog modal-lg">
-<form method="POST" class="modal-content" id="appForm">
-<input type="hidden" name="action" id="appFormAction" value="add_applicant">
-<input type="hidden" name="id" id="appFormId" value="">
-<div class="modal-header" style="background:linear-gradient(135deg,var(--adm-prim),#6d28d9);color:#fff">
-<h5 class="modal-title" id="appModalTitle"><i class="fas fa-user-plus me-2"></i>Add Applicant</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body">
-<div class="row g-3">
-<div class="col-md-12"><label class="form-label small fw-medium">Full Name *</label><input type="text" name="full_name" id="afn" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Gender</label><select name="gender" id="agen" class="form-select form-select-sm"><option>Male</option><option>Female</option><option>Other</option></select></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="adob" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" id="aph" class="form-control form-control-sm"></div>
-<div class="col-md-6"><label class="form-label small fw-medium">Email</label><input type="email" name="email" id="aem" class="form-control form-control-sm"></div>
-<div class="col-md-6"><label class="form-label small fw-medium">Address</label><input type="text" name="address" id="aaddr" class="form-control form-control-sm"></div>
-<hr class="my-1">
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Name</label><input type="text" name="guardian_name" id="agn" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Phone</label><input type="text" name="guardian_phone" id="agp" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Relationship</label><input type="text" name="guardian_relationship" id="agr" class="form-control form-control-sm"></div>
-<hr class="my-1">
-<div class="col-md-6"><label class="form-label small fw-medium">Program</label>
-<select name="program_id" id="aprog" class="form-select form-select-sm"><option value="">Select Program</option>
-<?php foreach($programs_list as $p): ?><option value="<?= $p['id'] ?? $p['program_code'] ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-</select></div>
-<div class="col-md-3"><label class="form-label small fw-medium">Intake</label><input type="text" name="intake" id="aint" class="form-control form-control-sm" placeholder="e.g. 2025A"></div>
-<div class="col-md-3" id="editStatusWrap" style="display:none"><label class="form-label small fw-medium">Status</label><select name="status" id="asts" class="form-select form-select-sm"><option>New Applicant</option><option>Under Review</option><option>Approved</option><option>Rejected</option><option>Registered</option></select></div>
-</div>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i><span id="appSaveLabel">Add Applicant</span></button>
-</div>
-</form>
-</div>
+<!-- REQUIREMENT ALERTS -->
+<div id="requirement_alerts" class="dashboard-section" data-section="requirement_alerts">
+<div class="scard"><div class="sch"><i class="fas fa-exclamation-triangle me-2"></i>Requirement Alerts</div><div class="scb">
+<div id="alertList"><p class="text-muted text-center">Loading...</p></div>
+</div></div>
 </div>
 
-<!-- View Applicant Modal -->
-<div class="modal fade" id="viewModal" tabindex="-1">
-<div class="modal-dialog modal-lg">
-<div class="modal-content">
-<div class="modal-header" style="background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff">
-<h5 class="modal-title"><i class="fas fa-user me-2"></i>Applicant Profile</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body p-4" id="viewModalBody">
-<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--adm-prim)"></i><p class="mt-2 text-muted small">Loading...</p></div>
-</div>
-<div class="modal-footer"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div>
-</div>
-</div>
-</div>
+</div><!-- end p-3 -->
+</div><!-- end dashboard-content -->
+<!-- MODALS -->
+<div class="modal fade" id="studentProfileModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="studentProfileBody"><p class="text-muted">Loading...</p></div></div></div></div>
 
-<!-- Student Create Modal -->
-<div class="modal fade" id="studentCreateModal" tabindex="-1">
-<div class="modal-dialog modal-lg">
-<form method="POST" class="modal-content" id="studentCreateForm">
-<input type="hidden" name="action" value="create_student">
-<div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">
-<h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Register New Student</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="editApplicantModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Applicant</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="editApplicantForm"><input type="hidden" name="id" id="editApplicantId">
+<div class="row g-2">
+<div class="col-md-6"><div class="mb-2"><label class="form-label">Full Name</label><input type="text" name="full_name" id="editName" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" id="editDob" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Gender</label><select name="gender" id="editGender" class="form-select form-select-sm"><option>Male</option><option>Female</option><option>Other</option></select></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Phone</label><input type="text" name="phone" id="editPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Email</label><input type="email" name="email" id="editEmail" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Program</label><select name="program_id" id="editProgram" class="form-select form-select-sm"><?php foreach($programs_list as $p):?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Intake</label><select name="intake" id="editIntake" class="form-select form-select-sm"><option>January</option><option>May</option><option>August</option></select></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Guardian Name</label><input type="text" name="guardian_name" id="editGuardian" class="form-control form-control-sm"></div></div>
+<div class="col-md-2"><div class="mb-2"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" id="editGuardianPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-2"><div class="mb-2"><label class="form-label">Relationship</label><input type="text" name="guardian_relationship" id="editGuardianRel" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Status</label><select name="status" id="editStatus" class="form-select form-select-sm"><option>New Applicant</option><option>Under Review</option><option>Approved</option><option>Rejected</option><option>Registered</option></select></div></div>
+<div class="col-md-12"><div class="mb-2"><label class="form-label">Address</label><textarea name="address" id="editAddress" class="form-control form-control-sm" rows="1"></textarea></div></div>
 </div>
-<div class="modal-body">
-<div class="row g-3">
-<div class="col-12"><h6 class="fw-semibold" style="color:#059669"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Gender</label><select name="gender" class="form-select form-select-sm"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" class="form-control form-control-sm"></div>
-<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#059669"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Student Number *</label><input type="text" name="student_number" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Program</label>
-<select name="program" class="form-select form-select-sm">
-<option value="">Select Program</option>
-<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-</select></div>
-<div class="col-md-2"><label class="form-label small fw-medium">Intake</label><select name="intake_period" class="form-select form-select-sm"><option>January</option><option>July</option></select></div>
-<div class="col-md-2"><label class="form-label small fw-medium">Year</label><input type="number" name="intake_year" class="form-control form-control-sm" value="<?= date('Y') ?>"></div>
-<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#059669"><i class="fas fa-shield-alt me-1"></i>Guardian Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Name</label><input type="text" name="guardian_name" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Relationship</label><input type="text" name="guardian_relationship" class="form-control form-control-sm"></div>
-</div>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-sm" style="background:#059669;color:#fff"><i class="fas fa-save me-1"></i>Create Student</button>
-</div>
-</form>
-</div>
-</div>
+</form></div><div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="saveEditApplicant()"><i class="fas fa-save me-1"></i>Save</button></div></div></div></div>
 
-<!-- Student Profile Modal -->
-<div class="modal fade" id="studentProfileModal" tabindex="-1">
-<div class="modal-dialog modal-xl">
-<div class="modal-content">
-<div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">
-<h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body p-0" id="studentProfileBody">
-<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x" style="color:#059669"></i><p class="mt-2 text-muted small">Loading student profile...</p></div>
-</div>
-</div>
-</div>
-</div>
+<div class="modal fade" id="requirementModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-clipboard-list me-2"></i>Applicant Requirements</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="requirementBody"><p class="text-muted">Loading...</p></div></div></div></div>
 
-<!-- Student Edit Modal -->
-<div class="modal fade" id="studentEditModal" tabindex="-1">
-<div class="modal-dialog modal-lg">
-<form method="POST" class="modal-content" id="studentEditForm">
-<input type="hidden" name="action" value="edit_student">
-<input type="hidden" name="student_id" id="editStudentId" value="">
-<div class="modal-header" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff">
-<h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Student</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body">
-<div class="row g-3">
-<div class="col-12"><h6 class="fw-semibold" style="color:#0284c7"><i class="fas fa-user me-1"></i>Personal Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">First Name *</label><input type="text" name="first_name" id="efn" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Middle Name</label><input type="text" name="other_name" id="emn" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Surname *</label><input type="text" name="surname" id="esn" class="form-control form-control-sm" required></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Date of Birth</label><input type="date" name="date_of_birth" id="edob" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Gender</label><select name="gender" id="egender" class="form-select form-select-sm"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Phone</label><input type="text" name="phone" id="eph" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Email</label><input type="email" name="email" id="eem" class="form-control form-control-sm"></div>
-<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#0284c7"><i class="fas fa-graduation-cap me-1"></i>Academic Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Student Number</label><input type="text" name="student_number" id="estuno" class="form-control form-control-sm" readonly style="background:#f8fafc"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Program</label>
-<select name="program" id="eprog" class="form-select form-select-sm">
-<option value="">Select Program</option>
-<?php foreach($programs_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-</select></div>
-<div class="col-md-2"><label class="form-label small fw-medium">Intake</label><select name="intake_period" id="eintake" class="form-select form-select-sm"><option>January</option><option>July</option></select></div>
-<div class="col-md-2"><label class="form-label small fw-medium">Year</label><input type="number" name="intake_year" id="eintakeyr" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Status</label>
-<select name="status" id="estatus" class="form-select form-select-sm">
-<option>Active</option><option>Suspended</option><option>Withdrawn</option><option>Graduated</option>
-</select></div>
-<div class="col-12"><h6 class="fw-semibold mt-2" style="color:#0284c7"><i class="fas fa-shield-alt me-1"></i>Guardian Details</h6></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Name</label><input type="text" name="guardian_name" id="egn" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Guardian Phone</label><input type="text" name="guardian_phone" id="egp" class="form-control form-control-sm"></div>
-<div class="col-md-4"><label class="form-label small fw-medium">Relationship</label><input type="text" name="guardian_relationship" id="egr" class="form-control form-control-sm"></div>
-</div>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-sm" style="background:#0284c7;color:#fff"><i class="fas fa-save me-1"></i>Save Changes</button>
-</div>
-</form>
-</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<div class="modal fade" id="uploadDocModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-upload me-2"></i>Upload Document</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">
+<input type="hidden" id="uploadDocReqId">
+<input type="hidden" id="uploadDocAppId">
+<div class="mb-2"><label class="form-label">Document File</label><input type="file" id="uploadDocFile" class="form-control form-control-sm"></div>
+<div class="mb-2"><label class="form-label">Notes</label><textarea id="uploadDocNotes" class="form-control form-control-sm" rows="2"></textarea></div>
+</div><div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="submitDocument()"><i class="fas fa-upload me-1"></i>Upload</button></div></div></div></div>
 <script>
-// ── Suppress unhandled promise rejections ──
-window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
+jQuery(function($) {
+  'use strict';
 
-// ── Section switching ──
-var navLinks = document.querySelectorAll('.sec-nav a');
-function switchSec(sec){
-    navLinks.forEach(function(l){ l.classList.toggle('active', l.getAttribute('data-sec') === sec); });
-    document.querySelectorAll('.cs').forEach(function(s){ s.classList.toggle('active', s.id === 'sec-' + sec); });
-    history.replaceState(null, '', '#' + sec);
-}
-navLinks.forEach(function(l){
-    l.addEventListener('click', function(e){
-        e.preventDefault();
-        switchSec(this.getAttribute('data-sec'));
-    });
-});
-(function(){
-    var hash = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports','student-search','import','directory','approvals'].indexOf(hash) !== -1) switchSec(hash);
-})();
-window.addEventListener('hashchange', function(){
-    var h = location.hash.replace('#', '');
-    if (['overview','applications','requirements','clearance','reports','student-search','import','directory','approvals'].indexOf(h) !== -1) switchSec(h);
-});
+  /* ── Helper: HTML escape ── */
+  function htmlEscape(s) {
+    return $('<span>').text(s).html();
+  }
 
-// ── Charts ──
-<?php if (!empty($intake_stats)): ?>
-new Chart(document.getElementById('intakeChart'), {
-    type: 'bar',
-    data: {
-        labels: [<?php foreach($intake_stats as $is){ echo "'".htmlspecialchars($is['intake'])."',"; } ?>],
-        datasets: [{
-            label: 'Applicants',
-            data: [<?php foreach($intake_stats as $is){ echo $is['c'].","; } ?>],
-            backgroundColor: '#7c3aed',
-            borderRadius: 4,
-            barThickness: 28
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {legend:{display:false}},
-        scales: {y:{beginAtZero:true,grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}
-    }
-});
-<?php endif; ?>
+  /* ── Debounce ── */
+  function debounce(fn, ms) {
+    var t;
+    return function() { clearTimeout(t); t = setTimeout(fn, ms); };
+  }
 
-<?php if (array_sum($clearance_levels) > 0): ?>
-new Chart(document.getElementById('clearanceChart'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Not Submitted','Submitted','Verified','Rejected','Missing'],
-        datasets: [{
-            data: [<?= $clearance_levels['Not Submitted'] ?>,<?= $clearance_levels['Submitted'] ?>,<?= $clearance_levels['Verified'] ?>,<?= $clearance_levels['Rejected'] ?>,<?= $clearance_levels['Missing'] ?>],
-            backgroundColor: ['#94a3b8','#f59e0b','#059669','#dc2626','#f97316'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}
-    }
-});
-<?php endif; ?>
+  /* ── Toast notification ── */
+  function showToast(type, msg) {
+    var bg = { success: '#059669', danger: '#dc2626', warning: '#d97706', info: '#2563eb' };
+    var el = $('<div>').css({
+      position: 'fixed', top: '20px', right: '20px',
+      background: bg[type] || '#333', color: '#fff',
+      padding: '10px 20px', borderRadius: '8px',
+      zIndex: 99999, fontSize: '13px'
+    }).text(msg);
+    $('body').append(el);
+    setTimeout(function() { el.fadeOut(function() { el.remove(); }); }, 3000);
+  }
 
-<?php if (!empty($program_clearance)): ?>
-new Chart(document.getElementById('programClearanceChart'), {
-    type: 'bar',
-    data: {
-        labels: [<?php foreach($program_clearance as $pc){ echo "'".htmlspecialchars($pc['program'])."',"; } ?>],
-        datasets: [
-            {label:'Cleared',data:[<?php foreach($program_clearance as $pc){ echo $pc['cleared'].","; } ?>],backgroundColor:'#059669',borderRadius:3,barThickness:16},
-            {label:'Approved',data:[<?php foreach($program_clearance as $pc){ echo $pc['approved'].","; } ?>],backgroundColor:'#f59e0b',borderRadius:3,barThickness:16},
-            {label:'Pending',data:[<?php foreach($program_clearance as $pc){ echo max(0,$pc['total']-$pc['cleared']-$pc['approved']-$pc['rejected']).","; } ?>],backgroundColor:'#94a3b8',borderRadius:3,barThickness:16},
-            {label:'Rejected',data:[<?php foreach($program_clearance as $pc){ echo $pc['rejected'].","; } ?>],backgroundColor:'#dc2626',borderRadius:3,barThickness:16}
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {legend:{position:'bottom',labels:{boxWidth:10,font:{size:9}}}},
-        scales: {
-            x:{stacked:true,grid:{display:false},ticks:{font:{size:9}}},
-            y:{stacked:true,beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{font:{size:9}}}
-        }
-    }
-});
-<?php endif; ?>
+  /* ── Section switching ── */
+  function switchSection(id) {
+    $('.dashboard-section').removeClass('active');
+    $('#' + id).addClass('active');
+    $('.section-tab').removeClass('active');
+    $('.section-tab[data-section="' + id + '"]').addClass('active');
+    window.location.hash = '#' + id;
+  }
 
-// ── Toast ──
-function showToast(msg, type){
-    type = type || 'success';
-    var t = document.createElement('div');
-    t.className = 'toast-fixed ' + type;
-    t.innerHTML = msg;
-    document.body.appendChild(t);
-    setTimeout(function(){ t.classList.add('show'); }, 30);
-    setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 250); }, 3000);
-}
+  /* ── Section tab click handlers ── */
+  $('.section-tab').on('click', function(e) {
+    e.preventDefault();
+    var section = $(this).data('section');
+    if (section) switchSection(section);
+  });
 
-// ── Applicant Modal ──
-function openAddModal(){
-    document.getElementById('appFormAction').value = 'add_applicant';
-    document.getElementById('appModalTitle').innerHTML = '<i class="fas fa-user-plus me-2"></i>Add Applicant';
-    document.getElementById('appSaveLabel').textContent = 'Add Applicant';
-    document.getElementById('appFormId').value = '';
-    document.getElementById('editStatusWrap').style.display = 'none';
-    document.getElementById('appForm').reset();
-    new bootstrap.Modal(document.getElementById('appModal')).show();
-}
+  /* ── Init section from hash ── */
+  (function initSection() {
+    var h = window.location.hash.replace('#', '');
+    if (h && $('#' + h).length) { switchSection(h); }
+    else { switchSection('overview'); }
+  })();
 
-function editApplicant(id){
-    document.getElementById('appFormAction').value = 'edit_applicant';
-    document.getElementById('appModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Applicant';
-    document.getElementById('appSaveLabel').textContent = 'Update Applicant';
-    document.getElementById('editStatusWrap').style.display = 'block';
-    document.getElementById('appFormId').value = id;
-    fetch('director-admissions.php?ajax=get_requirements&applicant_id=' + id)
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            var info = d.info || {};
-            document.getElementById('afn').value = info.full_name || '';
-            document.getElementById('agen').value = info.gender || 'Male';
-            document.getElementById('adob').value = info.date_of_birth || '';
-            document.getElementById('aph').value = info.phone || '';
-            document.getElementById('aem').value = info.email || '';
-            document.getElementById('aaddr').value = info.address || '';
-            document.getElementById('agn').value = info.guardian_name || '';
-            document.getElementById('agp').value = info.guardian_phone || '';
-            document.getElementById('agr').value = info.guardian_relationship || '';
-            document.getElementById('aprog').value = info.program_id || '';
-            document.getElementById('aint').value = info.intake || '';
-            document.getElementById('asts').value = info.status || 'New Applicant';
-            new bootstrap.Modal(document.getElementById('appModal')).show();
-        })
-        .catch(function(){ showToast('Failed to load applicant', 'error'); });
-}
-
-// ── Search Applicants ──
-function searchApps(){
-    var q = document.getElementById('appSearch').value.trim();
-    var results = document.getElementById('appSearchResults');
-    var container = document.getElementById('appListContainer');
-    if (q.length < 2) {
-        results.style.display = 'none';
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Enter at least 2 characters to search.</p></div>';
-        return;
-    }
-    results.style.display = '';
-    results.innerHTML = '<div class="p-2 text-center text-muted small"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
-    fetch('director-admissions.php?ajax=search_applicants&q=' + encodeURIComponent(q))
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-            if (!data || !data.length) {
-                results.innerHTML = '<div class="p-2 text-center text-muted small">No applicants found.</div>';
-                return;
-            }
-            var h = '';
-            data.forEach(function(s){
-                h += '<div class="search-dd-item" onclick="viewApplicant('+s.id+')">'+
-                    '<div class="app-avatar" style="width:32px;height:32px;font-size:0.75rem"><i class="fas fa-user"></i></div>'+
-                    '<div style="flex:1;min-width:0"><div class="sr-name">'+htmlEsc(s.full_name)+'</div><div class="sr-meta">'+htmlEsc(s.application_number)+' | '+htmlEsc(s.program)+' | '+htmlEsc(s.phone)+'</div></div>'+
-                    '<span class="badge bg-'+ (s.status==='Approved'?'success':(s.status==='Rejected'?'danger':'secondary')) +'">'+s.status+'</span>'+
-                    '</div>';
-            });
-            results.innerHTML = h;
-            results.style.display = '';
-        })
-        .catch(function(){ results.innerHTML = '<div class="p-2 text-center text-danger small">Search failed.</div>'; });
-}
-
-document.addEventListener('DOMContentLoaded', function(){
-    var inp = document.getElementById('appSearch');
-    if (inp) {
-        inp.addEventListener('keyup', function(e){
-            if (e.key === 'Enter') searchApps();
-            else { var v = this.value; setTimeout(function(){ if (document.getElementById('appSearch').value === v) searchApps(); }, 300); }
+  /* ── Applicant Records ── */
+  function loadApplicantRecords() {
+    $.post('', {
+      action: 'search_applicants', q: $('#applicantSearch').val(),
+      status: $('#filterStatus').val(), intake: $('#filterIntake').val()
+    }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(a) {
+          var statusClass = a.status === 'Approved' ? 'success' : a.status === 'Rejected' ? 'danger' : a.status === 'Registered' ? 'info' : 'primary';
+          var disabledApprove = (a.status === 'Approved' || a.status === 'Registered') ? 'disabled' : '';
+          var disabledConvert = a.status !== 'Approved' ? 'disabled' : '';
+          var disabledDelete = a.status === 'Registered' ? 'disabled' : '';
+          h += '<tr><td>' + htmlEscape(a.application_number || '') + '</td><td>' + htmlEscape(a.full_name) + '</td><td>' + htmlEscape(a.phone || '') + '</td><td>' + htmlEscape(a.program_name || '') + '</td><td>' + htmlEscape(a.intake || '') + '</td><td><span class="badge badge-' + statusClass + '">' + htmlEscape(a.status) + '</span></td><td>' +
+            '<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" data-action="edit" data-id="' + a.id + '"><i class="fas fa-edit"></i></button>' +
+            '<button class="btn btn-sm btn-outline-' + (a.status === 'Approved' ? 'secondary' : 'success') + ' py-0 px-2" style="font-size:10px" data-action="approve" data-id="' + a.id + '" ' + disabledApprove + '><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="reject" data-id="' + a.id + '" ' + disabledApprove + '><i class="fas fa-times"></i></button>' +
+            '<button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" data-action="convert" data-id="' + a.id + '" ' + disabledConvert + '><i class="fas fa-user-graduate"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="delete" data-id="' + a.id + '" ' + disabledDelete + '><i class="fas fa-trash"></i></button></td></tr>';
         });
-        inp.addEventListener('blur', function(){ setTimeout(function(){ var d=document.getElementById('appSearchResults'); if(d)d.style.display='none'; }, 200); });
-        inp.addEventListener('focus', function(){ if(this.value.length>=2){ var d=document.getElementById('appSearchResults'); if(d)d.style.display=''; } });
-    }
-});
+      } else { h = '<tr><td colspan="7" class="text-muted text-center">No applicants found</td></tr>'; }
+      $('#applicantList').html(h);
+    }, 'json').fail(function() { $('#applicantList').html('<tr><td colspan="7" class="text-danger text-center">Error loading applicants</td></tr>'); });
+  }
+  $('#applicantSearch').on('input', debounce(loadApplicantRecords, 300));
+  $('#filterStatus, #filterIntake').on('change', loadApplicantRecords);
+  window.applyFilter = loadApplicantRecords;
+  window.loadApplicantRecords = loadApplicantRecords;
 
-// ── View Applicant (loads full profile with requirements) ──
-function viewApplicant(id){
-    var modal = new bootstrap.Modal(document.getElementById('viewModal'));
-    document.getElementById('viewModalBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x" style="color:#7c3aed"></i><p class="mt-2 text-muted small">Loading profile...</p></div>';
-    modal.show();
-    fetch('director-admissions.php?ajax=get_requirements&applicant_id='+id)
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            var info = d.info || {};
-            var reqData = d.requirements || [];
-            var history = d.history || [];
-            var totalItems = reqData.length;
-            var verified = reqData.filter(function(r){ return r.status === 'Verified'; }).length;
-            var pct = totalItems > 0 ? Math.round((verified/totalItems)*100) : 0;
-            var h = '<div class="row g-3">'+
-                '<div class="col-md-4">'+
-                '<div class="text-center p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0">'+
-                '<div class="app-avatar" style="width:64px;height:64px;font-size:1.5rem;margin:0 auto 8px"><i class="fas fa-user-graduate"></i></div>'+
-                '<h5 class="mb-0" style="font-size:1rem">'+htmlEsc(info.full_name||'')+'</h5>'+
-                '<small class="text-muted">'+htmlEsc(info.application_number||'')+'</small>'+
-                '<div class="mt-2"><span class="badge bg-'+ (info.status==='Approved'?'success':(info.status==='Rejected'?'danger':(info.status==='Registered'?'info':'secondary'))) +'">'+(info.status||'-')+'</span></div>'+
-                '</div>'+
-                '<div class="mt-3 p-3 rounded" style="background:#f5f3ff;border:1px solid #e0e7ff">'+
-                '<div class="small fw-bold" style="color:#7c3aed"><i class="fas fa-clipboard-check me-1"></i>Progress</div>'+
-                '<div class="d-flex align-items-center gap-3 mt-2">'+
-                '<svg width="56" height="56" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="#e5e7eb" stroke-width="4"/>'+
-                '<circle cx="30" cy="30" r="26" fill="none" stroke="#7c3aed" stroke-width="4" stroke-dasharray="163.36" stroke-dashoffset="'+((100-pct)/100*163.36)+'" transform="rotate(-90 30 30)"/>'+
-                '<text x="30" y="30" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="bold" fill="#1e293b">'+pct+'%</text></svg>'+
-                '<div><div class="fw-bold" style="font-size:1.1rem">'+verified+' / '+totalItems+'</div><div class="small text-muted">verified</div></div>'+
-                '</div><div class="progress mt-2" style="height:4px"><div class="progress-bar" style="background:#7c3aed;width:'+pct+'%"></div></div>'+
-                '</div>'+
-                '</div>'+
-                '<div class="col-md-8">'+
-                '<ul class="nav nav-tabs mb-2 small">'+
-                '<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#vpInfo">Info</a></li>'+
-                '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#vpReqs">Requirements</a></li>'+
-                '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#vpH">History</a></li>'+
-                '</ul>'+
-                '<div class="tab-content">'+
-                '<div class="tab-pane fade show active" id="vpInfo">'+
-                '<div class="row g-1 small">';
-            var fields = [
-                ['Full Name', info.full_name],
-                ['App Number', info.application_number],
-                ['Gender', info.gender],
-                ['DOB', info.date_of_birth],
-                ['Phone', info.phone],
-                ['Email', info.email],
-                ['Address', info.address],
-                ['Guardian', info.guardian_name],
-                ['Guardian Phone', info.guardian_phone],
-                ['Relationship', info.guardian_relationship],
-                ['Intake', info.intake],
-                ['Admission Date', info.admission_date],
-                ['Status', info.status]
-            ];
-            fields.forEach(function(f){
-                if (f[1]) h += '<div class="col-6"><span class="text-muted">'+f[0]+':</span> <strong>'+htmlEsc(f[1])+'</strong></div>';
-            });
-            h += '</div></div>'+
-                '<div class="tab-pane fade" id="vpReqs">'+
-                '<div class="row g-1">';
-            reqData.forEach(function(r){
-                var sts = r.status || 'Not Submitted';
-                var badge = sts==='Verified'?'bg-success':(sts==='Rejected'?'bg-danger':(sts==='Submitted'?'bg-warning text-dark':(sts==='Missing'?'bg-orange text-dark':'bg-light text-muted')));
-                h += '<div class="col-md-6"><div class="req-card py-1 px-2" style="border-color:'+(sts==='Verified'?'#86efac':(sts==='Rejected'?'#fecaca':'#e2e8f0'))+'">'+
-                    '<span style="font-size:0.8rem;color:'+(sts==='Verified'?'#059669':(sts==='Rejected'?'#dc2626':'#94a3b8'))+'">'+
-                    '<i class="fas '+(sts==='Verified'?'fa-check-circle':(sts==='Rejected'?'fa-times-circle':'fa-circle'))+'"></i></span>'+
-                    '<span class="req-name">'+htmlEsc(r.requirement_name||'')+'</span>'+
-                    '<span class="badge '+badge+'">'+sts+'</span>'+
-                    (r.remarks ? '<small class="text-muted ms-1" title="'+htmlEsc(r.remarks)+'"><i class="fas fa-comment"></i></small>' : '')+
-                    '</div></div>';
-            });
-            h += '</div></div>'+
-                '<div class="tab-pane fade" id="vpH"><div style="max-height:300px;overflow-y:auto">';
-            if (history.length) {
-                history.forEach(function(ev){
-                    h += '<div class="req-hist-item"><span class="badge bg-'+ (ev.action==='Verified'?'success':(ev.action==='Rejected'?'danger':(ev.action==='Submitted'?'warning text-dark':'secondary'))) +'">'+ev.action+'</span>'+
-                        '<span style="flex:1">'+htmlEsc(ev.remarks||'')+'</span>'+
-                        '<small class="text-muted" style="white-space:nowrap">'+(ev.performed_by_name ? htmlEsc(ev.performed_by_name)+' &middot; ' : '')+ (ev.created_at ? new Date(ev.created_at).toLocaleString() : '')+'</small></div>';
-                });
-            } else {
-                h += '<p class="text-muted small">No history yet.</p>';
-            }
-            h += '</div></div></div></div></div></div>';
-            document.getElementById('viewModalBody').innerHTML = h;
-        })
-        .catch(function(){
-            document.getElementById('viewModalBody').innerHTML = '<div class="alert alert-danger text-center m-3 py-4">Failed to load profile.</div>';
-        });
-}
-
-// ── REQUIREMENTS PORTAL ──
-var _selectedReqAppId = 0;
-
-function searchReqApps(){
-    var q = document.getElementById('reqAppSearch').value.trim();
-    var results = document.getElementById('reqSearchResults');
-    if (q.length < 2) { results.style.display = 'none'; return; }
-    results.style.display = '';
-    results.innerHTML = '<div class="p-2 text-center text-muted small"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
-    fetch('director-admissions.php?ajax=search_applicants&q=' + encodeURIComponent(q))
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-            if (!data || !data.length) {
-                results.innerHTML = '<div class="p-2 text-center text-muted small">No applicants found.</div>';
-                return;
-            }
-            var h = '';
-            data.forEach(function(s){
-                h += '<div class="search-dd-item" onclick="selectReqApp('+s.id+')">'+
-                    '<div class="app-avatar" style="width:32px;height:32px;font-size:0.75rem"><i class="fas fa-user"></i></div>'+
-                    '<div style="flex:1;min-width:0"><div class="sr-name">'+htmlEsc(s.full_name)+'</div><div class="sr-meta">'+htmlEsc(s.application_number)+' | '+htmlEsc(s.phone)+'</div></div>'+
-                    '<span class="badge bg-'+ (s.status==='Approved'?'success':(s.status==='Rejected'?'danger':'secondary')) +'">'+s.status+'</span>'+
-                    '</div>';
-            });
-            results.innerHTML = h;
-        })
-        .catch(function(){ results.innerHTML = '<div class="p-2 text-center text-danger small">Search failed.</div>'; });
-}
-
-document.addEventListener('DOMContentLoaded', function(){
-    var inp = document.getElementById('reqAppSearch');
-    if (inp) {
-        inp.addEventListener('keyup', function(e){
-            if (e.key === 'Enter') searchReqApps();
-            else { var v = this.value; setTimeout(function(){ if (document.getElementById('reqAppSearch').value === v) searchReqApps(); }, 300); }
-        });
-        inp.addEventListener('blur', function(){ setTimeout(function(){ var d=document.getElementById('reqSearchResults'); if(d)d.style.display='none'; }, 200); });
-        inp.addEventListener('focus', function(){ if(this.value.length>=2){ var d=document.getElementById('reqSearchResults'); if(d)d.style.display=''; } });
-    }
-});
-
-function selectReqApp(id){
-    _selectedReqAppId = id;
-    document.getElementById('reqSearchResults').style.display = 'none';
-    document.getElementById('reqAppSearch').value = '';
-    loadReq(id);
-}
-
-function loadReq(aid){
-    var list = document.getElementById('reqListContainer');
-    list.innerHTML = '<div class="loading-dots"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading requirements...</p></div>';
-    document.getElementById('reqAppInfoCard').style.display = 'none';
-    document.getElementById('reqDetailTabs').style.display = 'none';
-    document.getElementById('reqDetailContent').style.display = 'none';
-    fetch('director-admissions.php?ajax=get_requirements&applicant_id=' + aid)
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            var info = d.info || {};
-            var reqData = d.requirements || [];
-            var history = d.history || [];
-            var totalItems = reqData.length;
-            var verifiedCount = 0;
-            var pendingCount = 0;
-            var missingCount = 0;
-            var statusMap = {};
-            var remarksMap = {};
-            reqData.forEach(function(r){
-                statusMap[r.requirement_id] = r.status || 'Not Submitted';
-                remarksMap[r.requirement_id] = r.remarks || '';
-                if (r.status === 'Verified') verifiedCount++;
-                else if (r.status === 'Missing') missingCount++;
-                else if (r.status === 'Not Submitted') pendingCount++;
-                else pendingCount++;
-            });
-            var pct = totalItems > 0 ? Math.round((verifiedCount/totalItems)*100) : 0;
-
-            document.getElementById('reqAppName').textContent = info.full_name || '-';
-            document.getElementById('reqAppNo').textContent = info.application_number || '-';
-            document.getElementById('reqAppPhone').textContent = info.phone || '-';
-            document.getElementById('reqAppStatus').textContent = info.status || '-';
-            document.getElementById('reqAppStatus').className = 'badge bg-'+(info.status==='Approved'?'success':(info.status==='Rejected'?'danger':(info.status==='Registered'?'info':'secondary')));
-            document.getElementById('reqAppInfoCard').style.display = '';
-
-            var arc = document.getElementById('reqArc');
-            var circumference = 2 * Math.PI * 26;
-            arc.style.strokeDasharray = circumference;
-            arc.style.strokeDashoffset = circumference - (pct/100) * circumference;
-            document.getElementById('reqPct').textContent = pct + '%';
-            document.getElementById('reqBar').style.width = pct + '%';
-            document.getElementById('reqBadgeVerified').textContent = verifiedCount + ' Verified';
-            document.getElementById('reqBadgePending').textContent = (totalItems - verifiedCount - missingCount) + ' Pending';
-            document.getElementById('reqBadgeMissing').textContent = missingCount + ' Missing';
-
-            document.getElementById('reqDetailTabs').style.display = '';
-            document.getElementById('reqDetailContent').style.display = '';
-
-            // Checklist tab
-            var ch = '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">'+
-                '<span class="fw-bold small">CHECKLIST ('+totalItems+' items)</span>'+
-                '<div class="d-flex gap-1">'+
-                '<button class="btn btn-sm btn-success py-0" onclick="markAllSub('+aid+')"><i class="fas fa-check-double me-1"></i>All Submitted</button>'+
-                '<button class="btn btn-sm btn-outline-secondary py-0" onclick="resetReq('+aid+')"><i class="fas fa-undo me-1"></i>Reset</button>'+
-                '</div></div>'+
-                '<div class="row g-1">';
-            reqData.forEach(function(r){
-                var sts = statusMap[r.requirement_id] || 'Not Submitted';
-                var bg = sts==='Verified'?'bg-success':(sts==='Rejected'?'bg-danger':(sts==='Submitted'?'bg-warning text-dark':(sts==='Missing'?'bg-orange text-dark':'bg-light text-muted border')));
-                ch += '<div class="col-md-6 col-lg-4">'+
-                    '<div class="req-card py-1 px-2" data-rid="'+r.requirement_id+'">'+
-                    '<span class="req-name">'+htmlEsc(r.requirement_name||'')+'</span>'+
-                    '<select class="form-select form-select-sm" onchange="toggleReq('+aid+','+r.requirement_id+',this.value)">'+
-                    '<option value="Not Submitted"'+(sts==='Not Submitted'?' selected':'')+'>Not Submitted</option>'+
-                    '<option value="Submitted"'+(sts==='Submitted'?' selected':'')+'>Submitted</option>'+
-                    '<option value="Verified"'+(sts==='Verified'?' selected':'')+'>Verified</option>'+
-                    '<option value="Rejected"'+(sts==='Rejected'?' selected':'')+'>Rejected</option>'+
-                    '<option value="Missing"'+(sts==='Missing'?' selected':'')+'>Missing</option>'+
-                    '</select>'+
-                    '<input type="text" class="req-remarks-input" placeholder="Remarks..." value="'+htmlEsc(remarksMap[r.requirement_id]||'')+'" onblur="toggleReq('+aid+','+r.requirement_id+',this.parentElement.querySelector(\'select\').value)">'+
-                    '</div></div>';
-            });
-            ch += '</div>';
-            document.getElementById('reqChecklistTab').innerHTML = ch;
-
-            // History tab
-            var hh = '<div style="max-height:250px;overflow-y:auto">';
-            if (history.length) {
-                history.forEach(function(ev){
-                    hh += '<div class="req-hist-item"><span class="badge bg-'+ (ev.action==='Verified'?'success':(ev.action==='Rejected'?'danger':(ev.action==='Submitted'?'warning text-dark':'secondary'))) +'">'+ev.action+'</span>'+
-                        '<span style="flex:1">'+htmlEsc(ev.remarks||'')+'</span>'+
-                        '<small class="text-muted" style="white-space:nowrap">'+(ev.performed_by_name ? htmlEsc(ev.performed_by_name)+' &middot; ' : '')+(ev.created_at ? new Date(ev.created_at).toLocaleString() : '')+'</small></div>';
-                });
-            } else {
-                hh += '<p class="text-muted small">No history yet.</p>';
-            }
-            hh += '</div>';
-            document.getElementById('reqHistoryTab').innerHTML = hh;
-            list.innerHTML = '';
-        })
-        .catch(function(){
-            list.innerHTML = '<div class="alert alert-danger text-center m-3">Failed to load applicant data.</div>';
-        });
-}
-
-function toggleReq(aid, rid, status){
-    var fd = new FormData();
-    fd.append('ajax', 'toggle_requirement');
-    fd.append('applicant_id', aid);
-    fd.append('requirement_id', rid);
-    fd.append('status', status);
-    var remarksInput = document.querySelector('.req-card[data-rid="'+rid+'"] .req-remarks-input');
-    fd.append('remarks', remarksInput ? remarksInput.value : '');
-    fetch('director-admissions.php', { method:'POST', body: fd })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (d.success) { showToast('Requirement updated to: ' + status, 'info'); loadReq(aid); }
-            else { showToast('Failed to update', 'error'); }
-        })
-        .catch(function(){ showToast('Network error', 'error'); });
-}
-
-function markAllSub(aid){
-    if (!confirm('Mark all requirements as Submitted?')) return;
-    var fd = new FormData();
-    fd.append('applicant_id', aid);
-    fetch('director-admissions.php?ajax=mark_all_submitted', { method:'POST', body: fd })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (d.success) { showToast('All marked as submitted', 'success'); loadReq(aid); }
-            else { showToast('Failed', 'error'); }
-        })
-        .catch(function(){ showToast('Network error', 'error'); });
-}
-
-function resetReq(aid){
-    if (!confirm('Reset all requirements for this applicant?')) return;
-    var fd = new FormData();
-    fd.append('applicant_id', aid);
-    fetch('director-admissions.php?ajax=reset_requirements', { method:'POST', body: fd })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (d.success) { showToast('All requirements reset', 'info'); loadReq(aid); }
-            else { showToast('Failed', 'error'); }
-        })
-        .catch(function(){ showToast('Network error', 'error'); });
-}
-
-// ── Utility ──
-function htmlEsc(s){
-    if (typeof s !== 'string') return String(s || '');
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
-
-// ═══ STUDENT SEARCH ═══
-function searchStudents(page){
+  /* ── Student Search ── */
+  window.searchStudents = function(page) {
     page = page || 1;
-    var q = document.getElementById('stuSearch').value.trim();
-    var program = document.getElementById('stuProgram').value;
-    var intake = document.getElementById('stuIntake').value;
-    var status = document.getElementById('stuStatus').value;
-    var url = '?ajax=search_students&q=' + encodeURIComponent(q) + '&program=' + encodeURIComponent(program) + '&intake=' + encodeURIComponent(intake) + '&status=' + encodeURIComponent(status) + '&page=' + page;
-    fetch(url).then(function(r){ return r.json(); }).then(function(d){
-        var container = document.getElementById('stuResults');
-        var pagination = document.getElementById('stuPagination');
-        if (d.error){
-            container.innerHTML = '<div class="empty-state" style="color:#dc2626"><i class="fas fa-exclamation-circle" style="color:#dc2626"></i><p>' + htmlEsc(d.error) + '</p></div>';
-            pagination.style.display = 'none';
-            return;
-        }
-        if (!d.students || d.students.length === 0){
-            var msg = (q || program || intake || status) ? 'No students found matching your criteria.' : 'No students in the directory yet. Add students using the Create or Import options.';
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-user-graduate"></i><p>' + msg + '</p></div>';
-            pagination.style.display = 'none';
-            return;
-        }
-        var html = '<div class="mb-2 small text-muted">Showing ' + d.students.length + ' of ' + d.total + ' students</div><div class="row g-3">';
-        d.students.forEach(function(s){
-            var fullName = [s.first_name, s.other_name, s.surname].filter(Boolean).join(' ');
-            var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
-            var pct = d.reqTotal > 0 ? Math.round((s.req_done || 0) / d.reqTotal * 100) : 0;
-            var barClass = pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-warning' : pct >= 1 ? 'bg-danger' : 'bg-secondary';
-            html += '<div class="col-md-6 col-lg-4">' +
-                '<div class="card h-100" style="border:1px solid var(--adm-border);border-radius:10px;overflow:hidden;transition:all 0.15s">' +
-                '<div class="card-body p-3">' +
-                '<div class="d-flex align-items-center gap-3">' +
-                '<div class="student-avatar" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">' + initials + '</div>' +
-                '<div class="flex-grow-1 min-width-0">' +
-                '<h6 class="mb-0 text-truncate fw-semibold" style="font-size:0.9rem">' + htmlEsc(fullName) + '</h6>' +
-                '<div class="small text-muted">' + htmlEsc(s.student_number || s.registration_number || '') + '</div>' +
-                '<div class="small text-muted">' + htmlEsc(s.program || '') + ' ' + htmlEsc(s.intake_period || '') + ' ' + htmlEsc(s.intake_year || '') + '</div>' +
-                '</div>' +
-                '<div class="text-end">' +
-                '<span class="badge bg-success student-status d-block mb-1">' + htmlEsc(s.status) + '</span>' +
-                '<span class="small text-muted">' + (s.req_done || 0) + '/' + d.reqTotal + '</span>' +
-                '</div>' +
-                '</div>' +
-                '<div class="mt-2"><div class="progress" style="height:4px;border-radius:2px"><div class="progress-bar ' + barClass + '" style="width:' + pct + '%"></div></div></div>' +
-                '<div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid #f1f5f9">' +
-                '<small class="text-muted"><i class="fas fa-phone me-1"></i>' + htmlEsc(s.phone || s.mobile_number || '-') + '</small>' +
-                '<button class="btn btn-sm btn-outline-success py-0 px-2" onclick="viewStudentProfile(' + s.id + ')" style="font-size:0.75rem"><i class="fas fa-eye me-1"></i>Profile</button>' +
-                '</div>' +
-                '</div></div></div>';
+    $.post('', { action: 'search_students', q: $('#ssQuery').val(), admission_no: $('#ssAdmissionNo').val(), reg_no: $('#ssRegNo').val(), phone: $('#ssPhone').val(), national_id: $('#ssNationalId').val(), program: $('#ssProgram').val(), intake: $('#ssIntake').val(), year: $('#ssYear').val(), status: $('#ssStatus').val(), page: page, limit: 50 },
+    function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(s) {
+          var name = s.full_name || (s.firstname + ' ' + s.lastname) || '';
+          var statusClass = s.status === 'Active' ? 'success' : s.status === 'Inactive' ? 'secondary' : s.status === 'Suspended' ? 'warning' : 'info';
+          h += '<tr><td>' + htmlEscape(s.admission_no || s.application_number || '') + '</td><td>' + htmlEscape(name) + '</td><td>' + htmlEscape(s.program_name || s.program || '') + '</td><td>' + htmlEscape(s.phone || '') + '</td><td><span class="badge bg-' + statusClass + '">' + htmlEscape(s.status || '') + '</span></td><td><button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" data-action="viewProfile" data-id="' + (s.student_id || s.id || 0) + '"><i class="fas fa-eye"></i></button></td></tr>';
         });
-        html += '</div>';
-        container.innerHTML = html;
-
-        // Pagination
-        if (d.totalPages > 1){
-            pagination.style.display = '';
-            var phtml = '<span class="small text-muted me-1">Page:</span>';
-            for (var i = 1; i <= d.totalPages; i++){
-                phtml += '<button class="btn btn-sm ' + (i === d.page ? 'btn-primary' : 'btn-outline-primary') + '" onclick="searchStudents(' + i + ')">' + i + '</button>';
-            }
-            pagination.innerHTML = phtml;
-        } else {
-            pagination.style.display = 'none';
+      } else { h = '<tr><td colspan="6" class="text-muted text-center">No results found</td></tr>'; }
+      $('#ssResults').html('<table class="table table-sm"><thead><tr><th>ID/Adm No</th><th>Name</th><th>Program</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + h + '</tbody></table>');
+      $('#ssCount').text((r.total || 0) + ' results');
+      if (r.total > 50) {
+        var ph = '';
+        for (var i = 1; i <= Math.ceil(r.total / 50); i++) {
+          ph += '<button class="btn btn-sm ' + (i === page ? 'btn-primary' : 'btn-outline-primary') + ' py-0 px-2 me-1" data-action="searchPage" data-page="' + i + '">' + i + '</button>';
         }
-    }).catch(function(){
-        document.getElementById('stuResults').innerHTML = '<div class="empty-state" style="color:#dc2626"><i class="fas fa-exclamation-triangle" style="color:#dc2626"></i><p>Search failed — check that the students database is connected.</p></div>';
-    });
-}
+        $('#ssPagination').html(ph);
+      } else { $('#ssPagination').empty(); }
+    }, 'json').fail(function() { $('#ssResults').html('<p class="text-danger">Error searching students</p>'); });
+  };
 
-// Enter key triggers search
-document.addEventListener('DOMContentLoaded', function(){
-    var inp = document.getElementById('stuSearch');
-    if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') searchStudents(1); });
-});
+  window.clearSearch = function() {
+    $('#ssQuery,#ssAdmissionNo,#ssRegNo,#ssPhone,#ssNationalId,#ssProgram,#ssIntake,#ssYear,#ssStatus').val('');
+    $('#ssResults').html('<div class="empty-state"><i class="fas fa-search"></i><div>Use the filters above to search for students. Results appear here.</div></div>');
+    $('#ssCount').text('0 results');
+    $('#ssPagination').empty();
+  };
 
-// ═══ STUDENT PROFILE (full details + editable) ═══
-var _profileStudentData = null; // holds last-loaded student data for edit modal
-
-function viewStudentProfile(id){
-    var modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
-    modal.show();
-    fetch('?ajax=get_student_profile&student_id=' + id).then(function(r){ return r.json(); }).then(function(d){
-        var body = document.getElementById('studentProfileBody');
-        if (d.error || !d.info){
-            body.innerHTML = '<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Failed to load profile: ' + htmlEsc(d.error) + '</p></div>';
-            return;
+  /* ── Student Profile ── */
+  window.viewStudentProfile = function(id) {
+    $.post('', { action: 'get_student_profile', student_id: id }, function(r) {
+      if (r.success) {
+        var d = r.data;
+        var reqsHtml = '';
+        if (d.requirements && d.requirements.length) {
+          d.requirements.forEach(function(req) {
+            var cls = req.status === 'Verified' ? 'success' : req.status === 'Submitted' ? 'primary' : req.status === 'Rejected' ? 'danger' : 'secondary';
+            reqsHtml += '<tr><td>' + htmlEscape(req.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(req.status || 'Pending') + '</span></td></tr>';
+          });
         }
-        _profileStudentData = d;
-        var s = d.info, a = d.applicant || {};
-        var fullName = [s.first_name, s.other_name, s.surname].filter(Boolean).join(' ') || 'N/A';
-        var initials = (s.first_name ? s.first_name[0] : '') + (s.surname ? s.surname[0] : '');
+        var docsHtml = '';
+        if (d.documents && d.documents.length) {
+          d.documents.forEach(function(doc) {
+            var cls2 = doc.verification_status === 'Verified' ? 'success' : doc.verification_status === 'Rejected' ? 'danger' : 'warning';
+            docsHtml += '<div class="d-flex justify-content-between align-items-center mb-1 p-1" style="background:#f8fafc;border-radius:4px"><span class="small">' + htmlEscape(doc.document_title || doc.file_name || 'Document') + '</span><span class="badge bg-' + cls2 + '">' + htmlEscape(doc.verification_status || 'Pending') + '</span></div>';
+          });
+        } else { docsHtml = '<p class="text-muted small mb-0">No documents uploaded</p>'; }
+        var h = '<div class="row g-3"><div class="col-md-6"><div class="scard"><div class="sch"><i class="fas fa-user me-2"></i>Personal Information</div><div class="scb"><dl><dt>Name</dt><dd>' + htmlEscape(d.full_name || '') + '</dd><dt>Admission No</dt><dd>' + htmlEscape(d.admission_no || '') + '</dd><dt>Phone</dt><dd>' + htmlEscape(d.phone || '') + '</dd><dt>Email</dt><dd>' + htmlEscape(d.email || '') + '</dd><dt>DOB</dt><dd>' + htmlEscape(d.date_of_birth || '') + '</dd><dt>National ID</dt><dd>' + htmlEscape(d.national_id || '') + '</dd></dl></div></div></div>' +
+          '<div class="col-md-6"><div class="scard"><div class="sch"><i class="fas fa-graduation-cap me-2"></i>Admission Info</div><div class="scb"><dl><dt>Program</dt><dd>' + htmlEscape(d.program_name || (d.info && d.info.program) || '') + '</dd><dt>Status</dt><dd><span class="badge bg-' + ((d.info && d.info.status === 'Active') ? 'success' : 'secondary') + '">' + htmlEscape((d.info && d.info.status) || '') + '</span></dd><dt>Student No</dt><dd>' + htmlEscape((d.info && d.info.student_number) || '') + '</dd><dt>Reg No</dt><dd>' + htmlEscape((d.info && d.info.registration_number) || '') + '</dd></dl></div></div></div></div>' +
+          '<div class="row g-3 mt-1"><div class="col-md-6"><div class="scard"><div class="sch"><i class="fas fa-clipboard-check me-2"></i>Requirements (' + d.completed + '/' + d.total_reqs + ' completed)</div><div class="scb"><div class="progress mb-3" style="height:20px;border-radius:10px"><div class="progress-bar" style="width:' + d.clearance_pct + '%;background:' + (d.clearance_pct >= 100 ? '#059669' : d.clearance_pct >= 50 ? '#d97706' : '#dc2626') + ';font-size:11px">' + d.clearance_pct + '%</div></div><table class="table table-sm"><thead><tr><th>Requirement</th><th>Status</th></tr></thead><tbody>' + reqsHtml + '</tbody></table></div></div></div>' +
+          '<div class="col-md-6"><div class="scard"><div class="sch"><i class="fas fa-file-alt me-2"></i>Documents (' + d.documents.length + ')</div><div class="scb">' + docsHtml + '</div></div></div></div>';
+        $('#studentProfileBody').html(h);
+        $('#studentProfileModal').modal('show');
+      } else { alert(r.error || 'Error loading profile'); }
+    }, 'json');
+  };
 
-        // ── Header ──
-        var hdrHtml =
-            '<div class="p-4" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">' +
-            '<div class="d-flex align-items-center gap-3 flex-wrap">' +
-            '<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.3rem;flex-shrink:0">' + initials + '</div>' +
-            '<div class="flex-grow-1">' +
-            '<h5 class="mb-0 fw-bold" style="color:#fff">' + htmlEsc(fullName) + '</h5>' +
-            '<div style="color:rgba(255,255,255,0.8);font-size:0.85rem"><strong>' + htmlEsc(s.student_number || '') + '</strong> &middot; ' + htmlEsc(s.program || '') + ' &middot; Intake: ' + htmlEsc(s.intake_period || '') + ' ' + htmlEsc(s.intake_year || '') + '</div></div>' +
-            '<div class="d-flex gap-2 align-items-center">' +
-            '<span class="badge bg-white text-success fs-6">' + htmlEsc(s.status) + '</span>' +
-            '<button class="btn btn-sm btn-light" onclick="openStudentEdit()" title="Edit Student"><i class="fas fa-edit"></i></button>' +
-            '<button class="btn btn-sm btn-light text-danger" onclick="deleteStudent(' + s.id + ',\'' + htmlEsc(fullName).replace(/'/g,"\\'") + '\')" title="Delete Student"><i class="fas fa-trash"></i></button>' +
-            (d.applicant_id ? '<button class="btn btn-sm btn-light" onclick="viewApplicant(' + d.applicant_id + ')" title="View Applicant Record"><i class="fas fa-user"></i></button>' : '') +
-            '</div></div></div>';
+  /* ── Delegate clicks for action buttons ── */
+  $(document).on('click', '[data-action]', function() {
+    var action = $(this).data('action');
+    var id = $(this).data('id');
+    var page = $(this).data('page');
+    if (page) { window.searchStudents(page); return; }
+    if (action === 'viewProfile') { window.viewStudentProfile(id); return; }
+    if (action === 'edit') { window.editApplicant(id); return; }
+    if (action === 'approve') { window.approveApplicant(id); return; }
+    if (action === 'reject') { window.rejectApplicant(id); return; }
+    if (action === 'convert') { window.convertToStudent(id); return; }
+    if (action === 'delete') { window.deleteApplicant(id); return; }
+    if (action === 'verifyDoc') { window.verifyDoc(id, $(this).data('appid')); return; }
+    if (action === 'rejectDoc') { window.rejectDoc(id, $(this).data('appid')); return; }
+  });
 
-        // ── Info Tab (full detail, no outer row — container adds it) ──
-        var infoHtml =
-            '<div class="col-md-6"><div class="small text-muted">Student Number</div><div class="fw-medium">' + htmlEsc(s.student_number || '-') + '</div></div>' +
-            '<div class="col-md-6"><div class="small text-muted">Full Name</div><div class="fw-medium">' + htmlEsc(fullName) + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">First Name</div><div class="fw-medium">' + htmlEsc(s.first_name || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Middle Name</div><div class="fw-medium">' + htmlEsc(s.other_name || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Surname</div><div class="fw-medium">' + htmlEsc(s.surname || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Date of Birth</div><div class="fw-medium">' + htmlEsc(s.date_of_birth || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Gender</div><div class="fw-medium">' + htmlEsc(s.gender || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Phone</div><div class="fw-medium">' + htmlEsc(s.phone || s.mobile_number || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Email</div><div class="fw-medium">' + htmlEsc(s.email || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Address</div><div class="fw-medium">' + htmlEsc(s.address || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Program</div><div class="fw-medium">' + htmlEsc(s.program || '-') + '</div></div>' +
-            '<div class="col-md-2"><div class="small text-muted">Intake Period</div><div class="fw-medium">' + htmlEsc(s.intake_period || '-') + '</div></div>' +
-            '<div class="col-md-2"><div class="small text-muted">Intake Year</div><div class="fw-medium">' + htmlEsc(s.intake_year || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Status</div><div><span class="badge bg-success">' + htmlEsc(s.status) + '</span></div></div>' +
-            '<div class="col-12"><hr class="my-1"><h6 class="fw-semibold" style="color:#059669"><i class="fas fa-shield-alt me-1"></i>Guardian</h6></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Guardian Name</div><div class="fw-medium">' + htmlEsc(s.guardian_name || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Guardian Phone</div><div class="fw-medium">' + htmlEsc(s.guardian_phone || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Relationship</div><div class="fw-medium">' + htmlEsc(s.guardian_relationship || '-') + '</div></div>' +
-            (d.applicant_id ?
-            '<div class="col-12"><hr class="my-1"><h6 class="fw-semibold" style="color:#7c3aed"><i class="fas fa-link me-1"></i>Linked Applicant #' + d.applicant_id + '</h6></div>' +
-            '<div class="col-md-4"><div class="small text-muted">Applicant Name</div><div class="fw-medium">' + htmlEsc(a.full_name || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">App Number</div><div class="fw-medium">' + htmlEsc(a.application_number || '-') + '</div></div>' +
-            '<div class="col-md-4"><div class="small text-muted">App Status</div><div><span class="badge bg-info">' + htmlEsc(a.status || '-') + '</span></div></div>'
-            : '<div class="col-12"><hr class="my-1"><div class="alert alert-warning py-2 small mb-0"><i class="fas fa-exclamation-triangle me-1"></i>No applicant record linked for this student.</div></div>');
+  /* ── Edit Applicant ── */
+  window.editApplicant = function(id) {
+    $.post('', { action: 'get_applicant_data', id: id }, function(r) {
+      if (r.id || r.success) {
+        var d = r.data || r;
+        $('#editApplicantId').val(d.id);
+        $('#editName').val(d.full_name);
+        $('#editDob').val(d.date_of_birth || '');
+        if (d.gender) $('#editGender').val(d.gender);
+        $('#editPhone').val(d.phone || '');
+        $('#editEmail').val(d.email || '');
+        $('#editProgram').val(d.program_id);
+        $('#editIntake').val(d.intake || 'January');
+        $('#editGuardian').val(d.guardian_name || '');
+        $('#editGuardianPhone').val(d.guardian_phone || '');
+        $('#editGuardianRel').val(d.guardian_relationship || '');
+        $('#editStatus').val(d.status || 'New Applicant');
+        $('#editAddress').val(d.address || '');
+        $('#editApplicantModal').modal('show');
+      } else { alert(r.message || 'Error loading applicant'); }
+    }, 'json');
+  };
+  window.saveEditApplicant = function() {
+    var f = $('#editApplicantForm').serialize() + '&action=edit_applicant';
+    $.post('', f, function(r) {
+      if (r.success) { $('#editApplicantModal').modal('hide'); loadApplicantRecords(); showToast('success', r.message || 'Updated'); }
+      else { showToast('danger', r.message || 'Error'); }
+    }, 'json').fail(function() { showToast('danger', 'Server error'); });
+  };
 
-        // ── Requirements Tab (actionable dropdowns) ──
-        var reqHtml = '';
-        if (d.requirements && d.requirements.length > 0 && d.applicant_id) {
-            reqHtml = '<div class="table-responsive"><table class="table table-sm mb-2"><thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead><tbody>';
-            d.requirements.forEach(function(r, i){
-                var opts = ['Not Submitted','Submitted','Verified','Rejected','Missing'];
-                var sel = '';
-                opts.forEach(function(o){
-                    sel += '<option value="' + o + '"' + (o === r.status ? ' selected' : '') + '>' + o + '</option>';
-                });
-                reqHtml += '<tr>' +
-                    '<td>' + (i + 1) + '</td>' +
-                    '<td class="fw-medium">' + htmlEsc(r.requirement_name || '-') + '</td>' +
-                    '<td><select class="form-select form-select-sm" id="reqStatus_' + r.requirement_id + '" style="font-size:0.72rem;padding:1px 18px 1px 6px;width:auto">' + sel + '</select></td>' +
-                    '<td><input type="text" class="form-control form-control-sm" id="reqRemarks_' + r.requirement_id + '" placeholder="Optional note" value="' + htmlEsc(r.remarks || '') + '" style="font-size:0.72rem;min-width:110px"></td>' +
-                    '<td><button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="toggleReqStatus(' + d.applicant_id + ',' + r.requirement_id + ')" style="font-size:0.7rem"><i class="fas fa-save me-1"></i>Save</button></td></tr>';
-            });
-            reqHtml += '</tbody></table></div>' +
-                '<button class="btn btn-sm btn-outline-success" onclick="markAllSubmitted(' + d.applicant_id + ')"><i class="fas fa-check-double me-1"></i>Mark All Submitted</button> ';
-        } else if (d.requirements && d.requirements.length > 0 && !d.applicant_id) {
-            reqHtml = '<div class="alert alert-warning small py-2 mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Create an applicant record and link it to this student to track requirements.</div>';
-        } else {
-            reqHtml = '<div class="text-center text-muted small py-4"><i class="fas fa-clipboard-list fa-2x mb-2" style="opacity:0.3"></i><br>No requirements have been configured yet.</div>';
-        }
+  /* ── Approve / Reject / Convert / Delete ── */
+  window.approveApplicant = function(id) {
+    if (!confirm('Approve this applicant?')) return;
+    $.post('', { action: 'approve_applicant_ajax', applicant_id: id }, function(r) {
+      if (r.success) { loadApplicantRecords(); window.loadApprovalList(); window.loadClearance(); showToast('success', 'Approved'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json').fail(function() { showToast('danger', 'Server error'); });
+  };
+  window.rejectApplicant = function(id) {
+    var reason = prompt('Rejection reason (optional):');
+    $.post('', { action: 'reject_applicant_ajax', applicant_id: id, reason: reason || '' }, function(r) {
+      if (r.success) { loadApplicantRecords(); window.loadApprovalList(); showToast('success', 'Rejected'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json').fail(function() { showToast('danger', 'Server error'); });
+  };
+  window.convertToStudent = function(id) {
+    if (!confirm('Convert this approved applicant to a student?')) return;
+    $.post('', { action: 'convert_to_student', applicant_id: id }, function(r) {
+      if (r.success) { loadApplicantRecords(); window.loadApprovalList(); showToast('success', 'Converted'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json').fail(function() { showToast('danger', 'Server error'); });
+  };
+  window.deleteApplicant = function(id) {
+    if (!confirm('Permanently delete this applicant?')) return;
+    $.post('', { action: 'delete_applicant', applicant_id: id }, function(r) {
+      if (r.success) { loadApplicantRecords(); showToast('success', 'Deleted'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json').fail(function() { showToast('danger', 'Server error'); });
+  };
 
-        // ── Documents Tab (upload + existing) ──
-        var docHtml = '';
-        if (d.applicant_id) {
-            docHtml = '<div class="card bg-light border-0 p-3 mb-3">' +
-                '<form id="docUploadForm' + d.applicant_id + '" onsubmit="return uploadDocFromProfile(' + d.applicant_id + ', event)">' +
-                '<div class="row g-2 align-items-end">' +
-                '<div class="col-md-3"><label class="form-label small fw-medium mb-0">Type</label><select name="document_type" class="form-select form-select-sm"><option>Transcript</option><option>Certificate</option><option>ID Card</option><option>Birth Certificate</option><option>Recommendation</option><option>Other</option></select></div>' +
-                '<div class="col-md-4"><label class="form-label small fw-medium mb-0">Title</label><input type="text" name="document_title" class="form-control form-control-sm" placeholder="e.g. KCSE Results"></div>' +
-                '<div class="col-md-3"><label class="form-label small fw-medium mb-0">File</label><input type="file" name="doc_file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></div>' +
-                '<div class="col-md-2"><button type="submit" class="btn btn-sm btn-primary w-100"><i class="fas fa-upload me-1"></i>Upload</button></div>' +
-                '</div></form></div>';
-        }
-        if (d.documents && d.documents.length > 0){
-            docHtml += '<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Type</th><th>File</th><th>Status</th><th>Uploaded By</th><th>Date</th><th>Action</th></tr></thead><tbody>';
-            d.documents.forEach(function(doc){
-                var dbadge = doc.verification_status === 'Verified' ? 'bg-success' : doc.verification_status === 'Rejected' ? 'bg-danger' : 'bg-warning text-dark';
-                docHtml += '<tr><td>' + htmlEsc(doc.document_type) + '</td>' +
-                    '<td><a href="../' + doc.file_path + '" target="_blank" class="small text-decoration-none">' + htmlEsc(doc.file_name) + ' <i class="fas fa-external-link-alt" style="font-size:0.6rem"></i></a></td>' +
-                    '<td><span class="badge ' + dbadge + '">' + htmlEsc(doc.verification_status) + '</span></td>' +
-                    '<td class="small text-muted">' + htmlEsc(doc.uploader_name || '-') + '</td>' +
-                    '<td class="small text-muted">' + (doc.uploaded_at ? doc.uploaded_at.slice(0,10) : '-') + '</td>' +
-                    '<td class="text-nowrap">' +
-                    (doc.verification_status !== 'Verified' ? '<button class="btn btn-sm btn-outline-success py-0 px-1" onclick="verifyDoc(' + doc.id + ',\'Verified\')" title="Verify"><i class="fas fa-check"></i></button> ' : '') +
-                    (doc.verification_status !== 'Rejected' ? '<button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="verifyDoc(' + doc.id + ',\'Rejected\')" title="Reject"><i class="fas fa-times"></i></button>' : '') +
-                    '</td></tr>';
-            });
-            docHtml += '</tbody></table></div>';
-        } else {
-            docHtml += '<div class="text-center text-muted small py-3"><i class="fas fa-file fa-2x mb-2" style="opacity:0.3"></i><br>No documents uploaded yet</div>';
-        }
-
-        // ── Activity Tab ──
-        var actHtml = d.activity && d.activity.length > 0 ?
-            '<div style="max-height:300px;overflow-y:auto">' + d.activity.map(function(a){
-                return '<div class="d-flex gap-2 py-1" style="border-bottom:1px solid #f1f5f9;font-size:0.78rem">' +
-                    '<span class="badge bg-secondary">' + htmlEsc(a.action) + '</span>' +
-                    '<span>' + htmlEsc(a.description || '') + '</span>' +
-                    '<span class="ms-auto text-muted" style="white-space:nowrap">' + (a.created_at ? a.created_at.slice(0,16).replace('T',' ') : '') + '</span></div>';
-            }).join('') + '</div>' :
-            '<div class="text-center text-muted small py-4"><i class="fas fa-history fa-2x mb-2" style="opacity:0.3"></i><br>No activity recorded yet</div>';
-
-        // ── Assemble ──
-        body.innerHTML = hdrHtml +
-            '<div class="p-3">' +
-            '<ul class="nav nav-tabs mb-3" id="profileTabs">' +
-            '<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#proInfo"><i class="fas fa-info-circle me-1"></i>Info</a></li>' +
-            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proReqs"><i class="fas fa-clipboard-check me-1"></i>Requirements</a></li>' +
-            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proDocs"><i class="fas fa-file me-1"></i>Documents</a></li>' +
-            '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#proActivity"><i class="fas fa-history me-1"></i>Activity</a></li>' +
-            '</ul>' +
-            '<div class="tab-content">' +
-            '<div class="tab-pane fade show active" id="proInfo"><div class="row g-3">' +
-            '<div class="col-12"><p class="text-muted small mb-0"><i class="fas fa-edit me-1"></i>Click <i class="fas fa-edit" style="color:#059669"></i> in the header to edit these details.</p></div>' +
-            infoHtml + '</div></div>' +
-            '<div class="tab-pane fade" id="proReqs">' + reqHtml + '</div>' +
-            '<div class="tab-pane fade" id="proDocs">' + docHtml + '</div>' +
-            '<div class="tab-pane fade" id="proActivity">' + actHtml + '</div>' +
-            '</div></div>';
-    }).catch(function(err){
-        document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Error loading profile.</p></div>';
-    });
-}
-
-// ═══ OPEN STUDENT EDIT (pre-fill from loaded profile data) ═══
-function openStudentEdit(){
-    if (!_profileStudentData || !_profileStudentData.info){
-        showToast('No student data loaded', 'error');
-        return;
-    }
-    var s = _profileStudentData.info;
-    document.getElementById('editStudentId').value = s.id || s.student_id || '';
-    document.getElementById('efn').value = s.first_name || '';
-    document.getElementById('emn').value = s.other_name || '';
-    document.getElementById('esn').value = s.surname || '';
-    document.getElementById('edob').value = s.date_of_birth || '';
-    document.getElementById('egender').value = s.gender || '';
-    document.getElementById('eph').value = s.phone || '';
-    document.getElementById('eem').value = s.email || '';
-    document.getElementById('estuno').value = s.student_number || '';
-    document.getElementById('eprog').value = s.program || '';
-    document.getElementById('eintake').value = s.intake_period || 'January';
-    document.getElementById('eintakeyr').value = s.intake_year || new Date().getFullYear();
-    document.getElementById('estatus').value = s.status || 'Active';
-    document.getElementById('egn').value = s.guardian_name || '';
-    document.getElementById('egp').value = s.guardian_phone || '';
-    document.getElementById('egr').value = s.guardian_relationship || '';
-    new bootstrap.Modal(document.getElementById('studentEditModal')).show();
-}
-
-// ═══ TOGGLE REQUIREMENT STATUS ═══
-function toggleReqStatus(aid, rid){
-    var el = document.getElementById('reqStatus_' + rid);
-    var remarksEl = document.getElementById('reqRemarks_' + rid);
-    if (!el) return;
-    var fd = new FormData();
-    fd.append('ajax', 'toggle_requirement');
-    fd.append('applicant_id', aid);
-    fd.append('requirement_id', rid);
-    fd.append('status', el.value);
-    fd.append('remarks', remarksEl ? remarksEl.value : '');
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        if (d.success) { showToast('Requirement status updated', 'success'); }
-        else { showToast(d.error || 'Update failed', 'error'); }
-    })
-    .catch(function(){ showToast('Network error', 'error'); });
-}
-
-// ═══ MARK ALL SUBMITTED ═══
-function markAllSubmitted(aid){
-    if (!confirm('Mark ALL requirements as Submitted?')) return;
-    var fd = new FormData();
-    fd.append('ajax', 'mark_all_submitted');
-    fd.append('applicant_id', aid);
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        if (d.success) { showToast('All requirements marked as Submitted', 'success'); }
-        else { showToast('Failed', 'error'); }
-    })
-    .catch(function(){ showToast('Network error', 'error'); });
-}
-
-// ═══ UPLOAD DOCUMENT FROM PROFILE ═══
-function uploadDocFromProfile(aid, e){
-    e.preventDefault();
-    var form = document.getElementById('docUploadForm' + aid);
-    if (!form) return false;
-    var fd = new FormData(form);
-    fd.append('ajax', 'upload_document');
-    fd.append('applicant_id', aid);
-    var btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
-        if (d.success) {
-            showToast('Document uploaded', 'success');
-            form.reset();
-        } else {
-            showToast(d.error || 'Upload failed', 'error');
-        }
-    })
-    .catch(function(){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
-        showToast('Network error', 'error');
-    });
-    return false;
-}
-
-// ═══ DOCUMENT VERIFICATION ═══
-function verifyDoc(docId, status){
-    if (!confirm('Mark this document as ' + status + '?')) return;
-    var fd = new FormData();
-    fd.append('ajax', 'verify_document');
-    fd.append('doc_id', docId);
-    fd.append('status', status);
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        if (d.success) { showToast('Document ' + status.toLowerCase() + ' successfully', 'success'); }
-        else { showToast('Failed to update document', 'error'); }
-    })
-    .catch(function(){ showToast('Network error', 'error'); });
-}
-
-// ═══ IMPORT ═══
-function importExcel(e){
-    e.preventDefault();
-    var fileInput = document.getElementById('importFileInput');
-    if (!fileInput.files.length){
-        showToast('Please select a file first.', 'error');
-        return;
-    }
-    var btn = document.getElementById('importBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Importing...';
-
-    var fd = new FormData(document.getElementById('importForm'));
-    fd.append('ajax', 'import_excel');
-
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Import Students';
-        if (d.success){
-            var resultsDiv = document.getElementById('importResults');
-            resultsDiv.style.display = '';
-            resultsDiv.innerHTML =
-                '<div class="alert alert-success mb-0"><h6 class="fw-semibold"><i class="fas fa-check-circle me-1"></i>Import Complete</h6>' +
-                '<div class="row g-2 mt-2"><div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5" style="color:#059669">' + (d.imported || 0) + '</div><small>Imported</small></div></div>' +
-                '<div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5" style="color:#f59e0b">' + (d.duplicates || 0) + '</div><small>Duplicates</small></div></div>' +
-                '<div class="col-4"><div class="card bg-light text-center p-2"><div class="fw-bold fs-5">' + (d.total || 0) + '</div><small>Total Processed</small></div></div></div></div>';
-        } else {
-            showToast(d.error || 'Import failed', 'error');
-        }
-    })
-    .catch(function(){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload me-1"></i>Import Students';
-        showToast('Import failed due to network error.', 'error');
-    });
-    return false;
-}
-
-// ═══ BATCH IMPORT FROM FOLDER ═══
-function batchImportStudents(){
-    var btn = document.getElementById('batchImportBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scanning...';
-    fetch('?ajax=import_students_data')
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sync me-1"></i>Scan & Import Missing';
-        var res = document.getElementById('batchImportResults');
-        if (d.success){
-            var errHtml = '';
-            if (d.errors && d.errors.length){
-                errHtml = '<div class="small text-danger mt-1">' + d.errors.map(function(e){ return '<div>' + htmlEsc(e) + '</div>'; }).join('') + '</div>';
-            }
-            res.innerHTML = '<div class="alert alert-success py-2 small mb-0">' +
-                '<i class="fas fa-check-circle me-1"></i> Scanned ' + (d.files || 0) + ' files, ' + (d.rows || 0) + ' rows. ' +
-                '<strong>' + (d.imported || 0) + '</strong> imported, <strong>' + (d.duplicates || 0) + '</strong> duplicates skipped.' +
-                errHtml + '</div>';
-        } else {
-            res.innerHTML = '<div class="alert alert-warning py-2 small mb-0"><i class="fas fa-exclamation-triangle me-1"></i>' + htmlEsc(d.error || 'Import failed') + '</div>';
-        }
-    })
-    .catch(function(){
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sync me-1"></i>Scan & Import Missing';
-        document.getElementById('batchImportResults').innerHTML = '<div class="alert alert-danger py-2 small mb-0">Network error during batch import.</div>';
-    });
-}
-
-// ═══ DELETE STUDENT ═══
-function deleteStudent(sid, name){
-    if (!confirm('Permanently delete student "' + name + '" (# ' + sid + ')?\n\nThis will mark the record as deleted and hide it from search.')) return;
-    if (!confirm('Are you sure? This action cannot be undone.')) return;
-    var fd = new FormData();
-    fd.append('action', 'delete_student');
-    fd.append('student_id', sid);
-    fetch('director-admissions.php', { method:'POST', body:fd })
-    .then(function(){ location.reload(); })
-    .catch(function(){ showToast('Delete failed', 'error'); });
-}
-
-// Click upload zone
-document.addEventListener('DOMContentLoaded', function(){
-    var zone = document.getElementById('importDropZone');
-    if (zone) {
-        zone.addEventListener('click', function(){ document.getElementById('importFileInput').click(); });
-        zone.addEventListener('dragover', function(e){ e.preventDefault(); this.style.borderColor = '#059669'; this.style.background = '#f0fdf4'; });
-        zone.addEventListener('dragleave', function(){ this.style.borderColor = 'var(--adm-border)'; this.style.background = 'transparent'; });
-        zone.addEventListener('drop', function(e){
-            e.preventDefault();
-            this.style.borderColor = 'var(--adm-border)';
-            this.style.background = 'transparent';
-            if (e.dataTransfer.files.length){
-                document.getElementById('importFileInput').files = e.dataTransfer.files;
-                document.getElementById('importFileName').textContent = e.dataTransfer.files[0].name;
-            }
+  /* ── Approval List ── */
+  window.loadApprovalList = function() {
+    $.post('', { action: 'search_applicants', status: 'New Applicant,Under Review' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(a) {
+          var disabled = (a.status === 'Approved' || a.status === 'Registered') ? 'disabled' : '';
+          var badgeCls = a.status === 'Approved' ? 'success' : a.status === 'Rejected' ? 'danger' : 'warning';
+          h += '<tr><td>' + htmlEscape(a.full_name) + '</td><td>' + htmlEscape(a.application_number || '') + '</td><td>' + htmlEscape(a.program_name || '') + '</td><td>' + htmlEscape(a.intake || '') + '</td><td><span class="badge badge-' + badgeCls + '">' + htmlEscape(a.status) + '</span></td><td>' +
+            '<button class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:4px;font-size:10px" data-action="approve" data-id="' + a.id + '" ' + disabled + '><i class="fas fa-check me-1"></i>Approve</button>' +
+            '<button class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;border-radius:4px;font-size:10px" data-action="reject" data-id="' + a.id + '" ' + disabled + '><i class="fas fa-times me-1"></i>Reject</button>' +
+            '<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" data-action="edit" data-id="' + a.id + '"><i class="fas fa-edit"></i></button></td></tr>';
         });
+      } else { h = '<tr><td colspan="6" class="text-muted text-center">No pending applicants</td></tr>'; }
+      $('#approvalList').html(h);
+    }, 'json');
+  };
+
+  /* ── Requirements ── */
+  window.toggleRequirement = function(id) {
+    $.post('', { action: 'toggle_requirement', id: id }, function(r) {
+      if (r.success) { location.reload(); } else { showToast('danger', r.error || 'Error'); }
+    }, 'json');
+  };
+  window.receiveRequirement = function(id) {
+    $.post('', { action: 'receive_requirement', requirement_id: id }, function(r) {
+      showToast(r.success ? 'success' : 'danger', r.success ? 'All submitted' : (r.error || 'Error'));
+    }, 'json');
+  };
+  window.resetAllRequirements = function() {
+    if (!confirm('Reset ALL applicants requirement statuses?')) return;
+    $.post('', { action: 'reset_requirements' }, function(r) {
+      showToast(r.success ? 'success' : 'danger', r.success ? 'Reset complete' : (r.error || 'Error'));
+    }, 'json');
+  };
+
+  /* ── View Applicant Requirements (modal) ── */
+  window.viewApplicantReqs = function(id) {
+    $.post('', { action: 'get_applicant_reqs', applicant_id: id }, function(r) {
+      if (r.success) {
+        var d = r.data, info = d.info, infoId = info.id || id;
+        if (!info || !info.full_name) { $('#requirementBody').html('<p class="text-danger">Applicant not found</p>'); $('#requirementModal').modal('show'); return; }
+        var h = '<div class="mb-3"><strong>' + htmlEscape(info.full_name) + '</strong> &mdash; ' + htmlEscape(info.application_number || '') + '<br><small class="text-muted">' + htmlEscape(info.program_name || '') + ' / ' + htmlEscape(info.intake || '') + '</small></div><hr><table class="table table-sm"><thead><tr><th>Requirement</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead><tbody>';
+        if (d.requirements && d.requirements.length) {
+          d.requirements.forEach(function(req) {
+            var cls = req.status === 'Verified' ? 'success' : req.status === 'Submitted' ? 'primary' : req.status === 'Rejected' ? 'danger' : 'secondary';
+            h += '<tr><td>' + htmlEscape(req.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(req.status || 'Pending') + '</span></td><td>';
+            var hasDoc = false;
+            if (d.documents && d.documents.length) {
+              d.documents.forEach(function(doc) {
+                if (doc.requirement_id == req.id) {
+                  hasDoc = true;
+                  h += '<div><a href="' + htmlEscape(doc.file_path || '#') + '" target="_blank" class="text-decoration-none small"><i class="fas fa-file me-1"></i>View</a>';
+                  if (doc.verification_status !== 'Verified') {
+                    h += ' <button class="btn btn-sm btn-outline-success py-0 px-1" style="font-size:9px" data-action="verifyDoc" data-id="' + doc.id + '" data-appid="' + infoId + '"><i class="fas fa-check"></i></button>';
+                  }
+                  h += ' <button class="btn btn-sm btn-outline-danger py-0 px-1" style="font-size:9px" data-action="rejectDoc" data-id="' + doc.id + '" data-appid="' + infoId + '"><i class="fas fa-times"></i></button></div>';
+                }
+              });
+            }
+            if (!hasDoc) h += '<span class="text-muted small">No docs</span>';
+            h += '</td><td><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" data-action="showUpload" data-reqid="' + req.id + '" data-appid="' + infoId + '"><i class="fas fa-upload"></i></button></td></tr>';
+          });
+        } else { h += '<tr><td colspan="4" class="text-muted text-center">No requirements loaded</td></tr>'; }
+        h += '</tbody></table>';
+        if (d.history && d.history.length) {
+          h += '<hr><h6>History</h6><ul class="small">';
+          d.history.forEach(function(hh) { h += '<li>' + htmlEscape(hh.action) + ' - ' + htmlEscape(hh.requirement_name || '') + ' <span class="text-muted">' + hh.created_at + '</span></li>'; });
+          h += '</ul>';
+        }
+        $('#requirementBody').html(h);
+        $('#requirementModal').modal('show');
+      } else { alert(r.error || 'Error'); }
+    }, 'json');
+  };
+
+  /* ── Upload Document Modal ── */
+  window.showUploadModal = function(reqId, appId) {
+    $('#uploadDocReqId').val(reqId);
+    $('#uploadDocAppId').val(appId);
+    $('#uploadDocFile').val('');
+    $('#uploadDocNotes').val('');
+    $('#uploadDocModal').modal('show');
+  };
+  window.submitDocument = function() {
+    var fd = new FormData();
+    fd.append('action', 'upload_document');
+    fd.append('requirement_id', $('#uploadDocReqId').val());
+    fd.append('applicant_id', $('#uploadDocAppId').val());
+    var file = $('#uploadDocFile')[0].files[0];
+    if (!file) { showToast('danger', 'Please select a file'); return; }
+    fd.append('doc_file', file);
+    $.ajax({
+      url: '', type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json',
+      success: function(r) {
+        if (r.success) { $('#uploadDocModal').modal('hide'); window.viewApplicantReqs($('#uploadDocAppId').val()); showToast('success', 'Uploaded'); }
+        else { showToast('danger', r.error || 'Upload failed'); }
+      }
+    });
+  };
+
+  /* ── Document Verification ── */
+  window.verifyDoc = function(docId, appId) {
+    $.post('', { action: 'verify_document', doc_id: docId, status: 'Verified' }, function(r) {
+      if (r.success) { window.viewApplicantReqs(appId); showToast('success', 'Verified'); } else { showToast('danger', r.error || 'Error'); }
+    }, 'json');
+  };
+  window.rejectDoc = function(docId, appId) {
+    $.post('', { action: 'verify_document', doc_id: docId, status: 'Rejected' }, function(r) {
+      if (r.success) { window.viewApplicantReqs(appId); showToast('success', 'Rejected'); } else { showToast('danger', r.error || 'Error'); }
+    }, 'json');
+  };
+
+  /* ── Clearance ── */
+  window.loadClearance = function() {
+    $.post('', { action: 'reports_data', type: 'clearance' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(pc) {
+          var pct = pc.total_req > 0 ? Math.round((pc.verified_count / pc.total_req) * 100) : 0;
+          var barCls = pct >= 100 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+          h += '<tr><td>' + htmlEscape(pc.application_number || '') + '</td><td>' + htmlEscape(pc.full_name) + '</td><td>' + htmlEscape(pc.program_name || '') + '</td><td>' + htmlEscape(pc.intake || '') + '</td><td><div class="progress" style="height:16px;border-radius:8px"><div class="progress-bar" style="width:' + pct + '%;background:' + barCls + ';font-size:10px">' + pct + '%</div></div></td><td><button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" data-action="viewReqs" data-id="' + pc.id + '"><i class="fas fa-eye"></i></button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="6" class="text-muted text-center">No data</td></tr>'; }
+      $('#clearanceList').html(h);
+    }, 'json');
+  };
+
+  /* ── Tracking ── */
+  window.loadReqTracking = function() {
+    $.post('', { action: 'get_requirements_tracking', q: $('#trkSearch').val(), status: $('#trkStatus').val() }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(t) {
+          var cls = t.status === 'Verified' ? 'success' : t.status === 'Submitted' ? 'primary' : t.status === 'Rejected' ? 'danger' : 'secondary';
+          h += '<tr><td>' + htmlEscape(t.full_name) + '</td><td>' + htmlEscape(t.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(t.status || 'Pending') + '</span></td><td>' + htmlEscape(t.remarks || '') + '</td><td><small class="text-muted">' + htmlEscape(t.updated_at || t.created_at || '') + '</small></td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No data</td></tr>'; }
+      $('#trackingList').html(h);
+    }, 'json');
+  };
+
+  /* ── Readiness ── */
+  window.loadReadiness = function() {
+    $.post('', { action: 'registration_readiness' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(x) {
+          var verified = x.verified_count || 0;
+          var total = x.total_req_items || x.total_req || 1;
+          var pct = Math.round((verified / total) * 100);
+          var cls = pct >= 100 ? 'success' : pct >= 50 ? 'warning' : 'danger';
+          var label = pct >= 100 ? 'Ready' : pct >= 50 ? 'Partial' : 'Not Ready';
+          h += '<tr><td>' + htmlEscape(x.full_name) + '</td><td>' + htmlEscape(x.program_name || '') + '</td><td>' + verified + '/' + total + ' (' + pct + '%)</td><td><span class="badge bg-' + cls + '">' + label + '</span></td><td><button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" data-action="viewReqs" data-id="' + x.id + '"><i class="fas fa-eye"></i></button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No data</td></tr>'; }
+      $('#readinessList').html(h);
+    }, 'json');
+  };
+
+  /* ── Registration List ── */
+  window.loadRegList = function() {
+    $.post('', { action: 'get_registration_list', q: $('#regSearch').val(), intake: $('#regIntake').val() }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(x) {
+          h += '<tr><td>' + htmlEscape(x.application_number || '') + '</td><td>' + htmlEscape(x.full_name) + '</td><td>' + htmlEscape(x.program_name || '') + '</td><td>' + htmlEscape(x.intake || '') + '</td><td>' + (x.is_registered ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>') + '</td><td><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:4px;font-size:10px" data-action="convert" data-id="' + x.id + '" ' + (x.is_registered ? 'disabled' : '') + '><i class="fas fa-user-graduate me-1"></i>Register</button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="6" class="text-muted text-center">No data</td></tr>'; }
+      $('#regList').html(h);
+    }, 'json');
+  };
+
+  /* ── Activation List ── */
+  window.loadActivationList = function() {
+    $.post('', { action: 'search_students', limit: 50 }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(s) {
+          var name = s.full_name || (s.firstname + ' ' + s.lastname) || '';
+          var isActive = s.status === 'Active';
+          h += '<tr><td>' + htmlEscape(s.admission_no || s.application_number || '') + '</td><td>' + htmlEscape(name) + '</td><td>' + htmlEscape(s.program_name || s.program || '') + '</td><td><span class="badge bg-' + (isActive ? 'success' : 'secondary') + '">' + htmlEscape(s.status || 'Inactive') + '</span></td><td><button class="btn btn-sm ' + (isActive ? 'btn-outline-warning' : 'btn-outline-success') + ' py-0 px-2" style="font-size:10px" data-action="toggleStatus" data-id="' + (s.student_id || s.id || 0) + '" data-status="' + (isActive ? 'deactivate' : 'activate') + '">' + (isActive ? '<i class="fas fa-toggle-off"></i>' : '<i class="fas fa-toggle-on"></i>') + '</button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No results</td></tr>'; }
+      $('#activationList').html(h);
+    }, 'json');
+  };
+
+  /* ── Handle toggle status button ── */
+  $(document).on('click', '[data-action="toggleStatus"]', function() {
+    var id = $(this).data('id');
+    var mode = $(this).data('status');
+    var msg = mode === 'activate' ? 'Activate this student?' : 'Deactivate this student?';
+    if (!confirm(msg)) return;
+    $.post('', { action: 'toggle_student_status', student_id: id, new_status: (mode === 'activate' ? 'Active' : 'Inactive') }, function(r) {
+      if (r.success) { window.loadActivationList(); showToast('success', r.message || 'Done'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json');
+  });
+
+  /* ── Document List ── */
+  window.loadDocList = function() {
+    $.post('', { action: 'get_documents_list' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(d) {
+          var cls = d.status === 'Verified' ? 'success' : d.status === 'Rejected' ? 'danger' : 'warning';
+          h += '<tr><td>' + htmlEscape(d.full_name) + '</td><td>' + htmlEscape(d.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(d.status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(d.created_at || '') + '</small></td><td>' +
+            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No documents</td></tr>'; }
+      $('#docList').html(h);
+    }, 'json');
+  };
+
+  /* ── Verification List ── */
+  window.loadVerificationList = function() {
+    $.post('', { action: 'get_verification_list' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(v) {
+          var cls = v.status === 'Verified' ? 'success' : v.status === 'Submitted' ? 'primary' : v.status === 'Rejected' ? 'danger' : 'secondary';
+          h += '<tr><td>' + htmlEscape(v.full_name) + '</td><td>' + htmlEscape(v.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(v.status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(v.updated_at || v.created_at || '') + '</small></td><td>' +
+            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No items to verify</td></tr>'; }
+      $('#verificationList').html(h);
+    }, 'json');
+  };
+
+  /* ── Handle "viewReqs" clicks (clearance/readiness tables) ── */
+  $(document).on('click', '[data-action="viewReqs"]', function() {
+    window.viewApplicantReqs($(this).data('id'));
+  });
+  /* ── Handle "showUpload" clicks ── */
+  $(document).on('click', '[data-action="showUpload"]', function() {
+    window.showUploadModal($(this).data('reqid'), $(this).data('appid'));
+  });
+  /* ── Handle verifyDoc/rejectDoc from dynamic rows ── */
+  $(document).on('click', '[data-action="verifyDoc"]', function() {
+    window.verifyDoc($(this).data('id'), $(this).data('appid'));
+  });
+  $(document).on('click', '[data-action="rejectDoc"]', function() {
+    window.rejectDoc($(this).data('id'), $(this).data('appid'));
+  });
+
+  /* ── Reports ── */
+  window.loadReport = function() {
+    $.post('', { action: 'reports_data', from: $('#rptFrom').val(), to: $('#rptTo').val() }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(x) {
+          h += '<tr><td>' + htmlEscape(x.created_at || '') + '</td><td>' + htmlEscape(x.full_name) + '</td><td>' + htmlEscape(x.program_name || '') + '</td><td>' + htmlEscape(x.status) + '</td><td>' + htmlEscape(x.intake || '') + '</td></tr>';
+        });
+      } else { h = '<tr><td colspan="5" class="text-muted text-center">No data for selected range</td></tr>'; }
+      $('#reportTable').html(h);
+    }, 'json');
+  };
+  window.exportCSV = function() {
+    var f = $('#rptFrom').val(), t = $('#rptTo').val();
+    window.open('?ajax=reports_data&type=admission&format=csv&from=' + encodeURIComponent(f) + '&to=' + encodeURIComponent(t), '_blank');
+  };
+
+  /* ── Messaging ── */
+  window.loadMessages = function() {
+    var id = $('#msgApplicant').val();
+    if (!id) { $('#msgConversation').html('<p class="text-muted text-center">Select an applicant to view messages</p>'); return; }
+    $.post('', { action: 'get_messages', applicant_id: id }, function(r) {
+      var h = '';
+      if (r && r.length) {
+        r.forEach(function(m) {
+          h += '<div class="mb-2"><span style="display:inline-block;padding:6px 12px;border-radius:12px;background:#e9ecef;color:#000;font-size:12px;max-width:80%">' + htmlEscape(m.message) + '</span><br><small class="text-muted">' + htmlEscape(m.created_at || '') + '</small></div>';
+        });
+      } else { h = '<p class="text-muted text-center">No messages</p>'; }
+      $('#msgConversation').html(h);
+    }, 'json');
+  };
+  window.sendMessage = function() {
+    var id = $('#msgApplicant').val(), msg = $('#msgText').val();
+    if (!id || !msg) { showToast('warning', 'Select applicant and type message'); return; }
+    $.post('', { action: 'send_message', applicant_id: id, message: msg }, function(r) {
+      if (r.success) { $('#msgText').val(''); window.loadMessages(); showToast('success', 'Sent'); }
+      else { showToast('danger', r.error || 'Error'); }
+    }, 'json');
+  };
+  $('#msgApplicant').on('change', window.loadMessages);
+
+  /* ── Notifications ── */
+  window.loadNotifications = function() {
+    var t = $('#notifType').val();
+    $.post('', { action: 'get_notifications', type: t }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(n) {
+          var icons = { info: 'fa-info-circle', success: 'fa-check-circle', warning: 'fa-exclamation-triangle', danger: 'fa-times-circle' };
+          h += '<div class="alert alert-' + (n.type || 'info') + ' d-flex justify-content-between align-items-center py-2 px-3 mb-2" style="border-radius:8px"><span><i class="fas ' + (icons[n.type] || 'fa-bell') + ' me-2"></i>' + htmlEscape(n.message) + '</span><small class="text-muted">' + htmlEscape(n.created_at || '') + '</small></div>';
+        });
+      } else { h = '<p class="text-muted text-center">No notifications</p>'; }
+      $('#notificationList').html(h);
+    }, 'json');
+  };
+  $('#clearAllNotifBtn').on('click', function() {
+    if (!confirm('Clear all notifications?')) return;
+    $.post('', { action: 'clear_notifications' }, function() { window.loadNotifications(); }, 'json');
+  });
+
+  /* ── Alerts ── */
+  window.loadAlerts = function() {
+    $.post('', { action: 'get_requirement_alerts' }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(a) {
+          h += '<div class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-2" style="border-radius:8px"><span><i class="fas fa-exclamation-triangle me-2"></i>' + htmlEscape(a.full_name) + ' - ' + htmlEscape(a.requirement_name) + ' <span class="badge bg-secondary">' + htmlEscape(a.status || 'Pending') + '</span></span><small class="text-muted">' + htmlEscape(a.updated_at || a.created_at || '') + '</small></div>';
+        });
+      } else { h = '<p class="text-muted text-center">No alerts</p>'; }
+      $('#alertList').html(h);
+    }, 'json');
+  };
+
+  /* ── Charts ── */
+  var intakeChart, clearanceChart, intakeChart2, intakeBarChart, programPieChart;
+  function initCharts() {
+    if ($('#intakeChart').length) {
+      intakeChart = new Chart(document.getElementById('intakeChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['January', 'May', 'August'], datasets: [{ label: 'Applicants', data: [<?=$jan_count??0?>,<?=$may_count??0?>,<?=$aug_count??0?>], backgroundColor: ['#7c3aed', '#2563eb', '#059669'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
     }
+    if ($('#clearanceChart').length) {
+      clearanceChart = new Chart(document.getElementById('clearanceChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['Cleared', 'Pending'], datasets: [{ data: [<?=$cleared_count??0?>,<?=$pending_count??0?>], backgroundColor: ['#059669', '#d97706'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+    if ($('#intakeChart2').length) {
+      intakeChart2 = new Chart(document.getElementById('intakeChart2').getContext('2d'), {
+        type: 'pie',
+        data: { labels: ['January', 'May', 'August'], datasets: [{ data: [<?=$jan_count??0?>,<?=$may_count??0?>,<?=$aug_count??0?>], backgroundColor: ['#7c3aed', '#2563eb', '#059669'] }] },
+        options: { responsive: true }
+      });
+    }
+    if ($('#intakeBarChart').length) {
+      intakeBarChart = new Chart(document.getElementById('intakeBarChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['January', 'May', 'August'], datasets: [{ label: 'Applicants', data: [<?=$jan_count??0?>,<?=$may_count??0?>,<?=$aug_count??0?>], backgroundColor: ['#7c3aed', '#2563eb', '#059669'] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+    if ($('#programPieChart').length) {
+      var plabels = [<?php $first=true;foreach($programs_list as $p):if(!$first)echo ',';echo "'".str_replace("'","\\'",$p['program_name'])."'";$first=false;endforeach;?>];
+      var pdata = [<?php $first=true;foreach($programs_list as $p):if(!$first)echo ',';echo($program_counts[$p['id']]??0);$first=false;endforeach;?>];
+      programPieChart = new Chart(document.getElementById('programPieChart').getContext('2d'), {
+        type: 'pie',
+        data: { labels: plabels, datasets: [{ data: pdata, backgroundColor: ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2', '#be185d', '#65a30d'] }] },
+        options: { responsive: true }
+      });
+    }
+  }
+
+  /* ── Load all data + init ── */
+  function loadData() {
+    window.loadClearance();
+    window.loadReqTracking();
+    window.loadReadiness();
+    window.loadRegList();
+    window.loadActivationList();
+    window.loadDocList();
+    window.loadVerificationList();
+    window.loadNotifications();
+    window.loadAlerts();
+    window.loadApprovalList();
+    initCharts();
+  }
+  loadData();
 });
 </script>
-<?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

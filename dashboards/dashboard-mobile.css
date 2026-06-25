@@ -29,8 +29,9 @@ body {
 }
 
 /* ── SIDEBAR ─────────────────────────────────────────────────── */
+.isnm-sidebar,
 .sidebar, .dashboard-sidebar {
-  width: var(--sidebar-width);
+  width: var(--sidebar-width, 270px);
   background: linear-gradient(180deg, var(--primary) 0%, #0d47a1 100%);
   color: #fff;
   height: 100vh;

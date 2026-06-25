@@ -64,6 +64,7 @@ $secretaryGroups = ['Secretary Dashboard','Sec Communications','Sec Corresponden
 $directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Payment Oversight','Budget Management','Expenditure Control','Payroll Oversight','Accounting & Ledger','Audit & Compliance','Procurement Finance','Assets & Investments','Financial Communications','Reports & Analytics','Approval Center'];
 $principalGroups = ['Executive','Academic Oversight','Student Affairs','Staff Oversight','Institutional Operations','Meetings & Governance','Principal Approvals','Principal Reports','Principal Communications'];
 $deputyGroups = ['Academic Support','Student Support','Operational Monitoring','Deputy Approvals','Deputy Reports','Deputy QA','Deputy Communications'];
+$admissionsGroups = ['Admissions','Approvals & Workflow','Settings'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -95,6 +96,9 @@ $pageGroupAllowList = [
     'director-finance.php'  => $directorFinanceGroups,
     'school-principal.php'  => $principalGroups,
     'deputy-principal.php'  => $deputyGroups,
+    'director-admissions.php'=> $admissionsGroups,
+    'admission-letters.php' => $admissionsGroups,
+    'intake-planning.php'   => $admissionsGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only
@@ -333,17 +337,20 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     <div class="sidebar-menu" id="sidebarMenu">
         <?php if (in_array($currentPage, ['director-admissions.php', 'admission-letters.php', 'intake-planning.php'])): ?>
         <!-- ═══ DIRECTOR ADMISSIONS — PROFESSIONAL SIDEBAR ═══ -->
-        <div class="menu-divider"><span><i class="fas fa-file-signature" style="color:#7c3aed;"></i> ADMISSIONS</span></div>
+        <div class="menu-divider"><span><i class="fas fa-chart-pie" style="color:#7c3aed;"></i> DASHBOARD</span></div>
         <div class="menu-group expanded" data-group="dashboard">
-            <a href="director-admissions.php" class="child-link <?= basename($_SERVER['PHP_SELF'])==='director-admissions.php' && !isset($_GET['section']) ? 'active' : '' ?>"><span class="menu-icon" style="font-size:0.8rem"><i class="fas fa-chart-pie"></i></span><span class="child-label">Overview</span></a>
+            <a href="director-admissions.php" class="child-link <?= basename($_SERVER['PHP_SELF'])==='director-admissions.php' && !isset($_GET['section']) ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Overview</span></a>
         </div>
-        <div class="menu-group <?= in_array($currentPage, ['admission-letters.php', 'intake-planning.php']) ? 'expanded' : '' ?>" data-group="applications">
-            <div class="menu-group-header" data-target="applications"><span class="menu-icon"><i class="fas fa-file-alt"></i></span><span class="menu-label">Applicants</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
-            <div class="menu-children" id="childGroup-applications" style="<?= in_array($currentPage, ['admission-letters.php', 'intake-planning.php']) ? '' : 'max-height:0' ?>">
+        <div class="menu-divider"><span><i class="fas fa-users" style="color:#3b82f6;"></i> APPLICANTS</span></div>
+        <div class="menu-group <?= in_array($currentPage, ['admission-letters.php', 'intake-planning.php']) ? 'expanded' : '' ?>" data-group="applicants">
+            <div class="menu-group-header" data-target="applicants"><span class="menu-icon"><i class="fas fa-user-plus"></i></span><span class="menu-label">Applicants</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-applicants" style="max-height:0">
                 <div class="menu-children-inner">
-                    <a href="director-admissions.php#applications" class="child-link" data-section="applications"><span class="child-bullet"></span><span class="child-label">Applicant Records</span></a>
-                    <a href="admission-letters.php" class="child-link <?= $currentPage==='admission-letters.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Admission Letters</span></a>
-                    <a href="intake-planning.php" class="child-link <?= $currentPage==='intake-planning.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Intake Planning</span></a>
+                    <a href="director-admissions.php#new_applicant" class="child-link" data-section="new_applicant"><span class="child-bullet"></span><span class="child-label">New Applicant</span></a>
+                    <a href="director-admissions.php#applicant_records" class="child-link" data-section="applicant_records"><span class="child-bullet"></span><span class="child-label">Applicant Records</span></a>
+                    <a href="director-admissions.php#student_search" class="child-link" data-section="student_search"><span class="child-bullet"></span><span class="child-label">Student Search</span></a>
+                    <a href="director-admissions.php#intake_management" class="child-link" data-section="intake_management"><span class="child-bullet"></span><span class="child-label">Intake Management</span></a>
+                    <a href="director-admissions.php#admission_approvals" class="child-link" data-section="admission_approvals"><span class="child-bullet"></span><span class="child-label">Admission Approvals</span></a>
                 </div>
             </div>
         </div>
@@ -352,8 +359,31 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <div class="menu-group-header" data-target="requirements"><span class="menu-icon"><i class="fas fa-list-check"></i></span><span class="menu-label">Requirements</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
             <div class="menu-children" id="childGroup-requirements" style="max-height:0">
                 <div class="menu-children-inner">
-                    <a href="director-admissions.php#requirements" class="child-link" data-section="requirements"><span class="child-bullet"></span><span class="child-label">Requirement Portal</span></a>
-                    <a href="director-admissions.php#clearance" class="child-link" data-section="clearance"><span class="child-bullet"></span><span class="child-label">Clearance Overview</span></a>
+                    <a href="director-admissions.php#requirement_portal" class="child-link" data-section="requirement_portal"><span class="child-bullet"></span><span class="child-label">Requirement Portal</span></a>
+                    <a href="director-admissions.php#requirement_clearance" class="child-link" data-section="requirement_clearance"><span class="child-bullet"></span><span class="child-label">Clearance</span></a>
+                    <a href="director-admissions.php#requirement_verification" class="child-link" data-section="requirement_verification"><span class="child-bullet"></span><span class="child-label">Verification</span></a>
+                    <a href="director-admissions.php#requirement_tracking" class="child-link" data-section="requirement_tracking"><span class="child-bullet"></span><span class="child-label">Tracking</span></a>
+                    <a href="director-admissions.php#requirement_alerts" class="child-link" data-section="requirement_alerts"><span class="child-bullet"></span><span class="child-label">Alerts</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="menu-divider"><span><i class="fas fa-user-graduate" style="color:#0891b2;"></i> REGISTRATION</span></div>
+        <div class="menu-group" data-group="registration">
+            <div class="menu-group-header" data-target="registration"><span class="menu-icon"><i class="fas fa-flag-checkered"></i></span><span class="menu-label">Registration</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-registration" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-admissions.php#registration_readiness" class="child-link" data-section="registration_readiness"><span class="child-bullet"></span><span class="child-label">Readiness</span></a>
+                    <a href="director-admissions.php#student_registration" class="child-link" data-section="student_registration"><span class="child-bullet"></span><span class="child-label">Registration</span></a>
+                    <a href="director-admissions.php#student_activation" class="child-link" data-section="student_activation"><span class="child-bullet"></span><span class="child-label">Activation</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="menu-divider"><span><i class="fas fa-file-alt" style="color:#7c3aed;"></i> DOCUMENTS</span></div>
+        <div class="menu-group" data-group="documents">
+            <div class="menu-group-header" data-target="documents"><span class="menu-icon"><i class="fas fa-file-alt"></i></span><span class="menu-label">Documents</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-documents" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-admissions.php#document_verification" class="child-link" data-section="document_verification"><span class="child-bullet"></span><span class="child-label">Document Verification</span></a>
                 </div>
             </div>
         </div>
@@ -362,8 +392,28 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <div class="menu-group-header" data-target="reports"><span class="menu-icon"><i class="fas fa-chart-pie"></i></span><span class="menu-label">Reports</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
             <div class="menu-children" id="childGroup-reports" style="max-height:0">
                 <div class="menu-children-inner">
-                    <a href="director-admissions.php#reports" class="child-link" data-section="reports"><span class="child-bullet"></span><span class="child-label">Admission Reports</span></a>
-                    <a href="director-admissions.php?report=clearance" target="_blank" class="child-link"><span class="child-bullet"></span><span class="child-label">Clearance Analytics</span></a>
+                    <a href="director-admissions.php#admission_reports" class="child-link" data-section="admission_reports"><span class="child-bullet"></span><span class="child-label">Admission Reports</span></a>
+                    <a href="director-admissions.php#intake_statistics" class="child-link" data-section="intake_statistics"><span class="child-bullet"></span><span class="child-label">Intake Statistics</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="menu-divider"><span><i class="fas fa-comments" style="color:#8b5cf6;"></i> COMMUNICATION</span></div>
+        <div class="menu-group" data-group="communication">
+            <div class="menu-group-header" data-target="communication"><span class="menu-icon"><i class="fas fa-envelope"></i></span><span class="menu-label">Communication</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-communication" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-admissions.php#applicant_messaging" class="child-link" data-section="applicant_messaging"><span class="child-bullet"></span><span class="child-label">Messaging</span></a>
+                    <a href="director-admissions.php#notifications" class="child-link" data-section="notifications"><span class="child-bullet"></span><span class="child-label">Notifications</span></a>
+                </div>
+            </div>
+        </div>
+        <div class="menu-divider"><span><i class="fas fa-external-link-alt" style="color:#94a3b8;"></i> LINKED</span></div>
+        <div class="menu-group" data-group="linked">
+            <div class="menu-group-header" data-target="linked"><span class="menu-icon"><i class="fas fa-link"></i></span><span class="menu-label">Linked Pages</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-linked" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="admission-letters.php" class="child-link <?= $currentPage==='admission-letters.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Admission Letters</span></a>
+                    <a href="intake-planning.php" class="child-link <?= $currentPage==='intake-planning.php' ? 'active' : '' ?>"><span class="child-bullet"></span><span class="child-label">Intake Planning</span></a>
                 </div>
             </div>
         </div>
