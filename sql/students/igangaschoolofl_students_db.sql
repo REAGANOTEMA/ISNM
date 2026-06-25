@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 22, 2026 at 10:17 PM
+-- Generation Time: Jun 25, 2026 at 06:35 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -110,6 +110,27 @@ CREATE TABLE `asset_categories` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bank_transactions`
+--
+
+CREATE TABLE `bank_transactions` (
+  `id` int NOT NULL,
+  `transaction_date` date NOT NULL,
+  `description` varchar(255) DEFAULT '',
+  `reference` varchar(100) DEFAULT '',
+  `debit` decimal(12,2) DEFAULT '0.00',
+  `credit` decimal(12,2) DEFAULT '0.00',
+  `balance` decimal(12,2) DEFAULT '0.00',
+  `reconciled` tinyint(1) DEFAULT '0',
+  `reconciled_by` int DEFAULT '0',
+  `reconciled_at` datetime DEFAULT NULL,
+  `bank_account` varchar(100) DEFAULT '',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `budgets`
 --
 
@@ -145,6 +166,63 @@ CREATE TABLE `budget_records` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_general_ledger`
+--
+
+CREATE TABLE `bursar_general_ledger` (
+  `id` int NOT NULL,
+  `entry_number` varchar(50) NOT NULL,
+  `account_id` int DEFAULT '0',
+  `cost_center_id` int DEFAULT '0',
+  `transaction_type` enum('Debit','Credit') NOT NULL,
+  `amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `reference_type` varchar(50) DEFAULT '',
+  `reference_id` varchar(50) DEFAULT '',
+  `description` text,
+  `entry_date` date DEFAULT (curdate()),
+  `posted_by` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_tax_filings`
+--
+
+CREATE TABLE `bursar_tax_filings` (
+  `id` int NOT NULL,
+  `tax_period_id` int NOT NULL,
+  `filing_date` date DEFAULT (curdate()),
+  `total_revenue` decimal(12,2) DEFAULT '0.00',
+  `total_tax` decimal(12,2) DEFAULT '0.00',
+  `filing_reference` varchar(100) DEFAULT '',
+  `status` enum('Draft','Filed','Amended') DEFAULT 'Draft',
+  `filed_by` int DEFAULT '0',
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bursar_tax_periods`
+--
+
+CREATE TABLE `bursar_tax_periods` (
+  `id` int NOT NULL,
+  `period_name` varchar(100) NOT NULL,
+  `fiscal_year` varchar(10) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` enum('Open','Closed','Filed') DEFAULT 'Open',
+  `created_by` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -608,6 +686,22 @@ CREATE TABLE `hostel_rooms` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `income_tax_rates`
+--
+
+CREATE TABLE `income_tax_rates` (
+  `id` int NOT NULL,
+  `tax_bracket_name` varchar(100) NOT NULL,
+  `min_income` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `max_income` decimal(12,2) DEFAULT NULL,
+  `tax_rate` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `fiscal_year` varchar(10) NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_attendance`
 --
 
@@ -1052,6 +1146,47 @@ CREATE TABLE `payment_subscriptions` (
   `created_by` varchar(50) DEFAULT NULL COMMENT 'student_id or staff_id who created',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_records`
+--
+
+CREATE TABLE `payroll_records` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `month` int NOT NULL,
+  `year` int NOT NULL,
+  `gross_salary` decimal(12,2) DEFAULT '0.00',
+  `total_deductions` decimal(12,2) DEFAULT '0.00',
+  `net_salary` decimal(12,2) DEFAULT '0.00',
+  `processed_by` int DEFAULT '0',
+  `processing_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('Draft','Processed','Approved','Paid') DEFAULT 'Draft'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payslips`
+--
+
+CREATE TABLE `payslips` (
+  `id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `payroll_record_id` int DEFAULT '0',
+  `month` int NOT NULL,
+  `year` int NOT NULL,
+  `basic_salary` decimal(12,2) DEFAULT '0.00',
+  `allowances` decimal(12,2) DEFAULT '0.00',
+  `deductions` decimal(12,2) DEFAULT '0.00',
+  `net_pay` decimal(12,2) DEFAULT '0.00',
+  `payment_date` date DEFAULT NULL,
+  `status` enum('Generated','Sent','Paid') DEFAULT 'Generated',
+  `generated_by` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1540,17 +1675,17 @@ CREATE TABLE `student_course_registrations` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_dashboard_view` (
-`attendance_rate` decimal(31,5)
-,`course` varchar(100)
-,`current_gpa` decimal(3,2)
-,`email` varchar(100)
-,`fee_balance` decimal(32,2)
-,`full_name` varchar(302)
-,`id` int
-,`profile_picture` varchar(500)
-,`set_name` varchar(50)
+`id` int
 ,`student_number` varchar(50)
+,`full_name` varchar(302)
+,`course` varchar(100)
 ,`year` bigint
+,`set_name` varchar(50)
+,`email` varchar(100)
+,`profile_picture` varchar(500)
+,`current_gpa` decimal(3,2)
+,`fee_balance` decimal(32,2)
+,`attendance_rate` decimal(31,5)
 );
 
 -- --------------------------------------------------------
@@ -1703,16 +1838,16 @@ CREATE TABLE `student_invoices` (
 -- (See below for the actual view)
 --
 CREATE TABLE `student_login_view` (
-`course` varchar(100)
-,`email` varchar(100)
+`id` int
+,`student_number` varchar(50)
 ,`full_name` varchar(302)
-,`id` int
-,`is_first_login` tinyint(1)
+,`email` varchar(100)
+,`password` varchar(255)
+,`course` varchar(100)
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
 ,`last_login` timestamp
 ,`login_attempts` int
-,`password` varchar(255)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
-,`student_number` varchar(50)
+,`is_first_login` tinyint(1)
 );
 
 -- --------------------------------------------------------
@@ -1943,11 +2078,11 @@ CREATE TABLE `timetable` (
 -- (See below for the actual view)
 --
 CREATE TABLE `view_document_grouping` (
-`document_count` bigint
-,`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
-,`program` varchar(100)
+`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
 ,`student_id` int
 ,`student_name` varchar(300)
+,`program` varchar(100)
+,`document_count` bigint
 );
 
 -- --------------------------------------------------------
@@ -1957,11 +2092,11 @@ CREATE TABLE `view_document_grouping` (
 -- (See below for the actual view)
 --
 CREATE TABLE `view_program_grouping` (
-`course_code` varchar(20)
-,`course_level` int
+`department` varchar(20)
+,`course_code` varchar(20)
 ,`course_name` varchar(255)
 ,`credit_hours` int
-,`department` varchar(20)
+,`course_level` int
 );
 
 -- --------------------------------------------------------
@@ -1972,11 +2107,11 @@ CREATE TABLE `view_program_grouping` (
 --
 CREATE TABLE `view_student_grouping` (
 `program` varchar(100)
-,`semester` varchar(20)
-,`set_name` varchar(50)
-,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
-,`student_count` bigint
 ,`year_of_study` int
+,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
+,`set_name` varchar(50)
+,`semester` varchar(20)
+,`student_count` bigint
 );
 
 -- --------------------------------------------------------
@@ -2064,6 +2199,15 @@ ALTER TABLE `asset_categories`
   ADD UNIQUE KEY `category_name` (`category_name`);
 
 --
+-- Indexes for table `bank_transactions`
+--
+ALTER TABLE `bank_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_date` (`transaction_date`),
+  ADD KEY `idx_reconciled` (`reconciled`),
+  ADD KEY `idx_account` (`bank_account`);
+
+--
 -- Indexes for table `budgets`
 --
 ALTER TABLE `budgets`
@@ -2081,6 +2225,30 @@ ALTER TABLE `budget_records`
   ADD KEY `idx_budget_id` (`budget_id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_br_budget` (`budget_id`);
+
+--
+-- Indexes for table `bursar_general_ledger`
+--
+ALTER TABLE `bursar_general_ledger`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `entry_number` (`entry_number`),
+  ADD KEY `idx_entry_date` (`entry_date`),
+  ADD KEY `idx_account` (`account_id`),
+  ADD KEY `idx_ref` (`reference_type`,`reference_id`);
+
+--
+-- Indexes for table `bursar_tax_filings`
+--
+ALTER TABLE `bursar_tax_filings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_period` (`tax_period_id`);
+
+--
+-- Indexes for table `bursar_tax_periods`
+--
+ALTER TABLE `bursar_tax_periods`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_period` (`period_name`,`fiscal_year`);
 
 --
 -- Indexes for table `bursar_users`
@@ -2274,6 +2442,13 @@ ALTER TABLE `hostel_rooms`
   ADD KEY `idx_hr_status` (`status`);
 
 --
+-- Indexes for table `income_tax_rates`
+--
+ALTER TABLE `income_tax_rates`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_bracket` (`fiscal_year`,`min_income`);
+
+--
 -- Indexes for table `lab_attendance`
 --
 ALTER TABLE `lab_attendance`
@@ -2440,6 +2615,23 @@ ALTER TABLE `payment_subscriptions`
   ADD KEY `idx_student` (`student_id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_next_due` (`next_due_date`);
+
+--
+-- Indexes for table `payroll_records`
+--
+ALTER TABLE `payroll_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_payroll` (`staff_id`,`month`,`year`),
+  ADD KEY `idx_period` (`month`,`year`);
+
+--
+-- Indexes for table `payslips`
+--
+ALTER TABLE `payslips`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_staff` (`staff_id`),
+  ADD KEY `idx_period` (`month`,`year`),
+  ADD KEY `idx_payroll` (`payroll_record_id`);
 
 --
 -- Indexes for table `penalty_configurations`
@@ -2802,6 +2994,12 @@ ALTER TABLE `asset_categories`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `bank_transactions`
+--
+ALTER TABLE `bank_transactions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `budgets`
 --
 ALTER TABLE `budgets`
@@ -2811,6 +3009,24 @@ ALTER TABLE `budgets`
 -- AUTO_INCREMENT for table `budget_records`
 --
 ALTER TABLE `budget_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_general_ledger`
+--
+ALTER TABLE `bursar_general_ledger`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_tax_filings`
+--
+ALTER TABLE `bursar_tax_filings`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bursar_tax_periods`
+--
+ALTER TABLE `bursar_tax_periods`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -2922,6 +3138,12 @@ ALTER TABLE `hostel_rooms`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `income_tax_rates`
+--
+ALTER TABLE `income_tax_rates`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_attendance`
 --
 ALTER TABLE `lab_attendance`
@@ -2967,7 +3189,7 @@ ALTER TABLE `lab_skills_demonstrations`
 -- AUTO_INCREMENT for table `late_payment_settings`
 --
 ALTER TABLE `late_payment_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `library_books`
@@ -3021,6 +3243,18 @@ ALTER TABLE `payment_receipts`
 -- AUTO_INCREMENT for table `payment_subscriptions`
 --
 ALTER TABLE `payment_subscriptions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payroll_records`
+--
+ALTER TABLE `payroll_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payslips`
+--
+ALTER TABLE `payslips`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --

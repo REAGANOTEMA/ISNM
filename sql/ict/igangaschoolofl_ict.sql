@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 22, 2026 at 10:16 PM
+-- Generation Time: Jun 25, 2026 at 06:35 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -522,12 +522,12 @@ CREATE TABLE `v_active_tickets` (
 -- (See below for the actual view)
 --
 CREATE TABLE `v_computer_availability` (
-`availability_percentage` decimal(29,2)
-,`location` varchar(100)
-,`maintenance_count` decimal(23,0)
-,`offline_count` decimal(23,0)
-,`online_count` decimal(23,0)
+`location` varchar(100)
 ,`total_computers` bigint
+,`online_count` decimal(23,0)
+,`offline_count` decimal(23,0)
+,`maintenance_count` decimal(23,0)
+,`availability_percentage` decimal(29,2)
 );
 
 -- --------------------------------------------------------
