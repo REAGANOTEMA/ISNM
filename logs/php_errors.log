@@ -7026,3 +7026,461 @@ Stack trace:
 [24-Jun-2026 15:27:02 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
 [24-Jun-2026 15:27:02 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
 [24-Jun-2026 15:27:02 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:16:11 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:16:11 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:16:11 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:16:11 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:45:49 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:45:50 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:45:50 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:45:50 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:50:17 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:50:18 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:50:24 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:48 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:56:48 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:56:48 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:56:48 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:56:53 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:56:53 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:56:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:04 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:57:04 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:57:04 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:57:05 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:57:10 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:57:10 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:10 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:34 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:57:34 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:57:34 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:57:34 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:57:39 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:57:39 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:57:39 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:10 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:58:10 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:58:10 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:58:10 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:58:15 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:58:15 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:15 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:45 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:58:45 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:58:45 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:58:45 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:58:53 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:58:53 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:58:53 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:24 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:59:24 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:59:24 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:59:24 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 16:59:29 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 16:59:29 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:29 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 16:59:59 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 16:59:59 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 16:59:59 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 16:59:59 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 17:00:05 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 17:00:05 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:05 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 17:00:28 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 17:00:28 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 17:00:28 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 17:00:28 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:01:43 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:01:43 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:01:43 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:01:43 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:04:11 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:04:11 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:04:11 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:04:11 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:04:28 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:04:28 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:04:28 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:04:28 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:04:40 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:04:40 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:04:40 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:10 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:05:10 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:05:10 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:05:10 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:05:21 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:05:21 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:21 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:05:51 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:05:51 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:05:51 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:05:51 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:06:02 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:06:02 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:02 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:23 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:06:23 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:06:23 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:06:23 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:06:33 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:06:33 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:06:33 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:04 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:07:04 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:07:04 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:07:04 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:07:13 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:07:13 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:07:13 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:07:13 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:07:13 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:07:13 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:07:17 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:07:17 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:07:17 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:07:17 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:07:30 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:07:30 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:07:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:00 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:08:00 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:08:00 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:08:00 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:08:08 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:08:08 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:08 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:38 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:08:38 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:08:38 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:08:38 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:08:49 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:08:49 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:08:49 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:19 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:09:19 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:09:19 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:09:19 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:09:30 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[24-Jun-2026 18:09:30 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:30 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1085
+[24-Jun-2026 18:09:41 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:09:41 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:09:41 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:09:41 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:11:06 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:11:06 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:11:06 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:11:06 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:11:24 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:11:24 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:11:24 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:11:24 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:12:59 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:12:59 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:12:59 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:12:59 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[24-Jun-2026 18:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[24-Jun-2026 18:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[24-Jun-2026 18:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[24-Jun-2026 18:14:33 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[25-Jun-2026 08:23:43 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[25-Jun-2026 08:23:43 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[25-Jun-2026 08:23:43 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[25-Jun-2026 08:23:43 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[25-Jun-2026 08:44:02 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[25-Jun-2026 08:44:02 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[25-Jun-2026 08:44:02 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[25-Jun-2026 08:44:02 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

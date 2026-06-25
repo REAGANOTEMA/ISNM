@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['bursar','registrar','director','finance']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['registrar','director','academics','admissions','head']);
 $user = $ctx['user'];
 $auth_service = $ctx['auth'];
 $staffDb = $ctx['staff'];

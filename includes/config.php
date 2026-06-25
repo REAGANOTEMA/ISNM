@@ -135,7 +135,8 @@ function generatePagination($current_page, $total_pages, $base_url) {
 }
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$env = ($env = getenv('APP_ENV')) !== false ? $env : ($_ENV['APP_ENV'] ?? 'production');
+ini_set('display_errors', $env === 'development' ? '1' : '0');
 
 date_default_timezone_set('Africa/Kampala');
 ?>

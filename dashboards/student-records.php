@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 
-$ctx          = bootstrapStaffDashboard([]);
+$ctx          = bootstrapStaffDashboard(['registrar','director','academics','lecturer','head','principal']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
 $students_conn = $ctx['students'];

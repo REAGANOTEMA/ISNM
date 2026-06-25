@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['bursar','finance','director','registrar']);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
 $websiteDb = $ctx['website'];

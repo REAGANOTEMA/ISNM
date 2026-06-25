@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['director','principal','deputy','secretary','matron','warden','head']);
 $staffDb = $ctx['staff'];
 $pageTitle = 'Student Discipline';
 

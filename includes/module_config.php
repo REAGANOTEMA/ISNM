@@ -204,35 +204,35 @@ function getModuleConfig(): array {
         [
             'title'    => 'Nursing Department',
             'icon'     => 'fas fa-user-nurse',
-            'roles'    => ['nursing','head','lecturer','midwifery'],
+            'roles'    => ['nursing','head nursing','head'],
             'children' => [
-                ['title' => 'Head of Nursing',       'route' => 'head-nursing.php',                   'roles' => ['head','nursing']],
-                ['title' => 'Department Overview',   'route' => 'head-nursing.php#overview',           'roles' => ['head','nursing']],
-                ['title' => 'Student Management',    'route' => 'head-nursing.php#students',           'roles' => ['head','nursing']],
-                ['title' => 'Programs & Courses',    'route' => 'head-nursing.php#programs',           'roles' => ['head','nursing']],
-                ['title' => 'Department Reports',    'route' => 'head-nursing.php#reports',            'roles' => ['head','nursing']],
-                ['title' => 'Student Records',       'route' => 'head-nursing.php#student-records',    'roles' => ['head','nursing']],
+                ['title' => 'Head of Nursing',       'route' => 'head-nursing.php',                   'roles' => ['head nursing','nursing']],
+                ['title' => 'Department Overview',   'route' => 'head-nursing.php#overview',           'roles' => ['head nursing','nursing']],
+                ['title' => 'Student Management',    'route' => 'head-nursing.php#students',           'roles' => ['head nursing','nursing']],
+                ['title' => 'Programs & Courses',    'route' => 'head-nursing.php#programs',           'roles' => ['head nursing','nursing']],
+                ['title' => 'Department Reports',    'route' => 'head-nursing.php#reports',            'roles' => ['head nursing','nursing']],
+                ['title' => 'Student Records',       'route' => 'head-nursing.php#student-records',    'roles' => ['head nursing','nursing']],
                 ['title' => 'Clinical Logbook',      'route' => 'clinical-placement.php?dept=nursing','roles' => ['nursing','midwifery','head','lecturer']],
-                ['title' => 'Practical Assessment',  'route' => 'clinical-placement.php?view=assessment','roles' => ['nursing','head','lecturer']],
-                ['title' => 'Skills Training',       'route' => 'skills-lab.php',                    'roles' => ['nursing','head','lecturer']],
+                ['title' => 'Practical Assessment',  'route' => 'clinical-placement.php?view=assessment','roles' => ['nursing','head nursing','lecturer']],
+                ['title' => 'Skills Training',       'route' => 'skills-lab.php',                    'roles' => ['nursing','head nursing','lecturer']],
                 ['title' => 'Clinical Placements',   'route' => 'clinical-placement.php',             'roles' => ['nursing','midwifery','head','lecturer']],
             ],
         ],
         [
             'title'    => 'Midwifery Department',
             'icon'     => 'fas fa-baby',
-            'roles'    => ['midwifery','head','lecturer'],
+            'roles'    => ['midwifery','head midwifery','head'],
             'children' => [
-                ['title' => 'Head of Midwifery',     'route' => 'head-midwifery.php',                 'roles' => ['head','midwifery']],
-                ['title' => 'Department Overview',   'route' => 'head-midwifery.php#overview',         'roles' => ['head','midwifery']],
-                ['title' => 'Student Management',    'route' => 'head-midwifery.php#students',         'roles' => ['head','midwifery']],
-                ['title' => 'Programs & Courses',    'route' => 'head-midwifery.php#programs',         'roles' => ['head','midwifery']],
-                ['title' => 'Department Reports',    'route' => 'head-midwifery.php#reports',          'roles' => ['head','midwifery']],
-                ['title' => 'Antenatal Care',        'route' => 'clinical-placement.php?dept=midwifery&view=antenatal','roles' => ['midwifery','head','lecturer']],
-                ['title' => 'Labor & Delivery',      'route' => 'clinical-placement.php?dept=midwifery&view=delivery','roles' => ['midwifery','head','lecturer']],
-                ['title' => 'Postnatal Care',        'route' => 'clinical-placement.php?dept=midwifery&view=postnatal','roles' => ['midwifery','head','lecturer']],
-                ['title' => 'Family Planning',       'route' => 'clinical-placement.php?dept=midwifery&view=fp','roles' => ['midwifery','head','lecturer']],
-                ['title' => 'Clinical Placements',   'route' => 'clinical-placement.php?dept=midwifery','roles' => ['midwifery','head','lecturer']],
+                ['title' => 'Head of Midwifery',     'route' => 'head-midwifery.php',                 'roles' => ['head midwifery','midwifery']],
+                ['title' => 'Department Overview',   'route' => 'head-midwifery.php#overview',         'roles' => ['head midwifery','midwifery']],
+                ['title' => 'Student Management',    'route' => 'head-midwifery.php#students',         'roles' => ['head midwifery','midwifery']],
+                ['title' => 'Programs & Courses',    'route' => 'head-midwifery.php#programs',         'roles' => ['head midwifery','midwifery']],
+                ['title' => 'Department Reports',    'route' => 'head-midwifery.php#reports',          'roles' => ['head midwifery','midwifery']],
+                ['title' => 'Antenatal Care',        'route' => 'clinical-placement.php?dept=midwifery&view=antenatal','roles' => ['midwifery','head midwifery','lecturer']],
+                ['title' => 'Labor & Delivery',      'route' => 'clinical-placement.php?dept=midwifery&view=delivery','roles' => ['midwifery','head midwifery','lecturer']],
+                ['title' => 'Postnatal Care',        'route' => 'clinical-placement.php?dept=midwifery&view=postnatal','roles' => ['midwifery','head midwifery','lecturer']],
+                ['title' => 'Family Planning',       'route' => 'clinical-placement.php?dept=midwifery&view=fp','roles' => ['midwifery','head midwifery','lecturer']],
+                ['title' => 'Clinical Placements',   'route' => 'clinical-placement.php?dept=midwifery','roles' => ['midwifery','head midwifery','lecturer']],
             ],
         ],
         [
@@ -242,7 +242,7 @@ function getModuleConfig(): array {
             'children' => [
                 ['title' => 'Director ICT',          'route' => 'director-ict.php',                   'roles' => ['director','ict','it']],
                 ['title' => 'ICT Overview',          'route' => 'director-ict.php#overview',           'roles' => ['director','ict','it']],
-                ['title' => 'Computer Lab',          'route' => 'director-ict.php#computers',          'roles' => ['director','ict','it','lab']],
+                ['title' => 'Computer Lab',          'route' => 'director-ict.php#computers',          'roles' => ['director','ict','it','lab manager']],
                 ['title' => 'Support Tickets',       'route' => 'director-ict.php#tickets',            'roles' => ['director','ict','it']],
                 ['title' => 'Lab Bookings',          'route' => 'director-ict.php#bookings',           'roles' => ['director','ict','it','lecturer']],
                 ['title' => 'Network Devices',       'route' => 'director-ict.php#network',            'roles' => ['director','ict','it']],
@@ -253,13 +253,13 @@ function getModuleConfig(): array {
                 ['title' => 'Official Duties',       'route' => 'director-ict.php#duties',            'roles' => ['director','ict','it']],
                 ['title' => 'Quick Actions',         'route' => 'director-ict.php#actions',           'roles' => ['director','ict','it']],
                 ['title' => 'ICT Students',          'route' => 'director-ict.php#students',          'roles' => ['director','ict','it']],
-                ['title' => 'Computer Lab',          'route' => 'computer_lab.php',                   'roles' => ['director','ict','it','lab']],
+                ['title' => 'Computer Lab',          'route' => 'computer_lab.php',                   'roles' => ['director','ict','it','lab manager']],
                 ['title' => 'Digital Learning',      'route' => 'digital-learning.php',               'roles' => ['director','ict','it','lecturer']],
                 ['title' => 'Cybersecurity',         'route' => 'cybersecurity.php',                  'roles' => ['director','ict','it']],
                 ['title' => 'ICT Policy',            'route' => 'ict-policy.php',                     'roles' => ['director','ict','it']],
                 ['title' => 'System Administration', 'route' => 'system-admin.php',                   'roles' => ['director','ict','it','system admin']],
-                ['title' => 'IT Support Tickets',    'route' => 'it-support-tickets.php',             'roles' => ['director','ict','it','lab']],
-                ['title' => 'Lab Booking Management','route' => 'lab-booking-management.php',         'roles' => ['director','ict','it','lecturer','lab']],
+                ['title' => 'IT Support Tickets',    'route' => 'it-support-tickets.php',             'roles' => ['director','ict','it','lab manager']],
+                ['title' => 'Lab Booking Management','route' => 'lab-booking-management.php',         'roles' => ['director','ict','it','lecturer','lab manager']],
             ],
         ],
         [
@@ -297,10 +297,10 @@ function getModuleConfig(): array {
             'roles'    => ['storekeeper','store','inventory','director','finance','bursar'],
             'children' => [
                 ['title' => 'Storekeeper',           'route' => 'storekeeper.php',                    'roles' => ['storekeeper','store','inventory']],
-                ['title' => 'Inventory Reports',     'route' => 'inventory-reports.php',              'roles' => ['director','principal','hr','store']],
-                ['title' => 'Asset Management',      'route' => 'asset-management.php',               'roles' => ['store','director','manager']],
-                ['title' => 'Procurement Oversight', 'route' => 'procurement-oversight.php',          'roles' => ['director','finance','bursar','store']],
-                ['title' => 'Department Requests',   'route' => 'department-requests.php',            'roles' => ['store','director','manager','head']],
+                ['title' => 'Inventory Reports',     'route' => 'inventory-reports.php',              'roles' => ['director','principal','hr','store','storekeeper']],
+                ['title' => 'Asset Management',      'route' => 'asset-management.php',               'roles' => ['store','storekeeper','director','manager']],
+                ['title' => 'Procurement Oversight', 'route' => 'procurement-oversight.php',          'roles' => ['director','finance','bursar','store','storekeeper']],
+                ['title' => 'Department Requests',   'route' => 'department-requests.php',            'roles' => ['store','storekeeper','director','manager','head']],
             ],
         ],
         [
@@ -434,17 +434,21 @@ function userCanAccessModule($moduleRoles, string $userRole): bool {
     foreach ($moduleRoles as $keyword) {
         $kw = strtolower(trim($keyword));
         if ($kw === '') continue;
-        // Exact match first
+        // Exact match (case-insensitive)
         if ($userRoleLower === $kw) return true;
-        // Word-boundary match (prevents "lab" matching "skills lab")
-        if (strpos($userRoleLower, $kw) !== false) {
-            $pos = strpos($userRoleLower, $kw);
+        // Substring match: keyword must start at a word boundary
+        // (position 0 or preceded by a space).
+        // We do NOT check what follows — this correctly handles:
+        //   'lecturer' → 'Lecturers' (plural)     ✓
+        //   'lecturer' → 'Senior Lecturers'       ✓
+        //   'director' → 'Director General'       ✓
+        //   'nursing'  → 'Head Nursing'           ✓
+        //   'lab'      → 'skills lab'             ✓ (only in Skills Lab)
+        //   'lab manager' → 'Computer Lab Manager' ✓ (in ICT)
+        $pos = strpos($userRoleLower, $kw);
+        if ($pos !== false) {
             $before = $pos === 0 ? '' : $userRoleLower[$pos - 1];
-            $after = $pos + strlen($kw) < strlen($userRoleLower) ? $userRoleLower[$pos + strlen($kw)] : '';
-            // Must be at word boundary (space, start, or end)
-            if (($before === '' || $before === ' ') && ($after === '' || $after === ' ')) {
-                return true;
-            }
+            if ($before === '' || $before === ' ') return true;
         }
     }
     return false;
@@ -456,10 +460,6 @@ function getFilteredModules(string $userRole): array {
     $all = getModuleConfig();
     $filtered = [];
     foreach ($all as $parent) {
-        // Check parent-level role access before processing children
-        if (!userCanAccessModule($parent['roles'], $userRole)) {
-            continue;
-        }
         $kids = [];
         foreach ($parent['children'] as $child) {
             if (userCanAccessModule($child['roles'], $userRole)) {
@@ -476,5 +476,16 @@ function getFilteredModules(string $userRole): array {
         }
     }
     return $filtered;
+}
+}
+
+/**
+ * Check whether a role should see a given parent-level sidebar module.
+ * Parent roles act as a default allow; individual child roles extend access.
+ * This function is retained for legacy checks but no longer gates the sidebar.
+ */
+if (!function_exists('userCanAccessParentModule')) {
+function userCanAccessParentModule($parentRoles, string $userRole): bool {
+    return userCanAccessModule($parentRoles, $userRole);
 }
 }

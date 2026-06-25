@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['nursing','midwifery','head','lecturer','director']);
 $user = $ctx['user'];
 $staffConn = getStaffConnection();
 $studentsConn = getStudentsConnection();

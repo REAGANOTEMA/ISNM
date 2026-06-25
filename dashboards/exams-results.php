@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['academics','registrar','director','lecturer','head']);
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $staffConn = getStaffConnection();

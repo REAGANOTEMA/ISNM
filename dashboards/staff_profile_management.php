@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['staff','director','secretary','registrar','lecturer']);
 $staffDb   = $ctx['staff'];
 $studentsDb = $ctx['students'];
 $websiteDb = $ctx['website'];

@@ -7,6 +7,15 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/registrar_document_templates.php';
 
 header('Content-Type: application/json');
+
+// Authentication check
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
 $action = $_GET['action'] ?? '';
 
 $students_conn = getStudentsConnection();

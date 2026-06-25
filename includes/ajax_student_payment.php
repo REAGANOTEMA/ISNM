@@ -3,7 +3,7 @@
  * AJAX endpoint for student self-service payment requests
  */
 require_once __DIR__ . '/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard([]);
+$ctx = bootstrapStaffDashboard(['bursar','finance','director','registrar']);
 $user = $ctx['user'];
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];

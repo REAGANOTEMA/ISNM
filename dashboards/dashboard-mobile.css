@@ -314,6 +314,29 @@ body {
   .action-buttons, .revenue-actions, .expense-actions,
   .budget-actions, .student-actions { gap: 6px; }
   .action-buttons .btn { font-size: .8rem; padding: 6px 10px; }
+
+  /* ── Tab navigation horizontal scroll ─────────── */
+  .sec-nav, .clin-nav, .section-tabs, .tab-nav {
+    overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; gap: 4px;
+  }
+  .sec-nav a, .clin-nav a, .section-tabs a, .tab-nav a,
+  .sec-nav button, .clin-nav button, .section-tabs button, .tab-nav button {
+    white-space: nowrap; flex-shrink: 0; font-size: .8rem; padding: 6px 12px;
+  }
+
+  /* ── Fixed-width form controls ────────────────── */
+  input[style*="width:"], select[style*="width:"],
+  input[style*="min-width:"], select[style*="min-width:"] {
+    width: 100% !important; min-width: unset !important; max-width: 100% !important;
+  }
+
+  /* ── Fixed-height table containers ─────────────── */
+  [style*="max-height:"][style*="overflow-y"] {
+    max-height: none !important; overflow-y: visible !important;
+  }
+
+  /* ── Modal / detail cells ──────────────────────── */
+  td[style*="min-width"] { min-width: unset !important; }
 }
 
 /* Small mobile: 480px */
