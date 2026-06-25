@@ -483,6 +483,122 @@ function getModuleConfig(): array {
                 ['title' => 'Audit Trail',           'route' => 'director-general.php#audit',         'roles' => ['director general','ceo','finance','director']],
             ],
         ],
+
+        // ── School Secretary Module Groups ──
+        [
+            'title'    => 'Secretary Dashboard',
+            'icon'     => 'fas fa-chart-pie',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Dashboard Home',     'route' => 'school-secretary.php?section=home',              'roles' => '*'],
+                ['title' => 'Admin Overview',     'route' => 'school-secretary.php?section=home',              'roles' => '*'],
+                ['title' => 'Daily Activities',   'route' => 'school-secretary.php?section=home',              'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Communications',
+            'icon'     => 'fas fa-comments',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Internal Messages',  'route' => 'school-secretary.php?section=comms',            'roles' => '*'],
+                ['title' => 'Staff Directory',    'route' => 'school-secretary.php?section=staff_search',     'roles' => '*'],
+                ['title' => 'Student Directory',  'route' => 'school-secretary.php?section=student_search',   'roles' => '*'],
+                ['title' => 'Announcements',      'route' => 'school-secretary.php?section=announcements',    'roles' => '*'],
+                ['title' => 'Circulars',          'route' => 'school-secretary.php?section=circulars',         'roles' => '*'],
+                ['title' => 'Notices',            'route' => 'school-secretary.php?section=notices',           'roles' => '*'],
+                ['title' => 'Communication Logs', 'route' => 'school-secretary.php?section=comm_logs',        'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Correspondence',
+            'icon'     => 'fas fa-envelope-open-text',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Incoming Mail',      'route' => 'school-secretary.php?section=incoming_mail',    'roles' => '*'],
+                ['title' => 'Outgoing Mail',      'route' => 'school-secretary.php?section=outgoing_mail',    'roles' => '*'],
+                ['title' => 'Official Letters',   'route' => 'school-secretary.php?section=letters',           'roles' => '*'],
+                ['title' => 'Document Tracking',  'route' => 'school-secretary.php?section=document_tracking','roles' => '*'],
+                ['title' => 'Archive',            'route' => 'school-secretary.php?section=correspondence_archive','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Meetings',
+            'icon'     => 'fas fa-handshake',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Meeting Schedule',   'route' => 'school-secretary.php?section=meetings',         'roles' => '*'],
+                ['title' => 'Meeting Requests',   'route' => 'school-secretary.php?section=meeting_requests', 'roles' => '*'],
+                ['title' => 'Meeting Minutes',    'route' => 'school-secretary.php?section=meetings&tab=minutes','roles' => '*'],
+                ['title' => 'Executive Meetings', 'route' => 'school-secretary.php?section=exec_meetings',    'roles' => '*'],
+                ['title' => 'Dept Meetings',      'route' => 'school-secretary.php?section=dept_meetings',    'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Appointments',
+            'icon'     => 'fas fa-calendar-check',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Appointment Requests','route' => 'school-secretary.php?section=appointments',    'roles' => '*'],
+                ['title' => 'Visitor Management',  'route' => 'school-secretary.php?section=visitor_mgmt',    'roles' => '*'],
+                ['title' => 'Office Calendar',     'route' => 'school-secretary.php?section=calendar',        'roles' => '*'],
+                ['title' => 'Executive Appts',     'route' => 'school-secretary.php?section=exec_appointments','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Document Mgmt',
+            'icon'     => 'fas fa-folder',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Document Registry',  'route' => 'school-secretary.php?section=documents',        'roles' => '*'],
+                ['title' => 'Document Filing',    'route' => 'school-secretary.php?section=doc_filing',       'roles' => '*'],
+                ['title' => 'Scanned Documents',  'route' => 'school-secretary.php?section=scanned_docs',     'roles' => '*'],
+                ['title' => 'Templates',          'route' => 'school-secretary.php?section=templates',        'roles' => '*'],
+                ['title' => 'Archives',           'route' => 'school-secretary.php?section=archives',         'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Request Mgmt',
+            'icon'     => 'fas fa-clipboard-list',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Pending Requests',   'route' => 'school-secretary.php?section=requests',         'roles' => '*'],
+                ['title' => 'Assigned Requests',  'route' => 'school-secretary.php?section=assigned_requests','roles' => '*'],
+                ['title' => 'Follow-Ups',         'route' => 'school-secretary.php?section=follow_ups',       'roles' => '*'],
+                ['title' => 'Request Tracking',   'route' => 'school-secretary.php?section=request_tracking', 'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Records',
+            'icon'     => 'fas fa-database',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Student Lookup',     'route' => 'school-secretary.php?section=student_search',   'roles' => '*'],
+                ['title' => 'Staff Lookup',       'route' => 'school-secretary.php?section=staff_search',     'roles' => '*'],
+                ['title' => 'Contact Directory',  'route' => 'school-secretary.php?section=contact_directory','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Reports',
+            'icon'     => 'fas fa-chart-bar',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Communication',     'route' => 'school-secretary.php?section=reports&type=communications','roles' => '*'],
+                ['title' => 'Appointments',      'route' => 'school-secretary.php?section=reports&type=appointments','roles' => '*'],
+                ['title' => 'Documents',         'route' => 'school-secretary.php?section=reports&type=documents','roles' => '*'],
+                ['title' => 'Activity',          'route' => 'school-secretary.php?section=reports&type=activity','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Sec Admissions',
+            'icon'     => 'fas fa-file-signature',
+            'roles'    => ['secretary','school secretary'],
+            'children' => [
+                ['title' => 'Admissions Support', 'route' => 'school-secretary.php?section=admissions',        'roles' => '*'],
+                ['title' => 'Student Lookup',     'route' => 'school-secretary.php?section=student_search',    'roles' => '*'],
+                ['title' => 'Applicant Search',   'route' => 'school-secretary.php?section=admissions',        'roles' => '*'],
+                ['title' => 'Admission Letters',  'route' => 'school-secretary.php?section=admissions',        'roles' => '*'],
+            ],
+        ],
     ];
 }
 }

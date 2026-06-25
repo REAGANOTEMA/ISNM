@@ -60,7 +60,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 // Per-dashboard module allow-lists — sidebar shows ONLY these groups for each page
 $bursarGroups = ['Overview','Student Fees','Payments','Payroll','Budgets & Expenditure','Accounts','Requisitions','Communications','Reports','Tools'];
+$secretaryGroups = ['Secretary Dashboard','Sec Communications','Sec Correspondence','Sec Meetings','Sec Appointments','Sec Document Mgmt','Sec Request Mgmt','Sec Records','Sec Reports','Sec Admissions'];
 $pageGroupAllowList = [
+    'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
     'bursar-billing.php'    => $bursarGroups,
     'bursar-payments.php'   => $bursarGroups,
