@@ -125,6 +125,9 @@ $active_staff_tab = 'show active';
   --cream:#F5E6C8;
   --cream-light:#FFF8E7;
   --cream-glow:rgba(245,230,200,0.20);
+  --gold:#C9A84C;
+  --gold-light:#E8D48B;
+  --gold-glow:rgba(201,168,76,0.20);
   --white:#FFFFFF;
   --glass-bg:rgba(255,255,255,0.09);
   --glass-border:rgba(255,255,255,0.12);
@@ -178,7 +181,7 @@ body{
 .title-bloom{
   position:absolute;top:18%;left:30%;z-index:0;
   width:500px;height:500px;
-  background:radial-gradient(circle,rgba(245,230,200,0.12) 0%,rgba(30,136,229,0.04) 30%,transparent 70%);
+  background:radial-gradient(circle,rgba(245,230,200,0.15) 0%,rgba(201,168,76,0.06) 30%,transparent 70%);
   filter:blur(40px);pointer-events:none;animation:bloomPulse 6s ease-in-out infinite alternate;
   will-change:transform,opacity
 }
@@ -200,9 +203,9 @@ body{
 /* ── CARD AMBIENT GLOW ── */
 .card-glow{
   position:absolute;top:50%;right:8%;z-index:0;
-  width:520px;height:520px;
-  background:radial-gradient(circle,rgba(30,136,229,0.10) 0%,rgba(15,163,177,0.04) 40%,transparent 70%);
-  filter:blur(30px);pointer-events:none;
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,rgba(30,136,229,0.10) 30%,transparent 70%);
+  filter:blur(40px);pointer-events:none;
   animation:glowPulse 5s ease-in-out infinite alternate;
   will-change:transform,opacity
 }
@@ -230,7 +233,7 @@ body{
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   animation-delay:0.1s
 }
-.hero-badge i{color:var(--teal-light);font-size:11px}
+.hero-badge i{color:var(--gold-light);font-size:11px}
 .hero-title{
   position:relative;font-size:3.4rem;font-weight:800;
   font-family:'Playfair Display',Georgia,serif;
@@ -272,21 +275,45 @@ body{
   100%{background-position:0% 50%}
 }
 .hero-sub{
-  font-size:0.95rem;color:rgba(255,255,255,0.70);
-  line-height:1.7;margin-bottom:28px;font-weight:300;
-  letter-spacing:0.15px;animation-delay:0.35s
+  margin-bottom:28px;animation-delay:0.35s
+}
+.hero-institution{
+  display:block;font-size:1.05rem;font-weight:600;
+  color:var(--cream);line-height:1.5;letter-spacing:0.2px;
+  margin-bottom:10px;font-family:'Playfair Display',Georgia,serif
+}
+.hero-divider{
+  display:block;width:60px;height:1px;
+  background:linear-gradient(90deg,var(--gold),rgba(201,168,76,0.15),transparent);
+  margin-bottom:12px
+}
+.hero-description{
+  display:block;font-size:0.9rem;color:rgba(255,255,255,0.65);
+  line-height:1.7;font-weight:300;letter-spacing:0.15px
 }
 .hero-motto{
-  padding:14px 20px;border-radius:12px;
-  background:rgba(255,255,255,0.04);
-  border-left:3px solid var(--teal);
-  font-size:13px;color:rgba(255,255,255,0.60);
-  font-weight:400;font-style:italic;line-height:1.7;
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px 20px;border-radius:12px;
+  background:rgba(201,168,76,0.04);
+  border:1px solid rgba(201,168,76,0.08);
+  font-size:13px;font-weight:400;line-height:1.6;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  letter-spacing:0.3px;animation-delay:0.5s;
-  text-shadow:0 0 20px rgba(15,163,177,0.06)
+  letter-spacing:0.2px;animation-delay:0.5s
 }
-.hero-motto strong{color:var(--teal-light);font-weight:600}
+.motto-emblem{
+  flex-shrink:0;width:8px;height:8px;border-radius:50%;
+  margin-top:7px;background:var(--gold);
+  box-shadow:0 0 12px var(--gold-glow),0 0 24px rgba(201,168,76,0.08)
+}
+.hero-motto strong{
+  display:block;color:var(--cream);font-weight:600;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:14px;margin-bottom:2px;letter-spacing:0.5px
+}
+.motto-sub{
+  display:block;color:rgba(255,255,255,0.55);
+  font-style:italic;font-weight:300;letter-spacing:0.3px
+}
 .hero-stats{
   display:flex;gap:28px;margin-top:32px;
   animation-delay:0.65s
@@ -294,9 +321,9 @@ body{
 .hero-stat{text-align:center}
 .hero-stat-num{
   font-size:1.5rem;font-weight:700;color:var(--white);
-  line-height:1;text-shadow:
+  line-height:1;  text-shadow:
     0 2px 12px rgba(0,0,0,0.25),
-    0 0 30px rgba(15,163,177,0.08);
+    0 0 30px var(--gold-glow);
   letter-spacing:-0.5px
 }
 .hero-stat-label{
@@ -310,7 +337,7 @@ body{
 }
 /* ── GLASSMORPHISM CARD (right) ── */
 .login-card-wrap{
-  width:100%;max-width:420px;position:relative;z-index:1;
+  width:100%;max-width:480px;position:relative;z-index:1;
   animation:cardIn 1s cubic-bezier(0.16,1,0.3,1) forwards,
              cardFloat 7s ease-in-out 1s infinite;
   transform-origin:center center;
@@ -325,144 +352,161 @@ body{
   50%{transform:perspective(1200px) rotateX(1.5deg) translateY(-7px)}
 }
 .login-card{
-  background:var(--glass-bg);
-  backdrop-filter:blur(28px) saturate(1.1);
-  -webkit-backdrop-filter:blur(28px) saturate(1.1);
-  border:1px solid var(--glass-border);
-  border-radius:22px;
-  padding:38px 34px 32px;
+  background:rgba(255,255,255,0.10);
+  backdrop-filter:blur(32px) saturate(1.2);
+  -webkit-backdrop-filter:blur(32px) saturate(1.2);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:24px;
+  padding:44px 40px 38px;
   position:relative;
   box-shadow:
-    0 2px 4px rgba(0,0,0,0.02),
-    0 8px 24px rgba(0,0,0,0.04),
-    0 20px 48px rgba(0,0,0,0.06),
-    0 40px 80px rgba(0,0,0,0.04),
-    inset 0 1px 0 rgba(255,255,255,0.12);
+    0 2px 4px rgba(0,0,0,0.04),
+    0 8px 24px rgba(0,0,0,0.06),
+    0 24px 56px rgba(0,0,0,0.08),
+    0 48px 96px rgba(0,0,0,0.06),
+    0 80px 140px rgba(0,0,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.15);
   transition:box-shadow 0.4s
 }
 .login-card::before{
-  content:'';position:absolute;top:0;left:18px;right:18px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent)
+  content:'';position:absolute;top:0;left:20px;right:20px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.30),transparent)
 }
 .login-card::after{
-  content:'';position:absolute;bottom:0;left:18px;right:18px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)
+  content:'';position:absolute;bottom:0;left:20px;right:20px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)
 }
 .card-logo-wrap{
-  display:flex;align-items:center;gap:14px;margin-bottom:22px
+  display:flex;align-items:center;gap:16px;margin-bottom:26px
 }
 .card-logo{
-  width:46px;height:46px;border-radius:50%;object-fit:cover;
-  border:2px solid rgba(255,255,255,0.15);flex-shrink:0
+  width:54px;height:54px;border-radius:50%;object-fit:cover;
+  border:2px solid rgba(201,168,76,0.30);flex-shrink:0;
+  box-shadow:0 0 28px rgba(201,168,76,0.10),0 4px 12px rgba(0,0,0,0.12)
 }
 .card-brand h2{
-  font-size:1.05rem;font-weight:700;color:var(--white);
-  margin:0;line-height:1.2;letter-spacing:-0.1px;
-  text-shadow:0 1px 4px rgba(0,0,0,0.15)
+  font-size:1.2rem;font-weight:700;color:var(--cream);
+  margin:0;line-height:1.25;letter-spacing:-0.2px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.20)
 }
 .card-brand p{
-  font-size:10px;color:rgba(255,255,255,0.45);margin:2px 0 0;
-  text-transform:uppercase;letter-spacing:0.8px;font-weight:400
+  font-size:11px;color:var(--gold-light);margin:3px 0 0;
+  text-transform:uppercase;letter-spacing:0.9px;font-weight:500;
+  opacity:0.85;text-shadow:0 1px 4px rgba(0,0,0,0.15)
 }
 .card-title{
-  font-size:1.25rem;font-weight:700;color:var(--white);
-  margin-bottom:4px;letter-spacing:-0.3px;
-  text-shadow:0 1px 4px rgba(0,0,0,0.10)
+  font-size:1.5rem;font-weight:800;color:var(--cream);
+  margin-bottom:6px;letter-spacing:-0.3px;
+  text-shadow:0 2px 12px rgba(0,0,0,0.18),0 0 30px var(--cream-glow)
 }
 .card-subtitle{
-  font-size:13px;color:rgba(255,255,255,0.50);
-  margin-bottom:24px;line-height:1.5;font-weight:400
+  font-size:14px;color:rgba(255,255,255,0.52);
+  margin-bottom:26px;line-height:1.6;font-weight:300;
+  letter-spacing:0.25px;text-shadow:0 1px 6px rgba(0,0,0,0.10)
 }
-.form-group{margin-bottom:16px}
+.form-group{margin-bottom:20px}
 .form-label{
-  display:block;font-size:10px;font-weight:600;color:rgba(255,255,255,0.60);
-  margin-bottom:5px;text-transform:uppercase;letter-spacing:0.8px
+  display:block;font-size:11px;font-weight:700;color:var(--gold-light);
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;
+  opacity:0.9;text-shadow:0 1px 4px rgba(0,0,0,0.10)
 }
 .input-wrap{
   position:relative;display:flex;align-items:center
 }
 .input-wrap .input-icon{
-  position:absolute;left:14px;color:rgba(255,255,255,0.30);
-  font-size:13px;z-index:2;transition:color 0.3s
+  position:absolute;left:16px;color:rgba(255,255,255,0.35);
+  font-size:15px;z-index:2;transition:color 0.3s
 }
 .input-wrap .form-control{
-  width:100%;padding:10px 14px 10px 42px;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:11px;font-size:14px;font-family:'Inter',sans-serif;
-  background:rgba(0,0,0,0.12);
+  width:100%;padding:13px 16px 13px 48px;
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:12px;font-size:15px;font-family:'Inter',sans-serif;
+  background:rgba(0,0,0,0.15);
   transition:all 0.3s;color:var(--white);
   outline:none;
   box-shadow:
-    inset 0 2px 4px rgba(0,0,0,0.15),
-    inset 0 1px 1px rgba(0,0,0,0.10),
-    0 1px 0 rgba(255,255,255,0.04)
+    inset 0 2px 6px rgba(0,0,0,0.18),
+    inset 0 1px 2px rgba(0,0,0,0.12),
+    0 1px 0 rgba(255,255,255,0.05)
 }
 .input-wrap .form-control:focus{
-  border-color:rgba(255,255,255,0.20);
-  background:rgba(0,0,0,0.18);
+  border-color:rgba(201,168,76,0.25);
+  background:rgba(0,0,0,0.22);
   box-shadow:
-    inset 0 2px 4px rgba(0,0,0,0.15),
-    0 0 0 3px rgba(30,136,229,0.10),
-    0 0 20px rgba(15,163,177,0.04)
+    inset 0 2px 6px rgba(0,0,0,0.18),
+    0 0 0 4px rgba(30,136,229,0.10),
+    0 0 32px rgba(201,168,76,0.06)
 }
-.input-wrap:focus-within .input-icon{color:var(--teal-light)}
-.form-control::placeholder{color:rgba(255,255,255,0.22);font-weight:300}
+.input-wrap:focus-within .input-icon{color:var(--gold-light)}
+.form-control::placeholder{color:rgba(255,255,255,0.20);font-weight:300;font-size:14px}
 .password-toggle{
-  position:absolute;right:12px;background:none;border:none;
-  color:rgba(255,255,255,0.30);cursor:pointer;padding:4px;font-size:13px;z-index:2;
+  position:absolute;right:14px;background:none;border:none;
+  color:rgba(255,255,255,0.30);cursor:pointer;padding:6px;font-size:15px;z-index:2;
   transition:color 0.3s
 }
 .password-toggle:hover{color:rgba(255,255,255,0.60)}
 .form-options{
   display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:20px
+  margin-bottom:22px
 }
 .remember-me{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;color:rgba(255,255,255,0.50);cursor:pointer;
-  font-weight:400;letter-spacing:0.2px
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:rgba(255,255,255,0.52);cursor:pointer;
+  font-weight:400;letter-spacing:0.2px;text-shadow:0 1px 4px rgba(0,0,0,0.08)
 }
 .remember-me input[type="checkbox"]{
-  width:15px;height:15px;accent-color:var(--teal);border-radius:3px;
-  background:rgba(255,255,255,0.05)
+  width:16px;height:16px;accent-color:var(--gold);border-radius:4px;
+  background:rgba(255,255,255,0.05);cursor:pointer
 }
 .forgot-link{
-  font-size:12px;color:rgba(255,255,255,0.50);text-decoration:none;
-  font-weight:400;transition:color 0.3s;letter-spacing:0.1px
+  font-size:13px;color:rgba(255,255,255,0.50);text-decoration:none;
+  font-weight:500;transition:color 0.3s;letter-spacing:0.2px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.08)
 }
-.forgot-link:hover{color:var(--teal-light)}
+.forgot-link:hover{color:var(--gold-light)}
 .btn-login{
-  width:100%;padding:11px 20px;
-  background:linear-gradient(165deg,var(--blue) 0%,var(--blue-dark) 100%);
-  color:#fff;border:none;border-radius:11px;
-  font-size:14px;font-weight:600;font-family:'Inter',sans-serif;
+  width:100%;padding:14px 24px;
+  background:linear-gradient(165deg,var(--blue) 0%,#0B3D91 50%,var(--blue-dark) 100%);
+  color:#fff;border:none;border-radius:12px;
+  font-size:15px;font-weight:700;font-family:'Inter',sans-serif;
   cursor:pointer;position:relative;overflow:hidden;
   transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
-  display:flex;align-items:center;justify-content:center;gap:8px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
   box-shadow:
-    0 4px 14px rgba(30,136,229,0.25),
-    0 2px 4px rgba(0,0,0,0.10),
-    0 8px 20px rgba(0,0,0,0.06),
+    0 6px 20px rgba(30,136,229,0.30),
+    0 3px 6px rgba(0,0,0,0.12),
+    0 12px 28px rgba(0,0,0,0.08),
     inset 0 1px 0 rgba(255,255,255,0.18);
-  letter-spacing:0.2px;
+  letter-spacing:0.3px;
   will-change:transform
+}
+.btn-login::before{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,0.07),rgba(201,168,76,0.12),rgba(201,168,76,0.07),transparent);
+  transform:skewX(-20deg);pointer-events:none;
+  animation:btnGoldSweep 5s ease-in-out infinite
+}
+@keyframes btnGoldSweep{
+  0%{left:-80%}
+  50%{left:150%}
+  100%{left:-80%}
 }
 .btn-login:hover{
   transform:translateY(-2px);
   box-shadow:
-    0 6px 24px rgba(30,136,229,0.35),
-    0 4px 8px rgba(0,0,0,0.12),
-    0 12px 30px rgba(0,0,0,0.08),
-    inset 0 1px 0 rgba(255,255,255,0.25)
+    0 8px 28px rgba(30,136,229,0.40),
+    0 6px 12px rgba(0,0,0,0.15),
+    0 16px 40px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.22)
 }
 .btn-login:active{
   transform:translateY(0);
   box-shadow:
-    0 1px 4px rgba(30,136,229,0.15),
-    inset 0 2px 4px rgba(0,0,0,0.12)
+    0 2px 6px rgba(30,136,229,0.15),
+    inset 0 2px 6px rgba(0,0,0,0.12)
 }
 .btn-login .spinner{
-  display:none;width:18px;height:18px;
+  display:none;width:20px;height:20px;
   border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;
   border-radius:50%;animation:spin 0.6s linear infinite
 }
@@ -471,40 +515,43 @@ body{
 .btn-login.loading{pointer-events:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .divider{
-  height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
-  margin:18px 0 16px
+  height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent);
+  margin:22px 0 18px
 }
 .footer-links{
-  display:flex;justify-content:center;gap:20px;
-  font-size:12px
+  display:flex;justify-content:center;gap:24px;
+  font-size:13px
 }
 .footer-links a{
-  color:rgba(255,255,255,0.40);text-decoration:none;
-  display:inline-flex;align-items:center;gap:6px;
-  transition:color 0.3s;font-weight:400;letter-spacing:0.1px
+  color:rgba(255,255,255,0.42);text-decoration:none;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:color 0.3s;font-weight:500;letter-spacing:0.15px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.08)
 }
-.footer-links a:hover{color:rgba(255,255,255,0.70)}
+.footer-links a:hover{color:rgba(255,255,255,0.75)}
 .alert{
-  border-radius:10px;padding:10px 14px;margin-bottom:18px;
-  font-size:12px;display:flex;align-items:center;gap:8px;
+  border-radius:11px;padding:12px 16px;margin-bottom:20px;
+  font-size:13px;display:flex;align-items:center;gap:10px;
   border:none;font-weight:400
 }
 .alert-danger{
-  background:rgba(239,68,68,0.08);color:#fca5a5;
-  border-left:3px solid rgba(239,68,68,0.4);
+  background:rgba(239,68,68,0.10);color:#fca5a5;
+  border-left:3px solid rgba(239,68,68,0.5);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
 }
 .alert-success{
-  background:rgba(34,197,94,0.08);color:#86efac;
-  border-left:3px solid rgba(34,197,94,0.4);
+  background:rgba(34,197,94,0.10);color:#86efac;
+  border-left:3px solid rgba(34,197,94,0.5);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
 }
 .role-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 12px;border-radius:16px;
-  background:rgba(15,163,177,0.08);border:1px solid rgba(15,163,177,0.12);
-  font-size:11px;font-weight:400;color:var(--teal-light);
-  margin-top:8px;letter-spacing:0.3px
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:20px;
+  background:rgba(201,168,76,0.10);border:1px solid rgba(201,168,76,0.15);
+  font-size:12px;font-weight:500;color:var(--gold-light);
+  margin-top:10px;margin-bottom:4px;letter-spacing:0.4px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.10);
+  box-shadow:0 2px 8px rgba(0,0,0,0.06)
 }
 /* ── SCAN LINES (live broadcast texture) ── */
 .scan-lines{
@@ -560,7 +607,8 @@ body{
   .login-right{padding:12px 16px 24px}
   .hero-title{font-size:1.6rem}
   .hero-badge{font-size:10px;margin-bottom:16px;letter-spacing:1.5px}
-  .hero-sub{font-size:0.82rem;margin-bottom:20px}
+  .hero-institution{font-size:0.9rem}
+  .hero-description{font-size:0.78rem;margin-bottom:20px}
   .login-card{padding:22px 16px 20px;border-radius:16px}
   .card-title{font-size:1.1rem}
   .card-subtitle{font-size:12px;margin-bottom:18px}
@@ -583,11 +631,17 @@ body{
 <div class="login-left">
   <div class="hero-content">
     <div class="title-bloom"></div>
-    <div class="hero-badge"><i class="fas fa-shield-alt"></i> Healthcare Staff Portal</div>
+    <div class="hero-badge"><i class="fas fa-gem"></i> Healthcare Staff Portal</div>
     <h1 class="hero-title">Welcome to<br><span>ISNM</span> Staff Portal</h1>
-    <p class="hero-sub">Iganga School of Nursing and Midwifery — Uganda's premier institution for nursing and midwifery education, empowering healthcare professionals since establishment.</p>
+    <div class="hero-sub">
+      <span class="hero-institution">Iganga School of Nursing and Midwifery</span>
+      <span class="hero-divider"></span>
+      <span class="hero-description">Uganda's premier institution for nursing and midwifery education, empowering healthcare professionals since establishment.</span>
+    </div>
     <div class="hero-motto">
-      <strong>Chosen to Serve</strong> — Based on a disciplined mind for health action.
+      <span class="motto-emblem"></span>
+      <strong>Chosen to Serve</strong>
+      <span class="motto-sub">Based on a disciplined mind for health action.</span>
     </div>
     <div class="hero-stats">
       <div class="hero-stat"><div class="hero-stat-num">20+</div><div class="hero-stat-label">Programs</div></div>
@@ -611,7 +665,7 @@ body{
       <div class="card-title">Staff Portal Login</div>
       <div class="card-subtitle">Welcome back. Please sign in to continue.</div>
       <?php if ($requested_position): ?>
-        <div class="role-badge"><i class="fas fa-sitemap"></i> <?=htmlspecialchars($requested_position)?></div>
+        <div class="role-badge"><i class="fas fa-star"></i> <?=htmlspecialchars($requested_position)?></div>
       <?php endif; ?>
       <?php if ($login_error): ?>
         <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i><?=htmlspecialchars($login_error)?></div>
