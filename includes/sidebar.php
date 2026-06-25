@@ -58,6 +58,46 @@ $modules = getFilteredModules($user_role);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 
+// Per-dashboard module allow-lists — sidebar shows ONLY these groups for each page
+$bursarGroups = ['Overview','Student Fees','Payments','Payroll','Budgets & Expenditure','Accounts','Requisitions','Communications','Reports','Tools'];
+$pageGroupAllowList = [
+    'school-bursar.php'     => $bursarGroups,
+    'bursar-billing.php'    => $bursarGroups,
+    'bursar-payments.php'   => $bursarGroups,
+    'bursar-reports.php'    => $bursarGroups,
+    'bursar-tax.php'        => $bursarGroups,
+    'bursar-payroll.php'    => $bursarGroups,
+    'bursar-ledger.php'     => $bursarGroups,
+    'cost-center-management.php' => $bursarGroups,
+    'penalty-configurations.php' => $bursarGroups,
+    'payment-subscriptions.php'  => $bursarGroups,
+    'student-statements.php'=> $bursarGroups,
+    'financial-reports.php' => $bursarGroups,
+    'fee-structure.php'     => $bursarGroups,
+    'invoice-generation.php'=> $bursarGroups,
+    'payment-recording.php' => $bursarGroups,
+    'budget-management.php' => $bursarGroups,
+    'expenditure-tracking.php'=>$bursarGroups,
+    'general-ledger.php'    => $bursarGroups,
+    'bank-reconciliation.php'=>$bursarGroups,
+    'audit-management.php'  => $bursarGroups,
+    'procurement-oversight.php'=>$bursarGroups,
+    'department-requests.php'=>$bursarGroups,
+    'ura-reporting.php'     => $bursarGroups,
+    'staff_receipt_printing.php' => $bursarGroups,
+    'proof-of-payments.php' => $bursarGroups,
+    'donations-management.php'=>$bursarGroups,
+    'director-finance.php'  => ['Finance'],
+];
+
+// When on a page in the allow list, restrict modules to those groups only
+$allowedGroups = $pageGroupAllowList[$currentPage] ?? null;
+if ($allowedGroups) {
+    $modules = array_values(array_filter($modules, function($m) use ($allowedGroups) {
+        return in_array($m['title'], $allowedGroups);
+    }));
+}
+
 // Per-dashboard module isolation — each page gets only its own section links
 $dashboardMap = [
     // ── Executive & Leadership ──
@@ -93,20 +133,7 @@ $dashboardMap = [
 
     // ── Finance ──
     'director-finance.php'  => ['title' => 'Director Finance',         'icon' => 'fas fa-chart-line'],
-    'school-bursar.php'     => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave',
-        'children' => [
-            ['title' => 'Bursar Dashboard',   'route' => 'school-bursar.php?section=overview',            'roles' => '*'],
-            ['title' => 'Record Payment',     'route' => 'school-bursar.php?section=record_payment',      'roles' => '*'],
-            ['title' => 'Generate Invoice',   'route' => 'school-bursar.php?section=generate_invoice',    'roles' => '*'],
-            ['title' => 'Fee Structure',      'route' => 'school-bursar.php?section=fee_structure',       'roles' => '*'],
-            ['title' => 'Student Statement',  'route' => 'school-bursar.php?section=student_statement',   'roles' => '*'],
-            ['title' => 'Receipt Print',      'route' => 'school-bursar.php?section=receipt_print',       'roles' => '*'],
-            ['title' => 'Financial Reports',  'route' => 'school-bursar.php?section=financial_reports',   'roles' => '*'],
-            ['title' => 'Budget',             'route' => 'school-bursar.php?section=budget',              'roles' => '*'],
-            ['title' => 'Daily Collections',  'route' => 'school-bursar.php?section=daily_collections',   'roles' => '*'],
-            ['title' => 'Auto Deductions',    'route' => 'payment-subscriptions.php',                     'roles' => '*'],
-        ],
-    ],
+    'school-bursar.php'     => ['title' => 'Bursar',                   'icon' => 'fas fa-money-bill-wave'],
     'financial-reports.php' => ['title' => 'Financial Reports',        'icon' => 'fas fa-chart-bar'],
     'fee-structure.php'     => ['title' => 'Fee Structure',            'icon' => 'fas fa-money-check-alt'],
     'invoice-generation.php'=> ['title' => 'Invoices',                 'icon' => 'fas fa-file-invoice'],

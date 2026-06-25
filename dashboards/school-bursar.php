@@ -13,6 +13,21 @@ $staff = $ctx['staff'];
 $students = $ctx['students'];
 $website = $ctx['website'];
 
+// Database name constants
+$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+
+// Auto-create missing bursar tables
+$bursarMigrate = function($db) use ($staff_db, $students_db) {
+    if (!$db) return;
+    $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.bursar_requisition_reviews (id INT AUTO_INCREMENT PRIMARY KEY, requester_id INT NOT NULL, item_description VARCHAR(500), amount DECIMAL(15,2) DEFAULT 0, status ENUM('pending','approved','rejected') DEFAULT 'pending', reviewed_by INT DEFAULT NULL, reviewed_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_messages (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT NOT NULL, sender_role VARCHAR(100), recipient_role VARCHAR(100), subject VARCHAR(200), message TEXT, read_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_notices (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), content TEXT, audience VARCHAR(50) DEFAULT 'all', published_by INT DEFAULT NULL, published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+};
+$bursarMigrate($staff);
+// Also try to create via students_db connection
+$bursarMigrate($students);
+
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view  = $_GET['section'];
 if ($view === 'overview') $view = 'home';
@@ -392,6 +407,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ── Requisition AJAX (approve/reject) ──────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
+    if (isset($_POST['ajax_approve_requisition'])) {
+        $reqId = (int)$_POST['req_id'];
+        $staff->query("UPDATE {$staff_db}.bursar_requisition_reviews SET status='approved', reviewed_by='{$_SESSION['staff_id']}', reviewed_at=NOW() WHERE id={$reqId}");
+        echo json_encode(['success' => 'Requisition approved.']);
+        exit;
+    }
+    if (isset($_POST['ajax_reject_requisition'])) {
+        $reqId = (int)$_POST['req_id'];
+        $staff->query("UPDATE {$staff_db}.bursar_requisition_reviews SET status='rejected', reviewed_by='{$_SESSION['staff_id']}', reviewed_at=NOW() WHERE id={$reqId}");
+        echo json_encode(['success' => 'Requisition rejected.']);
+        exit;
+    }
+}
+
 // ── Dashboard Stats with 60-second cache (combined databases) ─────
 
 $cache_key = 'bursar_home_stats_' . date('YmdH');
@@ -520,6 +551,11 @@ $pageTitle = 'Bursar Dashboard';
 
 <div class="ma content-section dashboard-section active" data-section="overview" style="margin-left:270px;padding:24px">
 
+<style>
+.print-only{display:none}
+@media print{.d-print-none{display:none!important}.print-only{display:block!important}.cc{border:1px solid #ddd!important;break-inside:avoid}.cc .ch{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.table th{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+
     <div class="ph">
         <div>
             <h1><i class="fas fa-calculator me-2"></i>Bursar Dashboard</h1>
@@ -548,102 +584,7 @@ $pageTitle = 'Bursar Dashboard';
         <div class="col-md-4"><div class="sc" style="border-left-color:#d97706"><div class="si" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><i class="fas fa-exclamation-circle"></i></div><div class="sv"><?= number_format($not_cleared_students) ?></div><div class="sl">Not Cleared</div></div></div>
     </div>
 
-    <!-- ── Action Grid ─────────────────────────────────────────── -->
-    <div class="ag mb-4">
-        <a href="?section=record_payment" class="ab"><i class="fas fa-hand-holding-usd"></i><span>Record Payment</span></a>
-        <a href="?section=generate_invoice" class="ab"><i class="fas fa-file-invoice"></i><span>Generate Invoice</span></a>
-        <a href="?section=bulk_billing" class="ab"><i class="fas fa-layer-group"></i><span>Bulk Billing</span></a>
-        <a href="?section=fee_structure" class="ab"><i class="fas fa-tags"></i><span>Fee Structure</span></a>
-        <a href="?section=fee_adjustments" class="ab"><i class="fas fa-adjust"></i><span>Fee Adjustments</span></a>
-        <a href="?section=student_statement" class="ab"><i class="fas fa-file-alt"></i><span>Student Statement</span></a>
-        <a href="?section=receipt_print" class="ab"><i class="fas fa-receipt"></i><span>Receipt Print</span></a>
-        <a href="?section=payment_verification" class="ab"><i class="fas fa-check-double"></i><span>Verification</span></a>
-        <a href="?section=financial_reports" class="ab"><i class="fas fa-chart-bar"></i><span>Financial Reports</span></a>
-        <a href="?section=daily_collections" class="ab"><i class="fas fa-list-ol"></i><span>Daily Collections</span></a>
-        <a href="?section=debtors_list" class="ab"><i class="fas fa-exclamation-triangle"></i><span>Debtors List</span></a>
-        <a href="?section=budget" class="ab"><i class="fas fa-wallet"></i><span>Budget</span></a>
-        <a href="?section=expenditure" class="ab"><i class="fas fa-shopping-cart"></i><span>Expenditure</span></a>
-        <a href="?section=payroll" class="ab"><i class="fas fa-money-check"></i><span>Payroll</span></a>
-        <a href="?section=ledger" class="ab"><i class="fas fa-book-open"></i><span>Ledger</span></a>
-        <a href="?section=cashbook" class="ab"><i class="fas fa-cash-register"></i><span>Cashbook</span></a>
-        <a href="?section=reconciliation" class="ab"><i class="fas fa-university"></i><span>Reconciliation</span></a>
-        <a href="?section=chart_of_accounts" class="ab"><i class="fas fa-book"></i><span>Chart of Accounts</span></a>
-        <a href="?section=assets" class="ab"><i class="fas fa-boxes"></i><span>Assets</span></a>
-        <a href="?section=tax_reports" class="ab"><i class="fas fa-file-invoice-dollar"></i><span>Tax / URA</span></a>
-        <a href="?section=fee_reminders" class="ab"><i class="fas fa-bell"></i><span>Fee Reminders</span></a>
-        <a href="?section=clearance" class="ab"><i class="fas fa-check-double"></i><span>Clearance</span></a>
-        <a href="?section=payment_approvals" class="ab"><i class="fas fa-thumbs-up"></i><span>Approvals</span></a>
-        <a href="?section=refunds" class="ab"><i class="fas fa-undo"></i><span>Refunds</span></a>
-        <a href="?section=late_payment" class="ab"><i class="fas fa-clock"></i><span>Late Payment</span></a>
-        <a href="?section=audit_trail" class="ab"><i class="fas fa-history"></i><span>Audit Trail</span></a>
-        <a href="payment-subscriptions.php" class="ab"><i class="fas fa-sync"></i><span>Auto Deductions</span></a>
-    </div>
 
-    <!-- ── Payment Provider Logos ───────────────────────────────── -->
-    <div class="cc mb-4">
-        <div class="ch"><i class="fas fa-credit-card me-2"></i>Supported Payment Methods</div>
-        <div class="cb">
-            <div class="d-flex gap-3 align-items-center flex-wrap">
-                <?php $providers = function_exists('getPaymentProviders') ? getPaymentProviders() : []; foreach ($providers as $key => $p): ?>
-                <div class="text-center">
-                    <img src="<?= htmlspecialchars($p['logo']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="payment-logo" style="height:32px;background:#fff;border-radius:6px;padding:4px;object-fit:contain;" onerror="this.src='../images/bank-default.svg'">
-                    <div><small><?= htmlspecialchars($p['name']) ?></small></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── Recent Transactions (staffs_db) ───────────────────────── -->
-    <div class="cc">
-        <div class="ch">Recent Transactions (Fee Payments)</div>
-        <div class="cb p-0">
-            <div class="table-responsive">
-                <table class="table tb">
-                    <thead><tr><th>#</th><th>Student</th><th>Receipt</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-                    <tbody>
-<?php
-$txnCount = 0;
-if (!empty($recent_txns)):
-    foreach ($recent_txns as $row):
-        $txnCount++;
-        echo '<tr><td>' . $txnCount . '</td><td>' . htmlspecialchars(($row['last_name'] ?? '') . ' ' . ($row['first_name'] ?? '')) . '<br><small class="text-muted">' . htmlspecialchars($row['student_id']) . '</small></td><td>' . htmlspecialchars($row['receipt_number'] ?? 'N/A') . '</td><td><strong>' . currency($row['amount_paid']) . '</strong></td><td>' . htmlspecialchars(ucfirst(str_replace('_',' ',$row['payment_method'] ?? ''))) . '</td><td>' . date('d/m/Y', strtotime($row['payment_date'])) . '</td><td>' . bsBadge($row['status']) . '</td></tr>';
-    endforeach;
-else:
-    echo '<tr><td colspan="7" class="text-center text-muted py-4">No recent transactions.</td></tr>';
-endif;
-?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── Recent Payments (students_db) ────────────────────────── -->
-    <div class="cc mt-4">
-        <div class="ch">Recent Payments (Student Portal)</div>
-        <div class="cb p-0">
-            <div class="table-responsive">
-                <table class="table tb">
-                    <thead><tr><th>Ref</th><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-                    <tbody>
-<?php if (!empty($recent_payments)): foreach ($recent_payments as $payment): ?>
-<tr>
-    <td><?= htmlspecialchars($payment['payment_reference'] ?? 'N/A') ?></td>
-    <td><?= htmlspecialchars(($payment['first_name'] ?? '') . ' ' . ($payment['last_name'] ?? '')) ?><br><small class="text-muted"><?= htmlspecialchars($payment['index_number'] ?? $payment['student_number'] ?? '') ?></small></td>
-    <td><strong><?= currency($payment['amount'] ?? 0) ?></strong></td>
-    <td><?php if (!empty($payment['payment_provider'])): ?><img src="<?= function_exists('getPaymentProviderLogo') ? getPaymentProviderLogo($payment['payment_provider']) : '' ?>" alt="" style="height:20px;border-radius:3px;vertical-align:middle"> <?php endif; ?><?= ucfirst(str_replace('_', ' ', $payment['payment_method'] ?? '-')) ?></td>
-    <td><?= date('d/m/Y', strtotime($payment['payment_date'] ?? 'now')) ?></td>
-    <td><?= bsBadge($payment['status'] ?? 'pending') ?></td>
-</tr>
-<?php endforeach; else: ?>
-<tr><td colspan="6" class="text-center text-muted py-4">No recent payments from student portal.</td></tr>
-<?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
     <?php endif; ?><!-- /home -->
 
@@ -1912,6 +1853,203 @@ echo $aprRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No pen
     </div>
     <?php endif; ?>
 
+    <!-- ======================== requisitions ======================== -->
+    <?php if ($view === 'requisitions'): ?>
+<?php
+// Get requisitions
+$reqFilter = $_GET['filter'] ?? 'pending';
+$reqWhere = "r.status = '".$staff->real_escape_string($reqFilter)."'";
+$reqs = $staff->query("SELECT r.*, u.username AS requester_name, u.role AS requester_role FROM {$staff_db}.bursar_requisition_reviews r LEFT JOIN {$staff_db}.users u ON r.requester_id = u.id WHERE {$reqWhere} ORDER BY r.created_at DESC");
+?>
+    <div class="cc">
+        <div class="ch d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-clipboard-list me-2"></i>Requisitions</span>
+            <div class="btn-group btn-group-sm">
+                <a href="?section=requisitions&filter=pending" class="btn btn-outline-primary <?= $reqFilter==='pending'?'active':'' ?>">Pending</a>
+                <a href="?section=requisitions&filter=approved" class="btn btn-outline-success <?= $reqFilter==='approved'?'active':'' ?>">Approved</a>
+                <a href="?section=requisitions&filter=rejected" class="btn btn-outline-danger <?= $reqFilter==='rejected'?'active':'' ?>">Rejected</a>
+            </div>
+        </div>
+        <div class="cb p-0">
+            <div class="table-responsive">
+                <table class="table tb">
+                    <thead><tr><th>#</th><th>Item</th><th>Amount</th><th>Requested By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+<?php if ($reqs && $reqs->num_rows > 0): $rn=0; while ($r = $reqs->fetch_assoc()): $rn++; ?>
+<tr>
+    <td><?= $rn ?></td>
+    <td><?= htmlspecialchars($r['item_description'] ?? $r['description'] ?? 'N/A') ?></td>
+    <td><strong><?= currency($r['amount'] ?? 0) ?></strong></td>
+    <td><?= htmlspecialchars($r['requester_name'] ?? 'Unknown') ?><br><small class="text-muted"><?= htmlspecialchars($r['requester_role'] ?? '') ?></small></td>
+    <td><?= date('d/m/Y', strtotime($r['created_at'])) ?></td>
+    <td><?php $st = $r['status'] ?? 'pending'; echo bsBadge($st === 'approved' ? 'Approved' : ($st === 'rejected' ? 'Rejected' : 'Pending')); ?></td>
+    <td>
+        <a href="?section=requisitions&view=<?= $r['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+        <?php if ($r['status'] === 'pending'): ?>
+        <button class="btn btn-sm btn-success" onclick="confirmAction('approve_requisition','<?= $r['id'] ?>')"><i class="fas fa-check"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="confirmAction('reject_requisition','<?= $r['id'] ?>')"><i class="fas fa-times"></i></button>
+        <?php endif; ?>
+    </td>
+</tr>
+<?php endwhile; else: ?>
+<tr><td colspan="7" class="text-center text-muted py-4">No <?= $reqFilter ?> requisitions found.</td></tr>
+<?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- ======================== communications ======================== -->
+    <?php if ($view === 'communications'): ?>
+<?php
+$commTab = $_GET['tab'] ?? 'inbox';
+$staffId = $_SESSION['staff_id'] ?? 0;
+$commDb = $students ? $students : $staff; // prefer students_db connection
+
+// Handle send message
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
+    $recipient = $commDb->real_escape_string($_POST['recipient_role'] ?? '');
+    $subject = $commDb->real_escape_string($_POST['subject'] ?? '');
+    $message = $commDb->real_escape_string($_POST['message'] ?? '');
+    if (!empty($recipient) && !empty($subject) && !empty($message)) {
+        $sql = "INSERT INTO {$students_db}.financial_messages (sender_id, sender_role, recipient_role, subject, message, created_at) VALUES ('{$staffId}', 'school bursar', '{$recipient}', '{$subject}', '{$message}', NOW())";
+        $commDb->query($sql);
+        $_SESSION['success'] = 'Message sent successfully.';
+        echo '<meta http-equiv="refresh" content="0;url=?section=communications&tab=sent">';
+        exit;
+    } else { echo '<div class="alert alert-danger">All fields required.</div>'; }
+}
+
+// Handle notice publish
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'publish_notice') {
+    $title = $commDb->real_escape_string($_POST['title'] ?? '');
+    $content = $commDb->real_escape_string($_POST['content'] ?? '');
+    $audience = $commDb->real_escape_string($_POST['audience'] ?? 'all');
+    if (!empty($title) && !empty($content)) {
+        $sql = "INSERT INTO {$students_db}.financial_notices (title, content, audience, published_by, published_at) VALUES ('{$title}', '{$content}', '{$audience}', '{$staffId}', NOW())";
+        $commDb->query($sql);
+        $_SESSION['success'] = 'Notice published.';
+        echo '<meta http-equiv="refresh" content="0;url=?section=communications&tab=notices">';
+        exit;
+    } else { echo '<div class="alert alert-danger">Title and content required.</div>'; }
+}
+?>
+    <div class="cc">
+        <div class="ch d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-envelope me-2"></i>Communications</span>
+            <ul class="nav nav-pills nav-sm">
+                <li class="nav-item"><a class="nav-link py-1 px-2 <?= $commTab==='inbox'?'active':'' ?>" href="?section=communications&tab=inbox"><i class="fas fa-inbox"></i> Inbox</a></li>
+                <li class="nav-item"><a class="nav-link py-1 px-2 <?= $commTab==='sent'?'active':'' ?>" href="?section=communications&tab=sent"><i class="fas fa-paper-plane"></i> Sent</a></li>
+                <li class="nav-item"><a class="nav-link py-1 px-2 <?= $commTab==='compose'?'active':'' ?>" href="?section=communications&tab=compose"><i class="fas fa-pen"></i> Compose</a></li>
+                <li class="nav-item"><a class="nav-link py-1 px-2 <?= $commTab==='notices'?'active':'' ?>" href="?section=communications&tab=notices"><i class="fas fa-bullhorn"></i> Notices</a></li>
+            </ul>
+        </div>
+        <div class="cb">
+<?php if ($commTab === 'inbox'): ?>
+<?php $inbox = $commDb->query("SELECT * FROM {$students_db}.financial_messages WHERE recipient_role = 'school bursar' OR recipient_role = 'all' ORDER BY created_at DESC"); ?>
+            <div class="table-responsive">
+                <table class="table tb">
+                    <thead><tr><th>From</th><th>Subject</th><th>Date</th><th>Status</th></tr></thead>
+                    <tbody>
+<?php if ($inbox && $inbox->num_rows > 0): while ($m = $inbox->fetch_assoc()): ?>
+<tr>
+    <td><?= htmlspecialchars(ucfirst($m['sender_role'] ?? 'Unknown')) ?></td>
+    <td><?= htmlspecialchars($m['subject'] ?? '') ?></td>
+    <td><?= date('d/m/Y H:i', strtotime($m['created_at'])) ?></td>
+    <td><?php $rd = !empty($m['read_at']); echo $rd ? '<span class="text-muted small">Read</span>' : '<span class="badge bg-primary">New</span>'; ?></td>
+</tr>
+<?php endwhile; else: ?>
+<tr><td colspan="4" class="text-center text-muted py-4">No messages.</td></tr>
+<?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+<?php elseif ($commTab === 'sent'): ?>
+<?php $sent = $commDb->query("SELECT * FROM {$students_db}.financial_messages WHERE sender_id = '{$staffId}' ORDER BY created_at DESC"); ?>
+            <div class="table-responsive">
+                <table class="table tb">
+                    <thead><tr><th>To</th><th>Subject</th><th>Date</th></tr></thead>
+                    <tbody>
+<?php if ($sent && $sent->num_rows > 0): while ($m = $sent->fetch_assoc()): ?>
+<tr><td><?= htmlspecialchars(ucfirst($m['recipient_role'] ?? 'Unknown')) ?></td><td><?= htmlspecialchars($m['subject'] ?? '') ?></td><td><?= date('d/m/Y H:i', strtotime($m['created_at'])) ?></td></tr>
+<?php endwhile; else: ?>
+<tr><td colspan="3" class="text-center text-muted py-4">No sent messages.</td></tr>
+<?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+<?php elseif ($commTab === 'compose'): ?>
+            <form method="POST">
+                <input type="hidden" name="action" value="send_message">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="fl">Recipient</label>
+                        <select name="recipient_role" class="form-control" required>
+                            <option value="">Select...</option>
+                            <option value="director general">Director General</option>
+                            <option value="secretary">Secretary</option>
+                            <option value="head of department">Head of Department</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="fl">Subject</label>
+                        <input type="text" name="subject" class="form-control" required maxlength="200">
+                    </div>
+                    <div class="col-12">
+                        <label class="fl">Message</label>
+                        <textarea name="message" class="form-control" rows="5" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane me-1"></i>Send Message</button>
+                    </div>
+                </div>
+            </form>
+<?php elseif ($commTab === 'notices'): ?>
+            <form method="POST" class="mb-4">
+                <input type="hidden" name="action" value="publish_notice">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fl">Notice Title</label>
+                        <input type="text" name="title" class="form-control" required maxlength="200">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="fl">Audience</label>
+                        <select name="audience" class="form-control">
+                            <option value="all">All Stakeholders</option>
+                            <option value="students">Students Only</option>
+                            <option value="staff">Staff Only</option>
+                            <option value="parents">Parents/Guardians</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="fl">Notice Content</label>
+                        <textarea name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-warning" type="submit"><i class="fas fa-bullhorn me-1"></i>Publish Notice</button>
+                    </div>
+                </div>
+            </form>
+<?php $notices = $commDb->query("SELECT * FROM {$students_db}.financial_notices ORDER BY published_at DESC LIMIT 20"); ?>
+            <div class="table-responsive">
+                <table class="table tb">
+                    <thead><tr><th>Title</th><th>Audience</th><th>Published</th><th>Status</th></tr></thead>
+                    <tbody>
+<?php if ($notices && $notices->num_rows > 0): while ($n = $notices->fetch_assoc()): ?>
+<tr><td><?= htmlspecialchars($n['title'] ?? '') ?></td><td><?= htmlspecialchars(ucfirst($n['audience'] ?? 'all')) ?></td><td><?= date('d/m/Y', strtotime($n['published_at'])) ?></td><td><span class="badge bg-success">Published</span></td></tr>
+<?php endwhile; else: ?>
+<tr><td colspan="4" class="text-center text-muted py-4">No notices published.</td></tr>
+<?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+<?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- ======================== Receipt Template (for printing) ========== -->
     <div id="receiptTemplate" class="receipt-preview d-none">
         <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;">
@@ -2207,6 +2345,22 @@ function setClearance(status){
     }).catch(function(){ document.getElementById('clearanceMessage').innerHTML = '<div class="alert alert-danger py-2 small">Request failed.</div>'; });
 }
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// ── Requisition actions ──────────────────────────────────────────
+function confirmAction(action, id){
+    if(!confirm('Are you sure you want to '+action.replace('_',' ')+' this requisition?')) return;
+    var form = new FormData();
+    form.append('ajax_'+action, '1');
+    form.append('req_id', id);
+    fetch('school-bursar.php?section=requisitions', {method:'POST', body:form})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if(d&&d.success){
+            location.reload();
+        } else {
+            alert(d&&d.error||'Action failed.');
+        }
+    }).catch(function(){ alert('Request failed.'); });
+}
 </script>
 </body>
 </html>

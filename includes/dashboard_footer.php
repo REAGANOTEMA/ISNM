@@ -61,8 +61,8 @@ if (file_exists($toolFile)) { try { include_once $toolFile; } catch (Exception $
 // Cache-busting version constant
 var ISNM_VERSION = '<?= $v ?>';
 
-// ── Log unhandled Promise rejections (prevents console noise, enables debugging) ──
-(function(){window.addEventListener('unhandledrejection',function(e){e.preventDefault();if(e.reason)console.warn('[ISNM] Unhandled rejection:',e.reason);});window.onunhandledrejection=function(e){if(e&&e.preventDefault)e.preventDefault();return true;};})();
+// ── Suppress unhandled Promise rejections ──
+window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {
