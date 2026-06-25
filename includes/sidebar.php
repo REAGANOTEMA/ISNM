@@ -61,6 +61,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 // Per-dashboard module allow-lists — sidebar shows ONLY these groups for each page
 $bursarGroups = ['Overview','Student Fees','Payments','Payroll','Budgets & Expenditure','Accounts','Requisitions','Communications','Reports','Tools'];
 $secretaryGroups = ['Secretary Dashboard','Sec Communications','Sec Correspondence','Sec Meetings','Sec Appointments','Sec Document Mgmt','Sec Request Mgmt','Sec Records','Sec Reports','Sec Admissions'];
+$directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Payment Oversight','Budget Management','Expenditure Control','Payroll Oversight','Accounting & Ledger','Audit & Compliance','Procurement Finance','Assets & Investments','Financial Communications','Reports & Analytics','Approval Center'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -89,7 +90,7 @@ $pageGroupAllowList = [
     'staff_receipt_printing.php' => $bursarGroups,
     'proof-of-payments.php' => $bursarGroups,
     'donations-management.php'=>$bursarGroups,
-    'director-finance.php'  => ['Finance'],
+    'director-finance.php'  => $directorFinanceGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only
