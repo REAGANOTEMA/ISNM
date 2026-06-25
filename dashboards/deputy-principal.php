@@ -1,1170 +1,1233 @@
 <?php
-include_once '../includes/config.php';
-include_once '../includes/functions.php';
-include_once '../includes/photo_upload.php';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-require_once __DIR__ . '/../includes/news_management_widget.php';
-require_once __DIR__ . '/../includes/student_set_viewer.php';
-require_once __DIR__ . '/../includes/institutional_framework.php';
-require_once __DIR__ . '/../includes/approval_workflow.php';
-
 $ctx = bootstrapStaffDashboard(['deputy', 'principal']);
-$auth_service = $ctx['auth'];
-$conn = $ctx['staff'];
-$user = $ctx['user'];
-$website_conn = $ctx['website'];
-$students_conn = $ctx['students'] ?? null;
-$user_id = (int) ($user['id'] ?? 0);
-$user_role = $user['role'] ?? '';
-$user_role_id = 0;     $ri = $conn->query("SELECT role_id FROM staff WHERE id = " . intval($user_id));
-if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
-$user_email = $user['email'] ?? '';
-$user_name = $user['full_name'] ?? '';
+$staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
+$user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
+$role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Deputy Principal';
+$staff_db   = defined('STAFF_DB_NAME')    ? STAFF_DB_NAME    : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$migrate = function($db) use ($staff_db, $students_db) {
+    if (!$db) return;
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meeting_minutes (id INT AUTO_INCREMENT PRIMARY KEY, meeting_id INT, agenda_item VARCHAR(300), discussion TEXT, resolution TEXT, action_items TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.meeting_actions (id INT AUTO_INCREMENT PRIMARY KEY, meeting_id INT, action_item TEXT, assigned_to VARCHAR(200), due_date DATE, status ENUM('pending','in_progress','completed') DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_discipline (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, offense TEXT, reported_by VARCHAR(200), hearing_date DATE, outcome VARCHAR(500), action_taken VARCHAR(200), status ENUM('open','resolved','appealed') DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_discipline_records (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, violation_type VARCHAR(200), description TEXT, severity ENUM('low','medium','high') DEFAULT 'medium', action_taken VARCHAR(200), status ENUM('pending','resolved','appealed') DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_welfare_cases (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, case_type VARCHAR(200), description TEXT, severity ENUM('low','medium','high','critical') DEFAULT 'medium', status ENUM('open','in_progress','resolved','closed') DEFAULT 'open', assigned_to VARCHAR(200), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.student_appeals (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT, appeal_type VARCHAR(200), reason TEXT, outcome VARCHAR(500), status ENUM('pending','approved','rejected') DEFAULT 'pending', reviewed_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.quality_assurance (id INT AUTO_INCREMENT PRIMARY KEY, review_title VARCHAR(300), review_type VARCHAR(200), department VARCHAR(200), reviewer VARCHAR(200), score DECIMAL(5,2), findings TEXT, recommendations TEXT, status ENUM('draft','completed','reviewed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.communication_log (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT, sender_name VARCHAR(200), recipient_role VARCHAR(100), subject VARCHAR(300), message TEXT, is_read TINYINT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.department_performance (id INT AUTO_INCREMENT PRIMARY KEY, department VARCHAR(200), metric VARCHAR(200), value DECIMAL(14,2), period VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.compliance_tracking (id INT AUTO_INCREMENT PRIMARY KEY, department VARCHAR(200), compliance_type VARCHAR(200), status ENUM('compliant','non_compliant','pending_review') DEFAULT 'pending_review', notes TEXT, reviewed_by VARCHAR(200), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.improvement_tracking (id INT AUTO_INCREMENT PRIMARY KEY, area VARCHAR(200), improvement_action TEXT, target_date DATE, progress DECIMAL(5,2) DEFAULT 0, status ENUM('planned','in_progress','completed') DEFAULT 'planned', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.deputy_tasks (id INT AUTO_INCREMENT PRIMARY KEY, task_title VARCHAR(300), description TEXT, assigned_by VARCHAR(200), priority ENUM('low','medium','high','urgent') DEFAULT 'medium', status ENUM('pending','in_progress','completed','cancelled') DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.teaching_quality_reviews (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT, review_date DATE, teaching_score DECIMAL(5,2), course_code VARCHAR(50), observer VARCHAR(200), feedback TEXT, status ENUM('draft','completed','reviewed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+};
+$migrate($staff); $migrate($students);
+$_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
+$view = $_GET['section']; if ($view === 'overview') $view = 'home';
+$ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
+function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
+function dep_success($m) { $_SESSION['dep_success'] = $m; }
+function dep_error($m) { $_SESSION['dep_error'] = $m; }
+function safeCount($c, $s) { $r = $c->query($s); if (!$r) return 0; $w = $r->fetch_assoc(); return intval($w['c'] ?? 0); }
 
-$display_name = $user['full_name'] ?? 'Deputy Principal';
-$name_parts = explode(' ', trim($display_name), 2);
-$first_name = $name_parts[0] ?? 'User';
-$last_name = $name_parts[1] ?? '';
+// ── AJAX DATA ENDPOINTS ─────────────────────────────────────
 
-// ── Helper ──
-function safeCount($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
-
-// ── Real stats ──
-$total_students   = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students") : 0;
-$active_students  = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
-$total_staff      = safeCount($conn,"SELECT COUNT(*)c FROM staff");
-$lecturers        = safeCount($conn,"SELECT COUNT(*)c FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%'");
-$active_courses   = safeCount($conn,"SELECT COUNT(*)c FROM academic_course_catalog WHERE status='Active'");
-$active_programs  = safeCount($conn,"SELECT COUNT(*)c FROM academic_programs WHERE status='Active'");
-$recent_applications = $website_conn ? safeCount($website_conn,"SELECT COUNT(*)c FROM applications") : 0;
-$avg_attendance   = $students_conn ? round(safeCount($students_conn,"SELECT COUNT(*)c FROM student_attendance WHERE status='Present'") / max(1,safeCount($students_conn,"SELECT COUNT(*)c FROM student_attendance")) * 100, 1) : 0;
-
-// ── Load real data ──
-$lecturer_list = []; $r=$conn->query("SELECT id,full_name,email,position FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' OR position LIKE '%Head%' ORDER BY full_name");
-if($r) while($row=$r->fetch_assoc()) $lecturer_list[]=$row;
-
-$course_list = []; $r=$conn->query("SELECT id,course_code,course_title,program_code FROM academic_course_catalog WHERE status='Active' ORDER BY course_title");
-if($r) while($row=$r->fetch_assoc()) $course_list[]=$row;
-
-$program_list = []; $r=$conn->query("SELECT id,program_code,program_name,program_type,department,duration_years,status FROM academic_programs ORDER BY program_name");
-if($r) while($row=$r->fetch_assoc()) $program_list[]=$row;
-
-$timetable_entries = []; $r=$conn->query("SELECT t.*,c.full_name lecturer_name FROM academic_timetable t LEFT JOIN staff c ON t.lecturer_id=c.id ORDER BY t.day_of_week,t.start_time LIMIT 50");
-if($r) while($row=$r->fetch_assoc()) $timetable_entries[]=$row;
-
-$assignments = []; $r=$conn->query("SELECT ca.*,s.full_name lecturer_name FROM course_assignments ca LEFT JOIN staff s ON ca.lecturer_id=s.id ORDER BY ca.created_at DESC LIMIT 30");
-if($r) while($row=$r->fetch_assoc()) $assignments[]=$row;
-
-$placements = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT cp.*,s.full_name student_name FROM clinical_placements_students cp LEFT JOIN students s ON cp.student_id=s.id ORDER BY cp.created_at DESC LIMIT 50");
-if($r) while($row=$r->fetch_assoc()) $placements[]=$row; }
-
-$materials = []; $r=$conn->query("SELECT d.*,s.full_name staff_name FROM generated_documents d LEFT JOIN staff s ON d.generated_by=s.id WHERE d.document_type IN('Teaching Material','Lecture Notes','Curriculum') OR d.document_title LIKE '%material%' OR d.document_title LIKE '%lecture%' ORDER BY d.created_at DESC LIMIT 30");
-if($r) while($row=$r->fetch_assoc()) $materials[]=$row;
-
-$recent_activities = []; $r=$conn->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
-if($r) while($row=$r->fetch_assoc()) $recent_activities[]=$row;
-
-// ── Report generation ──
-$report = $_GET['report'] ?? '';
-if ($report) {
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
-    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
-    if ($report === 'exam_performance') {
-        echo '<h2>Exam Performance Report</h2>';
-        $r = $conn->query("SELECT course_code,COUNT(*) total,SUM(CASE WHEN grade IN('A','B','C','D') THEN 1 ELSE 0 END) passed,AVG(marks) avg_marks FROM academic_records WHERE assessment_type='Exam' GROUP BY course_code");
-        echo '<table><thead><tr><th>Course</th><th>Total Students</th><th>Passed</th><th>Pass Rate</th><th>Avg Marks</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ $pr=$row['total']>0?round(($row['passed']/$row['total'])*100,1):0; echo '<tr><td>'.htmlspecialchars($row['course_code']).'</td><td>'.$row['total'].'</td><td>'.$row['passed'].'</td><td>'.$pr.'%</td><td>'.round($row['avg_marks'],1).'</td></tr>'; }
-        echo '</tbody></table>';
-    } elseif ($report === 'attendance_report') {
-        echo '<h2>Attendance Report</h2>';
-        if($students_conn){ $r=$students_conn->query("SELECT s.full_name,s.student_number,s.course,COUNT(a.id) total,SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END) present FROM students s LEFT JOIN student_attendance a ON s.id=a.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
-        echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Total Days</th><th>Present</th><th>Rate</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ $rt=$row['total']>0?round(($row['present']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td><td>'.$row['present'].'</td><td>'.$rt.'</td></tr>'; }
-        echo '</tbody></table>'; }
-    } elseif ($report === 'student_list') {
-        echo '<h2>Student List</h2>';
-        if($students_conn){ $r=$students_conn->query("SELECT student_number,registration_number,full_name,course,current_year,gender,status,phone,email FROM students WHERE status='Active' ORDER BY full_name");
-        echo '<table><thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Gender</th><th>Status</th></tr></thead><tbody>';
-        $i=1; if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.$i++.'</td><td>'.htmlspecialchars($row['registration_number']?:$row['student_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['current_year'].'</td><td>'.htmlspecialchars($row['gender']).'</td><td>'.htmlspecialchars($row['status']).'</td></tr>'; }
-        echo '</tbody></table>'; }
-    } elseif ($report === 'clinical_report') {
-        echo '<h2>Clinical Placements Report</h2>';
-        if($students_conn){ $r=$students_conn->query("SELECT cp.*,s.full_name FROM clinical_placements_students cp LEFT JOIN students s ON cp.student_id=s.id ORDER BY cp.created_at DESC LIMIT 100");
-        echo '<table><thead><tr><th>Student</th><th>Site</th><th>Supervisor</th><th>Start</th><th>End</th><th>Score</th><th>Status</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']??'-').'</td><td>'.htmlspecialchars($row['placement_site']).'</td><td>'.htmlspecialchars($row['supervisor_name']??'-').'</td><td>'.$row['start_date'].'</td><td>'.($row['end_date']??'-').'</td><td>'.($row['competency_score']??'-').'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '</tbody></table>'; }
-    } elseif ($report === 'evaluation_report') {
-        echo '<h2>Clinical Evaluation Report</h2>';
-        if($students_conn){ $r=$students_conn->query("SELECT cp.*,s.full_name FROM clinical_placements_students cp LEFT JOIN students s ON cp.student_id=s.id WHERE cp.competency_score IS NOT NULL ORDER BY cp.competency_score DESC");
-        echo '<table><thead><tr><th>Student</th><th>Site</th><th>Score</th><th>Logbook</th><th>Evaluation</th><th>Status</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']??'-').'</td><td>'.htmlspecialchars($row['placement_site']).'</td><td>'.($row['competency_score']??'-').'</td><td>'.($row['logbook_submitted']?'Yes':'No').'</td><td>'.htmlspecialchars(substr($row['supervisor_evaluation']??'',0,100)).'</td><td>'.$row['status'].'</td></tr>'; }
-        echo '</tbody></table>'; }
-    }
-    echo '</body></html>'; exit;
-}
-
-// ── AJAX endpoint ──
-$ajax = $_GET['ajax'] ?? '';
-$ajaxSid = intval($_GET['student_id'] ?? 0);
-$ajaxPid = intval($_GET['program_id'] ?? 0);
-if ($ajax && $ajaxSid > 0) {
+if ($view === 'deputy_stats' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    if ($ajax === 'student_profile') {
-        $info = []; $r=$students_conn->query("SELECT * FROM students WHERE id=" . intval($ajaxSid));
-        if($r) $info=$r->fetch_assoc();
-        $att=[];
-        if($students_conn){ $r=$students_conn->query("SELECT date,status FROM student_attendance WHERE student_id=" . intval($ajaxSid) . " ORDER BY date DESC LIMIT 20");
-        if($r) while($row=$r->fetch_assoc()) $att[]=$row; }
-        $inv=[]; if($students_conn){ $r=$students_conn->query("SELECT invoice_number,fee_type,total_amount,amount_paid,balance,status FROM student_invoices WHERE student_id=" . intval($ajaxSid) . " ORDER BY created_at DESC");
-        if($r) while($row=$r->fetch_assoc()) $inv[]=$row; }
-        $pay=[]; if($students_conn){ $r=$students_conn->query("SELECT payment_reference,amount_received,payment_method,payment_date,status FROM payments WHERE student_id=" . intval($ajaxSid) . " ORDER BY payment_date DESC");
-        if($r) while($row=$r->fetch_assoc()) $pay[]=$row; }
-        echo json_encode(['info'=>$info,'attendance'=>$att,'invoices'=>$inv,'payments'=>$pay]);
-        exit;
-    }
-    echo json_encode([]); exit;
+    $ts = $students ? safeCount($students, "SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
+    $as = safeCount($staff, "SELECT COUNT(*)c FROM staff WHERE status='Active'");
+    $ar = $students ? round(safeCount($students, "SELECT COUNT(*)c FROM student_attendance WHERE status='Present'") / max(1, safeCount($students, "SELECT COUNT(*)c FROM student_attendance")) * 100, 1) : 0;
+    $pt = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.deputy_tasks WHERE status='pending' OR status='in_progress'");
+    $da = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.department_performance WHERE value<50");
+    $ua = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.communication_log WHERE is_read=0 AND recipient_role='deputy'");
+    echo json_encode(['total_students'=>$ts,'active_staff'=>$as,'attendance_rate'=>$ar,'pending_tasks'=>$pt,'department_alerts'=>$da,'unread_messages'=>$ua]); exit;
 }
-if ($ajax && $ajaxPid > 0) {
+if ($view === 'class_monitoring_data' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    if ($ajax === 'program_courses') {
-        $qrProg=$conn->query("SELECT program_code FROM academic_programs WHERE id=" . intval($ajaxPid)); $prog=$qrProg?$qrProg->fetch_assoc():[]; $code=$prog['program_code']??'';
-        $data=[];$r=$conn->query("SELECT id,course_code,course_title,credits,year_of_study,semester FROM academic_course_catalog WHERE program_code='$code' ORDER BY year_of_study,semester,course_code");
-        if($r) while($row=$r->fetch_assoc()) $data[]=$row;
-        echo json_encode($data); exit;
-    }
-    echo json_encode([]); exit;
+    $r = $staff->query("SELECT t.*,c.full_name lecturer_name FROM academic_timetable t LEFT JOIN staff c ON t.lecturer_id=c.id ORDER BY t.day_of_week,t.start_time LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'attendance_monitoring_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $course = $staff->real_escape_string($_GET['course'] ?? '');
+    $from = $staff->real_escape_string($_GET['from'] ?? '');
+    $to = $staff->real_escape_string($_GET['to'] ?? '');
+    $sql = "SELECT a.*, s.full_name, s.student_number FROM {$students_db}.student_attendance a JOIN {$students_db}.students s ON a.student_id=s.id WHERE 1=1";
+    if ($course) $sql .= " AND a.subject='$course'";
+    if ($from) $sql .= " AND a.date>='$from'";
+    if ($to) $sql .= " AND a.date<='$to'";
+    $sql .= " ORDER BY a.date DESC LIMIT 200";
+    $r = $staff->query($sql); $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'clinical_placement_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT cp.*, s.full_name student_name FROM {$students_db}.clinical_placements_students cp LEFT JOIN {$students_db}.students s ON cp.student_id=s.id ORDER BY cp.created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'welfare_cases_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT w.*, s.full_name student_name FROM {$students_db}.student_welfare_cases w LEFT JOIN {$students_db}.students s ON w.student_id=s.id ORDER BY w.created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'discipline_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT d.*, s.full_name student_name FROM {$students_db}.student_discipline d LEFT JOIN {$students_db}.students s ON d.student_id=s.id ORDER BY d.created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'student_support_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.student_appeals ORDER BY created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'task_list' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.deputy_tasks ORDER BY created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'compliance_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.compliance_tracking ORDER BY created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'improvement_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.improvement_tracking ORDER BY created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'teaching_quality_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT r.*, s.full_name lecturer_name FROM {$staff_db}.teaching_quality_reviews r LEFT JOIN {$staff_db}.staff s ON r.lecturer_id=s.id ORDER BY r.created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'timetable_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT t.*, c.full_name lecturer_name FROM academic_timetable t LEFT JOIN staff c ON t.lecturer_id=c.id ORDER BY t.day_of_week,t.start_time LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'department_followup_data' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.department_performance ORDER BY created_at DESC LIMIT 100");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+}
+if ($view === 'approval_list_deputy' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $r = $staff->query("SELECT * FROM {$students_db}.communication_log WHERE recipient_role='deputy' AND is_read=0 ORDER BY created_at DESC LIMIT 50");
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 
-// ── POST handlers ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+// ── AJAX WRITE ENDPOINTS ────────────────────────────────────
 
-    if ($action === 'add_student_deputy') {
-        $fn  = $students_conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $sn  = $students_conn->real_escape_string(trim($_POST['surname'] ?? ''));
-        $on  = $students_conn->real_escape_string(trim($_POST['other_name'] ?? ''));
-        $gen = $students_conn->real_escape_string(trim($_POST['gender'] ?? 'Female'));
-        $crs = $students_conn->real_escape_string(trim($_POST['course'] ?? ''));
+if ($view === 'create_task' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $tt = $staff->real_escape_string($_POST['task_title'] ?? '');
+    $desc = $staff->real_escape_string($_POST['description'] ?? '');
+    $pr = $staff->real_escape_string($_POST['priority'] ?? 'medium');
+    if ($tt) {
+        $sn = $staff->real_escape_string($uname);
+        if ($staff->query("INSERT INTO {$students_db}.deputy_tasks (task_title,description,assigned_by,priority) VALUES ('$tt','$desc','$sn','$pr')")) {
+            echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed: '.$staff->error]); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Title required']); exit;
+}
+if ($view === 'update_task_status' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $tid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    if ($tid && $st) {
+        if ($staff->query("UPDATE {$students_db}.deputy_tasks SET status='$st' WHERE id=$tid")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if ($view === 'record_welfare_case' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $sid = (int)($_POST['student_id'] ?? 0); $ct = $staff->real_escape_string($_POST['case_type'] ?? '');
+    $desc = $staff->real_escape_string($_POST['description'] ?? '');
+    $sev = $staff->real_escape_string($_POST['severity'] ?? 'medium');
+    $ato = $staff->real_escape_string($_POST['assigned_to'] ?? '');
+    if ($sid && $ct) {
+        if ($staff->query("INSERT INTO {$students_db}.student_welfare_cases (student_id,case_type,description,severity,assigned_to) VALUES ($sid,'$ct','$desc','$sev','$ato')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Student and case type required']); exit;
+}
+if ($view === 'update_welfare_status' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $wid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    if ($wid && $st) {
+        if ($staff->query("UPDATE {$students_db}.student_welfare_cases SET status='$st' WHERE id=$wid")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if ($view === 'record_discipline' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $sid = (int)($_POST['student_id'] ?? 0); $off = $staff->real_escape_string($_POST['offense'] ?? '');
+    $hd = $staff->real_escape_string($_POST['hearing_date'] ?? '');
+    $act = $staff->real_escape_string($_POST['action_taken'] ?? '');
+    $rb = $staff->real_escape_string($uname);
+    if ($sid && $off) {
+        if ($staff->query("INSERT INTO {$students_db}.student_discipline (student_id,offense,reported_by,hearing_date,action_taken) VALUES ($sid,'$off','$rb','$hd','$act')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Student and offense required']); exit;
+}
+if ($view === 'update_discipline_status' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $did = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    $out = $staff->real_escape_string($_POST['outcome'] ?? '');
+    if ($did && $st) {
+        $sql = "UPDATE {$students_db}.student_discipline SET status='$st'";
+        if ($out) $sql .= ", outcome='$out'";
+        $sql .= " WHERE id=$did";
+        if ($staff->query($sql)) { echo json_encode(['success'=>true]); exit; }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if ($view === 'forward_approval' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $aid = (int)($_POST['id'] ?? 0); $comm = $staff->real_escape_string($_POST['recommendation'] ?? '');
+    if ($aid) {
+        $sn = $staff->real_escape_string($uname);
+        $sql = "UPDATE {$students_db}.communication_log SET is_read=1, message=CONCAT(message,'\n\n[Deputy Review by $sn at ".date('Y-m-d H:i:s').": $comm]\n[Forwarded to Principal for final approval]') WHERE id=$aid";
+        if ($staff->query($sql)) {
+            $staff->query("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES ($uid,'$sn','principal','Forwarded by Deputy: Review','Item #$aid reviewed by Deputy $sn. Recommendation: $comm')");
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Forward failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if ($view === 'send_communication_deputy' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $rt = $staff->real_escape_string($_POST['recipient_role'] ?? '');
+    $subj = $staff->real_escape_string($_POST['subject'] ?? '');
+    $msg = $staff->real_escape_string($_POST['message'] ?? '');
+    if ($subj && $msg && $rt && $rt !== 'institution') {
+        $sn = $staff->real_escape_string($uname);
+        if ($staff->query("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES ($uid,'$sn','$rt','$subj','$msg')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Send failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Subject, message, and valid recipient required. Institution-wide broadcasting not allowed.']); exit;
+}
+if ($view === 'record_compliance' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $dep = $staff->real_escape_string($_POST['department'] ?? '');
+    $ct = $staff->real_escape_string($_POST['compliance_type'] ?? '');
+    $notes = $staff->real_escape_string($_POST['notes'] ?? '');
+    $st = $staff->real_escape_string($_POST['status'] ?? 'pending_review');
+    if ($dep && $ct) {
+        $sn = $staff->real_escape_string($uname);
+        if ($staff->query("INSERT INTO {$students_db}.compliance_tracking (department,compliance_type,status,notes,reviewed_by) VALUES ('$dep','$ct','$st','$notes','$sn')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Department and compliance type required']); exit;
+}
+if ($view === 'record_improvement' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $area = $staff->real_escape_string($_POST['area'] ?? '');
+    $act = $staff->real_escape_string($_POST['improvement_action'] ?? '');
+    $td = $staff->real_escape_string($_POST['target_date'] ?? '');
+    if ($area && $act) {
+        if ($staff->query("INSERT INTO {$students_db}.improvement_tracking (area,improvement_action,target_date) VALUES ('$area','$act','$td')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Area and action required']); exit;
+}
+if ($view === 'update_improvement_progress' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $iid = (int)($_POST['id'] ?? 0); $pr = (float)($_POST['progress'] ?? 0);
+    $st = $staff->real_escape_string($_POST['status'] ?? '');
+    if ($iid) {
+        $sql = "UPDATE {$students_db}.improvement_tracking SET progress=$pr";
+        if ($st) $sql .= ", status='$st'";
+        $sql .= " WHERE id=$iid";
+        if ($staff->query($sql)) { echo json_encode(['success'=>true]); exit; }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if ($view === 'submit_teaching_review' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $lid = (int)($_POST['lecturer_id'] ?? 0); $rd = $staff->real_escape_string($_POST['review_date'] ?? date('Y-m-d'));
+    $ts = (float)($_POST['teaching_score'] ?? 0); $cc = $staff->real_escape_string($_POST['course_code'] ?? '');
+    $fb = $staff->real_escape_string($_POST['feedback'] ?? '');
+    $ob = $staff->real_escape_string($uname);
+    if ($lid && $cc) {
+        if ($staff->query("INSERT INTO {$staff_db}.teaching_quality_reviews (lecturer_id,review_date,teaching_score,course_code,observer,feedback) VALUES ($lid,'$rd',$ts,'$cc','$ob','$fb')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Lecturer and course required']); exit;
+}
+if ($view === 'record_attendance' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $sid = (int)($_POST['student_id'] ?? 0); $dt = $staff->real_escape_string($_POST['date'] ?? date('Y-m-d'));
+    $st = $staff->real_escape_string($_POST['status'] ?? 'Present'); $sub = $staff->real_escape_string($_POST['subject'] ?? 'General');
+    if ($sid) {
+        if ($staff->query("INSERT INTO {$students_db}.student_attendance (student_id,date,subject,status,recorded_by) VALUES ($sid,'$dt','$sub','$st',$uid)")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Student required']); exit;
+}
+if ($view === 'schedule_placement' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $sid = (int)($_POST['student_id'] ?? 0); $site = $staff->real_escape_string($_POST['placement_site'] ?? '');
+    $sup = $staff->real_escape_string($_POST['supervisor_name'] ?? '');
+    $sd = $staff->real_escape_string($_POST['start_date'] ?? '');
+    $ed = $staff->real_escape_string($_POST['end_date'] ?? '');
+    if ($sid && $site) {
+        if ($staff->query("INSERT INTO {$students_db}.clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES ($sid,'$site','$sup','$sd','$ed','Scheduled')")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+    }
+    echo json_encode(['success'=>false,'error'=>'Student and site required']); exit;
+}
+if ($view === 'update_placement_status' && $ajax === '1' && $staff) {
+    header('Content-Type: application/json');
+    $pid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    if ($pid && $st) {
+        if ($staff->query("UPDATE {$students_db}.clinical_placements_students SET status='$st' WHERE id=$pid")) {
+            echo json_encode(['success'=>true]); exit;
+        }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+    }
+    echo json_encode(['success'=>false]); exit;
+}
+if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
+
+// ── POST HANDLERS ───────────────────────────────────────────
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $act = $_POST['action'];
+    if ($act === 'add_student_deputy' && $students) {
+        $fn  = $students->real_escape_string(trim($_POST['first_name'] ?? ''));
+        $sn  = $students->real_escape_string(trim($_POST['surname'] ?? ''));
+        $on  = $students->real_escape_string(trim($_POST['other_name'] ?? ''));
+        $gen = $students->real_escape_string(trim($_POST['gender'] ?? 'Female'));
+        $crs = $students->real_escape_string(trim($_POST['course'] ?? ''));
         $yr  = intval($_POST['year'] ?? 1);
-        $sem = $students_conn->real_escape_string(trim($_POST['semester'] ?? 'Semester 1'));
-        $ph  = $students_conn->real_escape_string(trim($_POST['phone'] ?? ''));
-        $em  = $students_conn->real_escape_string(trim($_POST['email'] ?? ''));
-        $gn  = $students_conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $gp  = $students_conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-        if($fn && $sn && $crs && $students_conn){
+        $sem = $students->real_escape_string(trim($_POST['semester'] ?? 'Semester 1'));
+        $ph  = $students->real_escape_string(trim($_POST['phone'] ?? ''));
+        $em  = $students->real_escape_string(trim($_POST['email'] ?? ''));
+        $gn  = $students->real_escape_string(trim($_POST['guardian_name'] ?? ''));
+        $gp  = $students->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
+        if ($fn && $sn && $crs) {
             $snum = 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
             $full = trim("$fn $on $sn");
-            $students_conn->query("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,course,program,current_year,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES ('$snum','$fn','$sn','$on','$full','$gen','$crs','$crs',$yr,$yr,'$sem','$ph','$ph','$em','$gn','$gp','Active',NOW())");
-            if($students_conn->affected_rows>0){ $_SESSION['success']="Student $full registered."; }
-            else { $_SESSION['error']='Failed: '.$students_conn->error; }
-        } else { $_SESSION['error']='Required fields missing.'; }
-        header("Location: deputy-principal.php"); exit;
+            $students->query("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,course,current_year,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES ('$snum','$fn','$sn','$on','$full','$gen','$crs',$yr,$yr,'$sem','$ph','$ph','$em','$gn','$gp','Active',NOW())");
+            if ($students->affected_rows > 0) { dep_success("Student $full registered."); } else { dep_error('Failed: '.$students->error); }
+        } else { dep_error('Required fields missing.'); }
+        header("Location: deputy-principal.php?section=home"); exit;
     }
-
-    if ($action === 'schedule_class') {
-        $prog=$conn->real_escape_string($_POST['program_code']??'');
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $dow=$conn->real_escape_string($_POST['day_of_week']??'');
+    if ($act === 'schedule_class' && $staff) {
+        $prog=$staff->real_escape_string($_POST['program_code']??'');
+        $cc=$staff->real_escape_string($_POST['course_code']??'');
+        $dow=$staff->real_escape_string($_POST['day_of_week']??'');
         $st=$_POST['start_time']??'';
         $et=$_POST['end_time']??'';
-        $venue=$conn->real_escape_string($_POST['venue']??'');
+        $venue=$staff->real_escape_string($_POST['venue']??'');
         $lid=intval($_POST['lecturer_id']??0);
-        $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
+        $ay=$staff->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
+        $sem=$staff->real_escape_string($_POST['semester']??'Semester 1');
         $tid='TT-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $conn->query("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES ('$tid','$ay','$sem','$prog','$cc','$dow','$st','$et','$venue',$lid,$user_id)");
-        if($conn->affected_rows>0){ $_SESSION['success']="Class scheduled: $cc ($dow $st-$et)"; }
-        else { $_SESSION['error']='Failed to schedule: '.$conn->error; }
-        header("Location: deputy-principal.php"); exit;
+        $staff->query("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES ('$tid','$ay','$sem','$prog','$cc','$dow','$st','$et','$venue',$lid,$uid)");
+        if ($staff->affected_rows>0) { dep_success("Class scheduled: $cc ($dow $st-$et)"); } else { dep_error('Failed to schedule: '.$staff->error); }
+        header("Location: deputy-principal.php?section=class_monitoring"); exit;
     }
-
-    if ($action === 'assign_lecturer') {
+    if ($act === 'assign_lecturer' && $staff) {
         $lid=intval($_POST['lecturer_id']??0);
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $cn=$conn->real_escape_string($_POST['course_name']??'');
-        $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
-        $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        $rm=$conn->real_escape_string($_POST['classroom']??'');
-        $conn->query("INSERT INTO course_assignments (lecturer_id,course_code,course_name,semester,academic_year,classroom,assigned_by) VALUES ($lid,'$cc','$cn','$sem','$ay','$rm',$user_id)");
-        if($conn->affected_rows>0){ $_SESSION['success']="Lecturer assigned to $cn"; }
-        else { $_SESSION['error']='Assignment failed: '.$conn->error; }
-        header("Location: deputy-principal.php"); exit;
+        $cc=$staff->real_escape_string($_POST['course_code']??'');
+        $cn=$staff->real_escape_string($_POST['course_name']??'');
+        $sem=$staff->real_escape_string($_POST['semester']??'Semester 1');
+        $ay=$staff->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
+        $rm=$staff->real_escape_string($_POST['classroom']??'');
+        $staff->query("INSERT INTO course_assignments (lecturer_id,course_code,course_name,semester,academic_year,classroom,assigned_by) VALUES ($lid,'$cc','$cn','$sem','$ay','$rm',$uid)");
+        if ($staff->affected_rows>0) { dep_success("Lecturer assigned to $cn"); } else { dep_error('Assignment failed: '.$staff->error); }
+        header("Location: deputy-principal.php?section=academic_monitoring"); exit;
     }
-
-    if ($action === 'upload_material') {
-        $title=$conn->real_escape_string($_POST['material_title']??'');
-        $dtype=$conn->real_escape_string($_POST['document_type']??'Teaching Material');
-        if($title && isset($_FILES['material_file']) && $_FILES['material_file']['error']===UPLOAD_ERR_OK){
+    if ($act === 'upload_material' && $staff) {
+        $title=$staff->real_escape_string($_POST['material_title']??'');
+        $dtype=$staff->real_escape_string($_POST['document_type']??'Teaching Material');
+        if ($title && isset($_FILES['material_file']) && $_FILES['material_file']['error']===UPLOAD_ERR_OK) {
             $dir=__DIR__.'/../uploads/teaching_materials';
-            if(!is_dir($dir)) @mkdir($dir,0755,true);
+            if (!is_dir($dir)) @mkdir($dir,0755,true);
             $ext=strtolower(pathinfo($_FILES['material_file']['name'],PATHINFO_EXTENSION));
             $fname=time().'_'.preg_replace('/[^a-z0-9]/i','_',$title).'.'.$ext;
             $dest=$dir.'/'.$fname;
-            if(move_uploaded_file($_FILES['material_file']['tmp_name'],$dest)){
+            if (move_uploaded_file($_FILES['material_file']['tmp_name'],$dest)) {
                 $fpath="uploads/teaching_materials/$fname";
-                $conn->query("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES ('$dtype',$user_id,'$title','$fpath')");
-                $_SESSION['success']="Material '$title' uploaded.";
-            } else { $_SESSION['error']='Upload failed.'; }
-        } else { $_SESSION['error']='Title and file required.'; }
-        header("Location: deputy-principal.php"); exit;
+                $staff->query("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES ('$dtype',$uid,'$title','$fpath')");
+                dep_success("Material '$title' uploaded.");
+            } else { dep_error('Upload failed.'); }
+        } else { dep_error('Title and file required.'); }
+        header("Location: deputy-principal.php?section=academic_monitoring"); exit;
     }
-
-    if ($action === 'clinical_placement') {
+    if ($act === 'clinical_placement' && $students) {
         $sid=intval($_POST['student_id']??0);
-        $site=$students_conn->real_escape_string($_POST['placement_site']??'');
-        $sup=$students_conn->real_escape_string($_POST['supervisor_name']??'');
+        $site=$students->real_escape_string($_POST['placement_site']??'');
+        $sup=$students->real_escape_string($_POST['supervisor_name']??'');
         $sd=$_POST['start_date']??'';
         $ed=$_POST['end_date']??'';
-        if($students_conn && $sid>0 && $site){
-            $students_conn->query("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES ($sid,'$site','$sup','$sd','$ed','Scheduled')");
-            if($students_conn->affected_rows>0){ $_SESSION['success']='Clinical placement created.'; }
-            else { $_SESSION['error']='Placement failed: '.$students_conn->error; }
-        } else { $_SESSION['error']='Student and site required.'; }
-        header("Location: deputy-principal.php"); exit;
+        if ($sid>0 && $site) {
+            $students->query("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES ($sid,'$site','$sup','$sd','$ed','Scheduled')");
+            if ($students->affected_rows>0) { dep_success('Clinical placement created.'); } else { dep_error('Placement failed: '.$students->error); }
+        } else { dep_error('Student and site required.'); }
+        header("Location: deputy-principal.php?section=clinical_placement_monitoring"); exit;
     }
-
-    if ($action === 'clinical_evaluation') {
+    if ($act === 'clinical_evaluation' && $students) {
         $pid=intval($_POST['placement_id']??0);
         $score=floatval($_POST['competency_score']??0);
-        $eval=$students_conn->real_escape_string($_POST['evaluation']??'');
-        if($students_conn && $pid>0){
-            $students_conn->query("UPDATE clinical_placements_students SET competency_score=$score, supervisor_evaluation='$eval', logbook_submitted=1, status='Completed' WHERE id=$pid");
-            $_SESSION['success']='Evaluation recorded.';
-        } else { $_SESSION['error']='Placement ID required.'; }
-        header("Location: deputy-principal.php"); exit;
+        $eval=$students->real_escape_string($_POST['evaluation']??'');
+        if ($pid>0) {
+            $students->query("UPDATE clinical_placements_students SET competency_score=$score, supervisor_evaluation='$eval', logbook_submitted=1, status='Completed' WHERE id=$pid");
+            dep_success('Evaluation recorded.');
+        } else { dep_error('Placement ID required.'); }
+        header("Location: deputy-principal.php?section=clinical_placement_monitoring"); exit;
     }
-
-    if ($action === 'schedule_exam') {
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $etype=$conn->real_escape_string($_POST['exam_type']??'');
-        $sd=$_POST['exam_date']??'';
-        $rm=$conn->real_escape_string($_POST['exam_room']??'');
-        $prog=$conn->real_escape_string($_POST['program_code']??'');
-        $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
-        $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        $en='EXM-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $conn->query("INSERT INTO examination_records (exam_number,exam_type,course_code,semester,academic_year,program_code,exam_date,exam_room,status,created_by) VALUES ('$en','$etype','$cc','$sem','$ay','$prog','$sd','$rm','Scheduled',$user_id)");
-        if($conn->affected_rows>0){ $_SESSION['success']="Exam $en scheduled."; }
-        else { $_SESSION['error']='Failed: '.$conn->error; }
-        header("Location: deputy-principal.php"); exit;
-    }
-
-    if ($action === 'record_attendance') {
-        $sid=intval($_POST['student_id']??0);
-        $dt=$_POST['attendance_date']??date('Y-m-d');
-        $st=$students_conn->real_escape_string($_POST['attendance_status']??'Present');
-        $sub=$students_conn->real_escape_string($_POST['subject']??'General');
-        if($students_conn && $sid>0){
-            $students_conn->query("INSERT INTO student_attendance (student_id,date,subject,status,recorded_by) VALUES ($sid,'$dt','$sub','$st',$user_id)");
-            $_SESSION['success']='Attendance recorded.';
-        } else { $_SESSION['error']='Student required.'; }
-        header("Location: deputy-principal.php"); exit;
-    }
-
-    header("Location: deputy-principal.php"); exit;
 }
-?>
+
+$sv = $_SESSION['dep_success'] ?? ''; $ev = $_SESSION['dep_error'] ?? '';
+unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.btn-outline-purple { color:#8b5cf6; border-color:#8b5cf6; }
-.btn-outline-purple:hover { color:#fff; background:#8b5cf6; border-color:#8b5cf6; }
-.modal-content { max-height:80vh; overflow-y:auto; }
+.scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
+.scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
+.scard .scb{padding:20px}
+.act-item{padding:10px 14px;border-left:3px solid #1a237e;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:8px;transition:all .15s}
+.act-item:hover{background:#eef2ff}
+.act-item .time{font-size:11px;color:#94a3b8}
+.kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;transition:all .25s;display:flex;align-items:center;gap:14px;height:100%}
+.kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-1px)}
+.kpi-card .kpi-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.kpi-card .kpi-value{font-size:20px;font-weight:800;color:#0f172a;line-height:1.2}
+.kpi-card .kpi-label{font-size:11px;color:#64748b;font-weight:500}
+.kpi-card.primary .kpi-icon{background:#e8eaf6;color:#1a237e}
+.kpi-card.success .kpi-icon{background:#dcfce7;color:#16a34a}
+.kpi-card.info .kpi-icon{background:#e0f2fe;color:#0891b2}
+.kpi-card.warning .kpi-icon{background:#fef3c7;color:#d97706}
+.kpi-card.purple .kpi-icon{background:#f3e8ff;color:#7c3aed}
+.kpi-card.danger .kpi-icon{background:#fee2e2;color:#dc2626}
+.btn-sec{background:#1a237e;border:2px solid #1a237e;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:all .2s}
+.btn-sec:hover{background:#3949ab;border-color:#3949ab;color:#fff}
+.btn-outline-sec{background:#fff;border:2px solid #1a237e;color:#1a237e;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:all .2s}
+.btn-outline-sec:hover{background:#1a237e;color:#fff}
+.env-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;font-size:13px;transition:border-color .2s}
+.env-field:focus{border-color:#1a237e;outline:none;box-shadow:0 0 0 2px rgba(26,35,126,.1)}
+.nav-sections{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:20px;padding:12px 0;border-bottom:2px solid #e5e7eb}
+.nav-sections .nav-sec{padding:6px 14px;border-radius:8px;font-size:13px;color:#64748b;text-decoration:none;font-weight:500;transition:all .15s}
+.nav-sections .nav-sec:hover{background:#eef2ff;color:#1a237e}
+.nav-sections .nav-sec.active{background:#1a237e;color:#fff}
+.dep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+@media(max-width:768px){.dep-grid{grid-template-columns:1fr 1fr}}
 </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+</head><body>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="ma content-section dashboard-section active" data-section="deputy" style="margin-left:270px;padding:24px">
+<div class="ph mb-4">
+<div><h1><i class="fas fa-user-friends me-2"></i>Deputy Principal Dashboard</h1><p class="text-muted">Academic &amp; Student Affairs Monitoring</p></div>
+<a href="deputy-principal.php" class="bo btn-sm <?= $view==='home'?'d-none':'' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
+</div>
+<?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
+<?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Deputy Principal Dashboard</h1>
-                    <p>Assistant Academic Officer & Student Support</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo $user['first_name'] ?? 'User'; ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
+<!-- Navigation Tabs -->
+<div class="nav-sections">
+<a class="nav-sec <?= $view==='home'?'active':'' ?>" href="?section=home"><i class="fas fa-home me-1"></i>Overview</a>
+<a class="nav-sec <?= in_array($view,['academic_monitoring','class_monitoring','timetable_oversight','attendance_monitoring','clinical_placement_monitoring']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#academicSubnav" role="button"><i class="fas fa-book-open me-1"></i>Academic</a>
+<a class="nav-sec <?= in_array($view,['student_welfare','student_discipline','student_support','student_appeals_tracking']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#studentSubnav" role="button"><i class="fas fa-users me-1"></i>Student</a>
+<a class="nav-sec <?= in_array($view,['department_followups','compliance_tracking','institutional_activities','task_monitoring']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#opsSubnav" role="button"><i class="fas fa-cogs me-1"></i>Operations</a>
+<a class="nav-sec <?= $view==='approvals'?'active':'' ?>" href="?section=approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
+<a class="nav-sec <?= $view==='communications'?'active':'' ?>" href="?section=communications"><i class="fas fa-envelope me-1"></i>Communications</a>
+<a class="nav-sec <?= in_array($view,['monitoring_reports','attendance_reports','welfare_reports','department_reports']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#reportsSubnav" role="button"><i class="fas fa-chart-bar me-1"></i>Reports</a>
+<a class="nav-sec <?= in_array($view,['teaching_quality','clinical_training_reviews','compliance_reviews','improvement_tracking']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#qaSubnav" role="button"><i class="fas fa-clipboard-check me-1"></i>Quality</a>
+</div>
+<div class="collapse" id="academicSubnav"><div class="dep-grid mb-3">
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=academic_monitoring">Academic Monitoring</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=class_monitoring">Class Monitoring</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=timetable_oversight">Timetable Oversight</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=attendance_monitoring">Attendance</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=clinical_placement_monitoring">Clinical Placement</a>
+</div></div>
+<div class="collapse" id="studentSubnav"><div class="dep-grid mb-3">
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_welfare">Student Welfare</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_discipline">Discipline</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_support">Support</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_appeals_tracking">Appeals</a>
+</div></div>
+<div class="collapse" id="opsSubnav"><div class="dep-grid mb-3">
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=department_followups">Dept Follow-ups</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=compliance_tracking">Compliance</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=institutional_activities">Activities</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=task_monitoring">Task Monitor</a>
+</div></div>
+<div class="collapse" id="reportsSubnav"><div class="dep-grid mb-3">
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=monitoring_reports">Monitoring</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=attendance_reports">Attendance</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=welfare_reports">Welfare</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=department_reports">Department</a>
+</div></div>
+<div class="collapse" id="qaSubnav"><div class="dep-grid mb-3">
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=teaching_quality">Teaching Quality</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=clinical_training_reviews">Clinical Reviews</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=compliance_reviews">Compliance Reviews</a>
+<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=improvement_tracking">Improvement</a>
+</div></div>
 
-            <?php if(!empty($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show m-3 py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <?php unset($_SESSION['success']); endif; ?>
-            <?php if(!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show m-3 py-2"><?= htmlspecialchars($_SESSION['error']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <?php unset($_SESSION['error']); endif; ?>
+<?php if ($view === 'home'): ?>
+<?php
+$ts = $students ? safeCount($students, "SELECT COUNT(*)c FROM students WHERE status='Active'") : 0;
+$as = safeCount($staff, "SELECT COUNT(*)c FROM staff WHERE status='Active'");
+$ar = $students ? round(safeCount($students, "SELECT COUNT(*)c FROM student_attendance WHERE status='Present'") / max(1, safeCount($students, "SELECT COUNT(*)c FROM student_attendance")) * 100, 1) : 0;
+$pt = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.deputy_tasks WHERE status='pending' OR status='in_progress'");
+$da = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.department_performance WHERE value<50");
+$ua = safeCount($staff, "SELECT COUNT(*)c FROM {$students_db}.communication_log WHERE is_read=0 AND recipient_role='deputy'");
+$activities = []; $r = $staff->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 8");
+if ($r) while ($rw = $r->fetch_assoc()) $activities[] = $rw;
+$upcoming = []; $r = $staff->query("SELECT title, meeting_date, start_time FROM {$students_db}.meetings WHERE meeting_date>=CURDATE() ORDER BY meeting_date LIMIT 5");
+if ($r) while ($rw = $r->fetch_assoc()) $upcoming[] = $rw;
+?>
+<div class="row g-3 mb-4">
+<div class="col-md-2 col-6"><div class="kpi-card primary"><div class="kpi-icon"><i class="fas fa-users"></i></div><div><div class="kpi-value"><?= number_format($ts) ?></div><div class="kpi-label">Total Students</div></div></div></div>
+<div class="col-md-2 col-6"><div class="kpi-card success"><div class="kpi-icon"><i class="fas fa-user-tie"></i></div><div><div class="kpi-value"><?= number_format($as) ?></div><div class="kpi-label">Active Staff</div></div></div></div>
+<div class="col-md-2 col-6"><div class="kpi-card info"><div class="kpi-icon"><i class="fas fa-calendar-check"></i></div><div><div class="kpi-value"><?= $ar ?>%</div><div class="kpi-label">Attendance Rate</div></div></div></div>
+<div class="col-md-2 col-6"><div class="kpi-card warning"><div class="kpi-icon"><i class="fas fa-tasks"></i></div><div><div class="kpi-value"><?= $pt ?></div><div class="kpi-label">Pending Tasks</div></div></div></div>
+<div class="col-md-2 col-6"><div class="kpi-card danger"><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div><div><div class="kpi-value"><?= $da ?></div><div class="kpi-label">Dept Alerts</div></div></div></div>
+<div class="col-md-2 col-6"><div class="kpi-card purple"><div class="kpi-icon"><i class="fas fa-envelope"></i></div><div><div class="kpi-value"><?= $ua ?></div><div class="kpi-label">Unread Messages</div></div></div></div>
+</div>
+<div class="row g-3">
+<div class="col-md-8">
+<div class="scard"><div class="sch"><i class="fas fa-bolt me-2"></i>Quick Actions</div><div class="scb">
+<div class="row g-2">
+<div class="col-md-3 col-6"><a href="?section=task_monitoring" class="btn btn-sec w-100"><i class="fas fa-plus me-1"></i>New Task</a></div>
+<div class="col-md-3 col-6"><a href="?section=attendance_monitoring" class="btn btn-sec w-100"><i class="fas fa-user-check me-1"></i>Attendance</a></div>
+<div class="col-md-3 col-6"><a href="?section=communications" class="btn btn-sec w-100"><i class="fas fa-comments me-1"></i>Message</a></div>
+<div class="col-md-3 col-6"><a href="?section=approvals" class="btn btn-sec w-100"><i class="fas fa-check-double me-1"></i>Approvals</a></div>
+</div>
+</div></div>
+<div class="scard mt-3"><div class="sch"><i class="fas fa-clock me-2"></i>Recent Activity</div><div class="scb">
+<?php if ($activities): ?>
+<?php foreach ($activities as $a): ?>
+<div class="act-item py-1"><div class="d-flex justify-content-between"><span><i class="fas fa-circle text-primary me-2 small"></i><?= htmlspecialchars(mb_substr($a['activity'],0,80)) ?></span><span class="time"><?= date('d M H:i',strtotime($a['created_at'])) ?></span></div></div>
+<?php endforeach; ?>
+<?php else: ?>
+<div class="text-muted small">No recent activity.</div>
+<?php endif; ?>
+</div></div>
+</div>
+<div class="col-md-4">
+<div class="scard"><div class="sch"><i class="fas fa-calendar-day me-2"></i>Upcoming Activities</div><div class="scb p-0">
+<?php if ($upcoming): ?>
+<?php foreach ($upcoming as $u): ?>
+<div class="act-item"><div class="fw-bold small"><?= htmlspecialchars($u['title']) ?></div><div class="time"><?= htmlspecialchars($u['meeting_date']) ?> &middot; <?= htmlspecialchars($u['start_time']??'--') ?></div></div>
+<?php endforeach; ?>
+<?php else: ?>
+<div class="p-3 text-muted small">No upcoming activities.</div>
+<?php endif; ?>
+</div></div>
+</div>
+</div>
 
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <!-- Academic Overview -->
-                <section id="overview" class="content-section dashboard-section active" data-section="overview">
-                    <h2>Academic Overview</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="stat-content">
-                                <h3><?= $total_students ?></h3>
-                                <p>Total Students</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                            <div class="stat-content">
-                                <h3><?= $lecturers ?></h3>
-                                <p>Lecturers</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-book"></i></div>
-                            <div class="stat-content">
-                                <h3><?= $active_courses ?></h3>
-                                <p>Active Courses</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-                            <div class="stat-content">
-                                <h3><?= $avg_attendance ?>%</h3>
-                                <p>Avg Attendance</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+<?php elseif ($view === 'academic_monitoring'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-chart-line me-2"></i>Academic Monitoring</div><div class="scb">
+<form onsubmit="event.preventDefault(); depAssignLecturer()" class="row g-2 mb-3">
+<div class="col-md-3"><select id="alLecturer" class="form-select env-field"><option value="">Select Lecturer</option>
+<?php $r=$staff->query("SELECT id,full_name,position FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' ORDER BY full_name"); if($r) while($l=$r->fetch_assoc()): ?><option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['full_name']) ?></option><?php endwhile; ?>
+</select></div>
+<div class="col-md-3"><select id="alCourse" class="form-select env-field"><option value="">Select Course</option>
+<?php $r=$staff->query("SELECT id,course_code,course_title FROM academic_course_catalog WHERE status='Active' ORDER BY course_title"); if($r) while($c=$r->fetch_assoc()): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> - <?= htmlspecialchars($c['course_title']) ?></option><?php endwhile; ?>
+</select></div>
+<div class="col-md-2"><input type="text" id="alCourseName" class="form-control env-field" placeholder="Course Name"></div>
+<div class="col-md-2"><input type="text" id="alClassroom" class="form-control env-field" placeholder="Classroom"></div>
+<div class="col-md-2"><button type="submit" class="btn btn-sec w-100"><i class="fas fa-user-plus me-1"></i>Assign</button></div>
+</form>
+<h6 class="fw-bold mb-2">Current Assignments</h6>
+<div id="depAssignmentList"><div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div></div>
+</div></div>
+<script>
+function depAssignLecturer(){
+    var lid = document.getElementById('alLecturer').value; if(!lid){ alert('Select a lecturer'); return; }
+    var cc = document.getElementById('alCourse').value; if(!cc){ alert('Select a course'); return; }
+    var cn = document.getElementById('alCourseName').value || cc;
+    var rm = document.getElementById('alClassroom').value || '';
+    var fd = new FormData(); fd.append('action','assign_lecturer'); fd.append('lecturer_id',lid); fd.append('course_code',cc); fd.append('course_name',cn); fd.append('classroom',rm);
+    fetch('deputy-principal.php',{method:'POST',body:fd}).then(function(){ window.location.reload(); });
+}
+function depLoadAssignments(){
+    var el = document.getElementById('depAssignmentList');
+    fetch('deputy-principal.php?view=class_monitoring_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small">No assignments.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Venue</th><th>Lecturer</th></tr></thead><tbody>';
+        d.forEach(function(t){ h+='<tr><td>'+esc(t.course_code)+'</td><td>'+esc(t.day_of_week)+'</td><td>'+esc(t.start_time)+'-'+esc(t.end_time)+'</td><td>'+esc(t.venue||'')+'</td><td>'+esc(t.lecturer_name||'-')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small">Failed to load.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadAssignments);
+</script>
 
-                <!-- Official Duties -->
-                <section id="duties" class="content-section dashboard-section" data-section="duties">
-                    <h2><i class="fas fa-tasks me-2"></i>Official Duties &amp; Responsibilities</h2>
-                    <?php renderOfficialDuties($user_role_id, $conn); ?>
-                </section>
+<?php elseif ($view === 'class_monitoring'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-calendar-alt me-2"></i>Class Monitoring</div><div class="scb">
+<div id="depClassData"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div></div>
+</div></div>
+<script>
+function depLoadClassData(){
+    var el = document.getElementById('depClassData');
+    fetch('deputy-principal.php?view=class_monitoring_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted text-center py-4">No class data.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Course</th><th>Program</th><th>Day</th><th>Time</th><th>Venue</th><th>Lecturer</th><th>Year</th></tr></thead><tbody>';
+        d.forEach(function(t){ h+='<tr><td><strong>'+esc(t.course_code)+'</strong></td><td>'+esc(t.program_code||'-')+'</td><td>'+esc(t.day_of_week)+'</td><td>'+esc(t.start_time)+'-'+esc(t.end_time)+'</td><td>'+esc(t.venue||'-')+'</td><td>'+esc(t.lecturer_name||'-')+'</td><td>'+esc(t.academic_year||'-')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadClassData);
+</script>
 
-                <!-- Quick Actions -->
-                <section class="content-section">
-                    <h2><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        <a href="../dashboards/school-principal.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-chalkboard-teacher me-1"></i>School Principal</a>
-                        <a href="../dashboards/director-academics.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-graduation-cap me-1"></i>Director Academics</a>
-                        <a href="../dashboards/academic-registrar.php" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-alt me-1"></i>Academic Registrar</a>
-                        <a href="../dashboards/head-nursing.php" class="btn btn-outline-success btn-sm"><i class="fas fa-heartbeat me-1"></i>Head of Nursing</a>
-                        <a href="../dashboards/head-midwifery.php" class="btn btn-outline-success btn-sm"><i class="fas fa-user-md me-1"></i>Head of Midwifery</a>
-                        <a href="../dashboards/lecturers.php" class="btn btn-outline-info btn-sm"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
-                        <a href="../dashboards/matrons.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-user-shield me-1"></i>Matrons</a>
-                        <a href="../dashboards/wardens.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-door-open me-1"></i>Wardens</a>
-                        <a href="../student-directory.php" class="btn btn-outline-info btn-sm"><i class="fas fa-address-book me-1"></i>Student Directory</a>
-                        <a href="../dashboards/staff_transcript_generation.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-file-alt me-1"></i>Transcripts</a>
-                    </div>
-                </section>
-
-                <!-- Teaching & Learning -->
-                <section id="teaching" class="content-section dashboard-section" data-section="teaching">
-                    <h2>Teaching & Learning</h2>
-                    <div class="teaching-actions">
-                        <button class="btn btn-primary" onclick="openModal('scheduleClass')"><i class="fas fa-calendar-plus"></i> Schedule Class</button>
-                        <button class="btn btn-success" onclick="openModal('assignLecturer')"><i class="fas fa-user-plus"></i> Assign Lecturer</button>
-                        <button class="btn btn-info" onclick="openModal('curriculumReview')"><i class="fas fa-book-open"></i> Curriculum Review</button>
-                        <button class="btn btn-warning" onclick="openModal('teachingMaterials')"><i class="fas fa-file-alt"></i> Teaching Materials</button>
-                    </div>
-                    <div class="teaching-overview">
-                        <h3>Current Teaching Schedule</h3>
-                        <?php if(empty($timetable_entries)): ?>
-                        <p class="text-muted">No classes scheduled yet.</p>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Venue</th><th>Lecturer</th><th>Year</th><th>Status</th></tr></thead>
-                                <tbody>
-                                <?php foreach($timetable_entries as $t): ?>
-                                <tr>
-                                    <td><strong><?= htmlspecialchars($t['course_code']) ?></strong></td>
-                                    <td><?= $t['day_of_week'] ?></td>
-                                    <td><?= $t['start_time'] ?>-<?= $t['end_time'] ?></td>
-                                    <td><?= htmlspecialchars($t['venue']??'-') ?></td>
-                                    <td><?= htmlspecialchars($t['lecturer_name']??'-') ?></td>
-                                    <td><?= htmlspecialchars($t['academic_year']) ?></td>
-                                    <td><span class="badge bg-<?= $t['timetable_status']==='Published'?'success':($t['timetable_status']==='Approved'?'info':'secondary') ?>"><?= $t['timetable_status'] ?></span></td>
-                                </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </section>
-
-                <!-- Student Affairs -->
-                <section id="students" class="content-section dashboard-section" data-section="students">
-                    <h2>Student Affairs</h2>
-                    <div class="student-actions">
-                        <button class="btn btn-primary" onclick="openModal('studentRegistration')"><i class="fas fa-user-plus"></i> Student Registration</button>
-                        <button class="btn btn-success" onclick="openModal('studentRecords')"><i class="fas fa-folder"></i> Student Records</button>
-                        <button class="btn btn-info" onclick="openModal('attendanceTracking')"><i class="fas fa-user-check"></i> Attendance Tracking</button>
-                        <button class="btn btn-warning" onclick="openModal('studentPerformance')"><i class="fas fa-chart-line"></i> Performance Analysis</button>
-                    </div>
-                    <div class="student-overview">
-                        <h3>Student Performance Overview</h3>
-                        <div class="performance-grid">
-                            <?php foreach($program_list as $prog):
-                                $pcode = $conn->real_escape_string($prog['program_code']);
-                                $pname = $prog['program_name'];
-                                $count = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE course='$pname' AND status='Active'") : 0;
-                                $avgGpa = '-';
-                                $passRate = '-';
-                            ?>
-                            <div class="performance-card">
-                                <h4><?= htmlspecialchars($pname) ?></h4>
-                                <div class="performance-metrics">
-                                    <div class="metric"><span>Total Students:</span><strong><?= $count ?></strong></div>
-                                    <div class="metric"><span>Duration:</span><strong><?= $prog['duration_years'] ?> Years</strong></div>
-                                    <div class="metric"><span>Status:</span><strong class="text-<?= $prog['status']==='Active'?'success':'secondary' ?>"><?= $prog['status'] ?></strong></div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Examinations -->
-                <section id="examinations" class="content-section dashboard-section" data-section="examinations">
-                    <h2>Examination Management</h2>
-                    <div class="exam-actions">
-                        <button class="btn btn-primary" onclick="openModal('scheduleExam')"><i class="fas fa-calendar-plus"></i> Schedule Exam</button>
-                        <button class="btn btn-success" onclick="openModal('examResults')"><i class="fas fa-chart-bar"></i> Exam Results</button>
-                        <button class="btn btn-info" onclick="openModal('examAnalysis')"><i class="fas fa-analytics"></i> Performance Analysis</button>
-                        <button class="btn btn-warning" onclick="openModal('examReports')"><i class="fas fa-file-alt"></i> Generate Reports</button>
-                    </div>
-                    <div class="exam-overview">
-                        <h3>Upcoming Examinations</h3>
-                        <?php
-                        $exams = []; $r=$conn->query("SELECT exam_number,exam_type,course_code,semester,academic_year,exam_date,exam_room,status FROM examination_records WHERE exam_date >= CURDATE() OR status='Scheduled' ORDER BY exam_date LIMIT 10");
-                        if($r) while($row=$r->fetch_assoc()) $exams[]=$row;
-                        if(empty($exams)): ?>
-                        <p class="text-muted">No exams scheduled.</p>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead><tr><th>Exam</th><th>Type</th><th>Course</th><th>Date</th><th>Room</th><th>Status</th></tr></thead>
-                                <tbody>
-                                <?php foreach($exams as $e): ?>
-                                <tr>
-                                    <td><code><?= htmlspecialchars($e['exam_number']) ?></code></td>
-                                    <td><?= htmlspecialchars($e['exam_type']) ?></td>
-                                    <td><?= htmlspecialchars($e['course_code']) ?></td>
-                                    <td><?= $e['exam_date'] ?></td>
-                                    <td><?= htmlspecialchars($e['exam_room']??'-') ?></td>
-                                    <td><span class="badge bg-<?= $e['status']==='Published'?'success':($e['status']==='Scheduled'?'warning':'info') ?>"><?= $e['status'] ?></span></td>
-                                </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </section>
-
-                <!-- Clinical Training -->
-                <section id="clinical" class="content-section dashboard-section" data-section="clinical">
-                    <h2>Clinical Training</h2>
-                    <div class="clinical-actions">
-                        <button class="btn btn-primary" onclick="openModal('clinicalPlacement')"><i class="fas fa-hospital"></i> Clinical Placement</button>
-                        <button class="btn btn-success" onclick="openModal('clinicalEvaluation')"><i class="fas fa-clipboard-check"></i> Clinical Evaluation</button>
-                        <button class="btn btn-info" onclick="openModal('clinicalSites')"><i class="fas fa-map-marked-alt"></i> Clinical Sites</button>
-                        <button class="btn btn-warning" onclick="openModal('clinicalReports')"><i class="fas fa-file-medical"></i> Clinical Reports</button>
-                    </div>
-                    <div class="clinical-overview">
-                        <h3>Clinical Placements Overview</h3>
-                        <?php if(empty($placements)): ?>
-                        <p class="text-muted">No clinical placements yet.</p>
-                        <?php else: ?>
-                        <div class="placements-grid">
-                            <?php
-                            $sites = [];
-                            foreach($placements as $p){
-                                $key = $p['placement_site'];
-                                if(!isset($sites[$key])) $sites[$key] = ['count'=>0, 'status'=>$p['status']];
-                                $sites[$key]['count']++;
-                            }
-                            foreach($sites as $site=>$info): ?>
-                            <div class="placement-card">
-                                <div class="placement-header">
-                                    <h4><?= htmlspecialchars($site) ?></h4>
-                                    <span class="status-badge <?= $info['status']==='Active'?'active':'scheduled' ?>"><?= $info['status'] ?: 'Scheduled' ?></span>
-                                </div>
-                                <div class="placement-details">
-                                    <div class="detail"><span>Students:</span><strong><?= $info['count'] ?></strong></div>
-                                    <div class="detail"><span>Status:</span><strong><?= htmlspecialchars($info['status']?:'Scheduled') ?></strong></div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </section>
-
-                <!-- News Management -->
-                <section class="activities-section">
-                    <h2><i class="fas fa-newspaper me-2"></i>News Management</h2>
-                    <?php renderNewsWidget($conn, $website_conn, $user['id'] ?? 0, $user['full_name'] ?? 'Deputy Principal', $user['role'] ?? 'Deputy Principal', 5); ?>
-                </section>
-
-                <!-- Student Records -->
-                <section id="student-records" class="activities-section dashboard-section" data-section="student-records">
-                    <?php renderStudentSetViewer($students_conn, [
-                        'title' => 'Student Records',
-                        'icon' => 'fa-user-graduate',
-                        'show_all' => true,
-                        'per_page' => 50,
-                        'show_statement_link' => false
-                    ]); ?>
-                </section>
-
-                <!-- Recent Activities -->
-                <section class="activities-section">
-                    <h2>Recent Academic Activities</h2>
-                    <div class="activities-list">
-                        <?php foreach ($recent_activities as $activity): ?>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
-                            <div class="activity-content">
-                                <p><strong><?= htmlspecialchars($activity['activity'] ?? 'Activity') ?></strong></p>
-                                <small><?= date('M j, Y H:i', strtotime($activity['created_at'])) ?></small>
-                            </div>
-                        </div>
-                        <?php endforeach; if(empty($recent_activities)): ?>
-                        <p class="text-muted">No recent activities.</p>
-                        <?php endif; ?>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hierarchy, Alerts, Performance, Approvals -->
-    <div class="container-fluid px-4 pb-4">
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
-                    <div class="d-flex align-items-center gap-2 mb-2 small">
-                        <span class="badge bg-primary">Level 3</span>
-                        <span class="text-muted">You report to:</span>
-                        <span class="fw-semibold">School Principal (Level 2)</span>
-                    </div>
-                    <?= renderHierarchyChart($conn) ?>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-bell me-2 text-danger"></i>Department Alerts</h6>
-                    <?= renderAlertsPanel($conn, 'ACA', 5) ?>
-                </div>
-            </div>
-        </div>
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Department Performance</h6>
-                    <?php
-                    $depStaffId = 0;
-                    $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE position LIKE '%Deputy%' AND status='Active' LIMIT 1") : false;
-                    if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $depStaffId = $sr['id']; }
-                    echo renderDirectorPerformanceCard($depStaffId, 0, 'Deputy Principal', $conn);
-                    ?>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="section-card h-100">
-                    <h6 class="fw-bold mb-3" style="font-size:0.95rem"><i class="fas fa-check-double me-2 text-primary"></i>Pending Approvals</h6>
-                    <?php
-                    $pendingApprovals = getPendingApprovals($conn, 0, 5);
-                    if (!empty($pendingApprovals)):
-                        foreach ($pendingApprovals as $apr):
-                            echo renderApprovalWorkflowCard($apr, $conn);
-                            echo renderApprovalActionButtons($apr['id']);
-                        endforeach;
-                    else:
-                        echo '<div class="text-muted small py-3 text-center">No pending approvals.</div>';
-                    endif;
-                    ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="actionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" id="modalForm" enctype="multipart/form-data">
-                    <div class="modal-body" id="modalBody"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="modalActionBtn">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Student Profile Modal -->
-    <div class="modal fade" id="studentProfileModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>Student Profile</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="studentProfileBody">
-                    <div class="text-center py-4"><em>Loading...</em></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" onclick="printStudentProfile()"><i class="fas fa-print"></i> Print</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    function updateDateTime() {
-        const now = new Date();
-        document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 60000);
-
-
-
-    function openModal(action) {
-        const modal = new bootstrap.Modal(document.getElementById('actionModal'));
-        const title = document.getElementById('modalTitle');
-        const body = document.getElementById('modalBody');
-        const form = document.getElementById('modalForm');
-        const submitBtn = document.getElementById('modalActionBtn');
-
-        form.onsubmit = function(e){ return true; };
-        form.enctype = 'application/x-www-form-urlencoded';
-
-        switch(action) {
-            // ─── Schedule Class ───
-            case 'scheduleClass':
-                title.textContent = 'Schedule Class';
-                body.innerHTML = `<input type="hidden" name="action" value="schedule_class">
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Program</label><select name="program_code" class="form-select" required>
-                            <option value="">Select Program</option>
-                            <?php foreach($program_list as $p): ?><option value="<?= htmlspecialchars($p['program_code']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Course</label><select name="course_code" class="form-select" required>
-                            <option value="">Select Course</option>
-                            <?php foreach($course_list as $c): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> – <?= htmlspecialchars($c['course_title']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Day</label><select name="day_of_week" class="form-select" required>
-                            <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option>
-                        </select></div>
-                        <div class="col-md-3"><label class="form-label">Start Time</label><input type="time" name="start_time" class="form-control" required></div>
-                        <div class="col-md-3"><label class="form-label">End Time</label><input type="time" name="end_time" class="form-control" required></div>
-                        <div class="col-md-3"><label class="form-label">Venue</label><input type="text" name="venue" class="form-control" required></div>
-                        <div class="col-md-3"><label class="form-label">Lecturer</label><select name="lecturer_id" class="form-select">
-                            <option value="">Select</option>
-                            <?php foreach($lecturer_list as $l): ?><option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['full_name']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Academic Year</label><input type="text" name="academic_year" class="form-control" value="<?= date('Y').'-'.(date('Y')+1) ?>"></div>
-                        <div class="col-md-4"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>Semester 1</option><option>Semester 2</option></select></div>
-                    </div>`;
-                submitBtn.textContent = 'Schedule Class';
-                break;
-
-            // ─── Assign Lecturer ───
-            case 'assignLecturer':
-                title.textContent = 'Assign Lecturer to Course';
-                body.innerHTML = `<input type="hidden" name="action" value="assign_lecturer">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Lecturer</label><select name="lecturer_id" class="form-select" required>
-                            <option value="">Select Lecturer</option>
-                            <?php foreach($lecturer_list as $l): ?><option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['full_name']) ?> (<?= htmlspecialchars($l['position']) ?>)</option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-6"><label class="form-label">Course</label><select name="course_code" class="form-select" required>
-                            <option value="">Select Course</option>
-                            <?php foreach($course_list as $c): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> – <?= htmlspecialchars($c['course_title']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-6"><label class="form-label">Course Name</label><input type="text" name="course_name" class="form-control" required placeholder="e.g. Nursing Fundamentals"></div>
-                        <div class="col-md-3"><label class="form-label">Academic Year</label><input type="text" name="academic_year" class="form-control" value="<?= date('Y').'-'.(date('Y')+1) ?>"></div>
-                        <div class="col-md-3"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>Semester 1</option><option>Semester 2</option></select></div>
-                        <div class="col-md-6"><label class="form-label">Classroom</label><input type="text" name="classroom" class="form-control" placeholder="e.g. Room 101"></div>
-                    </div>`;
-                submitBtn.textContent = 'Assign Lecturer';
-                break;
-
-            // ─── Curriculum Review ───
-            case 'curriculumReview':
-                title.textContent = 'Curriculum Review';
-                let html = `<ul class="nav nav-tabs mb-3" id="curriculumTabs">
-                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#progTab">Programs</a></li>
-                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#courseTab">Courses</a></li>
-                </ul><div class="tab-content">
-                    <div class="tab-pane fade show active" id="progTab">
-                        <table class="table table-sm table-hover"><thead><tr><th>Code</th><th>Program</th><th>Type</th><th>Department</th><th>Duration</th><th>Status</th></tr></thead><tbody>`;
-                <?php foreach($program_list as $p): ?>
-                html += `<tr><td><?= htmlspecialchars($p['program_code']) ?></td><td><?= htmlspecialchars($p['program_name']) ?></td><td><?= $p['program_type'] ?></td><td><?= htmlspecialchars($p['department']) ?></td><td><?= $p['duration_years'] ?> yrs</td><td><span class="badge bg-<?= $p['status']==='Active'?'success':'secondary' ?>"><?= $p['status'] ?></span></td></tr>`;
-                <?php endforeach; ?>
-                html += `</tbody></table></div>
-                    <div class="tab-pane fade" id="courseTab">
-                        <table class="table table-sm table-hover"><thead><tr><th>Code</th><th>Title</th><th>Credits</th><th>Program</th><th>Year</th><th>Semester</th></tr></thead><tbody>`;
-                <?php foreach($course_list as $c): ?>
-                html += `<tr><td><?= htmlspecialchars($c['course_code']) ?></td><td><?= htmlspecialchars($c['course_title']) ?></td><td><?= $c['credits'] ?></td><td><?= htmlspecialchars($c['program_code']??'-') ?></td><td><?= $c['year_of_study']??'-' ?></td><td><?= htmlspecialchars($c['semester']??'-') ?></td></tr>`;
-                <?php endforeach; ?>
-                html += `</tbody></table></div></div>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                setTimeout(() => { if(typeof bootstrap !== 'undefined'){ document.querySelectorAll('#curriculumTabs a').forEach(t=>{ t.addEventListener('click',e=>{ e.preventDefault(); new bootstrap.Tab(t).show(); }); }); } }, 100);
-                return modal.show();
-                break;
-
-            // ─── Teaching Materials ───
-            case 'teachingMaterials':
-                title.textContent = 'Teaching Materials';
-                form.enctype = 'multipart/form-data';
-                html = `<input type="hidden" name="action" value="upload_material">
-                    <h6>Upload New Material</h6>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6"><label class="form-label">Title</label><input type="text" name="material_title" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label">Type</label><select name="document_type" class="form-select"><option>Teaching Material</option><option>Lecture Notes</option><option>Curriculum</option><option>Assignment</option><option>Other</option></select></div>
-                        <div class="col-md-12"><label class="form-label">File</label><input type="file" name="material_file" class="form-control" required></div>
-                    </div>
-                    <h6>Existing Materials</h6>`;
-                <?php if(empty($materials)): ?>
-                html += `<p class="text-muted">No materials uploaded yet.</p>`;
-                <?php else: ?>
-                html += `<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Title</th><th>Type</th><th>Uploaded By</th><th>Date</th><th>Action</th></tr></thead><tbody>`;
-                <?php foreach($materials as $m): ?>
-                html += `<tr><td><?= htmlspecialchars($m['document_title']) ?></td><td><?= htmlspecialchars($m['document_type']) ?></td><td><?= htmlspecialchars($m['staff_name']??'-') ?></td><td><?= $m['generation_date'] ?></td><td><?= $m['file_path'] ? '<a href="../'.htmlspecialchars($m['file_path']).'" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></a>' : '-' ?></td></tr>`;
-                <?php endforeach; ?>
-                html += `</tbody></table></div>`;
-                <?php endif; ?>
-                body.innerHTML = html;
-                submitBtn.textContent = 'Upload Material';
-                submitBtn.parentElement.style.display = '';
-                break;
-
-            // ─── Student Registration ───
-            case 'studentRegistration':
-                title.textContent = 'Student Registration';
-                body.innerHTML = `<input type="hidden" name="action" value="studentRegistration">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">First Name *</label><input type="text" name="first_name" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label">Surname *</label><input type="text" name="surname" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label">Other Names</label><input type="text" name="other_name" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label">Gender</label><select name="gender" class="form-select"><option>Female</option><option>Male</option></select></div>
-                        <div class="col-md-4"><label class="form-label">Program *</label><select name="course" class="form-select" required>
-                            <option value="">Select Program</option>
-                            <?php foreach($program_list as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-3"><label class="form-label">Year</label><select name="year" class="form-select"><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option></select></div>
-                        <div class="col-md-3"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>Semester 1</option><option>Semester 2</option></select></div>
-                        <div class="col-md-3"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label">Guardian Name</label><input type="text" name="guardian_name" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control"></div>
-                    </div>`;
-                submitBtn.textContent = 'Register Student';
-                form.onsubmit = function() {
-                    const fd = new FormData(this);
-                    fd.set('action', 'add_student_deputy');
-                    fetch('deputy-principal.php', { method:'POST', body:fd }).then(r=>{ window.location.reload(); }).catch(function(e){ console.warn('[ISNM] Student add failed:', e); });
-                    return false;
-                };
-                break;
-
-            // ─── Student Records ───
-            case 'studentRecords':
-                title.textContent = 'Student Records';
-                <?php
-                $students = [];
-                if($students_conn){ $r=$students_conn->query("SELECT id,student_number,registration_number,full_name,first_name,surname,course,current_year,gender,phone,mobile_number,email,status,index_number,national_student_id_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");
-                if($r) while($row=$r->fetch_assoc()) $students[]=$row; }
-                ?>
-                html = `<div class="mb-2"><input type="text" id="studentSearchInput" class="form-control form-control-sm" placeholder="Search by name, reg no, phone..." onkeyup="filterStudentTable()"></div>
-                    <div class="table-responsive" style="max-height:400px;overflow-y:auto">
-                    <table class="table table-sm table-hover" id="studentRecordsTable"><thead><tr><th>Reg No</th><th>Name</th><th>Program</th><th>Year</th><th>Phone/Mobile</th><th>Index No</th><th>Actions</th></tr></thead><tbody>`;
-                <?php foreach($students as $s):
-                    $sname = htmlspecialchars($s['full_name'] ?: trim($s['first_name'].' '.$s['surname']));
-                    $sreg = htmlspecialchars($s['registration_number'] ?: $s['student_number']);
-                    $sphone = htmlspecialchars($s['phone']??'');
-                    $smobile = htmlspecialchars($s['mobile_number']??'');
-                    $sindex = htmlspecialchars($s['index_number']??$s['national_student_id_number']??'');
-                ?>
-                html += `<tr>
-                    <td><code><?= $sreg ?></code></td>
-                    <td><?= $sname ?></td>
-                    <td><?= htmlspecialchars($s['course']??'-') ?></td>
-                    <td><?= $s['current_year']??'-' ?></td>
-                    <td><?= $sphone ?><?= ($sphone && $smobile && $smobile!==$sphone) ? '<br><small class="text-muted">M: '.$smobile.'</small>' : ($smobile ? '<br><small class="text-muted">'.$smobile.'</small>' : '-') ?></td>
-                    <td><?= $sindex ?: '-' ?></td>
-                    <td><button class="btn btn-sm btn-outline-info" onclick="viewStudentProfile(<?= $s['id'] ?>)"><i class="fas fa-eye"></i></button>
-                    <a href="../print-student.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
-                    <button class="btn btn-sm btn-outline-warning" onclick="openEditStudentModal(<?= $s['id'] ?>)"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
-                <?php endforeach; ?>
-                html += `</tbody></table></div>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Attendance Tracking ───
-            case 'attendanceTracking':
-                title.textContent = 'Record Attendance';
-                body.innerHTML = `<input type="hidden" name="action" value="record_attendance">
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Student</label><select name="student_id" class="form-select" required>
-                            <option value="">Select Student</option>
-                            <?php if($students_conn){ $sr=$students_conn->query("SELECT id,full_name,student_number,registration_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");
-                            if($sr) while($s=$sr->fetch_assoc()): ?><option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['full_name'] ?: $s['student_number']) ?></option><?php endwhile; } ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Date</label><input type="date" name="attendance_date" class="form-control" value="<?= date('Y-m-d') ?>"></div>
-                        <div class="col-md-4"><label class="form-label">Status</label><select name="attendance_status" class="form-select">
-                            <option>Present</option><option>Absent</option><option>Late</option><option>Excused</option>
-                        </select></div>
-                        <div class="col-md-12"><label class="form-label">Subject</label><input type="text" name="subject" class="form-control" placeholder="e.g. Nursing Fundamentals"></div>
-                    </div>`;
-                submitBtn.textContent = 'Record Attendance';
-                break;
-
-            // ─── Performance Analysis ───
-            case 'studentPerformance':
-                title.textContent = 'Performance Analysis';
-                form.onsubmit = function(){ return false; };
-                html = `<div class="row g-3">
-                    <?php foreach($program_list as $p):
-                        $pname = $conn->real_escape_string($p['program_name']);
-                        $cnt = $students_conn ? safeCount($students_conn,"SELECT COUNT(*)c FROM students WHERE course='$pname' AND status='Active'") : 0;
-                    ?>
-                    <div class="col-md-6">
-                        <div class="card card-body">
-                            <h6><?= htmlspecialchars($p['program_name']) ?></h6>
-                            <div class="d-flex justify-content-between"><span>Students:</span><strong><?= $cnt ?></strong></div>
-                            <div class="d-flex justify-content-between"><span>Duration:</span><strong><?= $p['duration_years'] ?> years</strong></div>
-                            <div class="d-flex justify-content-between"><span>Type:</span><strong><?= $p['program_type'] ?></strong></div>
-                            <div class="d-flex justify-content-between"><span>Status:</span><strong class="text-<?= $p['status']==='Active'?'success':'secondary' ?>"><?= $p['status'] ?></strong></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Schedule Exam ───
-            case 'scheduleExam':
-                title.textContent = 'Schedule Exam';
-                body.innerHTML = `<input type="hidden" name="action" value="schedule_exam">
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Course</label><select name="course_code" class="form-select" required>
-                            <option value="">Select Course</option>
-                            <?php foreach($course_list as $c): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Exam Type</label><select name="exam_type" class="form-select">
-                            <option>Mid Semester</option><option>End of Semester</option><option>Supplementary</option><option>Practical</option>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Program</label><select name="program_code" class="form-select">
-                            <option value="">All Programs</option>
-                            <?php foreach($program_list as $p): ?><option value="<?= htmlspecialchars($p['program_code']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Exam Date</label><input type="date" name="exam_date" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label">Room</label><input type="text" name="exam_room" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label">Semester</label><select name="semester" class="form-select"><option>Semester 1</option><option>Semester 2</option></select></div>
-                        <div class="col-md-6"><label class="form-label">Academic Year</label><input type="text" name="academic_year" class="form-control" value="<?= date('Y').'-'.(date('Y')+1) ?>"></div>
-                    </div>`;
-                submitBtn.textContent = 'Schedule Exam';
-                break;
-
-            // ─── Exam Results ───
-            case 'examResults':
-                title.textContent = 'Exam Results';
-                form.onsubmit = function(){ return false; };
-                <?php
-                $examsAll = []; $r=$conn->query("SELECT exam_number,exam_type,course_code,exam_date,status FROM examination_records ORDER BY created_at DESC LIMIT 50");
-                if($r) while($row=$r->fetch_assoc()) $examsAll[]=$row;
-                ?>
-                html = `<p class="text-muted">Click "View Results" to enter marks for an exam.</p>
-                    <div class="table-responsive" style="max-height:350px;overflow-y:auto">
-                    <table class="table table-sm table-hover"><thead><tr><th>Exam</th><th>Type</th><th>Course</th><th>Date</th><th>Status</th></tr></thead><tbody>`;
-                <?php foreach($examsAll as $e): ?>
-                html += `<tr><td><code><?= htmlspecialchars($e['exam_number']) ?></code></td><td><?= htmlspecialchars($e['exam_type']) ?></td><td><?= htmlspecialchars($e['course_code']) ?></td><td><?= $e['exam_date'] ?></td><td><span class="badge bg-<?= $e['status']==='Published'?'success':'warning' ?>"><?= $e['status'] ?></span></td></tr>`;
-                <?php endforeach; ?>
-                html += `</tbody></table></div>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Exam Analysis ───
-            case 'examAnalysis':
-                title.textContent = 'Performance Analysis';
-                form.onsubmit = function(){ return false; };
-                <?php
-                $passStats = [];
-                $r=$conn->query("SELECT course_code,COUNT(*) total,SUM(CASE WHEN grade IN('A','B','C','D') THEN 1 ELSE 0 END) passed FROM academic_records WHERE assessment_type='Exam' GROUP BY course_code LIMIT 20");
-                if($r) while($row=$r->fetch_assoc()) $passStats[]=$row;
-                ?>
-                html = `<?php if(empty($passStats)): ?><p class="text-muted">No exam results available for analysis.</p><?php else: ?>
-                    <table class="table table-sm table-hover"><thead><tr><th>Course</th><th>Total</th><th>Passed</th><th>Pass Rate</th></tr></thead><tbody>
-                    <?php foreach($passStats as $ps): $pr = $ps['total']>0 ? round(($ps['passed']/$ps['total'])*100,1) : 0; ?>
-                    <tr><td><?= htmlspecialchars($ps['course_code']) ?></td><td><?= $ps['total'] ?></td><td><?= $ps['passed'] ?></td><td><strong><?= $pr ?>%</strong></td></tr>
-                    <?php endforeach; ?>
-                    </tbody></table><?php endif; ?>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Exam Reports ───
-            case 'examReports':
-                title.textContent = 'Generate Reports';
-                form.onsubmit = function(){ return false; };
-                body.innerHTML = `<div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=exam_performance','_blank')">
-                            <i class="fas fa-chart-bar fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Exam Performance Report</strong>
-                            <small class="text-muted">View all exam results with pass rates</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=attendance_report','_blank')">
-                            <i class="fas fa-calendar-check fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Attendance Report</strong>
-                            <small class="text-muted">Student attendance summary</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=student_list','_blank')">
-                            <i class="fas fa-users fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Student List</strong>
-                            <small class="text-muted">All active students</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=clinical_report','_blank')">
-                            <i class="fas fa-hospital fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Clinical Report</strong>
-                            <small class="text-muted">Clinical placements summary</small>
-                        </div>
-                    </div>
-                </div>`;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Clinical Placement ───
-            case 'clinicalPlacement':
-                title.textContent = 'Clinical Placement';
-                body.innerHTML = `<input type="hidden" name="action" value="clinical_placement">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Student</label><select name="student_id" class="form-select" required>
-                            <option value="">Select Student</option>
-                            <?php if($students_conn){ $sr=$students_conn->query("SELECT id,full_name,student_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200");
-                            if($sr) while($s=$sr->fetch_assoc()): ?><option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['full_name'] ?: $s['student_number']) ?></option><?php endwhile; } ?>
-                        </select></div>
-                        <div class="col-md-6"><label class="form-label">Placement Site</label><input type="text" name="placement_site" class="form-control" required placeholder="e.g. Iganga Hospital"></div>
-                        <div class="col-md-6"><label class="form-label">Supervisor Name</label><input type="text" name="supervisor_name" class="form-control" placeholder="e.g. PNO Iganga"></div>
-                        <div class="col-md-3"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label">End Date</label><input type="date" name="end_date" class="form-control"></div>
-                    </div>`;
-                submitBtn.textContent = 'Create Placement';
-                break;
-
-            // ─── Clinical Evaluation ───
-            case 'clinicalEvaluation':
-                title.textContent = 'Clinical Evaluation';
-                form.onsubmit = function(){ return false; };
-                <?php
-                $eval_placements = $students_conn ? [] : [];
-                if($students_conn){ $r=$students_conn->query("SELECT cp.id,cp.placement_site,cp.student_id,cp.status,cp.competency_score,s.full_name FROM clinical_placements_students cp LEFT JOIN students s ON cp.student_id=s.id WHERE cp.status IN('Active','Scheduled') ORDER BY cp.created_at DESC LIMIT 50");
-                if($r) while($row=$r->fetch_assoc()) $eval_placements[]=$row; }
-                ?>
-                html = `<?php if(empty($eval_placements)): ?><p class="text-muted">No active placements for evaluation.</p><?php else: ?>
-                    <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Student</th><th>Site</th><th>Status</th><th>Score</th><th>Action</th></tr></thead><tbody>
-                    <?php foreach($eval_placements as $ep): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($ep['full_name']??'-') ?></td>
-                        <td><?= htmlspecialchars($ep['placement_site']) ?></td>
-                        <td><?= $ep['status'] ?></td>
-                        <td><?= $ep['competency_score'] ?? '-' ?></td>
-                        <td><button class="btn btn-sm btn-outline-success" onclick="evaluatePlacement(<?= $ep['id'] ?>, '<?= addslashes($ep['placement_site']) ?>')">Evaluate</button></td>
-                    </tr>
-                    <?php endforeach; ?>
-                    </tbody></table></div><?php endif; ?>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Clinical Sites ───
-            case 'clinicalSites':
-                title.textContent = 'Clinical Sites';
-                form.onsubmit = function(){ return false; };
-                <?php
-                $sites = $students_conn ? [] : [];
-                if($students_conn){ $r=$students_conn->query("SELECT DISTINCT placement_site,COUNT(*) cnt FROM clinical_placements_students GROUP BY placement_site ORDER BY cnt DESC");
-                if($r) while($row=$r->fetch_assoc()) $sites[]=$row; }
-                ?>
-                html = `<?php if(empty($sites)): ?><p class="text-muted">No clinical sites recorded.</p><?php else: ?>
-                    <table class="table table-sm table-hover"><thead><tr><th>Site</th><th>Students Assigned</th></tr></thead><tbody>
-                    <?php foreach($sites as $st): ?>
-                    <tr><td><strong><?= htmlspecialchars($st['placement_site']) ?></strong></td><td><?= $st['cnt'] ?></td></tr>
-                    <?php endforeach; ?>
-                    </tbody></table><?php endif; ?>`;
-                body.innerHTML = html;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            // ─── Clinical Reports ───
-            case 'clinicalReports':
-                title.textContent = 'Clinical Reports';
-                form.onsubmit = function(){ return false; };
-                body.innerHTML = `<div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=clinical_report','_blank')">
-                            <i class="fas fa-file-medical fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Clinical Placements Report</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card card-body text-center" style="cursor:pointer" onclick="window.open('deputy-principal.php?report=evaluation_report','_blank')">
-                            <i class="fas fa-clipboard-check fa-3x mb-2" style="color:var(--primary)"></i>
-                            <strong>Clinical Evaluation Report</strong>
-                        </div>
-                    </div>
-                </div>`;
-                submitBtn.parentElement.style.display = 'none';
-                break;
-
-            default:
-                title.textContent = 'Coming Soon';
-                body.innerHTML = '<p class="text-muted">This feature is being implemented.</p>';
-                submitBtn.parentElement.style.display = 'none';
-        }
-        modal.show();
-    }
-
-    function viewStudentProfile(id){
-        const modal = new bootstrap.Modal(document.getElementById('studentProfileModal'));
-        document.getElementById('studentProfileBody').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading profile...</p></div>';
-        modal.show();
-        fetch('deputy-principal.php?ajax=student_profile&student_id='+id)
-            .then(r=>r.json()).then(d=>{
-                let info = d.info || {};
-                let att = d.attendance || [];
-                let inv = d.invoices || [];
-                let pay = d.payments || [];
-                let totalPaid = pay.reduce((s,p)=>s+parseFloat(p.amount_received||0),0);
-                let totalInv = inv.reduce((s,iv)=>s+parseFloat(iv.total_amount||0),0);
-                let attPres = att.filter(a=>a.status==='Present').length;
-                let attRate = att.length>0 ? Math.round(attPres/att.length*100) : 0;
-                document.getElementById('studentProfileBody').innerHTML = `
-                    <ul class="nav nav-tabs mb-3" id="profileTabs">
-                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#persTab">Personal</a></li>
-                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#acadTab">Academic</a></li>
-                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#finTab">Finance</a></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="persTab">
-                            <div class="row g-2 small">
-                                <div class="col-md-6"><strong>Name:</strong> ${info.full_name||''}</div>
-                                <div class="col-md-6"><strong>Reg No:</strong> ${info.registration_number||info.student_number||'-'}</div>
-                                <div class="col-md-6"><strong>Phone:</strong> ${info.phone||'-'}</div>
-                                <div class="col-md-6"><strong>Email:</strong> ${info.email||'-'}</div>
-                                <div class="col-md-6"><strong>Gender:</strong> ${info.gender||'-'}</div>
-                                <div class="col-md-6"><strong>DOB:</strong> ${info.date_of_birth||'-'}</div>
-                                <div class="col-md-6"><strong>Nationality:</strong> ${info.nationality||'-'}</div>
-                                <div class="col-md-6"><strong>Guardian:</strong> ${info.guardian_name||info.parent_name||'-'}</div>
-                                <div class="col-md-6"><strong>Guardian Phone:</strong> ${info.guardian_phone||info.parent_phone||'-'}</div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="acadTab">
-                            <div class="row g-2 small">
-                                <div class="col-md-4"><strong>Program:</strong> ${info.course||'-'}</div>
-                                <div class="col-md-4"><strong>Year:</strong> ${info.current_year||'-'}</div>
-                                <div class="col-md-4"><strong>Semester:</strong> ${info.current_semester||'-'}</div>
-                                <div class="col-md-4"><strong>Set:</strong> ${info.set_name||'-'}</div>
-                                <div class="col-md-4"><strong>Intake:</strong> ${info.intake_date||'-'}</div>
-                                <div class="col-md-4"><strong>Status:</strong> <span class="badge bg-success">${info.status||'-'}</span></div>
-                                <div class="col-12 mt-2"><strong>Attendance Rate:</strong> ${attRate}% (${attPres}/${att.length} days present)</div>
-                                ${att.length>0 ? `<div class="col-12 mt-1"><table class="table table-sm table-bordered mt-1"><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${att.map(a=>`<tr><td>${a.date}</td><td>${a.status}</td></tr>`).join('')}</tbody></table></div>` : ''}
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="finTab">
-                            <div class="row g-2 small">
-                                <div class="col-md-4"><strong>Total Invoiced:</strong> ${totalInv.toLocaleString()}</div>
-                                <div class="col-md-4"><strong>Total Paid:</strong> ${totalPaid.toLocaleString()}</div>
-                                <div class="col-md-4"><strong>Balance:</strong> ${(totalInv-totalPaid).toLocaleString()}</div>
-                                ${inv.length>0 ? `<div class="col-12 mt-2"><table class="table table-sm table-bordered"><thead><tr><th>Invoice</th><th>Type</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${inv.map(iv=>`<tr><td>${iv.invoice_number}</td><td>${iv.fee_type}</td><td>${Number(iv.total_amount).toLocaleString()}</td><td>${Number(iv.amount_paid).toLocaleString()}</td><td>${Number(iv.balance).toLocaleString()}</td><td>${iv.status}</td></tr>`).join('')}</tbody></table></div>` : ''}
-                                ${pay.length>0 ? `<div class="col-12 mt-2"><strong>Payments</strong><table class="table table-sm table-bordered"><thead><tr><th>Ref</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>${pay.map(p=>`<tr><td>${p.payment_reference}</td><td>${Number(p.amount_received).toLocaleString()}</td><td>${p.payment_method}</td><td>${p.payment_date}</td></tr>`).join('')}</tbody></table></div>` : ''}
-                            </div>
-                        </div>
-                    </div>`;
-                setTimeout(()=>{
-                    document.querySelectorAll('#profileTabs a').forEach(t=>{
-                        t.addEventListener('click',e=>{ e.preventDefault(); new bootstrap.Tab(t).show(); });
-                    });
-                },100);
-            }).catch(()=>{
-                document.getElementById('studentProfileBody').innerHTML = '<p class="text-danger">Error loading profile.</p>';
-            });
-    }
-
-    function printStudentProfile(){
-        const c = document.getElementById('studentProfileBody').innerHTML;
-        const w = window.open('','_blank');
-        w.document.write('<!DOCTYPE html><html><head><title>Student Profile</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:6px 8px}th{background:#f3f4f6}h2{color:#1f2937}.text-right{text-align:right}@media print{body{print-color-adjust:exact}}</style></head><body><h2>Student Profile</h2>'+c+'<script>window.onload=function(){window.print()}<\/script></body></html>');
-        w.document.close();
-    }
-
-    function filterStudentTable(){
-        const q = document.getElementById('studentSearchInput')?.value?.toLowerCase()||'';
-        document.querySelectorAll('#studentRecordsTable tbody tr').forEach(r=>{
-            r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+<?php elseif ($view === 'timetable_oversight'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-table me-2"></i>Timetable Oversight</div><div class="scb">
+<div id="depTimetableData"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div></div>
+</div></div>
+<script>
+function depLoadTimetable(){
+    var el = document.getElementById('depTimetableData');
+    fetch('deputy-principal.php?view=timetable_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted text-center py-4">No timetable entries.</div>'; return; }
+        var days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Day</th><th>Time</th><th>Course</th><th>Program</th><th>Venue</th><th>Lecturer</th></tr></thead><tbody>';
+        days.forEach(function(day){
+            var entries = d.filter(function(t){ return t.day_of_week === day; });
+            if(entries.length){
+                h+='<tr class="table-secondary"><td colspan="6"><strong>'+day+'</strong></td></tr>';
+                entries.forEach(function(t){ h+='<tr><td></td><td>'+esc(t.start_time)+'-'+esc(t.end_time)+'</td><td>'+esc(t.course_code)+'</td><td>'+esc(t.program_code||'-')+'</td><td>'+esc(t.venue||'-')+'</td><td>'+esc(t.lecturer_name||'-')+'</td></tr>'; });
+            }
         });
-    }
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadTimetable);
+</script>
 
-    function evaluatePlacement(id, site){
-        openModal('clinicalEvaluation');
-        document.getElementById('modalTitle').textContent = 'Evaluate: '+site;
-        document.getElementById('modalBody').innerHTML = '<input type="hidden" name="action" value="clinical_evaluation"><input type="hidden" name="placement_id" value="'+id+'">'+
-            '<div class="mb-3"><label class="form-label">Competency Score (0-100)</label><input type="number" name="competency_score" class="form-control" min="0" max="100" step="0.1" required></div>'+
-            '<div class="mb-3"><label class="form-label">Evaluation Notes</label><textarea name="evaluation" class="form-control" rows="4" required></textarea></div>';
-        document.getElementById('modalActionBtn').textContent = 'Submit Evaluation';
-        document.getElementById('modalActionBtn').parentElement.style.display = '';
-        document.getElementById('modalForm').onsubmit = function(){ return true; };
-    }
+<?php elseif ($view === 'attendance_monitoring'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-user-check me-2"></i>Attendance Monitoring</div><div class="scb">
+<div class="row g-2 mb-3">
+<div class="col-md-3"><input type="text" id="attCourse" class="form-control env-field" placeholder="Course/Subject"></div>
+<div class="col-md-3"><input type="date" id="attFrom" class="form-control env-field"></div>
+<div class="col-md-3"><input type="date" id="attTo" class="form-control env-field"></div>
+<div class="col-md-3"><button class="btn btn-sec w-100" onclick="depLoadAttendance()"><i class="fas fa-search me-1"></i>Filter</button></div>
+</div>
+<div id="depAttendanceData"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div></div>
+</div></div>
+<script>
+function depLoadAttendance(){
+    var el = document.getElementById('depAttendanceData'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    var course = document.getElementById('attCourse').value; var f = document.getElementById('attFrom').value; var t = document.getElementById('attTo').value;
+    var url = 'deputy-principal.php?view=attendance_monitoring_data&ajax=1';
+    if(course) url+='&course='+encodeURIComponent(course); if(f) url+='&from='+f; if(t) url+='&to='+t;
+    fetch(url).then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted text-center py-4">No attendance records.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Reg No</th><th>Date</th><th>Subject</th><th>Status</th></tr></thead><tbody>';
+        d.forEach(function(a){ var stCls = a.status==='Present'?'success':a.status==='Late'?'warning':'danger'; h+='<tr><td>'+esc(a.full_name)+'</td><td>'+esc(a.student_number)+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.subject||'')+'</td><td><span class="badge bg-'+stCls+'">'+esc(a.status)+'</span></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadAttendance);
+</script>
 
-    function filterStudentTable(){
-        const q = document.getElementById('studentSearchInput')?.value?.toLowerCase()||'';
-        document.querySelectorAll('#studentRecordsTable tbody tr').forEach(r=>{
-            r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
-    }
+<?php elseif ($view === 'clinical_placement_monitoring'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-hospital me-2"></i>Schedule Placement</div><div class="scb">
+<form onsubmit="event.preventDefault(); depSchedulePlacement()">
+<div class="mb-3"><label class="fl">Student</label><select id="cpStudent" class="form-select env-field"><option value="">Select</option>
+<?php if($students){ $r=$students->query("SELECT id,full_name,student_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200"); if($r) while($s=$r->fetch_assoc()): ?><option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['full_name']) ?></option><?php endwhile; } ?>
+</select></div>
+<div class="mb-3"><label class="fl">Placement Site</label><input type="text" id="cpSite" class="form-control env-field" required></div>
+<div class="row g-2 mb-3"><div class="col-6"><label class="fl">Supervisor</label><input type="text" id="cpSupervisor" class="form-control env-field"></div><div class="col-6"><label class="fl">Start Date</label><input type="date" id="cpStart" class="form-control env-field"></div></div>
+<div class="row g-2 mb-3"><div class="col-6"><label class="fl">End Date</label><input type="date" id="cpEnd" class="form-control env-field"></div></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Schedule</button>
+</form>
+<div id="cpMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Placements</div><div class="scb p-0"><div id="depPlacementList"></div></div></div>
+</div>
+</div>
+<script>
+function depSchedulePlacement(){
+    var sid = document.getElementById('cpStudent').value; if(!sid){ alert('Select student'); return; }
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('placement_site',document.getElementById('cpSite').value); fd.append('supervisor_name',document.getElementById('cpSupervisor').value); fd.append('start_date',document.getElementById('cpStart').value); fd.append('end_date',document.getElementById('cpEnd').value);
+    fetch('deputy-principal.php?view=schedule_placement&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('cpMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Placement created.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('cpStudent').value=''; document.getElementById('cpSite').value=''; document.getElementById('cpSupervisor').value=''; document.getElementById('cpStart').value=''; document.getElementById('cpEnd').value=''; depLoadPlacements(); }
+    }).catch(function(){ document.getElementById('cpMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadPlacements(){
+    var el = document.getElementById('depPlacementList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=clinical_placement_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No placements.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Site</th><th>Supervisor</th><th>Start</th><th>End</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>';
+        d.forEach(function(p){ var stCls=p.status==='Completed'?'success':p.status==='Active'?'info':'warning text-dark'; h+='<tr><td>'+esc(p.student_name||'-')+'</td><td>'+esc(p.placement_site)+'</td><td>'+esc(p.supervisor_name||'-')+'</td><td class="small">'+(p.start_date||'-')+'</td><td class="small">'+(p.end_date||'-')+'</td><td>'+(p.competency_score||'-')+'</td><td><span class="badge bg-'+stCls+'">'+esc(p.status)+'</span></td><td><select class="form-select form-select-sm" style="width:auto" onchange="depUpdatePlacementStatus('+p.id+',this.value)"><option value="">Change</option><option value="Active">Active</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depUpdatePlacementStatus(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_placement_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadPlacements(); }).catch(function(){}); }
+document.addEventListener('DOMContentLoaded', depLoadPlacements);
+</script>
 
-    // Show overview by default
-    document.querySelectorAll('.content-section').forEach(s=>s.style.display='none');
-    const firstSection = document.getElementById('overview');
-    if(firstSection) firstSection.style.display='block';
-    </script>
+<?php elseif ($view === 'student_welfare'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-heart me-2"></i>Record Welfare Case</div><div class="scb">
+<form onsubmit="event.preventDefault(); depRecordWelfare()">
+<div class="mb-3"><label class="fl">Student</label><select id="wfStudent" class="form-select env-field"><option value="">Select</option>
+<?php if($students){ $r=$students->query("SELECT id,full_name,student_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200"); if($r) while($s=$r->fetch_assoc()): ?><option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['full_name']) ?></option><?php endwhile; } ?>
+</select></div>
+<div class="mb-3"><label class="fl">Case Type</label><input type="text" id="wfType" class="form-control env-field" required placeholder="e.g. Financial, Health, Counseling"></div>
+<div class="mb-3"><label class="fl">Description</label><textarea id="wfDesc" class="form-control env-field" rows="3"></textarea></div>
+<div class="row g-2 mb-3"><div class="col-6"><label class="fl">Severity</label><select id="wfSev" class="form-select env-field"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div><div class="col-6"><label class="fl">Assigned To</label><input type="text" id="wfAssigned" class="form-control env-field"></div></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record Case</button>
+</form>
+<div id="wfMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Welfare Cases</div><div class="scb p-0"><div id="depWelfareList"></div></div></div>
+</div>
+</div>
+<script>
+function depRecordWelfare(){
+    var sid = document.getElementById('wfStudent').value; if(!sid){ alert('Select student'); return; }
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('case_type',document.getElementById('wfType').value); fd.append('description',document.getElementById('wfDesc').value); fd.append('severity',document.getElementById('wfSev').value); fd.append('assigned_to',document.getElementById('wfAssigned').value);
+    fetch('deputy-principal.php?view=record_welfare_case&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('wfMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Case recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('wfStudent').value=''; document.getElementById('wfType').value=''; document.getElementById('wfDesc').value=''; document.getElementById('wfAssigned').value=''; depLoadWelfare(); }
+    }).catch(function(){ document.getElementById('wfMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadWelfare(){
+    var el = document.getElementById('depWelfareList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=welfare_cases_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No welfare cases.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Type</th><th>Severity</th><th>Assigned To</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>';
+        d.forEach(function(w){ var sevCls=w.severity==='critical'?'danger':w.severity==='high'?'warning':w.severity==='medium'?'info':'secondary'; var stCls=w.status==='resolved'||w.status==='closed'?'success':w.status==='in_progress'?'info':'warning text-dark'; h+='<tr><td>'+esc(w.student_name||'-')+'</td><td>'+esc(w.case_type)+'</td><td><span class="badge bg-'+sevCls+'">'+esc(w.severity)+'</span></td><td class="small">'+esc(w.assigned_to||'--')+'</td><td><span class="badge bg-'+stCls+'">'+esc(w.status)+'</span></td><td class="small">'+(w.created_at||'')+'</td><td><select class="form-select form-select-sm" style="width:auto" onchange="depUpdateWelfare('+w.id+',this.value)"><option value="">Action</option><option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depUpdateWelfare(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadWelfare(); }).catch(function(){}); }
+document.addEventListener('DOMContentLoaded', depLoadWelfare);
+</script>
+
+<?php elseif ($view === 'student_discipline'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-gavel me-2"></i>Record Discipline Case</div><div class="scb">
+<form onsubmit="event.preventDefault(); depRecordDiscipline()">
+<div class="mb-3"><label class="fl">Student</label><select id="discStudent" class="form-select env-field"><option value="">Select</option>
+<?php if($students){ $r=$students->query("SELECT id,full_name,student_number FROM students WHERE status='Active' ORDER BY full_name LIMIT 200"); if($r) while($s=$r->fetch_assoc()): ?><option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['full_name']) ?></option><?php endwhile; } ?>
+</select></div>
+<div class="mb-3"><label class="fl">Offense</label><textarea id="discOffense" class="form-control env-field" rows="3" required></textarea></div>
+<div class="row g-2 mb-3"><div class="col-6"><label class="fl">Hearing Date</label><input type="date" id="discHearing" class="form-control env-field"></div><div class="col-6"><label class="fl">Action Taken</label><input type="text" id="discAction" class="form-control env-field"></div></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record</button>
+</form>
+<div id="discMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Discipline Cases</div><div class="scb p-0"><div id="depDisciplineList"></div></div></div>
+</div>
+</div>
+<script>
+function depRecordDiscipline(){
+    var sid = document.getElementById('discStudent').value; if(!sid){ alert('Select student'); return; }
+    var fd = new FormData(); fd.append('student_id',sid); fd.append('offense',document.getElementById('discOffense').value); fd.append('hearing_date',document.getElementById('discHearing').value); fd.append('action_taken',document.getElementById('discAction').value);
+    fetch('deputy-principal.php?view=record_discipline&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('discMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('discStudent').value=''; document.getElementById('discOffense').value=''; document.getElementById('discHearing').value=''; document.getElementById('discAction').value=''; depLoadDiscipline(); }
+    }).catch(function(){ document.getElementById('discMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadDiscipline(){
+    var el = document.getElementById('depDisciplineList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=discipline_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No discipline cases.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Offense</th><th>Reported By</th><th>Hearing</th><th>Outcome</th><th>Status</th><th></th></tr></thead><tbody>';
+        d.forEach(function(dc){ var stCls=dc.status==='resolved'?'success':dc.status==='appealed'?'warning':'danger'; h+='<tr><td>'+esc(dc.student_name||'-')+'</td><td>'+esc(dc.offense)+'</td><td>'+esc(dc.reported_by||'-')+'</td><td class="small">'+(dc.hearing_date||'-')+'</td><td>'+esc(dc.outcome||'-')+'</td><td><span class="badge bg-'+stCls+'">'+esc(dc.status)+'</span></td><td><select class="form-select form-select-sm" style="width:auto" onchange="depUpdateDiscipline('+dc.id+',this.value)"><option value="">Action</option><option value="open">Open</option><option value="resolved">Resolved</option><option value="appealed">Appealed</option></select></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depUpdateDiscipline(id,st){ if(!st) return; var out=prompt('Outcome notes (optional):'); var fd=new FormData(); fd.append('id',id); fd.append('status',st); if(out) fd.append('outcome',out); fetch('deputy-principal.php?view=update_discipline_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadDiscipline(); }).catch(function(){}); }
+document.addEventListener('DOMContentLoaded', depLoadDiscipline);
+</script>
+
+<?php elseif ($view === 'student_support'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-hands-helping me-2"></i>Student Support Cases - Appeals &amp; Requests</div><div class="scb p-0"><div id="depSupportList"></div></div></div>
+<script>
+function depLoadSupport(){
+    var el = document.getElementById('depSupportList'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=student_support_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No support cases.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>ID</th><th>Appeal Type</th><th>Reason</th><th>Outcome</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(a){ var stCls=a.status==='approved'?'success':a.status==='rejected'?'danger':'warning text-dark'; h+='<tr><td>'+a.id+'</td><td>'+esc(a.appeal_type)+'</td><td class="small">'+esc(mb_substr(a.reason||'',0,80))+'</td><td class="small">'+esc(a.outcome||'-')+'</td><td><span class="badge bg-'+stCls+'">'+esc(a.status)+'</span></td><td class="small">'+(a.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadSupport);
+</script>
+
+<?php elseif ($view === 'student_appeals_tracking'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-file-contract me-2"></i>Student Appeals Tracking</div><div class="scb p-0"><div id="depAppealsList"></div></div></div>
+<script>
+function depLoadAppeals(){
+    var el = document.getElementById('depAppealsList'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=student_support_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No appeals.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>ID</th><th>Type</th><th>Reason</th><th>Outcome</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(a){ var stCls=a.status==='approved'?'success':a.status==='rejected'?'danger':'warning text-dark'; h+='<tr><td>'+a.id+'</td><td>'+esc(a.appeal_type)+'</td><td class="small">'+esc(mb_substr(a.reason||'',0,80))+'</td><td>'+esc(a.outcome||'-')+'</td><td><span class="badge bg-'+stCls+'">'+esc(a.status)+'</span></td><td class="small">'+(a.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadAppeals);
+</script>
+
+<?php elseif ($view === 'department_followups'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-clipboard-list me-2"></i>Department Follow-ups &amp; Performance</div><div class="scb p-0"><div id="depFollowupList"></div></div></div>
+<script>
+function depLoadFollowups(){
+    var el = document.getElementById('depFollowupList'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=department_followup_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No department metrics.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Department</th><th>Metric</th><th>Value</th><th>Period</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(p){ h+='<tr><td><strong>'+esc(p.department)+'</strong></td><td>'+esc(p.metric)+'</td><td>'+esc(p.value)+'</td><td class="small">'+esc(p.period||'-')+'</td><td class="small">'+(p.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadFollowups);
+</script>
+
+<?php elseif ($view === 'compliance_tracking'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-check-shield me-2"></i>Record Compliance</div><div class="scb">
+<form onsubmit="event.preventDefault(); depRecordCompliance()">
+<div class="mb-3"><label class="fl">Department</label><input type="text" id="compDept" class="form-control env-field" required></div>
+<div class="mb-3"><label class="fl">Compliance Type</label><input type="text" id="compType" class="form-control env-field" required placeholder="e.g. Licensing, Accreditation, Reporting"></div>
+<div class="mb-3"><label class="fl">Status</label><select id="compStatus" class="form-select env-field"><option value="compliant">Compliant</option><option value="non_compliant">Non-Compliant</option><option value="pending_review">Pending Review</option></select></div>
+<div class="mb-3"><label class="fl">Notes</label><textarea id="compNotes" class="form-control env-field" rows="3"></textarea></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record</button>
+</form>
+<div id="compMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Compliance Records</div><div class="scb p-0"><div id="depCompList"></div></div></div>
+</div>
+</div>
+<script>
+function depRecordCompliance(){
+    var fd = new FormData(); fd.append('department',document.getElementById('compDept').value); fd.append('compliance_type',document.getElementById('compType').value); fd.append('status',document.getElementById('compStatus').value); fd.append('notes',document.getElementById('compNotes').value);
+    fetch('deputy-principal.php?view=record_compliance&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('compMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('compDept').value=''; document.getElementById('compType').value=''; document.getElementById('compNotes').value=''; depLoadCompliance(); }
+    }).catch(function(){ document.getElementById('compMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadCompliance(){
+    var el = document.getElementById('depCompList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=compliance_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No compliance records.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Department</th><th>Type</th><th>Status</th><th>Reviewed By</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(c){ var stCls=c.status==='compliant'?'success':c.status==='non_compliant'?'danger':'warning text-dark'; h+='<tr><td>'+esc(c.department)+'</td><td>'+esc(c.compliance_type)+'</td><td><span class="badge bg-'+stCls+'">'+esc(c.status)+'</span></td><td>'+esc(c.reviewed_by||'-')+'</td><td class="small">'+(c.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadCompliance);
+</script>
+
+<?php elseif ($view === 'institutional_activities'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-calendar-week me-2"></i>Institutional Activities</div><div class="scb p-0"><div id="depActivitiesList"></div></div></div>
+<script>
+function depLoadActivities(){
+    var el = document.getElementById('depActivitiesList');
+    el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=class_monitoring_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No activities.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Venue</th><th>Lecturer</th><th>Year</th></tr></thead><tbody>';
+        d.forEach(function(t){ h+='<tr><td>'+esc(t.course_code)+'</td><td>'+esc(t.day_of_week)+'</td><td>'+esc(t.start_time)+'-'+esc(t.end_time)+'</td><td>'+esc(t.venue||'-')+'</td><td>'+esc(t.lecturer_name||'-')+'</td><td>'+esc(t.academic_year||'-')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadActivities);
+</script>
+
+<?php elseif ($view === 'task_monitoring'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-plus-circle me-2"></i>Create Task</div><div class="scb">
+<form onsubmit="event.preventDefault(); depCreateTask()">
+<div class="mb-3"><label class="fl">Task Title *</label><input type="text" id="tkTitle" class="form-control env-field" required></div>
+<div class="mb-3"><label class="fl">Description</label><textarea id="tkDesc" class="form-control env-field" rows="3"></textarea></div>
+<div class="mb-3"><label class="fl">Priority</label><select id="tkPriority" class="form-select env-field"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Create Task</button>
+</form>
+<div id="tkMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-tasks me-2"></i>Task List</div><div class="scb p-0"><div id="depTaskList"></div></div></div>
+</div>
+</div>
+<script>
+function depCreateTask(){
+    var tt = document.getElementById('tkTitle').value; if(!tt){ alert('Title required'); return; }
+    var fd = new FormData(); fd.append('task_title',tt); fd.append('description',document.getElementById('tkDesc').value); fd.append('priority',document.getElementById('tkPriority').value);
+    fetch('deputy-principal.php?view=create_task&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('tkMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Task created.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('tkTitle').value=''; document.getElementById('tkDesc').value=''; depLoadTasks(); }
+    }).catch(function(){ document.getElementById('tkMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadTasks(){
+    var el = document.getElementById('depTaskList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=task_list&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No tasks.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Task</th><th>Assigned By</th><th>Priority</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>';
+        d.forEach(function(t){ var prCls=t.priority==='urgent'?'danger':t.priority==='high'?'warning':t.priority==='medium'?'info':'secondary'; var stCls=t.status==='completed'?'success':t.status==='in_progress'?'info':t.status==='cancelled'?'danger':'warning text-dark'; h+='<tr><td><strong>'+esc(t.task_title)+'</strong></td><td class="small">'+esc(t.assigned_by||'-')+'</td><td><span class="badge bg-'+prCls+'">'+esc(t.priority)+'</span></td><td><span class="badge bg-'+stCls+'">'+esc(t.status)+'</span></td><td class="small">'+(t.created_at||'')+'</td><td><select class="form-select form-select-sm" style="width:auto" onchange="depUpdateTask('+t.id+',this.value)"><option value="">Change</option><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depUpdateTask(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_task_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadTasks(); }).catch(function(){}); }
+document.addEventListener('DOMContentLoaded', depLoadTasks);
+</script>
+
+<?php elseif ($view === 'approvals'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-check-double me-2"></i>Approvals - Review &amp; Forward to Principal</div><div class="scb">
+<p class="text-muted small mb-3">As Deputy Principal, you <strong>review and recommend</strong>. Final approval is done by the Principal. Items below are pending your review.</p>
+<div id="depApprovalList"><div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div></div>
+</div></div>
+<script>
+function depLoadApprovals(){
+    var el = document.getElementById('depApprovalList');
+    fetch('deputy-principal.php?view=approval_list_deputy&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small py-4 text-center">No items pending review.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Subject</th><th>From</th><th>Message</th><th>Date</th><th></th></tr></thead><tbody>';
+        d.forEach(function(c){ h+='<tr><td><strong>'+esc(c.subject)+'</strong></td><td>'+esc(c.sender_name||'-')+'</td><td class="small">'+esc(mb_substr(c.message||'',0,100))+'</td><td class="small">'+(c.created_at||'')+'</td><td><button class="btn btn-sm btn-outline-primary" onclick="depForwardApproval('+c.id+')"><i class="fas fa-forward me-1"></i>Review &amp; Forward</button></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depForwardApproval(id){
+    var rec = prompt('Enter your recommendation/comments:');
+    if(rec === null) return;
+    var fd = new FormData(); fd.append('id',id); fd.append('recommendation',rec);
+    fetch('deputy-principal.php?view=forward_approval&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(d.success){ depLoadApprovals(); alert('Reviewed and forwarded to Principal for final approval.'); }
+        else{ alert('Failed: '+d.error); }
+    }).catch(function(){ alert('Failed to forward.'); });
+}
+document.addEventListener('DOMContentLoaded', depLoadApprovals);
+</script>
+
+<?php elseif ($view === 'communications'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-paper-plane me-2"></i>Send Communication</div><div class="scb">
+<p class="text-muted small">You can message Principal, Registrar, HODs, Lecturers, and Student Leaders. Institution-wide broadcasting is not available.</p>
+<form id="depCommForm">
+<div class="mb-3"><label class="fl">Recipient</label><select id="commRecipient" class="form-select env-field">
+<option value="principal">Principal</option><option value="registrar">Registrar</option><option value="hods">Heads of Department</option><option value="lecturers">Lecturers</option><option value="student_leaders">Student Leaders</option>
+</select></div>
+<div class="mb-3"><label class="fl">Subject *</label><input type="text" id="commSubject" class="form-control env-field" required></div>
+<div class="mb-3"><label class="fl">Message *</label><textarea id="commBody" class="form-control env-field" rows="4" required></textarea></div>
+<button type="button" class="btn btn-sec" onclick="depSendComm()"><i class="fas fa-paper-plane me-1"></i>Send</button>
+</form>
+<div id="commMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-inbox me-2"></i>Communication History</div><div class="scb p-0"><div id="depCommHistory"></div></div></div>
+</div>
+</div>
+<script>
+function depSendComm(){
+    var rt = document.getElementById('commRecipient').value;
+    var subj = document.getElementById('commSubject').value; var msg = document.getElementById('commBody').value;
+    if(!subj || !msg){ alert('Subject and message required'); return; }
+    var fd = new FormData(); fd.append('recipient_role',rt); fd.append('subject',subj); fd.append('message',msg);
+    fetch('deputy-principal.php?view=send_communication_deputy&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('commMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Sent.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('commSubject').value=''; document.getElementById('commBody').value=''; depLoadCommHistory(); }
+    }).catch(function(){ document.getElementById('commMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadCommHistory(){
+    var el = document.getElementById('depCommHistory'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=task_list&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(){
+        fetch('deputy-principal.php?view=approval_list_deputy&ajax=1')
+        .then(function(r2){ return r2.json(); }).then(function(d){
+            if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No communications.</div>'; return; }
+            var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Subject</th><th>From</th><th>To</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+            d.forEach(function(c){ h+='<tr><td>'+esc(c.subject)+'</td><td>'+esc(c.sender_name||'-')+'</td><td class="small">'+esc(c.recipient_role||'-')+'</td><td class="small">'+(c.created_at||'')+'</td><td>'+(c.is_read?'<span class="badge bg-success">Read</span>':'<span class="badge bg-warning text-dark">Pending</span>')+'</td></tr>'; });
+            h+='</tbody></table></div>'; el.innerHTML=h;
+        }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+    }).catch(function(){});
+}
+document.addEventListener('DOMContentLoaded', depLoadCommHistory);
+</script>
+
+<?php elseif ($view === 'monitoring_reports'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-chart-simple me-2"></i>Monitoring Reports</div><div class="scb">
+<p class="text-muted small">Monitor key institutional metrics across departments.</p>
+<div id="depMonReport"></div>
+</div></div>
+<script>
+function depLoadMonReport(){
+    var el = document.getElementById('depMonReport'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=department_followup_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted text-center py-4">No data available.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Department</th><th>Metric</th><th>Value</th><th>Period</th></tr></thead><tbody>';
+        d.forEach(function(p){ h+='<tr><td><strong>'+esc(p.department)+'</strong></td><td>'+esc(p.metric)+'</td><td>'+esc(p.value)+'</td><td>'+esc(p.period||'-')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadMonReport);
+</script>
+
+<?php elseif ($view === 'attendance_reports'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-calendar-check me-2"></i>Attendance Reports</div><div class="scb">
+<div class="row g-2 mb-3">
+<div class="col-md-3"><input type="date" id="arFrom" class="form-control env-field"></div>
+<div class="col-md-3"><input type="date" id="arTo" class="form-control env-field"></div>
+<div class="col-md-3"><input type="text" id="arCourse" class="form-control env-field" placeholder="Course filter"></div>
+<div class="col-md-3"><button class="btn btn-sec w-100" onclick="depLoadAttReport()"><i class="fas fa-search me-1"></i>Generate</button></div>
+</div>
+<div id="depAttReport"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div></div>
+</div></div>
+<script>
+function depLoadAttReport(){
+    var el = document.getElementById('depAttReport'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    var f = document.getElementById('arFrom').value; var t = document.getElementById('arTo').value; var c = document.getElementById('arCourse').value;
+    var url = 'deputy-principal.php?view=attendance_monitoring_data&ajax=1';
+    if(f) url+='&from='+f; if(t) url+='&to='+t; if(c) url+='&course='+encodeURIComponent(c);
+    fetch(url).then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted text-center py-4">No data.</div>'; return; }
+        var pres = d.filter(function(a){ return a.status==='Present'; }).length;
+        var abs = d.filter(function(a){ return a.status==='Absent'; }).length;
+        var late = d.filter(function(a){ return a.status==='Late'; }).length;
+        var total = d.length;
+        el.innerHTML='<div class="row g-2 mb-3"><div class="col-3"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-success">'+pres+'</div><small>Present</small></div></div><div class="col-3"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-danger">'+abs+'</div><small>Absent</small></div></div><div class="col-3"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-warning">'+late+'</div><small>Late</small></div></div><div class="col-3"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-info">'+total+'</div><small>Total</small></div></div></div>'+
+        '<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Date</th><th>Subject</th><th>Status</th></tr></thead><tbody>'+
+        d.slice(0,100).map(function(a){ var sc=a.status==='Present'?'success':a.status==='Late'?'warning':'danger'; return '<tr><td>'+esc(a.full_name)+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.subject||'')+'</td><td><span class="badge bg-'+sc+'">'+esc(a.status)+'</span></td></tr>'; }).join('')+
+        '</tbody></table></div>';
+    }).catch(function(){ el.innerHTML='<div class="text-danger">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', function(){ document.getElementById('arFrom').value=''; document.getElementById('arTo').value=''; depLoadAttReport(); });
+</script>
+
+<?php elseif ($view === 'welfare_reports'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-heartbeat me-2"></i>Welfare Reports</div><div class="scb p-0"><div id="depWelfareReport"></div></div></div>
+<script>
+function depLoadWelfareReport(){
+    var el = document.getElementById('depWelfareReport'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=welfare_cases_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No welfare data.</div>'; return; }
+        var open = d.filter(function(w){ return w.status==='open'||w.status==='in_progress'; }).length;
+        var resolved = d.filter(function(w){ return w.status==='resolved'||w.status==='closed'; }).length;
+        var critical = d.filter(function(w){ return w.severity==='critical'; }).length;
+        el.innerHTML='<div class="p-3"><div class="row g-2 mb-3"><div class="col-4"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-warning">'+open+'</div><small>Active Cases</small></div></div><div class="col-4"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-success">'+resolved+'</div><small>Resolved</small></div></div><div class="col-4"><div class="border rounded p-2 text-center"><div class="fw-bold h4 text-danger">'+critical+'</div><small>Critical</small></div></div></div></div>'+
+        '<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Type</th><th>Severity</th><th>Status</th><th>Date</th></tr></thead><tbody>'+
+        d.map(function(w){ var sc=w.severity==='critical'?'danger':w.severity==='high'?'warning':'secondary'; var stc=w.status==='resolved'||w.status==='closed'?'success':w.status==='in_progress'?'info':'warning text-dark'; return '<tr><td>'+esc(w.student_name||'-')+'</td><td>'+esc(w.case_type)+'</td><td><span class="badge bg-'+sc+'">'+esc(w.severity)+'</span></td><td><span class="badge bg-'+stc+'">'+esc(w.status)+'</span></td><td class="small">'+(w.created_at||'')+'</td></tr>'; }).join('')+
+        '</tbody></table></div>';
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadWelfareReport);
+</script>
+
+<?php elseif ($view === 'department_reports'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-building me-2"></i>Department Reports</div><div class="scb p-0"><div id="depDeptReport"></div></div></div>
+<script>
+function depLoadDeptReport(){
+    var el = document.getElementById('depDeptReport'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=compliance_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No department data.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Department</th><th>Type</th><th>Status</th><th>Reviewed By</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(c){ var sc=c.status==='compliant'?'success':c.status==='non_compliant'?'danger':'warning text-dark'; h+='<tr><td>'+esc(c.department)+'</td><td>'+esc(c.compliance_type)+'</td><td><span class="badge bg-'+sc+'">'+esc(c.status)+'</span></td><td>'+esc(c.reviewed_by||'-')+'</td><td class="small">'+(c.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadDeptReport);
+</script>
+
+<?php elseif ($view === 'teaching_quality'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-chalkboard-teacher me-2"></i>Submit Teaching Review</div><div class="scb">
+<form onsubmit="event.preventDefault(); depSubmitTeachingReview()">
+<div class="mb-3"><label class="fl">Lecturer</label><select id="tqLecturer" class="form-select env-field"><option value="">Select</option>
+<?php $r=$staff->query("SELECT id,full_name,position FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' OR position LIKE '%Head%' ORDER BY full_name"); if($r) while($l=$r->fetch_assoc()): ?><option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['full_name']) ?> (<?= htmlspecialchars($l['position']) ?>)</option><?php endwhile; ?>
+</select></div>
+<div class="mb-3"><label class="fl">Course Code</label><select id="tqCourse" class="form-select env-field"><option value="">Select</option>
+<?php $r=$staff->query("SELECT course_code,course_title FROM academic_course_catalog WHERE status='Active' ORDER BY course_title"); if($r) while($c=$r->fetch_assoc()): ?><option value="<?= htmlspecialchars($c['course_code']) ?>"><?= htmlspecialchars($c['course_code']) ?> - <?= htmlspecialchars($c['course_title']) ?></option><?php endwhile; ?>
+</select></div>
+<div class="row g-2 mb-3"><div class="col-6"><label class="fl">Review Date</label><input type="date" id="tqDate" class="form-control env-field"></div><div class="col-6"><label class="fl">Score (0-100)</label><input type="number" id="tqScore" class="form-control env-field" min="0" max="100" step="0.1"></div></div>
+<div class="mb-3"><label class="fl">Feedback</label><textarea id="tqFeedback" class="form-control env-field" rows="4"></textarea></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Submit Review</button>
+</form>
+<div id="tqMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-star me-2"></i>Teaching Reviews</div><div class="scb p-0"><div id="depTQList"></div></div></div>
+</div>
+</div>
+<script>
+function depSubmitTeachingReview(){
+    var lid = document.getElementById('tqLecturer').value; if(!lid){ alert('Select lecturer'); return; }
+    var cc = document.getElementById('tqCourse').value; if(!cc){ alert('Select course'); return; }
+    var fd = new FormData(); fd.append('lecturer_id',lid); fd.append('review_date',document.getElementById('tqDate').value); fd.append('teaching_score',document.getElementById('tqScore').value); fd.append('course_code',cc); fd.append('feedback',document.getElementById('tqFeedback').value);
+    fetch('deputy-principal.php?view=submit_teaching_review&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('tqMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Review submitted.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('tqLecturer').value=''; document.getElementById('tqCourse').value=''; document.getElementById('tqDate').value=''; document.getElementById('tqScore').value=''; document.getElementById('tqFeedback').value=''; depLoadTQ(); }
+    }).catch(function(){ document.getElementById('tqMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadTQ(){
+    var el = document.getElementById('depTQList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=teaching_quality_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No reviews yet.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Lecturer</th><th>Course</th><th>Score</th><th>Observer</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+        d.forEach(function(r){ var sc=r.status==='reviewed'?'success':r.status==='completed'?'info':'warning text-dark'; h+='<tr><td>'+esc(r.lecturer_name||'-')+'</td><td>'+esc(r.course_code)+'</td><td><strong>'+(r.teaching_score||'-')+'</strong></td><td>'+esc(r.observer||'-')+'</td><td class="small">'+(r.review_date||r.created_at||'')+'</td><td><span class="badge bg-'+sc+'">'+esc(r.status)+'</span></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadTQ);
+</script>
+
+<?php elseif ($view === 'clinical_training_reviews'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-hospital-user me-2"></i>Clinical Training Reviews</div><div class="scb p-0"><div id="depClinicalReview"></div></div></div>
+<script>
+function depLoadClinicalReview(){
+    var el = document.getElementById('depClinicalReview'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=clinical_placement_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No placements.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Student</th><th>Site</th><th>Score</th><th>Logbook</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(p){ h+='<tr><td>'+esc(p.student_name||'-')+'</td><td>'+esc(p.placement_site)+'</td><td>'+(p.competency_score||'-')+'</td><td>'+(p.logbook_submitted?'Yes':'No')+'</td><td><span class="badge bg-'+(p.status==='Completed'?'success':p.status==='Active'?'info':'warning text-dark')+'">'+esc(p.status)+'</span></td><td class="small">'+(p.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadClinicalReview);
+</script>
+
+<?php elseif ($view === 'compliance_reviews'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-file-contract me-2"></i>Compliance Reviews</div><div class="scb p-0"><div id="depCompReview"></div></div></div>
+<script>
+function depLoadCompReview(){
+    var el = document.getElementById('depCompReview'); el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=compliance_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No compliance data.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Department</th><th>Type</th><th>Status</th><th>Notes</th><th>Date</th></tr></thead><tbody>';
+        d.forEach(function(c){ var sc=c.status==='compliant'?'success':c.status==='non_compliant'?'danger':'warning text-dark'; h+='<tr><td>'+esc(c.department)+'</td><td>'+esc(c.compliance_type)+'</td><td><span class="badge bg-'+sc+'">'+esc(c.status)+'</span></td><td class="small">'+esc(mb_substr(c.notes||'',0,80))+'</td><td class="small">'+(c.created_at||'')+'</td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+document.addEventListener('DOMContentLoaded', depLoadCompReview);
+</script>
+
+<?php elseif ($view === 'improvement_tracking'): ?>
+<div class="row g-3">
+<div class="col-md-5">
+<div class="scard"><div class="sch"><i class="fas fa-chart-line me-2"></i>Record Improvement Action</div><div class="scb">
+<form onsubmit="event.preventDefault(); depRecordImprovement()">
+<div class="mb-3"><label class="fl">Area</label><input type="text" id="impArea" class="form-control env-field" required placeholder="e.g. Curriculum, Facilities, Staffing"></div>
+<div class="mb-3"><label class="fl">Improvement Action</label><textarea id="impAction" class="form-control env-field" rows="3" required></textarea></div>
+<div class="mb-3"><label class="fl">Target Date</label><input type="date" id="impDate" class="form-control env-field"></div>
+<button type="submit" class="btn btn-sec"><i class="fas fa-save me-1"></i>Record</button>
+</form>
+<div id="impMsg" class="mt-2"></div>
+</div></div>
+</div>
+<div class="col-md-7">
+<div class="scard"><div class="sch"><i class="fas fa-list me-2"></i>Improvement Tracking</div><div class="scb p-0"><div id="depImpList"></div></div></div>
+</div>
+</div>
+<script>
+function depRecordImprovement(){
+    var fd = new FormData(); fd.append('area',document.getElementById('impArea').value); fd.append('improvement_action',document.getElementById('impAction').value); fd.append('target_date',document.getElementById('impDate').value);
+    fetch('deputy-principal.php?view=record_improvement&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('impMsg').innerHTML = d.success ? '<div class="alert alert-success py-1 small">Recorded.</div>' : '<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
+        if(d.success){ document.getElementById('impArea').value=''; document.getElementById('impAction').value=''; document.getElementById('impDate').value=''; depLoadImprovement(); }
+    }).catch(function(){ document.getElementById('impMsg').innerHTML = '<div class="alert alert-danger py-1 small">Failed.</div>'; });
+}
+function depLoadImprovement(){
+    var el = document.getElementById('depImpList'); if(!el) return; el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
+    fetch('deputy-principal.php?view=improvement_data&ajax=1')
+    .then(function(r){ return r.json(); }).then(function(d){
+        if(!d||!d.length){ el.innerHTML='<div class="text-muted small p-3">No improvement records.</div>'; return; }
+        var h='<div class="table-responsive"><table class="table tb"><thead><tr><th>Area</th><th>Action</th><th>Target</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>';
+        d.forEach(function(i){ var stCls=i.status==='completed'?'success':i.status==='in_progress'?'info':'warning text-dark'; h+='<tr><td><strong>'+esc(i.area)+'</strong></td><td class="small">'+esc(mb_substr(i.improvement_action,0,80))+'</td><td class="small">'+(i.target_date||'-')+'</td><td>'+(i.progress||0)+'%</td><td><span class="badge bg-'+stCls+'">'+esc(i.status)+'</span></td><td><button class="btn btn-sm btn-outline-primary" onclick="depUpdateImpProgress('+i.id+')"><i class="fas fa-edit"></i></button></td></tr>'; });
+        h+='</tbody></table></div>'; el.innerHTML=h;
+    }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
+}
+function depUpdateImpProgress(id){
+    var pr = prompt('Progress % (0-100):'); if(pr === null) return;
+    var st = prompt('Status (planned/in_progress/completed):');
+    var fd = new FormData(); fd.append('id',id); fd.append('progress',parseFloat(pr)||0); if(st) fd.append('status',st);
+    fetch('deputy-principal.php?view=update_improvement_progress&ajax=1',{method:'POST',body:fd})
+    .then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadImprovement(); }).catch(function(){});
+}
+document.addEventListener('DOMContentLoaded', depLoadImprovement);
+</script>
+
+<?php endif; ?>
+</div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-</body>
-</html>
+<script>
+function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
+</script>
+</body></html>

@@ -62,6 +62,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 $bursarGroups = ['Overview','Student Fees','Payments','Payroll','Budgets & Expenditure','Accounts','Requisitions','Communications','Reports','Tools'];
 $secretaryGroups = ['Secretary Dashboard','Sec Communications','Sec Correspondence','Sec Meetings','Sec Appointments','Sec Document Mgmt','Sec Request Mgmt','Sec Records','Sec Reports','Sec Admissions'];
 $directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Payment Oversight','Budget Management','Expenditure Control','Payroll Oversight','Accounting & Ledger','Audit & Compliance','Procurement Finance','Assets & Investments','Financial Communications','Reports & Analytics','Approval Center'];
+$principalGroups = ['Executive','Academic Oversight','Student Affairs','Staff Oversight','Institutional Operations','Meetings & Governance','Principal Approvals','Principal Reports','Principal Communications'];
+$deputyGroups = ['Academic Support','Student Support','Operational Monitoring','Deputy Approvals','Deputy Reports','Deputy QA','Deputy Communications'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -91,6 +93,8 @@ $pageGroupAllowList = [
     'proof-of-payments.php' => $bursarGroups,
     'donations-management.php'=>$bursarGroups,
     'director-finance.php'  => $directorFinanceGroups,
+    'school-principal.php'  => $principalGroups,
+    'deputy-principal.php'  => $deputyGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only

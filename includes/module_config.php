@@ -759,6 +759,181 @@ function getModuleConfig(): array {
                 ['title' => 'Approval Workflow',    'route' => 'director-finance.php?section=approval_center&tab=workflow','roles' => '*'],
             ],
         ],
+
+        // ── Principal Module Groups ──
+        [
+            'title'    => 'Academic Oversight',
+            'icon'     => 'fas fa-graduation-cap',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Academic Dashboard',   'route' => 'school-principal.php?section=academic_dashboard', 'roles' => '*'],
+                ['title' => 'Program Performance',  'route' => 'school-principal.php?section=program_performance', 'roles' => '*'],
+                ['title' => 'Exam Monitoring',      'route' => 'school-principal.php?section=exam_monitoring',    'roles' => '*'],
+                ['title' => 'Result Approvals',     'route' => 'school-principal.php?section=result_approvals',   'roles' => '*'],
+                ['title' => 'Clinical Training',    'route' => 'school-principal.php?section=clinical_training',  'roles' => '*'],
+                ['title' => 'Academic Quality',     'route' => 'school-principal.php?section=academic_quality',   'roles' => '*'],
+                ['title' => 'Graduation Readiness', 'route' => 'school-principal.php?section=graduation_readiness','roles' => '*'],
+                ['title' => 'Academic Compliance',  'route' => 'school-principal.php?section=academic_compliance','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Student Affairs',
+            'icon'     => 'fas fa-user-graduate',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Student Management',   'route' => 'school-principal.php?section=student_management',  'roles' => '*'],
+                ['title' => 'Student Welfare',      'route' => 'school-principal.php?section=student_welfare',     'roles' => '*'],
+                ['title' => 'Discipline Oversight', 'route' => 'school-principal.php?section=discipline_oversight','roles' => '*'],
+                ['title' => 'Student Appeals',      'route' => 'school-principal.php?section=student_appeals',     'roles' => '*'],
+                ['title' => 'Student Progress',     'route' => 'school-principal.php?section=student_progress',    'roles' => '*'],
+                ['title' => 'Student Risk Monitor', 'route' => 'school-principal.php?section=student_risk',        'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Staff Oversight',
+            'icon'     => 'fas fa-users',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Staff Overview',       'route' => 'school-principal.php?section=staff_overview',          'roles' => '*'],
+                ['title' => 'Dept Performance',     'route' => 'school-principal.php?section=department_performance',  'roles' => '*'],
+                ['title' => 'Staff Attendance',     'route' => 'school-principal.php?section=staff_attendance',        'roles' => '*'],
+                ['title' => 'Staff Appraisals',     'route' => 'school-principal.php?section=staff_appraisals',        'roles' => '*'],
+                ['title' => 'Staff Development',    'route' => 'school-principal.php?section=staff_development',       'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Institutional Operations',
+            'icon'     => 'fas fa-building',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Strategic Plans',      'route' => 'school-principal.php?section=strategic_plans',         'roles' => '*'],
+                ['title' => 'Institutional KPIs',   'route' => 'school-principal.php?section=institutional_kpis',      'roles' => '*'],
+                ['title' => 'Quality Assurance',    'route' => 'school-principal.php?section=quality_assurance',        'roles' => '*'],
+                ['title' => 'Accreditation',        'route' => 'school-principal.php?section=accreditation_readiness',  'roles' => '*'],
+                ['title' => 'Compliance Monitor',   'route' => 'school-principal.php?section=compliance_monitoring',    'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Meetings & Governance',
+            'icon'     => 'fas fa-handshake',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Meetings',             'route' => 'school-principal.php?section=meetings',                'roles' => '*'],
+                ['title' => 'Executive Meetings',   'route' => 'school-principal.php?section=executive_meetings',       'roles' => '*'],
+                ['title' => 'Academic Board',       'route' => 'school-principal.php?section=academic_board',           'roles' => '*'],
+                ['title' => 'Committee Meetings',   'route' => 'school-principal.php?section=committee_meetings',       'roles' => '*'],
+                ['title' => 'Action Tracking',      'route' => 'school-principal.php?section=action_tracking',          'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Principal Approvals',
+            'icon'     => 'fas fa-check-double',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Approval Center',      'route' => 'school-principal.php?section=approval_center',         'roles' => '*'],
+                ['title' => 'Graduation Approvals', 'route' => 'school-principal.php?section=graduation_readiness',     'roles' => '*'],
+                ['title' => 'Student Appeals',      'route' => 'school-principal.php?section=student_appeals',          'roles' => '*'],
+                ['title' => 'Recommendations',      'route' => 'school-principal.php?section=approval_center&tab=recommendations','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Principal Reports',
+            'icon'     => 'fas fa-file-alt',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Academic Reports',     'route' => 'school-principal.php?section=academic_reports',        'roles' => '*'],
+                ['title' => 'Student Reports',      'route' => 'school-principal.php?section=student_reports',         'roles' => '*'],
+                ['title' => 'Institutional Reports','route' => 'school-principal.php?section=institutional_reports',   'roles' => '*'],
+                ['title' => 'QA Reports',           'route' => 'school-principal.php?section=qa_reports',               'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Principal Communications',
+            'icon'     => 'fas fa-envelope',
+            'roles'    => ['school principal','principal'],
+            'children' => [
+                ['title' => 'Messages',             'route' => 'school-principal.php?section=communications',           'roles' => '*'],
+                ['title' => 'Notices',              'route' => 'school-principal.php?section=notices',                  'roles' => '*'],
+                ['title' => 'Announcements',        'route' => 'school-principal.php?section=announcements',           'roles' => '*'],
+                ['title' => 'Meeting Invitations',  'route' => 'school-principal.php?section=meeting_invitations',     'roles' => '*'],
+            ],
+        ],
+
+        // ── Deputy Principal Module Groups ──
+        [
+            'title'    => 'Academic Support',
+            'icon'     => 'fas fa-book-open',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Academic Monitoring',  'route' => 'deputy-principal.php?section=academic_monitoring',        'roles' => '*'],
+                ['title' => 'Class Monitoring',     'route' => 'deputy-principal.php?section=class_monitoring',           'roles' => '*'],
+                ['title' => 'Timetable Oversight',  'route' => 'deputy-principal.php?section=timetable_oversight',        'roles' => '*'],
+                ['title' => 'Attendance Monitor',   'route' => 'deputy-principal.php?section=attendance_monitoring',     'roles' => '*'],
+                ['title' => 'Clinical Placement',   'route' => 'deputy-principal.php?section=clinical_placement_monitoring','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Student Support',
+            'icon'     => 'fas fa-hands-helping',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Student Welfare',      'route' => 'deputy-principal.php?section=student_welfare',           'roles' => '*'],
+                ['title' => 'Student Discipline',   'route' => 'deputy-principal.php?section=student_discipline',        'roles' => '*'],
+                ['title' => 'Support Cases',        'route' => 'deputy-principal.php?section=student_support',           'roles' => '*'],
+                ['title' => 'Appeals Tracking',     'route' => 'deputy-principal.php?section=student_appeals_tracking',  'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Operational Monitoring',
+            'icon'     => 'fas fa-clipboard-check',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Dept Follow-Ups',      'route' => 'deputy-principal.php?section=department_followups',      'roles' => '*'],
+                ['title' => 'Compliance Tracking',  'route' => 'deputy-principal.php?section=compliance_tracking',       'roles' => '*'],
+                ['title' => 'Institutional Activities','route' => 'deputy-principal.php?section=institutional_activities','roles' => '*'],
+                ['title' => 'Task Monitoring',      'route' => 'deputy-principal.php?section=task_monitoring',            'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Deputy Approvals',
+            'icon'     => 'fas fa-file-signature',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Review & Forward',     'route' => 'deputy-principal.php?section=approvals',                 'roles' => '*'],
+                ['title' => 'Recommendations',      'route' => 'deputy-principal.php?section=approvals&tab=recommend','roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Deputy Reports',
+            'icon'     => 'fas fa-chart-bar',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Monitoring Reports',   'route' => 'deputy-principal.php?section=monitoring_reports',        'roles' => '*'],
+                ['title' => 'Attendance Reports',   'route' => 'deputy-principal.php?section=attendance_reports',        'roles' => '*'],
+                ['title' => 'Welfare Reports',      'route' => 'deputy-principal.php?section=welfare_reports',           'roles' => '*'],
+                ['title' => 'Department Reports',   'route' => 'deputy-principal.php?section=department_reports',        'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Deputy QA',
+            'icon'     => 'fas fa-star',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Teaching Quality',     'route' => 'deputy-principal.php?section=teaching_quality',          'roles' => '*'],
+                ['title' => 'Clinical Training QA', 'route' => 'deputy-principal.php?section=clinical_training_reviews', 'roles' => '*'],
+                ['title' => 'Compliance Reviews',   'route' => 'deputy-principal.php?section=compliance_reviews',        'roles' => '*'],
+                ['title' => 'Improvement Tracking', 'route' => 'deputy-principal.php?section=improvement_tracking',      'roles' => '*'],
+            ],
+        ],
+        [
+            'title'    => 'Deputy Communications',
+            'icon'     => 'fas fa-comments',
+            'roles'    => ['deputy'],
+            'children' => [
+                ['title' => 'Communications',       'route' => 'deputy-principal.php?section=communications',            'roles' => '*'],
+                ['title' => 'Direct Messages',      'route' => 'deputy-principal.php?section=communications&tab=messages','roles' => '*'],
+            ],
+        ],
     ];
 }
 }
