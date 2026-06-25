@@ -177,7 +177,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
           }
         } catch (e) {}
       };
-      xhr.onerror = function(){ console.warn('[ISNM] Notifications fetch failed (network).'); };
+      xhr.onerror = function(){};
       xhr.send();
     }
 
@@ -216,15 +216,15 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
       xhr.open('POST', '../includes/ajax_notifications.php?action=mark_read', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = function () { fetchNotifications(); };
-      xhr.onerror = function(){ console.warn('[ISNM] markRead failed (network).'); };
-      xhr.send('id=' + nid);
+      xhr.onerror = function(){};
+      xhr.send();
     }
 
     function markAllRead() {
       var xhr = new XMLHttpRequest();
       xhr.open('POST', '../includes/ajax_notifications.php?action=mark_all_read', true);
       xhr.onload = function () { fetchNotifications(); };
-      xhr.onerror = function(){ console.warn('[ISNM] markAllRead failed (network).'); };
+      xhr.onerror = function(){};
       xhr.send();
     }
 

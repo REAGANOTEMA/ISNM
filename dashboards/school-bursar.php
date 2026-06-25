@@ -23,6 +23,7 @@ $bursarMigrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.bursar_requisition_reviews (id INT AUTO_INCREMENT PRIMARY KEY, requester_id INT NOT NULL, item_description VARCHAR(500), amount DECIMAL(15,2) DEFAULT 0, status ENUM('pending','approved','rejected') DEFAULT 'pending', reviewed_by INT DEFAULT NULL, reviewed_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_messages (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT NOT NULL, sender_role VARCHAR(100), recipient_role VARCHAR(100), subject VARCHAR(200), message TEXT, read_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_notices (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), content TEXT, audience VARCHAR(50) DEFAULT 'all', published_by INT DEFAULT NULL, published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_clearance (id INT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(50) NOT NULL, academic_year VARCHAR(20), semester VARCHAR(20) DEFAULT 'Annual', clearance_status VARCHAR(50) DEFAULT 'Pending Review', cleared_by INT DEFAULT NULL, cleared_at DATETIME DEFAULT NULL, remarks TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_student_clearance (student_id, academic_year, semester)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $bursarMigrate($staff);
 // Also try to create via students_db connection
@@ -64,9 +65,10 @@ if ($view === 'clearance' && ($_POST['ajax_clearance'] ?? '') === '1') {
             $remarks = $_POST['remarks'] ?? '';
             $year = date('Y');
             if ($stuId) {
+                $uidClear = $user['id'];
                 $stmt = $staff->prepare("INSERT INTO igangaschoolofl_students_db.financial_clearance (student_id, academic_year, semester, clearance_status, cleared_by, cleared_at, remarks) VALUES (?, ?, 'Annual', ?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE clearance_status=VALUES(clearance_status), cleared_by=VALUES(cleared_by), cleared_at=NOW(), remarks=VALUES(remarks)");
                 if ($stmt) {
-                    $stmt->bind_param("sssis", $stuId, $year, $cStatus, $user['id'], $remarks);
+                    $stmt->bind_param("sssis", $stuId, $year, $cStatus, $uidClear, $remarks);
                     $stmt->execute();
                     $stmt->close();
                     echo json_encode(['success' => 'Clearance updated to: ' . $cStatus]);
@@ -167,7 +169,8 @@ if ($view === 'receipt_print' && $ajax === '1' && $q) {
                     $bal = 0;
                     $bStmt = $staff->prepare("SELECT balance FROM student_fee_accounts WHERE student_id = ? AND status NOT IN ('fully_paid','cancelled') ORDER BY id DESC LIMIT 1");
                     if ($bStmt) {
-                        $bStmt->bind_param("s", $row['student_id']);
+                        $sidRef = $row['student_id'];
+                        $bStmt->bind_param("s", $sidRef);
                         $bStmt->execute();
                         $bRes = $bStmt->get_result();
                         if ($bRow = $bRes->fetch_assoc()) $bal = (float)$bRow['balance'];
@@ -271,6 +274,62 @@ if ($view === 'generate_invoice' && $ajax === '1' && $sid) {
     exit;
 }
 
+// student_search - load full student financial profile
+if ($view === 'student_search' && $ajax === '1' && $sid) {
+    header('Content-Type: application/json');
+    $data = ['found' => false, 'student' => null, 'summary' => null, 'recent' => []];
+    try {
+        if ($students && $staff) {
+            $sidSafe = $students->real_escape_string($sid);
+            $stu = $students->query("SELECT student_id AS id, student_number, CONCAT(last_name,' ',first_name) AS full_name, first_name, last_name, other_name, program, year_of_study AS year, phone, email, photo, status, admission_date, gender, date_of_birth FROM students WHERE student_number = '$sidSafe' OR student_id = '$sidSafe' LIMIT 1");
+            if ($stu && ($s = $stu->fetch_assoc())) {
+                $sidFull = $s['student_number'] ?: $s['id'];
+                $sfa = $staff->query("SELECT COALESCE(SUM(total_fees),0) AS total_billed, COALESCE(SUM(amount_paid),0) AS total_paid, COALESCE(SUM(balance),0) AS total_balance FROM student_fee_accounts WHERE student_id = '$sidFull'");
+                $summary = $sfa ? $sfa->fetch_assoc() : ['total_billed' => 0, 'total_paid' => 0, 'total_balance' => 0];
+                $lastPay = $staff->query("SELECT amount_paid, payment_date, receipt_number, payment_method FROM fee_payments WHERE student_id = '$sidFull' AND status='verified' ORDER BY payment_date DESC LIMIT 5");
+                $recent = [];
+                if ($lastPay) while ($lp = $lastPay->fetch_assoc()) $recent[] = $lp;
+                $clear = $staff->query("SELECT clearance_status, remarks, updated_at FROM igangaschoolofl_students_db.financial_clearance WHERE student_id = '$sidFull' ORDER BY updated_at DESC LIMIT 1");
+                $clearStatus = ($clear && ($c = $clear->fetch_assoc())) ? $c['clearance_status'] : 'Not Requested';
+                $data['found'] = true;
+                $data['student'] = $s;
+                $data['summary'] = $summary;
+                $data['recent'] = $recent;
+                $data['clearance_status'] = $clearStatus;
+            }
+        }
+    } catch (Exception $e) { error_log('ajax student_search: ' . $e->getMessage()); }
+    echo json_encode($data);
+    exit;
+}
+
+// clearance_deps - check financial, library, hostel dependencies
+if ($view === 'clearance_deps' && $ajax === '1' && $sid) {
+    header('Content-Type: application/json');
+    $deps = [];
+    try {
+        $sidSafe = ($staff ? $staff->real_escape_string($sid) : $sid);
+        $balance = 0;
+        if ($staff) {
+            $balStmt = $staff->query("SELECT COALESCE(SUM(balance),0) AS bal FROM student_fee_accounts WHERE student_id = '$sidSafe' AND status NOT IN ('fully_paid','cancelled')");
+            if ($balStmt) $balance = (float)$balStmt->fetch_assoc()['bal'];
+        }
+        $deps[] = ['type'=>'Financial','passed'=>$balance <= 0,'detail'=>'Balance: UGX '.number_format($balance)];
+        if ($students) {
+            $stuSafe = $students->real_escape_string($sid);
+            $lib = $students->query("SELECT status FROM library_clearance WHERE student_id = '$stuSafe' LIMIT 1");
+            $libPass = $lib && ($l = $lib->fetch_assoc()) && $l['status'] === 'Cleared';
+            $deps[] = ['type'=>'Library','passed'=>$libPass,'detail'=>$libPass ? 'Cleared' : 'Pending/Not Cleared'];
+            $hostel = $students->query("SELECT status FROM hostel_clearance WHERE student_id = '$stuSafe' LIMIT 1");
+            $hostelPass = $hostel && ($h = $hostel->fetch_assoc()) && $h['status'] === 'Cleared';
+            $deps[] = ['type'=>'Hostel','passed'=>$hostelPass,'detail'=>$hostelPass ? 'Cleared' : 'Pending/Not Cleared'];
+        }
+        $deps[] = ['type'=>'Exam Eligibility','passed'=>$balance <= 0,'detail'=>$balance <= 0 ? 'Eligible' : 'Blocked (balance UGX '.number_format($balance).')'];
+    } catch (Exception $e) { error_log('clearance deps: '.$e->getMessage()); }
+    echo json_encode($deps);
+    exit;
+}
+
 // If an ajax param was present but no endpoint matched, just exit silently
 if (isset($_GET['ajax'])) exit;
 
@@ -334,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $inv_no = $inv_prefix . str_pad(($cnt ? (int)$cnt->fetch_assoc()['c'] + 1 : 1), 5, '0', STR_PAD_LEFT);
                 $stmt = $staff->prepare("INSERT INTO student_fee_accounts (student_id, academic_year, invoice_number, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, 0, ?, ?, 'unpaid')");
                 if ($stmt) {
-                    $stmt->bind_param("sssdd", $student_id, $academic_year, $inv_no, $total_fees, $total_fees, $due_date);
+                    $stmt->bind_param("sssdds", $student_id, $academic_year, $inv_no, $total_fees, $total_fees, $due_date);
                     if ($stmt->execute()) {
                         $_SESSION['success'] = "Invoice $inv_no created for UGX " . number_format($total_fees);
                     } else {
@@ -587,6 +646,217 @@ $pageTitle = 'Bursar Dashboard';
 
 
     <?php endif; ?><!-- /home -->
+
+    <!-- ======================== student_search ======================== -->
+    <?php if ($view === 'student_search'): ?>
+    <style>
+    .srch-card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;cursor:pointer}
+    .srch-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);border-color:#1a237e}
+    .srch-pic{width:64px;height:64px;border-radius:50%;object-fit:cover;background:#e8eaf6;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1a237e;font-weight:700}
+    .profile-section h6{color:#1a237e;border-bottom:2px solid #e8eaf6;padding-bottom:6px;margin-bottom:12px}
+    .filter-tag{background:#e8eaf6;color:#1a237e;padding:2px 10px;border-radius:12px;font-size:12px;display:inline-block}
+    </style>
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="cc"><div class="ch"><i class="fas fa-search me-2"></i>Student Search</div>
+            <div class="cb">
+                <form id="stuSearchForm" onsubmit="event.preventDefault(); doStudentSearch()" class="row g-2 mb-3">
+                    <div class="col-md-5"><input type="text" id="stuSearchQ" class="form-control fc" placeholder="Name, index number, phone..." autocomplete="off"></div>
+                    <div class="col-md-3"><select id="stuSearchProgram" class="form-select fs"><option value="">All Programs</option><option>Certificate Midwifery</option><option>Diploma Midwifery</option><option>Diploma Nursing Extension</option><option>Certificate Nursing</option></select></div>
+                    <div class="col-md-2"><select id="stuSearchYear" class="form-select fs"><option value="">All Years</option><option>Year 1</option><option>Year 2</option><option>Year 3</option></select></div>
+                    <div class="col-md-2"><button type="submit" class="btn bb w-100"><i class="fas fa-search me-1"></i>Search</button></div>
+                </form>
+                <div id="stuSearchResults" class="row g-2 mb-3"></div>
+                <div id="stuProfileOutput" class="d-none"></div>
+            </div></div>
+        </div>
+    </div>
+    <script>
+    function doStudentSearch(){
+        var q = document.getElementById('stuSearchQ').value.trim();
+        var prog = document.getElementById('stuSearchProgram').value;
+        var yr = document.getElementById('stuSearchYear').value;
+        var el = document.getElementById('stuSearchResults');
+        if(!q&&!prog){ el.innerHTML = '<div class="text-muted small py-2">Enter a search term or select a program.</div>'; return; }
+        el.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        var url = '../includes/ajax_student_search.php?q='+encodeURIComponent(q||' ');
+        if(prog) url += '&program='+encodeURIComponent(prog);
+        if(yr) url += '&year='+encodeURIComponent(yr);
+        fetch(url).then(function(r){ return r.json(); }).then(function(d){
+            el.innerHTML = '';
+            if(!d||!d.students||!d.students.length){ el.innerHTML = '<div class="text-muted small py-2">No students found.</div>'; return; }
+            d.students.forEach(function(s){
+                var initials = (s.surname?s.surname[0]:(s.first_name?s.first_name[0]:'?')) + (s.first_name?s.first_name[0]:'');
+                var card = document.createElement('div');
+                card.className = 'col-md-6';
+                card.innerHTML = '<div class="srch-card p-3 d-flex align-items-center gap-3" onclick="loadStudentProfile(\''+esc(s.student_id)+'\')"><div class="srch-pic">'+initials+'</div><div><strong>'+esc(s.surname)+', '+esc(s.first_name)+'</strong><br><small class="text-muted">'+esc(s.student_id)+' | '+esc(s.program||'')+' '+(s.level?'- '+esc(s.level):'')+'</small></div></div>';
+                el.appendChild(card);
+            });
+        }).catch(function(){ el.innerHTML = '<div class="text-danger small py-2">Search failed.</div>'; });
+    }
+    function loadStudentProfile(sid){
+        if(!sid) return;
+        var out = document.getElementById('stuProfileOutput');
+        out.classList.remove('d-none');
+        out.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        document.getElementById('stuSearchResults').innerHTML = '';
+        fetch('school-bursar.php?view=student_search&ajax=1&sid='+encodeURIComponent(sid))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if(!d||!d.found){ out.innerHTML = '<div class="alert alert-warning">Student data not found.</div>'; return; }
+            var s = d.student, sum = d.summary||{}, recent = d.recent||[];
+            var initials = ((s.last_name?s.last_name[0]:'')+(s.first_name?s.first_name[0]:''))||'?';
+            var h = '<div class="cc mt-3"><div class="ch"><i class="fas fa-user-graduate me-2"></i>Student Financial Profile</div><div class="cb">';
+            h += '<div class="row g-3"><div class="col-md-3 text-center"><div class="srch-pic mx-auto" style="width:80px;height:80px;font-size:28px">'+initials+'</div><h5 class="mt-2 mb-0">'+esc(s.full_name||'')+'</h5><span class="badge bg-'+(s.status==='Active'?'success':'secondary')+'">'+esc(s.status||'')+'</span></div>';
+            h += '<div class="col-md-5"><div class="profile-section"><h6>Student Info</h6><table class="table table-sm table-borderless mb-0"><tr><td class="text-muted" style="width:120px">Index No.</td><td><strong>'+esc(s.student_number||s.id||'')+'</strong></td></tr><tr><td class="text-muted">Program</td><td>'+esc(s.program||'')+'</td></tr><tr><td class="text-muted">Year</td><td>'+esc(s.year||'')+'</td></tr><tr><td class="text-muted">Gender</td><td>'+esc(s.gender||'')+'</td></tr><tr><td class="text-muted">Phone</td><td>'+esc(s.phone||'')+'</td></tr><tr><td class="text-muted">Email</td><td>'+esc(s.email||'')+'</td></tr><tr><td class="text-muted">Admission</td><td>'+esc(s.admission_date||'')+'</td></tr></table></div></div>';
+            h += '<div class="col-md-4"><div class="profile-section"><h6>Financial Summary</h6><div class="mb-2"><small class="text-muted">Total Billed</small><div class="fw-bold fs-5">UGX '+Number(sum.total_billed||0).toLocaleString()+'</div></div><div class="mb-2"><small class="text-muted">Total Paid</small><div class="fw-bold fs-5 text-success">UGX '+Number(sum.total_paid||0).toLocaleString()+'</div></div><div class="mb-2"><small class="text-muted">Balance</small><div class="fw-bold fs-5 '+(sum.total_balance>0?'text-danger':'text-success')+'">UGX '+Number(sum.total_balance||0).toLocaleString()+'</div></div><div class="mb-2"><small class="text-muted">Clearance</small><div><span class="badge bg-'+(d.clearance_status==='Cleared'?'success':d.clearance_status==='Not Cleared'?'danger':'warning text-dark')+'">'+esc(d.clearance_status||'Pending')+'</span></div></div></div></div></div>';
+            if(recent.length){
+                h += '<div class="profile-section mt-3"><h6>Recent Payments</h6><div class="table-responsive"><table class="table table-sm tb"><thead><tr><th>Date</th><th>Receipt</th><th>Method</th><th class="text-end">Amount</th></tr></thead><tbody>';
+                recent.forEach(function(p){ h += '<tr><td>'+esc(p.payment_date||'')+'</td><td>'+esc(p.receipt_number||'-')+'</td><td>'+esc(p.payment_method||'')+'</td><td class="text-end">UGX '+Number(p.amount_paid||0).toLocaleString()+'</td></tr>'; });
+                h += '</tbody></table></div></div>';
+            }
+            h += '<div class="d-flex gap-2 mt-3 no-print"><a class="btn bb btn-sm" href="?section=student_statement&sid='+esc(s.student_number||s.id)+'"><i class="fas fa-file-invoice me-1"></i>View Statement</a><a class="btn bo btn-sm" href="?section=record_payment&sid='+esc(s.student_number||s.id)+'"><i class="fas fa-money-bill me-1"></i>Record Payment</a><a class="btn bo btn-sm" href="?section=clearance&sid='+esc(s.student_number||s.id)+'"><i class="fas fa-check-circle me-1"></i>Clearance</a></div>';
+            h += '</div></div>';
+            out.innerHTML = h;
+            out.scrollIntoView({behavior:'smooth',block:'start'});
+        }).catch(function(){ out.innerHTML = '<div class="alert alert-danger">Failed to load profile.</div>'; });
+    }
+    </script>
+    <?php endif; ?><!-- /student_search -->
+
+    <!-- ======================== student_add ======================== -->
+    <?php if ($view === 'student_add'): ?>
+    <?php
+    // Handle add/update student
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $act = $_POST['action'] ?? '';
+        if ($act === 'add_student_financial' && $students) {
+            $fn = $students->real_escape_string(trim($_POST['first_name'] ?? ''));
+            $sn = $students->real_escape_string(trim($_POST['surname'] ?? ''));
+            $ph = $students->real_escape_string(trim($_POST['phone'] ?? ''));
+            $em = $students->real_escape_string(trim($_POST['email'] ?? ''));
+            $pr = $students->real_escape_string(trim($_POST['program'] ?? ''));
+            $yr = $students->real_escape_string(trim($_POST['year_of_study'] ?? ''));
+            $gen = $students->real_escape_string(trim($_POST['gender'] ?? ''));
+            $dob = $students->real_escape_string(trim($_POST['date_of_birth'] ?? ''));
+            $dist = $students->real_escape_string(trim($_POST['district'] ?? ''));
+            $nat = $students->real_escape_string(trim($_POST['nationality'] ?? 'Uganda'));
+            if ($fn && $sn) {
+                $check = $students->query("SELECT id FROM students WHERE first_name='$fn' AND last_name='$sn' AND phone='$ph' LIMIT 1");
+                if ($check && $check->num_rows > 0) {
+                    $msg = '<div class="alert alert-warning py-2 small">Duplicate student found. Use search to update.</div>';
+                } else {
+                    $max = $students->query("SELECT MAX(CAST(SUBSTRING(student_number,6) AS UNSIGNED)) AS max_num FROM students WHERE student_number LIKE 'ISNM-%'");
+                    $next = $max ? ((int)$max->fetch_assoc()['max_num'] + 1) : (date('Y')*10000 + 1);
+                    $student_number = 'ISNM-' . $next;
+                    $stmt = $students->prepare("INSERT INTO students (student_number, first_name, last_name, phone, email, program, year_of_study, gender, date_of_birth, district, nationality, status, admission_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
+                    if ($stmt) {
+                        $stmt->bind_param("sssssssssss", $student_number, $fn, $sn, $ph, $em, $pr, $yr, $gen, $dob, $dist, $nat);
+                        $stmt->execute() ? $msg = '<div class="alert alert-success py-2 small">Student added successfully. Number: <strong>' . $student_number . '</strong></div>' : $msg = '<div class="alert alert-danger py-2 small">Failed: ' . $stmt->error . '</div>';
+                        $stmt->close();
+                    } else { $msg = '<div class="alert alert-danger py-2 small">Database error.</div>'; }
+                }
+            } else { $msg = '<div class="alert alert-danger py-2 small">First name and surname are required.</div>'; }
+        }
+        if ($act === 'update_student_financial' && $students) {
+            $sid = $students->real_escape_string(trim($_POST['student_id'] ?? ''));
+            $ph = $students->real_escape_string(trim($_POST['phone'] ?? ''));
+            $em = $students->real_escape_string(trim($_POST['email'] ?? ''));
+            $dist = $students->real_escape_string(trim($_POST['district'] ?? ''));
+            if ($sid) {
+                $stmt = $students->prepare("UPDATE students SET phone=?, email=?, district=? WHERE student_number=? OR student_id=?");
+                if ($stmt) {
+                    $stmt->bind_param("sssss", $ph, $em, $dist, $sid, $sid);
+                    $stmt->execute() ? $msg = '<div class="alert alert-success py-2 small">Contact info updated.</div>' : $msg = '<div class="alert alert-warning py-2 small">No changes made.</div>';
+                    $stmt->close();
+                }
+            }
+        }
+    }
+    ?>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="cc"><div class="ch"><i class="fas fa-user-plus me-2"></i>Register New Student (Financial)</div>
+            <div class="cb">
+                <?= $msg ?? '' ?>
+                <p class="text-muted small">Add a new student record for fee tracking. Academic fields cannot be modified later by finance.</p>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_student_financial">
+                    <div class="row g-3">
+                        <div class="col-6"><label class="fl">Surname *</label><input type="text" name="surname" class="form-control fc" required></div>
+                        <div class="col-6"><label class="fl">First Name *</label><input type="text" name="first_name" class="form-control fc" required></div>
+                        <div class="col-6"><label class="fl">Phone</label><input type="text" name="phone" class="form-control fc"></div>
+                        <div class="col-6"><label class="fl">Email</label><input type="email" name="email" class="form-control fc"></div>
+                        <div class="col-6"><label class="fl">Program</label>
+                            <select name="program" class="form-select fs">
+                                <option value="">-- Select --</option>
+                                <option>Certificate Midwifery</option><option>Diploma Midwifery</option>
+                                <option>Diploma Nursing Extension</option><option>Certificate Nursing</option>
+                            </select>
+                        </div>
+                        <div class="col-3"><label class="fl">Year</label><select name="year_of_study" class="form-select fs"><option value="">-</option><option>Year 1</option><option>Year 2</option><option>Year 3</option></select></div>
+                        <div class="col-3"><label class="fl">Gender</label><select name="gender" class="form-select fs"><option value="">-</option><option>Male</option><option>Female</option></select></div>
+                        <div class="col-4"><label class="fl">Date of Birth</label><input type="date" name="date_of_birth" class="form-control fc"></div>
+                        <div class="col-4"><label class="fl">District</label><input type="text" name="district" class="form-control fc"></div>
+                        <div class="col-4"><label class="fl">Nationality</label><input type="text" name="nationality" class="form-control fc" value="Uganda"></div>
+                        <div class="col-12 text-end"><button type="submit" class="btn bb"><i class="fas fa-save me-1"></i>Register Student</button></div>
+                    </div>
+                </form>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="cc"><div class="ch"><i class="fas fa-edit me-2"></i>Update Contact / Financial Info</div>
+            <div class="cb">
+                <?= $msg2 ?? '' ?>
+                <p class="text-muted small">Search for a student and update contact details (phone, email, district only). Academic data is read-only.</p>
+                <div class="mb-3">
+                    <div class="input-group"><input type="text" id="editStudQ" class="form-control" placeholder="Search student name or ID..."><button class="btn bb" onclick="searchEditStudent()"><i class="fas fa-search"></i></button></div>
+                    <div id="editStudResults" class="mt-2"></div>
+                </div>
+                <form method="POST" id="editStudForm" class="d-none">
+                    <input type="hidden" name="action" value="update_student_financial">
+                    <input type="hidden" name="student_id" id="editStudId">
+                    <div class="row g-3">
+                        <div class="col-6"><label class="fl">Phone</label><input type="text" name="phone" id="editPhone" class="form-control fc"></div>
+                        <div class="col-6"><label class="fl">Email</label><input type="email" name="email" id="editEmail" class="form-control fc"></div>
+                        <div class="col-6"><label class="fl">District</label><input type="text" name="district" id="editDistrict" class="form-control fc"></div>
+                        <div class="col-6"><label class="fl">Academic Info</label><p class="form-control-plaintext small" id="editAcadInfo"></p></div>
+                        <div class="col-12 text-end"><button type="submit" class="btn bb"><i class="fas fa-save me-1"></i>Update</button></div>
+                    </div>
+                </form>
+            </div></div>
+        </div>
+    </div>
+    <script>
+    function searchEditStudent(){
+        var q = document.getElementById('editStudQ').value.trim();
+        if(!q) return;
+        fetch('../includes/ajax_student_search.php?q='+encodeURIComponent(q))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var el = document.getElementById('editStudResults');
+            el.innerHTML = '';
+            if(!d||!d.students||!d.students.length){ el.innerHTML = '<div class="text-muted small">No students found.</div>'; return; }
+            d.students.forEach(function(s){
+                var di = document.createElement('div');
+                di.className = 'sri';
+                di.innerHTML = '<strong>'+s.surname+', '+s.first_name+'</strong><br><small class="text-muted">'+s.student_id+' | '+(s.program||'')+'</small>';
+                di.addEventListener('click',function(){ selectEditStudent(s); });
+                el.appendChild(di);
+            });
+        }).catch(function(){ document.getElementById('editStudResults').innerHTML = '<div class="text-danger small">Search failed.</div>'; });
+    }
+    function selectEditStudent(s){
+        document.getElementById('editStudResults').innerHTML = '';
+        document.getElementById('editStudForm').classList.remove('d-none');
+        document.getElementById('editStudId').value = s.student_id;
+        document.getElementById('editPhone').value = s.phone||'';
+        document.getElementById('editEmail').value = s.email||'';
+        document.getElementById('editDistrict').value = '';
+        document.getElementById('editAcadInfo').textContent = (s.program||'N/A') + ' | ' + (s.level||'N/A');
+    }
+    </script>
+    <?php endif; ?><!-- /student_add -->
 
     <!-- ======================== record_payment ======================== -->
     <?php if ($view === 'record_payment'): ?>
@@ -927,7 +1197,7 @@ echo $budgetRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No 
                             $inv_no = $inv_prefix . str_pad($base, 5, '0', STR_PAD_LEFT);
                             $sid = $s['student_id'] ?? $s['student_number'] ?? '';
                             if ($sid) {
-                                $stmt->bind_param("sssdd", $sid, $academic_year, $inv_no, $amount, $amount, $due_date);
+                                $stmt->bind_param("sssdds", $sid, $academic_year, $inv_no, $amount, $amount, $due_date);
                                 if ($stmt->execute()) $created++;
                             }
                         }
@@ -1242,15 +1512,17 @@ echo $ccRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No cost
 $prRows = '';
 try {
     if ($staff) {
-        $r = $staff->query("SELECT * FROM staff_salaries ORDER BY created_at DESC LIMIT 50");
+        $r = $staff->query("SELECT ss.*, s.full_name, s.position FROM staff_salaries ss LEFT JOIN staff s ON ss.staff_id=s.id ORDER BY ss.created_at DESC LIMIT 50");
         if ($r && $r->num_rows) {
             while ($p = $r->fetch_assoc()) {
-                $prRows .= '<tr><td>' . htmlspecialchars($p['staff_name'] ?? $p['employee_name'] ?? '') . '</td><td>' . htmlspecialchars($p['department'] ?? '-') . '</td><td>' . currency($p['basic_salary'] ?? $p['salary'] ?? 0) . '</td><td>' . currency($p['allowances'] ?? $p['total_allowances'] ?? 0) . '</td><td>' . currency($p['deductions'] ?? $p['total_deductions'] ?? 0) . '</td><td><strong>' . currency(($p['net_pay'] ?? $p['basic_salary'] ?? 0)) . '</strong></td><td>' . htmlspecialchars($p['pay_period'] ?? $p['month'] ?? '-') . '</td></tr>';
+                $period = ($p['payment_month'] && $p['payment_year']) ? $p['payment_month'].'/'.$p['payment_year'] : ($p['effective_date'] ?? '-');
+                $net = $p['net_salary'] ?? ($p['basic_salary'] + $p['allowances'] - $p['deductions']);
+                $prRows .= '<tr><td>' . htmlspecialchars($p['full_name'] ?? 'Staff #'.$p['staff_id']) . '</td><td>' . htmlspecialchars($p['position'] ?? '-') . '</td><td>' . currency($p['basic_salary'] ?? 0) . '</td><td>' . currency($p['allowances'] ?? 0) . '</td><td>' . currency(($p['deductions'] ?? 0) + ($p['nssf_tax'] ?? 0) + ($p['paye_tax'] ?? 0)) . '</td><td><strong>' . currency($net) . '</strong></td><td>' . htmlspecialchars($period) . '</td></tr>';
             }
         } else {
-            $r = $staff->query("SELECT * FROM payroll_records ORDER BY created_at DESC LIMIT 50");
+            $r = $staff->query("SELECT pr.*, s.full_name FROM payroll_records pr LEFT JOIN staff s ON pr.staff_id=s.id ORDER BY pr.processing_date DESC LIMIT 50");
             if ($r) while ($p = $r->fetch_assoc()) {
-                $prRows .= '<tr><td>' . htmlspecialchars($p['staff_name'] ?? '') . '</td><td>' . htmlspecialchars($p['department'] ?? '-') . '</td><td>' . currency($p['gross_pay'] ?? 0) . '</td><td>' . currency($p['allowances'] ?? 0) . '</td><td>' . currency($p['deductions'] ?? 0) . '</td><td><strong>' . currency($p['net_pay'] ?? 0) . '</strong></td><td>' . htmlspecialchars($p['pay_period'] ?? '-') . '</td></tr>';
+                $prRows .= '<tr><td>' . htmlspecialchars($p['full_name'] ?? 'Staff #'.$p['staff_id']) . '</td><td>-</td><td>' . currency($p['gross_salary'] ?? 0) . '</td><td>' . currency($p['total_allowances'] ?? 0) . '</td><td>' . currency($p['total_deductions'] ?? 0) . '</td><td><strong>' . currency($p['net_salary'] ?? 0) . '</strong></td><td>' . htmlspecialchars($p['month'].'/'.$p['year']) . '</td></tr>';
             }
         }
     }
@@ -1277,9 +1549,9 @@ echo $prRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No payr
 $psRows = '';
 try {
     if ($staff) {
-        $r = $staff->query("SELECT * FROM generated_documents WHERE document_type='Payslip' ORDER BY created_at DESC LIMIT 50");
+        $r = $staff->query("SELECT g.*, s.full_name FROM generated_documents g LEFT JOIN staff s ON g.staff_id=s.id WHERE g.document_type='Payslip' ORDER BY g.generation_date DESC LIMIT 50");
         if ($r) while ($p = $r->fetch_assoc()) {
-            $psRows .= '<tr><td>' . htmlspecialchars($p['document_title'] ?? '-') . '</td><td>' . htmlspecialchars($p['document_description'] ?? '-') . '</td><td></td><td></td><td>' . htmlspecialchars($p['created_at'] ?? '-') . '</td></tr>';
+            $psRows .= '<tr><td>' . htmlspecialchars($p['full_name'] ?? ($p['document_title'] ?? '-')) . '</td><td>' . htmlspecialchars($p['document_description'] ?? '-') . '</td><td>' . currency($p['gross_salary'] ?? 0) . '</td><td>' . currency($p['net_pay'] ?? 0) . '</td><td>' . htmlspecialchars($p['generation_date'] ?? $p['created_at'] ?? '-') . '</td></tr>';
         }
     }
 } catch (Exception $e) {}
@@ -1631,11 +1903,16 @@ echo $donRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No don
     <!-- ======================== clearance ======================== -->
     <?php if ($view === 'clearance'): ?>
     <div class="cc">
-        <div class="ch"><i class="fas fa-check-double me-2"></i>Financial Clearance Management</div>
+        <div class="ch"><i class="fas fa-check-double me-2"></i>Financial Clearance Center</div>
         <div class="cb">
-            <p class="text-muted small">Mark students as financially cleared or not cleared for exam/result access.</p>
-            <div class="mb-3">
-                <input type="text" id="clearanceQuery" class="form-control" placeholder="Search student by name or ID..." onkeyup="searchClearanceStudent(event)">
+            <p class="text-muted small">Search a student, review financial status and clearance dependencies, then mark cleared or not cleared.</p>
+            <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <input type="text" id="clearanceQuery" class="form-control" placeholder="Search student by name or ID..." onkeyup="searchClearanceStudent(event)">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn bb w-100" onclick="searchClearanceStudent({key:'Enter'})"><i class="fas fa-search me-1"></i>Search</button>
+                </div>
             </div>
             <div id="clearanceSearchResults" class="mb-3"></div>
             <div id="clearanceOutput" class="d-none">
@@ -1643,9 +1920,10 @@ echo $donRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No don
                     <strong id="clearanceStudentName"></strong>
                     <span id="clearanceCurrentStatus" class="badge"></span>
                 </div>
-                <div class="d-flex gap-2 mb-3">
-                    <button class="btn btn-success btn-sm" onclick="setClearance('Cleared')"><i class="fas fa-check me-1"></i>Mark Cleared</button>
-                    <button class="btn btn-danger btn-sm" onclick="setClearance('Not Cleared')"><i class="fas fa-times me-1"></i>Mark Not Cleared</button>
+                <div id="clearanceDeps" class="row g-2 mb-3"></div>
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <button class="btn btn-success btn-sm" onclick="setClearance('Cleared')"><i class="fas fa-check me-1"></i>Full Clearance</button>
+                    <button class="btn btn-danger btn-sm" onclick="setClearance('Not Cleared')"><i class="fas fa-times me-1"></i>Not Cleared</button>
                     <button class="btn btn-secondary btn-sm" onclick="setClearance('Pending Review')"><i class="fas fa-clock me-1"></i>Pending Review</button>
                 </div>
                 <div class="mb-2">
@@ -1657,7 +1935,7 @@ echo $donRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No don
             <h6>Recently Updated Clearances</h6>
             <div class="table-responsive">
                 <table class="table tb">
-                    <thead><tr><th>Student ID</th><th>Status</th><th>Cleared By</th><th>Date</th><th>Remarks</th></tr></thead>
+                    <thead><tr><th>Student ID</th><th>Name</th><th>Status</th><th>Cleared By</th><th>Date</th><th>Remarks</th></tr></thead>
                     <tbody>
 <?php
 $clearRows = '';
@@ -1667,18 +1945,92 @@ try {
         if ($cr && $cr->num_rows) {
             while ($c = $cr->fetch_assoc()) {
                 $cs = $c['clearance_status'] === 'Cleared' ? 'success' : ($c['clearance_status'] === 'Not Cleared' ? 'danger' : 'warning text-dark');
-                $clearRows .= '<tr><td>' . htmlspecialchars($c['student_id']) . '</td><td><span class="badge bg-' . $cs . '">' . htmlspecialchars($c['clearance_status']) . '</span></td><td>' . htmlspecialchars($c['cleared_by_name'] ?? 'System') . '</td><td>' . htmlspecialchars($c['updated_at'] ?? '-') . '</td><td class="small text-muted">' . htmlspecialchars(mb_substr($c['remarks'] ?? '-', 0, 50)) . '</td></tr>';
+                $clearRows .= '<tr><td>' . htmlspecialchars($c['student_id']) . '</td><td>-</td><td><span class="badge bg-' . $cs . '">' . htmlspecialchars($c['clearance_status']) . '</span></td><td>' . htmlspecialchars($c['cleared_by_name'] ?? 'System') . '</td><td>' . htmlspecialchars($c['updated_at'] ?? '-') . '</td><td class="small text-muted">' . htmlspecialchars(mb_substr($c['remarks'] ?? '-', 0, 50)) . '</td></tr>';
             }
         }
     }
 } catch (Exception $e) {}
-echo $clearRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No clearance records found.</td></tr>';
+echo $clearRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No clearance records found.</td></tr>';
 ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+    <script>
+    function searchClearanceStudent(e){
+        if(e.key && e.key !== 'Enter') return;
+        e.preventDefault && e.preventDefault();
+        var q = document.getElementById('clearanceQuery').value.trim();
+        if(!q) return;
+        fetch('../includes/ajax_student_search.php?q='+encodeURIComponent(q))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var el = document.getElementById('clearanceSearchResults');
+            el.innerHTML = '';
+            if(!d||!d.length){ el.innerHTML = '<div class="text-muted small py-2">No students found.</div>'; return; }
+            d.forEach(function(s){
+                var di = document.createElement('div');
+                di.className = 'sri';
+                di.innerHTML = '<strong>'+s.surname+', '+s.first_name+'</strong><br><small class="text-muted">'+s.student_id+' | '+(s.program||'')+'</small>';
+                di.addEventListener('click',function(){ selectClearanceStudent(s); });
+                el.appendChild(di);
+            });
+        }).catch(function(){ document.getElementById('clearanceSearchResults').innerHTML = '<div class="text-danger small">Search failed.</div>'; });
+    }
+    function selectClearanceStudent(s){
+        clearanceStudentId = s.student_id;
+        document.getElementById('clearanceStudentName').textContent = s.surname+', '+s.first_name+' ('+s.student_id+')';
+        document.getElementById('clearanceOutput').classList.remove('d-none');
+        document.getElementById('clearanceSearchResults').innerHTML = '';
+        document.getElementById('clearanceMessage').innerHTML = '';
+        document.getElementById('clearanceRemarks').value = '';
+        fetch('school-bursar.php?view=clearance&ajax=1&sid='+encodeURIComponent(s.student_id))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var badge = document.getElementById('clearanceCurrentStatus');
+            var status = (d&&d.status) ? d.status : 'Pending Review';
+            badge.textContent = status;
+            badge.className = 'badge bg-'+(status==='Cleared'?'success':status==='Not Cleared'?'danger':'warning text-dark');
+        }).catch(function(){});
+        // Load dependency checks
+        fetch('school-bursar.php?view=clearance_deps&ajax=1&sid='+encodeURIComponent(s.student_id))
+        .then(function(r){ return r.json(); })
+        .then(function(deps){
+            var el = document.getElementById('clearanceDeps');
+            el.innerHTML = '';
+            if(!deps||!deps.length){ el.innerHTML = '<div class="col-12"><div class="alert alert-info small py-1 mb-0">No dependencies found.</div></div>'; return; }
+            deps.forEach(function(dp){
+                var st = dp.passed?'success':'danger';
+                var ic = dp.passed?'fa-check-circle':'fa-times-circle';
+                el.innerHTML += '<div class="col-md-3"><div class="p-2 border rounded small"><i class="fas '+ic+' text-'+st+' me-1"></i><strong>'+dp.type+'</strong><br><span class="text-muted">'+dp.detail+'</span></div></div>';
+            });
+        }).catch(function(){});
+    }
+    function setClearance(status){
+        if(!clearanceStudentId) return;
+        var remarks = document.getElementById('clearanceRemarks').value.trim();
+        var form = new FormData();
+        form.append('ajax_clearance', '1');
+        form.append('student_id', clearanceStudentId);
+        form.append('clearance_status', status);
+        form.append('remarks', remarks);
+        fetch('school-bursar.php?view=clearance', {method:'POST', body:form})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var msg = document.getElementById('clearanceMessage');
+            if(d&&d.success){
+                msg.innerHTML = '<div class="alert alert-success py-2 small">'+d.success+'</div>';
+                var badge = document.getElementById('clearanceCurrentStatus');
+                badge.textContent = status;
+                badge.className = 'badge bg-'+(status==='Cleared'?'success':status==='Not Cleared'?'danger':'warning text-dark');
+                setTimeout(function(){ location.reload(); }, 1000);
+            } else {
+                msg.innerHTML = '<div class="alert alert-danger py-2 small">'+(d&&d.error||'Failed')+'</div>';
+            }
+        }).catch(function(){ document.getElementById('clearanceMessage').innerHTML = '<div class="alert alert-danger py-2 small">Request failed.</div>'; });
+    }
+    </script>
     <?php endif; ?>
 
     <!-- ======================== late_payment ======================== -->
@@ -1694,7 +2046,7 @@ echo $clearRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No c
                     $v = $_POST[$k] ?? '';
                     if ($v !== '') {
                         $stmt = $staff->prepare("INSERT INTO late_payment_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_by=VALUES(updated_by)");
-                        if ($stmt) { $stmt->bind_param("ssi", $k, $v, $user['id']); $stmt->execute(); $stmt->close(); }
+                        if ($stmt) { $uidRef = $user['id']; $stmt->bind_param("ssi", $k, $v, $uidRef); $stmt->execute(); $stmt->close(); }
                     }
                 }
                 echo '<div class="alert alert-success">Settings saved.</div>';
@@ -1813,7 +2165,8 @@ echo $refRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No ref
                 $pRemarks = $_POST['approval_remarks'] ?? '';
                 $stmt = $staff->prepare("INSERT INTO payment_approvals (payment_id, payment_type, requested_by, approved_by, approval_status, approval_remarks, approved_at) VALUES (?, 'fee_payment', ?, ?, ?, ?, NOW())");
                 if ($stmt) {
-                    $stmt->bind_param("iiiss", $pId, $user['id'], $user['id'], $pStatus, $pRemarks);
+                    $uidApp = $user['id'];
+                    $stmt->bind_param("iiiss", $pId, $uidApp, $uidApp, $pStatus, $pRemarks);
                     $stmt->execute() ? $_SESSION['success'] = 'Payment ' . strtolower($pStatus) . '.' : $_SESSION['error'] = $stmt->error;
                     $stmt->close();
                 }
@@ -2164,8 +2517,8 @@ function loadStatement(s){
     fetch('school-bursar.php?view=student_statement&ajax=1&sid='+encodeURIComponent(s.student_id))
     .then(function(r){ return r.json(); })
     .then(function(d){
-        var h = '<div class="mb-3 d-flex justify-content-between align-items-center no-print"><h5 class="fw-bold mb-0">Statement: '+s.surname+', '+s.first_name+' ('+s.student_id+')</h5><button class="btn bo btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>';
-        h += '<div class="table-responsive"><table class="table tb"><thead><tr><th>Date</th><th>Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>';
+        var h = '<div class="mb-3 d-flex justify-content-between align-items-center no-print"><h5 class="fw-bold mb-0">Statement: '+s.surname+', '+s.first_name+' ('+s.student_id+')</h5><div class="d-flex gap-2"><button class="btn bo btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button><button class="btn bo btn-sm" onclick="exportStmtExcel()"><i class="fas fa-file-excel me-1"></i>Excel</button></div></div>';
+        h += '<div class="table-responsive"><table class="table tb" id="stmtTable"><thead><tr><th>Date</th><th>Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>';
         var bal = 0;
         h += '<tr class="table-secondary"><td colspan="4"><strong>Opening Balance</strong></td><td><strong>0</strong></td></tr>';
         (d.transactions||[]).forEach(function(tx){
@@ -2280,71 +2633,19 @@ document.addEventListener('DOMContentLoaded', function(){
                     });
                     var s=0; items.forEach(function(el){ s+=parseFloat(el.value)||0; }); total.value=s||'';
                 }
-            }).catch(function(e){ console.warn('[ISNM] Fee fetch failed:', e); });
+            }).catch(function(){});
         });
     }
 });
-// ── Clearance ────────────────────────────────────────────────────
-var clearanceStudentId = '';
-function searchClearanceStudent(e){
-    if(e.key === 'Enter') e.preventDefault();
-    var q = document.getElementById('clearanceQuery').value.trim();
-    if(!q) return;
-    fetch('../includes/ajax_student_search.php?q='+encodeURIComponent(q))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        var el = document.getElementById('clearanceSearchResults');
-        el.innerHTML = '';
-        if(!d||!d.length){ el.innerHTML = '<div class="text-muted small py-2">No students found.</div>'; return; }
-        d.forEach(function(s){
-            var di = document.createElement('div');
-            di.className = 'sri';
-            di.innerHTML = '<strong>'+s.surname+', '+s.first_name+'</strong><br><small class="text-muted">'+s.student_id+' | '+(s.program||'')+'</small>';
-            di.addEventListener('click',function(){ selectClearanceStudent(s); });
-            el.appendChild(di);
-        });
-    }).catch(function(){ document.getElementById('clearanceSearchResults').innerHTML = '<div class="text-danger small">Search failed.</div>'; });
-}
-function selectClearanceStudent(s){
-    clearanceStudentId = s.student_id;
-    document.getElementById('clearanceStudentName').textContent = s.surname+', '+s.first_name+' ('+s.student_id+')';
-    document.getElementById('clearanceOutput').classList.remove('d-none');
-    document.getElementById('clearanceSearchResults').innerHTML = '';
-    document.getElementById('clearanceMessage').innerHTML = '';
-    document.getElementById('clearanceRemarks').value = '';
-    fetch('school-bursar.php?view=clearance&ajax=1&sid='+encodeURIComponent(s.student_id))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        var badge = document.getElementById('clearanceCurrentStatus');
-        var status = (d&&d.status) ? d.status : 'Pending Review';
-        badge.textContent = status;
-        badge.className = 'badge bg-'+(status==='Cleared'?'success':status==='Not Cleared'?'danger':'warning text-dark');
-    }).catch(function(e){ console.warn('[ISNM] Clearance fetch failed:', e); });
-}
-function setClearance(status){
-    if(!clearanceStudentId) return;
-    var remarks = document.getElementById('clearanceRemarks').value.trim();
-    var form = new FormData();
-    form.append('ajax_clearance', '1');
-    form.append('student_id', clearanceStudentId);
-    form.append('clearance_status', status);
-    form.append('remarks', remarks);
-    fetch('school-bursar.php?view=clearance', {method:'POST', body:form})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-        var msg = document.getElementById('clearanceMessage');
-        if(d&&d.success){
-            msg.innerHTML = '<div class="alert alert-success py-2 small">'+d.success+'</div>';
-            var badge = document.getElementById('clearanceCurrentStatus');
-            badge.textContent = status;
-            badge.className = 'badge bg-'+(status==='Cleared'?'success':status==='Not Cleared'?'danger':'warning text-dark');
-            setTimeout(function(){ location.reload(); }, 1000);
-        } else {
-            msg.innerHTML = '<div class="alert alert-danger py-2 small">'+(d&&d.error||'Failed')+'</div>';
-        }
-    }).catch(function(){ document.getElementById('clearanceMessage').innerHTML = '<div class="alert alert-danger py-2 small">Request failed.</div>'; });
-}
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function exportStmtExcel(){
+    var tbl = document.getElementById('stmtTable');
+    if(!tbl) return;
+    var html = '<html><head><meta charset="UTF-8"><title>Student Statement | ISNM</title><style>td,th{border:1px solid #ccc;padding:6px 10px}th{background:#1a237e;color:#fff;font-weight:600}</style></head><body>'+tbl.outerHTML+'</body></html>';
+    var blob = new Blob([html], {type:'application/vnd.ms-excel'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'student_statement_'+new Date().toISOString().slice(0,10)+'.xls'; a.click();
+}
 // ── Requisition actions ──────────────────────────────────────────
 function confirmAction(action, id){
     if(!confirm('Are you sure you want to '+action.replace('_',' ')+' this requisition?')) return;

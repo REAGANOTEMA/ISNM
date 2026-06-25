@@ -125,6 +125,8 @@ function getModuleConfig(): array {
                 ['title' => 'Student Billing',   'route' => 'school-bursar.php?section=generate_invoice','roles' => '*'],
                 ['title' => 'Bulk Billing',      'route' => 'school-bursar.php?section=bulk_billing','roles' => '*'],
                 ['title' => 'Fee Adjustments',   'route' => 'school-bursar.php?section=fee_adjustments','roles' => '*'],
+                ['title' => 'Student Search',    'route' => 'school-bursar.php?section=student_search','roles' => '*'],
+                ['title' => 'Add / Edit Student','route' => 'school-bursar.php?section=student_add','roles' => '*'],
                 ['title' => 'Student Statements','route' => 'school-bursar.php?section=student_statement','roles' => '*'],
             ],
         ],

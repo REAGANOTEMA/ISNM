@@ -25,14 +25,20 @@ if (!$auth_service->canSearchStudentProfiles($role)) {
 }
 
 $search_term = trim($_GET['term'] ?? $_GET['q'] ?? '');
+$program_filter = trim($_GET['program'] ?? '');
+$year_filter = trim($_GET['year'] ?? '');
 
-if (strlen($search_term) < 2) {
+if (strlen($search_term) < 2 && !$program_filter) {
     echo json_encode(['success' => false, 'message' => 'Search term must be at least 2 characters']);
     exit();
 }
 
+$filters = [];
+if ($program_filter) $filters['program'] = $program_filter;
+if ($year_filter) $filters['level'] = $year_filter;
+
 $loader = new StudentDataLoader();
-$students = $loader->searchStudents($search_term);
+$students = $loader->searchStudents($search_term, $filters);
 $results = [];
 
 foreach (array_slice($students, 0, 50) as $student) {
