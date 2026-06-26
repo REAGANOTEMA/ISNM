@@ -17,11 +17,25 @@ $userName = $user['full_name'] ?? 'ICT Director';
 
 header('Content-Type: application/json');
 
+// CSRF protection
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
+    exit;
+}
+
 $action = $_POST['action'] ?? '';
 
 function ictRespond($success, $message, $data = null) {
     echo json_encode(['success' => $success, 'message' => $message, 'data' => $data]);
     exit;
+}
+
+function ictSanitize($value) {
+    if (is_string($value)) {
+        return strip_tags(trim($value));
+    }
+    return $value;
 }
 
 function ictAudit($ict, $userId, $userName, $action, $resourceType, $resourceId, $desc) {
@@ -83,7 +97,9 @@ try {
         case 'delete_asset':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Asset ID required');
-            $ict->query("UPDATE ict_assets SET current_status='retired' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_assets SET current_status='retired' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictAudit($ict, $userId, $userName, 'retire', 'asset', $id, "Retired asset #$id");
             ictRespond(true, 'Asset retired');
             break;
@@ -97,7 +113,9 @@ try {
             $stmt = $ict->prepare("INSERT INTO ict_asset_assignments (asset_id, assigned_to_staff_id, assigned_department, assignment_date, assigned_by) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param('iissi', $aid, $sid, $dept, $date, $userId);
             $stmt->execute();
-            $ict->query("UPDATE ict_assets SET assigned_staff_id=$sid, assigned_department='$dept', current_status='active' WHERE id=$aid");
+            $stmt = $ict->prepare("UPDATE ict_assets SET assigned_staff_id=?, assigned_department=?, current_status='active' WHERE id=?");
+            $stmt->bind_param('isi', $sid, $dept, $aid);
+            $stmt->execute();
             ictAudit($ict, $userId, $userName, 'assign', 'asset', $aid, "Assigned asset #$aid");
             ictRespond(true, 'Asset assigned');
             break;
@@ -112,7 +130,9 @@ try {
             $stmt = $ict->prepare("INSERT INTO ict_asset_maintenance (asset_id, maintenance_type, description, performed_by, cost, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('isssdi', $aid, $type, $desc, $by, $cost, $userId);
             $stmt->execute();
-            $ict->query("UPDATE ict_assets SET current_status='in_maintenance' WHERE id=$aid");
+            $stmt = $ict->prepare("UPDATE ict_assets SET current_status='in_maintenance' WHERE id=?");
+            $stmt->bind_param('i', $aid);
+            $stmt->execute();
             ictRespond(true, 'Maintenance logged');
             break;
 
@@ -147,7 +167,9 @@ try {
         case 'delete_server':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Server ID required');
-            $ict->query("UPDATE ict_servers SET status='decommissioned' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_servers SET status='decommissioned' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictRespond(true, 'Server decommissioned');
             break;
 
@@ -180,7 +202,9 @@ try {
             $id = (int)($_POST['id'] ?? 0);
             $status = $_POST['status'] ?? '';
             if (!$id) ictRespond(false, 'Device ID required');
-            $ict->query("UPDATE ict_wifi_devices SET status='$status' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_wifi_devices SET status=? WHERE id=?");
+            $stmt->bind_param('si', $status, $id);
+            $stmt->execute();
             ictRespond(true, 'WiFi device updated');
             break;
 
@@ -193,8 +217,12 @@ try {
             $stmt->bind_param('sssi', $bname, $btype, $target, $userId);
             $stmt->execute();
             $bid = $ict->insert_id;
-            $ict->query("UPDATE ict_system_backups SET status='completed', completed_at=NOW(), file_size_mb=ROUND(RAND()*100+10,2) WHERE id=$bid");
-            $ict->query("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES ($bid, 'Backup completed successfully', 'info')");
+            $stmt = $ict->prepare("UPDATE ict_system_backups SET status='completed', completed_at=NOW(), file_size_mb=ROUND(RAND()*100+10,2) WHERE id=?");
+            $stmt->bind_param('i', $bid);
+            $stmt->execute();
+            $stmt = $ict->prepare("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES (?, 'Backup completed successfully', 'info')");
+            $stmt->bind_param('i', $bid);
+            $stmt->execute();
             ictAudit($ict, $userId, $userName, 'backup', 'system', $bid, "Created $btype backup: $bname");
             ictRespond(true, 'Backup created', ['id' => $bid]);
             break;
@@ -202,16 +230,24 @@ try {
         case 'verify_backup':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Backup ID required');
-            $ict->query("UPDATE ict_system_backups SET status='verified', verified_at=NOW() WHERE id=$id");
-            $ict->query("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES ($id, 'Backup verified successfully', 'info')");
+            $stmt = $ict->prepare("UPDATE ict_system_backups SET status='verified', verified_at=NOW() WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $stmt = $ict->prepare("INSERT INTO ict_backup_logs (backup_id, log_message, log_level) VALUES (?, 'Backup verified successfully', 'info')");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictRespond(true, 'Backup verified');
             break;
 
         case 'delete_backup':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Backup ID required');
-            $ict->query("DELETE FROM ict_backup_logs WHERE backup_id=$id");
-            $ict->query("DELETE FROM ict_system_backups WHERE id=$id");
+            $stmt = $ict->prepare("DELETE FROM ict_backup_logs WHERE backup_id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $stmt = $ict->prepare("DELETE FROM ict_system_backups WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictRespond(true, 'Backup deleted');
             break;
 
@@ -245,14 +281,18 @@ try {
         case 'acknowledge_alert':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Alert ID required');
-            $ict->query("UPDATE ict_system_alerts SET status='acknowledged', acknowledged_by=$userId, acknowledged_at=NOW() WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_system_alerts SET status='acknowledged', acknowledged_by=?, acknowledged_at=NOW() WHERE id=?");
+            $stmt->bind_param('ii', $userId, $id);
+            $stmt->execute();
             ictRespond(true, 'Alert acknowledged');
             break;
 
         case 'resolve_alert':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Alert ID required');
-            $ict->query("UPDATE ict_system_alerts SET status='resolved', resolved_at=NOW() WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_system_alerts SET status='resolved', resolved_at=NOW() WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictRespond(true, 'Alert resolved');
             break;
 
@@ -272,7 +312,9 @@ try {
         case 'dismiss_notification':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) ictRespond(false, 'Notification ID required');
-            $ict->query("UPDATE ict_system_notifications SET is_dismissed=1 WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE ict_system_notifications SET is_dismissed=1 WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             ictRespond(true, 'Notification dismissed');
             break;
 
@@ -308,10 +350,15 @@ try {
             $status = $_POST['status'] ?? '';
             $firmware = $_POST['firmware_version'] ?? '';
             if (!$id) ictRespond(false, 'Device ID required');
-            $sets = [];
-            if ($status) $sets[] = "status='$status'";
-            if ($firmware) $sets[] = "firmware_version='$firmware'";
-            if (!empty($sets)) $ict->query("UPDATE network_devices SET " . implode(',', $sets) . " WHERE id=$id");
+            $sets = []; $params = []; $types = '';
+            if ($status) { $sets[] = "status=?"; $params[] = $status; $types .= 's'; }
+            if ($firmware) { $sets[] = "firmware_version=?"; $params[] = $firmware; $types .= 's'; }
+            if (!empty($sets)) {
+                $params[] = $id; $types .= 'i';
+                $stmt = $ict->prepare("UPDATE network_devices SET " . implode(',', $sets) . " WHERE id=?");
+                $stmt->bind_param($types, ...$params);
+                $stmt->execute();
+            }
             ictRespond(true, 'Network device updated');
             break;
 
@@ -322,12 +369,17 @@ try {
             $notes = $_POST['resolution_notes'] ?? '';
             $assign = (int)($_POST['assigned_to'] ?? 0);
             if (!$id) ictRespond(false, 'Ticket ID required');
-            $sets = [];
-            if ($status) $sets[] = "status='$status'";
-            if ($notes) $sets[] = "resolution_notes=CONCAT(IFNULL(resolution_notes,''),'\n[$userName] $notes')";
-            if ($assign > 0) $sets[] = "assigned_to=$assign";
-            if ($status === 'resolved') $sets[] = "resolved_at=NOW()";
-            if (!empty($sets)) $ict->query("UPDATE it_support_tickets SET " . implode(',', $sets) . " WHERE id=$id");
+            $sets = []; $params = []; $types = '';
+            if ($status) { $sets[] = "status=?"; $params[] = $status; $types .= 's'; }
+            if ($notes) { $sets[] = "resolution_notes=CONCAT(IFNULL(resolution_notes,''),CONCAT('\n[?] ',?))"; $params[] = $userName; $params[] = $notes; $types .= 'ss'; }
+            if ($assign > 0) { $sets[] = "assigned_to=?"; $params[] = $assign; $types .= 'i'; }
+            if ($status === 'resolved') { $sets[] = "resolved_at=NOW()"; }
+            if (!empty($sets)) {
+                $params[] = $id; $types .= 'i';
+                $stmt = $ict->prepare("UPDATE it_support_tickets SET " . implode(',', $sets) . " WHERE id=?");
+                $stmt->bind_param($types, ...$params);
+                $stmt->execute();
+            }
             ictRespond(true, 'Ticket updated');
             break;
 

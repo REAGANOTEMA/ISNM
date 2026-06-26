@@ -6,6 +6,13 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth-service.php';
 require_once __DIR__ . '/../includes/student_helpers.php';
 
+// Production error handler — convert errors to exceptions, show friendly message
+set_error_handler(function($severity, $message, $file, $line) {
+    if (error_reporting() & $severity) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    }
+});
+
 if (!function_exists('bootstrapStaffDashboard')) {
     /**
      * @param array<int, string> $roleKeywords Empty = any authenticated staff.
@@ -64,6 +71,11 @@ if (!function_exists('bootstrapStaffDashboard')) {
                     }
                 } catch (Exception $e) {}
             }
+        }
+
+        // CSRF token generation
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {

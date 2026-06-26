@@ -63,10 +63,22 @@ if (!empty($_SESSION['user_id'])) {
 <meta name="keywords" content="ISNM, Iganga, Nursing, Midwifery, School, Management, ERP">
 <meta name="author" content="ISNM">
 <meta name="robots" content="noindex, nofollow">
+<meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 <title><?= htmlspecialchars($pageTitle) ?> | ISNM</title>
 <!-- jQuery 3.6 — MUST load before any $ usage -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+window.CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
+// Auto-include CSRF token in all jQuery AJAX POST requests
+$(document).ajaxSend(function(e, xhr, opts) {
+    if (opts.type === 'POST' && window.CSRF_TOKEN) {
+        if (typeof opts.data === 'string' && opts.data.indexOf('csrf_token=') === -1) {
+            opts.data += (opts.data ? '&' : '') + 'csrf_token=' + encodeURIComponent(window.CSRF_TOKEN);
+        } else if (typeof opts.data === 'object' && opts.data && !(opts.data instanceof FormData)) {
+            opts.data.csrf_token = window.CSRF_TOKEN;
+        }
+    }
+});
 (function(){
   window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
 })();

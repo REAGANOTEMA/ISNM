@@ -17,6 +17,18 @@ $userId = $user['id'] ?? 0;
 
 header('Content-Type: application/json');
 
+// CSRF protection
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
+    exit;
+}
+
+function respond($success, $message, $data = null) {
+    echo json_encode(['success' => $success, 'message' => $message, 'data' => $data]);
+    exit;
+}
+
 $action = $_POST['action'] ?? '';
 
 try {
@@ -53,7 +65,9 @@ try {
         case 'delete_lab_room':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Room ID required');
-            $ict->query("UPDATE lab_rooms SET status='inactive' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE lab_rooms SET status='inactive' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Lab room deactivated');
             break;
 
@@ -95,7 +109,9 @@ try {
         case 'delete_computer':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Computer ID required');
-            $ict->query("UPDATE lab_computers SET status='deleted' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE lab_computers SET status='deleted' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Computer removed');
             break;
 
@@ -104,7 +120,10 @@ try {
             $studentId = (int)($_POST['student_id'] ?? 0);
             $expiry = $_POST['expiry_date'] ?? date('Y-m-d', strtotime('+1 year'));
             if (!$studentId) throw new Exception('Student ID required');
-            $stu = $students->query("SELECT id, student_number, registration_number, full_name, program, intake_date, profile_picture, passport_photo FROM students WHERE id = $studentId")->fetch_assoc();
+            $stmt = $students->prepare("SELECT id, student_number, registration_number, full_name, program, intake_date, profile_picture, passport_photo FROM students WHERE id = ? LIMIT 1");
+            $stmt->bind_param('i', $studentId);
+            $stmt->execute();
+            $stu = $stmt->get_result()->fetch_assoc();
             if (!$stu) throw new Exception('Student not found');
             $cardNum = 'ID-' . strtoupper(substr(md5($studentId . time()), 0, 10));
             $photo = $stu['passport_photo'] ?: $stu['profile_picture'] ?: '';
@@ -114,8 +133,12 @@ try {
             $stmt->bind_param('isssssssi', $studentId, $cardNum, $stu['registration_number'], $stu['program'], $intake, $year, $expiry, $photo, $userId);
             $stmt->execute();
             $cardId = $ict->insert_id;
-            $ict->query("INSERT INTO id_card_print_history (card_id, student_id, print_type, printed_by) VALUES ($cardId, $studentId, 'new', $userId)");
-            $ict->query("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = $cardId");
+            $stmt = $ict->prepare("INSERT INTO id_card_print_history (card_id, student_id, print_type, printed_by) VALUES (?, ?, 'new', ?)");
+            $stmt->bind_param('iii', $cardId, $studentId, $userId);
+            $stmt->execute();
+            $stmt = $ict->prepare("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = ?");
+            $stmt->bind_param('i', $cardId);
+            $stmt->execute();
             respond(true, 'ID card generated', ['id' => $cardId, 'card_number' => $cardNum, 'student' => $stu]);
             break;
 
@@ -123,10 +146,17 @@ try {
             $cardId = (int)($_POST['card_id'] ?? 0);
             $reason = $_POST['reason'] ?? 'reprint';
             if (!$cardId) throw new Exception('Card ID required');
-            $card = $ict->query("SELECT * FROM student_id_cards WHERE id = $cardId")->fetch_assoc();
+            $stmt = $ict->prepare("SELECT * FROM student_id_cards WHERE id = ?");
+            $stmt->bind_param('i', $cardId);
+            $stmt->execute();
+            $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Card not found');
-            $ict->query("INSERT INTO id_card_print_history (card_id, student_id, print_type, reason, printed_by) VALUES ($cardId, {$card['student_id']}, 'reprint', '$reason', $userId)");
-            $ict->query("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = $cardId");
+            $stmt = $ict->prepare("INSERT INTO id_card_print_history (card_id, student_id, print_type, reason, printed_by) VALUES (?, ?, 'reprint', ?, ?)");
+            $stmt->bind_param('iiss', $cardId, $card['student_id'], $reason, $userId);
+            $stmt->execute();
+            $stmt = $ict->prepare("UPDATE student_id_cards SET last_print_date = NOW(), print_count = print_count + 1 WHERE id = ?");
+            $stmt->bind_param('i', $cardId);
+            $stmt->execute();
             respond(true, 'Reprint logged');
             break;
 
@@ -135,7 +165,10 @@ try {
             $reason = $_POST['reason'] ?? 'lost';
             $charge = (float)($_POST['charge_amount'] ?? 0);
             if (!$cardId) throw new Exception('Card ID required');
-            $card = $ict->query("SELECT * FROM student_id_cards WHERE id = $cardId")->fetch_assoc();
+            $stmt = $ict->prepare("SELECT * FROM student_id_cards WHERE id = ?");
+            $stmt->bind_param('i', $cardId);
+            $stmt->execute();
+            $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Original card not found');
             $cardNum = 'ID-' . strtoupper(substr(md5($card['student_id'] . time()), 0, 10));
             $expiry = date('Y-m-d', strtotime('+1 year'));
@@ -147,14 +180,19 @@ try {
             $stmt = $ict->prepare("INSERT INTO id_card_replacements (student_id, original_card_id, reason, charge_amount, approved_by, new_card_id, status) VALUES (?, ?, ?, ?, ?, ?, 'approved')");
             $stmt->bind_param('iisiii', $card['student_id'], $cardId, $reason, $charge, $userId, $newId);
             $stmt->execute();
-            $ict->query("UPDATE student_id_cards SET status='replaced' WHERE id = $cardId");
+            $stmt = $ict->prepare("UPDATE student_id_cards SET status='replaced' WHERE id = ?");
+            $stmt->bind_param('i', $cardId);
+            $stmt->execute();
             respond(true, 'Card replacement created', ['new_card_id' => $newId, 'card_number' => $cardNum]);
             break;
 
         case 'verify_id_card':
             $cardNum = $_POST['card_number'] ?? '';
             if (!$cardNum) throw new Exception('Card number required');
-            $card = $ict->query("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschoolofl_students_db.students s ON c.student_id = s.id WHERE c.card_number = '$cardNum'")->fetch_assoc();
+            $stmt = $ict->prepare("SELECT c.*, s.full_name, s.student_number FROM student_id_cards c JOIN igangaschoolofl_students_db.students s ON c.student_id = s.id WHERE c.card_number = ? LIMIT 1");
+            $stmt->bind_param('s', $cardNum);
+            $stmt->execute();
+            $card = $stmt->get_result()->fetch_assoc();
             if (!$card) throw new Exception('Card not found');
             respond(true, 'Card verified', $card);
             break;
@@ -198,7 +236,9 @@ try {
         case 'delete_practical_session':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Session ID required');
-            $ict->query("UPDATE lab_practical_sessions SET status='cancelled' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE lab_practical_sessions SET status='cancelled' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Session cancelled');
             break;
 
@@ -224,11 +264,16 @@ try {
             $date = $_POST['attendance_date'] ?? date('Y-m-d');
             $ids = array_map('intval', explode(',', $students));
             $count = 0;
+            $checkStmt = $ict->prepare("SELECT id FROM lab_attendance WHERE student_id=? AND session_id=? AND attendance_date=?");
+            $insertStmt = $ict->prepare("INSERT INTO lab_attendance (student_id, lab_room_id, session_id, attendance_date, time_in, status, marked_by) VALUES (?, ?, ?, ?, NOW(), 'present', ?)");
             foreach ($ids as $sid) {
                 if ($sid <= 0) continue;
-                $check = $ict->query("SELECT id FROM lab_attendance WHERE student_id=$sid AND session_id=$sessionId AND attendance_date='$date'");
+                $checkStmt->bind_param('iis', $sid, $sessionId, $date);
+                $checkStmt->execute();
+                $check = $checkStmt->get_result();
                 if ($check && $check->num_rows === 0) {
-                    $ict->query("INSERT INTO lab_attendance (student_id, lab_room_id, session_id, attendance_date, time_in, status, marked_by) VALUES ($sid, $roomId, $sessionId, '$date', NOW(), 'present', $userId)");
+                    $insertStmt->bind_param('iiisi', $sid, $roomId, $sessionId, $date, $userId);
+                    $insertStmt->execute();
                     $count++;
                 }
             }
@@ -273,7 +318,9 @@ try {
         case 'delete_equipment':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Equipment ID required');
-            $ict->query("UPDATE lab_equipment SET status='retired' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE lab_equipment SET status='retired' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Equipment retired');
             break;
 
@@ -287,7 +334,9 @@ try {
             $stmt = $ict->prepare("INSERT INTO lab_equipment_checkout (equipment_id, checked_out_to, borrower_type, borrower_id, checkout_date, expected_return, checked_out_by) VALUES (?, ?, ?, ?, NOW(), ?, ?)");
             $stmt->bind_param('issiii', $eqId, $to, $type, $borrowerId, $returnDate, $userId);
             $stmt->execute();
-            $ict->query("UPDATE lab_equipment SET status='in_use' WHERE id=$eqId");
+            $stmt = $ict->prepare("UPDATE lab_equipment SET status='in_use' WHERE id=?");
+            $stmt->bind_param('i', $eqId);
+            $stmt->execute();
             respond(true, 'Equipment checked out');
             break;
 
@@ -298,8 +347,15 @@ try {
             $stmt = $ict->prepare("UPDATE lab_equipment_checkout SET actual_return=NOW(), condition_at_return=?, status='returned' WHERE id=?");
             $stmt->bind_param('si', $condition, $checkoutId);
             $stmt->execute();
-            $co = $ict->query("SELECT equipment_id FROM lab_equipment_checkout WHERE id=$checkoutId")->fetch_assoc();
-            if ($co) $ict->query("UPDATE lab_equipment SET status='available' WHERE id={$co['equipment_id']}");
+            $stmt = $ict->prepare("SELECT equipment_id FROM lab_equipment_checkout WHERE id=?");
+            $stmt->bind_param('i', $checkoutId);
+            $stmt->execute();
+            $co = $stmt->get_result()->fetch_assoc();
+            if ($co) {
+                $stmt = $ict->prepare("UPDATE lab_equipment SET status='available' WHERE id=?");
+                $stmt->bind_param('i', $co['equipment_id']);
+                $stmt->execute();
+            }
             respond(true, 'Equipment returned');
             break;
 
@@ -314,7 +370,10 @@ try {
             $printType = $_POST['print_type'] ?? 'bw';
             $paperSize = $_POST['paper_size'] ?? 'A4';
             if (!$reqName || $pages < 1) throw new Exception('Requester name and valid page count required');
-            $chargeRow = $ict->query("SELECT charge_per_page FROM printing_charges WHERE print_type='$printType' AND paper_size='$paperSize' AND is_active=1 LIMIT 1")->fetch_assoc();
+            $stmt = $ict->prepare("SELECT charge_per_page FROM printing_charges WHERE print_type=? AND paper_size=? AND is_active=1 LIMIT 1");
+            $stmt->bind_param('ss', $printType, $paperSize);
+            $stmt->execute();
+            $chargeRow = $stmt->get_result()->fetch_assoc();
             $chargePerPage = $chargeRow ? (float)$chargeRow['charge_per_page'] : 0;
             $total = $chargePerPage * $pages * $copies;
             $num = 'PRT-' . strtoupper(substr(md5(time()), 0, 8));
@@ -327,14 +386,18 @@ try {
         case 'complete_print_job':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Job ID required');
-            $ict->query("UPDATE printing_jobs SET status='completed', printed_by=$userId, printed_at=NOW() WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE printing_jobs SET status='completed', printed_by=?, printed_at=NOW() WHERE id=?");
+            $stmt->bind_param('ii', $userId, $id);
+            $stmt->execute();
             respond(true, 'Print job completed');
             break;
 
         case 'cancel_print_job':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Job ID required');
-            $ict->query("UPDATE printing_jobs SET status='cancelled' WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE printing_jobs SET status='cancelled' WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Print job cancelled');
             break;
 
@@ -342,7 +405,9 @@ try {
             $id = (int)($_POST['id'] ?? 0);
             $charge = (float)($_POST['charge_per_page'] ?? 0);
             if (!$id) throw new Exception('Charge ID required');
-            $ict->query("UPDATE printing_charges SET charge_per_page=$charge, updated_by=$userId WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE printing_charges SET charge_per_page=?, updated_by=? WHERE id=?");
+            $stmt->bind_param('dii', $charge, $userId, $id);
+            $stmt->execute();
             respond(true, 'Printing charge updated');
             break;
 
@@ -370,15 +435,9 @@ try {
             $cost = (float)($_POST['cost'] ?? 0);
             $technician = $_POST['assigned_technician'] ?? '';
             if (!$id) throw new Exception('Repair ID required');
-            $set = "status='$statusR'";
-            if ($diagnosis) $set .= ", diagnosis='$diagnosis'";
-            if ($resolution) $set .= ", resolution='$resolution'";
-            if ($parts) $set .= ", parts_replaced='$parts'";
-            if ($cost > 0) $set .= ", cost=$cost";
-            if ($technician) $set .= ", assigned_technician='$technician'";
-            if ($statusR === 'diagnosed') $set .= ", diagnosed_date=NOW()";
-            if ($statusR === 'completed' || $statusR === 'closed') $set .= ", completed_date=NOW()";
-            $ict->query("UPDATE computer_repairs SET $set WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE computer_repairs SET status=?, diagnosis=?, resolution=?, parts_replaced=?, cost=?, assigned_technician=?" . ($statusR === 'diagnosed' ? ", diagnosed_date=NOW()" : "") . ($statusR === 'completed' || $statusR === 'closed' ? ", completed_date=NOW()" : "") . " WHERE id=?");
+            $stmt->bind_param('ssssdsi', $statusR, $diagnosis, $resolution, $parts, $cost, $technician, $id);
+            $stmt->execute();
             respond(true, 'Repair updated');
             break;
 
@@ -414,7 +473,9 @@ try {
         case 'delete_software':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Software ID required');
-            $ict->query("DELETE FROM software_inventory WHERE id=$id");
+            $stmt = $ict->prepare("DELETE FROM software_inventory WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Software deleted');
             break;
 
@@ -448,14 +509,18 @@ try {
             $id = (int)($_POST['id'] ?? 0);
             $qty = (int)($_POST['quantity'] ?? 0);
             if (!$id) throw new Exception('Item ID required');
-            $ict->query("UPDATE lab_consumables SET quantity=$qty WHERE id=$id");
+            $stmt = $ict->prepare("UPDATE lab_consumables SET quantity=? WHERE id=?");
+            $stmt->bind_param('ii', $qty, $id);
+            $stmt->execute();
             respond(true, 'Stock updated');
             break;
 
         case 'delete_consumable':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) throw new Exception('Item ID required');
-            $ict->query("DELETE FROM lab_consumables WHERE id=$id");
+            $stmt = $ict->prepare("DELETE FROM lab_consumables WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
             respond(true, 'Consumable deleted');
             break;
 
@@ -475,9 +540,4 @@ try {
     }
 } catch (Exception $e) {
     respond(false, $e->getMessage());
-}
-
-function respond($success, $message, $data = null) {
-    echo json_encode(['success' => $success, 'message' => $message, 'data' => $data]);
-    exit;
 }
