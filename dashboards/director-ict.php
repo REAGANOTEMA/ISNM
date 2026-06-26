@@ -74,7 +74,6 @@ $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER B
 $pending_tickets = ict_fetch($ict, "SELECT * FROM it_support_tickets WHERE status IN ('open','in_progress') ORDER BY FIELD(priority,'critical','high','medium','low'), created_at DESC LIMIT 15");
 
 $tab = $_GET['tab'] ?? 'dashboard';
-$section = $_GET['section'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">

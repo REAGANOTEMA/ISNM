@@ -60,19 +60,23 @@
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# ── URL rewrites ─────────────────────────────────────────────
+# ── URL Routing & Security Rules ─────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Redirect /favicon.ico to school logo
-    RewriteRule ^favicon\.ico$ images/school-logo.png [L,R=301]
+    # Block Chrome extension paths that don't belong to ISNM
+    RewriteRule ^writing/ - [R=404,L]
+    RewriteRule ^site_integration/ - [R=404,L]
+    RewriteRule ^generate/ - [R=404,L]
 
-    # Director General Dashboard Routes
+    # Redirect /director and /director/ to overview
     RewriteRule ^director/?$ /director/overview [R=301,L]
+    # Map /director/{page} → dashboards/director-general.php?page={page}
     RewriteRule ^director/([a-z]+)/?$ dashboards/director-general.php?page=$1 [L,QSA]
 
-    # CEO Dashboard Routes
+    # Redirect /ceo and /ceo/ to overview
     RewriteRule ^ceo/?$ /ceo/overview [R=301,L]
+    # Map /ceo/{page} → dashboards/director-general.php?page={page}&dg_role=ceo
     RewriteRule ^ceo/([a-z]+)/?$ dashboards/director-general.php?page=$1&dg_role=ceo [L,QSA]
 </IfModule>
 

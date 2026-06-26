@@ -490,9 +490,7 @@
     // PWA Install Prompt Handler
     var deferredPrompt;
     window.addEventListener('beforeinstallprompt', function (e) {
-      e.preventDefault();
       deferredPrompt = e;
-      // Show a small install button in the footer
       var btn = document.getElementById('pwaInstallBtn');
       if (btn) btn.style.display = 'inline-block';
     });

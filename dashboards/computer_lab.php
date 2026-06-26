@@ -65,7 +65,6 @@ $installations = lab_fetch($ict, "SELECT si.*, sw.software_name, c.computer_name
 $assignments  = lab_fetch($ict, "SELECT a.*, c.computer_name FROM lab_computer_assignments a LEFT JOIN lab_computers c ON a.computer_id=c.id WHERE a.status='active' ORDER BY a.assigned_date DESC");
 
 $section = $_GET['section'] ?? 'dashboard';
-$section = $_GET['section'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
