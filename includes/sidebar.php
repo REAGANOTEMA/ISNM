@@ -105,11 +105,23 @@ $pageGroupAllowList = [
     'academic-registrar.php'=> $registrarGroups,
 ];
 
-// When on a page in the allow list, restrict modules to those groups only
+// Each page shows ONLY module groups that link to it (auto-detect) or are explicitly allow-listed
 $allowedGroups = $pageGroupAllowList[$currentPage] ?? null;
 if ($allowedGroups) {
     $modules = array_values(array_filter($modules, function($m) use ($allowedGroups) {
         return in_array($m['title'], $allowedGroups);
+    }));
+} else {
+    // Auto-detect: only show modules whose children point to this page
+    $modules = array_values(array_filter($modules, function($m) use ($currentPage) {
+        foreach ($m['children'] as $child) {
+            $cr = $child['route'];
+            $hp = strpos($cr, '#');
+            $cmp = $hp !== false ? substr($cr, 0, $hp) : $cr;
+            if (($qp = strpos($cmp, '?')) !== false) $cmp = substr($cmp, 0, $qp);
+            if (basename($cmp) === $currentPage) return true;
+        }
+        return false;
     }));
 }
 
