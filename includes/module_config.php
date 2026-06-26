@@ -332,28 +332,69 @@ function getModuleConfig(): array {
         [
             'title'    => 'ICT',
             'icon'     => 'fas fa-laptop-code',
-            'roles'    => ['director','ict','it','lab','system admin','principal'],
+            'roles'    => ['director','ict','it','system admin','principal'],
             'children' => [
-                ['title' => 'Director ICT',          'route' => 'director-ict.php',                   'roles' => ['director','ict','it']],
-                ['title' => 'ICT Overview',          'route' => 'director-ict.php#overview',           'roles' => ['director','ict','it']],
-                ['title' => 'Computer Lab',          'route' => 'director-ict.php#computers',          'roles' => ['director','ict','it','lab manager']],
-                ['title' => 'Support Tickets',       'route' => 'director-ict.php#tickets',            'roles' => ['director','ict','it']],
-                ['title' => 'Lab Bookings',          'route' => 'director-ict.php#bookings',           'roles' => ['director','ict','it','lecturer']],
-                ['title' => 'Network Devices',       'route' => 'director-ict.php#network',            'roles' => ['director','ict','it']],
-                ['title' => 'Software Inventory',    'route' => 'director-ict.php#software',           'roles' => ['director','ict','it']],
-                ['title' => 'Maintenance Logs',      'route' => 'director-ict.php#maintenance',        'roles' => ['director','ict','it']],
-                ['title' => 'ICT Reports',           'route' => 'director-ict.php#reports',             'roles' => ['director','ict','it']],
-                ['title' => 'ICT News',              'route' => 'director-ict.php#news',              'roles' => ['director','ict','it']],
-                ['title' => 'Official Duties',       'route' => 'director-ict.php#duties',            'roles' => ['director','ict','it']],
-                ['title' => 'Quick Actions',         'route' => 'director-ict.php#actions',           'roles' => ['director','ict','it']],
-                ['title' => 'ICT Students',          'route' => 'director-ict.php#students',          'roles' => ['director','ict','it']],
-                ['title' => 'Computer Lab',          'route' => 'computer_lab.php',                   'roles' => ['director','ict','it','lab manager']],
-                ['title' => 'Digital Learning',      'route' => 'digital-learning.php',               'roles' => ['director','ict','it','lecturer']],
-                ['title' => 'Cybersecurity',         'route' => 'cybersecurity.php',                  'roles' => ['director','ict','it']],
-                ['title' => 'ICT Policy',            'route' => 'ict-policy.php',                     'roles' => ['director','ict','it']],
-                ['title' => 'System Administration', 'route' => 'system-admin.php',                   'roles' => ['director','ict','it','system admin']],
-                ['title' => 'IT Support Tickets',    'route' => 'it-support-tickets.php',             'roles' => ['director','ict','it','lab manager']],
-                ['title' => 'Lab Booking Management','route' => 'lab-booking-management.php',         'roles' => ['director','ict','it','lecturer','lab manager']],
+                // ── Dashboard ──
+                ['title' => 'ICT Dashboard',           'route' => 'director-ict.php',                     'roles' => ['director','ict','it','system admin']],
+                ['title' => 'System Status',            'route' => 'director-ict.php?tab=dashboard',        'roles' => ['director','ict','it']],
+                ['title' => 'Critical Alerts',          'route' => 'director-ict.php?tab=security#alerts', 'roles' => ['director','ict','it']],
+                ['title' => 'Notifications',            'route' => 'director-ict.php?tab=monitoring',      'roles' => ['director','ict','it']],
+                // ── ICT Administration ──
+                ['title' => 'ICT Staff',                'route' => '../staff-directory.php',                'roles' => ['director','ict','it']],
+                ['title' => 'ICT Policies',             'route' => '../ict-policy.php',                    'roles' => ['director','ict','it']],
+                // ── ICT Asset Management ──
+                ['title' => 'Asset Register',           'route' => 'director-ict.php?tab=assets',           'roles' => ['director','ict','it']],
+                ['title' => 'Asset Assignments',        'route' => 'director-ict.php?tab=assets#assign',    'roles' => ['director','ict','it']],
+                ['title' => 'Asset Maintenance',        'route' => 'director-ict.php?tab=assets#maint',     'roles' => ['director','ict','it']],
+                ['title' => 'Asset Categories',         'route' => 'director-ict.php?tab=settings#cats',    'roles' => ['director','ict','it']],
+                // ── Infrastructure Management ──
+                ['title' => 'Infrastructure',           'route' => 'director-ict.php?tab=infrastructure',   'roles' => ['director','ict','it']],
+                ['title' => 'Servers',                  'route' => 'director-ict.php?tab=infrastructure',   'roles' => ['director','ict','it']],
+                ['title' => 'Network Devices',          'route' => 'director-ict.php?tab=infrastructure',   'roles' => ['director','ict','it']],
+                ['title' => 'WiFi Management',          'route' => 'director-ict.php?tab=infrastructure#wifi','roles' => ['director','ict','it']],
+                ['title' => 'Network Logs',             'route' => 'director-ict.php?tab=infrastructure#logs','roles' => ['director','ict','it']],
+                // ── User & Access Management ──
+                ['title' => 'User Management',          'route' => 'director-ict.php?tab=users',             'roles' => ['director','ict','it','system admin']],
+                ['title' => 'Staff Accounts',           'route' => 'director-ict.php?tab=users',             'roles' => ['director','ict','it']],
+                ['title' => 'Login Sessions',           'route' => 'director-ict.php?tab=users#logins',      'roles' => ['director','ict','it']],
+                // ── ERP System Management ──
+                ['title' => 'ERP System',               'route' => 'director-ict.php?tab=erp',              'roles' => ['director','ict','it','system admin']],
+                ['title' => 'Module Permissions',       'route' => 'director-ict.php?tab=erp',              'roles' => ['director','ict','it']],
+                ['title' => 'System Config',            'route' => 'director-ict.php?tab=erp',              'roles' => ['director','ict','it','system admin']],
+                // ── Website & Portal ──
+                ['title' => 'Website & Portal',          'route' => 'director-ict.php?tab=website',           'roles' => ['director','ict','it']],
+                ['title' => 'Website Status',            'route' => 'director-ict.php?tab=website',           'roles' => ['director','ict','it']],
+                ['title' => 'News & Updates',            'route' => 'director-ict.php?tab=website',           'roles' => ['director','ict','it']],
+                // ── Approvals ──
+                ['title' => 'ICT Approvals',             'route' => 'director-ict.php?tab=approvals',         'roles' => ['director','ict','it']],
+                ['title' => 'Pending Approvals',         'route' => 'director-ict.php?tab=approvals',         'roles' => ['director','ict','it']],
+                // ── Database Management ──
+                ['title' => 'Database Info',            'route' => 'director-ict.php?tab=dashboard#db',     'roles' => ['director','ict','it']],
+                ['title' => 'Backups & Recovery',       'route' => 'director-ict.php?tab=backups',          'roles' => ['director','ict','it','system admin']],
+                ['title' => 'Backup History',           'route' => 'director-ict.php?tab=backups#history',  'roles' => ['director','ict','it']],
+                // ── Help Desk ──
+                ['title' => 'Help Desk',                'route' => 'director-ict.php?tab=helpdesk',         'roles' => ['director','ict','it']],
+                ['title' => 'Support Tickets',          'route' => 'director-ict.php?tab=helpdesk',         'roles' => ['director','ict','it']],
+                ['title' => 'Security Logs',            'route' => 'director-ict.php?tab=helpdesk#security','roles' => ['director','ict','it']],
+                // ── Cybersecurity ──
+                ['title' => 'Security Dashboard',       'route' => 'director-ict.php?tab=security',         'roles' => ['director','ict','it','system admin']],
+                ['title' => 'Security Events',          'route' => 'director-ict.php?tab=security',         'roles' => ['director','ict','it']],
+                ['title' => 'Failed Logins',            'route' => 'director-ict.php?tab=security#logins',  'roles' => ['director','ict','it']],
+                ['title' => 'Audit Trail',              'route' => 'director-ict.php?tab=security#audit',   'roles' => ['director','ict','it']],
+                ['title' => 'Active Alerts',            'route' => 'director-ict.php?tab=security#alerts',  'roles' => ['director','ict','it']],
+                // ── Monitoring ──
+                ['title' => 'System Monitoring',        'route' => 'director-ict.php?tab=monitoring',       'roles' => ['director','ict','it']],
+                ['title' => 'System Health',            'route' => 'director-ict.php?tab=monitoring#health','roles' => ['director','ict','it']],
+                // ── ICT Reports ──
+                ['title' => 'ICT Reports',              'route' => '../ict-policy.php',                     'roles' => ['director','ict','it','principal']],
+                // ── Settings ──
+                ['title' => 'ICT Settings',             'route' => 'director-ict.php?tab=settings',         'roles' => ['director','ict','it','system admin']],
+                ['title' => 'Security Settings',         'route' => 'director-ict.php?tab=settings#security','roles' => ['director','ict','it','system admin']],
+                // ── External dashboards (oversight, not daily mgmt) ──
+                ['title' => 'Computer Lab (Oversight)', 'route' => '../computer_lab.php',                  'roles' => ['director','ict','it']],
+                ['title' => 'Cybersecurity',            'route' => '../cybersecurity.php',                  'roles' => ['director','ict','it']],
+                ['title' => 'ICT Policy',               'route' => '../ict-policy.php',                    'roles' => ['director','ict','it']],
+                ['title' => 'System Administration',    'route' => '../system-admin.php',                  'roles' => ['director','ict','it','system admin']],
             ],
         ],
         [

@@ -204,18 +204,18 @@ $dashboardMap = [
     'ict-policy.php'        => ['title' => 'ICT Policy',               'icon' => 'fas fa-file-alt'],
     'computer_lab.php'      => ['title' => 'Computer Lab Manager',      'icon' => 'fas fa-desktop',
         'children' => [
-            ['title' => 'Overview',              'route' => 'computer_lab.php?tab=dashboard',            'roles' => '*'],
-            ['title' => 'Student ID Cards',      'route' => 'computer_lab.php?tab=id-cards',             'roles' => '*'],
-            ['title' => 'Computers & Lab',       'route' => 'computer_lab.php?tab=computers',            'roles' => '*'],
-            ['title' => 'Practical Sessions',    'route' => 'computer_lab.php?tab=sessions',             'roles' => '*'],
-            ['title' => 'Equipment',             'route' => 'computer_lab.php?tab=equipment',            'roles' => '*'],
-            ['title' => 'Printing Centre',       'route' => 'computer_lab.php?tab=printing',             'roles' => '*'],
-            ['title' => 'Technical Support',     'route' => 'computer_lab.php?tab=support',              'roles' => '*'],
-            ['title' => 'Software',              'route' => 'computer_lab.php?tab=software',             'roles' => '*'],
-            ['title' => 'Inventory',             'route' => 'computer_lab.php?tab=inventory',            'roles' => '*'],
-            ['title' => 'Attendance',            'route' => 'computer_lab.php?tab=attendance',           'roles' => '*'],
-            ['title' => 'Reports',               'route' => 'computer_lab.php?tab=reports',              'roles' => '*'],
-            ['title' => 'Settings',              'route' => 'computer_lab.php?tab=settings',             'roles' => '*'],
+            ['title' => 'Overview',              'route' => 'computer_lab.php?section=dashboard',        'roles' => '*'],
+            ['title' => 'Student ID Cards',      'route' => 'computer_lab.php?section=id-cards',         'roles' => '*'],
+            ['title' => 'Computers & Lab',       'route' => 'computer_lab.php?section=computers',        'roles' => '*'],
+            ['title' => 'Practical Sessions',    'route' => 'computer_lab.php?section=sessions',         'roles' => '*'],
+            ['title' => 'Equipment',             'route' => 'computer_lab.php?section=equipment',        'roles' => '*'],
+            ['title' => 'Printing Centre',       'route' => 'computer_lab.php?section=printing',         'roles' => '*'],
+            ['title' => 'Technical Support',     'route' => 'computer_lab.php?section=support',          'roles' => '*'],
+            ['title' => 'Software',              'route' => 'computer_lab.php?section=software',         'roles' => '*'],
+            ['title' => 'Inventory',             'route' => 'computer_lab.php?section=inventory',        'roles' => '*'],
+            ['title' => 'Attendance',            'route' => 'computer_lab.php?section=attendance',       'roles' => '*'],
+            ['title' => 'Reports',               'route' => 'computer_lab.php?section=reports',          'roles' => '*'],
+            ['title' => 'Settings',              'route' => 'computer_lab.php?section=settings',         'roles' => '*'],
         ],
     ],
     'it-support-tickets.php'=> ['title' => 'IT Support Tickets',       'icon' => 'fas fa-ticket-alt'],
@@ -624,6 +624,175 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                 <div class="menu-children-inner">
                     <a href="hr-manager.php#settings" class="child-link" data-section="settings"><span class="child-bullet"></span><span class="child-label">Departments</span></a>
                     <a href="staff-directory.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Roles</span></a>
+                </div>
+            </div>
+        </div>
+        <?php elseif ($currentPage === 'director-ict.php'): ?>
+        <!-- ═══ DIRECTOR ICT — PROFESSIONAL SIDEBAR ═══ -->
+        <div class="menu-divider"><span><i class="fas fa-chart-pie" style="color:#3b82f6;"></i> A. ICT DASHBOARD</span></div>
+        <div class="menu-group expanded" data-group="dashboard">
+            <div class="menu-group-header" data-target="dashboard" style="cursor:pointer" onclick="switchToSection('dashboard')"><span class="menu-icon"><i class="fas fa-home"></i></span><span class="menu-label">Dashboard</span><span class="menu-chevron" style="visibility:hidden"><i class="fas fa-chevron-down"></i></span></div>
+        </div>
+        <div class="menu-group" data-group="monitoring">
+            <div class="menu-group-header" data-target="monitoring"><span class="menu-icon"><i class="fas fa-heartbeat"></i></span><span class="menu-label">System Status</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-monitoring" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=monitoring" class="child-link"><span class="child-bullet"></span><span class="child-label">Live Monitor</span></a>
+                    <a href="director-ict.php?tab=monitoring#health" class="child-link"><span class="child-bullet"></span><span class="child-label">System Health</span></a>
+                    <a href="director-ict.php?tab=backups" class="child-link"><span class="child-bullet"></span><span class="child-label">Database Info</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-cogs" style="color:#059669;"></i> B. ICT ADMIN</span></div>
+        <div class="menu-group" data-group="admin">
+            <div class="menu-group-header" data-target="admin"><span class="menu-icon"><i class="fas fa-users-cog"></i></span><span class="menu-label">Administration</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-admin" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="../staff-directory.php" class="child-link"><span class="child-bullet"></span><span class="child-label">ICT Staff</span></a>
+                    <a href="../ict-policy.php" class="child-link"><span class="child-bullet"></span><span class="child-label">ICT Policies</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-boxes" style="color:#7c3aed;"></i> C. ICT ASSETS</span></div>
+        <div class="menu-group" data-group="assets">
+            <div class="menu-group-header" data-target="assets"><span class="menu-icon"><i class="fas fa-boxes"></i></span><span class="menu-label">Asset Management</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-assets" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=assets" class="child-link"><span class="child-bullet"></span><span class="child-label">Asset Register</span></a>
+                    <a href="director-ict.php?tab=assets#assign" class="child-link"><span class="child-bullet"></span><span class="child-label">Assignments</span></a>
+                    <a href="director-ict.php?tab=assets#maint" class="child-link"><span class="child-bullet"></span><span class="child-label">Maintenance</span></a>
+                    <a href="director-ict.php?tab=settings#cats" class="child-link"><span class="child-bullet"></span><span class="child-label">Categories</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-server" style="color:#0891b2;"></i> D. INFRASTRUCTURE</span></div>
+        <div class="menu-group" data-group="infrastructure">
+            <div class="menu-group-header" data-target="infrastructure"><span class="menu-icon"><i class="fas fa-server"></i></span><span class="menu-label">Infrastructure</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-infrastructure" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=infrastructure" class="child-link"><span class="child-bullet"></span><span class="child-label">Servers</span></a>
+                    <a href="director-ict.php?tab=infrastructure" class="child-link"><span class="child-bullet"></span><span class="child-label">Network Devices</span></a>
+                    <a href="director-ict.php?tab=infrastructure#wifi" class="child-link"><span class="child-bullet"></span><span class="child-label">WiFi APs</span></a>
+                    <a href="director-ict.php?tab=infrastructure#logs" class="child-link"><span class="child-bullet"></span><span class="child-label">Network Logs</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-headset" style="color:#f59e0b;"></i> E. HELP DESK</span></div>
+        <div class="menu-group" data-group="helpdesk">
+            <div class="menu-group-header" data-target="helpdesk"><span class="menu-icon"><i class="fas fa-headset"></i></span><span class="menu-label">Help Desk</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-helpdesk" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=helpdesk" class="child-link"><span class="child-bullet"></span><span class="child-label">Support Tickets</span></a>
+                    <a href="director-ict.php?tab=helpdesk#security" class="child-link"><span class="child-bullet"></span><span class="child-label">Security Logs</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-shield-alt" style="color:#dc2626;"></i> F. CYBERSECURITY</span></div>
+        <div class="menu-group" data-group="cyber">
+            <div class="menu-group-header" data-target="cyber"><span class="menu-icon"><i class="fas fa-shield-alt"></i></span><span class="menu-label">Security</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-cyber" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=security" class="child-link"><span class="child-bullet"></span><span class="child-label">Security Events</span></a>
+                    <a href="director-ict.php?tab=security#logins" class="child-link"><span class="child-bullet"></span><span class="child-label">Failed Logins</span></a>
+                    <a href="director-ict.php?tab=security#audit" class="child-link"><span class="child-bullet"></span><span class="child-label">Audit Trail</span></a>
+                    <a href="director-ict.php?tab=security#alerts" class="child-link"><span class="child-bullet"></span><span class="child-label">Alerts</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-hdd" style="color:#8b5cf6;"></i> G. BACKUPS & RECOVERY</span></div>
+        <div class="menu-group" data-group="backups">
+            <div class="menu-group-header" data-target="backups"><span class="menu-icon"><i class="fas fa-hdd"></i></span><span class="menu-label">Backups</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-backups" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=backups" class="child-link"><span class="child-bullet"></span><span class="child-label">Backup History</span></a>
+                    <a href="director-ict.php?tab=backups#logs" class="child-link"><span class="child-bullet"></span><span class="child-label">Backup Logs</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-chart-bar" style="color:#7c3aed;"></i> H. REPORTS</span></div>
+        <div class="menu-group" data-group="reports">
+            <div class="menu-group-header" data-target="reports"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Reports</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-reports" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="../ict-policy.php" class="child-link"><span class="child-bullet"></span><span class="child-label">ICT Reports</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-users-cog" style="color:#3b82f6;"></i> J. USERS & ACCESS</span></div>
+        <div class="menu-group" data-group="users">
+            <div class="menu-group-header" data-target="users"><span class="menu-icon"><i class="fas fa-users-cog"></i></span><span class="menu-label">User Management</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-users" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=users" class="child-link"><span class="child-bullet"></span><span class="child-label">Staff Accounts</span></a>
+                    <a href="director-ict.php?tab=users#logins" class="child-link"><span class="child-bullet"></span><span class="child-label">Login Sessions</span></a>
+                    <a href="director-ict.php?tab=users#logins" class="child-link"><span class="child-bullet"></span><span class="child-label">Failed Logins</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-cubes" style="color:#059669;"></i> K. ERP SYSTEM</span></div>
+        <div class="menu-group" data-group="erp">
+            <div class="menu-group-header" data-target="erp"><span class="menu-icon"><i class="fas fa-cubes"></i></span><span class="menu-label">ERP Management</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-erp" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=erp" class="child-link"><span class="child-bullet"></span><span class="child-label">Module Permissions</span></a>
+                    <a href="director-ict.php?tab=erp" class="child-link"><span class="child-bullet"></span><span class="child-label">System Config</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-globe" style="color:#0891b2;"></i> L. WEBSITE & PORTAL</span></div>
+        <div class="menu-group" data-group="website">
+            <div class="menu-group-header" data-target="website"><span class="menu-icon"><i class="fas fa-globe"></i></span><span class="menu-label">Website & Portal</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-website" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=website" class="child-link"><span class="child-bullet"></span><span class="child-label">Website Status</span></a>
+                    <a href="director-ict.php?tab=website" class="child-link"><span class="child-bullet"></span><span class="child-label">News & Updates</span></a>
+                    <a href="director-ict.php?tab=website" class="child-link"><span class="child-bullet"></span><span class="child-label">Portal Links</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-check-double" style="color:#f59e0b;"></i> M. APPROVALS</span></div>
+        <div class="menu-group" data-group="approvals">
+            <div class="menu-group-header" data-target="approvals"><span class="menu-icon"><i class="fas fa-check-double"></i></span><span class="menu-label">Approvals</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-approvals" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=approvals" class="child-link"><span class="child-bullet"></span><span class="child-label">Pending Approvals</span></a>
+                    <a href="director-ict.php?tab=approvals" class="child-link"><span class="child-bullet"></span><span class="child-label">Ticket Summary</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-cog" style="color:#94a3b8;"></i> N. SETTINGS</span></div>
+        <div class="menu-group" data-group="settings">
+            <div class="menu-group-header" data-target="settings"><span class="menu-icon"><i class="fas fa-cog"></i></span><span class="menu-label">Settings</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-settings" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="director-ict.php?tab=settings" class="child-link"><span class="child-bullet"></span><span class="child-label">System Settings</span></a>
+                    <a href="director-ict.php?tab=settings#cats" class="child-link"><span class="child-bullet"></span><span class="child-label">Asset Categories</span></a>
+                    <a href="director-ict.php?tab=settings#security" class="child-link"><span class="child-bullet"></span><span class="child-label">Security Settings</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-external-link-alt" style="color:#94a3b8;"></i> O. LINKED DASHBOARDS</span></div>
+        <div class="menu-group" data-group="linked">
+            <div class="menu-group-header" data-target="linked"><span class="menu-icon"><i class="fas fa-link"></i></span><span class="menu-label">Oversight</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-linked" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="../computer_lab.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Computer Lab Mgr</span></a>
+                    <a href="../cybersecurity.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Cybersecurity</span></a>
+                    <a href="../ict-policy.php" class="child-link"><span class="child-bullet"></span><span class="child-label">ICT Policy</span></a>
+                    <a href="../system-admin.php" class="child-link"><span class="child-bullet"></span><span class="child-label">System Admin</span></a>
                 </div>
             </div>
         </div>

@@ -64,7 +64,7 @@ $maintenance_logs = lab_fetch($ict, "SELECT ml.*, c.computer_name FROM maintenan
 $installations = lab_fetch($ict, "SELECT si.*, sw.software_name, c.computer_name FROM software_installations si LEFT JOIN software_inventory sw ON si.software_id=sw.id LEFT JOIN lab_computers c ON si.computer_id=c.id ORDER BY si.created_at DESC LIMIT 30");
 $assignments  = lab_fetch($ict, "SELECT a.*, c.computer_name FROM lab_computer_assignments a LEFT JOIN lab_computers c ON a.computer_id=c.id WHERE a.status='active' ORDER BY a.assigned_date DESC");
 
-$tab = $_GET['tab'] ?? 'dashboard';
+$section = $_GET['section'] ?? 'dashboard';
 $section = $_GET['section'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -136,22 +136,22 @@ $section = $_GET['section'] ?? '';
 
         <!-- Section Navigation -->
         <ul class="nav nav-pills-ict">
-            <li class="nav-item"><a class="nav-link <?= $tab==='dashboard'?'active':'' ?>" href="?tab=dashboard"><i class="fas fa-chart-pie me-1"></i>Overview</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='id-cards'?'active':'' ?>" href="?tab=id-cards"><i class="fas fa-id-card me-1"></i>ID Cards<?= $active_ids ? ' <span class="badge bg-primary">'.$active_ids.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='computers'?'active':'' ?>" href="?tab=computers"><i class="fas fa-desktop me-1"></i>Computers</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='sessions'?'active':'' ?>" href="?tab=sessions"><i class="fas fa-chalkboard me-1"></i>Sessions</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='equipment'?'active':'' ?>" href="?tab=equipment"><i class="fas fa-toolbox me-1"></i>Equipment</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='printing'?'active':'' ?>" href="?tab=printing"><i class="fas fa-print me-1"></i>Printing<?= $pending_print ? ' <span class="badge bg-warning">'.$pending_print.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='support'?'active':'' ?>" href="?tab=support"><i class="fas fa-headset me-1"></i>Support<?= $open_repairs ? ' <span class="badge bg-danger">'.$open_repairs.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='software'?'active':'' ?>" href="?tab=software"><i class="fas fa-code me-1"></i>Software</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='inventory'?'active':'' ?>" href="?tab=inventory"><i class="fas fa-archive me-1"></i>Inventory</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='attendance'?'active':'' ?>" href="?tab=attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='reports'?'active':'' ?>" href="?tab=reports"><i class="fas fa-chart-line me-1"></i>Reports</a></li>
-            <li class="nav-item"><a class="nav-link <?= $tab==='settings'?'active':'' ?>" href="?tab=settings"><i class="fas fa-cog me-1"></i>Settings</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='dashboard'?'active':'' ?>" href="?section=dashboard"><i class="fas fa-chart-pie me-1"></i>Overview</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='id-cards'?'active':'' ?>" href="?section=id-cards"><i class="fas fa-id-card me-1"></i>ID Cards<?= $active_ids ? ' <span class="badge bg-primary">'.$active_ids.'</span>' : '' ?></a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='computers'?'active':'' ?>" href="?section=computers"><i class="fas fa-desktop me-1"></i>Computers</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='sessions'?'active':'' ?>" href="?section=sessions"><i class="fas fa-chalkboard me-1"></i>Sessions</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='equipment'?'active':'' ?>" href="?section=equipment"><i class="fas fa-toolbox me-1"></i>Equipment</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='printing'?'active':'' ?>" href="?section=printing"><i class="fas fa-print me-1"></i>Printing<?= $pending_print ? ' <span class="badge bg-warning">'.$pending_print.'</span>' : '' ?></a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='support'?'active':'' ?>" href="?section=support"><i class="fas fa-headset me-1"></i>Support<?= $open_repairs ? ' <span class="badge bg-danger">'.$open_repairs.'</span>' : '' ?></a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='software'?'active':'' ?>" href="?section=software"><i class="fas fa-code me-1"></i>Software</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='inventory'?'active':'' ?>" href="?section=inventory"><i class="fas fa-archive me-1"></i>Inventory</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='attendance'?'active':'' ?>" href="?section=attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='reports'?'active':'' ?>" href="?section=reports"><i class="fas fa-chart-line me-1"></i>Reports</a></li>
+            <li class="nav-item"><a class="nav-link <?= $section==='settings'?'active':'' ?>" href="?section=settings"><i class="fas fa-cog me-1"></i>Settings</a></li>
         </ul>
 
         <!-- ======== DASHBOARD OVERVIEW ======== -->
-        <?php if ($tab === 'dashboard'): ?>
+        <?php if ($section === 'dashboard'): ?>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-blue-soft"><i class="fas fa-desktop"></i></div><div><h4><?= $total_computers ?></h4><p>Computers</p></div></div></div>
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-green-soft"><i class="fas fa-check-circle"></i></div><div><h4><?= $online_computers ?></h4><p>Online</p></div></div></div>
@@ -224,7 +224,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== STUDENT ID CARDS ======== -->
-        <?php elseif ($tab === 'id-cards'): ?>
+        <?php elseif ($section === 'id-cards'): ?>
         <div class="row g-3">
             <div class="col-md-5">
                 <div class="section-card">
@@ -299,7 +299,7 @@ $section = $_GET['section'] ?? '';
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                                             <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="?tab=id-cards&section=preview&card=<?= $c['id'] ?>"><i class="fas fa-eye me-2"></i>Preview</a></li>
+                                                <li><a class="dropdown-item" href="?section=id-cards&section=preview&card=<?= $c['id'] ?>"><i class="fas fa-eye me-2"></i>Preview</a></li>
                                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="reprintCard(<?= $c['id'] ?>)"><i class="fas fa-print me-2"></i>Reprint</a></li>
                                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="printCardDirect(<?= $c['id'] ?>)"><i class="fas fa-file-pdf me-2"></i>Print / PDF</a></li>
                                             </ul>
@@ -351,7 +351,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== COMPUTER LAB ======== -->
-        <?php elseif ($tab === 'computers'): ?>
+        <?php elseif ($section === 'computers'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
                 <div class="section-card">
@@ -441,7 +441,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== PRACTICAL SESSIONS ======== -->
-        <?php elseif ($tab === 'sessions'): ?>
+        <?php elseif ($section === 'sessions'): ?>
         <div class="row g-3">
             <div class="col-lg-4">
                 <div class="section-card">
@@ -513,7 +513,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== EQUIPMENT ======== -->
-        <?php elseif ($tab === 'equipment'): ?>
+        <?php elseif ($section === 'equipment'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
                 <div class="section-card">
@@ -615,7 +615,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== PRINTING ======== -->
-        <?php elseif ($tab === 'printing'): ?>
+        <?php elseif ($section === 'printing'): ?>
         <div class="row g-3">
             <div class="col-lg-5">
                 <div class="section-card">
@@ -700,7 +700,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== SUPPORT (REPAIRS) ======== -->
-        <?php elseif ($tab === 'support'): ?>
+        <?php elseif ($section === 'support'): ?>
         <div class="row g-3">
             <div class="col-lg-4">
                 <div class="section-card">
@@ -770,7 +770,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== SOFTWARE ======== -->
-        <?php elseif ($tab === 'software'): ?>
+        <?php elseif ($section === 'software'): ?>
         <div class="row g-3">
             <div class="col-lg-4">
                 <div class="section-card">
@@ -856,7 +856,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== INVENTORY ======== -->
-        <?php elseif ($tab === 'inventory'): ?>
+        <?php elseif ($section === 'inventory'): ?>
         <div class="row g-3">
             <div class="col-lg-8">
                 <div class="section-card">
@@ -912,7 +912,7 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== ATTENDANCE ======== -->
-        <?php elseif ($tab === 'attendance'): ?>
+        <?php elseif ($section === 'attendance'): ?>
         <div class="row g-3">
             <div class="col-lg-4">
                 <div class="section-card">
@@ -968,14 +968,14 @@ $section = $_GET['section'] ?? '';
         </div>
 
         <!-- ======== REPORTS ======== -->
-        <?php elseif ($tab === 'reports'): ?>
+        <?php elseif ($section === 'reports'): ?>
         <div class="row g-3">
             <div class="col-md-6 col-lg-4">
                 <div class="section-card text-center">
                     <i class="fas fa-id-card fa-3x text-primary mb-2"></i>
                     <h5>Student ID Cards</h5>
                     <p class="small text-muted"><?= $active_ids ?> active cards | <?= count($id_cards) ?> total issued</p>
-                    <button class="btn btn-sm btn-primary" onclick="window.open('?tab=id-cards&section=preview&card=<?= $id_cards[0]['id']??0 ?>','_blank')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-primary" onclick="window.open('?section=id-cards&section=preview&card=<?= $id_cards[0]['id']??0 ?>','_blank')"><i class="fas fa-eye me-1"></i>View</button>
                     <button class="btn btn-sm btn-success" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button>
                 </div>
             </div>
@@ -984,7 +984,7 @@ $section = $_GET['section'] ?? '';
                     <i class="fas fa-desktop fa-3x text-success mb-2"></i>
                     <h5>Computer Inventory</h5>
                     <p class="small text-muted"><?= $total_computers ?> total | <?= $online_computers ?> online | <?= $offline_computers ?> offline</p>
-                    <button class="btn btn-sm btn-success" onclick="window.open('?tab=computers','_self')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-success" onclick="window.open('?section=computers','_self')"><i class="fas fa-eye me-1"></i>View</button>
                 </div>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -992,7 +992,7 @@ $section = $_GET['section'] ?? '';
                     <i class="fas fa-print fa-3x text-warning mb-2"></i>
                     <h5>Printing Summary</h5>
                     <p class="small text-muted"><?= $pending_print ?> pending | <?= count($print_jobs) ?> total jobs</p>
-                    <button class="btn btn-sm btn-warning text-dark" onclick="window.open('?tab=printing','_self')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-warning text-dark" onclick="window.open('?section=printing','_self')"><i class="fas fa-eye me-1"></i>View</button>
                 </div>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -1000,7 +1000,7 @@ $section = $_GET['section'] ?? '';
                     <i class="fas fa-headset fa-3x text-danger mb-2"></i>
                     <h5>Technical Support</h5>
                     <p class="small text-muted"><?= $open_repairs ?> open repairs</p>
-                    <button class="btn btn-sm btn-danger" onclick="window.open('?tab=support','_self')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-danger" onclick="window.open('?section=support','_self')"><i class="fas fa-eye me-1"></i>View</button>
                 </div>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -1008,7 +1008,7 @@ $section = $_GET['section'] ?? '';
                     <i class="fas fa-toolbox fa-3x text-purple mb-2"></i>
                     <h5>Equipment Status</h5>
                     <p class="small text-muted"><?= $total_equip ?> total | <?= $checked_out ?> checked out</p>
-                    <button class="btn btn-sm btn-primary" onclick="window.open('?tab=equipment','_self')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-primary" onclick="window.open('?section=equipment','_self')"><i class="fas fa-eye me-1"></i>View</button>
                 </div>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -1016,13 +1016,13 @@ $section = $_GET['section'] ?? '';
                     <i class="fas fa-archive fa-3x text-info mb-2"></i>
                     <h5>Consumables</h5>
                     <p class="small text-muted"><?= $low_consumables ?> low stock | <?= $out_consumables ?> out of stock</p>
-                    <button class="btn btn-sm btn-info text-white" onclick="window.open('?tab=inventory','_self')"><i class="fas fa-eye me-1"></i>View</button>
+                    <button class="btn btn-sm btn-info text-white" onclick="window.open('?section=inventory','_self')"><i class="fas fa-eye me-1"></i>View</button>
                 </div>
             </div>
         </div>
 
         <!-- ======== SETTINGS ======== -->
-        <?php elseif ($tab === 'settings'): ?>
+        <?php elseif ($section === 'settings'): ?>
         <div class="row g-3">
             <div class="col-lg-6">
                 <div class="section-card">
@@ -1219,7 +1219,7 @@ function reprintCard(id) {
     });
 }
 
-function printCardDirect(id) { window.open(`?tab=id-cards&section=preview&card=${id}`, '_blank'); }
+function printCardDirect(id) { window.open(`?section=id-cards&section=preview&card=${id}`, '_blank'); }
 
 function setComputerStatus(id, status) {
     $.post(LAB_HANDLER, { action: 'edit_computer', id, status }).done(r => { if(r.success) location.reload(); else showAlert(r.message, 'danger'); });
