@@ -101,182 +101,30 @@ function getModuleConfig(): array {
             ],
         ],
         [
-            'title'    => 'Dashboard',
-            'icon'     => 'fas fa-tachometer-alt',
-            'roles'    => ['academic registrar','registrar'],
+            'title'    => 'Academic Registrar',
+            'icon'     => 'fas fa-clipboard-list',
+            'roles'    => ['registrar','director','principal','deputy'],
             'children' => [
-                ['title' => 'Overview', 'route' => 'academic-registrar.php?section=dashboard', 'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Admissions & Registration',
-            'icon'     => 'fas fa-file-signature',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Student Registration',     'route' => 'academic-registrar.php?section=registration',     'roles' => '*'],
-                ['title' => 'Admission Management',     'route' => 'academic-registrar.php?section=admissions',      'roles' => '*'],
-                ['title' => 'Programme Allocation',     'route' => 'academic-registrar.php?section=programme-allocation', 'roles' => '*'],
-                ['title' => 'Intake Management',        'route' => 'academic-registrar.php?section=intake',          'roles' => '*'],
-                ['title' => 'Student Transfers',        'route' => 'academic-registrar.php?section=transfers',       'roles' => '*'],
-                ['title' => 'Student Deferment',        'route' => 'academic-registrar.php?section=deferment',       'roles' => '*'],
-                ['title' => 'Student Withdrawal',       'route' => 'academic-registrar.php?section=withdrawal',      'roles' => '*'],
-                ['title' => 'Student Readmission',      'route' => 'academic-registrar.php?section=readmission',     'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Student Records',
-            'icon'     => 'fas fa-address-book',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Student Directory',        'route' => 'academic-registrar.php?section=student-directory',   'roles' => '*'],
-                ['title' => 'Academic Profiles',        'route' => 'academic-registrar.php?section=academic-profiles',   'roles' => '*'],
-                ['title' => 'Guardian Information',     'route' => 'academic-registrar.php?section=guardian',            'roles' => '*'],
-                ['title' => 'Emergency Contacts',       'route' => 'academic-registrar.php?section=emergency',           'roles' => '*'],
-                ['title' => 'Student Documents',        'route' => 'academic-registrar.php?section=documents',           'roles' => '*'],
-                ['title' => 'Student ID Cards',         'route' => 'academic-registrar.php?section=id-cards',            'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Academic Management',
-            'icon'     => 'fas fa-graduation-cap',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Academic Calendar',        'route' => 'academic-registrar.php?section=academic-calendar',    'roles' => '*'],
-                ['title' => 'Academic Years',           'route' => 'academic-registrar.php?section=academic-years',       'roles' => '*'],
-                ['title' => 'Semesters',                'route' => 'academic-registrar.php?section=semesters',           'roles' => '*'],
-                ['title' => 'Courses',                  'route' => 'academic-registrar.php?section=courses',             'roles' => '*'],
-                ['title' => 'Curriculum',               'route' => 'academic-registrar.php?section=curriculum',          'roles' => '*'],
-                ['title' => 'Credit Units',             'route' => 'academic-registrar.php?section=credit-units',        'roles' => '*'],
-                ['title' => 'Programme Structure',      'route' => 'academic-registrar.php?section=programme-structure', 'roles' => '*'],
-                ['title' => 'Clinical Placement',       'route' => 'academic-registrar.php?section=clinical-placement',  'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Examinations',
-            'icon'     => 'fas fa-pencil-alt',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Exam Timetable',           'route' => 'academic-registrar.php?section=exam-timetable',       'roles' => '*'],
-                ['title' => 'Continuous Assessment',    'route' => 'academic-registrar.php?section=ca',                  'roles' => '*'],
-                ['title' => 'Final Examination',        'route' => 'academic-registrar.php?section=final-exam',          'roles' => '*'],
-                ['title' => 'Practical Examination',    'route' => 'academic-registrar.php?section=practical-exam',      'roles' => '*'],
-                ['title' => 'Clinical Assessment',      'route' => 'academic-registrar.php?section=clinical-assessment', 'roles' => '*'],
-                ['title' => 'Marks Entry',              'route' => 'academic-registrar.php?section=marks-entry',         'roles' => '*'],
-                ['title' => 'Marks Verification',       'route' => 'academic-registrar.php?section=marks-verification',  'roles' => '*'],
-                ['title' => 'Missing Marks',            'route' => 'academic-registrar.php?section=missing-marks',       'roles' => '*'],
-                ['title' => 'Moderation',               'route' => 'academic-registrar.php?section=moderation',          'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Results Management',
-            'icon'     => 'fas fa-chart-bar',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Generate Results',         'route' => 'academic-registrar.php?section=generate-results',     'roles' => '*'],
-                ['title' => 'GPA Calculation',          'route' => 'academic-registrar.php?section=gpa',                 'roles' => '*'],
-                ['title' => 'CGPA Calculation',         'route' => 'academic-registrar.php?section=cgpa',                'roles' => '*'],
-                ['title' => 'Grade Book',               'route' => 'academic-registrar.php?section=grade-book',          'roles' => '*'],
-                ['title' => 'Publish Results',          'route' => 'academic-registrar.php?section=publish-results',     'roles' => '*'],
-                ['title' => 'Result Approval Workflow', 'route' => 'academic-registrar.php?section=result-approval',     'roles' => '*'],
-                ['title' => 'Result Slip Generator',    'route' => 'academic-registrar.php?section=result-slip',         'roles' => '*'],
-                ['title' => 'Retake Management',        'route' => 'academic-registrar.php?section=retake',              'roles' => '*'],
-                ['title' => 'Supplementary Exams',      'route' => 'academic-registrar.php?section=supplementary',       'roles' => '*'],
-                ['title' => 'Promotion Decisions',      'route' => 'academic-registrar.php?section=promotion',           'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'National Examinations',
-            'icon'     => 'fas fa-university',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Candidate Registration',   'route' => 'academic-registrar.php?section=national-registration', 'roles' => '*'],
-                ['title' => 'National Exam Numbers',    'route' => 'academic-registrar.php?section=national-numbers',     'roles' => '*'],
-                ['title' => 'National Results',         'route' => 'academic-registrar.php?section=national-results',    'roles' => '*'],
-                ['title' => 'Certificate Uploads',      'route' => 'academic-registrar.php?section=national-uploads',    'roles' => '*'],
-                ['title' => 'National Certificates',    'route' => 'academic-registrar.php?section=national-certificates','roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Certificates & Transcripts',
-            'icon'     => 'fas fa-scroll',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Transcript Generator',     'route' => 'academic-registrar.php?section=transcript-generator','roles' => '*'],
-                ['title' => 'Transcript Archive',       'route' => 'academic-registrar.php?section=transcript-archive', 'roles' => '*'],
-                ['title' => 'Certificate Generator',    'route' => 'academic-registrar.php?section=certificate-generator','roles' => '*'],
-                ['title' => 'Certificate Uploads',      'route' => 'academic-registrar.php?section=certificate-uploads','roles' => '*'],
-                ['title' => 'Completion Letters',       'route' => 'academic-registrar.php?section=completion-letters','roles' => '*'],
-                ['title' => 'Recommendation Letters',   'route' => 'academic-registrar.php?section=recommendation-letters','roles' => '*'],
-                ['title' => 'Verification Portal',      'route' => 'academic-registrar.php?section=verification',       'roles' => '*'],
-                ['title' => 'Student Downloads',        'route' => 'academic-registrar.php?section=student-downloads',  'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Graduation',
-            'icon'     => 'fas fa-graduation-cap',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Graduation List',          'route' => 'academic-registrar.php?section=graduation-list',     'roles' => '*'],
-                ['title' => 'Graduation Clearance',     'route' => 'academic-registrar.php?section=graduation-clearance','roles' => '*'],
-                ['title' => 'Graduation Eligibility',   'route' => 'academic-registrar.php?section=graduation-eligibility','roles' => '*'],
-                ['title' => 'Senate Approval',          'route' => 'academic-registrar.php?section=senate-approval',    'roles' => '*'],
-                ['title' => 'Principal Approval',       'route' => 'academic-registrar.php?section=principal-approval', 'roles' => '*'],
-                ['title' => 'Director General Approval','route' => 'academic-registrar.php?section=dg-approval',        'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Communication',
-            'icon'     => 'fas fa-bullhorn',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Student Notices',          'route' => 'academic-registrar.php?section=notices',            'roles' => '*'],
-                ['title' => 'Academic Announcements',   'route' => 'academic-registrar.php?section=announcements',      'roles' => '*'],
-                ['title' => 'Email Notifications',      'route' => 'academic-registrar.php?section=emails',             'roles' => '*'],
-                ['title' => 'SMS Notifications',        'route' => 'academic-registrar.php?section=sms',                'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Reports',
-            'icon'     => 'fas fa-file-alt',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Student Reports',          'route' => 'academic-registrar.php?section=reports-student',      'roles' => '*'],
-                ['title' => 'Results Reports',          'route' => 'academic-registrar.php?section=reports-results',     'roles' => '*'],
-                ['title' => 'GPA Reports',              'route' => 'academic-registrar.php?section=reports-gpa',         'roles' => '*'],
-                ['title' => 'Graduation Reports',       'route' => 'academic-registrar.php?section=reports-graduation',  'roles' => '*'],
-                ['title' => 'National Exam Reports',    'route' => 'academic-registrar.php?section=reports-national',    'roles' => '*'],
-                ['title' => 'Transcript Reports',       'route' => 'academic-registrar.php?section=reports-transcript',  'roles' => '*'],
-                ['title' => 'Certificate Reports',      'route' => 'academic-registrar.php?section=reports-certificate', 'roles' => '*'],
-                ['title' => 'Academic Audit Reports',   'route' => 'academic-registrar.php?section=reports-audit',       'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Approvals',
-            'icon'     => 'fas fa-check-double',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Pending Lecturer Approvals','route' => 'academic-registrar.php?section=pending-lecturer',  'roles' => '*'],
-                ['title' => 'Pending HOD Approvals',    'route' => 'academic-registrar.php?section=pending-hod',        'roles' => '*'],
-                ['title' => 'Pending Dir. Academics',   'route' => 'academic-registrar.php?section=pending-dir-academics','roles' => '*'],
-                ['title' => 'Pending Principal',        'route' => 'academic-registrar.php?section=pending-principal',  'roles' => '*'],
-                ['title' => 'Pending Dir. General',     'route' => 'academic-registrar.php?section=pending-dg',         'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Settings',
-            'icon'     => 'fas fa-cogs',
-            'roles'    => ['academic registrar','registrar'],
-            'children' => [
-                ['title' => 'Grading System',           'route' => 'academic-registrar.php?section=settings-grading',    'roles' => '*'],
-                ['title' => 'Transcript Template',      'route' => 'academic-registrar.php?section=settings-transcript','roles' => '*'],
-                ['title' => 'Certificate Template',     'route' => 'academic-registrar.php?section=settings-certificate','roles' => '*'],
-                ['title' => 'Academic Calendar Settings','route' => 'academic-registrar.php?section=settings-calendar', 'roles' => '*'],
+                ['title' => 'Overview',             'route' => 'academic-registrar.php#overview',            'roles' => '*'],
+                ['title' => 'Student Registration',  'route' => 'academic-registrar.php#course-registration', 'roles' => '*'],
+                ['title' => 'Student Records',       'route' => 'academic-registrar.php#student-records',     'roles' => '*'],
+                ['title' => 'Student Records (By Set)','route' => 'student-records.php',                     'roles' => ['director','academics','registrar','principal','head','lecturer']],
+                ['title' => 'Programmes',            'route' => 'academic-registrar.php#programs',            'roles' => '*'],
+                ['title' => 'Courses',               'route' => 'academic-registrar.php#courses',             'roles' => '*'],
+                ['title' => 'Grading Management',    'route' => 'academic-registrar.php#grading',             'roles' => '*'],
+                ['title' => 'Transcripts',           'route' => 'academic-registrar.php#transcripts',         'roles' => '*'],
+                ['title' => 'Certificates',          'route' => 'academic-registrar.php#certificates',        'roles' => '*'],
+                ['title' => 'Graduation',            'route' => 'academic-registrar.php#graduation',          'roles' => '*'],
+                ['title' => 'Reports',               'route' => 'academic-registrar.php#reports',             'roles' => '*'],
+                ['title' => 'Calendar',              'route' => 'academic-registrar.php#academic-calendar',   'roles' => '*'],
+                ['title' => 'Notifications',         'route' => 'academic-registrar.php#notifications',       'roles' => '*'],
+                ['title' => 'Settings',              'route' => 'academic-registrar.php#settings',            'roles' => '*'],
             ],
         ],
         [
             'title'    => 'Overview',
             'icon'     => 'fas fa-chart-pie',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Financial Analytics','route' => 'school-bursar.php?section=financial_reports','roles' => '*'],
                 ['title' => 'Daily Collections',  'route' => 'school-bursar.php?section=daily_collections','roles' => '*'],
@@ -286,7 +134,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Student Fees',
             'icon'     => 'fas fa-user-graduate',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Fee Structures',    'route' => 'school-bursar.php?section=fee_structure','roles' => '*'],
                 ['title' => 'Student Billing',   'route' => 'school-bursar.php?section=generate_invoice','roles' => '*'],
@@ -300,7 +148,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Payments',
             'icon'     => 'fas fa-money-bill-wave',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Record Payments',       'route' => 'school-bursar.php?section=record_payment','roles' => '*'],
                 ['title' => 'Payment Verification',  'route' => 'school-bursar.php?section=payment_verification','roles' => '*'],
@@ -313,16 +161,17 @@ function getModuleConfig(): array {
         [
             'title'    => 'Payroll',
             'icon'     => 'fas fa-money-check-alt',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant','payroll','hr','manager','auditor'],
             'children' => [
                 ['title' => 'Payroll Dashboard', 'route' => 'bursar-payroll.php','roles' => '*'],
+                ['title' => 'Enterprise Payroll', 'route' => 'payroll.php','roles' => '*'],
                 ['title' => 'Salary Processing', 'route' => 'school-bursar.php?section=payroll','roles' => '*'],
             ],
         ],
         [
             'title'    => 'Budgets & Expenditure',
             'icon'     => 'fas fa-wallet',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Budget Planning',     'route' => 'school-bursar.php?section=budget','roles' => '*'],
                 ['title' => 'Expenditure Tracking','route' => 'school-bursar.php?section=expenditure','roles' => '*'],
@@ -331,7 +180,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Accounts',
             'icon'     => 'fas fa-book',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'General Ledger',      'route' => 'school-bursar.php?section=ledger','roles' => '*'],
                 ['title' => 'Chart of Accounts',   'route' => 'school-bursar.php?section=chart_of_accounts','roles' => '*'],
@@ -343,7 +192,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Requisitions',
             'icon'     => 'fas fa-clipboard-list',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Pending Requisitions',  'route' => 'school-bursar.php?section=requisitions','roles' => '*'],
                 ['title' => 'Approved Requisitions', 'route' => 'school-bursar.php?section=requisitions&filter=approved','roles' => '*'],
@@ -353,7 +202,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Communications',
             'icon'     => 'fas fa-envelope',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Messages',         'route' => 'school-bursar.php?section=communications','roles' => '*'],
                 ['title' => 'Financial Notices','route' => 'school-bursar.php?section=communications&tab=notices','roles' => '*'],
@@ -363,7 +212,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Reports',
             'icon'     => 'fas fa-file-alt',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Collection Reports','route' => 'school-bursar.php?section=financial_reports','roles' => '*'],
                 ['title' => 'Debtors Reports',   'route' => 'school-bursar.php?section=debtors_list','roles' => '*'],
@@ -375,7 +224,7 @@ function getModuleConfig(): array {
         [
             'title'    => 'Tools',
             'icon'     => 'fas fa-cog',
-            'roles'    => ['school bursar','bursar'],
+            'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Fee Reminders',         'route' => 'school-bursar.php?section=fee_reminders','roles' => '*'],
                 ['title' => 'Assets',                'route' => 'school-bursar.php?section=assets','roles' => '*'],
@@ -393,164 +242,57 @@ function getModuleConfig(): array {
             ],
         ],
         [
-            'title'    => 'Overview',
-            'icon'     => 'fas fa-chart-pie',
-            'roles'    => ['hr manager','hr'],
+            'title'    => 'Human Resources',
+            'icon'     => 'fas fa-users',
+            'roles'    => ['hr','manager','director','principal','head','lecturer','staff'],
             'children' => [
-                ['title' => 'HR Dashboard',          'route' => 'hr-manager.php',                          'roles' => '*'],
-                ['title' => 'Quick Actions',         'route' => 'hr-manager.php?section=overview',         'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Staff Management',
-            'icon'     => 'fas fa-id-card',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Staff Records',         'route' => 'hr-manager.php?section=staff-records',    'roles' => '*'],
-                ['title' => 'Roles & Departments',   'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
-                ['title' => 'Contracts',             'route' => 'hr-manager.php?section=payroll',          'roles' => ['hr','manager','director']],
-                ['title' => 'Documents',             'route' => 'hr-manager.php?section=staff-records',    'roles' => '*'],
-                ['title' => 'Staff Directory',       'route' => 'staff-directory.php',                     'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Attendance & Time',
-            'icon'     => 'fas fa-calendar-check',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Attendance Logs',       'route' => 'hr-manager.php?section=attendance',       'roles' => '*'],
-                ['title' => 'Shift Scheduling',      'route' => 'hr-manager.php?section=attendance',       'roles' => ['hr','manager','head']],
-                ['title' => 'Late Coming Tracker',   'route' => 'hr-manager.php?section=attendance',       'roles' => '*'],
-                ['title' => 'Absenteeism Reports',   'route' => 'hr-manager.php?section=reports',          'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Leave Management',
-            'icon'     => 'fas fa-calendar-alt',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Leave Requests',        'route' => 'hr-manager.php?section=leave',            'roles' => '*'],
-                ['title' => 'Leave Balances',        'route' => 'hr-manager.php?section=leave',            'roles' => '*'],
-                ['title' => 'Leave Calendar',        'route' => 'hr-manager.php?section=leave',            'roles' => '*'],
-                ['title' => 'Leave Types Config',    'route' => 'hr-manager.php?section=settings',         'roles' => ['hr','manager']],
-            ],
-        ],
-        [
-            'title'    => 'Performance',
-            'icon'     => 'fas fa-chart-line',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Staff Appraisals',      'route' => 'hr-manager.php?section=performance',      'roles' => '*'],
-                ['title' => 'Lecturer Evaluation',   'route' => 'hr-manager.php?section=performance',      'roles' => ['hr','head','principal']],
-                ['title' => 'Clinical Supervision',  'route' => 'hr-manager.php?section=performance',      'roles' => ['hr','head','nursing','midwifery']],
-                ['title' => 'KPI Tracking',          'route' => 'hr-manager.php?section=performance',      'roles' => ['hr','manager','head']],
-            ],
-        ],
-        [
-            'title'    => 'Training & CPD',
-            'icon'     => 'fas fa-graduation-cap',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'CPD Records',           'route' => 'hr-manager.php?section=training',         'roles' => '*'],
-                ['title' => 'Mandatory Training',    'route' => 'hr-manager.php?section=training',         'roles' => ['hr','manager','head']],
-                ['title' => 'Workshop Attendance',   'route' => 'hr-manager.php?section=training',         'roles' => '*'],
-                ['title' => 'Certifications',        'route' => 'hr-manager.php?section=training',         'roles' => '*'],
-                ['title' => 'Expiry Alerts',         'route' => 'hr-manager.php?section=training',         'roles' => ['hr','manager']],
-            ],
-        ],
-        [
-            'title'    => 'Recruitment',
-            'icon'     => 'fas fa-user-plus',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Job Vacancies',         'route' => 'hr-manager.php?section=recruitment',      'roles' => '*'],
-                ['title' => 'Applications',          'route' => 'hr-manager.php?section=recruitment',      'roles' => '*'],
-                ['title' => 'Interview Tracking',    'route' => 'hr-manager.php?section=recruitment',      'roles' => '*'],
-                ['title' => 'Onboarding',            'route' => 'hr-manager.php?section=recruitment',      'roles' => ['hr','manager']],
-            ],
-        ],
-        [
-            'title'    => 'Payroll (HR View)',
-            'icon'     => 'fas fa-money-check',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Payroll Dashboard',     'route' => 'hr-manager.php?section=payroll&tab=overview', 'roles' => '*'],
-                ['title' => 'Employee Profiles',     'route' => 'hr-manager.php?section=payroll&tab=employees','roles' => '*'],
-                ['title' => 'Payroll Run',           'route' => 'hr-manager.php?section=payroll&tab=run',      'roles' => '*'],
-                ['title' => 'Allowances',            'route' => 'hr-manager.php?section=payroll&tab=allowances','roles' => '*'],
-                ['title' => 'Deductions',            'route' => 'hr-manager.php?section=payroll&tab=deductions','roles' => '*'],
-                ['title' => 'Overtime',              'route' => 'hr-manager.php?section=payroll&tab=overtime',  'roles' => '*'],
-                ['title' => 'Bonuses',               'route' => 'hr-manager.php?section=payroll&tab=bonuses',   'roles' => '*'],
-                ['title' => 'Payslips',              'route' => 'hr-manager.php?section=payroll&tab=payslips',  'roles' => '*'],
-                ['title' => 'Approvals',             'route' => 'hr-manager.php?section=payroll&tab=approvals', 'roles' => ['hr','manager']],
-                ['title' => 'Reports',               'route' => 'hr-manager.php?section=payroll&tab=reports',   'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Disciplinary',
-            'icon'     => 'fas fa-gavel',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Warnings',              'route' => 'hr-manager.php?section=disciplinary',     'roles' => '*'],
-                ['title' => 'Incidents',             'route' => 'hr-manager.php?section=disciplinary',     'roles' => '*'],
-                ['title' => 'Disciplinary Cases',    'route' => 'hr-manager.php?section=disciplinary',     'roles' => '*'],
-                ['title' => 'Investigations',        'route' => 'hr-manager.php?section=disciplinary',     'roles' => ['hr','manager','director']],
-            ],
-        ],
-        [
-            'title'    => 'Compliance',
-            'icon'     => 'fas fa-certificate',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Nursing Licenses',      'route' => 'hr-manager.php?section=licenses',         'roles' => '*'],
-                ['title' => 'Midwifery Registration','route' => 'hr-manager.php?section=licenses',         'roles' => '*'],
-                ['title' => 'Expiry Alerts',         'route' => 'hr-manager.php?section=licenses',         'roles' => ['hr','manager']],
-            ],
-        ],
-        [
-            'title'    => 'Deployment & Rotation',
-            'icon'     => 'fas fa-exchange-alt',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Clinical Rotation',      'route' => 'hr-manager.php?section=rotation',        'roles' => '*'],
-                ['title' => 'Hospital Assignments',   'route' => 'hr-manager.php?section=rotation',        'roles' => '*'],
-                ['title' => 'Ward Allocation',        'route' => 'hr-manager.php?section=rotation',        'roles' => '*'],
-                ['title' => 'Lecturer Deployment',    'route' => 'hr-manager.php?section=rotation',        'roles' => ['hr','head','principal']],
-            ],
-        ],
-        [
-            'title'    => 'Communication',
-            'icon'     => 'fas fa-bullhorn',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'HR Announcements',       'route' => 'hr-manager.php?section=communication',   'roles' => '*'],
-                ['title' => 'Staff Notices',          'route' => 'hr-manager.php?section=communication',   'roles' => '*'],
-                ['title' => 'Policy Updates',         'route' => 'hr-manager.php?section=communication',   'roles' => '*'],
-                ['title' => 'Internal Messaging',     'route' => 'hr-manager.php?section=communication',   'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Reports & Analytics',
-            'icon'     => 'fas fa-chart-bar',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Staff Reports',          'route' => 'hr-manager.php?section=reports',          'roles' => '*'],
-                ['title' => 'Attendance Reports',     'route' => 'hr-manager.php?section=reports',          'roles' => '*'],
-                ['title' => 'Leave Reports',          'route' => 'hr-manager.php?section=reports',          'roles' => '*'],
-                ['title' => 'Performance Reports',    'route' => 'hr-manager.php?section=reports',          'roles' => '*'],
-                ['title' => 'License Compliance',     'route' => 'hr-manager.php?section=licenses',         'roles' => '*'],
-            ],
-        ],
-        [
-            'title'    => 'Settings',
-            'icon'     => 'fas fa-cog',
-            'roles'    => ['hr manager','hr'],
-            'children' => [
-                ['title' => 'Departments',            'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
-                ['title' => 'Roles',                  'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
-                ['title' => 'Staff Categories',       'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
-                ['title' => 'Leave Types',            'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
-                ['title' => 'Approval Workflows',     'route' => 'hr-manager.php?section=settings',         'roles' => '*'],
+                // ── A. HR Core ──
+                ['title' => 'HR Dashboard',           'route' => 'hr-manager.php',                     'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Staff Records',          'route' => 'hr-manager.php#staff',                'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Roles & Departments',    'route' => 'staff-directory.php',                'roles' => ['hr','manager','director']],
+                ['title' => 'Staff Profile',          'route' => 'staff_profile_management.php',       'roles' => '*'],
+                ['title' => 'Staff Directory',        'route' => 'staff-directory.php',                'roles' => '*'],
+                ['title' => 'Documents',              'route' => 'staff_profile_management.php',       'roles' => '*'],
+                // ── B. Attendance ──
+                ['title' => 'Attendance Logs',        'route' => 'staff-attendance.php',               'roles' => ['hr','manager','director']],
+                ['title' => 'Shift Scheduling',       'route' => 'duty-rosters.php',                   'roles' => ['hr','manager','director','head','matron','warden']],
+                // ── C. Leave Management ──
+                ['title' => 'Leave Management',       'route' => 'hr-manager.php#leave',                'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Leave Dashboard',        'route' => 'leave-management.php',               'roles' => ['hr','manager','director','lecturer','staff']],
+                // ── D. Performance ──
+                ['title' => 'Performance',            'route' => 'hr-manager.php#performance',          'roles' => ['hr','manager','director','head','principal']],
+                ['title' => 'Appraisals',             'route' => 'performance-appraisal.php',          'roles' => ['hr','manager','director','head']],
+                // ── E. Training & CPD ──
+                ['title' => 'Training & CPD',         'route' => 'hr-manager.php#training',             'roles' => ['hr','manager','lecturer','head']],
+                ['title' => 'CPD Dashboard',          'route' => 'training-cpd.php',                   'roles' => ['hr','manager','lecturer','head']],
+                // ── F. Recruitment ──
+                ['title' => 'Recruitment',            'route' => 'hr-manager.php#recruitment',          'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Job Vacancies',          'route' => 'recruitment.php',                    'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Onboarding',             'route' => 'onboarding.php',                     'roles' => ['hr','manager','director']],
+                ['title' => 'Resignations',           'route' => 'resignations.php',                   'roles' => ['hr','manager','director']],
+                // ── G. Payroll (HR View) ──
+                ['title' => 'Payroll (HR View)',      'route' => 'hr-manager.php#payroll',              'roles' => ['hr','manager','director']],
+                ['title' => 'Salary View',            'route' => '../payroll.php',                      'roles' => ['hr','manager']],
+                ['title' => 'Payslips',               'route' => '../payroll.php?section=payslips',     'roles' => ['hr','manager']],
+                // ── H. Disciplinary ──
+                ['title' => 'Disciplinary',           'route' => 'hr-manager.php#disciplinary',         'roles' => ['hr','manager','director','principal']],
+                ['title' => 'Cases',                  'route' => 'staff-disciplinary.php',             'roles' => ['hr','manager','director','principal']],
+                // ── I. Licensing & Compliance ──
+                ['title' => 'Licensing',              'route' => 'hr-manager.php#licensing',            'roles' => ['hr','manager','director','head','nursing','midwifery']],
+                ['title' => 'Professional Licenses',  'route' => 'professional-licenses.php',          'roles' => ['hr','manager','director','head','nursing','midwifery']],
+                // ── J. Deployment & Rotation ──
+                ['title' => 'Deployment & Rotation',  'route' => 'hr-manager.php#deployment',           'roles' => ['hr','manager','director','head']],
+                ['title' => 'Clinical Placements',    'route' => 'clinical-placement.php',             'roles' => ['hr','manager','nursing','midwifery','head','lecturer']],
+                ['title' => 'Duty Rosters',           'route' => 'duty-rosters.php',                   'roles' => ['hr','manager','director','head','matron','warden']],
+                // ── K. Communication ──
+                ['title' => 'Communications',         'route' => 'hr-manager.php#comms',                'roles' => ['hr','manager','director']],
+                ['title' => 'News & Announcements',   'route' => '../news.php',                         'roles' => ['hr','manager']],
+                // ── L. Reports ──
+                ['title' => 'HR Reports',             'route' => 'hr-manager.php#reports',              'roles' => ['hr','manager','director','principal']],
+                // ── M. Settings ──
+                ['title' => 'HR Settings',            'route' => 'hr-manager.php#settings',             'roles' => ['hr','manager','director','principal']],
+                // ── Non-Teaching Staff ──
+                ['title' => 'Non-Teaching Staff',     'route' => 'non-teaching-staff.php',             'roles' => ['non-teaching','non teaching','staff','lecturer']],
             ],
         ],
         [
@@ -612,6 +354,47 @@ function getModuleConfig(): array {
                 ['title' => 'System Administration', 'route' => 'system-admin.php',                   'roles' => ['director','ict','it','system admin']],
                 ['title' => 'IT Support Tickets',    'route' => 'it-support-tickets.php',             'roles' => ['director','ict','it','lab manager']],
                 ['title' => 'Lab Booking Management','route' => 'lab-booking-management.php',         'roles' => ['director','ict','it','lecturer','lab manager']],
+            ],
+        ],
+        [
+            'title'    => 'Computer Department',
+            'icon'     => 'fas fa-desktop',
+            'roles'    => ['lab','lab manager','computer lab','ict','it','director'],
+            'children' => [
+                // ── A. Dashboard ──
+                ['title' => 'Lab Manager Dashboard',   'route' => 'computer_lab.php',                    'roles' => ['lab','lab manager','computer lab','ict','it','director']],
+                ['title' => 'Today\'s Statistics',      'route' => 'computer_lab.php?tab=dashboard',       'roles' => ['lab','lab manager','computer lab','ict','it','director']],
+                // ── B. Student ICT Services ──
+                ['title' => 'Student ID Cards',         'route' => 'computer_lab.php?tab=id-cards',        'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Generate ID Card',         'route' => 'computer_lab.php?tab=id-cards&section=generate', 'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Verify ID Card',           'route' => 'computer_lab.php?tab=id-cards&section=verify',   'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Bulk ID Printing',         'route' => 'computer_lab.php?tab=id-cards&section=bulk',     'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'ID Card Replacements',     'route' => 'computer_lab.php?tab=id-cards&section=replace',  'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── C. Computer Laboratory ──
+                ['title' => 'Computers',                'route' => 'computer_lab.php?tab=computers',        'roles' => ['lab','lab manager','computer lab','ict','it','director']],
+                ['title' => 'Practical Sessions',       'route' => 'computer_lab.php?tab=sessions',         'roles' => ['lab','lab manager','computer lab','ict','it','lecturer']],
+                ['title' => 'Lab Attendance',           'route' => 'computer_lab.php?tab=attendance',       'roles' => ['lab','lab manager','computer lab','ict','it','lecturer']],
+                ['title' => 'Equipment',                'route' => 'computer_lab.php?tab=equipment',        'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Lab Rooms',                'route' => 'computer_lab.php?tab=settings#rooms',   'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── D. Printing Centre ──
+                ['title' => 'Printing Jobs',            'route' => 'computer_lab.php?tab=printing',         'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Printing Charges',         'route' => 'computer_lab.php?tab=printing#charges', 'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Print History',            'route' => 'computer_lab.php?tab=printing#history', 'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── E. Technical Support ──
+                ['title' => 'Technical Support',        'route' => 'computer_lab.php?tab=support',          'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Repair Requests',          'route' => 'computer_lab.php?tab=support#repairs',  'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Maintenance Logs',         'route' => 'computer_lab.php?tab=computers#maint',  'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── F. Software Management ──
+                ['title' => 'Software Inventory',       'route' => 'computer_lab.php?tab=software',         'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Installations',            'route' => 'computer_lab.php?tab=software#install', 'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── G. Inventory & Consumables ──
+                ['title' => 'Consumables Stock',        'route' => 'computer_lab.php?tab=inventory',        'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Equipment Inventory',      'route' => 'computer_lab.php?tab=equipment',        'roles' => ['lab','lab manager','computer lab','ict','it']],
+                // ── H. Reports ──
+                ['title' => 'Lab Reports',              'route' => 'computer_lab.php?tab=reports',          'roles' => ['lab','lab manager','computer lab','ict','it','director','principal']],
+                // ── I. Settings ──
+                ['title' => 'Lab Settings',             'route' => 'computer_lab.php?tab=settings',         'roles' => ['lab','lab manager','computer lab','ict','it']],
+                ['title' => 'Printing Charges Config',  'route' => 'computer_lab.php?tab=settings#print',   'roles' => ['lab','lab manager','computer lab','ict','it']],
             ],
         ],
         [

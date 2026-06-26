@@ -65,8 +65,6 @@ $directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Paymen
 $principalGroups = ['Executive','Academic Oversight','Student Affairs','Staff Oversight','Institutional Operations','Meetings & Governance','Principal Approvals','Principal Reports','Principal Communications'];
 $deputyGroups = ['Academic Support','Student Support','Operational Monitoring','Deputy Approvals','Deputy Reports','Deputy QA','Deputy Communications'];
 $admissionsGroups = ['Admissions','Approvals & Workflow','Settings'];
-$hrGroups = ['Overview','Staff Management','Attendance & Time','Leave Management','Performance','Training & CPD','Recruitment','Payroll (HR View)','Disciplinary','Compliance','Deployment & Rotation','Communication','Reports & Analytics','Settings'];
-$registrarGroups = ['Dashboard','Admissions & Registration','Student Records','Academic Management','Examinations','Results Management','National Examinations','Certificates & Transcripts','Graduation','Communication','Reports','Approvals','Settings'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -101,27 +99,13 @@ $pageGroupAllowList = [
     'director-admissions.php'=> $admissionsGroups,
     'admission-letters.php' => $admissionsGroups,
     'intake-planning.php'   => $admissionsGroups,
-    'hr-manager.php'        => $hrGroups,
-    'academic-registrar.php'=> $registrarGroups,
 ];
 
-// Each page shows ONLY module groups that link to it (auto-detect) or are explicitly allow-listed
+// When on a page in the allow list, restrict modules to those groups only
 $allowedGroups = $pageGroupAllowList[$currentPage] ?? null;
 if ($allowedGroups) {
     $modules = array_values(array_filter($modules, function($m) use ($allowedGroups) {
         return in_array($m['title'], $allowedGroups);
-    }));
-} else {
-    // Auto-detect: only show modules whose children point to this page
-    $modules = array_values(array_filter($modules, function($m) use ($currentPage) {
-        foreach ($m['children'] as $child) {
-            $cr = $child['route'];
-            $hp = strpos($cr, '#');
-            $cmp = $hp !== false ? substr($cr, 0, $hp) : $cr;
-            if (($qp = strpos($cmp, '?')) !== false) $cmp = substr($cmp, 0, $qp);
-            if (basename($cmp) === $currentPage) return true;
-        }
-        return false;
     }));
 }
 
@@ -168,6 +152,7 @@ $dashboardMap = [
     'budget-management.php' => ['title' => 'Budget Management',        'icon' => 'fas fa-chart-pie'],
     'expenditure-tracking.php'=> ['title' => 'Expenditure Tracking',   'icon' => 'fas fa-file-invoice-dollar'],
     'bursar-payroll.php'    => ['title' => 'Payroll',                  'icon' => 'fas fa-money-check'],
+    'payroll.php'           => ['title' => 'Enterprise Payroll',       'icon' => 'fas fa-money-check-alt'],
     'general-ledger.php'    => ['title' => 'General Ledger',           'icon' => 'fas fa-book'],
     'bank-reconciliation.php'=> ['title' => 'Bank Reconciliation',     'icon' => 'fas fa-university'],
     'student-statements.php'=> ['title' => 'Student Statements',       'icon' => 'fas fa-file-invoice'],
@@ -217,7 +202,22 @@ $dashboardMap = [
     'digital-learning.php'  => ['title' => 'Digital Learning',         'icon' => 'fas fa-laptop'],
     'cybersecurity.php'     => ['title' => 'Cybersecurity',            'icon' => 'fas fa-shield'],
     'ict-policy.php'        => ['title' => 'ICT Policy',               'icon' => 'fas fa-file-alt'],
-    'computer_lab.php'      => ['title' => 'Computer Lab',             'icon' => 'fas fa-desktop'],
+    'computer_lab.php'      => ['title' => 'Computer Lab Manager',      'icon' => 'fas fa-desktop',
+        'children' => [
+            ['title' => 'Overview',              'route' => 'computer_lab.php?tab=dashboard',            'roles' => '*'],
+            ['title' => 'Student ID Cards',      'route' => 'computer_lab.php?tab=id-cards',             'roles' => '*'],
+            ['title' => 'Computers & Lab',       'route' => 'computer_lab.php?tab=computers',            'roles' => '*'],
+            ['title' => 'Practical Sessions',    'route' => 'computer_lab.php?tab=sessions',             'roles' => '*'],
+            ['title' => 'Equipment',             'route' => 'computer_lab.php?tab=equipment',            'roles' => '*'],
+            ['title' => 'Printing Centre',       'route' => 'computer_lab.php?tab=printing',             'roles' => '*'],
+            ['title' => 'Technical Support',     'route' => 'computer_lab.php?tab=support',              'roles' => '*'],
+            ['title' => 'Software',              'route' => 'computer_lab.php?tab=software',             'roles' => '*'],
+            ['title' => 'Inventory',             'route' => 'computer_lab.php?tab=inventory',            'roles' => '*'],
+            ['title' => 'Attendance',            'route' => 'computer_lab.php?tab=attendance',           'roles' => '*'],
+            ['title' => 'Reports',               'route' => 'computer_lab.php?tab=reports',              'roles' => '*'],
+            ['title' => 'Settings',              'route' => 'computer_lab.php?tab=settings',             'roles' => '*'],
+        ],
+    ],
     'it-support-tickets.php'=> ['title' => 'IT Support Tickets',       'icon' => 'fas fa-ticket-alt'],
     'lab-booking-management.php'=> ['title' => 'Lab Booking',          'icon' => 'fas fa-calendar-check'],
 
@@ -474,6 +474,158 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <a href="director-general.php?page=messaging" class="menu-link dg-nav-item" data-section="messaging"><span class="menu-icon"><i class="fas fa-comments"></i></span><span class="menu-label">Staff Messaging</span></a>
             <a href="director-general.php?page=broadcast" class="menu-link dg-nav-item" data-section="broadcast"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Broadcast Messages</span></a>
             <a href="director-general.php?page=communications" class="menu-link dg-nav-item" data-section="communications"><span class="menu-icon"><i class="fas fa-envelope"></i></span><span class="menu-label">Message History</span></a>
+        </div>
+        <?php elseif ($currentPage === 'hr-manager.php'): ?>
+        <!-- ═══ HR MANAGER — PROFESSIONAL SIDEBAR ═══ -->
+        <div class="menu-divider"><span><i class="fas fa-chart-pie" style="color:#dc2626;"></i> HR DASHBOARD</span></div>
+        <div class="menu-group expanded" data-group="overview">
+            <div class="menu-group-header" data-target="overview" onclick="location.href='hr-manager.php'"><span class="menu-icon"><i class="fas fa-home"></i></span><span class="menu-label">Overview</span><span class="menu-chevron" style="visibility:hidden"><i class="fas fa-chevron-down"></i></span></div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-id-card" style="color:#3b82f6;"></i> A. HR CORE</span></div>
+        <div class="menu-group" data-group="staff">
+            <div class="menu-group-header" data-target="staff"><span class="menu-icon"><i class="fas fa-users"></i></span><span class="menu-label">Staff Management</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-staff" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#staff" class="child-link" data-section="staff"><span class="child-bullet"></span><span class="child-label">Staff Records</span></a>
+                    <a href="staff-directory.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Roles &amp; Departments</span></a>
+                    <a href="contracts-management.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Contracts</span></a>
+                    <a href="staff_profile_management.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Documents</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-calendar-check" style="color:#059669;"></i> B. ATTENDANCE</span></div>
+        <div class="menu-group" data-group="attendance">
+            <div class="menu-group-header" data-target="attendance"><span class="menu-icon"><i class="fas fa-clock"></i></span><span class="menu-label">Attendance &amp; Time</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-attendance" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="staff-attendance.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Attendance Logs</span></a>
+                    <a href="duty-rosters.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Shift Scheduling</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-calendar-alt" style="color:#f59e0b;"></i> C. LEAVE</span></div>
+        <div class="menu-group" data-group="leave">
+            <div class="menu-group-header" data-target="leave"><span class="menu-icon"><i class="fas fa-calendar-alt"></i></span><span class="menu-label">Leave Management</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-leave" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#leave" class="child-link" data-section="leave"><span class="child-bullet"></span><span class="child-label">Leave Requests</span></a>
+                    <a href="leave-management.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Full Leave Dashboard</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-chart-line" style="color:#8b5cf6;"></i> D. PERFORMANCE</span></div>
+        <div class="menu-group" data-group="performance">
+            <div class="menu-group-header" data-target="performance"><span class="menu-icon"><i class="fas fa-chart-line"></i></span><span class="menu-label">Performance</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-performance" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#performance" class="child-link" data-section="performance"><span class="child-bullet"></span><span class="child-label">Appraisals</span></a>
+                    <a href="performance-appraisal.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Evaluations</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-graduation-cap" style="color:#0891b2;"></i> E. TRAINING &amp; CPD</span></div>
+        <div class="menu-group" data-group="training">
+            <div class="menu-group-header" data-target="training"><span class="menu-icon"><i class="fas fa-graduation-cap"></i></span><span class="menu-label">Training &amp; CPD</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-training" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#training" class="child-link" data-section="training"><span class="child-bullet"></span><span class="child-label">CPD Records</span></a>
+                    <a href="training-cpd.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Certifications</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-user-plus" style="color:#059669;"></i> F. RECRUITMENT</span></div>
+        <div class="menu-group" data-group="recruitment">
+            <div class="menu-group-header" data-target="recruitment"><span class="menu-icon"><i class="fas fa-user-plus"></i></span><span class="menu-label">Recruitment</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-recruitment" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#recruitment" class="child-link" data-section="recruitment"><span class="child-bullet"></span><span class="child-label">Vacancies</span></a>
+                    <a href="recruitment.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Applications</span></a>
+                    <a href="onboarding.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Onboarding</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-money-check" style="color:#7c3aed;"></i> G. PAYROLL (HR VIEW)</span></div>
+        <div class="menu-group" data-group="payroll">
+            <div class="menu-group-header" data-target="payroll"><span class="menu-icon"><i class="fas fa-money-check"></i></span><span class="menu-label">Payroll</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-payroll" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="../payroll.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Salary View</span></a>
+                    <a href="../payroll.php?section=payslips" class="child-link"><span class="child-bullet"></span><span class="child-label">Payslips</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-gavel" style="color:#dc2626;"></i> H. DISCIPLINARY</span></div>
+        <div class="menu-group" data-group="disciplinary">
+            <div class="menu-group-header" data-target="disciplinary"><span class="menu-icon"><i class="fas fa-gavel"></i></span><span class="menu-label">Disciplinary</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-disciplinary" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#disciplinary" class="child-link" data-section="disciplinary"><span class="child-bullet"></span><span class="child-label">Cases</span></a>
+                    <a href="staff-disciplinary.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Investigations</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-certificate" style="color:#dc2626;"></i> I. LICENSING</span></div>
+        <div class="menu-group" data-group="licensing">
+            <div class="menu-group-header" data-target="licensing"><span class="menu-icon"><i class="fas fa-certificate"></i></span><span class="menu-label">Licensing &amp; Compliance</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-licensing" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#licensing" class="child-link" data-section="licensing"><span class="child-bullet"></span><span class="child-label">Licenses</span></a>
+                    <a href="professional-licenses.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Compliance</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-clinic-medical" style="color:#0891b2;"></i> J. DEPLOYMENT</span></div>
+        <div class="menu-group" data-group="deployment">
+            <div class="menu-group-header" data-target="deployment"><span class="menu-icon"><i class="fas fa-clinic-medical"></i></span><span class="menu-label">Deployment &amp; Rotation</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-deployment" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#deployment" class="child-link" data-section="deployment"><span class="child-bullet"></span><span class="child-label">Clinical Rotation</span></a>
+                    <a href="clinical-placement.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Placements</span></a>
+                    <a href="duty-rosters.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Rosters</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-bullhorn" style="color:#8b5cf6;"></i> K. COMMUNICATION</span></div>
+        <div class="menu-group" data-group="comms">
+            <div class="menu-group-header" data-target="comms"><span class="menu-icon"><i class="fas fa-bullhorn"></i></span><span class="menu-label">Communication</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-comms" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#comms" class="child-link" data-section="comms"><span class="child-bullet"></span><span class="child-label">Announcements</span></a>
+                    <a href="../news.php" class="child-link"><span class="child-bullet"></span><span class="child-label">News</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-chart-bar" style="color:#7c3aed;"></i> L. REPORTS</span></div>
+        <div class="menu-group" data-group="reports">
+            <div class="menu-group-header" data-target="reports"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span><span class="menu-label">Reports &amp; Analytics</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-reports" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#reports" class="child-link" data-section="reports"><span class="child-bullet"></span><span class="child-label">HR Reports</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-divider"><span><i class="fas fa-cog" style="color:#94a3b8;"></i> M. SETTINGS</span></div>
+        <div class="menu-group" data-group="settings">
+            <div class="menu-group-header" data-target="settings"><span class="menu-icon"><i class="fas fa-cog"></i></span><span class="menu-label">Settings</span><span class="menu-chevron"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="menu-children" id="childGroup-settings" style="max-height:0">
+                <div class="menu-children-inner">
+                    <a href="hr-manager.php#settings" class="child-link" data-section="settings"><span class="child-bullet"></span><span class="child-label">Departments</span></a>
+                    <a href="staff-directory.php" class="child-link"><span class="child-bullet"></span><span class="child-label">Roles</span></a>
+                </div>
+            </div>
         </div>
         <?php else: ?>
         <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->

@@ -163,9 +163,40 @@ if (!function_exists('isnm_mysqli_connect')) {
     }
 }
 
+if (!defined('PAYROLL_DB_HOST')) {
+    define('PAYROLL_DB_HOST', isnm_env('PAYROLL_DB_HOST', STAFF_DB_HOST));
+}
+if (!defined('PAYROLL_DB_PORT')) {
+    define('PAYROLL_DB_PORT', (int) isnm_env('PAYROLL_DB_PORT', STAFF_DB_PORT));
+}
+if (!defined('PAYROLL_DB_NAME')) {
+    define('PAYROLL_DB_NAME', isnm_env('PAYROLL_DB_NAME', STAFF_DB_NAME));
+}
+if (!defined('PAYROLL_DB_USER')) {
+    define('PAYROLL_DB_USER', isnm_env('PAYROLL_DB_USER', STAFF_DB_USER));
+}
+if (!defined('PAYROLL_DB_PASS')) {
+    define('PAYROLL_DB_PASS', isnm_env('PAYROLL_DB_PASS', STAFF_DB_PASS));
+}
+if (!defined('PAYROLL_DB_CHARSET')) {
+    define('PAYROLL_DB_CHARSET', isnm_env('PAYROLL_DB_CHARSET', STAFF_DB_CHARSET));
+}
+
 if (!function_exists('getICTConnection')) {
     function getICTConnection() {
         return isnm_mysqli_connect('ICT', ICT_DB_HOST, ICT_DB_USER, ICT_DB_PASS, ICT_DB_NAME, ICT_DB_PORT, ICT_DB_CHARSET);
+    }
+}
+
+if (!function_exists('getPayrollDBName')) {
+    function getPayrollDBName(): string {
+        return PAYROLL_DB_NAME;
+    }
+}
+
+if (!function_exists('getPayrollConnection')) {
+    function getPayrollConnection() {
+        return isnm_mysqli_connect('Payroll', PAYROLL_DB_HOST, PAYROLL_DB_USER, PAYROLL_DB_PASS, PAYROLL_DB_NAME, PAYROLL_DB_PORT, PAYROLL_DB_CHARSET);
     }
 }
 
