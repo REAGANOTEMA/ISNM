@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
-$ctx = bootstrapStaffDashboard(['school bursar', 'bursar', 'accountant', 'finance']);
+$ctx = bootstrapStaffDashboard(['school bursar','bursar']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';

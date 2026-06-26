@@ -169,12 +169,12 @@
                     }else{
                             echo "<script>alert('new password and confirm passsword are not same')</script>";
                     }
-                }
-                else{
+                }else{
                     echo "<script>alert('wrong current password...');</script>";
                 }
             }
         }
+    }
        //  if(!$result)
        //  {
        //  echo "<script>alert('The username you entered does not exist')</script>";

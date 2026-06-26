@@ -82,7 +82,7 @@ try {
         $r = $conn->query("SELECT COUNT(*) c FROM staff");
         if ($r) $kpi['total_staff'] = (int)$r->fetch_assoc()['c'];
 
-        $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE status='Active'");
+        $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE LOWER(status)='active'");
         if ($r) $kpi['active_staff'] = (int)$r->fetch_assoc()['c'];
         $kpi['staff_current'] = $kpi['active_staff'];
 

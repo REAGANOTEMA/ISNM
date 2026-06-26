@@ -65,6 +65,8 @@ $directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Paymen
 $principalGroups = ['Executive','Academic Oversight','Student Affairs','Staff Oversight','Institutional Operations','Meetings & Governance','Principal Approvals','Principal Reports','Principal Communications'];
 $deputyGroups = ['Academic Support','Student Support','Operational Monitoring','Deputy Approvals','Deputy Reports','Deputy QA','Deputy Communications'];
 $admissionsGroups = ['Admissions','Approvals & Workflow','Settings'];
+$hrGroups = ['Overview','Staff Management','Attendance & Time','Leave Management','Performance','Training & CPD','Recruitment','Payroll (HR View)','Disciplinary','Compliance','Deployment & Rotation','Communication','Reports & Analytics','Settings'];
+$registrarGroups = ['Dashboard','Admissions & Registration','Student Records','Academic Management','Examinations','Results Management','National Examinations','Certificates & Transcripts','Graduation','Communication','Reports','Approvals','Settings'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -99,6 +101,8 @@ $pageGroupAllowList = [
     'director-admissions.php'=> $admissionsGroups,
     'admission-letters.php' => $admissionsGroups,
     'intake-planning.php'   => $admissionsGroups,
+    'hr-manager.php'        => $hrGroups,
+    'academic-registrar.php'=> $registrarGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only

@@ -45,7 +45,7 @@ function getDepartmentPerformance($staffConn) {
         $result = $staffConn->query("
             SELECT dd.department_name, dd.department_code, dd.description,
                    sr.role_name, sr.hierarchy_level,
-                   (SELECT COUNT(*) FROM staff s WHERE s.role_id = dd.role_id AND s.status = 'Active') as staff_count,
+                   (SELECT COUNT(*) FROM staff s WHERE s.role_id = dd.role_id AND LOWER(s.status) = 'active') as staff_count,
                    (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND (dt.status = 'In Progress' OR dt.status = 'Not Started')) as active_targets,
                    (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status = 'Missed') as missed_targets,
                    (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.department_targets dt WHERE dt.department_code = dd.department_code AND dt.status IN ('Achieved','Exceeded')) as achieved_targets,

@@ -26,7 +26,7 @@ class AuthenticationService {
     private function isStaffAccountLocked($email) {
         $conn = getStaffConnection();
         if (!$conn) return false;
-        $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE LOWER(email) = ? AND status = 'Active' AND locked_until > NOW()");
+        $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active' AND locked_until > NOW()");
         if (!$stmt) return false;
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -56,9 +56,9 @@ class AuthenticationService {
     private function recordStaffFailedAttempt($email) {
         $conn = getStaffConnection();
         if (!$conn) return;
-        $s = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE LOWER(email) = ? AND status = 'Active'");
+        $s = $conn->prepare("UPDATE staff SET login_attempts = login_attempts + 1 WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
         if ($s) { $s->bind_param('s', $email); $s->execute(); $s->close(); }
-        $s2 = $conn->prepare("SELECT login_attempts FROM staff WHERE LOWER(email) = ? AND status = 'Active'");
+        $s2 = $conn->prepare("SELECT login_attempts FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
         if (!$s2) return;
         $s2->bind_param('s', $email);
         $s2->execute();
@@ -66,7 +66,7 @@ class AuthenticationService {
         $s2->close();
         if ($row && $row['login_attempts'] >= $this->maxLoginAttempts) {
             $lock = date('Y-m-d H:i:s', time() + $this->lockoutDuration);
-            $s3 = $conn->prepare("UPDATE staff SET locked_until = ? WHERE LOWER(email) = ? AND status = 'Active'");
+            $s3 = $conn->prepare("UPDATE staff SET locked_until = ? WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
             if ($s3) { $s3->bind_param('ss', $lock, $email); $s3->execute(); $s3->close(); }
         }
     }

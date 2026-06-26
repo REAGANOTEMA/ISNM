@@ -78,11 +78,11 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
     // ── Staff ──
     if ($conn) {
         try {
-            $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE status='Active'"); if ($r) $data['staff']['active'] = (int)$r->fetch_assoc()['c'];
+            $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE LOWER(status)='active'"); if ($r) $data['staff']['active'] = (int)$r->fetch_assoc()['c'];
             $r = $conn->query("SELECT COUNT(*) c FROM staff"); if ($r) $data['staff']['total'] = (int)$r->fetch_assoc()['c'];
             $r = $conn->query("SELECT COUNT(*) c FROM staff WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())"); if ($r) $data['staff']['new_this_month'] = (int)$r->fetch_assoc()['c'];
             // Staff by department
-            $r = $conn->query("SELECT COALESCE(department,'General') dept, COUNT(*) c FROM staff WHERE status='Active' GROUP BY dept ORDER BY c DESC LIMIT 10");
+            $r = $conn->query("SELECT COALESCE(department,'General') dept, COUNT(*) c FROM staff WHERE LOWER(status)='active' GROUP BY dept ORDER BY c DESC LIMIT 10");
             if ($r) while ($row = $r->fetch_assoc()) $data['staff']['by_department'][] = $row;
         } catch (Exception $e) {}
     }
