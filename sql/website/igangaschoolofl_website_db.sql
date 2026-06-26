@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -43,7 +43,7 @@ DELIMITER ;
 -- Table structure for table `contact_submissions`
 --
 
-CREATE TABLE `contact_submissions` (
+CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `id` int NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE `contact_submissions` (
   `replied_at` datetime DEFAULT NULL,
   `replied_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -64,7 +64,7 @@ CREATE TABLE `contact_submissions` (
 -- Table structure for table `daily_sick_records`
 --
 
-CREATE TABLE `daily_sick_records` (
+CREATE TABLE IF NOT EXISTS `daily_sick_records` (
   `id` int NOT NULL,
   `record_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE `daily_sick_records` (
 -- Table structure for table `donations`
 --
 
-CREATE TABLE `donations` (
+CREATE TABLE IF NOT EXISTS `donations` (
   `id` int NOT NULL,
   `donor_name` varchar(200) NOT NULL,
   `donor_email` varchar(255) NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE `donations` (
   `acknowledged_at` datetime DEFAULT NULL,
   `acknowledged_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -124,7 +124,7 @@ CREATE TABLE `donations` (
 -- Table structure for table `medicine_stock`
 --
 
-CREATE TABLE `medicine_stock` (
+CREATE TABLE IF NOT EXISTS `medicine_stock` (
   `id` int NOT NULL,
   `medicine_code` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -190,7 +190,7 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 -- Table structure for table `medicine_stock_transactions`
 --
 
-CREATE TABLE `medicine_stock_transactions` (
+CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
   `transaction_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_id` int NOT NULL,
@@ -214,7 +214,7 @@ CREATE TABLE `medicine_stock_transactions` (
 -- Table structure for table `news`
 --
 
-CREATE TABLE `news` (
+CREATE TABLE IF NOT EXISTS `news` (
   `id` int NOT NULL,
   `title` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
@@ -228,7 +228,7 @@ CREATE TABLE `news` (
   `published_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -236,7 +236,7 @@ CREATE TABLE `news` (
 -- Table structure for table `notifications`
 --
 
-CREATE TABLE `notifications` (
+CREATE TABLE IF NOT EXISTS `notifications` (
   `id` int NOT NULL,
   `recipient_type` enum('student','staff','all') NOT NULL,
   `recipient_id` int DEFAULT NULL,
@@ -247,7 +247,7 @@ CREATE TABLE `notifications` (
   `sent_at` datetime DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -255,13 +255,13 @@ CREATE TABLE `notifications` (
 -- Table structure for table `notification_reads`
 --
 
-CREATE TABLE `notification_reads` (
+CREATE TABLE IF NOT EXISTS `notification_reads` (
   `id` int NOT NULL,
   `notification_id` int NOT NULL,
   `user_id` int NOT NULL COMMENT 'FK to staffs_db.staff.id or students_db.students.id',
   `user_type` enum('staff','student') NOT NULL DEFAULT 'staff',
   `read_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -269,7 +269,7 @@ CREATE TABLE `notification_reads` (
 -- Table structure for table `pages`
 --
 
-CREATE TABLE `pages` (
+CREATE TABLE IF NOT EXISTS `pages` (
   `id` int NOT NULL,
   `title` varchar(200) NOT NULL,
   `slug` varchar(200) NOT NULL,
@@ -282,7 +282,7 @@ CREATE TABLE `pages` (
   `page_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -290,7 +290,7 @@ CREATE TABLE `pages` (
 -- Table structure for table `portal_messages`
 --
 
-CREATE TABLE `portal_messages` (
+CREATE TABLE IF NOT EXISTS `portal_messages` (
   `id` int NOT NULL,
   `sender_id` int NOT NULL,
   `recipient_id` int DEFAULT NULL,
@@ -300,7 +300,7 @@ CREATE TABLE `portal_messages` (
   `is_read` tinyint(1) DEFAULT '0',
   `read_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -308,7 +308,7 @@ CREATE TABLE `portal_messages` (
 -- Table structure for table `push_subscriptions`
 --
 
-CREATE TABLE `push_subscriptions` (
+CREATE TABLE IF NOT EXISTS `push_subscriptions` (
   `id` int NOT NULL,
   `user_id` int NOT NULL,
   `user_type` enum('staff','student') COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -328,7 +328,7 @@ CREATE TABLE `push_subscriptions` (
 -- Table structure for table `sickness_directory`
 --
 
-CREATE TABLE `sickness_directory` (
+CREATE TABLE IF NOT EXISTS `sickness_directory` (
   `id` int NOT NULL,
   `sickness_code` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
   `sickness_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -380,7 +380,7 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 -- Table structure for table `student_applications`
 --
 
-CREATE TABLE `student_applications` (
+CREATE TABLE IF NOT EXISTS `student_applications` (
   `id` int NOT NULL,
   `application_number` varchar(50) NOT NULL,
   `first_name` varchar(100) NOT NULL,
@@ -400,7 +400,7 @@ CREATE TABLE `student_applications` (
   `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `reviewed_by` int DEFAULT NULL,
   `reviewed_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -408,7 +408,7 @@ CREATE TABLE `student_applications` (
 -- Table structure for table `student_sick_leave`
 --
 
-CREATE TABLE `student_sick_leave` (
+CREATE TABLE IF NOT EXISTS `student_sick_leave` (
   `id` int NOT NULL,
   `leave_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -449,7 +449,7 @@ CREATE TABLE `student_sick_leave` (
 -- Table structure for table `volunteer_applications`
 --
 
-CREATE TABLE `volunteer_applications` (
+CREATE TABLE IF NOT EXISTS `volunteer_applications` (
   `id` int NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -468,7 +468,7 @@ CREATE TABLE `volunteer_applications` (
   `reviewed_at` datetime DEFAULT NULL,
   `reviewed_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Indexes for dumped tables

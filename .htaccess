@@ -60,17 +60,19 @@
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# ── Director General Dashboard Routes ─────────────────────────
+# ── URL rewrites ─────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Redirect /director and /director/ to overview
+
+    # Redirect /favicon.ico to school logo
+    RewriteRule ^favicon\.ico$ images/school-logo.png [L,R=301]
+
+    # Director General Dashboard Routes
     RewriteRule ^director/?$ /director/overview [R=301,L]
-    # Map /director/{page} → dashboards/director-general.php?page={page}
     RewriteRule ^director/([a-z]+)/?$ dashboards/director-general.php?page=$1 [L,QSA]
 
-    # Redirect /ceo and /ceo/ to overview
+    # CEO Dashboard Routes
     RewriteRule ^ceo/?$ /ceo/overview [R=301,L]
-    # Map /ceo/{page} → dashboards/director-general.php?page={page}&dg_role=ceo
     RewriteRule ^ceo/([a-z]+)/?$ dashboards/director-general.php?page=$1&dg_role=ceo [L,QSA]
 </IfModule>
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This documentation describes the complete database structure for the International School of Nursing and Midwifery (ISNM) School Management System. The database name is **isnm_db**.
+This documentation describes the complete database structure for the Iganga School of Nursing and Midwifery (ISNM) School Management System. The main system database name is **igangaschoolofl_ict**.
 
 ## Database Structure
 
@@ -332,7 +332,7 @@ The following files were created during development but are superseded by the ma
 ### Quick Setup
 1. Run the master file: `23_MASTER_ISNM_COMPLETE_SYSTEM.sql`
 2. This will create all tables, views, stored procedures, and sample data
-3. Configure PHP application to use the `isnm_db` database
+3. Configure PHP application to use the `igangaschoolofl_ict` database for the main system
 4. Update database connection settings in `db.php`
 
 ### Individual Module Setup

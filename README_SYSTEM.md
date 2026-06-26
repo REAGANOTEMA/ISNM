@@ -37,11 +37,12 @@ A comprehensive Student Management System for Iganga School of Nursing and Midwi
 ### 1. Database Setup
 
 ```sql
--- Create database
-CREATE DATABASE isnm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Import the schema
-mysql -u root -p isnm_db < database/isnm_complete_schema.sql
+-- Note: On shared hosting, the databases are already created.
+-- Select the target database and import:
+--   sql/ict/igangaschoolofl_ict.sql          → igangaschoolofl_ict (main system)
+--   sql/students/igangaschoolofl_students_db.sql → igangaschoolofl_students_db
+--   sql/staffs/igangaschoolofl_staffs_db.sql  → igangaschoolofl_staffs_db
+--   sql/website/igangaschoolofl_website_db.sql → igangaschoolofl_website_db
 ```
 
 ### 2. File Setup
@@ -221,7 +222,7 @@ Run import: `http://localhost/ISNM/import.php`
 1. **Database Connection Failed**
    - Check MySQL server is running
    - Verify database credentials in `config/database.php`
-   - Ensure database `isnm_db` exists
+   - Ensure the required databases exist on your MySQL server
 
 2. **File Upload Failed**
    - Check `uploads/students/` directory permissions

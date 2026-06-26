@@ -2028,14 +2028,21 @@ function sendIndividualMsg(e){
   data.append('recipient_type', 'department');
   data.append('recipient_id', rid);
   var result = document.getElementById('msgResult');
+  if (!result) return false;
   result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Sending...</span>';
   fetch('../includes/ajax_staff_communication.php', { method:'POST', body:data })
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if (!r.ok) { return r.json().then(function(e){ throw e; }).catch(function(){ throw new Error('HTTP ' + r.status); }); }
+      return r.json();
+    })
     .then(function(d){
       if(d.success){ result.innerHTML = '<span class="text-success">Message sent successfully.</span>'; document.getElementById('msgSubject').value=''; document.getElementById('msgBody').value=''; }
       else { result.innerHTML = '<span class="text-danger">Error: ' + (d.error||'Unknown') + '</span>'; }
     })
-    .catch(function(){ result.innerHTML = '<span class="text-danger">Network error.</span>'; });
+    .catch(function(e){
+      console.warn('[sendIndividualMsg]', e);
+      if (result) result.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+    });
   return false;
 }
 function toggleBroadcastDept(val){ document.getElementById('broadcastDeptGroup').style.display = val === 'department' ? 'block' : 'none'; }
@@ -2051,14 +2058,21 @@ function sendBroadcast(e){
   if (audience !== 'all_staff') fd.append('recipient_id', fd.get('broadcast_department'));
   else fd.append('recipient_id', '');
   var result = document.getElementById('bcResult');
+  if (!result) return false;
   result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Sending broadcast...</span>';
   fetch('../includes/ajax_staff_communication.php', { method:'POST', body:fd })
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if (!r.ok) { return r.json().then(function(e){ throw e; }).catch(function(){ throw new Error('HTTP ' + r.status); }); }
+      return r.json();
+    })
     .then(function(d){
       if(d.success){ result.innerHTML = '<span class="text-success">Broadcast sent to ' + (d.recipients_count||'all') + ' recipient(s).</span>'; document.getElementById('bcSubject').value=''; document.getElementById('bcBody').value=''; }
       else { result.innerHTML = '<span class="text-danger">Error: ' + (d.error||'Unknown') + '</span>'; }
     })
-    .catch(function(){ result.innerHTML = '<span class="text-danger">Network error.</span>'; });
+    .catch(function(e){
+      console.warn('[sendBroadcast]', e);
+      if (result) result.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+    });
   return false;
 }
 </script>

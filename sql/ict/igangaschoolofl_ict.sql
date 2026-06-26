@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -35,7 +35,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VAR
     END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
+CREATE PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
     ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
 END$$
@@ -48,7 +48,7 @@ DELIMITER ;
 -- Table structure for table `daily_sick_records`
 --
 
-CREATE TABLE `daily_sick_records` (
+CREATE TABLE IF NOT EXISTS `daily_sick_records` (
   `id` int NOT NULL,
   `record_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE `daily_sick_records` (
 -- Table structure for table `it_support_tickets`
 --
 
-CREATE TABLE `it_support_tickets` (
+CREATE TABLE IF NOT EXISTS `it_support_tickets` (
   `id` int NOT NULL,
   `ticket_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `requester_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -116,7 +116,7 @@ INSERT INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requ
 -- Table structure for table `lab_bookings`
 --
 
-CREATE TABLE `lab_bookings` (
+CREATE TABLE IF NOT EXISTS `lab_bookings` (
   `id` int NOT NULL,
   `booking_reference` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `course_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -149,7 +149,7 @@ INSERT INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructo
 -- Table structure for table `lab_computers`
 --
 
-CREATE TABLE `lab_computers` (
+CREATE TABLE IF NOT EXISTS `lab_computers` (
   `id` int NOT NULL,
   `computer_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `computer_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -186,7 +186,7 @@ INSERT INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `location`, `
 -- Table structure for table `lab_usage_stats`
 --
 
-CREATE TABLE `lab_usage_stats` (
+CREATE TABLE IF NOT EXISTS `lab_usage_stats` (
   `id` int NOT NULL,
   `lab_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `date` date NOT NULL,
@@ -216,7 +216,7 @@ INSERT INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `tota
 -- Table structure for table `maintenance_logs`
 --
 
-CREATE TABLE `maintenance_logs` (
+CREATE TABLE IF NOT EXISTS `maintenance_logs` (
   `id` int NOT NULL,
   `computer_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `maintenance_type` enum('routine','repair','upgrade','cleaning') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -247,7 +247,7 @@ INSERT INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `descri
 -- Table structure for table `medicine_stock`
 --
 
-CREATE TABLE `medicine_stock` (
+CREATE TABLE IF NOT EXISTS `medicine_stock` (
   `id` int NOT NULL,
   `medicine_code` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -313,7 +313,7 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 -- Table structure for table `medicine_stock_transactions`
 --
 
-CREATE TABLE `medicine_stock_transactions` (
+CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
   `transaction_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_id` int NOT NULL,
@@ -337,7 +337,7 @@ CREATE TABLE `medicine_stock_transactions` (
 -- Table structure for table `network_devices`
 --
 
-CREATE TABLE `network_devices` (
+CREATE TABLE IF NOT EXISTS `network_devices` (
   `id` int NOT NULL,
   `device_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `device_type` enum('router','switch','access_point','firewall','server','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -377,7 +377,7 @@ INSERT INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`,
 -- Table structure for table `sickness_directory`
 --
 
-CREATE TABLE `sickness_directory` (
+CREATE TABLE IF NOT EXISTS `sickness_directory` (
   `id` int NOT NULL,
   `sickness_code` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
   `sickness_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -429,7 +429,7 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 -- Table structure for table `software_inventory`
 --
 
-CREATE TABLE `software_inventory` (
+CREATE TABLE IF NOT EXISTS `software_inventory` (
   `id` int NOT NULL,
   `software_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -468,7 +468,7 @@ INSERT INTO `software_inventory` (`id`, `software_name`, `version`, `license_key
 -- Table structure for table `student_sick_leave`
 --
 
-CREATE TABLE `student_sick_leave` (
+CREATE TABLE IF NOT EXISTS `student_sick_leave` (
   `id` int NOT NULL,
   `leave_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -509,7 +509,7 @@ CREATE TABLE `student_sick_leave` (
 -- Stand-in structure for view `v_active_tickets`
 -- (See below for the actual view)
 --
-CREATE TABLE `v_active_tickets` (
+CREATE TABLE IF NOT EXISTS `v_active_tickets` (
 `priority` enum('low','medium','high','critical')
 ,`ticket_count` bigint
 ,`ticket_numbers` text
@@ -521,7 +521,7 @@ CREATE TABLE `v_active_tickets` (
 -- Stand-in structure for view `v_computer_availability`
 -- (See below for the actual view)
 --
-CREATE TABLE `v_computer_availability` (
+CREATE TABLE IF NOT EXISTS `v_computer_availability` (
 `location` varchar(100)
 ,`total_computers` bigint
 ,`online_count` decimal(23,0)
@@ -537,7 +537,7 @@ CREATE TABLE `v_computer_availability` (
 --
 DROP TABLE IF EXISTS `v_active_tickets`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_tickets`  AS SELECT `it_support_tickets`.`priority` AS `priority`, count(0) AS `ticket_count`, group_concat(`it_support_tickets`.`ticket_number` separator ',') AS `ticket_numbers` FROM `it_support_tickets` WHERE (`it_support_tickets`.`status` in ('open','in_progress')) GROUP BY `it_support_tickets`.`priority` ORDER BY (case `it_support_tickets`.`priority` when 'critical' then 1 when 'high' then 2 when 'medium' then 3 else 4 end) ASC ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_active_tickets`  AS SELECT `it_support_tickets`.`priority` AS `priority`, count(0) AS `ticket_count`, group_concat(`it_support_tickets`.`ticket_number` separator ',') AS `ticket_numbers` FROM `it_support_tickets` WHERE (`it_support_tickets`.`status` in ('open','in_progress')) GROUP BY `it_support_tickets`.`priority` ORDER BY (case `it_support_tickets`.`priority` when 'critical' then 1 when 'high' then 2 when 'medium' then 3 else 4 end) ASC ;
 
 -- --------------------------------------------------------
 
@@ -546,7 +546,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `v_computer_availability`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_computer_availability`  AS SELECT `lab_computers`.`location` AS `location`, count(0) AS `total_computers`, sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) AS `online_count`, sum((case when (`lab_computers`.`status` = 'offline') then 1 else 0 end)) AS `offline_count`, sum((case when (`lab_computers`.`status` = 'maintenance') then 1 else 0 end)) AS `maintenance_count`, round(((sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) * 100.0) / count(0)),2) AS `availability_percentage` FROM `lab_computers` WHERE (`lab_computers`.`status` <> 'deleted') GROUP BY `lab_computers`.`location` ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_computer_availability`  AS SELECT `lab_computers`.`location` AS `location`, count(0) AS `total_computers`, sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) AS `online_count`, sum((case when (`lab_computers`.`status` = 'offline') then 1 else 0 end)) AS `offline_count`, sum((case when (`lab_computers`.`status` = 'maintenance') then 1 else 0 end)) AS `maintenance_count`, round(((sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) * 100.0) / count(0)),2) AS `availability_percentage` FROM `lab_computers` WHERE (`lab_computers`.`status` <> 'deleted') GROUP BY `lab_computers`.`location` ;
 
 --
 -- Indexes for dumped tables

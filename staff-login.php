@@ -600,7 +600,7 @@ body{
   .hero-motto{display:none}
   .card-glow{display:none}
   .login-card-wrap{max-width:440px;margin:0 auto;animation:cardIn 1s cubic-bezier(0.16,1,0.3,1) forwards}
-  .login-card{padding:28px 24px 24px}
+  .login-card{padding:32px 28px 28px}
 }
 @media(max-width:480px){
   .login-left{padding:24px 16px 12px}
@@ -609,12 +609,18 @@ body{
   .hero-badge{font-size:10px;margin-bottom:16px;letter-spacing:1.5px}
   .hero-institution{font-size:0.9rem}
   .hero-description{font-size:0.78rem;margin-bottom:20px}
-  .login-card{padding:22px 16px 20px;border-radius:16px}
-  .card-title{font-size:1.1rem}
-  .card-subtitle{font-size:12px;margin-bottom:18px}
-  .form-group{margin-bottom:14px}
+  .login-card{padding:24px 18px 22px;border-radius:18px}
+  .card-title{font-size:1.25rem}
+  .card-subtitle{font-size:13px;margin-bottom:18px}
+  .card-brand h2{font-size:1rem}
+  .form-group{margin-bottom:16px}
+  .form-label{font-size:10px}
+  .input-wrap .form-control{font-size:14px;padding:11px 14px 11px 42px}
   .login-card-wrap{max-width:100%}
   .form-options{flex-direction:column;gap:8px;align-items:flex-start}
+  .btn-login{padding:12px 20px;font-size:14px}
+  .role-badge{padding:4px 12px;font-size:11px}
+  .footer-links{font-size:12px;gap:16px}
 }
 </style>
 </head>

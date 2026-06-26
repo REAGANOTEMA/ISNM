@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -43,7 +43,7 @@ DELIMITER ;
 -- Table structure for table `academic_registrar_activity_log`
 --
 
-CREATE TABLE `academic_registrar_activity_log` (
+CREATE TABLE IF NOT EXISTS `academic_registrar_activity_log` (
   `id` int NOT NULL,
   `activity` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_by` int DEFAULT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE `academic_registrar_activity_log` (
 -- Table structure for table `announcements`
 --
 
-CREATE TABLE `announcements` (
+CREATE TABLE IF NOT EXISTS `announcements` (
   `id` int NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE `announcements` (
 -- Table structure for table `assets`
 --
 
-CREATE TABLE `assets` (
+CREATE TABLE IF NOT EXISTS `assets` (
   `id` int NOT NULL,
   `asset_tag` varchar(50) NOT NULL,
   `asset_name` varchar(255) NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE `assets` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -97,7 +97,7 @@ CREATE TABLE `assets` (
 -- Table structure for table `asset_categories`
 --
 
-CREATE TABLE `asset_categories` (
+CREATE TABLE IF NOT EXISTS `asset_categories` (
   `id` int NOT NULL,
   `category_name` varchar(100) NOT NULL,
   `description` text,
@@ -105,7 +105,7 @@ CREATE TABLE `asset_categories` (
   `useful_life_years` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -113,7 +113,7 @@ CREATE TABLE `asset_categories` (
 -- Table structure for table `bank_transactions`
 --
 
-CREATE TABLE `bank_transactions` (
+CREATE TABLE IF NOT EXISTS `bank_transactions` (
   `id` int NOT NULL,
   `transaction_date` date NOT NULL,
   `description` varchar(255) DEFAULT '',
@@ -126,7 +126,7 @@ CREATE TABLE `bank_transactions` (
   `reconciled_at` datetime DEFAULT NULL,
   `bank_account` varchar(100) DEFAULT '',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -134,7 +134,7 @@ CREATE TABLE `bank_transactions` (
 -- Table structure for table `budgets`
 --
 
-CREATE TABLE `budgets` (
+CREATE TABLE IF NOT EXISTS `budgets` (
   `id` int NOT NULL,
   `budget_name` varchar(255) NOT NULL,
   `fiscal_year` varchar(20) NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE `budgets` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -155,7 +155,7 @@ CREATE TABLE `budgets` (
 -- Table structure for table `budget_records`
 --
 
-CREATE TABLE `budget_records` (
+CREATE TABLE IF NOT EXISTS `budget_records` (
   `id` int NOT NULL,
   `budget_id` int NOT NULL,
   `budget_item` varchar(255) NOT NULL,
@@ -166,7 +166,7 @@ CREATE TABLE `budget_records` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -174,7 +174,7 @@ CREATE TABLE `budget_records` (
 -- Table structure for table `bursar_general_ledger`
 --
 
-CREATE TABLE `bursar_general_ledger` (
+CREATE TABLE IF NOT EXISTS `bursar_general_ledger` (
   `id` int NOT NULL,
   `entry_number` varchar(50) NOT NULL,
   `account_id` int DEFAULT '0',
@@ -187,7 +187,7 @@ CREATE TABLE `bursar_general_ledger` (
   `entry_date` date DEFAULT (curdate()),
   `posted_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -195,7 +195,7 @@ CREATE TABLE `bursar_general_ledger` (
 -- Table structure for table `bursar_tax_filings`
 --
 
-CREATE TABLE `bursar_tax_filings` (
+CREATE TABLE IF NOT EXISTS `bursar_tax_filings` (
   `id` int NOT NULL,
   `tax_period_id` int NOT NULL,
   `filing_date` date DEFAULT (curdate()),
@@ -206,7 +206,7 @@ CREATE TABLE `bursar_tax_filings` (
   `filed_by` int DEFAULT '0',
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -214,7 +214,7 @@ CREATE TABLE `bursar_tax_filings` (
 -- Table structure for table `bursar_tax_periods`
 --
 
-CREATE TABLE `bursar_tax_periods` (
+CREATE TABLE IF NOT EXISTS `bursar_tax_periods` (
   `id` int NOT NULL,
   `period_name` varchar(100) NOT NULL,
   `fiscal_year` varchar(10) NOT NULL,
@@ -223,7 +223,7 @@ CREATE TABLE `bursar_tax_periods` (
   `status` enum('Open','Closed','Filed') DEFAULT 'Open',
   `created_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -231,7 +231,7 @@ CREATE TABLE `bursar_tax_periods` (
 -- Table structure for table `bursar_users`
 --
 
-CREATE TABLE `bursar_users` (
+CREATE TABLE IF NOT EXISTS `bursar_users` (
   `id` int NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
@@ -242,7 +242,7 @@ CREATE TABLE `bursar_users` (
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -250,7 +250,7 @@ CREATE TABLE `bursar_users` (
 -- Table structure for table `cash_book`
 --
 
-CREATE TABLE `cash_book` (
+CREATE TABLE IF NOT EXISTS `cash_book` (
   `id` int NOT NULL,
   `entry_number` varchar(50) NOT NULL,
   `entry_type` enum('Receipt','Payment') NOT NULL,
@@ -263,7 +263,7 @@ CREATE TABLE `cash_book` (
   `transaction_date` date DEFAULT (curdate()),
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -271,7 +271,7 @@ CREATE TABLE `cash_book` (
 -- Table structure for table `chart_of_accounts`
 --
 
-CREATE TABLE `chart_of_accounts` (
+CREATE TABLE IF NOT EXISTS `chart_of_accounts` (
   `id` int NOT NULL,
   `account_code` varchar(20) NOT NULL,
   `account_name` varchar(255) NOT NULL,
@@ -281,7 +281,7 @@ CREATE TABLE `chart_of_accounts` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `chart_of_accounts`
@@ -309,7 +309,7 @@ INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_
 -- Table structure for table `clinical_placements`
 --
 
-CREATE TABLE `clinical_placements` (
+CREATE TABLE IF NOT EXISTS `clinical_placements` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `facility_name` varchar(255) NOT NULL,
@@ -321,7 +321,7 @@ CREATE TABLE `clinical_placements` (
   `skills_assessment` text,
   `status` enum('Active','Completed','Cancelled') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -329,7 +329,7 @@ CREATE TABLE `clinical_placements` (
 -- Table structure for table `clinical_placements_students`
 --
 
-CREATE TABLE `clinical_placements_students` (
+CREATE TABLE IF NOT EXISTS `clinical_placements_students` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `placement_site` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -350,7 +350,7 @@ CREATE TABLE `clinical_placements_students` (
 -- Table structure for table `contact_submissions`
 --
 
-CREATE TABLE `contact_submissions` (
+CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `id` int NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -363,7 +363,7 @@ CREATE TABLE `contact_submissions` (
   `replied_at` datetime DEFAULT NULL,
   `replied_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -371,7 +371,7 @@ CREATE TABLE `contact_submissions` (
 -- Table structure for table `cost_centers`
 --
 
-CREATE TABLE `cost_centers` (
+CREATE TABLE IF NOT EXISTS `cost_centers` (
   `id` int NOT NULL,
   `cost_center_code` varchar(20) NOT NULL,
   `cost_center_name` varchar(255) NOT NULL,
@@ -380,7 +380,7 @@ CREATE TABLE `cost_centers` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `cost_centers`
@@ -405,7 +405,7 @@ INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `depar
 -- Table structure for table `daily_sick_records`
 --
 
-CREATE TABLE `daily_sick_records` (
+CREATE TABLE IF NOT EXISTS `daily_sick_records` (
   `id` int NOT NULL,
   `record_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -440,7 +440,7 @@ CREATE TABLE `daily_sick_records` (
 -- Table structure for table `department_requests`
 --
 
-CREATE TABLE `department_requests` (
+CREATE TABLE IF NOT EXISTS `department_requests` (
   `id` int NOT NULL,
   `request_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `from_department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -464,7 +464,7 @@ CREATE TABLE `department_requests` (
 -- Table structure for table `donations`
 --
 
-CREATE TABLE `donations` (
+CREATE TABLE IF NOT EXISTS `donations` (
   `id` int NOT NULL,
   `donor_name` varchar(200) NOT NULL,
   `donor_email` varchar(255) NOT NULL,
@@ -481,7 +481,7 @@ CREATE TABLE `donations` (
   `acknowledged_at` datetime DEFAULT NULL,
   `acknowledged_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -489,7 +489,7 @@ CREATE TABLE `donations` (
 -- Table structure for table `expenditure_records`
 --
 
-CREATE TABLE `expenditure_records` (
+CREATE TABLE IF NOT EXISTS `expenditure_records` (
   `id` int NOT NULL,
   `expenditure_number` varchar(50) NOT NULL,
   `budget_record_id` int DEFAULT NULL,
@@ -505,7 +505,7 @@ CREATE TABLE `expenditure_records` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -513,7 +513,7 @@ CREATE TABLE `expenditure_records` (
 -- Table structure for table `fee_adjustments`
 --
 
-CREATE TABLE `fee_adjustments` (
+CREATE TABLE IF NOT EXISTS `fee_adjustments` (
   `id` int NOT NULL,
   `adjustment_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -527,7 +527,7 @@ CREATE TABLE `fee_adjustments` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -535,7 +535,7 @@ CREATE TABLE `fee_adjustments` (
 -- Table structure for table `fee_reminders`
 --
 
-CREATE TABLE `fee_reminders` (
+CREATE TABLE IF NOT EXISTS `fee_reminders` (
   `id` int NOT NULL,
   `reminder_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -545,7 +545,7 @@ CREATE TABLE `fee_reminders` (
   `sent_by` int DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -553,7 +553,7 @@ CREATE TABLE `fee_reminders` (
 -- Table structure for table `fee_structures`
 --
 
-CREATE TABLE `fee_structures` (
+CREATE TABLE IF NOT EXISTS `fee_structures` (
   `id` int NOT NULL,
   `fee_name` varchar(255) NOT NULL,
   `fee_type` enum('Tuition','Registration','Library','Laboratory','Examination','Graduation','Other') NOT NULL,
@@ -566,7 +566,7 @@ CREATE TABLE `fee_structures` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -574,7 +574,7 @@ CREATE TABLE `fee_structures` (
 -- Table structure for table `financial_clearance`
 --
 
-CREATE TABLE `financial_clearance` (
+CREATE TABLE IF NOT EXISTS `financial_clearance` (
   `id` int NOT NULL,
   `student_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -593,7 +593,7 @@ CREATE TABLE `financial_clearance` (
 -- Table structure for table `financial_reports`
 --
 
-CREATE TABLE `financial_reports` (
+CREATE TABLE IF NOT EXISTS `financial_reports` (
   `id` int NOT NULL,
   `report_name` varchar(255) NOT NULL,
   `report_type` enum('Income Statement','Balance Sheet','Cash Flow','Budget vs Actual','Fee Collection','Expenditure','Custom') NOT NULL,
@@ -605,7 +605,7 @@ CREATE TABLE `financial_reports` (
   `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` enum('Draft','Final','Archived') DEFAULT 'Draft',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -613,7 +613,7 @@ CREATE TABLE `financial_reports` (
 -- Table structure for table `general_ledger`
 --
 
-CREATE TABLE `general_ledger` (
+CREATE TABLE IF NOT EXISTS `general_ledger` (
   `id` int NOT NULL,
   `entry_number` varchar(50) NOT NULL,
   `account_id` int NOT NULL,
@@ -626,7 +626,7 @@ CREATE TABLE `general_ledger` (
   `transaction_date` date DEFAULT (curdate()),
   `posted_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -634,7 +634,7 @@ CREATE TABLE `general_ledger` (
 -- Table structure for table `graduation_candidates`
 --
 
-CREATE TABLE `graduation_candidates` (
+CREATE TABLE IF NOT EXISTS `graduation_candidates` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `academic_year` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -654,7 +654,7 @@ CREATE TABLE `graduation_candidates` (
 -- Table structure for table `hostel_allocations`
 --
 
-CREATE TABLE `hostel_allocations` (
+CREATE TABLE IF NOT EXISTS `hostel_allocations` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `room_id` int NOT NULL,
@@ -664,7 +664,7 @@ CREATE TABLE `hostel_allocations` (
   `check_out_date` date DEFAULT NULL,
   `status` enum('Active','Checked Out','Cancelled') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -672,7 +672,7 @@ CREATE TABLE `hostel_allocations` (
 -- Table structure for table `hostel_rooms`
 --
 
-CREATE TABLE `hostel_rooms` (
+CREATE TABLE IF NOT EXISTS `hostel_rooms` (
   `id` int NOT NULL,
   `room_number` varchar(20) NOT NULL,
   `hostel_name` varchar(100) NOT NULL,
@@ -681,7 +681,7 @@ CREATE TABLE `hostel_rooms` (
   `fee_per_semester` decimal(12,2) DEFAULT '0.00',
   `status` enum('Available','Full','Maintenance') DEFAULT 'Available',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -689,7 +689,7 @@ CREATE TABLE `hostel_rooms` (
 -- Table structure for table `income_tax_rates`
 --
 
-CREATE TABLE `income_tax_rates` (
+CREATE TABLE IF NOT EXISTS `income_tax_rates` (
   `id` int NOT NULL,
   `tax_bracket_name` varchar(100) NOT NULL,
   `min_income` decimal(12,2) NOT NULL DEFAULT '0.00',
@@ -697,7 +697,7 @@ CREATE TABLE `income_tax_rates` (
   `tax_rate` decimal(5,2) NOT NULL DEFAULT '0.00',
   `fiscal_year` varchar(10) NOT NULL,
   `is_active` tinyint(1) DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -705,7 +705,7 @@ CREATE TABLE `income_tax_rates` (
 -- Table structure for table `lab_attendance`
 --
 
-CREATE TABLE `lab_attendance` (
+CREATE TABLE IF NOT EXISTS `lab_attendance` (
   `id` int NOT NULL,
   `session_id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
@@ -715,7 +715,7 @@ CREATE TABLE `lab_attendance` (
   `marked_by` int DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -723,7 +723,7 @@ CREATE TABLE `lab_attendance` (
 -- Table structure for table `lab_consumables`
 --
 
-CREATE TABLE `lab_consumables` (
+CREATE TABLE IF NOT EXISTS `lab_consumables` (
   `id` int NOT NULL,
   `item_name` varchar(255) NOT NULL,
   `category` varchar(100) DEFAULT NULL,
@@ -736,7 +736,7 @@ CREATE TABLE `lab_consumables` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -744,7 +744,7 @@ CREATE TABLE `lab_consumables` (
 -- Table structure for table `lab_equipment`
 --
 
-CREATE TABLE `lab_equipment` (
+CREATE TABLE IF NOT EXISTS `lab_equipment` (
   `id` int NOT NULL,
   `equipment_code` varchar(50) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -765,7 +765,7 @@ CREATE TABLE `lab_equipment` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -773,7 +773,7 @@ CREATE TABLE `lab_equipment` (
 -- Table structure for table `lab_equipment_checkouts`
 --
 
-CREATE TABLE `lab_equipment_checkouts` (
+CREATE TABLE IF NOT EXISTS `lab_equipment_checkouts` (
   `id` int NOT NULL,
   `equipment_id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
@@ -787,7 +787,7 @@ CREATE TABLE `lab_equipment_checkouts` (
   `notes` text,
   `status` enum('checked_out','returned','overdue','lost_damaged') DEFAULT 'checked_out',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -795,7 +795,7 @@ CREATE TABLE `lab_equipment_checkouts` (
 -- Table structure for table `lab_incidents`
 --
 
-CREATE TABLE `lab_incidents` (
+CREATE TABLE IF NOT EXISTS `lab_incidents` (
   `id` int NOT NULL,
   `incident_date` date NOT NULL DEFAULT (curdate()),
   `incident_time` time DEFAULT NULL,
@@ -809,7 +809,7 @@ CREATE TABLE `lab_incidents` (
   `status` enum('open','investigating','resolved','closed') DEFAULT 'open',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -817,7 +817,7 @@ CREATE TABLE `lab_incidents` (
 -- Table structure for table `lab_practical_sessions`
 --
 
-CREATE TABLE `lab_practical_sessions` (
+CREATE TABLE IF NOT EXISTS `lab_practical_sessions` (
   `id` int NOT NULL,
   `session_code` varchar(50) NOT NULL,
   `title` varchar(255) NOT NULL,
@@ -835,7 +835,7 @@ CREATE TABLE `lab_practical_sessions` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -843,7 +843,7 @@ CREATE TABLE `lab_practical_sessions` (
 -- Table structure for table `lab_skills_demonstrations`
 --
 
-CREATE TABLE `lab_skills_demonstrations` (
+CREATE TABLE IF NOT EXISTS `lab_skills_demonstrations` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `skill_name` varchar(255) NOT NULL,
@@ -856,7 +856,7 @@ CREATE TABLE `lab_skills_demonstrations` (
   `next_review_date` date DEFAULT NULL,
   `verified_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -864,7 +864,7 @@ CREATE TABLE `lab_skills_demonstrations` (
 -- Table structure for table `late_payment_settings`
 --
 
-CREATE TABLE `late_payment_settings` (
+CREATE TABLE IF NOT EXISTS `late_payment_settings` (
   `id` int NOT NULL,
   `setting_key` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `setting_value` text COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -889,7 +889,7 @@ INSERT INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `desc
 -- Table structure for table `library_books`
 --
 
-CREATE TABLE `library_books` (
+CREATE TABLE IF NOT EXISTS `library_books` (
   `id` int NOT NULL,
   `book_title` varchar(255) NOT NULL,
   `author` varchar(255) DEFAULT NULL,
@@ -901,7 +901,7 @@ CREATE TABLE `library_books` (
   `available_copies` int DEFAULT '1',
   `shelf_location` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -909,7 +909,7 @@ CREATE TABLE `library_books` (
 -- Table structure for table `library_borrowing`
 --
 
-CREATE TABLE `library_borrowing` (
+CREATE TABLE IF NOT EXISTS `library_borrowing` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `book_id` int NOT NULL,
@@ -920,7 +920,7 @@ CREATE TABLE `library_borrowing` (
   `fine_paid` tinyint(1) DEFAULT '0',
   `status` enum('Borrowed','Returned','Overdue','Lost') DEFAULT 'Borrowed',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -928,7 +928,7 @@ CREATE TABLE `library_borrowing` (
 -- Table structure for table `library_fines`
 --
 
-CREATE TABLE `library_fines` (
+CREATE TABLE IF NOT EXISTS `library_fines` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `book_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -946,7 +946,7 @@ CREATE TABLE `library_fines` (
 -- Table structure for table `medicine_stock`
 --
 
-CREATE TABLE `medicine_stock` (
+CREATE TABLE IF NOT EXISTS `medicine_stock` (
   `id` int NOT NULL,
   `medicine_code` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -1012,7 +1012,7 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 -- Table structure for table `medicine_stock_transactions`
 --
 
-CREATE TABLE `medicine_stock_transactions` (
+CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
   `transaction_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `medicine_id` int NOT NULL,
@@ -1036,7 +1036,7 @@ CREATE TABLE `medicine_stock_transactions` (
 -- Table structure for table `news`
 --
 
-CREATE TABLE `news` (
+CREATE TABLE IF NOT EXISTS `news` (
   `id` int NOT NULL,
   `title` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
@@ -1050,7 +1050,7 @@ CREATE TABLE `news` (
   `published_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1058,7 +1058,7 @@ CREATE TABLE `news` (
 -- Table structure for table `notifications`
 --
 
-CREATE TABLE `notifications` (
+CREATE TABLE IF NOT EXISTS `notifications` (
   `id` int NOT NULL,
   `notification_type` enum('fee_reminder','payment_received','invoice_generated','budget_alert','system') DEFAULT 'system',
   `recipient_type` enum('student','staff','bursar') NOT NULL,
@@ -1069,7 +1069,7 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT '0',
   `sent_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1077,7 +1077,7 @@ CREATE TABLE `notifications` (
 -- Table structure for table `payments`
 --
 
-CREATE TABLE `payments` (
+CREATE TABLE IF NOT EXISTS `payments` (
   `id` int NOT NULL,
   `payment_reference` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1092,7 +1092,7 @@ CREATE TABLE `payments` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1100,7 +1100,7 @@ CREATE TABLE `payments` (
 -- Table structure for table `payment_receipts`
 --
 
-CREATE TABLE `payment_receipts` (
+CREATE TABLE IF NOT EXISTS `payment_receipts` (
   `id` int NOT NULL,
   `receipt_number` varchar(50) NOT NULL,
   `payment_id` int NOT NULL,
@@ -1114,7 +1114,7 @@ CREATE TABLE `payment_receipts` (
   `voided_by` int DEFAULT NULL,
   `void_reason` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1122,7 +1122,7 @@ CREATE TABLE `payment_receipts` (
 -- Table structure for table `payment_subscriptions`
 --
 
-CREATE TABLE `payment_subscriptions` (
+CREATE TABLE IF NOT EXISTS `payment_subscriptions` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `subscription_type` enum('fee_installment','hostel','library','other') NOT NULL DEFAULT 'fee_installment',
@@ -1146,7 +1146,7 @@ CREATE TABLE `payment_subscriptions` (
   `created_by` varchar(50) DEFAULT NULL COMMENT 'student_id or staff_id who created',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1154,7 +1154,7 @@ CREATE TABLE `payment_subscriptions` (
 -- Table structure for table `payroll_records`
 --
 
-CREATE TABLE `payroll_records` (
+CREATE TABLE IF NOT EXISTS `payroll_records` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `month` int NOT NULL,
@@ -1165,7 +1165,7 @@ CREATE TABLE `payroll_records` (
   `processed_by` int DEFAULT '0',
   `processing_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` enum('Draft','Processed','Approved','Paid') DEFAULT 'Draft'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1173,7 +1173,7 @@ CREATE TABLE `payroll_records` (
 -- Table structure for table `payslips`
 --
 
-CREATE TABLE `payslips` (
+CREATE TABLE IF NOT EXISTS `payslips` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `payroll_record_id` int DEFAULT '0',
@@ -1187,7 +1187,7 @@ CREATE TABLE `payslips` (
   `status` enum('Generated','Sent','Paid') DEFAULT 'Generated',
   `generated_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1195,7 +1195,7 @@ CREATE TABLE `payslips` (
 -- Table structure for table `penalty_configurations`
 --
 
-CREATE TABLE `penalty_configurations` (
+CREATE TABLE IF NOT EXISTS `penalty_configurations` (
   `id` int NOT NULL,
   `penalty_name` varchar(100) NOT NULL,
   `penalty_type` varchar(100) DEFAULT NULL,
@@ -1204,7 +1204,7 @@ CREATE TABLE `penalty_configurations` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `penalty_configurations`
@@ -1225,7 +1225,7 @@ INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amo
 -- Table structure for table `programs`
 --
 
-CREATE TABLE `programs` (
+CREATE TABLE IF NOT EXISTS `programs` (
   `id` int NOT NULL,
   `program_code` varchar(20) NOT NULL,
   `program_name` varchar(255) NOT NULL,
@@ -1235,7 +1235,7 @@ CREATE TABLE `programs` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1243,7 +1243,7 @@ CREATE TABLE `programs` (
 -- Table structure for table `proof_of_payments`
 --
 
-CREATE TABLE `proof_of_payments` (
+CREATE TABLE IF NOT EXISTS `proof_of_payments` (
   `id` int NOT NULL,
   `proof_number` varchar(50) NOT NULL,
   `payment_id` int NOT NULL,
@@ -1255,7 +1255,7 @@ CREATE TABLE `proof_of_payments` (
   `verified_at` timestamp NULL DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1263,7 +1263,7 @@ CREATE TABLE `proof_of_payments` (
 -- Table structure for table `registrar_certificates`
 --
 
-CREATE TABLE `registrar_certificates` (
+CREATE TABLE IF NOT EXISTS `registrar_certificates` (
   `id` int NOT NULL,
   `certificate_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1286,7 +1286,7 @@ CREATE TABLE `registrar_certificates` (
   `notes` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1294,7 +1294,7 @@ CREATE TABLE `registrar_certificates` (
 -- Table structure for table `registrar_settings`
 --
 
-CREATE TABLE `registrar_settings` (
+CREATE TABLE IF NOT EXISTS `registrar_settings` (
   `id` int NOT NULL,
   `setting_key` varchar(100) NOT NULL,
   `setting_value` text,
@@ -1302,7 +1302,7 @@ CREATE TABLE `registrar_settings` (
   `description` varchar(500) DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `registrar_settings`
@@ -1326,7 +1326,7 @@ INSERT INTO `registrar_settings` (`id`, `setting_key`, `setting_value`, `setting
 -- Table structure for table `registrar_transcript_requests`
 --
 
-CREATE TABLE `registrar_transcript_requests` (
+CREATE TABLE IF NOT EXISTS `registrar_transcript_requests` (
   `id` int NOT NULL,
   `request_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1350,7 +1350,7 @@ CREATE TABLE `registrar_transcript_requests` (
   `notes` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1358,7 +1358,7 @@ CREATE TABLE `registrar_transcript_requests` (
 -- Table structure for table `salary_components`
 --
 
-CREATE TABLE `salary_components` (
+CREATE TABLE IF NOT EXISTS `salary_components` (
   `id` int NOT NULL,
   `component_name` varchar(100) NOT NULL,
   `component_type` enum('Earning','Deduction') DEFAULT 'Earning',
@@ -1367,7 +1367,7 @@ CREATE TABLE `salary_components` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1375,7 +1375,7 @@ CREATE TABLE `salary_components` (
 -- Table structure for table `sickness_directory`
 --
 
-CREATE TABLE `sickness_directory` (
+CREATE TABLE IF NOT EXISTS `sickness_directory` (
   `id` int NOT NULL,
   `sickness_code` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
   `sickness_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -1427,7 +1427,7 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 -- Table structure for table `sponsorships`
 --
 
-CREATE TABLE `sponsorships` (
+CREATE TABLE IF NOT EXISTS `sponsorships` (
   `id` int NOT NULL,
   `sponsorship_code` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1442,7 +1442,7 @@ CREATE TABLE `sponsorships` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1450,7 +1450,7 @@ CREATE TABLE `sponsorships` (
 -- Table structure for table `staff_salaries`
 --
 
-CREATE TABLE `staff_salaries` (
+CREATE TABLE IF NOT EXISTS `staff_salaries` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `base_salary` decimal(12,2) NOT NULL,
@@ -1463,7 +1463,7 @@ CREATE TABLE `staff_salaries` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1471,7 +1471,7 @@ CREATE TABLE `staff_salaries` (
 -- Table structure for table `students`
 --
 
-CREATE TABLE `students` (
+CREATE TABLE IF NOT EXISTS `students` (
   `id` int NOT NULL,
   `student_number` varchar(50) NOT NULL,
   `registration_number` varchar(50) DEFAULT NULL,
@@ -1512,7 +1512,7 @@ CREATE TABLE `students` (
   `is_first_login` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Triggers `students`
@@ -1596,7 +1596,7 @@ DELIMITER ;
 -- Table structure for table `students_trash`
 --
 
-CREATE TABLE `students_trash` (
+CREATE TABLE IF NOT EXISTS `students_trash` (
   `id` int NOT NULL,
   `original_id` int NOT NULL,
   `student_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1615,7 +1615,7 @@ CREATE TABLE `students_trash` (
 -- Table structure for table `student_academic_records`
 --
 
-CREATE TABLE `student_academic_records` (
+CREATE TABLE IF NOT EXISTS `student_academic_records` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `semester` varchar(50) DEFAULT NULL,
@@ -1630,7 +1630,7 @@ CREATE TABLE `student_academic_records` (
   `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1638,7 +1638,7 @@ CREATE TABLE `student_academic_records` (
 -- Table structure for table `student_attendance`
 --
 
-CREATE TABLE `student_attendance` (
+CREATE TABLE IF NOT EXISTS `student_attendance` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `date` date NOT NULL,
@@ -1649,7 +1649,7 @@ CREATE TABLE `student_attendance` (
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1657,7 +1657,7 @@ CREATE TABLE `student_attendance` (
 -- Table structure for table `student_course_registrations`
 --
 
-CREATE TABLE `student_course_registrations` (
+CREATE TABLE IF NOT EXISTS `student_course_registrations` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `course_id` int NOT NULL,
@@ -1666,7 +1666,7 @@ CREATE TABLE `student_course_registrations` (
   `registration_date` date DEFAULT (curdate()),
   `status` enum('Registered','Dropped','Completed') DEFAULT 'Registered',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1674,7 +1674,7 @@ CREATE TABLE `student_course_registrations` (
 -- Stand-in structure for view `student_dashboard_view`
 -- (See below for the actual view)
 --
-CREATE TABLE `student_dashboard_view` (
+CREATE TABLE IF NOT EXISTS `student_dashboard_view` (
 `id` int
 ,`student_number` varchar(50)
 ,`full_name` varchar(302)
@@ -1694,7 +1694,7 @@ CREATE TABLE `student_dashboard_view` (
 -- Table structure for table `student_discipline`
 --
 
-CREATE TABLE `student_discipline` (
+CREATE TABLE IF NOT EXISTS `student_discipline` (
   `id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
   `incident_date` date NOT NULL,
@@ -1705,7 +1705,7 @@ CREATE TABLE `student_discipline` (
   `reported_by` int DEFAULT NULL,
   `status` enum('Open','Resolved','Appealed') DEFAULT 'Open',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1713,7 +1713,7 @@ CREATE TABLE `student_discipline` (
 -- Table structure for table `student_discipline_records`
 --
 
-CREATE TABLE `student_discipline_records` (
+CREATE TABLE IF NOT EXISTS `student_discipline_records` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `case_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1732,7 +1732,7 @@ CREATE TABLE `student_discipline_records` (
 -- Table structure for table `student_downloads`
 --
 
-CREATE TABLE `student_downloads` (
+CREATE TABLE IF NOT EXISTS `student_downloads` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `title` varchar(200) NOT NULL,
@@ -1743,7 +1743,7 @@ CREATE TABLE `student_downloads` (
   `download_count` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1751,7 +1751,7 @@ CREATE TABLE `student_downloads` (
 -- Table structure for table `student_fees`
 --
 
-CREATE TABLE `student_fees` (
+CREATE TABLE IF NOT EXISTS `student_fees` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `fee_type` varchar(100) NOT NULL,
@@ -1764,7 +1764,7 @@ CREATE TABLE `student_fees` (
   `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1772,7 +1772,7 @@ CREATE TABLE `student_fees` (
 -- Table structure for table `student_fee_assignments`
 --
 
-CREATE TABLE `student_fee_assignments` (
+CREATE TABLE IF NOT EXISTS `student_fee_assignments` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `fee_structure_id` int NOT NULL,
@@ -1784,7 +1784,7 @@ CREATE TABLE `student_fee_assignments` (
   `assigned_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1792,7 +1792,7 @@ CREATE TABLE `student_fee_assignments` (
 -- Table structure for table `student_hostel_allocations`
 --
 
-CREATE TABLE `student_hostel_allocations` (
+CREATE TABLE IF NOT EXISTS `student_hostel_allocations` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `hostel_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1810,7 +1810,7 @@ CREATE TABLE `student_hostel_allocations` (
 -- Table structure for table `student_invoices`
 --
 
-CREATE TABLE `student_invoices` (
+CREATE TABLE IF NOT EXISTS `student_invoices` (
   `id` int NOT NULL,
   `invoice_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1829,7 +1829,7 @@ CREATE TABLE `student_invoices` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1837,7 +1837,7 @@ CREATE TABLE `student_invoices` (
 -- Stand-in structure for view `student_login_view`
 -- (See below for the actual view)
 --
-CREATE TABLE `student_login_view` (
+CREATE TABLE IF NOT EXISTS `student_login_view` (
 `id` int
 ,`student_number` varchar(50)
 ,`full_name` varchar(302)
@@ -1856,7 +1856,7 @@ CREATE TABLE `student_login_view` (
 -- Table structure for table `student_messages`
 --
 
-CREATE TABLE `student_messages` (
+CREATE TABLE IF NOT EXISTS `student_messages` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `department_email` varchar(100) NOT NULL,
@@ -1867,7 +1867,7 @@ CREATE TABLE `student_messages` (
   `reply_message` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `replied_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1875,7 +1875,7 @@ CREATE TABLE `student_messages` (
 -- Table structure for table `student_notifications`
 --
 
-CREATE TABLE `student_notifications` (
+CREATE TABLE IF NOT EXISTS `student_notifications` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `title` varchar(200) NOT NULL,
@@ -1888,7 +1888,7 @@ CREATE TABLE `student_notifications` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `link_id` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1896,14 +1896,14 @@ CREATE TABLE `student_notifications` (
 -- Table structure for table `student_password_resets`
 --
 
-CREATE TABLE `student_password_resets` (
+CREATE TABLE IF NOT EXISTS `student_password_resets` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `reset_token` varchar(255) NOT NULL,
   `expires_at` timestamp NOT NULL,
   `is_used` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1911,7 +1911,7 @@ CREATE TABLE `student_password_resets` (
 -- Table structure for table `student_penalties`
 --
 
-CREATE TABLE `student_penalties` (
+CREATE TABLE IF NOT EXISTS `student_penalties` (
   `id` int NOT NULL,
   `penalty_number` varchar(50) NOT NULL,
   `student_id` int NOT NULL,
@@ -1926,7 +1926,7 @@ CREATE TABLE `student_penalties` (
   `waiver_reason` text,
   `status` enum('Active','Waived','Paid') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1934,7 +1934,7 @@ CREATE TABLE `student_penalties` (
 -- Table structure for table `student_profiles`
 --
 
-CREATE TABLE `student_profiles` (
+CREATE TABLE IF NOT EXISTS `student_profiles` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `bio` text,
@@ -1944,7 +1944,7 @@ CREATE TABLE `student_profiles` (
   `education_background` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1952,7 +1952,7 @@ CREATE TABLE `student_profiles` (
 -- Table structure for table `student_requests`
 --
 
-CREATE TABLE `student_requests` (
+CREATE TABLE IF NOT EXISTS `student_requests` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `request_type` enum('Leave of Absence','Deferral','Transfer','Withdrawal','Other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1971,7 +1971,7 @@ CREATE TABLE `student_requests` (
 -- Table structure for table `student_sick_leave`
 --
 
-CREATE TABLE `student_sick_leave` (
+CREATE TABLE IF NOT EXISTS `student_sick_leave` (
   `id` int NOT NULL,
   `leave_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `student_id` int NOT NULL,
@@ -2012,7 +2012,7 @@ CREATE TABLE `student_sick_leave` (
 -- Table structure for table `student_timetables`
 --
 
-CREATE TABLE `student_timetables` (
+CREATE TABLE IF NOT EXISTS `student_timetables` (
   `id` int NOT NULL,
   `student_id` int NOT NULL,
   `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
@@ -2023,7 +2023,7 @@ CREATE TABLE `student_timetables` (
   `classroom` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2031,7 +2031,7 @@ CREATE TABLE `student_timetables` (
 -- Table structure for table `subscription_deductions`
 --
 
-CREATE TABLE `subscription_deductions` (
+CREATE TABLE IF NOT EXISTS `subscription_deductions` (
   `id` int NOT NULL,
   `subscription_id` int NOT NULL,
   `student_id` varchar(50) NOT NULL,
@@ -2047,7 +2047,7 @@ CREATE TABLE `subscription_deductions` (
   `last_attempt_date` datetime DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2055,7 +2055,7 @@ CREATE TABLE `subscription_deductions` (
 -- Table structure for table `timetable`
 --
 
-CREATE TABLE `timetable` (
+CREATE TABLE IF NOT EXISTS `timetable` (
   `id` int NOT NULL,
   `program` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `year_of_study` int DEFAULT '1',
@@ -2077,7 +2077,7 @@ CREATE TABLE `timetable` (
 -- Stand-in structure for view `view_document_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE `view_document_grouping` (
+CREATE TABLE IF NOT EXISTS `view_document_grouping` (
 `document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
 ,`student_id` int
 ,`student_name` varchar(300)
@@ -2091,7 +2091,7 @@ CREATE TABLE `view_document_grouping` (
 -- Stand-in structure for view `view_program_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE `view_program_grouping` (
+CREATE TABLE IF NOT EXISTS `view_program_grouping` (
 `department` varchar(20)
 ,`course_code` varchar(20)
 ,`course_name` varchar(255)
@@ -2105,7 +2105,7 @@ CREATE TABLE `view_program_grouping` (
 -- Stand-in structure for view `view_student_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE `view_student_grouping` (
+CREATE TABLE IF NOT EXISTS `view_student_grouping` (
 `program` varchar(100)
 ,`year_of_study` int
 ,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
@@ -2121,7 +2121,7 @@ CREATE TABLE `view_student_grouping` (
 --
 DROP TABLE IF EXISTS `student_dashboard_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where (`student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`)) group by `student_academic_records`.`student_id`) `sa` on((`s`.`id` = `sa`.`student_id`))) left join (select `student_attendance`.`student_id` AS `student_id`,((sum((case when (`student_attendance`.`status` = 'Present') then 1 else 0 end)) * 100.0) / count(0)) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on((`s`.`id` = `sa2`.`student_id`))) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where (`student_fees`.`status` in ('Unpaid','Partially Paid','Overdue')) group by `student_fees`.`student_id`) `sf` on((`s`.`id` = `sf`.`student_id`))) WHERE (`s`.`status` = 'Active') ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where (`student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`)) group by `student_academic_records`.`student_id`) `sa` on((`s`.`id` = `sa`.`student_id`))) left join (select `student_attendance`.`student_id` AS `student_id`,((sum((case when (`student_attendance`.`status` = 'Present') then 1 else 0 end)) * 100.0) / count(0)) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on((`s`.`id` = `sa2`.`student_id`))) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where (`student_fees`.`status` in ('Unpaid','Partially Paid','Overdue')) group by `student_fees`.`student_id`) `sf` on((`s`.`id` = `sf`.`student_id`))) WHERE (`s`.`status` = 'Active') ;
 
 -- --------------------------------------------------------
 
@@ -2130,7 +2130,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `student_login_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE (`students`.`status` = 'Active') ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE (`students`.`status` = 'Active') ;
 
 -- --------------------------------------------------------
 
@@ -2139,7 +2139,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `view_document_grouping`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_document_grouping`  AS SELECT `gd`.`document_type` AS `document_type`, `gd`.`student_id` AS `student_id`, `s`.`full_name` AS `student_name`, `s`.`course` AS `program`, count(0) AS `document_count` FROM (`igangaschoolofl_staffs_db`.`generated_documents` `gd` left join `students` `s` on((`gd`.`student_id` = `s`.`id`))) WHERE (`gd`.`document_type` is not null) GROUP BY `gd`.`document_type`, `gd`.`student_id`, `s`.`full_name`, `s`.`course` ORDER BY `gd`.`document_type` ASC, `s`.`full_name` ASC ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_document_grouping`  AS SELECT `gd`.`document_type` AS `document_type`, `gd`.`student_id` AS `student_id`, `s`.`full_name` AS `student_name`, `s`.`course` AS `program`, count(0) AS `document_count` FROM (`igangaschoolofl_staffs_db`.`generated_documents` `gd` left join `students` `s` on((`gd`.`student_id` = `s`.`id`))) WHERE (`gd`.`document_type` is not null) GROUP BY `gd`.`document_type`, `gd`.`student_id`, `s`.`full_name`, `s`.`course` ORDER BY `gd`.`document_type` ASC, `s`.`full_name` ASC ;
 
 -- --------------------------------------------------------
 
@@ -2148,7 +2148,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `view_program_grouping`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_program_grouping`  AS SELECT `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` AS `department`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_code` AS `course_code`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` AS `course_name`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`credits` AS `credit_hours`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`year_of_study` AS `course_level` FROM `igangaschoolofl_staffs_db`.`academic_course_catalog` WHERE ((`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` is not null) AND (`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` <> '')) ORDER BY `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` ASC, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` ASC ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_program_grouping`  AS SELECT `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` AS `department`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_code` AS `course_code`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` AS `course_name`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`credits` AS `credit_hours`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`year_of_study` AS `course_level` FROM `igangaschoolofl_staffs_db`.`academic_course_catalog` WHERE ((`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` is not null) AND (`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` <> '')) ORDER BY `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` ASC, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` ASC ;
 
 -- --------------------------------------------------------
 
@@ -2157,7 +2157,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `view_student_grouping`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_grouping`  AS SELECT `students`.`course` AS `program`, `students`.`current_year` AS `year_of_study`, `students`.`status` AS `status`, `students`.`set_name` AS `set_name`, `students`.`current_semester` AS `semester`, count(0) AS `student_count` FROM `students` WHERE ((`students`.`full_name` is not null) AND (`students`.`full_name` <> '') AND (length(`students`.`full_name`) > 3) AND (not((`students`.`full_name` like '%MINISTRY%'))) AND (not((`students`.`full_name` like '%ACCOUNTABILITY%'))) AND (not((`students`.`full_name` like '%VERIFICATION%'))) AND (not((`students`.`full_name` like '%HEALTH EDUCATION%'))) AND (not((`students`.`full_name` like '%……………………………………………………%')))) GROUP BY `students`.`course`, `students`.`current_year`, `students`.`status`, `students`.`set_name`, `students`.`current_semester` ORDER BY `students`.`course` ASC, `students`.`current_year` ASC, `students`.`status` ASC ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_student_grouping`  AS SELECT `students`.`course` AS `program`, `students`.`current_year` AS `year_of_study`, `students`.`status` AS `status`, `students`.`set_name` AS `set_name`, `students`.`current_semester` AS `semester`, count(0) AS `student_count` FROM `students` WHERE ((`students`.`full_name` is not null) AND (`students`.`full_name` <> '') AND (length(`students`.`full_name`) > 3) AND (not((`students`.`full_name` like '%MINISTRY%'))) AND (not((`students`.`full_name` like '%ACCOUNTABILITY%'))) AND (not((`students`.`full_name` like '%VERIFICATION%'))) AND (not((`students`.`full_name` like '%HEALTH EDUCATION%'))) AND (not((`students`.`full_name` like '%……………………………………………………%')))) GROUP BY `students`.`course`, `students`.`current_year`, `students`.`status`, `students`.`set_name`, `students`.`current_semester` ORDER BY `students`.`course` ASC, `students`.`current_year` ASC, `students`.`status` ASC ;
 
 --
 -- Indexes for dumped tables
