@@ -45,7 +45,8 @@ INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_workflows (workflow_name, 
 ('Academic Request', 'Academic', 'Academic affairs requests requiring Director General approval', 1),
 ('Admissions Request', 'Admissions', 'Admissions-related requests requiring Director General approval', 1),
 ('Library Request', 'Library', 'Library resource and service requests requiring Director General approval', 1),
-('Store Requisition', 'Store & Assets', 'Store and asset requisitions requiring Director General approval', 1);
+('Store Requisition', 'Store & Assets', 'Store and asset requisitions requiring Director General approval', 1),
+('Student Registration', 'Academic', 'Student registration requests requiring Director General approval', 1);
 
 -- 6. Insert stages for ICT Request workflow (2-stage: Director ICT -> Director General)
 SET @ict_wf = (SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name = 'ICT Request' LIMIT 1);
