@@ -2,16 +2,37 @@
 /**
  * Shared staff dashboard authentication and multi-database bootstrap.
  */
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../auth-service.php';
-require_once __DIR__ . '/../includes/student_helpers.php';
 
-// Production error handler — convert errors to exceptions, show friendly message
-set_error_handler(function($severity, $message, $file, $line) {
-    if (error_reporting() & $severity) {
-        throw new ErrorException($message, 0, $severity, $file, $line);
+// ── Fatal error catcher (prevents blank pages on production) ──
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $msg = htmlspecialchars($err['message']);
+        $file = htmlspecialchars($err['file']);
+        $line = (int)$err['line'];
+        if (ob_get_level()) ob_clean();
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
+        echo '<style>body{font-family:sans-serif;background:#fef2f2;padding:30px;color:#991b1b}';
+        echo '.card{background:#fff;border-radius:12px;padding:24px;border:1px solid #fecaca;max-width:700px;margin:40px auto}';
+        echo 'h2{color:#dc2626;margin:0 0 10px}pre{background:#fef2f2;padding:12px;border-radius:6px;overflow:auto;font-size:13px}</style></head>';
+        echo '<body><div class="card"><h2>Internal Server Error</h2>';
+        echo '<p>The system encountered a PHP error. Please check the details below and contact the developer.</p>';
+        echo '<pre>' . $msg . "\nFile: $file\nLine: $line" . '</pre></div></body></html>';
+        exit;
     }
 });
+
+try {
+    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/../auth-service.php';
+    require_once __DIR__ . '/../includes/student_helpers.php';
+} catch (Throwable $e) {
+    if (ob_get_level()) ob_clean();
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error</title>';
+    echo '<style>body{font-family:sans-serif;background:#fef2f2;padding:30px;color:#991b1b}</style></head>';
+    echo '<body><h2>Missing Required File</h2><p>' . htmlspecialchars($e->getMessage()) . '</p></body></html>';
+    exit;
+}
 
 if (!function_exists('bootstrapStaffDashboard')) {
     /**
@@ -71,11 +92,6 @@ if (!function_exists('bootstrapStaffDashboard')) {
                     }
                 } catch (Exception $e) {}
             }
-        }
-
-        // CSRF token generation
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
         if (!empty($roleKeywords) && !$auth_service->hasFullInstitutionAccess($role)) {

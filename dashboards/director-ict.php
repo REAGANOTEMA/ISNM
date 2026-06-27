@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
+try {
+    $ctx = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
+} catch (Throwable $e) {
+    if (ob_get_level()) ob_clean();
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Access Error</title></head><body>';
+    echo '<h2>Access Error</h2><p>' . htmlspecialchars($e->getMessage()) . '</p>';
+    echo '<p><a href="../staff-login.php">Return to Login</a></p></body></html>';
+    exit;
+}
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $website_conn = $ctx['website'];
