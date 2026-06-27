@@ -209,7 +209,7 @@ function renderStudentSetViewer($conn, array $options = []) {
             <div class="col-md-2">
                 <label class="text-white small fw-semibold mb-1"><i class="fas fa-layer-group me-1"></i>Level</label>
                 <select name="level" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value=""> , All , </option>
+                    <option value="">All Levels</option>
                     <?php foreach ($levels as $l): ?>
                         <option value="<?= htmlspecialchars($l) ?>" <?= $selectedLevel === $l ? 'selected' : '' ?>><?= htmlspecialchars($l) ?></option>
                     <?php endforeach; ?>

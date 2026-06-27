@@ -70,8 +70,8 @@ if ($dg_cached) {
 
     $staff_list = [];
     if ($conn) {
-        $sr = $conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.position,s.department,s.status,s.last_login,sr.role_name
-            FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
+        $sr = $conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.phone,s.position,s.department,s.status,s.last_login,sr.role_name
+            FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name");
         if ($sr) while ($row = $sr->fetch_assoc()) $staff_list[] = $row;
     }
 
@@ -471,6 +471,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         if ($sid) { $conn->query("DELETE FROM staff WHERE id=" . intval($sid)); $ok = true; $msg = 'Staff removed.'; }
     }
 
+    if ($action === 'edit_staff' && $conn) {
+        $eid = (int)($_POST['edit_staff_id'] ?? 0);
+        $ename = $conn->real_escape_string(trim($_POST['edit_staff_name'] ?? ''));
+        $eidno = $conn->real_escape_string(trim($_POST['edit_staff_idno'] ?? ''));
+        $eem = $conn->real_escape_string(trim($_POST['edit_staff_email'] ?? ''));
+        $eph = $conn->real_escape_string(trim($_POST['edit_staff_phone'] ?? ''));
+        $edp = $conn->real_escape_string(trim($_POST['edit_staff_dept'] ?? ''));
+        $ero = $conn->real_escape_string(trim($_POST['edit_staff_role'] ?? ''));
+        $est = $conn->real_escape_string(trim($_POST['edit_staff_status'] ?? 'Active'));
+        if ($eid && $ename) {
+            $conn->query("UPDATE staff SET full_name='$ename', staff_id='$eidno', email='$eem', phone='$eph', department='$edp', position='$ero', status='$est' WHERE id=$eid");
+            $ok = true; $msg = "Staff $ename updated.";
+        } else { $msg = 'Name required.'; }
+    }
+
     if ($action === 'approve_submission' && $websiteConn) {
         $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
@@ -740,6 +755,16 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 /* ── Badges ── */
 .badge-soft { font-weight: 500; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 
+/* ── Section Visibility ── */
+.dashboard-section { display: none; }
+.dashboard-section.active { display: block; }
+.section-tab.active { background: #1e3a8a !important; color: #fff !important; }
+.section-tab:hover { background: #f1f5f9; }
+@media (max-width: 768px) {
+  .section-tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .section-tab { white-space: nowrap; font-size: 11px !important; padding: 5px 10px !important; }
+}
+
 /* ── Modals ── */
 .modern-modal .modal-content { border: none; border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); }
 .modern-modal .modal-header { border: none; padding: 14px 18px; border-radius: 14px 14px 0 0; }
@@ -775,6 +800,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   body { background:#fff !important; font-size:10pt; }
   .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, .dg-topbar, .logout-link { display:none !important; }
   .dg-content { padding:0 !important; margin:0 !important; max-width:100% !important; background:#fff !important; }
+  .dashboard-section { display:block !important; }
   .section-card { box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid; page-break-inside:avoid; }
   .kpi-grid { gap:6px; }
   .kpi-card { box-shadow:none !important; border:1px solid #e2e8f0 !important; break-inside:avoid; }
@@ -819,9 +845,6 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
 </div>
 <?php unset($_SESSION['success']); endif; ?>
-
-<!-- ═══ ANALYTICS / KPI CENTER ═══ -->
-<?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
 
 <!-- ═══ SECTION: SERVICES (Pending Submissions) ═══ -->
 <div id="services" class="content-section dashboard-section<?= $dgSection === 'services' ? ' active' : '' ?>" data-section="services">
@@ -892,6 +915,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- ═══ SECTION: EXECUTIVE ═══ -->
 <div id="executive" class="content-section dashboard-section<?= $dgSection === 'executive' ? ' active' : '' ?>" data-section="executive">
+  <?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
   <div class="section-card">
     <?php dgToolbar('Executive Overview', 'fa-chart-simple', 'Updated live'); ?>
     <div class="section-header">
@@ -1004,6 +1028,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             <a href="../dashboards/director-finance.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-coins me-1"></i>Finance Dashboard</a>
             <a href="../dashboards/school-bursar.php" class="btn btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
             <a href="../dashboards/budget-management.php" class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:8px;"><i class="fas fa-chart-line me-1"></i>Budget</a>
+            <a href="../dashboards/bursar-payroll.php" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;"><i class="fas fa-file-invoice-dollar me-1"></i>Payroll</a>
           </div>
         </div>
       </div>
@@ -1052,9 +1077,33 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
           <div class="col-3"><div class="stat-block" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);"><div class="stat-val" style="color:#1e40af"><?= $staffAttendanceToday['on_leave'] ?></div><div class="stat-lbl" style="color:#1e3a8a">On Leave</div></div></div>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <a href="../dashboards/staff-attendance.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-clock me-1"></i>Full Report</a>
+          <a href="../dashboards/staff-attendance.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-clock me-1"></i>Attendance</a>
           <a href="../dashboards/hr-manager.php" class="btn btn-sm" style="background:#059669;color:#fff;border:none;border-radius:8px;"><i class="fas fa-users me-1"></i>HR Dashboard</a>
-          <a href="../dashboards/staff-directory.php" class="btn btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-address-book me-1"></i>Staff Directory</a>
+          <a href="../dashboards/staff-directory.php" class="btn btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-address-book me-1"></i>Directory</a>
+          <a href="../dashboards/bursar-payroll.php" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;"><i class="fas fa-file-invoice-dollar me-1"></i>Payroll</a>
+        </div>
+        <div class="mb-3">
+          <span class="badge bg-dark px-3 py-1 mb-2" style="font-size:11px;border-radius:12px;">ALL DASHBOARDS</span>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="../dashboards/school-principal.php" class="btn btn-xs" style="background:#1e3a8a;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-chalkboard-teacher me-1"></i>Principal</a>
+            <a href="../dashboards/deputy-principal.php" class="btn btn-xs" style="background:#1e3a8a;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-user-check me-1"></i>Deputy</a>
+            <a href="../dashboards/academic-registrar.php" class="btn btn-xs" style="background:#1e3a8a;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-file-alt me-1"></i>Registrar</a>
+            <a href="../dashboards/school-secretary.php" class="btn btn-xs" style="background:#0891b2;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-envelope me-1"></i>Secretary</a>
+            <a href="../dashboards/hr-manager.php" class="btn btn-xs" style="background:#dc2626;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-users me-1"></i>HR</a>
+            <a href="../dashboards/school-bursar.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-money-bill me-1"></i>Bursar</a>
+            <a href="../dashboards/director-academics.php" class="btn btn-xs" style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-graduation-cap me-1"></i>Academics</a>
+            <a href="../dashboards/director-finance.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-coins me-1"></i>Finance</a>
+            <a href="../dashboards/director-admissions.php" class="btn btn-xs" style="background:#0891b2;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-file-contract me-1"></i>Admissions</a>
+            <a href="../dashboards/director-ict.php" class="btn btn-xs" style="background:#64748b;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-laptop-code me-1"></i>ICT</a>
+            <a href="../dashboards/head-nursing.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-heartbeat me-1"></i>Nursing</a>
+            <a href="../dashboards/head-midwifery.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-user-md me-1"></i>Midwifery</a>
+            <a href="../dashboards/senior-lecturers.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-user-graduate me-1"></i>Senior</a>
+            <a href="../dashboards/lecturers.php" class="btn btn-xs" style="background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-chalkboard me-1"></i>Lecturers</a>
+            <a href="../dashboards/school-librarian.php" class="btn btn-xs" style="background:#0891b2;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-book me-1"></i>Librarian</a>
+            <a href="../dashboards/student-management.php" class="btn btn-xs" style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-users-rectangle me-1"></i>Students</a>
+            <a href="../dashboards/storekeeper.php" class="btn btn-xs" style="background:#d97706;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-warehouse me-1"></i>Store</a>
+            <a href="../dashboards/clinical-placement.php" class="btn btn-xs" style="background:#0d9488;color:#fff;border:none;border-radius:6px;font-size:11px;padding:3px 10px;"><i class="fas fa-hospital me-1"></i>Clinical</a>
+          </div>
         </div>
         <?php if(!empty($dept_list)): ?>
         <h3 class="section-title" style="font-size:14px;margin-bottom:10px;"><i class="fas fa-building" style="color:#d97706;"></i>Departments</h3>
@@ -1077,7 +1126,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         </div>
         <div class="table-scroll">
           <table class="table dg-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
             <?php if(empty($staff_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No staff records found.</td></tr>
             <?php else: foreach($staff_list as $s): $bc=$s['status']==='Active'?'bg-success text-white':($s['status']==='On Leave'?'bg-warning text-dark':'bg-danger text-white'); ?>
@@ -1086,9 +1135,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
               <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
               <td><?= htmlspecialchars($s['role_name']??$s['position']) ?></td>
               <td><?= htmlspecialchars($s['department']??'-') ?></td>
-              <td><span style="font-size:12px;color:#64748b;"><?= htmlspecialchars($s['email']) ?></span></td>
+              <td><span style="font-size:12px;color:#64748b;"><?= htmlspecialchars($s['phone']??'-') ?></span></td>
               <td><span class="badge badge-soft <?= $bc ?>"><?= htmlspecialchars($s['status']) ?></span></td>
               <td>
+                <button class="btn btn-sm" style="color:#2563eb;border:none;background:none;padding:0 4px;" title="Edit" onclick='openEditStaffModal(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
                 <form method="POST" style="display:inline;" onsubmit="return confirm('Remove <?= htmlspecialchars($s['full_name'],ENT_QUOTES) ?> from staff?')">
                   <input type="hidden" name="dg_action" value="delete_staff">
                   <input type="hidden" name="staff_id" value="<?= $s['id'] ?>">
@@ -1143,7 +1193,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         <button class="btn" style="background:#2563eb;color:#fff;border:none;border-radius:8px;white-space:nowrap;" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus me-1"></i>Add New Student</button>
       </div>
       <div class="alert alert-info py-2 mb-3"><i class="fas fa-info-circle me-1"></i> Use the search box above or the <strong>Student Set Viewer</strong> below to find student records.</div>
-      <div class="mt-2"><?php renderStudentSetViewer($studentsConn,['title'=>'All Student Records','icon'=>'fa-users-gear','super_admin'=>true,'show_all'=>false]); ?></div>
+      <div class="mt-2"><?php renderStudentSetViewer($studentsConn,['title'=>'All Student Records','icon'=>'fa-users-gear','super_admin'=>true,'show_all'=>true]); ?></div>
 <?php
 // Student performance prediction data
 $perfData = ['labels'=>[],'actual'=>[],'predicted'=>[],'courses'=>[]];
@@ -1867,6 +1917,35 @@ function dgExportCSV() {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" class="btn" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-save me-1"></i>Add Staff</button>
+  </div>
+</form>
+  </div>
+</div>
+
+<!-- ═══ EDIT STAFF MODAL ═══ -->
+<div class="modal fade modern-modal" id="editStaffModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content">
+      <input type="hidden" name="dg_action" value="edit_staff">
+      <input type="hidden" name="edit_staff_id" id="editStaffId" value="0">
+      <div class="modal-header" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;">
+        <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Staff Member</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Full Name *</label><input type="text" name="edit_staff_name" id="editStaffName" class="form-control" required style="border-radius:8px;"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Staff ID *</label><input type="text" name="edit_staff_idno" id="editStaffIdno" class="form-control" required style="border-radius:8px;"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Email</label><input type="email" name="edit_staff_email" id="editStaffEmail" class="form-control" style="border-radius:8px;"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Phone</label><input type="text" name="edit_staff_phone" id="editStaffPhone" class="form-control" style="border-radius:8px;"></div>
+          <div class="col-12"><label class="form-label fw-semibold" style="font-size:13px;">Department</label><select name="edit_staff_dept" id="editStaffDept" class="form-select" style="border-radius:8px;"><option value="">Select</option><?php foreach($dept_list as $dd): ?><option value="<?= htmlspecialchars($dd['department_code']) ?>"><?= htmlspecialchars($dd['department_name']) ?></option><?php endforeach; ?></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Role</label><input type="text" name="edit_staff_role" id="editStaffRole" class="form-control" style="border-radius:8px;" placeholder="e.g., Lecturer"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px;">Status</label><select name="edit_staff_status" id="editStaffStatus" class="form-select" style="border-radius:8px;"><option value="Active">Active</option><option value="On Leave">On Leave</option><option value="Inactive">Inactive</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-save me-1"></i>Update Staff</button>
       </div>
     </form>
   </div>
@@ -1988,6 +2067,20 @@ function dgFilterNews(q) {
         var status = (el.querySelector('.dg-news-status')?.textContent || '').toLowerCase();
         el.style.display = !q || title.indexOf(q) !== -1 || status.indexOf(q) !== -1 ? '' : 'none';
     });
+}
+
+function openEditStaffModal(staff) {
+    if (!staff) return;
+    document.getElementById('editStaffId').value = staff.id || 0;
+    document.getElementById('editStaffName').value = staff.full_name || '';
+    document.getElementById('editStaffIdno').value = staff.staff_id || '';
+    document.getElementById('editStaffEmail').value = staff.email || '';
+    document.getElementById('editStaffPhone').value = staff.phone || '';
+    document.getElementById('editStaffDept').value = staff.department || '';
+    document.getElementById('editStaffRole').value = staff.position || staff.role_name || '';
+    document.getElementById('editStaffStatus').value = staff.status || 'Active';
+    var modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
 }
 </script>
 

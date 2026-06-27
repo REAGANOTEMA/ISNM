@@ -5,8 +5,12 @@
  * Set $pageTitle before including, e.g.: $pageTitle = 'Director General';
  */
 $pageTitle = $pageTitle ?? 'Dashboard';
-$rootPath  = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
-if ($rootPath === '') $rootPath = '.';
+$selfDir   = dirname($_SERVER['PHP_SELF']);
+$rootPath  = '..';
+// Calculate absolute project root for SW scope
+$scopeParts = explode('/', trim($selfDir, '/'));
+array_pop($scopeParts); // remove 'dashboards'
+$swScope    = empty($scopeParts) ? '/' : '/' . implode('/', $scopeParts) . '/';
 
 // Cache-busting version — bump on every deploy
 $v = '2.1.0';
@@ -121,7 +125,7 @@ $(document).ajaxSend(function(e, xhr, opts) {
 <!-- Service Worker + Push Notification Registration -->
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>', { scope: '/ISNM/' })
+    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>', { scope: '<?= $swScope ?>' })
         .then(function(reg) {
             if ('PushManager' in window && 'Notification' in window && Notification.permission === 'granted') {
                 reg.pushManager.subscribe({ userVisibleOnly: true }).then(function(sub) {
@@ -131,7 +135,7 @@ if ('serviceWorker' in navigator) {
                         data.append('auth_key', (sub.toJSON().keys && sub.toJSON().keys.auth) || '');
                         data.append('p256dh_key', (sub.toJSON().keys && sub.toJSON().keys.p256dh) || '');
                         data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
-                        fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
+                        fetch('<?= $rootPath ?>/includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
                     }
                 }).catch(function(){});
             }

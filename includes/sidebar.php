@@ -15,13 +15,13 @@ $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
 // Load profile image
-$profileImage = (rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/') ?: '.') . '/images/username.png';
+$profileImage = '../images/username.png';
 $profileClickHandler = "if(typeof openProfileModal==='function')openProfileModal();";
 if ($user_type === 'student') {
     $profileClickHandler = "window.location.href='../student_profile.php'";
     // Try to load student profile photo
     try {
-        $rootPath_sb = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
+        $rootPath_sb = '..';
         $studentConn = getStudentsConnection();
         if ($studentConn) {
             $q = $studentConn->prepare("SELECT profile_picture, passport_photo FROM students WHERE id = ?");

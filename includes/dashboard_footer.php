@@ -1,6 +1,5 @@
 <?php
-$rootPath = rtrim(str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 2), '/');
-if ($rootPath === '') $rootPath = '.';
+$rootPath = '..';
 
 // Cache-busting version — bump on every deploy
 $v = '2.1.0';
