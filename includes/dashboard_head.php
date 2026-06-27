@@ -12,7 +12,7 @@ if ($rootPath === '') $rootPath = '.';
 $v = '2.1.0';
 
 // Profile image URL for dashboard header avatars (falls back to username.png)
-$profileImageUrl = '../images/username.png';
+$profileImageUrl = $rootPath . '/images/username.png';
 $userType = $_SESSION['type'] ?? '';
 if (!empty($_SESSION['user_id'])) {
     if ($userType === 'student') {
@@ -31,7 +31,7 @@ if (!empty($_SESSION['user_id'])) {
                     if ($photoFile) {
                         $checkPath = __DIR__ . '/../studentUploads/profile_images/' . $photoFile;
                         if (file_exists($checkPath)) {
-                            $profileImageUrl = '../studentUploads/profile_images/' . $photoFile . '?v=' . time();
+                            $profileImageUrl = $rootPath . '/studentUploads/profile_images/' . $photoFile . '?v=' . time();
                         }
                     }
                 }

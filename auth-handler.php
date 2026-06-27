@@ -304,11 +304,6 @@ switch ($action) {
         handleCreateStaff();
         break;
 
-    // ── Unlock Session (from lock screen) ────────────────────────
-    case 'unlock_session':
-        handleUnlockSession($auth_service);
-        break;
-
     // ── Logout ───────────────────────────────────────────────────
     case 'logout':
         handleLogout();
@@ -458,70 +453,6 @@ function handleCreateStaff() {
     $res = $auth_service->createStaffAccount($data);
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'staff-login.php'));
-    exit();
-}
-
-function handleUnlockSession(AuthenticationService $auth_service) {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    $password = $_POST['password'] ?? '';
-    if (trim($password) === '') {
-        $_SESSION['lock_error'] = 'Password is required.';
-        header('Location: ../dashboards/lock-screen.php');
-        exit();
-    }
-    $userId   = $_SESSION['user_id'] ?? 0;
-    $email    = $_SESSION['email']    ?? '';
-    $userRole = $_SESSION['role']     ?? '';
-    try {
-        $conn = getStaffConnection();
-        $authenticated = false;
-        if ($conn) {
-            // Try unified staff table
-            $stmt = $conn->prepare("SELECT password, password_hash FROM staff WHERE id = ? AND email = ? LIMIT 1");
-            if ($stmt) {
-                $stmt->bind_param('is', $userId, $email);
-                $stmt->execute();
-                $row = $stmt->get_result()->fetch_assoc();
-                $stmt->close();
-                if ($row) {
-                    $hash = $row['password_hash'] ?: $row['password'];
-                    if ($hash && (password_verify($password, $hash) || $hash === $password)) {
-                        $authenticated = true;
-                    }
-                }
-            }
-            $conn->close();
-        }
-        if (!$authenticated) {
-            // Try hr_users table fallback
-            $conn2 = getStaffConnection();
-            if ($conn2) {
-                $st = $conn2->prepare("SELECT password_hash FROM hr_users WHERE email = ? LIMIT 1");
-                if ($st) {
-                    $st->bind_param('s', $email);
-                    $st->execute();
-                    $rw = $st->get_result()->fetch_assoc();
-                    $st->close();
-                    if ($rw && (password_verify($password, $rw['password_hash']) || $rw['password_hash'] === $password)) {
-                        $authenticated = true;
-                    }
-                }
-                $conn2->close();
-            }
-        }
-        if (!$authenticated) {
-            $_SESSION['lock_error'] = 'Invalid password. Please try again.';
-            header('Location: ../dashboards/lock-screen.php');
-            exit();
-        }
-    } catch (Exception $e) {
-        $_SESSION['lock_error'] = 'An error occurred. Please try again.';
-        header('Location: ../dashboards/lock-screen.php');
-        exit();
-    }
-    $auth_service->unlockSession();
-    $dashboard = $auth_service->getDashboardRoute($userRole) ?: 'dashboards/director-general.php';
-    header('Location: ../' . $dashboard);
     exit();
 }
 

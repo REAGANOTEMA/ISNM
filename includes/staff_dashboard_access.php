@@ -58,12 +58,8 @@ if (!function_exists('bootstrapStaffDashboard')) {
             exit();
         }
 
-        // Session timeout / idle-lock enforcement
+        // Session timeout enforcement
         if (!$auth_service->checkSessionValidity()) {
-            if ($auth_service->isSessionLocked()) {
-                header('Location: ../dashboards/lock-screen.php');
-                exit();
-            }
             $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
             header('Location: ../staff-login.php?error=expired' . ($redirect ? "&redirect=$redirect" : ''));
             exit();

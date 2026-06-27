@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/department_approval_request.php';
 try {
     $ctx = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
 } catch (Throwable $e) {
@@ -80,6 +81,13 @@ $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DAT
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");
 // ── Approvals ──
 $pending_tickets = ict_fetch($ict, "SELECT * FROM it_support_tickets WHERE status IN ('open','in_progress') ORDER BY FIELD(priority,'critical','high','medium','low'), created_at DESC LIMIT 15");
+$pending_approval_requests = [];
+if ($staff_conn) {
+    try {
+        $r = $staff_conn->query("SELECT ar.*, ws.workflow_name, ws.category FROM igangaschoolofl_staffs_db.approval_requests ar LEFT JOIN igangaschoolofl_staffs_db.approval_workflows ws ON ar.workflow_id = ws.id WHERE ar.status = 'Active' AND (ws.category = 'ICT' OR ws.category IS NULL) ORDER BY FIELD(ar.priority,'Critical','High','Medium','Normal'), ar.created_at DESC LIMIT 15");
+        if ($r) while ($row = $r->fetch_assoc()) $pending_approval_requests[] = $row;
+    } catch (Exception $e) {}
+}
 
 $tab = $_GET['tab'] ?? 'dashboard';
 ?>
@@ -975,7 +983,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
             <div class="col-lg-8">
                 <div class="section-card">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h2 class="mb-0"><i class="fas fa-check-double me-2 text-warning"></i>Pending Approvals</h2>
+                        <h2 class="mb-0"><i class="fas fa-check-double me-2 text-warning"></i>Pending IT Tickets</h2>
                         <div>
                             <button class="btn btn-sm btn-outline-secondary filter-pill active" onclick="filterApproval('all')">All</button>
                             <button class="btn btn-sm btn-outline-danger filter-pill" onclick="filterApproval('critical')">Critical</button>
@@ -983,9 +991,9 @@ $tab = $_GET['tab'] ?? 'dashboard';
                         </div>
                     </div>
                     <?php if (empty($pending_tickets)): ?>
-                    <div class="text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x mb-2 d-block"></i>No pending approvals</div>
+                    <div class="text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x mb-2 d-block"></i>No pending tickets</div>
                     <?php else: ?>
-                    <div class="table-responsive" style="max-height:500px;overflow-y:auto">
+                    <div class="table-responsive" style="max-height:300px;overflow-y:auto">
                         <table class="table table-sm table-hover table-small">
                             <thead><tr><th>Ticket #</th><th>Requester</th><th>Description</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
@@ -1007,20 +1015,62 @@ $tab = $_GET['tab'] ?? 'dashboard';
                     </div>
                     <?php endif; ?>
                 </div>
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="mb-0"><i class="fas fa-file-signature me-2 text-primary"></i>DG Approval Requests</h2>
+                        <div>
+                            <?php renderDepartmentApprovalButton(); ?>
+                        </div>
+                    </div>
+                    <?php if (empty($pending_approval_requests)): ?>
+                    <div class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>No pending approval requests</div>
+                    <?php else: ?>
+                    <div class="table-responsive" style="max-height:300px;overflow-y:auto">
+                        <table class="table table-sm table-hover table-small">
+                            <thead><tr><th>Request #</th><th>Title</th><th>Requester</th><th>Priority</th><th>Stage</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($pending_approval_requests as $ar): ?>
+                                <tr class="ticket-row-<?= strtolower($ar['priority']) ?>">
+                                    <td><code><?= htmlspecialchars($ar['request_number']) ?></code></td>
+                                    <td><small><?= htmlspecialchars(mb_substr($ar['title'] ?? '', 0, 50)) ?></small></td>
+                                    <td><?= htmlspecialchars($ar['requester_name']) ?></td>
+                                    <td><span class="badge bg-<?= $ar['priority']==='Critical'||$ar['priority']==='High'?'danger':'info' ?>"><?= $ar['priority'] ?></span></td>
+                                    <td><span class="badge bg-primary"><?= htmlspecialchars($ar['workflow_name'] ?? 'ICT Request') ?></span></td>
+                                    <td>
+                                        <a href="../dashboards/director-general.php?page=approvals" class="btn btn-sm btn-outline-primary py-0 px-1" title="View in DG Center"><i class="fas fa-external-link-alt"></i></a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="col-lg-4">
                 <div class="section-card">
-                    <h2><i class="fas fa-chart-pie me-2 text-primary"></i>Approval Summary</h2>
+                    <h2><i class="fas fa-chart-pie me-2 text-primary"></i>IT Ticket Summary</h2>
                     <div class="small">
                         <div class="d-flex justify-content-between py-1"><span>Open Tickets</span><span class="badge bg-danger"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status='open'") ?></span></div>
                         <div class="d-flex justify-content-between py-1"><span>In Progress</span><span class="badge bg-warning text-dark"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status='in_progress'") ?></span></div>
                         <div class="d-flex justify-content-between py-1"><span>Resolved</span><span class="badge bg-success"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status='resolved'") ?></span></div>
                         <div class="d-flex justify-content-between py-1"><span>Closed</span><span class="badge bg-secondary"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status='closed'") ?></span></div>
                         <hr class="my-1">
-                        <div class="d-flex justify-content-between py-1"><span>Critical</span><span class="badge bg-danger"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status IN ('open','in_progress') AND priority IN ('critical','high')") ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>Critical/High</span><span class="badge bg-danger"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status IN ('open','in_progress') AND priority IN ('critical','high')") ?></span></div>
                         <div class="d-flex justify-content-between py-1"><span>Normal</span><span class="badge bg-info"><?= ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE status IN ('open','in_progress') AND priority IN ('medium','low')") ?></span></div>
                     </div>
                 </div>
+                <div class="section-card">
+                    <h2><i class="fas fa-chart-line me-2 text-success"></i>DG Request Summary</h2>
+                    <div class="small">
+                        <div class="d-flex justify-content-between py-1"><span>Active Requests</span><span class="badge bg-primary"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Active'") : 0 ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>Approved</span><span class="badge bg-success"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Approved'") : 0 ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>My Requests</span><span class="badge bg-info"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE requester_id=" . (int)($user_id)) : 0 ?></span></div>
+                    </div>
+                </div>
+                <?php if (function_exists('renderMyApprovalRequestsWidget')): ?>
+                <?= renderMyApprovalRequestsWidget($staff_conn) ?>
+                <?php endif; ?>
                 <div class="section-card">
                     <h2><i class="fas fa-clipboard-list me-2 text-info"></i>Approval Types</h2>
                     <div class="d-grid gap-2 small">
@@ -1122,6 +1172,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
 </form>
 </div></div>
 
+<?php if (function_exists('renderDepartmentApprovalModal')) renderDepartmentApprovalModal(); ?>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -1204,6 +1255,7 @@ function addSecurityLog() {
 function filterTickets(s) { $('#ticketTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('backup-row-'+s)); }); }
 function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter-pill[onclick*="'${s}'"]`).addClass('active'); $('.section-card tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
+<?php if (function_exists('renderDepartmentApprovalScripts')) renderDepartmentApprovalScripts(); ?>
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

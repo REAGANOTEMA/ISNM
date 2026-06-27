@@ -99,6 +99,10 @@ try {
                 'info',
                 'fas fa-file-signature'
             );
+            // Mark as read for the requester so only others (DG) see it as unread
+            if ($nid && function_exists('markNotificationRead')) {
+                markNotificationRead($nid, $staffId, 'staff');
+            }
         }
 
         echo json_encode([

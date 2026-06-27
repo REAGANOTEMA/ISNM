@@ -71,7 +71,7 @@ if (!function_exists('getUserHierarchyLevel')) {
 function getUserHierarchyLevel($staffId, $conn) {
     if (!$conn) return 99;
     try {
-        $stmt = $conn->prepare("SELECT sr.hierarchy_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
+        $stmt = $conn->prepare("SELECT sr.role_level as hierarchy_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
         if (!$stmt) return 99;
         $stmt->bind_param('i', $staffId);
         $stmt->execute();
@@ -97,26 +97,33 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
         $reqStmt->close();
         if (!$request || $request['status'] !== 'Active') return false;
 
-        // Role enforcement: user must have equal or higher authority (lower hierarchy_level number)
+        // Role enforcement: user must have equal or higher authority (lower role_level number)
         $userLevel = getUserHierarchyLevel($staffId, $conn);
-        $stageStmt = $conn->prepare("SELECT assigned_role_id, stage_name, stage_order, required_hierarchy_level FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ?");
+        $stageStmt = $conn->prepare("SELECT assigned_role_id, assigned_role_name, stage_name, stage_order, is_final FROM igangaschoolofl_staffs_db.approval_stages WHERE id = ?");
         if ($stageStmt) {
             $stageStmt->bind_param('i', $request['current_stage_id']);
             $stageStmt->execute();
             $stage = $stageStmt->get_result()->fetch_assoc();
             $stageStmt->close();
-            if ($stage && !empty($stage['required_hierarchy_level'])) {
-                $reqLevel = (int)$stage['required_hierarchy_level'];
-                if ($userLevel > $reqLevel) {
-                    error_log("processApprovalAction: User $staffId level $userLevel cannot act on stage requiring level <= $reqLevel");
-                    return false;
+            if ($stage && !empty($stage['assigned_role_name'])) {
+                $roleStmt = $conn->prepare("SELECT sr.role_name, sr.role_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
+                if ($roleStmt) {
+                    $roleStmt->bind_param('i', $staffId);
+                    $roleStmt->execute();
+                    $userRole = $roleStmt->get_result()->fetch_assoc();
+                    $roleStmt->close();
+                    if ($userRole && $userRole['role_level'] > 1 && $userRole['role_name'] !== $stage['assigned_role_name']) {
+                        error_log("processApprovalAction: User $staffId role '{$userRole['role_name']}' cannot act on stage requiring '{$stage['assigned_role_name']}'");
+                        return false;
+                    }
                 }
             }
-            // Only Director General (hierarchy_level=1) can process final approval stage
+            // Only Director General (role_level=1) can approve final stage
             $currentOrder = (int)$request['current_stage_order'];
             $totalStages = (int)$request['total_stages'];
-            if ($currentOrder >= $totalStages && $actionType === 'approve' && $userLevel > 1) {
-                error_log("processApprovalAction: Only hierarchy_level=1 can approve final stage. User $staffId has level $userLevel");
+            $isFinalStage = $stage ? !empty($stage['is_final']) : ($currentOrder >= $totalStages);
+            if ($isFinalStage && $actionType === 'approve' && $userLevel > 1) {
+                error_log("processApprovalAction: Only role_level=1 can approve final stage. User $staffId has level $userLevel");
                 return false;
             }
         }

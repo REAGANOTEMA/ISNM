@@ -388,10 +388,10 @@ class AuthenticationService {
             return false;
         }
 
-        // 20-minute idle lock
+        // 20-minute idle timeout → log out
         $idleTimeout = 1200;
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $idleTimeout) {
-            $_SESSION['session_locked'] = true;
+            $this->logout();
             return false;
         }
 
@@ -678,7 +678,7 @@ class AuthenticationService {
 $auth_service = new AuthenticationService();
 
 // ── Lightweight session activity ping ──────────────────────────────
-if (!empty($_GET['ajax']) && $_GET['ajax'] === 'ping_activity' && $auth_service->isAuthenticated() && !$auth_service->isSessionLocked()) {
+if (!empty($_GET['ajax']) && $_GET['ajax'] === 'ping_activity' && $auth_service->isAuthenticated()) {
     $auth_service->checkAndLockSession();
     header('Content-Type: application/json');
     echo '{"ok":true,"t":' . time() . '}';

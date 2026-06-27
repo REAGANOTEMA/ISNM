@@ -161,7 +161,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 
     function fetchNotifications() {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', '../includes/ajax_notifications.php?action=fetch&_=' + Date.now(), true);
+      xhr.open('GET', '<?= $rootPath ?>/includes/ajax_notifications.php?action=fetch&_=' + Date.now(), true);
       xhr.onload = function () {
         if (xhr.status !== 200) return;
         try {
@@ -213,7 +213,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 
     function markRead(nid) {
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', '../includes/ajax_notifications.php?action=mark_read', true);
+      xhr.open('POST', '<?= $rootPath ?>/includes/ajax_notifications.php?action=mark_read', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = function () { fetchNotifications(); };
       xhr.onerror = function(){};
@@ -222,7 +222,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 
     function markAllRead() {
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', '../includes/ajax_notifications.php?action=mark_all_read', true);
+      xhr.open('POST', '<?= $rootPath ?>/includes/ajax_notifications.php?action=mark_all_read', true);
       xhr.onload = function () { fetchNotifications(); };
       xhr.onerror = function(){};
       xhr.send();
@@ -307,27 +307,17 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
 </script>
 <?php if (function_exists('renderProfileScripts')) renderProfileScripts(); ?>
 
-<!-- ── Session Idle Auto-Lock (20 min inactivity) ── -->
+<!-- ── Session Idle Auto-Logout (10 min inactivity → sign out) ── -->
 <script>
 (function() {
-    var IDLE_TIMEOUT_MS = 1200000; // 20 minutes
-    var WARNING_MS = 1140000;      // 19 minutes (1 min warning)
+    var IDLE_TIMEOUT_MS = 600000; // 10 minutes
     var idleTimer = null;
-    var warningShown = false;
-    var lockScreenUrl = '../dashboards/lock-screen.php';
 
     function resetIdleTimer() {
         if (idleTimer) clearTimeout(idleTimer);
-        warningShown = false;
         idleTimer = setTimeout(function() {
-            window.location.href = lockScreenUrl;
+            window.location.href = '../logout.php';
         }, IDLE_TIMEOUT_MS);
-    }
-
-    function pingActivity() {
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(window.location.pathname + '?ajax=ping_activity');
-        }
     }
 
     var events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
@@ -336,10 +326,9 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
     }
 
     resetIdleTimer();
-    setInterval(pingActivity, 300000); // ping every 5 min
 })();
 </script>
-<!-- ── End Session Auto-Lock ── -->
+<!-- ── End Session Idle Auto-Logout ── -->
 
 <?php if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff'): ?>
 <div class="isnm-loader" id="isnmLoader">
