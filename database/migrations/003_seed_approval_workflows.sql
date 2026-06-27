@@ -96,3 +96,9 @@ SET @store_wf = (SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHE
 
 INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_name, stage_order, assigned_role_id, assigned_role_name, is_final) VALUES
 (@store_wf, 'Director General Approval', 1, NULL, 'Director General', 1);
+
+-- 14. Insert stages for Student Registration (1-stage: DG direct)
+SET @student_wf = (SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name = 'Student Registration' LIMIT 1);
+
+INSERT IGNORE INTO igangaschoolofl_staffs_db.approval_stages (workflow_id, stage_name, stage_order, assigned_role_id, assigned_role_name, is_final) VALUES
+(@student_wf, 'Director General Approval', 1, NULL, 'Director General', 1);
