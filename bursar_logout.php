@@ -3,8 +3,8 @@
  * Bursar Logout
  */
 
-require_once 'auth-service.php';
-$auth_service->logout();
-
-header('Location: staff-login.php?logout=success');
+if (session_status() === PHP_SESSION_NONE) session_start();
+session_unset();
+session_destroy();
+header('Location: organogram.php');
 exit;

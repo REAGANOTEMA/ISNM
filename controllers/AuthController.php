@@ -18,7 +18,7 @@ class AuthController {
      */
     public function login() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('login.php');
+            redirect('staff-login.php');
         }
         
         $username = sanitizeInput($_POST['username'] ?? '');
@@ -26,14 +26,13 @@ class AuthController {
         
         if (empty($username) || empty($password)) {
             flashMessage('error', 'Username and password are required');
-            redirect('login.php');
+            redirect('staff-login.php');
         }
         
         // Authenticate user
         $result = $this->user->authenticate($username, $password);
         
         if ($result['success']) {
-            // Set session variables
             $_SESSION['user_id'] = $result['user']['id'];
             $_SESSION['username'] = $result['user']['username'];
             $_SESSION['full_name'] = $result['user']['full_name'];
@@ -47,7 +46,7 @@ class AuthController {
             redirect('dashboard.php');
         } else {
             flashMessage('error', $result['error']);
-            redirect('login.php');
+            redirect('staff-login.php');
         }
     }
     
@@ -55,16 +54,14 @@ class AuthController {
      * Handle user logout
      */
     public function logout() {
-        // Destroy session
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        session_unset();
         session_destroy();
-        
-        // Clear session cookie
         if (isset($_COOKIE[session_name()])) {
             setcookie(session_name(), '', time() - 3600, '/');
         }
-        
-        flashMessage('success', 'You have been logged out successfully');
-        redirect('login.php');
+        header('Location: organogram.php');
+        exit();
     }
     
     /**
@@ -73,7 +70,7 @@ class AuthController {
     public function checkAuth() {
         if (!isLoggedIn()) {
             flashMessage('error', 'Please login to access this page');
-            redirect('login.php');
+            redirect('staff-login.php');
         }
         
         // Check session timeout
@@ -159,7 +156,7 @@ class AuthController {
      */
     public function changePassword() {
         if (!isLoggedIn()) {
-            redirect('login.php');
+            redirect('staff-login.php');
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

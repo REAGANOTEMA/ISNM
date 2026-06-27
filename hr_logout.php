@@ -37,6 +37,6 @@ if (isset($_SESSION['hr_id'])) {
     session_destroy();
 }
 
-header('Location: staff-login.php?logout=success');
+header('Location: organogram.php');
 exit;
 ?>

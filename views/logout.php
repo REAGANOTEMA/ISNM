@@ -1,12 +1,6 @@
 <?php
-/**
- * Logout Handler for ISNM Student Management System
- */
-
-require_once __DIR__ . '/../controllers/AuthController.php';
-require_once __DIR__ . '/../config/config.php';
-
-// Handle logout
-$authController = new AuthController();
-$authController->logout();
-?>
+if (session_status() === PHP_SESSION_NONE) session_start();
+session_unset();
+session_destroy();
+header('Location: ../organogram.php');
+exit();

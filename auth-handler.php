@@ -458,9 +458,8 @@ function handleCreateStaff() {
 
 function handleLogout() {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    $type = $_SESSION['type'] ?? 'staff';
     session_unset();
     session_destroy();
-    header('Location: ' . ($type === 'student' ? 'student-login.php' : 'organogram.php'));
+    header('Location: organogram.php');
     exit();
 }

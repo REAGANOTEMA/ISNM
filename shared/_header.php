@@ -20,7 +20,7 @@ include_once __DIR__ . '/../includes/functions.php';
   <meta name="apple-touch-fullscreen" content="yes">
   <link rel="manifest" href="manifest.json">
   
-  <script>window.addEventListener('unhandledrejection',function(e){e.preventDefault()});</script>
+  <script>(function(){window.addEventListener('unhandledrejection',function(e){e.preventDefault()});window.addEventListener('error',function(e){if(e.target&&e.target instanceof HTMLScriptElement||e.target instanceof HTMLLinkElement||e.target instanceof HTMLImageElement){e.preventDefault()}});})();</script>
   <title><?php echo isset($pageTitle) ? $pageTitle : 'Iganga School of Nursing and Midwifery'; ?></title>
   <meta name="description" content="Iganga School of Nursing and Midwifery - Quality Healthcare Education in Uganda">
   <meta name="keywords" content="nursing school, midwifery, healthcare education, ISNM, Uganda">
