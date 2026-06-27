@@ -52,16 +52,21 @@ if (!function_exists('bootstrapStaffDashboard')) {
             $auth_service = new AuthenticationService();
         }
 
+        // Compute correct relative path to staff-login.php
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $dirDepth = substr_count(dirname($scriptName), '/');
+        $loginPath = $dirDepth > 1 ? str_repeat('../', $dirDepth - 1) . 'staff-login.php' : 'staff-login.php';
+
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
             $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-            header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
+            header('Location: ' . $loginPath . ($redirect ? "?redirect=$redirect" : ''));
             exit();
         }
 
         // Session timeout enforcement
         if (!$auth_service->checkSessionValidity()) {
             $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-            header('Location: ../staff-login.php?error=expired' . ($redirect ? "&redirect=$redirect" : ''));
+            header('Location: ' . $loginPath . '?error=expired' . ($redirect ? "&redirect=$redirect" : ''));
             exit();
         }
 

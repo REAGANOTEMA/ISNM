@@ -2,6 +2,8 @@
 /**
  * Receipt Printing Endpoint
  */
+require_once __DIR__ . '/includes/staff_dashboard_access.php';
+bootstrapStaffDashboard();
 require_once __DIR__ . '/includes/financial_functions.php';
 require_once __DIR__ . '/includes/receipt_generator.php';
 

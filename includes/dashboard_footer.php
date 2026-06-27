@@ -316,7 +316,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
     function resetIdleTimer() {
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(function() {
-            window.location.href = '../logout.php';
+            window.location.href = '<?= $rootPath ?>/logout.php';
         }, IDLE_TIMEOUT_MS);
     }
 

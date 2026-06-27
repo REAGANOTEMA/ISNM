@@ -57,13 +57,22 @@ $printing_jobs = lab_fetch($ict, "SELECT * FROM lab_printing_jobs ORDER BY creat
 $attendance_records = lab_fetch($ict, "SELECT * FROM lab_attendance ORDER BY created_at DESC LIMIT 20");
 $id_card_requests = lab_fetch($ict, "SELECT * FROM lab_id_card_requests ORDER BY created_at DESC LIMIT 20");
 $sessions = lab_fetch($ict, "SELECT * FROM lab_bookings ORDER BY booking_date DESC LIMIT 20");
+$total_students = 0;
+$students_list = [];
+if ($students_conn) {
+    $r = $students_conn->query("SELECT COUNT(*) as cnt FROM students WHERE status='Active'");
+    if ($r) $total_students = (int)$r->fetch_assoc()['cnt'];
+    $r = $students_conn->query("SELECT id, index_number, full_name, phone, email, program, gender, set_name, status FROM students WHERE status != 'deleted' ORDER BY full_name ASC LIMIT 200");
+    if ($r) $students_list = $r->fetch_all(MYSQLI_ASSOC);
+}
 
 // POST handlers
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
+    // Student handlers (students DB — works without ICT DB)
     if ($action === 'add_student' && $students_conn) {
-        $student_id = 'ISNM/' . date('Y') . '/' . str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $index = 'ISNM/' . date('Y') . '/' . str_pad(mt_rand(0, 99999), 5, '0', STR_PAD_LEFT);
         $fn = $students_conn->real_escape_string($_POST['full_name']);
         $parts = explode(' ', trim($fn), 2);
         $first = $parts[0];
@@ -74,9 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict) {
         $gender = $students_conn->real_escape_string($_POST['gender'] ?? '');
         $set = $students_conn->real_escape_string($_POST['set_name'] ?? date('Y'));
         $dob = $_POST['date_of_birth'] ? "'" . $students_conn->real_escape_string($_POST['date_of_birth']) . "'" : 'NULL';
-        $sql = "INSERT INTO students (student_id, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, status, created_at) VALUES ('$student_id', '$first', '$surname', '$fn', '$phone', '$email', '$prog', '$gender', '$set', $dob, '" . date('Y') . "', 'Active', NOW())";
+        $sql = "INSERT INTO students (index_number, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, status, is_first_login, created_at) VALUES ('$index', '$first', '$surname', '$fn', '$phone', '$email', '$prog', '$gender', '$set', $dob, '" . date('Y') . "', 'Active', 1, NOW())";
         if ($students_conn->query($sql)) {
-            $_SESSION['success'] = "Student $fn added. ID: $student_id";
+            $_SESSION['success'] = "Student $fn added. Index: $index — they can sign in at student-login.php";
         } else {
             $_SESSION['error'] = "Error: " . $students_conn->error;
         }
@@ -84,6 +93,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict) {
         exit;
     }
 
+    if ($action === 'edit_student' && $students_conn) {
+        $id = intval($_POST['id']);
+        $fn = $students_conn->real_escape_string($_POST['full_name']);
+        $parts = explode(' ', trim($fn), 2);
+        $first = $parts[0];
+        $surname = $parts[1] ?? '';
+        $phone = $students_conn->real_escape_string($_POST['phone'] ?? '');
+        $email = $students_conn->real_escape_string($_POST['email'] ?? '');
+        $prog = $students_conn->real_escape_string($_POST['program'] ?? '');
+        $gender = $students_conn->real_escape_string($_POST['gender'] ?? '');
+        $set = $students_conn->real_escape_string($_POST['set_name'] ?? '');
+        $status = $students_conn->real_escape_string($_POST['status'] ?? 'Active');
+        $idx = $students_conn->real_escape_string($_POST['index_number'] ?? '');
+        $students_conn->query("UPDATE students SET index_number='$idx', first_name='$first', surname='$surname', full_name='$fn', phone='$phone', email='$email', program='$prog', gender='$gender', set_name='$set', status='$status', updated_at=NOW() WHERE id=$id");
+        $_SESSION['success'] = "Student $fn updated.";
+        header('Location: computer_lab.php?section=students');
+        exit;
+    }
+
+    if ($action === 'delete_student' && $students_conn) {
+        $id = intval($_POST['id']);
+        $students_conn->query("UPDATE students SET status='deleted' WHERE id=$id");
+        $_SESSION['success'] = "Student removed.";
+        header('Location: computer_lab.php?section=students');
+        exit;
+    }
+
+    if ($ict) {
     if ($action === 'add_computer') {
         $cid = $ict->real_escape_string($_POST['computer_id']);
         $name = $ict->real_escape_string($_POST['computer_name']);
@@ -280,6 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict) {
 
     header('Location: computer_lab.php');
     exit;
+} // end if ($ict)
 }
 
 $section = $_GET['section'] ?? 'dashboard';
@@ -297,14 +335,16 @@ $pageTitle = 'Computer Lab Manager';
 .stat-card p { margin:0; font-size:11px; color:#6b7280; }
 .section-card { background:#fff; border-radius:12px; padding:18px; border:1px solid #e5e7eb; margin-bottom:14px; }
 .section-card h2 { font-size:14px; font-weight:700; margin-bottom:12px; color:#111827; }
+.bg-primary-soft { background:#eef2ff; color:#4f46e5; }
 .bg-blue-soft { background:#eff6ff; color:#2563eb; }
 .bg-green-soft { background:#f0fdf4; color:#16a34a; }
 .bg-red-soft { background:#fef2f2; color:#dc2626; }
 .bg-orange-soft { background:#fff7ed; color:#ea580c; }
-.bg-purple-soft { background:#faf5ff; color:#9333ea; }
 .bg-yellow-soft { background:#fefce8; color:#ca8a04; }
 .bg-teal-soft { background:#f0fdfa; color:#0d9488; }
 .bg-pink-soft { background:#fdf2f8; color:#db2777; }
+.bg-cyan-soft { background:#ecfeff; color:#0891b2; }
+.bg-purple-soft { background:#faf5ff; color:#9333ea; }
 .bg-indigo-soft { background:#eef2ff; color:#4f46e5; }
 .bg-cyan-soft { background:#ecfeff; color:#0891b2; }
 .bg-gray-soft { background:#f3f4f6; color:#4b5563; }
@@ -341,6 +381,7 @@ $pageTitle = 'Computer Lab Manager';
         <!-- Section Tabs -->
         <ul class="nav nav-pills-lab">
             <li><a class="nav-link <?= $section==='dashboard'?'active':'' ?>" href="?section=dashboard"><i class="fas fa-chart-pie me-1"></i>Dashboard</a></li>
+            <li><a class="nav-link <?= $section==='students'?'active':'' ?>" href="?section=students"><i class="fas fa-user-graduate me-1"></i>Students</a></li>
             <li><a class="nav-link <?= $section==='computers'?'active':'' ?>" href="?section=computers"><i class="fas fa-desktop me-1"></i>Computers</a></li>
             <li><a class="nav-link <?= $section==='sessions'?'active':'' ?>" href="?section=sessions"><i class="fas fa-calendar-alt me-1"></i>Sessions</a></li>
             <li><a class="nav-link <?= $section==='id-cards'?'active':'' ?>" href="?section=id-cards"><i class="fas fa-id-card me-1"></i>ID Cards</a></li>
@@ -357,6 +398,7 @@ $pageTitle = 'Computer Lab Manager';
         <!-- ════════════════ DASHBOARD ════════════════ -->
         <?php if ($section === 'dashboard'): ?>
         <div class="row g-2 mb-3">
+            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card" onclick="location='?section=students'" style="cursor:pointer"><div class="icon-circle bg-primary-soft"><i class="fas fa-user-graduate"></i></div><div><h4><?= $total_students ?></h4><p>Total Students</p></div></div></div>
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-blue-soft"><i class="fas fa-desktop"></i></div><div><h4><?= $total_computers ?></h4><p>Total Computers</p></div></div></div>
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-green-soft"><i class="fas fa-check-circle"></i></div><div><h4><?= $computers_online ?></h4><p>Online</p></div></div></div>
             <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-red-soft"><i class="fas fa-times-circle"></i></div><div><h4><?= $computers_offline ?></h4><p>Offline</p></div></div></div>
@@ -427,6 +469,44 @@ $pageTitle = 'Computer Lab Manager';
                         <div class="d-flex justify-content-between py-1"><span>Software Titles</span><strong><?= $software_count ?></strong></div>
                         <div class="d-flex justify-content-between py-1"><span>Print Jobs Today</span><strong><?= $printing_jobs_today ?></strong></div>
                         <div class="d-flex justify-content-between py-1"><span>Attendance Records Today</span><strong><?= $student_attendance_today ?></strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════ STUDENTS ════════════════ -->
+        <?php elseif ($section === 'students'): ?>
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Management</h2>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus me-1"></i>Add Student</button>
+                    </div>
+                    <div class="table-responsive" style="max-height:550px;overflow-y:auto">
+                        <table class="table table-sm table-hover table-small">
+                            <thead><tr><th>#</th><th>Index Number</th><th>Full Name</th><th>Program</th><th>Phone</th><th>Email</th><th>Gender</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <?php if (empty($students_list)): ?>
+                                <tr><td colspan="9" class="text-center text-muted py-3">No students found. Add one above.</td></tr>
+                            <?php else: $i=1; foreach ($students_list as $s): ?>
+                                <tr>
+                                    <td><?= $i++ ?></td>
+                                    <td><code><?= htmlspecialchars($s['index_number'] ?? '') ?></code></td>
+                                    <td><?= htmlspecialchars($s['full_name'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($s['program'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($s['phone'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($s['email'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($s['gender'] ?? '') ?></td>
+                                    <td><span class="badge bg-<?= ($s['status']??'')==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? '') ?></span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary py-0" onclick="editStudent(<?= $s['id'] ?>)" title="Edit"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteStudent(<?= $s['id'] ?>,'<?= htmlspecialchars(addslashes($s['full_name'] ?? '')) ?>')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -981,6 +1061,76 @@ $pageTitle = 'Computer Lab Manager';
     </div>
 </div>
 
+<!-- Edit Student Modal -->
+<div class="modal fade" id="editStudentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" class="modal-content">
+            <input type="hidden" name="action" value="edit_student">
+            <input type="hidden" name="id" id="editStudentId">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-12"><label class="form-label fw-semibold">Full Name *</label><input type="text" class="form-control" name="full_name" id="editFullName" required></div>
+                    <div class="col-md-4"><label class="form-label fw-semibold">Index Number</label><input type="text" class="form-control" name="index_number" id="editIndexNumber"></div>
+                    <div class="col-md-4"><label class="form-label fw-semibold">Phone</label><input type="text" class="form-control" name="phone" id="editPhone"></div>
+                    <div class="col-md-4"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" name="email" id="editEmail"></div>
+                    <div class="col-md-6"><label class="form-label fw-semibold">Program</label>
+                        <select class="form-select" name="program" id="editProgram">
+                            <option value="">Select</option>
+                            <option>Certificate in Nursing</option>
+                            <option>Certificate in Midwifery</option>
+                            <option>Diploma in Nursing</option>
+                            <option>Diploma in Midwifery</option>
+                            <option>Enrolled Comprehensive Nursing</option>
+                            <option>Enrolled Psychiatric Nursing</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label fw-semibold">Gender</label>
+                        <select class="form-select" name="gender" id="editGender"><option>Male</option><option>Female</option></select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label fw-semibold">Set / Year</label><input type="text" class="form-control" name="set_name" id="editSetName"></div>
+                    <div class="col-md-6"><label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="status" id="editStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Withdrawn">Withdrawn</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> Update Student</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Student Modal -->
+<div class="modal fade" id="deleteStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content">
+            <input type="hidden" name="action" value="delete_student">
+            <input type="hidden" name="id" id="deleteStudentId">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Delete Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteStudentName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i> Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Add Computer Modal -->
 <div class="modal fade" id="addComputerModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1360,6 +1510,28 @@ function deleteSoftware(id) {
     f.innerHTML = '<input type="hidden" name="action" value="delete_software"><input type="hidden" name="id" value="' + id + '">';
     document.body.appendChild(f);
     f.submit();
+}
+
+function editStudent(id) {
+    var students = <?= json_encode($students_list) ?>;
+    var s = students.find(function(x) { return x.id == id; });
+    if (!s) return;
+    document.getElementById('editStudentId').value = s.id;
+    document.getElementById('editFullName').value = s.full_name || '';
+    document.getElementById('editIndexNumber').value = s.index_number || '';
+    document.getElementById('editPhone').value = s.phone || '';
+    document.getElementById('editEmail').value = s.email || '';
+    document.getElementById('editProgram').value = s.program || '';
+    document.getElementById('editGender').value = s.gender || 'Male';
+    document.getElementById('editSetName').value = s.set_name || '';
+    document.getElementById('editStatus').value = s.status || 'Active';
+    new bootstrap.Modal(document.getElementById('editStudentModal')).show();
+}
+
+function deleteStudent(id, name) {
+    document.getElementById('deleteStudentId').value = id;
+    document.getElementById('deleteStudentName').textContent = name;
+    new bootstrap.Modal(document.getElementById('deleteStudentModal')).show();
 }
 
 function fillIdCardForm(studentId, studentName, program) {
