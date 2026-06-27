@@ -154,13 +154,13 @@ $pageTitle = 'Lab Booking Management';
 <?php else:?>
 <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Reference</th><th>Course</th><th>Instructor</th><th>Date</th><th>Time</th><th>Students</th><th>Lab</th><th>Status</th><th>Actions</th></tr></thead><tbody>
 <?php foreach($bookings as $b):
-$badge = match($b['status']) {
-    'pending' => 'bg-warning text-dark',
-    'confirmed' => 'bg-success',
-    'cancelled' => 'bg-danger',
-    'completed' => 'bg-primary',
-    default => 'bg-secondary'
-};
+switch($b['status']) {
+    case 'pending': $badge = 'bg-warning text-dark'; break;
+    case 'confirmed': $badge = 'bg-success'; break;
+    case 'cancelled': $badge = 'bg-danger'; break;
+    case 'completed': $badge = 'bg-primary'; break;
+    default: $badge = 'bg-secondary';
+}
 ?>
 <tr>
 <td><code><?=htmlspecialchars($b['booking_reference'])?></code></td>

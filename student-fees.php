@@ -133,7 +133,9 @@ CSS;
           <div class="card fee-card"><div class="card-header text-white"><h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Payments</h5></div><div class="card-body p-0">
 <?php if (count($payments) > 0): ?>
             <div class="table-responsive"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>Date</th><th>Amount</th><th>Method</th><th>Ref</th><th>Status</th></tr></thead><tbody>
-<?php foreach (array_slice($payments, 0, 10) as $p): $statusClass = match($p['status'] ?? ''){'approved'=>'success','verified'=>'primary','rejected'=>'danger',default=>'warning'}; ?>
+<?php foreach (array_slice($payments, 0, 10) as $p):
+    switch($p['status'] ?? ''){case'approved':$statusClass='success';break;case'verified':$statusClass='primary';break;case'rejected':$statusClass='danger';break;default:$statusClass='warning';}
+?>
               <tr>
                 <td class="small"><?php echo htmlspecialchars($p['created_at'] ?? '-'); ?></td>
                 <td><strong>UGX <?php echo number_format($p['amount'] ?? 0); ?></strong></td>
@@ -166,7 +168,9 @@ CSS;
       <div class="card fee-card"><div class="card-header text-white"><h5 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Fee Statement</h5></div><div class="card-body p-0">
 <?php if (count($invoices) > 0): ?>
         <div class="table-responsive"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>#</th><th>Invoice</th><th>Program</th><th>Year</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Due</th><th>Status</th></tr></thead><tbody>
-<?php $i = 1; foreach ($invoices as $inv): $bal = ($inv['total_amount'] ?? 0) - ($inv['amount_paid'] ?? 0); $balClass2 = $bal > 0 ? 'danger' : 'success'; $statusClass2 = match($inv['status'] ?? ''){'paid'=>'success','partial'=>'warning','overdue'=>'danger','pending'=>'primary','cancelled'=>'secondary',default=>'secondary'}; ?>
+<?php $i = 1; foreach ($invoices as $inv): $bal = ($inv['total_amount'] ?? 0) - ($inv['amount_paid'] ?? 0); $balClass2 = $bal > 0 ? 'danger' : 'success';
+    switch($inv['status'] ?? ''){case'paid':$statusClass2='success';break;case'partial':$statusClass2='warning';break;case'overdue':$statusClass2='danger';break;case'pending':$statusClass2='primary';break;case'cancelled':$statusClass2='secondary';break;default:$statusClass2='secondary';}
+?>
           <tr>
             <td><?php echo $i++; ?></td>
             <td class="small"><?php echo htmlspecialchars($inv['invoice_number'] ?? '-'); ?></td>

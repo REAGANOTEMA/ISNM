@@ -193,20 +193,20 @@ $pageTitle = 'IT Support Tickets';
             </thead>
             <tbody>
                 <?php foreach ($tickets as $t): 
-                    $pclass = match($t['priority']) {
-                        'low' => 'badge-low',
-                        'medium' => 'badge-medium',
-                        'high' => 'badge-high',
-                        'critical' => 'badge-critical',
-                        default => 'bg-secondary'
-                    };
-                    $sclass = match($t['status']) {
-                        'open' => 'bg-danger',
-                        'in_progress' => 'bg-warning text-dark',
-                        'resolved' => 'bg-success',
-                        'closed' => 'bg-secondary',
-                        default => 'bg-secondary'
-                    };
+                    switch($t['priority']) {
+                        case 'low': $pclass = 'badge-low'; break;
+                        case 'medium': $pclass = 'badge-medium'; break;
+                        case 'high': $pclass = 'badge-high'; break;
+                        case 'critical': $pclass = 'badge-critical'; break;
+                        default: $pclass = 'bg-secondary';
+                    }
+                    switch($t['status']) {
+                        case 'open': $sclass = 'bg-danger'; break;
+                        case 'in_progress': $sclass = 'bg-warning text-dark'; break;
+                        case 'resolved': $sclass = 'bg-success'; break;
+                        case 'closed': $sclass = 'bg-secondary'; break;
+                        default: $sclass = 'bg-secondary';
+                    }
                 ?>
                 <tr>
                     <td><code><?= htmlspecialchars($t['ticket_number']) ?></code></td>

@@ -160,11 +160,14 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                         <tbody>
                         <?php foreach ($contracts as $c):
                             $sc = strtolower($c['status']??'Active');
-                            $badge = match($sc) {
-                                'active' => 'bg-success', 'expired' => 'bg-secondary',
-                                'terminated' => 'bg-danger', 'suspended' => 'bg-warning text-dark',
-                                'renewed' => 'bg-info', default => 'bg-primary'
-                            };
+                            switch($sc) {
+                                case 'active': $badge = 'bg-success'; break;
+                                case 'expired': $badge = 'bg-secondary'; break;
+                                case 'terminated': $badge = 'bg-danger'; break;
+                                case 'suspended': $badge = 'bg-warning text-dark'; break;
+                                case 'renewed': $badge = 'bg-info'; break;
+                                default: $badge = 'bg-primary';
+                            }
                             $isExpiring = $sc==='active' && $c['end_date'] && strtotime($c['end_date']) <= strtotime('+60 days');
                         ?>
                             <tr class="contract-card status-<?= $isExpiring ? 'expiring' : $sc ?>">

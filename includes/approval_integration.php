@@ -20,7 +20,7 @@ function submitStoreForApproval($storeReqId, $conn = null) {
         $priority = ucfirst(strtolower($req['urgency'] ?? 'Medium'));
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name='Store Requisition' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 
@@ -54,7 +54,7 @@ function submitStudentForApproval($pendingId, $conn = null) {
         }
 
         $wfId = 0;
-        $wf = $conn->query("SELECT id FROM approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
+        $wf = $conn->query("SELECT id FROM igangaschoolofl_staffs_db.approval_workflows WHERE workflow_name='Student Registration' AND is_active=1 LIMIT 1");
         if ($wf && ($w = $wf->fetch_assoc())) $wfId = (int)$w['id'];
         if (!$wfId) return false;
 
@@ -161,7 +161,7 @@ function renderApprovalTabs($conn, $studentsConn) {
     $storeApprovals = []; $studentApprovals = []; $generalApprovals = [];
     foreach ($pa as $a) {
         $cat = $a['workflow_category'] ?? '';
-        if ($cat === 'Store') $storeApprovals[] = $a;
+        if ($cat === 'Store & Assets') $storeApprovals[] = $a;
         elseif ($cat === 'Academic') $studentApprovals[] = $a;
         else $generalApprovals[] = $a;
     }
@@ -235,7 +235,7 @@ function renderApprovalList($approvals, $conn, $context = '') {
         $catIcon = 'fa-file-alt';
         $catColor = '#6b7280';
         $cat = $a['workflow_category'] ?? '';
-        if ($cat === 'Store') { $catIcon = 'fa-shopping-cart'; $catColor = '#d97706'; }
+        if ($cat === 'Store & Assets') { $catIcon = 'fa-shopping-cart'; $catColor = '#d97706'; }
         elseif ($cat === 'Academic') { $catIcon = 'fa-user-graduate'; $catColor = '#059669'; }
 
         $refUrl = $a['reference_url'] ? htmlspecialchars($a['reference_url']) : '#';

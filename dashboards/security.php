@@ -206,14 +206,24 @@ if ($conn) {
                         <table class="table table-sm table-hover">
                             <thead><tr><th>Name</th><th>Phone</th><th>Nature</th><th>Person to Visit</th><th>Arrival</th><th>Status</th></tr></thead>
                             <tbody>
-                            <?php foreach ($today_visitors as $v): ?>
+                            <?php foreach ($today_visitors as $v):
+                                $vs = $v['status'];
+                                switch($vs) {
+                                    case 'Checked In': $vs_badge = 'success'; break;
+                                    case 'On Campus': $vs_badge = 'primary'; break;
+                                    case 'Checked Out': $vs_badge = 'secondary'; break;
+                                    case 'Scheduled': $vs_badge = 'warning'; break;
+                                    case 'No Show': $vs_badge = 'danger'; break;
+                                    default: $vs_badge = 'secondary';
+                                }
+                            ?>
                             <tr>
                                 <td><strong><?= htmlspecialchars($v['visitor_name']) ?></strong></td>
                                 <td><small><?= htmlspecialchars($v['visitor_phone'] ?? '-') ?></small></td>
                                 <td><span class="badge bg-info"><?= htmlspecialchars($v['visitor_nature']) ?></span></td>
                                 <td><small><?= htmlspecialchars($v['person_to_visit_name'] ?? '-') ?></small></td>
                                 <td><small><?= !empty($v['expected_arrival']) ? date('g:i A', strtotime($v['expected_arrival'])) : '-' ?></small></td>
-                                <td><span class="badge bg-<?= match($v['status']){'Checked In'=>'success','On Campus'=>'primary','Checked Out'=>'secondary','Scheduled'=>'warning','No Show'=>'danger',default=>'secondary'} ?>"><?= htmlspecialchars($v['status']) ?></span></td>
+                                <td><span class="badge bg-<?= $vs_badge ?>"><?= htmlspecialchars($v['status']) ?></span></td>
                             </tr>
                             <?php endforeach; ?>
                             </tbody>

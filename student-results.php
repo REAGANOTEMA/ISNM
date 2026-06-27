@@ -147,7 +147,12 @@ body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
                         <?php else: $i=1; ?>
                         <?php foreach ($filteredResults as $r): 
                             $g = $r['grade']??'';
-                            $gClass = match(true) { $g==='A'||$g==='A+'||$g==='A-' => 'grade-A', $g==='B'||$g==='B+'||$g==='B-' => 'grade-B', $g==='C'||$g==='C+'||$g==='C-' => 'grade-C', $g==='D'||$g==='D+'||$g==='D-' => 'grade-D', $g==='F' => 'grade-F', default => '' };
+                            if (in_array($g, ['A','A+','A-'])) { $gClass = 'grade-A'; }
+                            elseif (in_array($g, ['B','B+','B-'])) { $gClass = 'grade-B'; }
+                            elseif (in_array($g, ['C','C+','C-'])) { $gClass = 'grade-C'; }
+                            elseif (in_array($g, ['D','D+','D-'])) { $gClass = 'grade-D'; }
+                            elseif ($g === 'F') { $gClass = 'grade-F'; }
+                            else { $gClass = ''; }
                             $marks = $r['marks_obtained'] ?? $r['final_exam_marks'] ?? $r['marks'] ?? '—';
                         ?>
                         <tr>

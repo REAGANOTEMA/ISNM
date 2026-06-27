@@ -35,9 +35,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'upload_profile_image') {
         finfo_close($finfo);
         if (!in_array($mime, $allowedTypes)) { throw new Exception('Only JPG, PNG, GIF, WebP allowed'); }
 
-        $ext = match ($mime) {
-            'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', default => 'jpg'
-        };
+        switch ($mime) {
+            case 'image/jpeg': $ext = 'jpg'; break;
+            case 'image/png': $ext = 'png'; break;
+            case 'image/gif': $ext = 'gif'; break;
+            case 'image/webp': $ext = 'webp'; break;
+            default: $ext = 'jpg';
+        }
         $filename = 'staff_' . $staffId . '_' . time() . '.' . $ext;
         $uploadDir = __DIR__ . '/../uploads/profiles/';
         if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
