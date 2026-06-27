@@ -2,7 +2,10 @@
 $results = [];
 $allPass = true;
 
-$results[] = ['PHP Version', phpversion(), 'info'];
+$pv = phpversion();
+$pvOk = version_compare($pv, '8.0', '>=');
+$results[] = ['PHP Version', $pv . ($pvOk ? '' : ' — NEEDS 8.0+'), $pvOk ? 'pass' : 'fail'];
+if (!$pvOk) $allPass = false;
 
 if (file_exists(__DIR__ . '/.env')) {
     $results[] = ['.env file', 'Found', 'pass'];

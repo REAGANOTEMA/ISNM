@@ -3,7 +3,7 @@
 // Credentials are loaded from config/database.php and .env.
 
 // Include unified database connection system
-require_once 'database_connections.php';
+require_once __DIR__ . '/database_connections.php';
 
 // Session security configuration
 ini_set('session.use_only_cookies', 1);

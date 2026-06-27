@@ -64,10 +64,16 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Block Chrome extension paths that don't belong to ISNM
-    RewriteRule ^writing/ - [R=404,L]
-    RewriteRule ^site_integration/ - [R=404,L]
-    RewriteRule ^generate/ - [R=404,L]
+    # Set RewriteBase automatically (handles subdirectory installs like /ISNM/)
+    RewriteBase /
+
+    # Block Chrome extension paths that don't belong to ISNM (catches /writing/*, /site_integration/*, /generate/*)
+    RewriteRule ^writing/ - [R=404,L,NC]
+    RewriteRule ^site_integration/ - [R=404,L,NC]
+    RewriteRule ^generate/ - [R=404,L,NC]
+
+    # Also block direct file access to these paths
+    RedirectMatch 404 ^/(writing|site_integration|generate)(/|$)
 
     # Redirect /director and /director/ to overview
     RewriteRule ^director/?$ /director/overview [R=301,L]

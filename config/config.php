@@ -80,11 +80,13 @@ function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
+if (!function_exists('hasPermission')) {
 function hasPermission($permission) {
     if (!isLoggedIn()) return false;
     
     $role = $_SESSION['user_role'] ?? '';
     return in_array($permission, ROLES[$role] ?? []);
+}
 }
 
 function redirect($url) {
