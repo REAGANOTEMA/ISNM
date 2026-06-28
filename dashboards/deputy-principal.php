@@ -53,12 +53,12 @@ if ($view === 'attendance_monitoring_data' && $ajax === '1' && $staff) {
     $course = $staff->real_escape_string($_GET['course'] ?? '');
     $from = $staff->real_escape_string($_GET['from'] ?? '');
     $to = $staff->real_escape_string($_GET['to'] ?? '');
-    $sql = "SELECT a.*, s.full_name, s.student_number FROM {$students_db}.student_attendance a JOIN {$students_db}.students s ON a.student_id=s.id WHERE 1=1";
+    $sql = "SELECT a.*, s.full_name, s.student_number FROM student_attendance a JOIN students s ON a.student_id=s.id WHERE 1=1";
     if ($course) $sql .= " AND a.subject='$course'";
     if ($from) $sql .= " AND a.date>='$from'";
     if ($to) $sql .= " AND a.date<='$to'";
     $sql .= " ORDER BY a.date DESC LIMIT 200";
-    $r = $staff->query($sql); $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+    $r = $students ? $students->query($sql) : null; $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 if ($view === 'clinical_placement_data' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');

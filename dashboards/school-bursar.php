@@ -763,10 +763,10 @@ $pageTitle = 'Bursar Dashboard';
             } else { $msg = '<div class="alert alert-danger py-2 small">First name and surname are required.</div>'; }
         }
         if ($act === 'update_student_financial' && $students) {
-            $sid = $students->real_escape_string(trim($_POST['student_id'] ?? ''));
-            $ph = $students->real_escape_string(trim($_POST['phone'] ?? ''));
-            $em = $students->real_escape_string(trim($_POST['email'] ?? ''));
-            $dist = $students->real_escape_string(trim($_POST['district'] ?? ''));
+            $sid = trim($_POST['student_id'] ?? '');
+            $ph = trim($_POST['phone'] ?? '');
+            $em = trim($_POST['email'] ?? '');
+            $dist = trim($_POST['district'] ?? '');
             if ($sid) {
                 $stmt = $students->prepare("UPDATE students SET phone=?, email=?, district=? WHERE student_number=? OR student_id=?");
                 if ($stmt) {

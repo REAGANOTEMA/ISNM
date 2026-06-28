@@ -296,8 +296,8 @@ if ($view === 'circular_list' && $ajax === '1' && $staff) {
 }
 if ($view === 'contact_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $cn = $staff->real_escape_string($_POST['full_name']??''); $co = $staff->real_escape_string($_POST['organization']??''); $cp = $staff->real_escape_string($_POST['position']??''); $cph = $staff->real_escape_string($_POST['phone']??''); $ce = $staff->real_escape_string($_POST['email']??''); $ca = $staff->real_escape_string($_POST['address']??''); $cc = $staff->real_escape_string($_POST['category']??'General'); $cn2 = $staff->real_escape_string($_POST['notes']??'');
-    if ($cn) { if ($staff->query("INSERT INTO {$students_db}.contact_directory (full_name,organization,position,phone,email,address,category,notes,created_by) VALUES ('$cn','$co','$cp','$cph','$ce','$ca','$cc','$cn2',$uid)")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Create failed']); exit; }
+    $cn = $_POST['full_name']??''; $co = $_POST['organization']??''; $cp = $_POST['position']??''; $cph = $_POST['phone']??''; $ce = $_POST['email']??''; $ca = $_POST['address']??''; $cc = $_POST['category']??'General'; $cn2 = $_POST['notes']??'';
+    if ($cn) { $stmt = $staff->prepare("INSERT INTO {$students_db}.contact_directory (full_name,organization,position,phone,email,address,category,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?)"); if ($stmt) { $stmt->bind_param('ssssssssi', $cn, $co, $cp, $cph, $ce, $ca, $cc, $cn2, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; } $stmt->close(); } echo json_encode(['success'=>false,'error'=>'Create failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'contact_list' && $ajax === '1' && $staff) {
