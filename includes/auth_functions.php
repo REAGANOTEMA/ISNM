@@ -158,7 +158,7 @@ function checkAuth($required_role = null) {
                 $_SESSION['error'] = 'Access denied. You do not have permission to access this page.';
                 // Redirect to appropriate dashboard based on user type
                 if ($_SESSION['type'] === 'student') {
-                    header('Location: student-dashboard.php');
+                    header('Location: ../dashboards/student.php');
                 } else {
                     header('Location: ' . getUserDashboard($_SESSION['role']));
                 }
@@ -421,7 +421,7 @@ function formatPhone($phone) {
 function getStudentByNSIN($nsin_number) {
     global $conn;
     
-    $sql = "SELECT * FROM students WHERE nsin_number = ?";
+    $sql = "SELECT * FROM students WHERE student_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $nsin_number);
     $stmt->execute();
@@ -492,7 +492,7 @@ function getLoginAttempts($identifier, $user_type) {
     global $conn;
     
     if ($user_type === 'student') {
-        $sql = "SELECT login_attempts FROM students WHERE nsin_number = ?";
+        $sql = "SELECT login_attempts FROM students WHERE student_id = ?";
     } else {
         $sql = "SELECT login_attempts FROM users WHERE username = ?";
     }

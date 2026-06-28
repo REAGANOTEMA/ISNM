@@ -44,15 +44,20 @@ function handlePasswordResetRequest() {
         exit();
     }
     
-    // Check if user exists
-    $conn = getConnection();
-    $stmt = $conn->prepare("SELECT id, full_name, role FROM users WHERE email = ? AND role != 'student'");
+    // Check if user exists in staff table
+    $conn = getStaffConnection();
+    if (!$conn) {
+        $_SESSION['error'] = 'Database connection failed. Please contact the system administrator.';
+        header('Location: staff-password-reset.php');
+        exit();
+    }
+    $stmt = $conn->prepare("SELECT id, full_name FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active'");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        $_SESSION['error'] = 'No account found with this email address';
+        $_SESSION['error'] = 'No active staff account found with this email address';
         header('Location: staff-password-reset.php');
         exit();
     }
@@ -63,9 +68,9 @@ function handlePasswordResetRequest() {
     $reset_token = bin2hex(random_bytes(32));
     $reset_expiry = date('Y-m-d H:i:s', time() + 3600); // 1 hour expiry
     
-    // Store reset token
-    $update_stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_expiry = ? WHERE email = ?");
-    $update_stmt->bind_param("sss", $reset_token, $reset_expiry, $email);
+    // Store reset token in staff table
+    $update_stmt = $conn->prepare("UPDATE staff SET reset_token = ?, reset_expiry = ? WHERE id = ?");
+    $update_stmt->bind_param("ssi", $reset_token, $reset_expiry, $user['id']);
     $update_stmt->execute();
     
     // In a real system, you would send an email here

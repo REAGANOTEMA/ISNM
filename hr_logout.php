@@ -3,40 +3,27 @@
  * HR Logout
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (isset($_SESSION['hr_id'])) {
-    $user_id = $_SESSION['hr_id'];
-    
-    // Log logout activity
-    require_once 'config/database.php';
-    try {
-        $conn = getStaffConnection();
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        $agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        
-        $stmt = $conn->prepare("
-            INSERT INTO hr_activity_logs (user_id, user_name, user_role, action_type, entity_type, ip_address, user_agent, notes) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $name = $_SESSION['hr_name'];
-        $role = 'hr_manager';
-        $action = 'LOGOUT';
-        $entity_type = 'hr_users';
-        $notes = 'User logged out';
-        
-        $stmt->bind_param('isssssss', $user_id, $name, $role, $action, $entity_type, $ip, $agent, $notes);
-        $stmt->execute();
-        $stmt->close();
-        $conn->close();
-    } catch (Exception $e) {
-        error_log('Logout error: ' . $e->getMessage());
-    }
-    
-    // Destroy session
-    session_destroy();
+// Clear all session data
+$_SESSION = [];
+if (ini_get("session.use_cookies")) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
+    );
 }
 
-header('Location: organogram.php');
+// Destroy session
+session_unset();
+session_destroy();
+
+// Prevent browser caching
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+header('Location: staff-login.php');
 exit;
 ?>

@@ -62,15 +62,15 @@ include_once 'shared/_header.php';
         </div>
         
         <div class="hero-stats">
-          <div class="stat-item">
+          <div class="stat-item stat-green">
             <span class="stat-number">15+</span>
             <span class="stat-label">Years Excellence</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item stat-blue">
             <span class="stat-number">3000+</span>
             <span class="stat-label">Graduates</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item stat-chocolate">
             <span class="stat-number">100%</span>
             <span class="stat-label">Pass Rate</span>
           </div>
@@ -160,7 +160,7 @@ include_once 'shared/_header.php';
                 <i class="fas fa-baby"></i>
               </div>
               <h3>Certificate in Midwifery</h3>
-              <p>2½ years specialized midwifery program with hands on delivery experience</p>
+              <p>2½ years specialized midwifery program with hands-on delivery experience</p>
               <ul class="program-features">
                 <li>Maternal health training</li>
                 <li>Delivery room practice</li>
@@ -193,7 +193,7 @@ include_once 'shared/_header.php';
               <p>1½ years advanced program for enrolled midwives</p>
               <ul class="program-features">
                 <li>Advanced midwifery skills</li>
-                <li>High risk pregnancy management</li>
+                <li>High-risk pregnancy management</li>
                 <li>Neonatal care specialization</li>
               </ul>
               <a href="programs.php" class="btn btn-outline-primary">Learn More</a>
@@ -262,28 +262,28 @@ include_once 'shared/_header.php';
             <div class="facility-card">
               <i class="fas fa-school fa-3x text-primary mb-3"></i>
               <h4>Classrooms</h4>
-              <p>6 permanent classrooms accommodating 60 students each</p>
+              <p>Modern spacious classrooms designed for comfortable and interactive learning</p>
             </div>
           </div>
           <div class="col-md-6 col-lg-3">
             <div class="facility-card">
               <i class="fas fa-desktop fa-3x text-success mb-3"></i>
               <h4>Computer Lab</h4>
-              <p>60 functional computers with internet services</p>
+              <p>Fully equipped computer laboratory with high-speed internet for digital learning</p>
             </div>
           </div>
           <div class="col-md-6 col-lg-3">
             <div class="facility-card">
               <i class="fas fa-book fa-3x text-info mb-3"></i>
               <h4>Library</h4>
-              <p>Well stocked library with reference materials</p>
+              <p>Well-stocked library with extensive medical reference materials and study areas</p>
             </div>
           </div>
           <div class="col-md-6 col-lg-3">
             <div class="facility-card">
               <i class="fas fa-utensils fa-3x text-warning mb-3"></i>
               <h4>Dining Hall</h4>
-              <p>Multi purpose hall accommodating 300 students</p>
+              <p>Spacious multi-purpose hall accommodating 300 students for dining and events</p>
             </div>
           </div>
         </div>

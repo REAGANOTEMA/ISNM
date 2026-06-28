@@ -141,6 +141,44 @@ class AuthenticationService {
         return null;
     }
 
+    public function resetPasswordWithToken($token, $newPassword) {
+        if (empty($token) || empty($newPassword)) {
+            return ['success' => false, 'message' => 'Token and new password are required.'];
+        }
+        if (strlen($newPassword) < 8) {
+            return ['success' => false, 'message' => 'Password must be at least 8 characters long.'];
+        }
+        $conn = getStaffConnection();
+        if (!$conn) {
+            return ['success' => false, 'message' => 'Database unavailable.'];
+        }
+        $stmt = $conn->prepare("SELECT id FROM staff WHERE reset_token = ? AND reset_expiry > NOW()");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Invalid or expired reset token.'];
+        }
+        $stmt->bind_param('s', $token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return ['success' => false, 'message' => 'Invalid or expired reset token.'];
+        }
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+        $update = $conn->prepare("UPDATE staff SET password = ?, reset_token = NULL, reset_expiry = NULL, updated_at = NOW() WHERE id = ?");
+        if (!$update) {
+            return ['success' => false, 'message' => 'Failed to update password.'];
+        }
+        $update->bind_param('si', $hash, $row['id']);
+        if ($update->execute()) {
+            $update->close();
+            return ['success' => true, 'message' => 'Password has been reset successfully.'];
+        }
+        $update->close();
+        return ['success' => false, 'message' => 'Failed to update password.'];
+    }
+
     public function setStudentPassword($studentId, $password) {
         if (!is_int($studentId) || $studentId <= 0) return ['success' => false, 'message' => 'Invalid student record'];
         if (strlen($password) < 8) return ['success' => false, 'message' => 'Password must be at least 8 characters long'];

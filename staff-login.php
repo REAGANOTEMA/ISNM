@@ -637,7 +637,7 @@ body{
 <div class="login-left">
   <div class="hero-content">
     <div class="title-bloom"></div>
-    <div class="hero-badge"><i class="fas fa-gem"></i> Healthcare Staff Portal</div>
+    <div class="hero-badge"><i class="fas fa-gem"></i> School Staff Portal</div>
     <h1 class="hero-title">Welcome to<br><span>ISNM</span> Staff Portal</h1>
     <div class="hero-sub">
       <span class="hero-institution">Iganga School of Nursing and Midwifery</span>
@@ -650,7 +650,7 @@ body{
       <span class="motto-sub">Based on a disciplined mind for health action.</span>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-num">20+</div><div class="hero-stat-label">Programs</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">4</div><div class="hero-stat-label">Programs</div></div>
       <div class="hero-stat"><div class="hero-stat-num">315+</div><div class="hero-stat-label">Students</div></div>
       <div class="hero-stat"><div class="hero-stat-num">50+</div><div class="hero-stat-label">Staff</div></div>
       <div class="hero-stat"><div class="hero-stat-num">15+</div><div class="hero-stat-label">Years</div></div>
@@ -665,7 +665,7 @@ body{
         <img src="images/school-logo.png" alt="ISNM" class="card-logo">
         <div class="card-brand">
           <h2>Iganga School of Nursing</h2>
-          <p>and Midwifery &bull; Government of Uganda</p>
+          <p>and Midwifery &bull; Registered with MOES &amp; UNMC</p>
         </div>
       </div>
       <div class="card-title">Staff Portal Login</div>

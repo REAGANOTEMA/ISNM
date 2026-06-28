@@ -417,7 +417,7 @@ if (isset($conn)) {
     $dept_restrictions = new DepartmentRestrictions($conn);
     
     // Auto-apply restrictions to common queries
-    if (!in_array($_SESSION['user_role'] ?? '', ['Director General', 'CEO'])) {
+    if (!in_array($_SESSION['role'] ?? '', ['Director General', 'CEO'])) {
         // Add department filter to session
         $_SESSION['department_filter'] = $dept_restrictions->getUserDepartmentName();
     }
