@@ -11550,3 +11550,7 @@ Stack trace:
 [28-Jun-2026 07:57:36 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1139
 [28-Jun-2026 07:57:36 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1139
 [28-Jun-2026 07:57:36 Africa/Kampala] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 1139
+[28-Jun-2026 07:58:08 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[28-Jun-2026 07:58:08 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[28-Jun-2026 07:58:08 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[28-Jun-2026 07:58:08 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

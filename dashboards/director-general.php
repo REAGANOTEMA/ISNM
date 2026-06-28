@@ -504,8 +504,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         if ($subid) { $ok = true; $msg = 'Submission approved.'; }
     }
     if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
-        $ref = $conn->real_escape_string($_POST['sub_ref'] ?? '');
-        if ($ref) { $conn->query("UPDATE store_requests SET status='approved',approved_by=" . intval($user_id) . ",approved_at=NOW() WHERE request_number='$ref'"); $ok = true; $msg = 'Store request approved.'; }
+        $ref = $_POST['sub_ref'] ?? '';
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Store request approved.'; }
     }
 
     if ($action === 'reject_submission' && $websiteConn) {

@@ -1,15 +1,15 @@
 <?php
 $pageTitle = 'Recruitment';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hr','manager','director','principal']);
-require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
+$ctx = bootstrapStaffDashboard(['hr','manager','director','principal']);
+$conn = $ctx['staff'];
+$user = $ctx['user'];
 
 $openPositions = 0; $totalApplicants = 0; $shortlisted = 0; $hiredThisMonth = 0;
 $positions = [];
 
 if ($conn) {
-    $r1 = $conn->query("SELECT COUNT(*) c FROM recruitment WHERE status='Open'");
+    $r1 = $conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'");
     if ($r1) $openPositions = (int)$r1->fetch_assoc()['c'];
     $r2 = $conn->query("SELECT COUNT(*) c FROM job_applications");
     if ($r2) $totalApplicants = (int)$r2->fetch_assoc()['c'];
@@ -17,7 +17,7 @@ if ($conn) {
     if ($r3) $shortlisted = (int)$r3->fetch_assoc()['c'];
     $r4 = $conn->query("SELECT COUNT(*) c FROM job_applications WHERE status='Hired' AND MONTH(updated_at)=MONTH(NOW()) AND YEAR(updated_at)=YEAR(NOW())");
     if ($r4) $hiredThisMonth = (int)$r4->fetch_assoc()['c'];
-    $p = $conn->query("SELECT r.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.position_id=r.id) applicants_count FROM recruitment r ORDER BY r.posted_date DESC LIMIT 50");
+    $p = $conn->query("SELECT r.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.position_id=r.id) applicants_count FROM staff_recruitment r ORDER BY r.posted_date DESC LIMIT 50");
     if ($p) $positions = $p->fetch_all(MYSQLI_ASSOC);
 }
 ?>
