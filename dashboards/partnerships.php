@@ -5,13 +5,14 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_partnership') {
-    $org = $conn->real_escape_string($_POST['organization']);
-    $type = $conn->real_escape_string($_POST['type'] ?? 'academic');
-    $contact = $conn->real_escape_string($_POST['contact_person'] ?? '');
-    $email = $conn->real_escape_string($_POST['contact_email'] ?? '');
-    $status = $conn->real_escape_string($_POST['status'] ?? 'active');
-    $desc = $conn->real_escape_string($_POST['description'] ?? '');
-    $conn->query("INSERT INTO partnerships (organization_name, partnership_type, contact_person, contact_email, status, description) VALUES ('$org', '$type', '$contact', '$email', '$status', '$desc')");
+    $org = trim($_POST['organization'] ?? '');
+    $type = trim($_POST['type'] ?? 'academic');
+    $contact = trim($_POST['contact_person'] ?? '');
+    $email = trim($_POST['contact_email'] ?? '');
+    $status = trim($_POST['status'] ?? 'active');
+    $desc = trim($_POST['description'] ?? '');
+    $stmt = $conn->prepare("INSERT INTO partnerships (organization_name, partnership_type, contact_person, contact_email, status, description) VALUES (?, ?, ?, ?, ?, ?)");
+    if ($stmt) { $stmt->bind_param('ssssss', $org, $type, $contact, $email, $status, $desc); $stmt->execute(); $stmt->close(); }
     header('Location: partnerships.php'); exit;
 }
 

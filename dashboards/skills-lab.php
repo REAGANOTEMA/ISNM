@@ -179,9 +179,18 @@ if ($view === 'sessions' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE title LIKE '%" . $db->real_escape_string($q) . "%' OR session_code LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT * FROM lab_practical_sessions $cond ORDER BY session_date DESC LIMIT 200");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT * FROM lab_practical_sessions WHERE title LIKE ? OR session_code LIKE ? ORDER BY session_date DESC LIMIT 200");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT * FROM lab_practical_sessions ORDER BY session_date DESC LIMIT 200");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;

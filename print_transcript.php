@@ -59,18 +59,27 @@ if (!$studentId && $is_student && !empty($_SESSION['user_id'])) {
 // AJAX student lookup for staff
 if ($action === 'lookup' && $is_staff && $studentsDb && isset($_GET['q'])) {
     header('Content-Type: application/json');
-    $q = '%' . $studentsDb->real_escape_string($_GET['q']) . '%';
-    $res = $studentsDb->query("SELECT id, first_name, surname, other_name, full_name, student_number, registration_number, program, course FROM students WHERE full_name LIKE '$q' OR student_number LIKE '$q' OR registration_number LIKE '$q' LIMIT 20");
-    $out = [];
-    if ($res) while ($row = $res->fetch_assoc()) {
-        $out[] = [
-            'id' => $row['id'],
-            'full_name' => $row['full_name'] ?: trim(($row['first_name']??'') . ' ' . ($row['surname']??'') . ($row['other_name'] ? ' ' . $row['other_name'] : '')),
-            'student_number' => $row['student_number'] ?? '',
-            'registration_number' => $row['registration_number'] ?? '',
-            'program' => $row['program'] ?: $row['course'] ?: '',
-        ];
+    $q = '%' . $_GET['q'] . '%';
+    $stmt = $studentsDb->prepare("SELECT id, first_name, surname, other_name, full_name, student_number, registration_number, program, course FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? LIMIT 20");
+    if ($stmt) {
+        $stmt->bind_param("sss", $q, $q, $q);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $out = [];
+        if ($res) while ($row = $res->fetch_assoc()) {
+            $out[] = [
+                'id' => $row['id'],
+                'full_name' => $row['full_name'] ?: trim(($row['first_name']??'') . ' ' . ($row['surname']??'') . ($row['other_name'] ? ' ' . $row['other_name'] : '')),
+                'student_number' => $row['student_number'] ?? '',
+                'registration_number' => $row['registration_number'] ?? '',
+                'program' => $row['program'] ?: $row['course'] ?: '',
+            ];
+        }
+        $stmt->close();
     }
+    echo json_encode($out ?? []);
+    exit;
+}
     echo json_encode($out);
     exit;
 }
@@ -158,17 +167,22 @@ if ($action === 'save_draft' && $is_registrar && $_SERVER['REQUEST_METHOD'] === 
     $courses = json_decode($courses_json, true);
     if ($sid && is_array($courses)) {
         foreach ($courses as $c) {
-            $cc  = $studentsDb->real_escape_string($c['course_code'] ?? '');
-            $cn  = $studentsDb->real_escape_string($c['course_name'] ?? '');
+            $cc  = $c['course_code'] ?? '';
+            $cn  = $c['course_name'] ?? '';
             $cr  = (float)($c['credits'] ?? 0);
-            $sem = $studentsDb->real_escape_string($c['semester'] ?? '');
-            $yr  = $studentsDb->real_escape_string($c['academic_year'] ?? date('Y'));
+            $sem = $c['semester'] ?? '';
+            $yr  = $c['academic_year'] ?? date('Y');
             $mk  = (float)($c['marks'] ?? 0);
-            $gr  = $studentsDb->real_escape_string($c['grade'] ?? '');
+            $gr  = $c['grade'] ?? '';
             if ($cc) {
-                $studentsDb->query("INSERT INTO student_academic_records (student_id, course_code, course_name, credits, semester, academic_year, marks, grade, created_at)
-                    VALUES ($sid, '$cc', '$cn', $cr, '$sem', '$yr', $mk, '$gr', NOW())
-                    ON DUPLICATE KEY UPDATE course_name='$cn', credits=$cr, marks=$mk, grade='$gr', updated_at=NOW()");
+                $stmt = $studentsDb->prepare("INSERT INTO student_academic_records (student_id, course_code, course_name, credits, semester, academic_year, marks, grade, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    ON DUPLICATE KEY UPDATE course_name=?, credits=?, marks=?, grade=?, updated_at=NOW()");
+                if ($stmt) {
+                    $stmt->bind_param("issssdsssds", $sid, $cc, $cn, $cr, $sem, $yr, $mk, $gr, $cn, $cr, $mk, $gr);
+                    $stmt->execute();
+                    $stmt->close();
+                }
             }
         }
         $saveMsg = 'Transcript draft saved successfully.';
