@@ -49,7 +49,7 @@ if ($view === 'principal_stats' && $ajax === '1') {
     if ($students) {
         $r = $students->query("SELECT COUNT(*) c FROM students WHERE status='Active'"); if ($r) $out['total_students'] = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT ROUND(AVG(IFNULL(attendance_percentage,0)),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $out['attendance_rate'] = (float)($r->fetch_assoc()['v']??0);
-        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM examination_records WHERE grade IS NOT NULL) t FROM examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $out['pass_rate']=$t>0?round((int)$rw['p']/$t*100,1):0; }
+        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.examination_records WHERE grade IS NOT NULL) t FROM igangaschoolofl_staffs_db.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $out['pass_rate']=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $out['welfare_alerts'] = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $out['upcoming_meetings'] = (int)$r->fetch_assoc()['c'];
     }

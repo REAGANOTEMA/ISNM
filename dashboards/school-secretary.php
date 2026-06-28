@@ -318,13 +318,21 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
     if ($act === 'publish_announcement' && $students && $staff) {
-        $t = $staff->real_escape_string(trim($_POST['ann_title']??'')); $b = $staff->real_escape_string(trim($_POST['ann_body']??'')); $tg = $staff->real_escape_string($_POST['ann_target']??'All'); $pr = $staff->real_escape_string($_POST['ann_priority']??'Normal');
-        if ($t && $b) { if ($students->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$t','$b','$tg','$pr',$uid,1,NOW())")) { sec_success('Announcement published.'); } else { sec_error('Database write failed.'); } } else { sec_error('Title and body required.'); }
+        $t = trim($_POST['ann_title']??''); $b = trim($_POST['ann_body']??''); $tg = $_POST['ann_target']??'All'; $pr = $_POST['ann_priority']??'Normal';
+        if ($t && $b) {
+            $stmt = $students->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
+            if ($stmt) { $stmt->bind_param('ssssi', $t, $b, $tg, $pr, $uid); if ($stmt->execute()) { sec_success('Announcement published.'); } else { sec_error('Database write failed.'); } $stmt->close(); }
+            else { sec_error('Database write failed.'); }
+        } else { sec_error('Title and body required.'); }
         header('Location: school-secretary.php?section=announcements'); exit;
     }
     if ($act === 'send_message' && $staff) {
-        $subj = $staff->real_escape_string(trim($_POST['msg_subject']??'')); $body = $staff->real_escape_string(trim($_POST['msg_body']??'')); $rt = $staff->real_escape_string($_POST['msg_recipient']??'staff');
-        if ($subj && $body) { if ($staff->query("INSERT INTO {$students_db}.secretary_messages (sender_id,sender_name,recipient_type,subject,message) VALUES ($uid,'$uname','$rt','$subj','$body')")) { sec_success('Message sent.'); } else { sec_error('Database write failed.'); } } else { sec_error('Subject and message required.'); }
+        $subj = trim($_POST['msg_subject']??''); $body = trim($_POST['msg_body']??''); $rt = $_POST['msg_recipient']??'staff';
+        if ($subj && $body) {
+            $stmt = $staff->prepare("INSERT INTO {$students_db}.secretary_messages (sender_id,sender_name,recipient_type,subject,message) VALUES (?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('issss', $uid, $uname, $rt, $subj, $body); if ($stmt->execute()) { sec_success('Message sent.'); } else { sec_error('Database write failed.'); } $stmt->close(); }
+            else { sec_error('Database write failed.'); }
+        } else { sec_error('Subject and message required.'); }
         header('Location: school-secretary.php?section=comms'); exit;
     }
 }

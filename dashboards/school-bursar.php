@@ -735,30 +735,36 @@ $pageTitle = 'Bursar Dashboard';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $act = $_POST['action'] ?? '';
         if ($act === 'add_student_financial' && $students) {
-            $fn = $students->real_escape_string(trim($_POST['first_name'] ?? ''));
-            $sn = $students->real_escape_string(trim($_POST['surname'] ?? ''));
-            $ph = $students->real_escape_string(trim($_POST['phone'] ?? ''));
-            $em = $students->real_escape_string(trim($_POST['email'] ?? ''));
-            $pr = $students->real_escape_string(trim($_POST['program'] ?? ''));
-            $yr = $students->real_escape_string(trim($_POST['year_of_study'] ?? ''));
-            $gen = $students->real_escape_string(trim($_POST['gender'] ?? ''));
-            $dob = $students->real_escape_string(trim($_POST['date_of_birth'] ?? ''));
-            $dist = $students->real_escape_string(trim($_POST['district'] ?? ''));
-            $nat = $students->real_escape_string(trim($_POST['nationality'] ?? 'Uganda'));
+            $fn = trim($_POST['first_name'] ?? '');
+            $sn = trim($_POST['surname'] ?? '');
+            $ph = trim($_POST['phone'] ?? '');
+            $em = trim($_POST['email'] ?? '');
+            $pr = trim($_POST['program'] ?? '');
+            $yr = trim($_POST['year_of_study'] ?? '');
+            $gen = trim($_POST['gender'] ?? '');
+            $dob = trim($_POST['date_of_birth'] ?? '');
+            $dist = trim($_POST['district'] ?? '');
+            $nat = trim($_POST['nationality'] ?? 'Uganda');
             if ($fn && $sn) {
-                $check = $students->query("SELECT id FROM students WHERE first_name='$fn' AND last_name='$sn' AND phone='$ph' LIMIT 1");
-                if ($check && $check->num_rows > 0) {
-                    $msg = '<div class="alert alert-warning py-2 small">Duplicate student found. Use search to update.</div>';
-                } else {
-                    $max = $students->query("SELECT MAX(CAST(SUBSTRING(student_number,6) AS UNSIGNED)) AS max_num FROM students WHERE student_number LIKE 'ISNM-%'");
-                    $next = $max ? ((int)$max->fetch_assoc()['max_num'] + 1) : (date('Y')*10000 + 1);
-                    $student_number = 'ISNM-' . $next;
-                    $stmt = $students->prepare("INSERT INTO students (student_number, first_name, last_name, phone, email, program, year_of_study, gender, date_of_birth, district, nationality, status, admission_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-                    if ($stmt) {
-                        $stmt->bind_param("sssssssssss", $student_number, $fn, $sn, $ph, $em, $pr, $yr, $gen, $dob, $dist, $nat);
-                        $stmt->execute() ? $msg = '<div class="alert alert-success py-2 small">Student added successfully. Number: <strong>' . $student_number . '</strong></div>' : $msg = '<div class="alert alert-danger py-2 small">Failed: ' . $stmt->error . '</div>';
-                        $stmt->close();
-                    } else { $msg = '<div class="alert alert-danger py-2 small">Database error.</div>'; }
+                $check = $students->prepare("SELECT id FROM students WHERE first_name=? AND last_name=? AND phone=? LIMIT 1");
+                if ($check) {
+                    $check->bind_param('sss', $fn, $sn, $ph);
+                    $check->execute();
+                    $checkResult = $check->get_result();
+                    if ($checkResult && $checkResult->num_rows > 0) {
+                        $msg = '<div class="alert alert-warning py-2 small">Duplicate student found. Use search to update.</div>';
+                    } else {
+                        $max = $students->query("SELECT MAX(CAST(SUBSTRING(student_number,6) AS UNSIGNED)) AS max_num FROM students WHERE student_number LIKE 'ISNM-%'");
+                        $next = $max ? ((int)$max->fetch_assoc()['max_num'] + 1) : (date('Y')*10000 + 1);
+                        $student_number = 'ISNM-' . $next;
+                        $stmt = $students->prepare("INSERT INTO students (student_number, first_name, last_name, phone, email, program, year_of_study, gender, date_of_birth, district, nationality, status, admission_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
+                        if ($stmt) {
+                            $stmt->bind_param("sssssssssss", $student_number, $fn, $sn, $ph, $em, $pr, $yr, $gen, $dob, $dist, $nat);
+                            $stmt->execute() ? $msg = '<div class="alert alert-success py-2 small">Student added successfully. Number: <strong>' . $student_number . '</strong></div>' : $msg = '<div class="alert alert-danger py-2 small">Failed: ' . $stmt->error . '</div>';
+                            $stmt->close();
+                        } else { $msg = '<div class="alert alert-danger py-2 small">Database error.</div>'; }
+                    }
+                    $check->close();
                 }
             } else { $msg = '<div class="alert alert-danger py-2 small">First name and surname are required.</div>'; }
         }
