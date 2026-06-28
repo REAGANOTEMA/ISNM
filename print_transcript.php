@@ -80,9 +80,6 @@ if ($action === 'lookup' && $is_staff && $studentsDb && isset($_GET['q'])) {
     echo json_encode($out ?? []);
     exit;
 }
-    echo json_encode($out);
-    exit;
-}
 
 // Download action: serve HTML as file download
 if ($action === 'download' && $studentId && $studentsDb) {
