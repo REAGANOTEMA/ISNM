@@ -206,20 +206,24 @@ if ($view === 'financial_reports' && $ajax === '1') {
     $result = ['headers' => [], 'rows' => [], 'total' => 0];
     try {
         if ($staff) {
-            $fromSafe = $staff->real_escape_string($from);
-            $toSafe = $staff->real_escape_string($to);
             if ($type === 'daily_collections') {
                 $result['headers'] = ['Date', 'Transactions', 'Total Collected'];
-                $r = $staff->query("SELECT DATE(payment_date) AS dt, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$fromSafe' AND '$toSafe' AND status='verified' GROUP BY DATE(payment_date) ORDER BY dt");
+                $stmt = $staff->prepare("SELECT DATE(payment_date) AS dt, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY DATE(payment_date) ORDER BY dt");
+                if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); } else { $r = null; }
                 if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['dt'], $row['cnt'], 'UGX ' . number_format($row['tot'])]; $result['total'] += $row['tot']; }
+                if (isset($stmt)) $stmt->close();
             } elseif ($type === 'monthly_summary') {
                 $result['headers'] = ['Month', 'Payments', 'Total'];
-                $r = $staff->query("SELECT DATE_FORMAT(payment_date,'%Y-%m') AS m, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$fromSafe' AND '$toSafe' AND status='verified' GROUP BY DATE_FORMAT(payment_date,'%Y-%m') ORDER BY m");
+                $stmt = $staff->prepare("SELECT DATE_FORMAT(payment_date,'%Y-%m') AS m, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY DATE_FORMAT(payment_date,'%Y-%m') ORDER BY m");
+                if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); } else { $r = null; }
                 if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['m'], $row['cnt'], 'UGX ' . number_format($row['tot'])]; $result['total'] += $row['tot']; }
+                if (isset($stmt)) $stmt->close();
             } elseif ($type === 'revenue_by_category') {
                 $result['headers'] = ['Payment Method', 'Transactions', 'Total'];
-                $r = $staff->query("SELECT payment_method, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$fromSafe' AND '$toSafe' AND status='verified' GROUP BY payment_method");
+                $stmt = $staff->prepare("SELECT payment_method, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY payment_method");
+                if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); } else { $r = null; }
                 if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [ucfirst(str_replace('_', ' ', $row['payment_method'] ?? 'Unknown')), $row['cnt'], 'UGX ' . number_format($row['tot'])]; $result['total'] += $row['tot']; }
+                if (isset($stmt)) $stmt->close();
             } elseif ($type === 'outstanding_debtors') {
                 $result['headers'] = ['Student ID', 'Total Fees', 'Paid', 'Balance'];
                 $r = $staff->query("SELECT student_id, total_fees, amount_paid, balance FROM student_fee_accounts WHERE status NOT IN ('fully_paid','cancelled') ORDER BY balance DESC LIMIT 50");
@@ -238,8 +242,8 @@ if ($view === 'daily_collections' && $ajax === '1') {
     $data = ['total' => 0, 'count' => 0, 'methods' => [], 'payments' => []];
     try {
         if ($staff) {
-            $dateSafe = $staff->real_escape_string($date);
-            $r = $staff->query("SELECT fp.*, s.first_name, s.last_name FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = '$dateSafe' AND fp.status='verified' ORDER BY fp.payment_date DESC");
+            $stmt = $staff->prepare("SELECT fp.*, s.first_name, s.last_name FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = ? AND fp.status='verified' ORDER BY fp.payment_date DESC");
+            if ($stmt) { $stmt->bind_param('s', $date); $stmt->execute(); $r = $stmt->get_result(); } else { $r = null; }
             if ($r) {
                 $data['count'] = $r->num_rows;
                 while ($row = $r->fetch_assoc()) {
@@ -249,6 +253,7 @@ if ($view === 'daily_collections' && $ajax === '1') {
                     $data['payments'][] = ['student_name' => ($row['last_name'] ?? '') . ' ' . ($row['first_name'] ?? ''), 'student_id' => $row['student_id'], 'receipt_number' => $row['receipt_number'] ?? '', 'amount' => $row['amount_paid'], 'method' => $m];
                 }
             }
+            if (isset($stmt)) $stmt->close();
         }
     } catch (Exception $e) { error_log('ajax daily: ' . $e->getMessage()); }
     echo json_encode($data);
@@ -261,12 +266,12 @@ if ($view === 'generate_invoice' && $ajax === '1' && $sid) {
     $fees = [];
     try {
         if ($students && $staff) {
-            $sidSafe = $students->real_escape_string($sid);
-            $prog = $students->query("SELECT program FROM students WHERE student_number = '$sidSafe' OR student_id = '$sidSafe' LIMIT 1");
-            if ($prog && ($p = $prog->fetch_assoc())) {
-                $program = $staff->real_escape_string($p['program']);
-                $fs = $staff->query("SELECT item_name, amount FROM fee_structures WHERE program = '' OR program = '$program' ORDER BY id");
-                if ($fs) while ($f = $fs->fetch_assoc()) $fees[] = $f;
+            $stmt = $students->prepare("SELECT program FROM students WHERE student_number = ? OR student_id = ? LIMIT 1");
+            if ($stmt) { $stmt->bind_param('ss', $sid, $sid); $stmt->execute(); $prog = $stmt->get_result(); $p = $prog ? $prog->fetch_assoc() : null; $stmt->close(); } else { $p = null; }
+            if ($p) {
+                $program = $p['program'];
+                $stmt2 = $staff->prepare("SELECT item_name, amount FROM fee_structures WHERE program = '' OR program = ? ORDER BY id");
+                if ($stmt2) { $stmt2->bind_param('s', $program); $stmt2->execute(); $fs = $stmt2->get_result(); if ($fs) while ($f = $fs->fetch_assoc()) $fees[] = $f; $stmt2->close(); }
             }
         }
     } catch (Exception $e) { error_log('ajax fee struct: ' . $e->getMessage()); }
@@ -280,15 +285,17 @@ if ($view === 'student_search' && $ajax === '1' && $sid) {
     $data = ['found' => false, 'student' => null, 'summary' => null, 'recent' => []];
     try {
         if ($students && $staff) {
-            $sidSafe = $students->real_escape_string($sid);
-            $stu = $students->query("SELECT student_id AS id, student_number, CONCAT(last_name,' ',first_name) AS full_name, first_name, last_name, other_name, program, year_of_study AS year, phone, email, photo, status, admission_date, gender, date_of_birth FROM students WHERE student_number = '$sidSafe' OR student_id = '$sidSafe' LIMIT 1");
-            if ($stu && ($s = $stu->fetch_assoc())) {
+            $stmt = $students->prepare("SELECT student_id AS id, student_number, CONCAT(last_name,' ',first_name) AS full_name, first_name, last_name, other_name, program, year_of_study AS year, phone, email, photo, status, admission_date, gender, date_of_birth FROM students WHERE student_number = ? OR student_id = ? LIMIT 1");
+            if ($stmt) { $stmt->bind_param('ss', $sid, $sid); $stmt->execute(); $stu = $stmt->get_result(); $s = $stu ? $stu->fetch_assoc() : null; $stmt->close(); } else { $s = null; }
+            if ($s) {
                 $sidFull = $s['student_number'] ?: $s['id'];
-                $sfa = $staff->query("SELECT COALESCE(SUM(total_fees),0) AS total_billed, COALESCE(SUM(amount_paid),0) AS total_paid, COALESCE(SUM(balance),0) AS total_balance FROM student_fee_accounts WHERE student_id = '$sidFull'");
-                $summary = $sfa ? $sfa->fetch_assoc() : ['total_billed' => 0, 'total_paid' => 0, 'total_balance' => 0];
-                $lastPay = $staff->query("SELECT amount_paid, payment_date, receipt_number, payment_method FROM fee_payments WHERE student_id = '$sidFull' AND status='verified' ORDER BY payment_date DESC LIMIT 5");
+                $stmt2 = $staff->prepare("SELECT COALESCE(SUM(total_fees),0) AS total_billed, COALESCE(SUM(amount_paid),0) AS total_paid, COALESCE(SUM(balance),0) AS total_balance FROM student_fee_accounts WHERE student_id = ?");
+                if ($stmt2) { $stmt2->bind_param('s', $sidFull); $stmt2->execute(); $sfa = $stmt2->get_result(); $summary = $sfa ? $sfa->fetch_assoc() : ['total_billed' => 0, 'total_paid' => 0, 'total_balance' => 0]; $stmt2->close(); } else { $summary = ['total_billed' => 0, 'total_paid' => 0, 'total_balance' => 0]; }
+                $stmt3 = $staff->prepare("SELECT amount_paid, payment_date, receipt_number, payment_method FROM fee_payments WHERE student_id = ? AND status='verified' ORDER BY payment_date DESC LIMIT 5");
+                if ($stmt3) { $stmt3->bind_param('s', $sidFull); $stmt3->execute(); $lastPay = $stmt3->get_result(); } else { $lastPay = null; }
                 $recent = [];
                 if ($lastPay) while ($lp = $lastPay->fetch_assoc()) $recent[] = $lp;
+                if (isset($stmt3)) $stmt3->close();
                 $clear = $staff->query("SELECT clearance_status, remarks, updated_at FROM igangaschoolofl_students_db.financial_clearance WHERE student_id = '$sidFull' ORDER BY updated_at DESC LIMIT 1");
                 $clearStatus = ($clear && ($c = $clear->fetch_assoc())) ? $c['clearance_status'] : 'Not Requested';
                 $data['found'] = true;
@@ -308,20 +315,22 @@ if ($view === 'clearance_deps' && $ajax === '1' && $sid) {
     header('Content-Type: application/json');
     $deps = [];
     try {
-        $sidSafe = ($staff ? $staff->real_escape_string($sid) : $sid);
         $balance = 0;
         if ($staff) {
-            $balStmt = $staff->query("SELECT COALESCE(SUM(balance),0) AS bal FROM student_fee_accounts WHERE student_id = '$sidSafe' AND status NOT IN ('fully_paid','cancelled')");
-            if ($balStmt) $balance = (float)$balStmt->fetch_assoc()['bal'];
+            $balStmt = $staff->prepare("SELECT COALESCE(SUM(balance),0) AS bal FROM student_fee_accounts WHERE student_id = ? AND status NOT IN ('fully_paid','cancelled')");
+            if ($balStmt) { $balStmt->bind_param('s', $sid); $balStmt->execute(); $balR = $balStmt->get_result(); if ($balR) $balance = (float)$balR->fetch_assoc()['bal']; $balStmt->close(); }
         }
         $deps[] = ['type'=>'Financial','passed'=>$balance <= 0,'detail'=>'Balance: UGX '.number_format($balance)];
         if ($students) {
-            $stuSafe = $students->real_escape_string($sid);
-            $lib = $students->query("SELECT status FROM library_clearance WHERE student_id = '$stuSafe' LIMIT 1");
-            $libPass = $lib && ($l = $lib->fetch_assoc()) && $l['status'] === 'Cleared';
+            $lib = $students->prepare("SELECT status FROM library_clearance WHERE student_id = ? LIMIT 1");
+            if ($lib) { $lib->bind_param('s', $sid); $lib->execute(); $libR = $lib->get_result(); } else { $libR = null; }
+            $libPass = $libR && ($l = $libR->fetch_assoc()) && $l['status'] === 'Cleared';
+            if (isset($lib)) $lib->close();
             $deps[] = ['type'=>'Library','passed'=>$libPass,'detail'=>$libPass ? 'Cleared' : 'Pending/Not Cleared'];
-            $hostel = $students->query("SELECT status FROM hostel_clearance WHERE student_id = '$stuSafe' LIMIT 1");
-            $hostelPass = $hostel && ($h = $hostel->fetch_assoc()) && $h['status'] === 'Cleared';
+            $hostel = $students->prepare("SELECT status FROM hostel_clearance WHERE student_id = ? LIMIT 1");
+            if ($hostel) { $hostel->bind_param('s', $sid); $hostel->execute(); $hostelR = $hostel->get_result(); } else { $hostelR = null; }
+            $hostelPass = $hostelR && ($h = $hostelR->fetch_assoc()) && $h['status'] === 'Cleared';
+            if (isset($hostel)) $hostel->close();
             $deps[] = ['type'=>'Hostel','passed'=>$hostelPass,'detail'=>$hostelPass ? 'Cleared' : 'Pending/Not Cleared'];
         }
         $deps[] = ['type'=>'Exam Eligibility','passed'=>$balance <= 0,'detail'=>$balance <= 0 ? 'Eligible' : 'Blocked (balance UGX '.number_format($balance).')'];
@@ -388,9 +397,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = 'Student and amount are required.';
             } else {
                 $inv_prefix = 'INV-' . date('Y') . '-';
-                $invPrefixSafe = $staff->real_escape_string($inv_prefix);
-                $cnt = $staff->query("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE invoice_number LIKE '$invPrefixSafe%'");
-                $inv_no = $inv_prefix . str_pad(($cnt ? (int)$cnt->fetch_assoc()['c'] + 1 : 1), 5, '0', STR_PAD_LEFT);
+                $cnt = $staff->prepare("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE invoice_number LIKE ?");
+                if ($cnt) { $cntLike = $inv_prefix . '%'; $cnt->bind_param('s', $cntLike); $cnt->execute(); $cntR = $cnt->get_result(); } else { $cntR = null; }
+                $inv_no = $inv_prefix . str_pad(($cntR ? (int)$cntR->fetch_assoc()['c'] + 1 : 1), 5, '0', STR_PAD_LEFT);
+                if (isset($cnt)) $cnt->close();
                 $stmt = $staff->prepare("INSERT INTO student_fee_accounts (student_id, academic_year, invoice_number, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, 0, ?, ?, 'unpaid')");
                 if ($stmt) {
                     $stmt->bind_param("sssdds", $student_id, $academic_year, $inv_no, $total_fees, $total_fees, $due_date);
@@ -1191,13 +1201,20 @@ echo $budgetRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No 
         $due_date = trim($_POST['due_date'] ?? date('Y-m-d', strtotime('+30 days')));
         if ($program && $amount > 0 && $staff) {
             try {
-                $sql = "SELECT student_id, student_number, CONCAT(first_name,' ',last_name) AS name FROM igangaschoolofl_students_db.students WHERE program = '" . $staff->real_escape_string($program) . "' AND status='Active'";
-                if ($year) $sql .= " AND year = '" . $staff->real_escape_string($year) . "'";
-                $r = $staff->query($sql);
+                $stmt = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',last_name) AS name FROM igangaschoolofl_students_db.students WHERE program = ? AND status='Active'");
+                if ($stmt) { $stmt->bind_param('s', $program); $stmt->execute(); $stuList = $stmt->get_result(); } else { $stuList = null; }
+                if ($year && $stuList) {
+                    $stuList->close();
+                    $stmt2 = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',last_name) AS name FROM igangaschoolofl_students_db.students WHERE program = ? AND year = ? AND status='Active'");
+                    if ($stmt2) { $stmt2->bind_param('ss', $program, $year); $stmt2->execute(); $stuList = $stmt2->get_result(); }
+                }
+                $r = $stuList;
                 if ($r && $r->num_rows > 0) {
                     $inv_prefix = 'INV-' . date('Y') . '-';
-                    $cnt = $staff->query("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE invoice_number LIKE '$inv_prefix%'");
-                    $base = $cnt ? (int)$cnt->fetch_assoc()['c'] : 0;
+                    $cnt = $staff->prepare("SELECT COUNT(*) AS c FROM student_fee_accounts WHERE invoice_number LIKE ?");
+                    if ($cnt) { $cntLike = $inv_prefix . '%'; $cnt->bind_param('s', $cntLike); $cnt->execute(); $cntR = $cnt->get_result(); } else { $cntR = null; }
+                    $base = $cntR ? (int)$cntR->fetch_assoc()['c'] : 0;
+                    if (isset($cnt)) $cnt->close();
                     $created = 0;
                     $academic_year = date('Y') . '/' . (date('Y') + 1);
                     $stmt = $staff->prepare("INSERT INTO student_fee_accounts (student_id, academic_year, invoice_number, total_fees, amount_paid, balance, due_date, status) VALUES (?, ?, ?, ?, 0, ?, ?, 'unpaid')");
@@ -2221,8 +2238,8 @@ echo $aprRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No pen
 <?php
 // Get requisitions
 $reqFilter = $_GET['filter'] ?? 'pending';
-$reqWhere = "r.status = '".$staff->real_escape_string($reqFilter)."'";
-$reqs = $staff->query("SELECT r.*, u.username AS requester_name, u.role AS requester_role FROM {$staff_db}.bursar_requisition_reviews r LEFT JOIN {$staff_db}.users u ON r.requester_id = u.id WHERE {$reqWhere} ORDER BY r.created_at DESC");
+$stmt = $staff->prepare("SELECT r.*, u.username AS requester_name, u.role AS requester_role FROM {$staff_db}.bursar_requisition_reviews r LEFT JOIN {$staff_db}.users u ON r.requester_id = u.id WHERE r.status = ? ORDER BY r.created_at DESC");
+if ($stmt) { $stmt->bind_param('s', $reqFilter); $stmt->execute(); $reqs = $stmt->get_result(); $stmt->close(); } else { $reqs = null; }
 ?>
     <div class="cc">
         <div class="ch d-flex justify-content-between align-items-center">
@@ -2273,12 +2290,12 @@ $commDb = $students ? $students : $staff; // prefer students_db connection
 
 // Handle send message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
-    $recipient = $commDb->real_escape_string($_POST['recipient_role'] ?? '');
-    $subject = $commDb->real_escape_string($_POST['subject'] ?? '');
-    $message = $commDb->real_escape_string($_POST['message'] ?? '');
+    $recipient = trim($_POST['recipient_role'] ?? '');
+    $subject = trim($_POST['subject'] ?? '');
+    $message = trim($_POST['message'] ?? '');
     if (!empty($recipient) && !empty($subject) && !empty($message)) {
-        $sql = "INSERT INTO {$students_db}.financial_messages (sender_id, sender_role, recipient_role, subject, message, created_at) VALUES ('{$staffId}', 'school bursar', '{$recipient}', '{$subject}', '{$message}', NOW())";
-        $commDb->query($sql);
+        $stmt = $commDb->prepare("INSERT INTO {$students_db}.financial_messages (sender_id, sender_role, recipient_role, subject, message, created_at) VALUES (?, 'school bursar', ?, ?, ?, NOW())");
+        if ($stmt) { $stmt->bind_param('isss', $staffId, $recipient, $subject, $message); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Message sent successfully.';
         echo '<meta http-equiv="refresh" content="0;url=?section=communications&tab=sent">';
         exit;
@@ -2287,12 +2304,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle notice publish
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'publish_notice') {
-    $title = $commDb->real_escape_string($_POST['title'] ?? '');
-    $content = $commDb->real_escape_string($_POST['content'] ?? '');
-    $audience = $commDb->real_escape_string($_POST['audience'] ?? 'all');
+    $title = trim($_POST['title'] ?? '');
+    $content = trim($_POST['content'] ?? '');
+    $audience = trim($_POST['audience'] ?? 'all');
     if (!empty($title) && !empty($content)) {
-        $sql = "INSERT INTO {$students_db}.financial_notices (title, content, audience, published_by, published_at) VALUES ('{$title}', '{$content}', '{$audience}', '{$staffId}', NOW())";
-        $commDb->query($sql);
+        $stmt = $commDb->prepare("INSERT INTO {$students_db}.financial_notices (title, content, audience, published_by, published_at) VALUES (?, ?, ?, ?, NOW())");
+        if ($stmt) { $stmt->bind_param('sssi', $title, $content, $audience, $staffId); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Notice published.';
         echo '<meta http-equiv="refresh" content="0;url=?section=communications&tab=notices">';
         exit;

@@ -18,11 +18,16 @@ if ($conn) {
     if ($r) $balances = (int)$r->fetch_assoc()['c'];
     $search = trim($_GET['search'] ?? '');
     $statusFilter = trim($_GET['status'] ?? '');
-    $w = "1=1";
-    if ($search !== '') { $s = $conn->real_escape_string($search); $w .= " AND (s.full_name LIKE '%$s%' OR lt.type_name LIKE '%$s%' OR lr.status LIKE '%$s%')"; }
-    if ($statusFilter !== '') { $st = $conn->real_escape_string($statusFilter); $w .= " AND lr.status='$st'"; }
-    $q = $conn->query("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
-    if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+    $w = "1=1"; $bindTypes = ''; $bindValues = [];
+    if ($search !== '') { $w .= " AND (s.full_name LIKE ? OR lt.type_name LIKE ? OR lr.status LIKE ?)"; $bindTypes .= 'sss'; $bindValues[] = "%$search%"; $bindValues[] = "%$search%"; $bindValues[] = "%$search%"; }
+    if ($statusFilter !== '') { $w .= " AND lr.status=?"; $bindTypes .= 's'; $bindValues[] = $statusFilter; }
+    if ($bindTypes) {
+        $stmt = $conn->prepare("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
+        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); $stmt->execute(); $q = $stmt->get_result(); if ($q) $records = $q->fetch_all(MYSQLI_ASSOC); $stmt->close(); }
+    } else {
+        $q = $conn->query("SELECT lr.*, s.full_name staff_name, lt.type_name leave_type, DATEDIFF(lr.end_date,lr.start_date)+1 days FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id WHERE $w ORDER BY lr.created_at DESC LIMIT 100");
+        if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+    }
     $lt = $conn->query("SELECT * FROM leave_types ORDER BY type_name");
     if ($lt) while ($row = $lt->fetch_assoc()) $leaveTypes[] = $row;
     $sl = $conn->query("SELECT id, full_name FROM staff WHERE status='Active' ORDER BY full_name LIMIT 200");

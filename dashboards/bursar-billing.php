@@ -46,12 +46,12 @@ if ($ajax === 'get_fee_structure' && $sid) {
     header('Content-Type: application/json');
     $fees = []; $student = [];
     try {
-        $prog = $students->query("SELECT program, current_year FROM students WHERE student_id = '".$students->real_escape_string($sid)."' LIMIT 1");
-        if ($prog) $student = $prog->fetch_assoc();
+        $stmt = $students->prepare("SELECT program, current_year FROM students WHERE student_id = ? LIMIT 1");
+        if ($stmt) { $stmt->bind_param('s', $sid); $stmt->execute(); $prog = $stmt->get_result(); $student = $prog ? ($prog->fetch_assoc() ?: []) : []; $stmt->close(); }
         if (!empty($student['program'])) {
             $p = $student['program']; $y = $student['current_year'] ?? '';
-            $r = $staff->query("SELECT * FROM fee_structures WHERE (program = '' OR program = '".$staff->real_escape_string($p)."') AND (year_level = '' OR year_level = '".$staff->real_escape_string($y)."') ORDER BY id");
-            if ($r) while ($row = $r->fetch_assoc()) $fees[] = $row;
+            $stmt = $staff->prepare("SELECT * FROM fee_structures WHERE (program = '' OR program = ?) AND (year_level = '' OR year_level = ?) ORDER BY id");
+            if ($stmt) { $stmt->bind_param('ss', $p, $y); $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $fees[] = $row; $stmt->close(); }
         }
     } catch (Exception $e) { error_log('fee_struct: '.$e->getMessage()); }
     echo json_encode(['student' => $student, 'items' => $fees]); exit;
@@ -168,7 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $account_id = (int)($_POST['fee_account_id'] ?? 0); $reason = trim($_POST['write_off_reason'] ?? '');
             if ($account_id > 0) {
-                $staff->query("UPDATE student_fee_accounts SET status = 'cancelled', write_off_reason = '".$staff->real_escape_string($reason)."', balance = 0 WHERE id = $account_id");
+                $stmt = $staff->prepare("UPDATE student_fee_accounts SET status = 'cancelled', write_off_reason = ?, balance = 0 WHERE id = ?");
+                if ($stmt) { $stmt->bind_param('si', $reason, $account_id); $stmt->execute(); $stmt->close(); }
                 $_SESSION['success'] = 'Invoice written off.';
             }
         } catch (Exception $e) { $_SESSION['error'] = $e->getMessage(); }

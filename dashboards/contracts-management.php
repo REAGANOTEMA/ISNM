@@ -19,13 +19,18 @@ if ($staffDb) {
     $expiring = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Active' AND end_date IS NOT NULL AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)"))&&$r?$r->fetch_assoc()['c']:0);
     $expired = (int)(($r=$staffDb->query("SELECT COUNT(*) c FROM staff_contracts WHERE status='Expired'"))&&$r?$r->fetch_assoc()['c']:0);
 
-    $where = [];
-    if ($search) $where[] = "(s.full_name LIKE '%".$staffDb->real_escape_string($search)."%' OR c.contract_number LIKE '%".$staffDb->real_escape_string($search)."%')";
-    if ($filterType) $where[] = "c.contract_type='".$staffDb->real_escape_string($filterType)."'";
-    if ($filterStatus) $where[] = "c.status='".$staffDb->real_escape_string($filterStatus)."'";
+    $where = []; $bindTypes = ''; $bindValues = [];
+    if ($search) { $where[] = "(s.full_name LIKE ? OR c.contract_number LIKE ?)"; $bindTypes .= 'ss'; $bindValues[] = "%$search%"; $bindValues[] = "%$search%"; }
+    if ($filterType) { $where[] = "c.contract_type=?"; $bindTypes .= 's'; $bindValues[] = $filterType; }
+    if ($filterStatus) { $where[] = "c.status=?"; $bindTypes .= 's'; $bindValues[] = $filterStatus; }
     $ws = $where ? 'WHERE '.implode(' AND ', $where) : '';
-    $r = $staffDb->query("SELECT c.*, s.full_name, s.staff_id, s.department sd, s.position FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id $ws ORDER BY c.created_at DESC LIMIT 100");
-    if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row;
+    if ($bindTypes) {
+        $stmt = $staffDb->prepare("SELECT c.*, s.full_name, s.staff_id, s.department sd, s.position FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id $ws ORDER BY c.created_at DESC LIMIT 100");
+        if ($stmt) { $stmt->bind_param($bindTypes, ...$bindValues); $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row; $stmt->close(); }
+    } else {
+        $r = $staffDb->query("SELECT c.*, s.full_name, s.staff_id, s.department sd, s.position FROM staff_contracts c LEFT JOIN staff s ON c.staff_id=s.id $ws ORDER BY c.created_at DESC LIMIT 100");
+        if ($r) while ($row = $r->fetch_assoc()) $contracts[] = $row;
+    }
 
     $sl = $staffDb->query("SELECT id, staff_id, full_name, department, position FROM staff WHERE status='Active' ORDER BY full_name");
     if ($sl) while ($row = $sl->fetch_assoc()) $staffList[] = $row;
@@ -36,17 +41,17 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     $action = $_POST['action'] ?? '';
     if ($staffDb && $action==='add_contract') {
         $staff_id = (int)($_POST['staff_id']??0);
-        $type = $staffDb->real_escape_string($_POST['contract_type']??'');
-        $start = $staffDb->real_escape_string($_POST['start_date']??'');
-        $end = $staffDb->real_escape_string($_POST['end_date']??'');
-        $job = $staffDb->real_escape_string($_POST['job_title']??'');
-        $dept = $staffDb->real_escape_string($_POST['department']??'');
+        $type = trim($_POST['contract_type']??'');
+        $start = trim($_POST['start_date']??'');
+        $end = trim($_POST['end_date']??'');
+        $job = trim($_POST['job_title']??'');
+        $dept = trim($_POST['department']??'');
         $salary = floatval($_POST['salary']??0);
         $probation = (int)($_POST['probation_period']??6);
         $notice = (int)($_POST['notice_period']??30);
-        $terms = $staffDb->real_escape_string($_POST['contract_terms']??'');
-        $benefits = $staffDb->real_escape_string($_POST['benefits']??'');
-        $signed = $staffDb->real_escape_string($_POST['signed_date']??'');
+        $terms = trim($_POST['contract_terms']??'');
+        $benefits = trim($_POST['benefits']??'');
+        $signed = trim($_POST['signed_date']??'');
         $cnum = 'CTR-'.date('Ymd').'-'.str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
         if ($staff_id && $type && $start && $job) {
             $stmt = $staffDb->prepare("INSERT INTO staff_contracts (contract_number,staff_id,contract_type,start_date,end_date,job_title,department,salary,probation_period,notice_period,contract_terms,benefits,signed_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'Active')");
@@ -72,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     }
     if ($staffDb && $action==='renew_contract') {
         $cid = (int)($_POST['contract_id']??0);
-        $newEnd = $staffDb->real_escape_string($_POST['new_end_date']??'');
+        $newEnd = trim($_POST['new_end_date']??'');
         if ($cid && $newEnd) {
             $staffDb->query("UPDATE staff_contracts SET status='Renewed', updated_at=NOW() WHERE id=" . intval($cid));
             $r = $staffDb->query("SELECT * FROM staff_contracts WHERE id=" . intval($cid));

@@ -8,7 +8,7 @@ $conn = $ctx['staff'];
 $user = $ctx['user'];
 $userRole = $user['role'] ?? '';
 
-$studentsConn = getStudentsConnection();
+$studentsConn = $ctx['students'];
 
 $user_id = $_SESSION['user_id'] ?? 0;
 $user_role = $_SESSION['role'] ?? '';

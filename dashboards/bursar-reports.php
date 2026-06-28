@@ -20,41 +20,53 @@ function badge($s) {
 // ── AJAX report endpoints ──
 if ($ajax) {
     header('Content-Type: application/json');
-    $from = $staff ? $staff->real_escape_string($_GET['from'] ?? date('Y-m-01')) : date('Y-m-01');
-    $to = $staff ? $staff->real_escape_string($_GET['to'] ?? date('Y-m-d')) : date('Y-m-d');
+    $from = $_GET['from'] ?? date('Y-m-01');
+    $to = $_GET['to'] ?? date('Y-m-d');
     $result = ['headers' => [], 'rows' => [], 'total' => 0, 'chart_labels' => [], 'chart_values' => []];
 
     try { if (!$staff) throw new Exception('no db');
 
     if ($ajax === 'daily') {
         $result['headers'] = ['Date', 'Transactions', 'Total Collected'];
-        $r = $staff->query("SELECT DATE(payment_date) AS dt, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY DATE(payment_date) ORDER BY dt");
-        if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['dt'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['dt']; $result['chart_values'][] = (float)$row['tot']; }
+        $stmt = $staff->prepare("SELECT DATE(payment_date) AS dt, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY DATE(payment_date) ORDER BY dt");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); }
+        if ($r ?? null) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['dt'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['dt']; $result['chart_values'][] = (float)$row['tot']; }
+        if (isset($stmt)) $stmt->close();
     } elseif ($ajax === 'weekly') {
         $result['headers'] = ['Week Starting', 'Transactions', 'Total'];
-        $r = $staff->query("SELECT DATE_SUB(payment_date, INTERVAL WEEKDAY(payment_date) DAY) AS wk, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY wk ORDER BY wk");
-        if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['wk'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['wk']; $result['chart_values'][] = (float)$row['tot']; }
+        $stmt = $staff->prepare("SELECT DATE_SUB(payment_date, INTERVAL WEEKDAY(payment_date) DAY) AS wk, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY wk ORDER BY wk");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); }
+        if ($r ?? null) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['wk'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['wk']; $result['chart_values'][] = (float)$row['tot']; }
+        if (isset($stmt)) $stmt->close();
     } elseif ($ajax === 'monthly') {
         $result['headers'] = ['Month', 'Payments', 'Total'];
-        $r = $staff->query("SELECT DATE_FORMAT(payment_date,'%Y-%m') AS m, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY m ORDER BY m");
-        if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['m'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['m']; $result['chart_values'][] = (float)$row['tot']; }
+        $stmt = $staff->prepare("SELECT DATE_FORMAT(payment_date,'%Y-%m') AS m, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY m ORDER BY m");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); }
+        if ($r ?? null) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['m'], $row['cnt'], currency($row['tot'])]; $result['total'] += $row['tot']; $result['chart_labels'][] = $row['m']; $result['chart_values'][] = (float)$row['tot']; }
+        if (isset($stmt)) $stmt->close();
     } elseif ($ajax === 'revenue_category') {
         $result['headers'] = ['Category', 'Amount', 'Percentage'];
         $grand_total = 0;
-        $r = $staff->query("SELECT payment_method, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY payment_method");
-        if ($r) { $all = []; while ($row = $r->fetch_assoc()) { $all[] = $row; $grand_total += (float)$row['tot']; } foreach ($all as $row) { $pct = $grand_total > 0 ? round(((float)$row['tot']/$grand_total)*100, 1).'%' : '0%'; $result['rows'][] = [ucfirst(str_replace('_',' ',$row['payment_method'])), currency($row['tot']), $pct]; $result['chart_labels'][] = ucfirst(str_replace('_',' ',$row['payment_method'])); $result['chart_values'][] = (float)$row['tot']; } $result['total'] = $grand_total; }
+        $stmt = $staff->prepare("SELECT payment_method, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN ? AND ? AND status='verified' GROUP BY payment_method");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); }
+        if ($r ?? null) { $all = []; while ($row = $r->fetch_assoc()) { $all[] = $row; $grand_total += (float)$row['tot']; } foreach ($all as $row) { $pct = $grand_total > 0 ? round(((float)$row['tot']/$grand_total)*100, 1).'%' : '0%'; $result['rows'][] = [ucfirst(str_replace('_',' ',$row['payment_method'])), currency($row['tot']), $pct]; $result['chart_labels'][] = ucfirst(str_replace('_',' ',$row['payment_method'])); $result['chart_values'][] = (float)$row['tot']; } $result['total'] = $grand_total; }
+        if (isset($stmt)) $stmt->close();
     } elseif ($ajax === 'outstanding') {
         $result['headers'] = ['Student ID', 'Student Name', 'Program', 'Total Fees', 'Paid', 'Balance'];
         $r = $staff->query("SELECT sfa.*, s.first_name, s.surname, s.program FROM student_fee_accounts sfa LEFT JOIN igangaschoolofl_students_db.students s ON sfa.student_id = s.student_id WHERE sfa.status NOT IN ('fully_paid','cancelled') ORDER BY sfa.balance DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) { $result['rows'][] = [$row['student_id'], htmlspecialchars(($row['surname']??'').' '.($row['first_name']??'')), htmlspecialchars($row['program']??'-'), currency($row['total_fees']), currency($row['amount_paid']), '<strong class="text-danger">'.currency($row['balance']).'</strong>']; $result['total'] += (float)$row['balance']; }
     } elseif ($ajax === 'statement' && !empty($_GET['sid'])) {
-        $sid = $staff->real_escape_string($_GET['sid']);
+        $sid = $_GET['sid'];
         $result['headers'] = ['Date', 'Description', 'Debit', 'Credit', 'Balance'];
         $txns = []; $bal = 0;
-        $inv = $staff->query("SELECT created_at AS dt, invoice_number, total_fees FROM student_fee_accounts WHERE student_id='$sid' ORDER BY created_at ASC");
-        if ($inv) while ($row = $inv->fetch_assoc()) { $txns[] = ['dt'=>$row['dt'], 'desc'=>'Invoice '.$row['invoice_number'], 'debit'=>(float)$row['total_fees'], 'credit'=>0]; }
-        $pay = $staff->query("SELECT payment_date AS dt, receipt_number, amount_paid FROM fee_payments WHERE student_id='$sid' AND status='verified' ORDER BY payment_date ASC");
-        if ($pay) while ($row = $pay->fetch_assoc()) { $txns[] = ['dt'=>$row['dt'], 'desc'=>'Payment '.$row['receipt_number'], 'debit'=>0, 'credit'=>(float)$row['amount_paid']]; }
+        $stmt = $staff->prepare("SELECT created_at AS dt, invoice_number, total_fees FROM student_fee_accounts WHERE student_id=? ORDER BY created_at ASC");
+        if ($stmt) { $stmt->bind_param('s', $sid); $stmt->execute(); $inv = $stmt->get_result(); }
+        if ($inv ?? null) while ($row = $inv->fetch_assoc()) { $txns[] = ['dt'=>$row['dt'], 'desc'=>'Invoice '.$row['invoice_number'], 'debit'=>(float)$row['total_fees'], 'credit'=>0]; }
+        $stmt2 = $staff->prepare("SELECT payment_date AS dt, receipt_number, amount_paid FROM fee_payments WHERE student_id=? AND status='verified' ORDER BY payment_date ASC");
+        if ($stmt2) { $stmt2->bind_param('s', $sid); $stmt2->execute(); $pay = $stmt2->get_result(); }
+        if ($pay ?? null) while ($row = $pay->fetch_assoc()) { $txns[] = ['dt'=>$row['dt'], 'desc'=>'Payment '.$row['receipt_number'], 'debit'=>0, 'credit'=>(float)$row['amount_paid']]; }
+        if (isset($stmt)) $stmt->close();
+        if (isset($stmt2)) $stmt2->close();
         usort($txns, function($a,$b){ return strcmp($a['dt'], $b['dt']); });
         foreach ($txns as $tx) { $bal += (float)$tx['debit'] - (float)$tx['credit']; $result['rows'][] = [$tx['dt'], htmlspecialchars($tx['desc']), $tx['debit'] > 0 ? currency($tx['debit']) : '-', $tx['credit'] > 0 ? currency($tx['credit']) : '-', '<strong>'.currency($bal).'</strong>']; }
         $result['total'] = $bal;

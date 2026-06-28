@@ -27,30 +27,60 @@ if ($ajax) {
         if (!$staff) throw new Exception('no db');
 
         if ($ajax === 'trial_balance') {
-            $as_of = $staff->real_escape_string($_GET['as_of'] ?? date('Y-m-d'));
+            $as_of = $_GET['as_of'] ?? date('Y-m-d');
             $debits = 0; $credits = 0;
-            $r = $staff->query("SELECT account_code, account_name, account_type, COALESCE(SUM(debit_amount),0) AS deb, COALESCE(SUM(credit_amount),0) AS cred FROM bursar_general_ledger WHERE entry_date <= '$as_of' GROUP BY account_code, account_name, account_type ORDER BY account_type, account_code");
-            if ($r) { while ($row = $r->fetch_assoc()) { $d = (float)$row['deb']; $c = (float)$row['cred']; $bal = $d - $c; $result['rows'][] = [$row['account_code'], htmlspecialchars($row['account_name']), htmlspecialchars($row['account_type']), $bal >= 0 ? currency($bal) : '-', $bal < 0 ? currency(abs($bal)) : '-']; if ($bal >= 0) $debits += $bal; else $credits += abs($bal); } }
+            $stmt = $staff->prepare("SELECT account_code, account_name, account_type, COALESCE(SUM(debit_amount),0) AS deb, COALESCE(SUM(credit_amount),0) AS cred FROM bursar_general_ledger WHERE entry_date <= ? GROUP BY account_code, account_name, account_type ORDER BY account_type, account_code");
+            if ($stmt) {
+                $stmt->bind_param('s', $as_of);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) { while ($row = $r->fetch_assoc()) { $d = (float)$row['deb']; $c = (float)$row['cred']; $bal = $d - $c; $result['rows'][] = [$row['account_code'], htmlspecialchars($row['account_name']), htmlspecialchars($row['account_type']), $bal >= 0 ? currency($bal) : '-', $bal < 0 ? currency(abs($bal)) : '-']; if ($bal >= 0) $debits += $bal; else $credits += abs($bal); } }
+                $stmt->close();
+            }
             $result['total_debit'] = $debits; $result['total_credit'] = $credits;
         } elseif ($ajax === 'income_statement') {
-            $from = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01'));
-            $to = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
+            $from = $_GET['from'] ?? date('Y-m-01');
+            $to = $_GET['to'] ?? date('Y-m-d');
             $income = 0; $expenses = 0;
-            $r = $staff->query("SELECT account_name, account_type, COALESCE(SUM(credit_amount - debit_amount),0) AS bal FROM bursar_general_ledger WHERE entry_date BETWEEN '$from' AND '$to' AND account_type IN ('income','revenue') GROUP BY account_name, account_type");
-            if ($r) { $result['income_items'] = []; while ($row = $r->fetch_assoc()) { $b = (float)$row['bal']; $result['income_items'][] = [htmlspecialchars($row['account_name']), currency($b)]; $income += $b; } }
-            $r = $staff->query("SELECT account_name, account_type, COALESCE(SUM(debit_amount - credit_amount),0) AS bal FROM bursar_general_ledger WHERE entry_date BETWEEN '$from' AND '$to' AND account_type IN ('expense','cost_of_sales') GROUP BY account_name, account_type");
-            if ($r) { $result['expense_items'] = []; while ($row = $r->fetch_assoc()) { $b = (float)$row['bal']; $result['expense_items'][] = [htmlspecialchars($row['account_name']), currency($b)]; $expenses += $b; } }
+            $stmt = $staff->prepare("SELECT account_name, account_type, COALESCE(SUM(credit_amount - debit_amount),0) AS bal FROM bursar_general_ledger WHERE entry_date BETWEEN ? AND ? AND account_type IN ('income','revenue') GROUP BY account_name, account_type");
+            if ($stmt) {
+                $stmt->bind_param('ss', $from, $to);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) { $result['income_items'] = []; while ($row = $r->fetch_assoc()) { $b = (float)$row['bal']; $result['income_items'][] = [htmlspecialchars($row['account_name']), currency($b)]; $income += $b; } }
+                $stmt->close();
+            }
+            $stmt = $staff->prepare("SELECT account_name, account_type, COALESCE(SUM(debit_amount - credit_amount),0) AS bal FROM bursar_general_ledger WHERE entry_date BETWEEN ? AND ? AND account_type IN ('expense','cost_of_sales') GROUP BY account_name, account_type");
+            if ($stmt) {
+                $stmt->bind_param('ss', $from, $to);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) { $result['expense_items'] = []; while ($row = $r->fetch_assoc()) { $b = (float)$row['bal']; $result['expense_items'][] = [htmlspecialchars($row['account_name']), currency($b)]; $expenses += $b; } }
+                $stmt->close();
+            }
             $result['total_income'] = $income; $result['total_expenses'] = $expenses; $result['net_income'] = $income - $expenses;
         } elseif ($ajax === 'ledger_entries') {
-            $from = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01'));
-            $to = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
-            $r = $staff->query("SELECT gl.*, coa.account_name, coa.account_type FROM bursar_general_ledger gl LEFT JOIN bursar_chart_of_accounts coa ON gl.account_code = coa.account_code WHERE gl.entry_date BETWEEN '$from' AND '$to' ORDER BY gl.entry_date DESC, gl.id DESC LIMIT 200");
-            if ($r) { $result['entries'] = []; while ($row = $r->fetch_assoc()) $result['entries'][] = $row; }
+            $from = $_GET['from'] ?? date('Y-m-01');
+            $to = $_GET['to'] ?? date('Y-m-d');
+            $stmt = $staff->prepare("SELECT gl.*, coa.account_name, coa.account_type FROM bursar_general_ledger gl LEFT JOIN bursar_chart_of_accounts coa ON gl.account_code = coa.account_code WHERE gl.entry_date BETWEEN ? AND ? ORDER BY gl.entry_date DESC, gl.id DESC LIMIT 200");
+            if ($stmt) {
+                $stmt->bind_param('ss', $from, $to);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) { $result['entries'] = []; while ($row = $r->fetch_assoc()) $result['entries'][] = $row; }
+                $stmt->close();
+            }
         } elseif ($ajax === 'cashbook') {
-            $from = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01'));
-            $to = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
-            $r = $staff->query("SELECT * FROM bursar_cashbook WHERE transaction_date BETWEEN '$from' AND '$to' ORDER BY transaction_date DESC, id DESC LIMIT 200");
-            if ($r) { $result['entries'] = []; while ($row = $r->fetch_assoc()) $result['entries'][] = $row; }
+            $from = $_GET['from'] ?? date('Y-m-01');
+            $to = $_GET['to'] ?? date('Y-m-d');
+            $stmt = $staff->prepare("SELECT * FROM bursar_cashbook WHERE transaction_date BETWEEN ? AND ? ORDER BY transaction_date DESC, id DESC LIMIT 200");
+            if ($stmt) {
+                $stmt->bind_param('ss', $from, $to);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) { $result['entries'] = []; while ($row = $r->fetch_assoc()) $result['entries'][] = $row; }
+                $stmt->close();
+            }
         } elseif ($ajax === 'reconciliation') {
             $r = $staff->query("SELECT * FROM bursar_bank_reconciliation ORDER BY reconciliation_date DESC LIMIT 50");
             if ($r) { $result['entries'] = []; while ($row = $r->fetch_assoc()) $result['entries'][] = $row; }
