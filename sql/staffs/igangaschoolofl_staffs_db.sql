@@ -1850,11 +1850,8 @@ CREATE TABLE `fee_adjustments` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `fee_payments`
+-- Skipped: `fee_payments` is a VIEW, created in Views section
 --
-
-DROP TABLE IF EXISTS `fee_payments`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
 
 -- --------------------------------------------------------
 
@@ -5173,7 +5170,7 @@ CREATE TABLE `users` (
 --
 
 DROP VIEW IF EXISTS `fee_payments`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
+CREATE VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
 
 -- --------------------------------------------------------
 
@@ -5181,7 +5178,8 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fee_payments` AS select `i
 -- Procedures
 --
 
-DROP PROCEDURE IF EXISTS `get_dashboard_statistics`;
+DELIMITER //
+DROP PROCEDURE IF EXISTS `get_dashboard_statistics`//
 CREATE PROCEDURE `get_dashboard_statistics`(IN p_user_id INT, IN p_role VARCHAR(100))
 BEGIN
     SELECT
@@ -5191,9 +5189,9 @@ BEGIN
         2 AS active_programs,
         0 AS total_revenue,
         0 AS total_expenses;
-END;
+END//
 
-DROP PROCEDURE IF EXISTS `get_staff_performance_summary`;
+DROP PROCEDURE IF EXISTS `get_staff_performance_summary`//
 CREATE PROCEDURE `get_staff_performance_summary`(IN p_user_id INT)
 BEGIN
     SELECT s.id, s.full_name, sr.role_name, s.department, s.status,
@@ -5203,7 +5201,8 @@ BEGIN
     WHERE s.status = 'Active'
     ORDER BY s.full_name
     LIMIT 20;
-END;
+END//
+DELIMITER ;
 
 --
 -- Functions
