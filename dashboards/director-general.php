@@ -369,12 +369,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
-    $title    = $conn ? $conn->real_escape_string(trim($_POST['ann_title'] ?? '')) : '';
-    $body     = $conn ? $conn->real_escape_string(trim($_POST['ann_body'] ?? '')) : '';
-    $target   = $conn ? $conn->real_escape_string($_POST['ann_target'] ?? 'All') : 'All';
-    $priority = $conn ? $conn->real_escape_string($_POST['ann_priority'] ?? 'Normal') : 'Normal';
+    $title    = trim($_POST['ann_title'] ?? '');
+    $body     = trim($_POST['ann_body'] ?? '');
+    $target   = $_POST['ann_target'] ?? 'All';
+    $priority = $_POST['ann_priority'] ?? 'Normal';
     if ($title && $body && $studentsConn) {
-        $studentsConn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES ('$title','$body','$target','$priority'," . intval($user_id) . ",1,NOW())");
+        $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
+        if ($stmt) {
+            $stmt->bind_param('sss si', $title, $body, $target, $priority, $user_id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Announcement published to all $target.";
         $nid = createNotification('New Announcement: ' . $title, $body, 'director-general.php', 'announcement', 'fas fa-bullhorn');
         if ($nid) {

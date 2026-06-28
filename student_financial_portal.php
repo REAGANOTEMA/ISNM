@@ -5,7 +5,6 @@
 require_once __DIR__ . '/includes/student_auth.php';
 require_once __DIR__ . '/includes/financial_functions.php';
 
-$conn = getConnection();
 $student_id = $_SESSION['user_id'] ?? 0;
 
 // Get student's financial statement
@@ -21,7 +20,6 @@ $balance = getStudentBalance($student_id);
     <title>Student Financial Portal | ISNM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/isnm-style.css">
     <style>
         :root {
             --isnm-blue: #1e3a8a;
@@ -111,13 +109,13 @@ $balance = getStudentBalance($student_id);
                                     <strong><?php echo htmlspecialchars($invoice['invoice_number']); ?></strong>
                                     <div class="text-muted">
                                         Academic Year: <?php echo htmlspecialchars($invoice['academic_year']); ?> | 
-                                        Semester: <?php echo $invoice['semester']; ?>
+                                        Semester: <?php echo htmlspecialchars($invoice['semester']); ?>
                                     </div>
                                 </div>
                                 <div class="text-end">
                                     <div><strong>UGX <?php echo number_format($invoice['total_amount']); ?></strong></div>
-                                    <span class="badge status-<?php echo $invoice['status']; ?>">
-                                        <?php echo ucfirst($invoice['status']); ?>
+                                    <span class="badge status-<?php echo htmlspecialchars($invoice['status']); ?>">
+                                        <?php echo ucfirst(htmlspecialchars($invoice['status'])); ?>
                                     </span>
                                 </div>
                             </div>
@@ -185,7 +183,7 @@ $balance = getStudentBalance($student_id);
                                         <td><?php echo htmlspecialchars($payment['reference_number'] ?? '-'); ?></td>
                                         <td>
                                             <span class="badge bg-<?php echo $payment['status'] === 'approved' ? 'success' : 'warning'; ?>">
-                                                <?php echo ucfirst($payment['status']); ?>
+                                                <?php echo ucfirst(htmlspecialchars($payment['status'])); ?>
                                             </span>
                                         </td>
                                     </tr>

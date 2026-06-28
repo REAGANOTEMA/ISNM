@@ -91,8 +91,8 @@ function authenticateStaff($email, $password) {
         
         $user = $result->fetch_assoc();
         
-        // Verify password using password_verify - with plain text fallback
-        if (!password_verify($password, $user['password']) && $user['password'] !== $password) {
+        // Verify password using password_verify
+        if (!password_verify($password, $user['password'])) {
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
         
@@ -354,7 +354,7 @@ function resetPassword($user_type, $identifier) {
     
     if ($user_type === 'student') {
         // For students, use NSIN number
-        $sql = "SELECT * FROM students WHERE nsin_number = ? AND status = 'active'";
+        $sql = "SELECT * FROM students WHERE index_number = ? AND status = 'Active'";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $identifier);
     } else {
@@ -448,19 +448,23 @@ function isAccountLocked($user_id, $user_type) {
     global $conn;
     
     if ($user_type === 'student') {
-        $sql = "SELECT account_locked, locked_until FROM students WHERE student_id = ?";
+        $sql = "SELECT login_attempts, locked_until FROM students WHERE student_number = ? OR index_number = ?";
     } else {
-        $sql = "SELECT account_locked, locked_until FROM users WHERE user_id = ?";
+        $sql = "SELECT login_attempts, locked_until FROM users WHERE id = ?";
     }
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $user_id);
+    if ($user_type === 'student') {
+        $stmt->bind_param("ss", $user_id, $user_id);
+    } else {
+        $stmt->bind_param("i", $user_id);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
-        return $user['account_locked'] && $user['locked_until'] > date('Y-m-d H:i:s');
+        return ($user['login_attempts'] ?? 0) >= 5 && isset($user['locked_until']) && $user['locked_until'] > date('Y-m-d H:i:s');
     }
     
     return false;
@@ -471,13 +475,14 @@ function unlockAccount($user_id, $user_type) {
     global $conn;
     
     if ($user_type === 'student') {
-        $sql = "UPDATE students SET login_attempts = 0, account_locked = 0, locked_until = NULL WHERE student_id = ?";
+        $sql = "UPDATE students SET login_attempts = 0, locked_until = NULL WHERE student_number = ? OR index_number = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ss", $user_id, $user_id);
     } else {
-        $sql = "UPDATE users SET login_attempts = 0, account_locked = 0, locked_until = NULL WHERE user_id = ?";
+        $sql = "UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
     }
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $user_id);
     
     return $stmt->execute();
 }

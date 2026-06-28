@@ -75,7 +75,7 @@ function logActivity($user_id, $user_role, $activity_type, $activity_description
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return;
-    $stmt->bind_param('ssssss', $user_id, $activity_type, $activity_description, $module_affected, $ip_address, $user_agent);
+    $stmt->bind_param('isssss', $user_id, $activity_type, $activity_description, $module_affected, $ip_address, $user_agent);
     $stmt->execute();
     $stmt->close();
 }

@@ -69,8 +69,12 @@ function getAnalyticsData($conn, $studentsConn, $websiteConn) {
             // Monthly trend (last 6 months)
             for ($i = 5; $i >= 0; $i--) {
                 $m = date('Y-m', strtotime("-$i months"));
-                $r = $studentsConn->query("SELECT COUNT(*) c FROM students WHERE DATE_FORMAT(created_at,'%Y-%m')='$m'");
+                $stmt = $studentsConn->prepare("SELECT COUNT(*) c FROM students WHERE DATE_FORMAT(created_at,'%Y-%m')=?");
+                $stmt->bind_param("s", $m);
+                $stmt->execute();
+                $r = $stmt->get_result();
                 $data['students']['trend'][] = $r ? (int)$r->fetch_assoc()['c'] : 0;
+                $stmt->close();
             }
         } catch (Exception $e) {}
     }

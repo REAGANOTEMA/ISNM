@@ -279,10 +279,10 @@ function hasPermission($permission, $userId = null) {
     }
     
     try {
-        $sql = "SELECT COUNT(*) as has_permission FROM staff_permissions sp 
-                  JOIN staff_roles sr ON sp.staff_id = ? 
-                  WHERE sp.permission_level IN (?, ?, ?, ?) AND sp.is_active = 1";
-        $params = [$userId, 'Write', 'Delete', 'Admin', 'Super Admin'];
+        $sql = "SELECT COUNT(*) as has_permission FROM staff s 
+                  JOIN staff_roles sr ON s.role_id = sr.id 
+                  WHERE s.id = ? AND sr.role_level <= ?";
+        $params = [$userId, 3];
         
         $result = DatabaseConnection::executeQuery('staffs', $sql, $params);
         

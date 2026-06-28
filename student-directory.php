@@ -1,9 +1,12 @@
 <?php
 require_once __DIR__ . '/includes/staff_dashboard_access.php';
-bootstrapStaffDashboard();
+$dash = bootstrapStaffDashboard();
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/views/student_data_loader.php';
+
+$loggedIn = !empty($_SESSION['user_id']);
+$userName = $_SESSION['full_name'] ?? 'User';
 
 header('Content-Type: text/html; charset=utf-8');
 

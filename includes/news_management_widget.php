@@ -159,7 +159,10 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
     // ---- Fetch news ----
     $news = [];
     if ($staff_conn) {
-        $r = $staff_conn->query("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT $limit");
+        $stmt = $staff_conn->prepare("SELECT n.*, s.full_name AS author_name, s.position AS author_role FROM director_news n LEFT JOIN staff s ON n.author_id=s.id ORDER BY n.created_at DESC LIMIT ?");
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $r = $stmt->get_result();
         if ($r) while ($row = $r->fetch_assoc()) $news[] = $row;
     }
 

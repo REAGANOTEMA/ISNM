@@ -39,12 +39,20 @@ if (!function_exists('processAutoDeductions')) {
             $amount = (float)$sub['installment_amount'];
             $dueDate = $sub['next_due_date'];
 
-            $existing = $conn->query("SELECT id FROM subscription_deductions WHERE subscription_id = $subId AND installment_number = $installNo AND status != 'skipped'");
-            if ($existing && $existing->num_rows > 0) {
+            $existing = $conn->prepare("SELECT id FROM subscription_deductions WHERE subscription_id = ? AND installment_number = ? AND status != 'skipped'");
+            $existing->bind_param('ii', $subId, $installNo);
+            $existing->execute();
+            $existingResult = $existing->get_result();
+            if ($existingResult && $existingResult->num_rows > 0) {
                 $results['skipped']++;
-                $conn->query("UPDATE payment_subscriptions SET next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = $subId");
+                $updStmt = $conn->prepare("UPDATE payment_subscriptions SET next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = ?");
+                $updStmt->bind_param('i', $subId);
+                $updStmt->execute();
+                $updStmt->close();
+                $existing->close();
                 continue;
             }
+            $existing->close();
 
             $ref = 'AUTO-' . date('Ymd') . '-' . str_pad($subId, 4, '0', STR_PAD_LEFT) . '-' . str_pad($installNo, 3, '0', STR_PAD_LEFT);
             $conn->begin_transaction();
@@ -71,11 +79,14 @@ if (!function_exists('processAutoDeductions')) {
                 $newCollected = $installNo;
                 $completed = ($newCollected >= (int)$sub['total_installments']);
                 if ($completed) {
-                    $updateSql = "UPDATE payment_subscriptions SET installments_collected = $newCollected, status = 'completed', next_due_date = NULL, end_date = CURDATE() WHERE id = $subId";
+                    $updateStmt = $conn->prepare("UPDATE payment_subscriptions SET installments_collected = ?, status = 'completed', next_due_date = NULL, end_date = CURDATE() WHERE id = ?");
+                    $updateStmt->bind_param('ii', $newCollected, $subId);
                 } else {
-                    $updateSql = "UPDATE payment_subscriptions SET installments_collected = $newCollected, next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = $subId";
+                    $updateStmt = $conn->prepare("UPDATE payment_subscriptions SET installments_collected = ?, next_due_date = DATE_ADD(next_due_date, INTERVAL 1 MONTH) WHERE id = ?");
+                    $updateStmt->bind_param('ii', $newCollected, $subId);
                 }
-                $conn->query($updateSql);
+                $updateStmt->execute();
+                $updateStmt->close();
 
                 $conn->commit();
                 $results['success']++;
@@ -158,9 +169,17 @@ if (!function_exists('cancelSubscription')) {
         $conn = getStudentsConnection();
         if (!$conn) return false;
         $id = (int)$subscriptionId;
-        $where = $studentId ? "AND student_id = '" . $conn->real_escape_string($studentId) . "'" : '';
-        $conn->query("UPDATE payment_subscriptions SET status = 'cancelled' WHERE id = $id $where");
-        return $conn->affected_rows > 0;
+        if ($studentId) {
+            $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'cancelled' WHERE id = ? AND student_id = ?");
+            $stmt->bind_param("is", $id, $studentId);
+        } else {
+            $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'cancelled' WHERE id = ?");
+            $stmt->bind_param("i", $id);
+        }
+        $stmt->execute();
+        $affected = $conn->affected_rows;
+        $stmt->close();
+        return $affected > 0;
     }
 }
 
@@ -169,9 +188,17 @@ if (!function_exists('pauseSubscription')) {
         $conn = getStudentsConnection();
         if (!$conn) return false;
         $id = (int)$subscriptionId;
-        $where = $studentId ? "AND student_id = '" . $conn->real_escape_string($studentId) . "'" : '';
-        $conn->query("UPDATE payment_subscriptions SET status = 'paused' WHERE id = $id $where");
-        return $conn->affected_rows > 0;
+        if ($studentId) {
+            $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'paused' WHERE id = ? AND student_id = ?");
+            $stmt->bind_param("is", $id, $studentId);
+        } else {
+            $stmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'paused' WHERE id = ?");
+            $stmt->bind_param("i", $id);
+        }
+        $stmt->execute();
+        $affected = $conn->affected_rows;
+        $stmt->close();
+        return $affected > 0;
     }
 }
 
@@ -180,14 +207,30 @@ if (!function_exists('resumeSubscription')) {
         $conn = getStudentsConnection();
         if (!$conn) return false;
         $id = (int)$subscriptionId;
-        $where = $studentId ? "AND student_id = '" . $conn->real_escape_string($studentId) . "'" : '';
-        $q = $conn->query("SELECT frequency FROM payment_subscriptions WHERE id = $id");
+        $freqStmt = $conn->prepare("SELECT frequency FROM payment_subscriptions WHERE id = ?");
+        $freqStmt->bind_param("i", $id);
+        $freqStmt->execute();
+        $q = $freqStmt->get_result();
         $interval = $q ? $q->fetch_assoc() : null;
+        $freqStmt->close();
         $freq = $interval['frequency'] ?? 'monthly';
         $sqlFreq = $freq === 'weekly' ? 'INTERVAL 1 WEEK' : ($freq === 'quarterly' ? 'INTERVAL 3 MONTH' : 'INTERVAL 1 MONTH');
-        $q = $conn->query("SELECT DATE_ADD(CURDATE(), $sqlFreq) AS nd"); $nextDue = ($q && ($r=$q->fetch_assoc())) ? $r['nd'] : null;
-        $conn->query("UPDATE payment_subscriptions SET status = 'active', next_due_date = '$nextDue' WHERE id = $id $where");
-        return $conn->affected_rows > 0;
+        $dateStmt = $conn->prepare("SELECT DATE_ADD(CURDATE(), $sqlFreq) AS nd");
+        $dateStmt->execute();
+        $dq = $dateStmt->get_result();
+        $nextDue = ($dq && $r = $dq->fetch_assoc()) ? $r['nd'] : null;
+        $dateStmt->close();
+        if ($studentId) {
+            $updStmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'active', next_due_date = ? WHERE id = ? AND student_id = ?");
+            $updStmt->bind_param("sis", $nextDue, $id, $studentId);
+        } else {
+            $updStmt = $conn->prepare("UPDATE payment_subscriptions SET status = 'active', next_due_date = ? WHERE id = ?");
+            $updStmt->bind_param("si", $nextDue, $id);
+        }
+        $updStmt->execute();
+        $affected = $conn->affected_rows;
+        $updStmt->close();
+        return $affected > 0;
     }
 }
 

@@ -9,15 +9,23 @@ $action = $_POST['action'] ?? '';
 $referrer = $_SERVER['HTTP_REFERER'] ?? '../dashboards/security.php';
 
 if ($action === 'report_incident' && $conn) {
-    $incident_type = $conn->real_escape_string($_POST['incident_type'] ?? '');
-    $location = $conn->real_escape_string($_POST['location'] ?? '');
-    $severity = $conn->real_escape_string($_POST['severity'] ?? 'Medium');
-    $description = $conn->real_escape_string($_POST['description'] ?? '');
+    $incident_type = trim($_POST['incident_type'] ?? '');
+    $location = trim($_POST['location'] ?? '');
+    $severity = trim($_POST['severity'] ?? 'Medium');
+    $description = trim($_POST['description'] ?? '');
 
-    $incident_number = 'SEC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-    $sql = "INSERT INTO security_incidents (incident_number, incident_type, location, description, severity, status, reported_by, incident_date)
-            VALUES ('$incident_number', '$incident_type', '$location', '$description', '$severity', 'Reported', $user_id, NOW())";
-    $conn->query($sql);
+    if ($incident_type && $description) {
+        $stmt = $conn->prepare("INSERT INTO security_incidents (incident_type, location, description, status, reported_by) VALUES (?, ?, ?, 'Reported', ?)");
+        $stmt->bind_param("sssi", $incident_type, $location, $description, $user_id);
+        if ($stmt->execute()) {
+            $_SESSION['success'] = "Incident reported successfully.";
+        } else {
+            $_SESSION['error'] = "Error reporting incident: " . $conn->error;
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['error'] = "Incident type and description are required.";
+    }
 }
 
 header("Location: $referrer");

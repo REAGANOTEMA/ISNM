@@ -61,9 +61,12 @@ function dgHandleMarkRead($conn, $userId): void {
     while (ob_get_level()) ob_end_clean();
     header('Content-Type: application/json');
     if ($action === 'mark_read' && !empty($_POST['notif_key'])) {
-        $key = $conn ? $conn->real_escape_string($_POST['notif_key']) : $_POST['notif_key'];
+        $key = $_POST['notif_key'];
         if ($conn) {
-            $conn->query("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES ('$key', $userId)");
+            $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
+            $stmt->bind_param("si", $key, $userId);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['ok' => true]);
         exit;
@@ -71,10 +74,12 @@ function dgHandleMarkRead($conn, $userId): void {
     if ($action === 'mark_all_read' && !empty($_POST['keys'])) {
         $keys = json_decode($_POST['keys'], true);
         if (is_array($keys) && $conn) {
+            $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
             foreach ($keys as $k) {
-                $k = $conn->real_escape_string($k);
-                $conn->query("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES ('$k', $userId)");
+                $stmt->bind_param("si", $k, $userId);
+                $stmt->execute();
             }
+            $stmt->close();
         }
         echo json_encode(['ok' => true]);
         exit;
@@ -90,7 +95,10 @@ function dgGatherNotifications($conn, $studentsConn, $websiteConn, int $userId):
 
     // Load previously-read notification keys for this user
     if ($conn) {
-        $rk = $conn->query("SELECT notification_key FROM dg_read_notifications WHERE user_id = $userId");
+        $rkStmt = $conn->prepare("SELECT notification_key FROM dg_read_notifications WHERE user_id = ?");
+        $rkStmt->bind_param("i", $userId);
+        $rkStmt->execute();
+        $rk = $rkStmt->get_result();
         if ($rk) {
             while ($row = $rk->fetch_assoc()) {
                 $readKeys[$row['notification_key']] = true;

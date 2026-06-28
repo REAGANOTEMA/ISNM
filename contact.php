@@ -150,13 +150,13 @@
                       </label>
                       <select class="form-control" id="subject" name="subject" required>
                         <option value="">Select Subject</option>
-                        <option value="Admissions">ðŸŽ“ Admissions</option>
-                        <option value="Academics">ðŸ“š Academics</option>
-                        <option value="Finance">ðŸ’° Finance/Bursar</option>
-                        <option value="General Inquiry">â“ General Inquiry</option>
-                        <option value="Complaint">ðŸ“ Complaint</option>
-                        <option value="Partnership">ðŸ¤ Partnership</option>
-                        <option value="Alumni">ðŸ‘¥ Alumni</option>
+                        <option value="Admissions">Admissions</option>
+                        <option value="Academics">Academics</option>
+                        <option value="Finance">Finance/Bursar</option>
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Complaint">Complaint</option>
+                        <option value="Partnership">Partnership</option>
+                        <option value="Alumni">Alumni</option>
                       </select>
                     </div>
                     <div class="col-12">
@@ -245,17 +245,18 @@
                 </div>
                 <div class="hour-item">
                   <div class="day-info">
-                  <i class="fas fa-calendar-week"></i>
-                  <span class="day">Saturday</span>
+                    <i class="fas fa-calendar-week me-2"></i>
+                    <span class="day">Saturday</span>
+                  </div>
+                  <span class="time">9:00 AM to 1:00 PM</span>
                 </div>
-                <span class="time">9:00 AM to 1:00 PM</span>
-              </div>
-              <div class="hour-item closed">
-                <div class="day-info">
-                  <i class="fas fa-calendar-times"></i>
-                  <span class="day">Sunday</span>
+                <div class="hour-item closed">
+                  <div class="day-info">
+                    <i class="fas fa-calendar-times me-2"></i>
+                    <span class="day">Sunday</span>
+                  </div>
+                  <span class="time">Closed</span>
                 </div>
-                <span class="time">Closed</span>
               </div>
             </div>
           </div>

@@ -4,7 +4,9 @@
  * Ensures users only see data assigned to their department
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Department-Based Data Access Restrictions
 class DepartmentRestrictions {
@@ -16,7 +18,7 @@ class DepartmentRestrictions {
     public function __construct($conn) {
         $this->conn = $conn;
         $this->user_id = $_SESSION['user_id'] ?? null;
-        $this->user_role = $_SESSION['user_role'] ?? null;
+        $this->user_role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? null;
         
         // Get user department
         if ($this->user_id) {

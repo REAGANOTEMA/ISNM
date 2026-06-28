@@ -13,7 +13,7 @@ $staff = $data['staff'];
 $ict = getICTConnection();
 $students = getStudentsConnection();
 $user = $data['user'];
-$userId = $user['id'] ?? 0;
+$userId = (int)($user['id'] ?? 0);
 
 header('Content-Type: application/json');
 

@@ -18,7 +18,7 @@ $user_id   = (int)($_SESSION['user_id'] ?? 0);
 $profileImage = '../images/username.png';
 $profileClickHandler = "if(typeof openProfileModal==='function')openProfileModal();";
 if ($user_type === 'student') {
-    $profileClickHandler = "window.location.href='../student_profile.php'";
+    $profileClickHandler = "window.location.href='../student-profile.php'";
     // Try to load student profile photo
     try {
         $rootPath_sb = '..';

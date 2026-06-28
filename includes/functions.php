@@ -277,7 +277,7 @@ function createDatabaseBackup() {
         mkdir('backups', 0755, true);
     }
     
-    $command = "mysqldump --user=root --password= --host=localhost isnm_school > $backup_file";
+    $command = "mysqldump --user=root --host=localhost isnm_school > $backup_file";
     exec($command);
     
     return file_exists($backup_file) ? $backup_file : false;
@@ -356,7 +356,7 @@ function auditTrail($user_id, $action, $details, $ip_address = null) {
             VALUES (?, ?, ?, ?, ?, NOW())";
     
     $stmt = $GLOBALS['conn']->prepare($sql);
-    $stmt->bind_param("sssss", $user_id, $action, $details, $ip_address, $user_agent);
+    $stmt->bind_param("issss", $user_id, $action, $details, $ip_address, $user_agent);
     $stmt->execute();
     $stmt->close();
 }

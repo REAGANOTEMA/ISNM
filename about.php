@@ -256,7 +256,7 @@
                   <i class="fas fa-user-md"></i>
                 </div>
                 <div class="program-details">
-                  <h3>Diploma in Nursing â€“ Extension</h3>
+                  <h3>Diploma in Nursing – Extension</h3>
                   <p>Duration: 1½ years</p>
                   <p>Advanced program for enrolled nurses seeking diploma qualification</p>
                 </div>
@@ -266,7 +266,7 @@
                   <i class="fas fa-stethoscope"></i>
                 </div>
                 <div class="program-details">
-                  <h3>Diploma in Midwifery â€“ Extension</h3>
+                  <h3>Diploma in Midwifery – Extension</h3>
                   <p>Duration: 1½ years</p>
                   <p>Advanced program for enrolled midwives</p>
                 </div>

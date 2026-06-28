@@ -13,57 +13,73 @@ if (!$conn) { header("Location: $referrer"); exit; }
 switch ($action) {
     case 'create_welfare_case':
         $student_id = (int)($_POST['student_id'] ?? 0);
-        $case_type = $conn->real_escape_string($_POST['case_type'] ?? '');
-        $priority = $conn->real_escape_string($_POST['priority'] ?? 'Medium');
-        $description = $conn->real_escape_string($_POST['case_description'] ?? '');
-        $actions_taken = $conn->real_escape_string($_POST['immediate_actions'] ?? '');
-        $follow_up = isset($_POST['follow_up_required']) ? 1 : 0;
+        $case_type = trim($_POST['case_type'] ?? '');
+        $description = trim($_POST['description'] ?? $_POST['case_description'] ?? '');
         if ($student_id && $case_type) {
-            $case_number = 'WEL-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $sql = "INSERT INTO student_welfare_cases (case_number, student_id, case_type, priority, case_description, immediate_actions, status, assigned_warden, follow_up_required)
-                    VALUES ('$case_number', $student_id, '$case_type', '$priority', '$description', '$actions_taken', 'Open', $user_id, $follow_up)";
-            $conn->query($sql);
+            $stmt = $conn->prepare("INSERT INTO student_welfare_cases (student_id, case_type, description, status, assigned_to) VALUES (?, ?, ?, 'Open', ?)");
+            $stmt->bind_param("issi", $student_id, $case_type, $description, $user_id);
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Welfare case created successfully.";
+            } else {
+                $_SESSION['error'] = "Error creating welfare case: " . $conn->error;
+            }
+            $stmt->close();
         }
         break;
 
     case 'schedule_session':
         $student_id = (int)($_POST['student_id'] ?? 0);
-        $session_type = $conn->real_escape_string($_POST['session_type'] ?? 'Individual');
-        $session_date = $conn->real_escape_string($_POST['session_date'] ?? '');
-        $session_time = $conn->real_escape_string($_POST['session_time'] ?? '');
-        $location = $conn->real_escape_string($_POST['location'] ?? '');
-        $issues = $conn->real_escape_string($_POST['issues_discussed'] ?? '');
+        $session_type = trim($_POST['session_type'] ?? 'Individual');
+        $session_date = trim($_POST['session_date'] ?? '');
+        $session_time = trim($_POST['session_time'] ?? '');
+        $location = trim($_POST['location'] ?? '');
+        $issues = trim($_POST['issues_discussed'] ?? '');
         if ($student_id && $session_date) {
             $session_id = 'CS-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $sql = "INSERT INTO student_counseling_sessions (session_id, student_id, counselor_id, session_date, session_time, session_type, issues_discussed)
-                    VALUES ('$session_id', $student_id, $user_id, '$session_date', '$session_time', '$session_type', '$issues')";
-            $conn->query($sql);
+            $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (session_id, student_id, counselor_id, session_date, session_time, session_type, issues_discussed) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("siissss", $session_id, $student_id, $user_id, $session_date, $session_time, $session_type, $issues);
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Counseling session scheduled successfully.";
+            } else {
+                $_SESSION['error'] = "Error scheduling session: " . $conn->error;
+            }
+            $stmt->close();
         }
         break;
 
     case 'create_discipline_case':
         $student_id = (int)($_POST['student_id'] ?? 0);
-        $incident_type = $conn->real_escape_string($_POST['incident_type'] ?? '');
-        $incident_date = $conn->real_escape_string($_POST['incident_date'] ?? '');
-        $action_taken = $conn->real_escape_string($_POST['action_taken'] ?? 'Warning');
+        $incident_type = trim($_POST['incident_type'] ?? '');
+        $incident_date = trim($_POST['incident_date'] ?? date('Y-m-d'));
+        $action_taken = trim($_POST['action_taken'] ?? 'Warning');
+        $description = trim($_POST['description'] ?? '');
         if ($student_id && $incident_type) {
-            $case_number = 'DISC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $sql = "INSERT INTO student_discipline (case_number, student_id, incident_date, incident_type, action_taken, status)
-                    VALUES ('$case_number', $student_id, '$incident_date', '$incident_type', '$action_taken', 'Pending')";
-            $conn->query($sql);
+            $stmt = $conn->prepare("INSERT INTO student_discipline_records (student_id, incident_date, incident_type, description, action_taken, reported_by, status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')");
+            $stmt->bind_param("issssi", $student_id, $incident_date, $incident_type, $description, $action_taken, $user_id);
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Discipline case created successfully.";
+            } else {
+                $_SESSION['error'] = "Error creating discipline case: " . $conn->error;
+            }
+            $stmt->close();
         }
         break;
 
     case 'create_health_incident':
         $student_id = (int)($_POST['student_id'] ?? 0);
-        $incident_type = $conn->real_escape_string($_POST['incident_type'] ?? 'Other');
-        $description = $conn->real_escape_string($_POST['description'] ?? '');
-        $actions_taken = $conn->real_escape_string($_POST['actions_taken'] ?? '');
+        $incident_type = trim($_POST['incident_type'] ?? 'Other');
+        $description = trim($_POST['description'] ?? '');
+        $actions_taken = trim($_POST['actions_taken'] ?? '');
         if ($student_id) {
             $incident_id = 'HI-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $sql = "INSERT INTO student_health_incidents (incident_id, student_id, incident_date, incident_type, location, resolved)
-                    VALUES ('$incident_id', $student_id, CURDATE(), '$incident_type', '$description', 0)";
-            $conn->query($sql);
+            $stmt = $conn->prepare("INSERT INTO student_health_incidents (incident_id, student_id, incident_date, incident_type, description, actions_taken, reported_by) VALUES (?, ?, CURDATE(), ?, ?, ?, ?)");
+            $stmt->bind_param("sisssi", $incident_id, $student_id, $incident_type, $description, $actions_taken, $user_id);
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Health incident recorded successfully.";
+            } else {
+                $_SESSION['error'] = "Error recording health incident: " . $conn->error;
+            }
+            $stmt->close();
         }
         break;
 }

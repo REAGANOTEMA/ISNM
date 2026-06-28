@@ -10,15 +10,27 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$firstName = trim($_POST['firstName'] ?? '');
-$lastName  = trim($_POST['lastName'] ?? '');
+$firstName = sanitizeInput(trim($_POST['firstName'] ?? ''));
+$lastName  = sanitizeInput(trim($_POST['lastName'] ?? ''));
 $email     = trim($_POST['email'] ?? '');
 $phone     = trim($_POST['phone'] ?? '');
-$subject   = trim($_POST['subject'] ?? '');
-$message   = trim($_POST['message'] ?? '');
+$subject   = sanitizeInput(trim($_POST['subject'] ?? ''));
+$message   = sanitizeInput(trim($_POST['message'] ?? ''));
 
 if (!$firstName || !$lastName || !$email || !$phone || !$subject || !$message) {
     $_SESSION['error_message'] = 'Please fill in all required fields.';
+    header('Location: contact.php');
+    exit;
+}
+
+if (!validateEmail($email)) {
+    $_SESSION['error_message'] = 'Please enter a valid email address.';
+    header('Location: contact.php');
+    exit;
+}
+
+if (!validatePhone($phone)) {
+    $_SESSION['error_message'] = 'Please enter a valid phone number (e.g., 0700123456 or +256700123456).';
     header('Location: contact.php');
     exit;
 }
@@ -50,6 +62,35 @@ try {
     $cta = ['url' => 'https://isnm.ac.ug/dashboards/director-general.php', 'text' => 'View in Dashboard'];
 
     notifyDirectorGeneral('New Contact Message: ' . $subject, $contentBlocks, $cta);
+
+    try {
+        $staffsDb = getStaffConnection();
+        if ($staffsDb) {
+            $notifStmt = $staffsDb->prepare("INSERT INTO notifications (title, message, type, priority, audience, created_by, created_at) VALUES (?, ?, 'form_submission', 'normal', 'director_general', 0, NOW())");
+            $notifTitle = 'New Contact: ' . $subject;
+            $notifMsg = $fullName . ' submitted a contact form regarding "' . $subject . '". Email: ' . $email . ', Phone: ' . $phone;
+            $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
+            $notifStmt->execute();
+            $notifStmt->close();
+        }
+    } catch (Exception $e) {
+        error_log('Contact notification log error: ' . $e->getMessage());
+    }
+
+    try {
+        $staffsDb = getStaffConnection();
+        if ($staffsDb) {
+            $logStmt = $staffsDb->prepare("INSERT INTO activity_log (user_id, activity, details, ip_address, created_at) VALUES (0, ?, ?, ?, NOW())");
+            $logActivity = 'Contact Form Submission';
+            $logDetails = $fullName . ' (' . $email . ') submitted contact form: ' . $subject;
+            $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
+            $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+    } catch (Exception $e) {
+        error_log('Contact activity log error: ' . $e->getMessage());
+    }
 
     $_SESSION['success_message'] = 'Thank you, ' . $firstName . '! Your message has been sent successfully. We will get back to you shortly.';
     header('Location: contact.php');

@@ -42,7 +42,7 @@ function ictAudit($ict, $userId, $userName, $action, $resourceType, $resourceId,
     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
     $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
     $stmt = $ict->prepare("INSERT INTO ict_audit_logs (user_id, username, action, resource_type, resource_id, description, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param('issiisss', $userId, $userName, $action, $resourceType, $resourceId, $desc, $ip, $ua);
+    $stmt->bind_param('isssssss', $userId, $userName, $action, $resourceType, $resourceId, $desc, $ip, $ua);
     $stmt->execute();
 }
 
@@ -65,7 +65,7 @@ try {
             $dept = $_POST['assigned_department'] ?? '';
             if (!$num || !$name) ictRespond(false, 'Asset number and name required');
             $stmt = $ict->prepare("INSERT INTO ict_assets (asset_number, asset_name, asset_type, brand, model, serial_number, barcode, category_id, purchase_date, warranty_expiry, current_location, purchase_cost, assigned_department, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('sssssssssssdsi', $num, $name, $type, $brand, $model, $serial, $barcode, $category, $purchase, $warranty, $location, $cost, $dept, $userId);
+            $stmt->bind_param('ssssssssssdsi', $num, $name, $type, $brand, $model, $serial, $barcode, $category, $purchase, $warranty, $location, $cost, $dept, $userId);
             $stmt->execute();
             $id = $ict->insert_id;
             ictAudit($ict, $userId, $userName, 'create', 'asset', $id, "Created asset $num - $name");

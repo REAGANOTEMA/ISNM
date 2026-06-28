@@ -429,11 +429,11 @@
                 </div>
                 <?php
                 $bankAccounts = [
-                    'stanbic' => ['name' => 'Stanbic Bank Uganda', 'logo' => '../images/stanbic-logo.jpg', 'account' => '9030001234567', 'swift' => 'SBICUGKX'],
-                    'centenary' => ['name' => 'Centenary Bank', 'logo' => '../images/centenary-logo.jpg', 'account' => '3210009876', 'swift' => 'CERBUGKA'],
-                    'equity' => ['name' => 'Equity Bank', 'logo' => '../images/equity_logo.png', 'account' => '5010004567', 'swift' => 'EQBLUGKA'],
-                    'pearl' => ['name' => 'Pearl Bank', 'logo' => '../images/pearl-logo.png', 'account' => '7120003456', 'swift' => 'PRBLUGKA'],
-                    'uba' => ['name' => 'UBA Bank', 'logo' => '../images/uba-bank-logo.png', 'account' => '6010002345', 'swift' => 'UBAFUGKA'],
+                    'stanbic' => ['name' => 'Stanbic Bank Uganda', 'logo' => 'images/stanbic-logo.jpg', 'account' => '9030001234567', 'swift' => 'SBICUGKX'],
+                    'centenary' => ['name' => 'Centenary Bank', 'logo' => 'images/centenary-logo.jpg', 'account' => '3210009876', 'swift' => 'CERBUGKA'],
+                    'equity' => ['name' => 'Equity Bank', 'logo' => 'images/equity_logo.png', 'account' => '5010004567', 'swift' => 'EQBLUGKA'],
+                    'pearl' => ['name' => 'Pearl Bank', 'logo' => 'images/pearl-logo.png', 'account' => '7120003456', 'swift' => 'PRBLUGKA'],
+                    'uba' => ['name' => 'UBA Bank', 'logo' => 'images/uba-bank-logo.png', 'account' => '6010002345', 'swift' => 'UBAFUGKA'],
                 ];
                 foreach ($bankAccounts as $key => $bank): ?>
                 <div class="col-md-6 mb-3">

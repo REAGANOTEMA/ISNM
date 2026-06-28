@@ -125,10 +125,15 @@ function renderStudentSetViewer($conn, array $options = []) {
                     $stmt->close();
                 }
             } else {
-                $safeSQL = "SELECT * FROM students WHERE $whereSQL ORDER BY set_name DESC, program, level, surname, first_name LIMIT $offset, $perPage";
-                $r = $conn->query($safeSQL);
-                if ($r) {
-                    while ($row = $r->fetch_assoc()) $students[] = $row;
+                $stmtLimit = $conn->prepare("SELECT * FROM students WHERE $whereSQL ORDER BY set_name DESC, program, level, surname, first_name LIMIT ?, ?");
+                if ($stmtLimit) {
+                    $stmtLimit->bind_param('ii', $offset, $perPage);
+                    $stmtLimit->execute();
+                    $r = $stmtLimit->get_result();
+                    if ($r) {
+                        while ($row = $r->fetch_assoc()) $students[] = $row;
+                    }
+                    $stmtLimit->close();
                 }
             }
         } catch (Exception $e) {}

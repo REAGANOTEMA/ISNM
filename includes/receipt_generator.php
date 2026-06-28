@@ -155,7 +155,7 @@ class ReceiptGenerator {
         $staff_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
         $staff_stmt->bind_param("i", $staff_id);
         $staff_stmt->execute();
-        $staff = $staff_stmt->fetch_assoc();
+        $staff = $staff_stmt->get_result()->fetch_assoc();
         
         if (!$staff) {
             return "Staff not found";

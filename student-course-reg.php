@@ -29,9 +29,9 @@ if ($studentsDb) {
     $program = $studentsDb->real_escape_string($studentInfo['program']??'');
     $year = (int)($studentInfo['year_of_study']??1);
 
-    $rg = $studentsDb->query("SELECT cr.*, ac.course_title, ac.credits FROM student_course_registrations cr LEFT JOIN academic_course_catalog ac ON cr.course_id = ac.id WHERE cr.student_id = '$sid' ORDER BY cr.registration_date DESC");
+    $rg = $studentsDb->query("SELECT cr.*, ac.course_title, ac.credits FROM student_course_registrations cr LEFT JOIN academic_course_catalog ac ON cr.course_id = ac.id WHERE cr.student_id = " . (int)$sidInt . " ORDER BY cr.registration_date DESC");
     if (!$rg || $rg->num_rows === 0) {
-        $rg = $studentsDb->query("SELECT * FROM course_registrations WHERE student_id=$sidInt ORDER BY id DESC");
+        $rg = $studentsDb->query("SELECT * FROM course_registrations WHERE student_id=" . (int)$sidInt . " ORDER BY id DESC");
     }
     if ($rg) {
         $registrations = $rg->fetch_all(MYSQLI_ASSOC);

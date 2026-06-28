@@ -33,7 +33,7 @@ if ($studentsDb) {
     $bk = $studentsDb->query("SELECT * FROM library_books ORDER BY book_title LIMIT 50");
     if ($bk) $books = $bk->fetch_all(MYSQLI_ASSOC);
 
-    $bw = $studentsDb->query("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id='$sid' ORDER BY lb.borrow_date DESC LIMIT 20");
+    $bw = $studentsDb->query("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id=" . (int)$sidInt . " ORDER BY lb.borrow_date DESC LIMIT 20");
     if ($bw) $borrowings = $bw->fetch_all(MYSQLI_ASSOC);
 
     $fn = $studentsDb->query("SELECT * FROM library_fines WHERE student_id=$sidInt AND paid=0");
@@ -66,9 +66,9 @@ include_once __DIR__ . '/includes/sidebar.php';
 <style>
 :root{--primary:#2c5f8a;--accent:#1a9e6e}
 body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
-lib-card{border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);margin-bottom:24px}
-lib-card .card-header{background:linear-gradient(135deg,#2c5f8a,#1a9e6e);padding:20px 28px;border:none;color:#fff}
-lib-card .card-body{padding:24px 28px}
+.lib-card{border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);margin-bottom:24px}
+.lib-card .card-header{background:linear-gradient(135deg,#2c5f8a,#1a9e6e);padding:20px 28px;border:none;color:#fff}
+.lib-card .card-body{padding:24px 28px}
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:0}
 .book-card{border:1px solid #e9ecef;border-radius:12px;padding:16px;transition:all .2s}
 .book-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-color:#2c5f8a}

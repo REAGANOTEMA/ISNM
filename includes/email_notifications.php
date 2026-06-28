@@ -16,11 +16,11 @@ if (!function_exists('sendProfessionalEmail')) {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'erp.schoolmanagementsystem@gmail.com';
-            $mail->Password = 'whqbysomdhdjthvr';
+            $mail->Username = isnm_env('SMTP_USERNAME', 'erp.schoolmanagementsystem@gmail.com');
+            $mail->Password = isnm_env('SMTP_PASSWORD', '');
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
-            $mail->setFrom('erp.schoolmanagementsystem@gmail.com', 'ISNM Notification System');
+            $mail->setFrom(isnm_env('SMTP_USERNAME', 'erp.schoolmanagementsystem@gmail.com'), 'ISNM Notification System');
             $mail->addAddress($to, $toName);
             $mail->isHTML(true);
             $mail->Subject = $subject;

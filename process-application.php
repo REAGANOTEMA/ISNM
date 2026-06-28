@@ -41,14 +41,13 @@ function uploadFileIfPresent($fieldName, $allowedTypes, $maxSize, $uploadDir) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $applicationId = generateApplicationId();
-        $level = $_POST['levelApplying'] ?? '';
+        $level = sanitizeInput($_POST['levelApplying'] ?? '');
 
         $uploadDir = 'application_uploads';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        // Upload required general documents
         $academicDocResult = handleFileUpload(
             $_FILES['academicDocument'],
             ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
@@ -68,13 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ($academicDocResult['success'] ? $photoResult['message'] : $academicDocResult['message']));
         }
 
-        // Upload conditional documents
         $docFields = [
             'uceCertificateDoc' => ['pdf', 'jpg', 'jpeg', 'png'],
             'uaceCertificateDoc' => ['pdf', 'jpg', 'jpeg', 'png'],
         ];
 
-        // Diploma-specific required documents
         if ($level === 'Diploma Extension') {
             $docFields['unmebResultSlip'] = ['pdf', 'jpg', 'jpeg', 'png'];
             $docFields['unmebCertificate'] = ['pdf', 'jpg', 'jpeg', 'png'];
@@ -92,76 +89,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uploadedDocs[$field] = $result['path'];
         }
 
-        // Build comprehensive additional data
-        $additionalData = [
-            'otherName' => $_POST['otherName'] ?? '',
-            'countryOfResidence' => $_POST['countryOfResidence'] ?? '',
-            'homeDistrict' => $_POST['homeDistrict'] ?? '',
-            'village' => $_POST['village'] ?? '',
-            'religion' => $_POST['religion'] ?? '',
-            'maritalStatus' => $_POST['maritalStatus'] ?? '',
-            'spouseName' => $_POST['spouseName'] ?? '',
-            'numberOfChildren' => $_POST['numberOfChildren'] ?? '',
-            'disability' => $_POST['disability'] ?? '',
-            'disabilityType' => $_POST['disabilityType'] ?? '',
-            'disabilityDescription' => $_POST['disabilityDescription'] ?? '',
-            'feePayer' => $_POST['feePayer'] ?? '',
-            'parentName' => $_POST['parentName'] ?? '',
-            'parentNationality' => $_POST['parentNationality'] ?? '',
-            'parentAddress' => $_POST['parentAddress'] ?? '',
-            'parentPhone' => $_POST['parentPhone'] ?? '',
-            'parentEmail' => $_POST['parentEmail'] ?? '',
-            'emergencyContactName' => $_POST['emergencyContactName'] ?? '',
-            'emergencyContactPhone' => $_POST['emergencyContactPhone'] ?? '',
-            'emergencyContactEmail' => $_POST['emergencyContactEmail'] ?? '',
-            'levelApplying' => $level,
-            'intakePeriod' => $_POST['intakePeriod'] ?? '',
-            'previousSchool' => $_POST['previousSchool'] ?? '',
-            'uceSchool' => $_POST['uceSchool'] ?? '',
-            'uceIndexNumber' => $_POST['uceIndexNumber'] ?? '',
-            'uceYear' => $_POST['uceYear'] ?? '',
-            'uceEnglish' => $_POST['uceEnglish'] ?? '',
-            'uceMath' => $_POST['uceMath'] ?? '',
-            'uceBiology' => $_POST['uceBiology'] ?? '',
-            'uceChemistry' => $_POST['uceChemistry'] ?? '',
-            'ucePhysics' => $_POST['ucePhysics'] ?? '',
-            'uceOther' => $_POST['uceOther'] ?? '',
-            'uaceSchoolName' => $_POST['uaceSchoolName'] ?? '',
-            'uaceIndexNumber' => $_POST['uaceIndexNumber'] ?? '',
-            'uaceYear' => $_POST['uaceYear'] ?? '',
-            'uaceSubject1' => $_POST['uaceSubject1'] ?? '',
-            'uaceGrade1' => $_POST['uaceGrade1'] ?? '',
-            'uaceSubject2' => $_POST['uaceSubject2'] ?? '',
-            'uaceGrade2' => $_POST['uaceGrade2'] ?? '',
-            'uaceSubject3' => $_POST['uaceSubject3'] ?? '',
-            'uaceGrade3' => $_POST['uaceGrade3'] ?? '',
-            'uaceSubsidiary1' => $_POST['uaceSubsidiary1'] ?? '',
-            'uaceSubGrade1' => $_POST['uaceSubGrade1'] ?? '',
-            'uaceSubsidiary2' => $_POST['uaceSubsidiary2'] ?? '',
-            'uaceSubGrade2' => $_POST['uaceSubGrade2'] ?? '',
-            'diplomaExamNumber' => $_POST['diplomaExamNumber'] ?? '',
-            'diplomaYearCompletion' => $_POST['diplomaYearCompletion'] ?? '',
-            'diplomaYearEntry' => $_POST['diplomaYearEntry'] ?? '',
-            'practicingLicense' => $_POST['practicingLicense'] ?? '',
-            'diplomaPaper1' => $_POST['diplomaPaper1'] ?? '',
-            'diplomaPaper2' => $_POST['diplomaPaper2'] ?? '',
-            'diplomaPaper3' => $_POST['diplomaPaper3'] ?? '',
-            'diplomaOsce' => $_POST['diplomaOsce'] ?? '',
-            'diplomaDistinctions' => $_POST['diplomaDistinctions'] ?? '',
-            'diplomaCredits' => $_POST['diplomaCredits'] ?? '',
-            'diplomaPasses' => $_POST['diplomaPasses'] ?? '',
-            'diplomaCgpa' => $_POST['diplomaCgpa'] ?? '',
-            'sportsActivities' => $_POST['sportsActivities'] ?? '',
-            'leadershipPositions' => $_POST['leadershipPositions'] ?? '',
-            'motivation' => $_POST['motivation'] ?? '',
-        ];
-        $additionalDataJson = json_encode($additionalData);
-
-        // Use website_db for student applications
         $websiteDb = getWebsiteConnection();
         if (!$websiteDb) {
             throw new Exception('Database connection failed');
         }
+
+        $firstName = sanitizeInput($_POST['firstName'] ?? '');
+        $surname   = sanitizeInput($_POST['surname'] ?? '');
+        $otherName = sanitizeInput($_POST['otherName'] ?? '');
+        $dob       = $_POST['dateOfBirth'] ?? '';
+        $gender    = $_POST['gender'] ?? '';
+        $nationality = sanitizeInput($_POST['nationality'] ?? '');
+        $contactNumber = trim($_POST['contactNumber'] ?? '');
+        $appEmail  = trim($_POST['email'] ?? '');
+        $course    = sanitizeInput($_POST['course'] ?? '');
+        $previousSchool = sanitizeInput($_POST['previousSchool'] ?? '');
+
+        if (!$firstName || !$surname || !$dob || !$gender || !$contactNumber || !$appEmail || !$course) {
+            throw new Exception('Please fill in all required fields.');
+        }
+
+        if (!validateEmail($appEmail)) {
+            throw new Exception('Please enter a valid email address.');
+        }
+
+        if (!validatePhone($contactNumber)) {
+            throw new Exception('Please enter a valid phone number.');
+        }
+
+        $address = sanitizeInput(($_POST['village'] ?? '') . ', ' . ($_POST['homeDistrict'] ?? ''));
 
         $stmt = $websiteDb->prepare("
             INSERT INTO student_applications (
@@ -172,98 +128,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())
         ");
 
-        $fullName = trim($_POST['firstName'] . ' ' . ($_POST['otherName'] ?? '') . ' ' . $_POST['surname']);
-        $address = trim(($_POST['village'] ?? '') . ', ' . ($_POST['homeDistrict'] ?? ''));
-        $previousSchool = $_POST['previousSchool'] ?? '';
+        $uceResults = sanitizeInput($_POST['uceIndexNumber'] ?? '') . ' (' . sanitizeInput($_POST['uceYear'] ?? '') . ')';
+        $uaceResults = sanitizeInput($_POST['uaceIndexNumber'] ?? '') . ' (' . sanitizeInput($_POST['uaceYear'] ?? '') . ')';
 
         $stmt->bind_param('ssssssssssssss',
             $applicationId,
-            $_POST['firstName'],
-            $_POST['surname'],
-            $_POST['otherName'] ?? null,
-            $_POST['dateOfBirth'],
-            $_POST['gender'],
-            $_POST['nationality'],
-            $_POST['contactNumber'],
-            $_POST['email'],
+            $firstName,
+            $surname,
+            $otherName ?: null,
+            $dob,
+            $gender,
+            $nationality,
+            $contactNumber,
+            $appEmail,
             $address,
-            $_POST['course'],
+            $course,
             $previousSchool,
-            $_POST['uceIndexNumber'] ?? null,
-            $_POST['uceYear'] ?? null
+            $uceResults ?: null,
+            $uaceResults ?: null
         );
         $stmt->execute();
         $applicationDbId = $stmt->insert_id;
         $stmt->close();
 
-        // Store additional data and document paths
-        if ($applicationDbId) {
-            $updateStmt = $websiteDb->prepare("
-                UPDATE student_applications SET
-                    additional_data = ?,
-                    academic_document_path = ?,
-                    photo_path = ?,
-                    uce_certificate_path = ?,
-                    uace_certificate_path = ?,
-                    unmeb_result_slip_path = ?,
-                    unmeb_certificate_path = ?,
-                    enrolment_certificate_path = ?,
-                    practicing_license_path = ?,
-                    academic_transcript_path = ?
-                WHERE id = ?
-            ");
-            $updateStmt->bind_param('ssssssssssi',
-                $additionalDataJson,
-                $academicDocResult['path'],
-                $photoResult['path'],
-                $uploadedDocs['uceCertificateDoc'] ?? null,
-                $uploadedDocs['uaceCertificateDoc'] ?? null,
-                $uploadedDocs['unmebResultSlip'] ?? null,
-                $uploadedDocs['unmebCertificate'] ?? null,
-                $uploadedDocs['enrolmentCertificate'] ?? null,
-                $uploadedDocs['practicingLicenseDoc'] ?? null,
-                $uploadedDocs['academicTranscript'] ?? null,
-                $applicationDbId
-            );
-            $updateStmt->execute();
-            $updateStmt->close();
-        }
+        $fullName = trim($firstName . ' ' . $otherName . ' ' . $surname);
 
-        // Send confirmation to applicant
         $confirmSubject = "Application Received - Iganga School of Nursing & Midwifery";
         $confirmContent = [
-            'Dear ' . $_POST['firstName'] . ',',
+            'Dear ' . $firstName . ',',
             'Thank you for applying to Iganga School of Nursing and Midwifery. Your application has been received successfully.',
             ['type' => 'table', 'data' => [
                 'Application ID' => $applicationId,
-                'Program'        => $_POST['course'],
+                'Program'        => $course,
                 'Level'          => $level,
-                'Intake'         => $_POST['intakePeriod'],
+                'Intake'         => $_POST['intakePeriod'] ?? '',
                 'Status'         => 'Pending Review',
             ]],
             'Your application is now under review. You will be contacted for an interview shortly.',
             'For inquiries, call 0782 990 403 (Principal) or 0782 633 253 (Deputy Principal).',
         ];
         $confirmHtml = buildProfessionalEmailTemplate('Application Confirmation', $confirmContent);
-        sendProfessionalEmail($_POST['email'], $fullName, $confirmSubject, $confirmHtml);
+        sendProfessionalEmail($appEmail, $fullName, $confirmSubject, $confirmHtml);
 
-        // Notify all directors
         $dirContent = [
             'A new student application has been submitted and requires review.',
             ['type' => 'table', 'data' => [
                 'Application #'  => $applicationId,
                 'Applicant'      => $fullName,
-                'Program'        => $_POST['course'],
+                'Program'        => $course,
                 'Level'          => $level,
-                'Intake'         => $_POST['intakePeriod'],
-                'Phone'          => $_POST['contactNumber'],
-                'Email'          => $_POST['email'],
+                'Intake'         => $_POST['intakePeriod'] ?? '',
+                'Phone'          => $contactNumber,
+                'Email'          => $appEmail,
                 'Submitted'      => date('d M Y h:i A'),
             ]],
             'Please log in to the dashboard to review this application and take appropriate action.',
         ];
         $dirCta = ['url' => 'https://isnm.ac.ug/dashboards/director-admissions.php', 'text' => 'Review Application'];
-        $sent = notifyAllDirectors('New Application: ' . $fullName . ' - ' . $_POST['course'], $dirContent, $dirCta);
+        $sent = notifyAllDirectors('New Application: ' . $fullName . ' - ' . $course, $dirContent, $dirCta);
+
+        try {
+            $staffsDb = getStaffConnection();
+            if ($staffsDb) {
+                $notifStmt = $staffsDb->prepare("INSERT INTO notifications (title, message, type, priority, audience, created_by, created_at) VALUES (?, ?, 'application', 'high', 'admissions', 0, NOW())");
+                $notifTitle = 'New Application: ' . $fullName;
+                $notifMsg = 'Application #' . $applicationId . ' submitted by ' . $fullName . ' for ' . $course . ' (' . $level . '). Phone: ' . $contactNumber . ', Email: ' . $appEmail;
+                $notifStmt->bind_param('ss', $notifTitle, $notifMsg);
+                $notifStmt->execute();
+                $notifStmt->close();
+            }
+        } catch (Exception $e) {
+            error_log('Application notification log error: ' . $e->getMessage());
+        }
+
+        try {
+            $staffsDb = getStaffConnection();
+            if ($staffsDb) {
+                $logStmt = $staffsDb->prepare("INSERT INTO activity_log (user_id, activity, details, ip_address, created_at) VALUES (0, ?, ?, ?, NOW())");
+                $logActivity = 'Student Application';
+                $logDetails = $fullName . ' (' . $appEmail . ') submitted application #' . $applicationId . ' for ' . $course;
+                $logIp = $_SERVER['REMOTE_ADDR'] ?? '';
+                $logStmt->bind_param('sss', $logActivity, $logDetails, $logIp);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+        } catch (Exception $e) {
+            error_log('Application activity log error: ' . $e->getMessage());
+        }
 
         error_log('Application ' . $applicationId . ' created. Notifications sent to ' . $sent . ' directors.');
 
