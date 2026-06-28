@@ -236,8 +236,6 @@ class DatabaseConnection {
     public static function sanitizeInput($input) {
         return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
     }
-
-    public static function beginTransaction($database) {
         $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $conn->begin_transaction();
