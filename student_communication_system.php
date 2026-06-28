@@ -69,8 +69,8 @@ function handleSendMessage() {
     $sender_id = $_SESSION['user_id'];
     $sender_role = $_SESSION['role'];
     
-    // Get recipient information
-    $recipient_sql = "SELECT role FROM students WHERE student_id = ? UNION SELECT role FROM users WHERE user_id = ?";
+    // Get recipient information — student role is always 'student'
+    $recipient_sql = "SELECT 'student' as role FROM students WHERE student_number = ? OR id = ?";
     $recipient_stmt = $conn->prepare($recipient_sql);
     $recipient_stmt->bind_param("ss", $student_id, $student_id);
     $recipient_stmt->execute();
@@ -95,15 +95,15 @@ function handleSendMessage() {
     $sql = "INSERT INTO messages (student_id, sender_id, sender_role, subject, message_content, message_type, priority, sent_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 'sent')";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssss", $student_id, $sender_id, $sender_role, $subject, $message, $message_type, $priority);
+    $stmt->bind_param("sssssss", $student_id, $sender_id, $sender_role, $subject, $message, $message_type, $priority);
     
     if ($stmt->execute()) {
         // Create notification for recipient
-        $notification_sql = "INSERT INTO notifications (user_id, notification_type, title, message, created_at, is_read) VALUES (?, 'message', ?, ?, CURDATE(), 0)";
+        $notification_sql = "INSERT INTO notifications (recipient_type, recipient_id, subject, message, notification_type, created_at) VALUES ('student', ?, ?, ?, 'system', NOW())";
         $notification_stmt = $conn->prepare($notification_sql);
         $notification_title = "New Message from $sender_role";
         $notification_message = "$subject: " . substr($message, 0, 100) . "...";
-        $notification_stmt->bind_param("sss", $student_id, $notification_title, $notification_message);
+        $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
         $notification_stmt->execute();
         
         logActivity($_SESSION['user_id'], $_SESSION['role'], 'Message Sent', "Sent $message_type message to: $student_id", 'messages', $student_id);
@@ -139,11 +139,11 @@ function handleSendBulkMessage() {
         
         if ($stmt->execute()) {
             // Create notification for student
-            $notification_sql = "INSERT INTO notifications (user_id, notification_type, title, message, created_at, is_read) VALUES (?, 'message', ?, ?, CURDATE(), 0)";
+            $notification_sql = "INSERT INTO notifications (recipient_type, recipient_id, subject, message, notification_type, created_at) VALUES ('student', ?, ?, ?, 'system', NOW())";
             $notification_stmt = $conn->prepare($notification_sql);
             $notification_title = "New Message from $sender_role";
             $notification_message = "$subject: " . substr($message, 0, 100) . "...";
-            $notification_stmt->bind_param("sss", $student_id, $notification_title, $notification_message);
+            $notification_stmt->bind_param("iss", $student_id, $notification_title, $notification_message);
             $notification_stmt->execute();
             
             $success_count++;

@@ -4,9 +4,9 @@ include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
 
-// Override global $conn to use students_db (these tables belong there)
+// academic_records table is in staffs_db — keep $conn as staffs_db (from includes/config.php)
+// Get students_db separately for student lookups
 $studentsDb = getStudentsConnection();
-if ($studentsDb) { global $conn; $conn = $studentsDb; }
 
 // Check if user is logged in and has appropriate access level
 if (!$auth_service->isAuthenticated() || !$auth_service->canSearchStudentProfiles($_SESSION['role'])) {
@@ -63,7 +63,7 @@ function handleAddMarks() {
     $sql = "INSERT INTO academic_records (student_id, academic_year, semester, year, course_code, course_name, course_type, credits, assessment_marks, exam_marks, total_marks, grade, grade_points, gpa_contribution, lecturer, entered_by, entry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssddddddss", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
+    $stmt->bind_param("sssissisidddssdi", $student_id, $academic_year, $semester, $year, $course_code, $course_name, $course_type, $credits, $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $lecturer, $_SESSION['user_id']);
     
     if ($stmt->execute()) {
         // Update student's cumulative GPA
@@ -101,7 +101,7 @@ function handleUpdateMarks() {
     $sql = "UPDATE academic_records SET assessment_marks = ?, exam_marks = ?, total_marks = ?, grade = ?, grade_points = ?, gpa_contribution = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ddddddsds", $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $_SESSION['user_id'], $record_id);
+    $stmt->bind_param("dddsddii", $assessment_marks, $exam_marks, $total_marks, $grade, $grade_points, $gpa_contribution, $_SESSION['user_id'], $record_id);
     
     if ($stmt->execute()) {
         // Update student's cumulative GPA
@@ -241,7 +241,7 @@ $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_c
 // Get academic records
 $records_sql = "SELECT ar.*, s.first_name, s.surname, s.program, s.level 
                FROM academic_records ar 
-               JOIN students s ON ar.student_id = s.student_id 
+               JOIN igangaschoolofl_students_db.students s ON ar.student_id = s.student_id 
                $where_clause 
                ORDER BY ar.academic_year DESC, ar.semester DESC, ar.student_id ASC";
 $academic_records = executeQuery($records_sql, $params, $types);
@@ -255,7 +255,7 @@ $semesters_sql = "SELECT DISTINCT semester FROM academic_records ORDER BY semest
 $semesters = executeQuery($semesters_sql);
 
 // Get unique programs for filter
-$programs_sql = "SELECT DISTINCT program FROM students ORDER BY program";
+$programs_sql = "SELECT DISTINCT program FROM igangaschoolofl_students_db.students ORDER BY program";
 $programs = executeQuery($programs_sql);
 ?>
 

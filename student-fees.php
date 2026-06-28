@@ -33,7 +33,7 @@ if ($studentNumber && $studentsDb) {
         $studentInfo = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        $stmt2 = $studentsDb->prepare("SELECT si.*, fs.program, fs.academic_year FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_structure_id = fs.id WHERE si.student_id = ? ORDER BY si.created_at DESC");
+        $stmt2 = $studentsDb->prepare("SELECT si.*, fs.fee_name, fs.fee_type as fee_category, fs.amount as structure_amount FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_type COLLATE utf8mb4_unicode_ci = fs.fee_name WHERE si.student_id = ? ORDER BY si.created_at DESC");
         $stmt2->bind_param("s", $studentNumber);
         $stmt2->execute();
         $invoices = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -54,7 +54,7 @@ if ($studentNumber && $studentsDb) {
     } catch (Exception $e) {}
 }
 
-$fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname'] ?? '') . ' ' . ($studentInfo['firstname'] ?? '')) : 'Student';
+$fullName = $studentInfo ? htmlspecialchars(($studentInfo['surname'] ?? '') . ' ' . ($studentInfo['first_name'] ?? '')) : 'Student';
 $program = $studentInfo ? htmlspecialchars($studentInfo['program'] ?? 'N/A') : 'N/A';
 $balClass = $balanceInfo['balance'] > 0 ? 'danger' : 'success';
 $balIcon = $balanceInfo['balance'] > 0 ? 'exclamation-triangle' : 'check';

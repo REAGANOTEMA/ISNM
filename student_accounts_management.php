@@ -250,7 +250,7 @@ function handleDeleteStudent() {
     $student_id = sanitizeInput($_POST['student_id']);
     
     // Check if student has related records
-    $check_sql = "SELECT COUNT(*) as count FROM fee_payments WHERE student_id = ?";
+    $check_sql = "SELECT COUNT(*) as count FROM payments WHERE student_id = (SELECT id FROM students WHERE student_id = ? LIMIT 1)";
     $check_result = executeQuery($check_sql, [$student_id], 's');
     
     if ($check_result[0]['count'] > 0) {
@@ -273,6 +273,7 @@ function handleDeleteStudent() {
 }
 
 function handleImportStudents() {
+    global $conn;
     if (isset($_FILES['import_file']) && $_FILES['import_file']['error'] == 0) {
         $file = $_FILES['import_file']['tmp_name'];
         $handle = fopen($file, 'r');
