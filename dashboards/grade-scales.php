@@ -7,6 +7,12 @@ $user_role = $_SESSION['role'] ?? '';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+
+if ($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`grade_scales` (id INT AUTO_INCREMENT PRIMARY KEY, grade_letter VARCHAR(5) NOT NULL, grade_point DECIMAL(4,2) DEFAULT 0.00, min_percentage DECIMAL(5,2) DEFAULT 0.00, max_percentage DECIMAL(5,2) DEFAULT 100.00, remark VARCHAR(200) DEFAULT '', created_by INT DEFAULT 0, status VARCHAR(50) DEFAULT 'Active', UNIQUE KEY uq_grade (grade_letter)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_scale' && ($_POST['grade'] ?? '')) {
@@ -15,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $maxScore = (float)($_POST['max_score'] ?? 100);
         $gp = (float)($_POST['grade_point'] ?? 0);
         $remark = $conn->real_escape_string($_POST['remark'] ?? '');
-        $conn->query("INSERT INTO grade_scales (grade, min_score, max_score, grade_point, remark, created_by) VALUES ('$grade', $minScore, $maxScore, $gp, '$remark', $userId)");
+        $conn->query("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES ('$grade', $minScore, $maxScore, $gp, '$remark', $userId) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
         $_SESSION['success'] = "Grade scale '$grade' added.";
         header('Location: grade-scales.php'); exit;
     }
@@ -29,9 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $search = trim($_GET['search'] ?? '');
 $where = "1=1";
-if ($search !== '') { $s = $conn->real_escape_string($search); $where .= " AND (grade LIKE '%$s%' OR remark LIKE '%$s%')"; }
+if ($search !== '') { $s = $conn->real_escape_string($search); $where .= " AND (grade_letter LIKE '%$s%' OR remark LIKE '%$s%')"; }
 $scales = [];
-$r = $conn->query("SELECT * FROM grade_scales WHERE $where ORDER BY min_score DESC");
+$r = $conn->query("SELECT * FROM grade_scales WHERE $where ORDER BY min_percentage DESC");
 if ($r) while ($row = $r->fetch_assoc()) $scales[] = $row;
 
 $pageTitle = 'Grade Scales & Grading System';
@@ -79,8 +85,8 @@ $pageTitle = 'Grade Scales & Grading System';
         <div class="card-body">
             <form method="post" class="row g-2">
                 <div class="col-md-2"><input name="grade" class="form-control" placeholder="Grade (A, B+)" required></div>
-                <div class="col-md-2"><input name="min_score" class="form-control" type="number" step="0.1" placeholder="Min Score" required></div>
-                <div class="col-md-2"><input name="max_score" class="form-control" type="number" step="0.1" placeholder="Max Score" required></div>
+                <div class="col-md-2"><input name="min_score" class="form-control" type="number" step="0.1" placeholder="Min %" required></div>
+                <div class="col-md-2"><input name="max_score" class="form-control" type="number" step="0.1" placeholder="Max %" required></div>
                 <div class="col-md-2"><input name="grade_point" class="form-control" type="number" step="0.1" placeholder="Grade Point" required></div>
                 <div class="col-md-2"><input name="remark" class="form-control" placeholder="Remark (Excellent)"></div>
                 <div class="col-md-2"><button type="submit" name="action" value="add_scale" class="btn btn-primary w-100"><i class="fas fa-plus"></i> Add</button></div>
@@ -92,13 +98,13 @@ $pageTitle = 'Grade Scales & Grading System';
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Grade</th><th>Min Score</th><th>Max Score</th><th>Grade Point</th><th>Remark</th><th class="no-print">Action</th></tr></thead>
+                    <thead><tr><th>Grade</th><th>Min %</th><th>Max %</th><th>Grade Point</th><th>Remark</th><th class="no-print">Action</th></tr></thead>
                     <tbody>
                         <?php foreach ($scales as $s): ?>
                         <tr>
-                            <td><strong><?= htmlspecialchars($s['grade']) ?></strong></td>
-                            <td><?= $s['min_score'] ?></td>
-                            <td><?= $s['max_score'] ?></td>
+                            <td><strong><?= htmlspecialchars($s['grade_letter']) ?></strong></td>
+                            <td><?= $s['min_percentage'] ?></td>
+                            <td><?= $s['max_percentage'] ?></td>
                             <td><?= $s['grade_point'] ?></td>
                             <td><?= htmlspecialchars($s['remark'] ?? '') ?></td>
                             <td class="no-print">

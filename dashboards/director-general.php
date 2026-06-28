@@ -288,10 +288,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                 if ($status === 'published') {
                     $nid = createNotification('New News: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
                     if ($nid) { notifyAllStaff($nid); }
-                    // Notify students via student_notifications
                     $snConn = getStudentsConnection();
                     if ($snConn) {
-                        $snConn->query("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news','" . $snConn->real_escape_string($title) . "','" . $snConn->real_escape_string(mb_substr(strip_tags($content), 0, 200)) . "',0,NOW() FROM students WHERE status='Active'");
+                        $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,?,0,NOW() FROM students WHERE status='Active'");
+                        if ($snStmt) {
+                            $snTitle = mb_substr(strip_tags($title), 0, 200);
+                            $snMsg = mb_substr(strip_tags($content), 0, 200);
+                            $snStmt->bind_param('ss', $snTitle, $snMsg);
+                            $snStmt->execute();
+                            $snStmt->close();
+                        }
                         $snConn->close();
                     }
                 }
@@ -338,10 +344,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
                 if ($newStatus === 'published') {
                     $snConn = getStudentsConnection();
                     if ($snConn) {
-                        // Get the news title for the notification
                         $nt = $conn->query("SELECT title FROM director_news WHERE id=" . intval($news_id));
                         $nwTitle = ($nt && $nt->num_rows) ? $nt->fetch_assoc()['title'] : 'News published';
-                        $snConn->query("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news','" . $snConn->real_escape_string($nwTitle) . "','A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
+                        $snStmt = $snConn->prepare("INSERT INTO student_notifications (student_id,type,title,message,is_read,created_at) SELECT id,'news',?,'A new news article has been published.',0,NOW() FROM students WHERE status='Active'");
+                        if ($snStmt) { $snTitle = mb_substr($nwTitle, 0, 200); $snStmt->bind_param('s', $snTitle); $snStmt->execute(); $snStmt->close(); }
                         $snConn->close();
                     }
                 }

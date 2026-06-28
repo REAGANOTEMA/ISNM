@@ -54,16 +54,19 @@ if ($view === 'comms_fetch' && $ajax === '1' && $staff) {
 }
 if ($view === 'appointment_book' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $vn = $staff->real_escape_string($_POST['visitor_name']??'');
-    $vp = $staff->real_escape_string($_POST['visitor_phone']??'');
-    $ve = $staff->real_escape_string($_POST['visitor_email']??'');
+    $vn = $_POST['visitor_name']??'';
+    $vp = $_POST['visitor_phone']??'';
+    $ve = $_POST['visitor_email']??'';
     $si = (int)($_POST['staff_id']??0);
-    $ad = $staff->real_escape_string($_POST['appointment_date']??'');
-    $at = $staff->real_escape_string($_POST['appointment_time']??'');
-    $pp = $staff->real_escape_string($_POST['purpose']??'');
+    $ad = $_POST['appointment_date']??'';
+    $at = $_POST['appointment_time']??'';
+    $pp = $_POST['purpose']??'';
     if ($vn && $ad) {
-        if ($staff->query("INSERT INTO {$students_db}.appointments (visitor_name,visitor_phone,visitor_email,staff_id,appointment_date,appointment_time,purpose,created_by) VALUES ('$vn','$vp','$ve',$si,'$ad','$at','$pp',$uid)")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.appointments (visitor_name,visitor_phone,visitor_email,staff_id,appointment_date,appointment_time,purpose,created_by) VALUES (?,?,?,?,?,?,?,?)");
+        if ($stmt) {
+            $stmt->bind_param('sssssssi', $vn, $vp, $ve, $si, $ad, $at, $pp, $uid);
+            if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; }
+            $stmt->close();
         }
         echo json_encode(['success'=>false,'error'=>'Database write failed']); exit;
     }
@@ -83,19 +86,25 @@ if ($view === 'appointment_update' && $ajax === '1' && $staff) {
 }
 if ($view === 'meeting_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $mt = $staff->real_escape_string($_POST['title']??'');
-    $md = $staff->real_escape_string($_POST['meeting_date']??'');
-    $st = $staff->real_escape_string($_POST['start_time']??'');
-    $et = $staff->real_escape_string($_POST['end_time']??'');
-    $ml = $staff->real_escape_string($_POST['location']??'');
-    $ag = $staff->real_escape_string($_POST['agenda']??'');
-    $tp = $staff->real_escape_string($_POST['meeting_type']??'General');
+    $mt = $_POST['title']??'';
+    $md = $_POST['meeting_date']??'';
+    $st = $_POST['start_time']??'';
+    $et = $_POST['end_time']??'';
+    $ml = $_POST['location']??'';
+    $ag = $_POST['agenda']??'';
+    $tp = $_POST['meeting_type']??'General';
     $at = $_POST['attendees'] ?? '';
     if ($mt && $md) {
-        if ($staff->query("INSERT INTO {$students_db}.meetings (title,meeting_type,meeting_date,start_time,end_time,location,agenda,created_by) VALUES ('$mt','$tp','$md','$st','$et','$ml','$ag',$uid)")) {
-            $mid = $staff->insert_id;
-            if ($mid && $at) { $names = explode("\n", $at); foreach ($names as $n) { $n = trim($n); if ($n) { $ns = $staff->real_escape_string($n); $staff->query("INSERT INTO {$students_db}.meeting_attendees (meeting_id,attendee_name) VALUES ($mid,'$ns')"); } } }
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.meetings (title,meeting_type,meeting_date,start_time,end_time,location,agenda,created_by) VALUES (?,?,?,?,?,?,?,?)");
+        if ($stmt) {
+            $stmt->bind_param('sssssssi', $mt, $tp, $md, $st, $et, $ml, $ag, $uid);
+            if ($stmt->execute()) {
+                $mid = $staff->insert_id;
+                $stmt->close();
+                if ($mid && $at) { $names = explode("\n", $at); foreach ($names as $n) { $n = trim($n); if ($n) { $ns = $staff->prepare("INSERT INTO {$students_db}.meeting_attendees (meeting_id,attendee_name) VALUES (?,?)"); if ($ns) { $ns->bind_param('is', $mid, $n); $ns->execute(); $ns->close(); } } } }
+                echo json_encode(['success'=>true]); exit;
+            }
+            $stmt->close();
         }
         echo json_encode(['success'=>false,'error'=>'Database write failed']); exit;
     }
@@ -121,11 +130,11 @@ if ($view === 'meeting_save_minutes' && $ajax === '1' && $staff) {
 }
 if ($view === 'doc_upload' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $dt = $staff->real_escape_string($_POST['doc_title']??'');
-    $dc = $staff->real_escape_string($_POST['category']??'General');
-    $dr = $staff->real_escape_string($_POST['reference_number']??'');
-    $dd = $staff->real_escape_string($_POST['description']??'');
-    $dtp = $staff->real_escape_string($_POST['doc_type']??'document');
+    $dt = $_POST['doc_title']??'';
+    $dc = $_POST['category']??'General';
+    $dr = $_POST['reference_number']??'';
+    $dd = $_POST['description']??'';
+    $dtp = $_POST['doc_type']??'document';
     $fn = '';
     if (!empty($_FILES['doc_file']['name'])) {
         $uploadDir = __DIR__ . '/../uploads/documents/';
@@ -134,10 +143,9 @@ if ($view === 'doc_upload' && $ajax === '1' && $staff) {
         move_uploaded_file($_FILES['doc_file']['tmp_name'], $uploadDir . $fn);
     }
     if ($dt) {
-        $fp = $staff->real_escape_string('uploads/documents/'.$fn);
-        if ($staff->query("INSERT INTO {$students_db}.document_tracking (doc_title,doc_type,category,file_name,file_path,reference_number,description,uploaded_by) VALUES ('$dt','$dtp','$dc','$fn','$fp','$dr','$dd',$uid)")) {
-            echo json_encode(['success'=>true]); exit;
-        }
+        $fp = 'uploads/documents/'.$fn;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.document_tracking (doc_title,doc_type,category,file_name,file_path,reference_number,description,uploaded_by) VALUES (?,?,?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('sssssssi', $dt, $dtp, $dc, $fn, $fp, $dr, $dd, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; } $stmt->close(); }
         echo json_encode(['success'=>false,'error'=>'Upload failed']); exit;
     }
     echo json_encode(['success'=>false]); exit;
@@ -156,26 +164,33 @@ if ($view === 'doc_update' && $ajax === '1' && $staff) {
 }
 if ($view === 'request_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $rt2 = $staff->real_escape_string($_POST['request_title']??'');
-    $rd = $staff->real_escape_string($_POST['description']??'');
-    $ra = $staff->real_escape_string($_POST['assigned_to']??'');
-    $rp = $staff->real_escape_string($_POST['priority']??'normal');
-    $rty = $staff->real_escape_string($_POST['request_type']??'general');
+    $rt2 = $_POST['request_title']??'';
+    $rd = $_POST['description']??'';
+    $ra = $_POST['assigned_to']??'';
+    $rp = $_POST['priority']??'normal';
+    $rty = $_POST['request_type']??'general';
     if ($rt2) {
-        if ($staff->query("INSERT INTO {$students_db}.request_tracking (request_title,request_type,description,assigned_to,priority,requested_by) VALUES ('$rt2','$rty','$rd','$ra','$rp',$uid)")) {
-            echo json_encode(['success'=>true]); exit;
-        }
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.request_tracking (request_title,request_type,description,assigned_to,priority,requested_by) VALUES (?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('sssssi', $rt2, $rty, $rd, $ra, $rp, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; } $stmt->close(); }
         echo json_encode(['success'=>false,'error'=>'Create failed']); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'request_list' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $f = $staff->real_escape_string($_GET['filter']??'');
+    $f = $_GET['filter'] ?? '';
     $sql = "SELECT * FROM {$students_db}.request_tracking";
-    if ($f === 'assigned') $sql .= " WHERE assigned_to LIKE '%$uname%'"; elseif ($f === 'pending') $sql .= " WHERE status='pending'";
+    if ($f === 'assigned') {
+        $sql .= " WHERE assigned_to LIKE ?";
+    } elseif ($f === 'pending') {
+        $sql .= " WHERE status='pending'";
+    }
     $sql .= " ORDER BY created_at DESC LIMIT 50";
-    $r = $staff->query($sql); $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+    $stmt = $staff->prepare($sql);
+    if ($stmt && $f === 'assigned') { $like = "%$uname%"; $stmt->bind_param('s', $like); }
+    $rows = [];
+    if ($stmt) { $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; $stmt->close(); }
+    echo json_encode($rows); exit;
 }
 if ($view === 'request_update' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
@@ -217,20 +232,19 @@ if ($view === 'stats_data' && $ajax === '1' && $staff) {
 }
 if ($view === 'correspondence_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $ct = $staff->real_escape_string($_POST['type']??'incoming');
-    $cr = $staff->real_escape_string($_POST['reference']??'');
-    $cs = $staff->real_escape_string($_POST['sender_name']??'');
-    $crc = $staff->real_escape_string($_POST['recipient_name']??'');
-    $csu = $staff->real_escape_string($_POST['subject']??'');
-    $cb = $staff->real_escape_string($_POST['body']??'');
-    $cdr = $staff->real_escape_string($_POST['date_received']??date('Y-m-d'));
-    $cds = $staff->real_escape_string($_POST['date_sent']??date('Y-m-d'));
+    $ct = $_POST['type']??'incoming';
+    $cr = $_POST['reference']??'';
+    $cs = $_POST['sender_name']??'';
+    $crc = $_POST['recipient_name']??'';
+    $csu = $_POST['subject']??'';
+    $cb = $_POST['body']??'';
+    $cdr = $_POST['date_received']??date('Y-m-d');
+    $cds = $_POST['date_sent']??date('Y-m-d');
     $fn = '';
     if (!empty($_FILES['corr_file']['name'])) { $ud = __DIR__ . '/../uploads/correspondence/'; if (!is_dir($ud)) @mkdir($ud,0755,true); $fn = time().'_'.basename($_FILES['corr_file']['name']); move_uploaded_file($_FILES['corr_file']['tmp_name'],$ud.$fn); }
-    $fp = $staff->real_escape_string('uploads/correspondence/'.$fn);
-    if ($staff->query("INSERT INTO {$students_db}.correspondence (type,reference,sender_name,recipient_name,subject,body,date_received,date_sent,file_name,file_path,handled_by) VALUES ('$ct','$cr','$cs','$crc','$csu','$cb','$cdr','$cds','$fn','$fp',$uid)")) {
-        echo json_encode(['success'=>true]); exit;
-    }
+    $fp = 'uploads/correspondence/'.$fn;
+    $stmt = $staff->prepare("INSERT INTO {$students_db}.correspondence (type,reference,sender_name,recipient_name,subject,body,date_received,date_sent,file_name,file_path,handled_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+    if ($stmt) { $stmt->bind_param('ssssssssssi', $ct, $cr, $cs, $crc, $csu, $cb, $cdr, $cds, $fn, $fp, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; } $stmt->close(); }
     echo json_encode(['success'=>false,'error'=>'Database write failed']); exit;
 }
 if ($view === 'correspondence_list' && $ajax === '1' && $staff) {
@@ -243,14 +257,18 @@ if ($view === 'correspondence_list' && $ajax === '1' && $staff) {
 }
 if ($view === 'letter_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $lt = $staff->real_escape_string($_POST['letter_type']??'Official');
-    $lr = $staff->real_escape_string($_POST['reference']??'');
-    $lti = $staff->real_escape_string($_POST['title']??'');
-    $lrn = $staff->real_escape_string($_POST['recipient_name']??'');
-    $lra = $staff->real_escape_string($_POST['recipient_address']??'');
-    $lb = $staff->real_escape_string($_POST['body']??'');
-    $lld = $staff->real_escape_string($_POST['letter_date']??date('Y-m-d'));
-    if ($lti && $lrn) { if ($staff->query("INSERT INTO {$students_db}.official_letters (letter_type,reference,title,recipient_name,recipient_address,body,letter_date,issued_by,created_by) VALUES ('$lt','$lr','$lti','$lrn','$lra','$lb','$lld','$uname',$uid)")) { echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit; } echo json_encode(['success'=>false,'error'=>'Database write failed']); exit; }
+    $lt = $_POST['letter_type']??'Official';
+    $lr = $_POST['reference']??'';
+    $lti = $_POST['title']??'';
+    $lrn = $_POST['recipient_name']??'';
+    $lra = $_POST['recipient_address']??'';
+    $lb = $_POST['body']??'';
+    $lld = $_POST['letter_date']??date('Y-m-d');
+    if ($lti && $lrn) {
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.official_letters (letter_type,reference,title,recipient_name,recipient_address,body,letter_date,issued_by,created_by) VALUES (?,?,?,?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('ssssssssi', $lt, $lr, $lti, $lrn, $lra, $lb, $lld, $uname, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true,'id'=>$staff->insert_id]); $stmt->close(); exit; } $stmt->close(); }
+        echo json_encode(['success'=>false,'error'=>'Database write failed']); exit;
+    }
     echo json_encode(['success'=>false,'error'=>'Title and recipient required']); exit;
 }
 if ($view === 'letter_list' && $ajax === '1' && $staff) {

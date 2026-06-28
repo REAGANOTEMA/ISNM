@@ -7,19 +7,28 @@ $user = $ctx['user'];
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $pageTitle = 'Professional Licenses';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_license') {
-    $staff = $conn->real_escape_string($_POST['staff_name']);
-    $lic = $conn->real_escape_string($_POST['license_number']);
-    $type = $conn->real_escape_string($_POST['license_type']);
-    $expiry = $conn->real_escape_string($_POST['expiry_date'] ?? '');
-    $body = $conn->real_escape_string($_POST['issuing_body'] ?? '');
-    $conn->query("INSERT INTO professional_licenses (staff_name, license_number, license_type, expiry_date, issuing_body, created_by) VALUES ('$staff', '$lic', '$type', " . ($expiry ? "'$expiry'" : "NULL") . ", '$body', $userId)");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_license' && $conn) {
+    $staff = trim($_POST['staff_name'] ?? '');
+    $lic = trim($_POST['license_number'] ?? '');
+    $type = trim($_POST['license_type'] ?? '');
+    $expiry = trim($_POST['expiry_date'] ?? '');
+    $body = trim($_POST['issuing_body'] ?? '');
+    if ($staff && $lic) {
+        $stmt = $conn->prepare("INSERT INTO professional_licenses (staff_name, license_number, license_type, expiry_date, issuing_body, created_by) VALUES (?, ?, ?, NULLIF(?, ''), ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('sssssi', $staff, $lic, $type, $expiry, $body, $userId);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
     header('Location: professional-licenses.php'); exit;
 }
 
 $licenses = [];
-$r = $conn->query("SELECT * FROM professional_licenses ORDER BY expiry_date ASC");
-if ($r) while ($row = $r->fetch_assoc()) $licenses[] = $row;
+if ($conn) {
+    $r = $conn->query("SELECT * FROM professional_licenses ORDER BY expiry_date ASC");
+    if ($r) while ($row = $r->fetch_assoc()) $licenses[] = $row;
+}
 
 $now = date('Y-m-d');
 $expiring = count(array_filter($licenses, fn($l) => ($l['expiry_date'] ?? '') > $now && ($l['expiry_date'] ?? '') <= date('Y-m-d', strtotime('+90 days'))));

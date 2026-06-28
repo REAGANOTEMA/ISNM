@@ -1,23 +1,23 @@
 <?php
 $pageTitle = 'Performance Appraisal';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-bootstrapStaffDashboard(['hr','manager','director','principal','head']);
-require_once __DIR__ . '/../includes/config_enhanced.php';
-$conn = getStaffConnection();
+$ctx = bootstrapStaffDashboard(['hr','manager','director','principal','head']);
+$conn = $ctx['staff'];
+$user = $ctx['user'];
 
 $totalAppraisals = 0; $pending = 0; $completed = 0; $avgScore = 0;
 $appraisals = [];
 
 if ($conn) {
-    $r1 = $conn->query("SELECT COUNT(*) c FROM appraisals WHERE YEAR(created_at)=YEAR(NOW())");
+    $r1 = $conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE YEAR(created_at)=YEAR(NOW())");
     if ($r1) $totalAppraisals = (int)$r1->fetch_assoc()['c'];
-    $r2 = $conn->query("SELECT COUNT(*) c FROM appraisals WHERE status='Pending'");
+    $r2 = $conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'");
     if ($r2) $pending = (int)$r2->fetch_assoc()['c'];
-    $r3 = $conn->query("SELECT COUNT(*) c FROM appraisals WHERE status='Completed'");
+    $r3 = $conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Completed'");
     if ($r3) $completed = (int)$r3->fetch_assoc()['c'];
-    $r4 = $conn->query("SELECT AVG(score) a FROM appraisals WHERE score IS NOT NULL");
+    $r4 = $conn->query("SELECT AVG(score) a FROM staff_appraisals WHERE score IS NOT NULL");
     if ($r4 && $row = $r4->fetch_assoc()) $avgScore = round((float)$row['a'], 1);
-    $a = $conn->query("SELECT a.*, COALESCE(s.full_name, a.staff_name) staff_name FROM appraisals a LEFT JOIN staff s ON a.staff_id=s.id ORDER BY a.created_at DESC LIMIT 50");
+    $a = $conn->query("SELECT a.*, COALESCE(s.full_name, a.staff_name) staff_name FROM staff_appraisals a LEFT JOIN staff s ON a.staff_id=s.id ORDER BY a.created_at DESC LIMIT 50");
     if ($a) $appraisals = $a->fetch_all(MYSQLI_ASSOC);
 }
 ?>

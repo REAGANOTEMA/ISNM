@@ -6,10 +6,17 @@ $user = $ctx['user'];
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_item') {
-    $item = $conn->real_escape_string($_POST['item']);
-    $dept = $conn->real_escape_string($_POST['department'] ?? 'all');
-    $conn->query("INSERT INTO onboarding_checklist (item_name, department, created_by) VALUES ('$item', '$dept', $userId)");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_item' && $conn) {
+    $item = trim($_POST['item'] ?? '');
+    $dept = trim($_POST['department'] ?? 'all');
+    if ($item) {
+        $stmt = $conn->prepare("INSERT INTO onboarding_checklist (item_name, department, created_by) VALUES (?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('ssi', $item, $dept, $userId);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
     header('Location: onboarding.php'); exit;
 }
 

@@ -36,12 +36,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add_request') {
         $staffId = intval($_POST['staff_id'] ?? 0);
         $leaveTypeId = intval($_POST['leave_type_id'] ?? 0);
-        $startDate = $conn->real_escape_string($_POST['start_date'] ?? '');
-        $endDate = $conn->real_escape_string($_POST['end_date'] ?? '');
-        $reason = $conn->real_escape_string($_POST['reason'] ?? '');
+        $startDate = trim($_POST['start_date'] ?? '');
+        $endDate = trim($_POST['end_date'] ?? '');
+        $reason = trim($_POST['reason'] ?? '');
         if ($staffId && $leaveTypeId && $startDate && $endDate) {
-            $conn->query("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES ($staffId, $leaveTypeId, '$startDate', '$endDate', '$reason', 'Pending')");
-            $_SESSION['success'] = 'Leave request submitted.';
+            $stmt = $conn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+            if ($stmt) {
+                $stmt->bind_param('iisss', $staffId, $leaveTypeId, $startDate, $endDate, $reason);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = 'Leave request submitted.';
+            } else {
+                $_SESSION['error'] = 'Database error.';
+            }
         } else {
             $_SESSION['error'] = 'All fields required.';
         }
@@ -50,10 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update_status') {
         $id = intval($_POST['id'] ?? 0);
-        $newStatus = $conn->real_escape_string($_POST['status'] ?? '');
+        $newStatus = trim($_POST['status'] ?? '');
         if (in_array($newStatus, ['Approved','Rejected','Cancelled']) && $id > 0) {
-            $conn->query("UPDATE leave_requests SET status='$newStatus', reviewed_by={$_SESSION['user_id']} WHERE id=$id");
-            $_SESSION['success'] = "Leave request $newStatus.";
+            $stmt = $conn->prepare("UPDATE leave_requests SET status=?, reviewed_by=? WHERE id=?");
+            if ($stmt) {
+                $reviewedBy = (int)($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param('sii', $newStatus, $reviewedBy, $id);
+                $stmt->execute();
+                $stmt->close();
+                $_SESSION['success'] = "Leave request $newStatus.";
+            }
         }
         header('Location: leave-management.php'); exit;
     }

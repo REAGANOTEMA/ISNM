@@ -179,7 +179,7 @@ if ($staff_conn) {
     $stats['pending_approvals'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM payroll_approvals WHERE status='pending'")->fetch_assoc()['c'] ?? 0);
     $stats['active_runs'] = (int)($staff_conn->query("SELECT COUNT(*) c FROM payroll_runs WHERE status IN ('draft','approved')")->fetch_assoc()['c'] ?? 0);
 
-    $r = $staff_conn->query("SELECT pe.*, s.full_name, s.staff_id, d.department_name FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id LEFT JOIN departments d ON s.department_id = d.id ORDER BY s.full_name");
+    $r = $staff_conn->query("SELECT pe.*, s.full_name, s.staff_id, d.department_name FROM payroll_employees pe JOIN staff s ON pe.staff_id = s.id LEFT JOIN staff_departments d ON s.department_id = d.id ORDER BY s.full_name");
     if ($r) $payroll_employees = $r->fetch_all(MYSQLI_ASSOC);
 
     $r = $staff_conn->query("SELECT pr.*, cr.full_name as created_name, ap.full_name as approved_name FROM payroll_runs pr LEFT JOIN staff cr ON pr.created_by = cr.id LEFT JOIN staff ap ON pr.approved_by = ap.id ORDER BY pr.created_at DESC");
@@ -696,7 +696,7 @@ if ($staff_conn) {
                 </div>
             </div>
             <?php if (($report_run = (int)($_GET['report_run'] ?? 0)) && $staff_conn): ?>
-                <?php $rd = $staff_conn->query("SELECT pd.*, s.full_name, d.department_name FROM payroll_details pd JOIN staff s ON pd.staff_id = s.id LEFT JOIN departments d ON s.department_id = d.id WHERE pd.payroll_run_id = $report_run ORDER BY s.full_name");
+                <?php $rd = $staff_conn->query("SELECT pd.*, s.full_name, d.department_name FROM payroll_details pd JOIN staff s ON pd.staff_id = s.id LEFT JOIN staff_departments d ON s.department_id = d.id WHERE pd.payroll_run_id = $report_run ORDER BY s.full_name");
                 $rr = $staff_conn->query("SELECT * FROM payroll_runs WHERE id=$report_run")->fetch_assoc(); ?>
                 <?php if ($rd && $rr): ?>
                 <div class="cc mt-3"><div class="ch"><i class="fas fa-print me-2"></i>Run #<?= $report_run ?> — <?= htmlspecialchars($rr['period']) ?></div>

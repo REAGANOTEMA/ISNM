@@ -3,9 +3,9 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['academics','registrar','director','lecturer','head']);
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
-$staffConn = getStaffConnection();
-$studentsConn = getStudentsConnection();
-$conn = $studentsConn ?: $staffConn;
+$staffConn = $ctx['staff'];
+$studentsConn = $ctx['students'];
+$conn = $staffConn;
 $pageTitle = 'Exams & Results';
 $uid = $_SESSION['user_id'] ?? 0;
 
@@ -15,7 +15,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['ex
     $examNumber = $conn ? $conn->real_escape_string($_GET['exam']) : '';
     $data = [];
     if ($conn && $examNumber) {
-        $r = $conn->query("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM igangaschoolofl_students_db.examination_records er JOIN igangaschoolofl_students_db.students s ON er.student_id=s.id WHERE er.exam_number='$examNumber' ORDER BY s.surname, s.first_name");
+        $r = $conn->query("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM examination_records er JOIN igangaschoolofl_students_db.students s ON er.student_id=s.id WHERE er.exam_number='$examNumber' ORDER BY s.surname, s.first_name");
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
     }
     echo json_encode($data);
@@ -26,10 +26,10 @@ $totalExams = 0; $published = 0; $pendingGrading = 0; $current = 0;
 $exams = []; $courses = []; $students = [];
 
 if ($conn) {
-    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM igangaschoolofl_students_db.examination_records"); $totalExams = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
-    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM igangaschoolofl_students_db.examination_records WHERE grade_status='Published'"); $published = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
-    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM igangaschoolofl_students_db.examination_records WHERE grade_status IN('Draft','Submitted','Under Review')"); $pendingGrading = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
-    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM igangaschoolofl_students_db.examination_records WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())"); $current = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records"); $totalExams = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status='Published'"); $published = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE grade_status IN('Draft','Submitted','Under Review')"); $pendingGrading = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
+    $qr = $conn->query("SELECT COUNT(DISTINCT exam_number) c FROM examination_records WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())"); $current = $qr ? (int)$qr->fetch_assoc()['c'] : 0;
 
     $search = trim($_GET['search'] ?? '');
     $filterType = trim($_GET['exam_type'] ?? '');
@@ -38,10 +38,10 @@ if ($conn) {
     if ($search !== '') { $s = $conn->real_escape_string($search); $where .= " AND (er.exam_number LIKE '%$s%' OR er.course_code LIKE '%$s%' OR cc.course_title LIKE '%$s%' OR er.exam_type LIKE '%$s%')"; }
     if ($filterType !== '') { $t = $conn->real_escape_string($filterType); $where .= " AND er.exam_type='$t'"; }
     if ($filterStatus !== '') { $st = $conn->real_escape_string($filterStatus); $where .= " AND er.grade_status='$st'"; }
-    $r = $conn->query("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM igangaschoolofl_students_db.examination_records er LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
+    $r = $conn->query("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM examination_records er LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
     if ($r) while ($row = $r->fetch_assoc()) $exams[] = $row;
 
-    $cr = $conn->query("SELECT course_code, course_title FROM igangaschoolofl_staffs_db.academic_course_catalog WHERE status='Active' ORDER BY course_code");
+    $cr = $conn->query("SELECT course_code, course_title FROM academic_course_catalog WHERE status='Active' ORDER BY course_code");
     if ($cr) while ($row = $cr->fetch_assoc()) $courses[] = $row;
     $sr = $conn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number, student_number FROM igangaschoolofl_students_db.students WHERE status='Active' ORDER BY surname LIMIT 500");
     if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_exam') {
         $exam_number = $conn->real_escape_string($_POST['exam_number'] ?? '');
         if ($exam_number) {
-            $conn->query("DELETE FROM igangaschoolofl_students_db.examination_records WHERE exam_number='$exam_number'");
+            $conn->query("DELETE FROM examination_records WHERE exam_number='$exam_number'");
             $_SESSION['success'] = "Exam '$exam_number' deleted.";
         }
         header('Location: exams-results.php'); exit;

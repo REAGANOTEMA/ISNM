@@ -470,13 +470,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
     if (isset($_POST['ajax_approve_requisition'])) {
         $reqId = (int)$_POST['req_id'];
-        $staff->query("UPDATE {$staff_db}.bursar_requisition_reviews SET status='approved', reviewed_by='{$_SESSION['staff_id']}', reviewed_at=NOW() WHERE id={$reqId}");
+        $reviewedBy = (int)($_SESSION['user_id'] ?? 0);
+        $stmt = $staff->prepare("UPDATE {$staff_db}.bursar_requisition_reviews SET status='approved', reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+        if ($stmt) { $stmt->bind_param('ii', $reviewedBy, $reqId); $stmt->execute(); $stmt->close(); }
         echo json_encode(['success' => 'Requisition approved.']);
         exit;
     }
     if (isset($_POST['ajax_reject_requisition'])) {
         $reqId = (int)$_POST['req_id'];
-        $staff->query("UPDATE {$staff_db}.bursar_requisition_reviews SET status='rejected', reviewed_by='{$_SESSION['staff_id']}', reviewed_at=NOW() WHERE id={$reqId}");
+        $reviewedBy = (int)($_SESSION['user_id'] ?? 0);
+        $stmt = $staff->prepare("UPDATE {$staff_db}.bursar_requisition_reviews SET status='rejected', reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+        if ($stmt) { $stmt->bind_param('ii', $reviewedBy, $reqId); $stmt->execute(); $stmt->close(); }
         echo json_encode(['success' => 'Requisition rejected.']);
         exit;
     }

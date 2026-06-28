@@ -9,13 +9,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
     if ($id && in_array($action, ['reviewed', 'contacted', 'accepted', 'declined'])) {
-        $status = $websiteConn->real_escape_string($action);
-        $websiteConn->query("UPDATE volunteer_applications SET status='$status', reviewed_at=NOW(), reviewed_by=$userId WHERE id=$id");
+        $stmt = $websiteConn->prepare("UPDATE volunteer_applications SET status=?, reviewed_at=NOW(), reviewed_by=? WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param('sii', $action, $userId, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Volunteer application status updated to '" . ucfirst($action) . "'.";
         header('Location: volunteer-applications.php'); exit;
     }
     if ($action === 'delete') {
-        $websiteConn->query("DELETE FROM volunteer_applications WHERE id=$id");
+        $stmt = $websiteConn->prepare("DELETE FROM volunteer_applications WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Volunteer application deleted.';
         header('Location: volunteer-applications.php'); exit;
     }

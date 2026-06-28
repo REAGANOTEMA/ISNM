@@ -20,8 +20,8 @@ function badge($s) {
 // ── AJAX report endpoints ──
 if ($ajax) {
     header('Content-Type: application/json');
-    $from = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01'));
-    $to = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
+    $from = $staff ? $staff->real_escape_string($_GET['from'] ?? date('Y-m-01')) : date('Y-m-01');
+    $to = $staff ? $staff->real_escape_string($_GET['to'] ?? date('Y-m-d')) : date('Y-m-d');
     $result = ['headers' => [], 'rows' => [], 'total' => 0, 'chart_labels' => [], 'chart_values' => []];
 
     try { if (!$staff) throw new Exception('no db');
