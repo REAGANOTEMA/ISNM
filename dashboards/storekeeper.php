@@ -130,8 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Create order
     if ($action === 'create_order') {
         $items = $_POST['order_items'] ?? [];
-        $supplier = $staffConn->real_escape_string(trim($_POST['supplier'] ?? 'Internal Requisition'));
-        $notes = $staffConn->real_escape_string(trim($_POST['notes'] ?? ''));
+        $supplier = trim($_POST['supplier'] ?? 'Internal Requisition');
+        $notes = trim($_POST['notes'] ?? '');
         $valid = [];
 
         foreach ($items as $i) {
@@ -144,8 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (!empty($valid)) {
             $ordNum = 'PO-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
             $total = array_sum(array_map(fn($v)=>$v[1]*$v[2], $valid));
-            $staffConn->query("INSERT INTO store_orders (order_number, supplier, notes, total_amount, status, requested_by) VALUES ('$ordNum', '$supplier', '$notes', $total, 'pending_approval', " . intval($userId) . ")");
+            $stmt = $staffConn->prepare("INSERT INTO store_orders (order_number, supplier, notes, total_amount, status, requested_by) VALUES (?, ?, ?, ?, 'pending_approval', ?)");
+            $stmt->bind_param("ssddi", $ordNum, $supplier, $notes, $total, $userId);
+            $stmt->execute();
             $orderId = $staffConn->insert_id;
+            $stmt->close();
 
             $ins = $staffConn->prepare("INSERT INTO store_order_items (order_id, item_id, quantity_ordered, unit_price) VALUES (?, ?, ?, ?)");
             foreach ($valid as $v) {
@@ -161,12 +164,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Receive order
     if ($action === 'receive_order') {
         $orderId = (int)($_POST['order_id'] ?? 0);
-        $staffConn->query("UPDATE store_orders SET status='received', received_by=" . intval($userId) . ", received_at=NOW() WHERE id=" . intval($orderId));
-        $items = $staffConn->query("SELECT oi.id, oi.item_id, oi.quantity_ordered FROM store_order_items oi WHERE oi.order_id=" . intval($orderId) . " AND oi.status='pending'");
+        $stmt = $staffConn->prepare("UPDATE store_orders SET status='received', received_by=?, received_at=NOW() WHERE id=?");
+        $stmt->bind_param("ii", $userId, $orderId);
+        $stmt->execute();
+        $stmt->close();
+        $stmt = $staffConn->prepare("SELECT oi.id, oi.item_id, oi.quantity_ordered FROM store_order_items oi WHERE oi.order_id=? AND oi.status='pending'");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $items = $stmt->get_result();
+        $stmt->close();
         while ($row = $items->fetch_assoc()) {
-            $staffConn->query("UPDATE store_order_items SET quantity_received=quantity_ordered, status='received' WHERE id={$row['id']}");
-            $staffConn->query("UPDATE store_inventory SET quantity=quantity+{$row['quantity_ordered']} WHERE id={$row['item_id']}");
-            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES ({$row['item_id']}, 'order_received', {$row['quantity_ordered']}, 'Order #$orderId received', " . intval($userId) . ", 'order', " . intval($orderId) . ")");
+            $oid = $row['id'];
+            $iid = $row['item_id'];
+            $qord = $row['quantity_ordered'];
+            $reason = "Order #$orderId received";
+            $stmt = $staffConn->prepare("UPDATE store_order_items SET quantity_received=quantity_ordered, status='received' WHERE id=?");
+            $stmt->bind_param("i", $oid);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $staffConn->prepare("UPDATE store_inventory SET quantity=quantity+? WHERE id=?");
+            $stmt->bind_param("di", $qord, $iid);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (?, 'order_received', ?, ?, ?, 'order', ?)");
+            $stmt->bind_param("idsi", $iid, $qord, $reason, $userId, $orderId);
+            $stmt->execute();
+            $stmt->close();
         }
         header('Location: storekeeper.php'); exit;
     }

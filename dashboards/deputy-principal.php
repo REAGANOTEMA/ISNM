@@ -50,15 +50,27 @@ if ($view === 'class_monitoring_data' && $ajax === '1' && $staff) {
 }
 if ($view === 'attendance_monitoring_data' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $course = $staff->real_escape_string($_GET['course'] ?? '');
-    $from = $staff->real_escape_string($_GET['from'] ?? '');
-    $to = $staff->real_escape_string($_GET['to'] ?? '');
+    $course = $_GET['course'] ?? '';
+    $from = $_GET['from'] ?? '';
+    $to = $_GET['to'] ?? '';
     $sql = "SELECT a.*, s.full_name, s.student_number FROM student_attendance a JOIN students s ON a.student_id=s.id WHERE 1=1";
-    if ($course) $sql .= " AND a.subject='$course'";
-    if ($from) $sql .= " AND a.date>='$from'";
-    if ($to) $sql .= " AND a.date<='$to'";
+    $params = [];
+    $types = '';
+    if ($course) { $sql .= " AND a.subject=?"; $types .= 's'; $params[] = $course; }
+    if ($from) { $sql .= " AND a.date>=?"; $types .= 's'; $params[] = $from; }
+    if ($to) { $sql .= " AND a.date<=?"; $types .= 's'; $params[] = $to; }
     $sql .= " ORDER BY a.date DESC LIMIT 200";
-    $r = $students ? $students->query($sql) : null; $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+    if (!empty($params)) {
+        $stmt = $students->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $r = $stmt->get_result();
+    } else {
+        $r = $students ? $students->query($sql) : null;
+    }
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw;
+    if (!empty($params)) $stmt->close();
+    echo json_encode($rows); exit;
 }
 if ($view === 'clinical_placement_data' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
@@ -120,198 +132,238 @@ if ($view === 'approval_list_deputy' && $ajax === '1' && $staff) {
 
 if ($view === 'create_task' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $tt = $staff->real_escape_string($_POST['task_title'] ?? '');
-    $desc = $staff->real_escape_string($_POST['description'] ?? '');
-    $pr = $staff->real_escape_string($_POST['priority'] ?? 'medium');
+    $tt = $_POST['task_title'] ?? '';
+    $desc = $_POST['description'] ?? '';
+    $pr = $_POST['priority'] ?? 'medium';
     if ($tt) {
-        $sn = $staff->real_escape_string($uname);
-        if ($staff->query("INSERT INTO {$students_db}.deputy_tasks (task_title,description,assigned_by,priority) VALUES ('$tt','$desc','$sn','$pr')")) {
-            echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
+        $sn = $uname;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.deputy_tasks (task_title,description,assigned_by,priority) VALUES (?,?,?,?)");
+        $stmt->bind_param("ssss", $tt, $desc, $sn, $pr);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true,'id'=>$staff->insert_id]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed: '.$staff->error]); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed: '.$staff->error]); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Title required']); exit;
 }
 if ($view === 'update_task_status' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $tid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    $tid = (int)($_POST['id'] ?? 0); $st = $_POST['status'] ?? '';
     if ($tid && $st) {
-        if ($staff->query("UPDATE {$students_db}.deputy_tasks SET status='$st' WHERE id=$tid")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("UPDATE {$students_db}.deputy_tasks SET status=? WHERE id=?");
+        $stmt->bind_param("si", $st, $tid);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Update failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'record_welfare_case' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $sid = (int)($_POST['student_id'] ?? 0); $ct = $staff->real_escape_string($_POST['case_type'] ?? '');
-    $desc = $staff->real_escape_string($_POST['description'] ?? '');
-    $sev = $staff->real_escape_string($_POST['severity'] ?? 'medium');
-    $ato = $staff->real_escape_string($_POST['assigned_to'] ?? '');
+    $sid = (int)($_POST['student_id'] ?? 0); $ct = $_POST['case_type'] ?? '';
+    $desc = $_POST['description'] ?? '';
+    $sev = $_POST['severity'] ?? 'medium';
+    $ato = $_POST['assigned_to'] ?? '';
     if ($sid && $ct) {
-        if ($staff->query("INSERT INTO {$students_db}.student_welfare_cases (student_id,case_type,description,severity,assigned_to) VALUES ($sid,'$ct','$desc','$sev','$ato')")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.student_welfare_cases (student_id,case_type,description,severity,assigned_to) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("issss", $sid, $ct, $desc, $sev, $ato);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Student and case type required']); exit;
 }
 if ($view === 'update_welfare_status' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $wid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    $wid = (int)($_POST['id'] ?? 0); $st = $_POST['status'] ?? '';
     if ($wid && $st) {
-        if ($staff->query("UPDATE {$students_db}.student_welfare_cases SET status='$st' WHERE id=$wid")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("UPDATE {$students_db}.student_welfare_cases SET status=? WHERE id=?");
+        $stmt->bind_param("si", $st, $wid);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Update failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'record_discipline' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $sid = (int)($_POST['student_id'] ?? 0); $off = $staff->real_escape_string($_POST['offense'] ?? '');
-    $hd = $staff->real_escape_string($_POST['hearing_date'] ?? '');
-    $act = $staff->real_escape_string($_POST['action_taken'] ?? '');
-    $rb = $staff->real_escape_string($uname);
+    $sid = (int)($_POST['student_id'] ?? 0); $off = $_POST['offense'] ?? '';
+    $hd = $_POST['hearing_date'] ?? '';
+    $act = $_POST['action_taken'] ?? '';
+    $rb = $uname;
     if ($sid && $off) {
-        if ($staff->query("INSERT INTO {$students_db}.student_discipline (student_id,offense,reported_by,hearing_date,action_taken) VALUES ($sid,'$off','$rb','$hd','$act')")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.student_discipline (student_id,offense,reported_by,hearing_date,action_taken) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("issss", $sid, $off, $rb, $hd, $act);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Student and offense required']); exit;
 }
 if ($view === 'update_discipline_status' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $did = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
-    $out = $staff->real_escape_string($_POST['outcome'] ?? '');
+    $did = (int)($_POST['id'] ?? 0); $st = $_POST['status'] ?? '';
+    $out = $_POST['outcome'] ?? '';
     if ($did && $st) {
-        $sql = "UPDATE {$students_db}.student_discipline SET status='$st'";
-        if ($out) $sql .= ", outcome='$out'";
-        $sql .= " WHERE id=$did";
-        if ($staff->query($sql)) { echo json_encode(['success'=>true]); exit; }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        if ($out) {
+            $stmt = $staff->prepare("UPDATE {$students_db}.student_discipline SET status=?, outcome=? WHERE id=?");
+            $stmt->bind_param("ssi", $st, $out, $did);
+        } else {
+            $stmt = $staff->prepare("UPDATE {$students_db}.student_discipline SET status=? WHERE id=?");
+            $stmt->bind_param("si", $st, $did);
+        }
+        if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'forward_approval' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $aid = (int)($_POST['id'] ?? 0); $comm = $staff->real_escape_string($_POST['recommendation'] ?? '');
+    $aid = (int)($_POST['id'] ?? 0); $comm = $_POST['recommendation'] ?? '';
     if ($aid) {
-        $sn = $staff->real_escape_string($uname);
-        $sql = "UPDATE {$students_db}.communication_log SET is_read=1, message=CONCAT(message,'\n\n[Deputy Review by $sn at ".date('Y-m-d H:i:s').": $comm]\n[Forwarded to Principal for final approval]') WHERE id=$aid";
-        if ($staff->query($sql)) {
-            $staff->query("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES ($uid,'$sn','principal','Forwarded by Deputy: Review','Item #$aid reviewed by Deputy $sn. Recommendation: $comm')");
-            echo json_encode(['success'=>true]); exit;
-        }
-        echo json_encode(['success'=>false,'error'=>'Forward failed']); exit;
+        $sn = $uname;
+        $timestamp = date('Y-m-d H:i:s');
+        $newMsg = "[Deputy Review by $sn at $timestamp: $comm]\n[Forwarded to Principal for final approval]";
+        $stmt = $staff->prepare("UPDATE {$students_db}.communication_log SET is_read=1, message=CONCAT(message,'\n\n',?) WHERE id=?");
+        $stmt->bind_param("si", $newMsg, $aid);
+        $stmt->execute();
+        $stmt->close();
+        
+        $subject = "Forwarded by Deputy: Review";
+        $body = "Item #$aid reviewed by Deputy $sn. Recommendation: $comm";
+        $stmt2 = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,'$sn','principal',?,?)");
+        $stmt2->bind_param("iss", $uid, $subject, $body);
+        $stmt2->execute();
+        $stmt2->close();
+        echo json_encode(['success'=>true]); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'send_communication_deputy' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $rt = $staff->real_escape_string($_POST['recipient_role'] ?? '');
-    $subj = $staff->real_escape_string($_POST['subject'] ?? '');
-    $msg = $staff->real_escape_string($_POST['message'] ?? '');
+    $rt = $_POST['recipient_role'] ?? '';
+    $subj = $_POST['subject'] ?? '';
+    $msg = $_POST['message'] ?? '';
     if ($subj && $msg && $rt && $rt !== 'institution') {
-        $sn = $staff->real_escape_string($uname);
-        if ($staff->query("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES ($uid,'$sn','$rt','$subj','$msg')")) {
-            echo json_encode(['success'=>true]); exit;
+        $sn = $uname;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.communication_log (sender_id,sender_name,recipient_role,subject,message) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("issss", $uid, $sn, $rt, $subj, $msg);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Send failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Send failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Subject, message, and valid recipient required. Institution-wide broadcasting not allowed.']); exit;
 }
 if ($view === 'record_compliance' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $dep = $staff->real_escape_string($_POST['department'] ?? '');
-    $ct = $staff->real_escape_string($_POST['compliance_type'] ?? '');
-    $notes = $staff->real_escape_string($_POST['notes'] ?? '');
-    $st = $staff->real_escape_string($_POST['status'] ?? 'pending_review');
+    $dep = $_POST['department'] ?? '';
+    $ct = $_POST['compliance_type'] ?? '';
+    $notes = $_POST['notes'] ?? '';
+    $st = $_POST['status'] ?? 'pending_review';
     if ($dep && $ct) {
-        $sn = $staff->real_escape_string($uname);
-        if ($staff->query("INSERT INTO {$students_db}.compliance_tracking (department,compliance_type,status,notes,reviewed_by) VALUES ('$dep','$ct','$st','$notes','$sn')")) {
-            echo json_encode(['success'=>true]); exit;
+        $sn = $uname;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.compliance_tracking (department,compliance_type,status,notes,reviewed_by) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("sssss", $dep, $ct, $st, $notes, $sn);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Department and compliance type required']); exit;
 }
 if ($view === 'record_improvement' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $area = $staff->real_escape_string($_POST['area'] ?? '');
-    $act = $staff->real_escape_string($_POST['improvement_action'] ?? '');
-    $td = $staff->real_escape_string($_POST['target_date'] ?? '');
+    $area = $_POST['area'] ?? '';
+    $act = $_POST['improvement_action'] ?? '';
+    $td = $_POST['target_date'] ?? '';
     if ($area && $act) {
-        if ($staff->query("INSERT INTO {$students_db}.improvement_tracking (area,improvement_action,target_date) VALUES ('$area','$act','$td')")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.improvement_tracking (area,improvement_action,target_date) VALUES (?,?,?)");
+        $stmt->bind_param("sss", $area, $act, $td);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Area and action required']); exit;
 }
 if ($view === 'update_improvement_progress' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
     $iid = (int)($_POST['id'] ?? 0); $pr = (float)($_POST['progress'] ?? 0);
-    $st = $staff->real_escape_string($_POST['status'] ?? '');
+    $st = $_POST['status'] ?? '';
     if ($iid) {
-        $sql = "UPDATE {$students_db}.improvement_tracking SET progress=$pr";
-        if ($st) $sql .= ", status='$st'";
-        $sql .= " WHERE id=$iid";
-        if ($staff->query($sql)) { echo json_encode(['success'=>true]); exit; }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        if ($st) {
+            $stmt = $staff->prepare("UPDATE {$students_db}.improvement_tracking SET progress=?, status=? WHERE id=?");
+            $stmt->bind_param("dsi", $pr, $st, $iid);
+        } else {
+            $stmt = $staff->prepare("UPDATE {$students_db}.improvement_tracking SET progress=? WHERE id=?");
+            $stmt->bind_param("di", $pr, $iid);
+        }
+        if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; }
+        echo json_encode(['success'=>false,'error'=>'Update failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'submit_teaching_review' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $lid = (int)($_POST['lecturer_id'] ?? 0); $rd = $staff->real_escape_string($_POST['review_date'] ?? date('Y-m-d'));
-    $ts = (float)($_POST['teaching_score'] ?? 0); $cc = $staff->real_escape_string($_POST['course_code'] ?? '');
-    $fb = $staff->real_escape_string($_POST['feedback'] ?? '');
-    $ob = $staff->real_escape_string($uname);
+    $lid = (int)($_POST['lecturer_id'] ?? 0); $rd = $_POST['review_date'] ?? date('Y-m-d');
+    $ts = (float)($_POST['teaching_score'] ?? 0); $cc = $_POST['course_code'] ?? '';
+    $fb = $_POST['feedback'] ?? '';
+    $ob = $uname;
     if ($lid && $cc) {
-        if ($staff->query("INSERT INTO {$staff_db}.teaching_quality_reviews (lecturer_id,review_date,teaching_score,course_code,observer,feedback) VALUES ($lid,'$rd',$ts,'$cc','$ob','$fb')")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$staff_db}.teaching_quality_reviews (lecturer_id,review_date,teaching_score,course_code,observer,feedback) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("isdsss", $lid, $rd, $ts, $cc, $ob, $fb);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Lecturer and course required']); exit;
 }
 if ($view === 'record_attendance' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $sid = (int)($_POST['student_id'] ?? 0); $dt = $staff->real_escape_string($_POST['date'] ?? date('Y-m-d'));
-    $st = $staff->real_escape_string($_POST['status'] ?? 'Present'); $sub = $staff->real_escape_string($_POST['subject'] ?? 'General');
+    $sid = (int)($_POST['student_id'] ?? 0); $dt = $_POST['date'] ?? date('Y-m-d');
+    $st = $_POST['status'] ?? 'Present'; $sub = $_POST['subject'] ?? 'General';
     if ($sid) {
-        if ($staff->query("INSERT INTO {$students_db}.student_attendance (student_id,date,subject,status,recorded_by) VALUES ($sid,'$dt','$sub','$st',$uid)")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.student_attendance (student_id,date,subject,status,recorded_by) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("isssi", $sid, $dt, $sub, $st, $uid);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Student required']); exit;
 }
 if ($view === 'schedule_placement' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $sid = (int)($_POST['student_id'] ?? 0); $site = $staff->real_escape_string($_POST['placement_site'] ?? '');
-    $sup = $staff->real_escape_string($_POST['supervisor_name'] ?? '');
-    $sd = $staff->real_escape_string($_POST['start_date'] ?? '');
-    $ed = $staff->real_escape_string($_POST['end_date'] ?? '');
+    $sid = (int)($_POST['student_id'] ?? 0); $site = $_POST['placement_site'] ?? '';
+    $sup = $_POST['supervisor_name'] ?? '';
+    $sd = $_POST['start_date'] ?? '';
+    $ed = $_POST['end_date'] ?? '';
     if ($sid && $site) {
-        if ($staff->query("INSERT INTO {$students_db}.clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES ($sid,'$site','$sup','$sd','$ed','Scheduled')")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("INSERT INTO {$students_db}.clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
+        $stmt->bind_param("issss", $sid, $site, $sup, $sd, $ed);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Write failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Write failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false,'error'=>'Student and site required']); exit;
 }
 if ($view === 'update_placement_status' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $pid = (int)($_POST['id'] ?? 0); $st = $staff->real_escape_string($_POST['status'] ?? '');
+    $pid = (int)($_POST['id'] ?? 0); $st = $_POST['status'] ?? '';
     if ($pid && $st) {
-        if ($staff->query("UPDATE {$students_db}.clinical_placements_students SET status='$st' WHERE id=$pid")) {
-            echo json_encode(['success'=>true]); exit;
+        $stmt = $staff->prepare("UPDATE {$students_db}.clinical_placements_students SET status=? WHERE id=?");
+        $stmt->bind_param("si", $st, $pid);
+        if ($stmt->execute()) {
+            echo json_encode(['success'=>true]); $stmt->close(); exit;
         }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        echo json_encode(['success'=>false,'error'=>'Update failed']); $stmt->close(); exit;
     }
     echo json_encode(['success'=>false]); exit;
 }
@@ -322,54 +374,63 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
     if ($act === 'add_student_deputy' && $students) {
-        $fn  = $students->real_escape_string(trim($_POST['first_name'] ?? ''));
-        $sn  = $students->real_escape_string(trim($_POST['surname'] ?? ''));
-        $on  = $students->real_escape_string(trim($_POST['other_name'] ?? ''));
-        $gen = $students->real_escape_string(trim($_POST['gender'] ?? 'Female'));
-        $crs = $students->real_escape_string(trim($_POST['course'] ?? ''));
+        $fn  = trim($_POST['first_name'] ?? '');
+        $sn  = trim($_POST['surname'] ?? '');
+        $on  = trim($_POST['other_name'] ?? '');
+        $gen = trim($_POST['gender'] ?? 'Female');
+        $crs = trim($_POST['course'] ?? '');
         $yr  = intval($_POST['year'] ?? 1);
-        $sem = $students->real_escape_string(trim($_POST['semester'] ?? 'Semester 1'));
-        $ph  = $students->real_escape_string(trim($_POST['phone'] ?? ''));
-        $em  = $students->real_escape_string(trim($_POST['email'] ?? ''));
-        $gn  = $students->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-        $gp  = $students->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
+        $sem = trim($_POST['semester'] ?? 'Semester 1');
+        $ph  = trim($_POST['phone'] ?? '');
+        $em  = trim($_POST['email'] ?? '');
+        $gn  = trim($_POST['guardian_name'] ?? '');
+        $gp  = trim($_POST['guardian_phone'] ?? '');
         if ($fn && $sn && $crs) {
             $snum = 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
             $full = trim("$fn $on $sn");
-            $students->query("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,course,current_year,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES ('$snum','$fn','$sn','$on','$full','$gen','$crs',$yr,$yr,'$sem','$ph','$ph','$em','$gn','$gp','Active',NOW())");
+            $stmt = $students->prepare("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,course,current_year,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
+            $stmt->bind_param("ssssssiiissssss", $snum, $fn, $sn, $on, $full, $gen, $crs, $yr, $yr, $sem, $ph, $ph, $em, $gn, $gp);
+            $stmt->execute();
             if ($students->affected_rows > 0) { dep_success("Student $full registered."); } else { dep_error('Failed: '.$students->error); }
+            $stmt->close();
         } else { dep_error('Required fields missing.'); }
         header("Location: deputy-principal.php?section=home"); exit;
     }
     if ($act === 'schedule_class' && $staff) {
-        $prog=$staff->real_escape_string($_POST['program_code']??'');
-        $cc=$staff->real_escape_string($_POST['course_code']??'');
-        $dow=$staff->real_escape_string($_POST['day_of_week']??'');
+        $prog=$_POST['program_code']??'';
+        $cc=$_POST['course_code']??'';
+        $dow=$_POST['day_of_week']??'';
         $st=$_POST['start_time']??'';
         $et=$_POST['end_time']??'';
-        $venue=$staff->real_escape_string($_POST['venue']??'');
+        $venue=$_POST['venue']??'';
         $lid=intval($_POST['lecturer_id']??0);
-        $ay=$staff->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        $sem=$staff->real_escape_string($_POST['semester']??'Semester 1');
+        $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
+        $sem=$_POST['semester']??'Semester 1';
         $tid='TT-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $staff->query("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES ('$tid','$ay','$sem','$prog','$cc','$dow','$st','$et','$venue',$lid,$uid)");
+        $stmt = $staff->prepare("INSERT INTO academic_timetable (timetable_id,academic_year,semester,program_code,course_code,day_of_week,start_time,end_time,venue,lecturer_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("sssssssssi", $tid, $ay, $sem, $prog, $cc, $dow, $st, $et, $venue, $lid, $uid);
+        $stmt->execute();
         if ($staff->affected_rows>0) { dep_success("Class scheduled: $cc ($dow $st-$et)"); } else { dep_error('Failed to schedule: '.$staff->error); }
+        $stmt->close();
         header("Location: deputy-principal.php?section=class_monitoring"); exit;
     }
     if ($act === 'assign_lecturer' && $staff) {
         $lid=intval($_POST['lecturer_id']??0);
-        $cc=$staff->real_escape_string($_POST['course_code']??'');
-        $cn=$staff->real_escape_string($_POST['course_name']??'');
-        $sem=$staff->real_escape_string($_POST['semester']??'Semester 1');
-        $ay=$staff->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        $rm=$staff->real_escape_string($_POST['classroom']??'');
-        $staff->query("INSERT INTO course_assignments (lecturer_id,course_code,course_name,semester,academic_year,classroom,assigned_by) VALUES ($lid,'$cc','$cn','$sem','$ay','$rm',$uid)");
+        $cc=$_POST['course_code']??'';
+        $cn=$_POST['course_name']??'';
+        $sem=$_POST['semester']??'Semester 1';
+        $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
+        $rm=$_POST['classroom']??'';
+        $stmt = $staff->prepare("INSERT INTO course_assignments (lecturer_id,course_code,course_name,semester,academic_year,classroom,assigned_by) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("isssssi", $lid, $cc, $cn, $sem, $ay, $rm, $uid);
+        $stmt->execute();
         if ($staff->affected_rows>0) { dep_success("Lecturer assigned to $cn"); } else { dep_error('Assignment failed: '.$staff->error); }
+        $stmt->close();
         header("Location: deputy-principal.php?section=academic_monitoring"); exit;
     }
     if ($act === 'upload_material' && $staff) {
-        $title=$staff->real_escape_string($_POST['material_title']??'');
-        $dtype=$staff->real_escape_string($_POST['document_type']??'Teaching Material');
+        $title=$_POST['material_title']??'';
+        $dtype=$_POST['document_type']??'Teaching Material';
         if ($title && isset($_FILES['material_file']) && $_FILES['material_file']['error']===UPLOAD_ERR_OK) {
             $dir=__DIR__.'/../uploads/teaching_materials';
             if (!is_dir($dir)) @mkdir($dir,0755,true);
@@ -378,7 +439,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $dest=$dir.'/'.$fname;
             if (move_uploaded_file($_FILES['material_file']['tmp_name'],$dest)) {
                 $fpath="uploads/teaching_materials/$fname";
-                $staff->query("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES ('$dtype',$uid,'$title','$fpath')");
+                $stmt = $staff->prepare("INSERT INTO generated_documents (document_type,generated_by,document_title,file_path) VALUES (?,?,?,?)");
+                $stmt->bind_param("siss", $dtype, $uid, $title, $fpath);
+                $stmt->execute();
+                $stmt->close();
                 dep_success("Material '$title' uploaded.");
             } else { dep_error('Upload failed.'); }
         } else { dep_error('Title and file required.'); }
@@ -386,22 +450,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'clinical_placement' && $students) {
         $sid=intval($_POST['student_id']??0);
-        $site=$students->real_escape_string($_POST['placement_site']??'');
-        $sup=$students->real_escape_string($_POST['supervisor_name']??'');
+        $site=$_POST['placement_site']??'';
+        $sup=$_POST['supervisor_name']??'';
         $sd=$_POST['start_date']??'';
         $ed=$_POST['end_date']??'';
         if ($sid>0 && $site) {
-            $students->query("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES ($sid,'$site','$sup','$sd','$ed','Scheduled')");
+            $stmt = $students->prepare("INSERT INTO clinical_placements_students (student_id,placement_site,supervisor_name,start_date,end_date,status) VALUES (?,?,?,?,?,'Scheduled')");
+            $stmt->bind_param("issss", $sid, $site, $sup, $sd, $ed);
+            $stmt->execute();
             if ($students->affected_rows>0) { dep_success('Clinical placement created.'); } else { dep_error('Placement failed: '.$students->error); }
+            $stmt->close();
         } else { dep_error('Student and site required.'); }
         header("Location: deputy-principal.php?section=clinical_placement_monitoring"); exit;
     }
     if ($act === 'clinical_evaluation' && $students) {
         $pid=intval($_POST['placement_id']??0);
         $score=floatval($_POST['competency_score']??0);
-        $eval=$students->real_escape_string($_POST['evaluation']??'');
+        $eval=$_POST['evaluation']??'';
         if ($pid>0) {
-            $students->query("UPDATE clinical_placements_students SET competency_score=$score, supervisor_evaluation='$eval', logbook_submitted=1, status='Completed' WHERE id=$pid");
+            $stmt = $students->prepare("UPDATE clinical_placements_students SET competency_score=?, supervisor_evaluation=?, logbook_submitted=1, status='Completed' WHERE id=?");
+            $stmt->bind_param("dsi", $score, $eval, $pid);
+            $stmt->execute();
+            $stmt->close();
             dep_success('Evaluation recorded.');
         } else { dep_error('Placement ID required.'); }
         header("Location: deputy-principal.php?section=clinical_placement_monitoring"); exit;

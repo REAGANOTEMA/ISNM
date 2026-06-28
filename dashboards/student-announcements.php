@@ -30,26 +30,50 @@ if ($conn) {
     $expiredCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM announcements WHERE expires_at IS NOT NULL AND expires_at<CURDATE()"))&&$r?$r->fetch_assoc()['c']:0);
 
     $where = ["1=1"];
-    if ($search) $where[] = "(title LIKE '%".$conn->real_escape_string($search)."%' OR body LIKE '%".$conn->real_escape_string($search)."%')";
-    if ($filterAudience) $where[] = "target_audience='".$conn->real_escape_string($filterAudience)."'";
-    if ($filterPriority) $where[] = "priority='".$conn->real_escape_string($filterPriority)."'";
+    $types = '';
+    $params = [];
+    if ($search) {
+        $like = '%' . $search . '%';
+        $where[] = "(title LIKE ? OR body LIKE ?)";
+        $types .= 'ss';
+        $params[] = $like;
+        $params[] = $like;
+    }
+    if ($filterAudience) {
+        $where[] = "target_audience=?";
+        $types .= 's';
+        $params[] = $filterAudience;
+    }
+    if ($filterPriority) {
+        $where[] = "priority=?";
+        $types .= 's';
+        $params[] = $filterPriority;
+    }
     $ws = implode(' AND ', $where);
-    $r = $conn->query("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschoolofl_staffs_db.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
-    if ($r) while ($row = $r->fetch_assoc()) $announcements[] = $row;
+    $stmt = $conn->prepare("SELECT a.*, s.full_name AS poster_name FROM announcements a LEFT JOIN igangaschoolofl_staffs_db.staff s ON a.posted_by=s.id WHERE $ws ORDER BY a.created_at DESC LIMIT 100");
+    if ($stmt) {
+        if (!empty($params)) $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $r = $stmt->get_result();
+        if ($r) while ($row = $r->fetch_assoc()) $announcements[] = $row;
+        $stmt->close();
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     $action = $_POST['action'] ?? '';
     if ($conn && $action==='add_announcement') {
-        $title = $conn->real_escape_string($_POST['title']??'');
-        $body = $conn->real_escape_string($_POST['body']??'');
-        $audience = $conn->real_escape_string($_POST['target_audience']??'All');
-        $priority = $conn->real_escape_string($_POST['priority']??'Normal');
-        $expires = $conn->real_escape_string($_POST['expires_at']??'');
-        $expVal = $expires ? "'$expires'" : 'NULL';
+        $title = $_POST['title'] ?? '';
+        $body = $_POST['body'] ?? '';
+        $audience = $_POST['target_audience'] ?? 'All';
+        $priority = $_POST['priority'] ?? 'Normal';
+        $expires = $_POST['expires_at'] ?? null;
         $uid = (int)($user['id']??0);
         if ($title && $body) {
-            $conn->query("INSERT INTO announcements (title,body,target_audience,priority,posted_by,expires_at) VALUES ('$title','$body','$audience','$priority',$uid,$expVal)");
+            $stmt = $conn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,expires_at) VALUES (?,?,?,?,?,?)");
+            $stmt->bind_param("ssssi", $title, $body, $audience, $priority, $uid, $expires);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Announcement published.';
         }
         header('Location: student-announcements.php'); exit;

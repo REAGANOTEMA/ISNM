@@ -79,7 +79,14 @@ $user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = ".in
 
 // ── Program Enrollment Stats ──
 function enrollmentStats($conn, $students_conn, $program_name) {
-  return $students_conn ? sc($students_conn,"SELECT COUNT(*)c FROM students WHERE course='".$conn->real_escape_string($program_name)."' AND status='Active'") : 0;
+  if (!$students_conn) return 0;
+  $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE course=? AND status='Active'");
+  $stmt->bind_param("s", $program_name);
+  $stmt->execute();
+  $r = $stmt->get_result();
+  $row = $r->fetch_assoc();
+  $stmt->close();
+  return $row ? intval($row['c']) : 0;
 }
 
 // ── Report generation ──
@@ -113,21 +120,32 @@ if ($report) {
         if($r) while($row=$r->fetch_assoc()){ $pr=$row['total']>0?round(($row['passed']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['course_code']).'</td><td>'.$row['total'].'</td><td>'.$row['passed'].'</td><td>'.$pr.'</td><td>'.round($row['avg_marks']??0,1).'</td><td>'.round($row['avg_gpa']??0,2).'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'program_courses') {
-        $pc = $conn->real_escape_string($_GET['program_code']??'');
+        $pc = $_GET['program_code']??'';
         echo '<h2>Courses for: '.htmlspecialchars($pc).'</h2>';
-        $r=$conn->query("SELECT cc.*,p.program_name FROM academic_course_catalog cc LEFT JOIN academic_programs p ON cc.program_code=p.program_code WHERE cc.program_code='$pc' ORDER BY cc.year_of_study,cc.semester,cc.course_code");
+        $stmt = $conn->prepare("SELECT cc.*,p.program_name FROM academic_course_catalog cc LEFT JOIN academic_programs p ON cc.program_code=p.program_code WHERE cc.program_code=? ORDER BY cc.year_of_study,cc.semester,cc.course_code");
+        $stmt->bind_param("s", $pc);
+        $stmt->execute();
+        $r = $stmt->get_result();
         echo '<table><thead><tr><th>Code</th><th>Title</th><th>Year</th><th>Semester</th><th>Credits</th><th>Status</th></tr></thead><tbody>';
         if($r && $r->num_rows>0) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['course_code']).'</td><td>'.htmlspecialchars($row['course_title']).'</td><td>'.$row['year_of_study'].'</td><td>'.$row['semester'].'</td><td>'.$row['credits'].'</td><td>'.htmlspecialchars($row['status']).'</td></tr>'; }
         else echo '<tr><td colspan="6" class="text-center text-muted">No courses found.</td></tr>';
         echo '</tbody></table>';
+        $stmt->close();
     } elseif ($report === 'program_enrollment') {
         $fp = $_GET['program'] ?? '';
         echo '<h2>Program Enrollment Report</h2>';
-        if($fp){ echo '<p><strong>Filtered:</strong> '.htmlspecialchars($fp).'</p>'; $r=$students_conn->query("SELECT course,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE course='".$students_conn->real_escape_string($fp)."' GROUP BY course"); }
+        if($fp){
+            echo '<p><strong>Filtered:</strong> '.htmlspecialchars($fp).'</p>';
+            $stmt = $students_conn->prepare("SELECT course,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE course=? GROUP BY course");
+            $stmt->bind_param("s", $fp);
+            $stmt->execute();
+            $r = $stmt->get_result();
+        }
         else { $r=$students_conn->query("SELECT course,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY course"); }
         echo '<table><thead><tr><th>Program</th><th>Total</th><th>Active</th><th>Inactive</th></tr></thead><tbody>';
         if($r) while($row=$r->fetch_assoc()){ $in=$row['total']-$row['active']; echo '<tr><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td><td>'.$row['active'].'</td><td>'.$in.'</td></tr>'; }
         echo '</tbody></table>';
+        if($fp) $stmt->close();
     } elseif ($report === 'lecturer_workload') {
         echo '<h2>Lecturer Workload</h2>';
         $r=$conn->query("SELECT s.full_name,s.position,s.department,COUNT(ca.id)courses_assigned FROM staff s LEFT JOIN course_assignments ca ON s.id=ca.lecturer_id WHERE s.position LIKE '%Lecturer%' OR s.position LIKE '%lecturer%' GROUP BY s.id ORDER BY courses_assigned DESC");
@@ -175,85 +193,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create_exam') {
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $et=$conn->real_escape_string($_POST['exam_type']??'');
-        $pc=$conn->real_escape_string($_POST['program_code']??'');
+        $cc=$_POST['course_code']??'';
+        $et=$_POST['exam_type']??'';
+        $pc=$_POST['program_code']??'';
         $sd=$_POST['exam_date']??'';
-        $rm=$conn->real_escape_string($_POST['exam_room']??'');
-        $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
-        $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
+        $rm=$_POST['exam_room']??'';
+        $sem=$_POST['semester']??'Semester 1';
+        $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
         $en='EXM-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $conn->query("INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES ('$en','$et','$cc','$pc','$sd','$rm','$sem','$ay','Scheduled',".intval($user_id).")");
+        $stmt = $conn->prepare("INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES (?,?,?,?,?,?,?,?,'Scheduled',?)");
+        $stmt->bind_param("ssssssssi", $en, $et, $cc, $pc, $sd, $rm, $sem, $ay, $user_id);
+        $stmt->execute();
         if($conn->affected_rows>0)$_SESSION['success']="Exam $en created."; else $_SESSION['error']=$conn->error;
+        $stmt->close();
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'publish_results') {
-        $en=$conn->real_escape_string($_POST['exam_number']??'');
-        $conn->query("UPDATE examination_records SET status='Published' WHERE exam_number='$en'");
+        $en=$_POST['exam_number']??'';
+        $stmt = $conn->prepare("UPDATE examination_records SET status='Published' WHERE exam_number=?");
+        $stmt->bind_param("s", $en);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success']="Results published for $en.";
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'enter_marks') {
-        $en=$conn->real_escape_string($_POST['exam_number']??'');
+        $en=$_POST['exam_number']??'';
         $sid=intval($_POST['student_id']??0);
         $mk=floatval($_POST['marks']??0);
-        $gr=$conn->real_escape_string($_POST['grade']??'');
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $cn=$conn->real_escape_string($_POST['course_name']??'');
+        $gr=$_POST['grade']??'';
+        $cc=$_POST['course_code']??'';
+        $cn=$_POST['course_name']??'';
         $gp=floatval($_POST['gpa']??0);
-        if($en && $sid){ $conn->query("INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,gpa,graded_by) VALUES (".intval($sid).",'$cc','$cn','Exam',$mk,'$gr',$gp,".intval($user_id).")"); $_SESSION['success']='Marks entered.'; }
+        if($en && $sid){
+            $stmt = $conn->prepare("INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,gpa,graded_by) VALUES (?,?,?,'Exam',?,?,?,?)");
+            $stmt->bind_param("issdsdi", $sid, $cc, $cn, $mk, $gr, $gp, $user_id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success']='Marks entered.';
+        }
         else { $_SESSION['error']='Exam and student required.'; }
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'transcript_request') {
         $sid=intval($_POST['student_id']??0);
-        $dn=$conn->real_escape_string($_POST['document_title']??'Transcript');
-        $dt=$conn->real_escape_string($_POST['document_type']??'Transcript');
-        if($sid){ $conn->query("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES ('$dt',".intval($sid).",".intval($user_id).",'$dn','')"); $_SESSION['success']='Document generated.'; }
+        $dn=$_POST['document_title']??'Transcript';
+        $dt=$_POST['document_type']??'Transcript';
+        if($sid){
+            $stmt = $conn->prepare("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES (?,?,?,?,'')");
+            $stmt->bind_param("siss", $dt, $sid, $user_id, $dn);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success']='Document generated.';
+        }
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'approve_result') {
-        $en=$conn->real_escape_string($_POST['exam_number']??'');
-        $stat=$conn->real_escape_string($_POST['approval_status']??'Approved');
-        $cmt=$conn->real_escape_string($_POST['comments']??'');
-        $conn->query("INSERT INTO result_approvals (exam_number,status,comments,approved_by,approval_date) VALUES ('$en','$stat','$cmt',".intval($user_id).",NOW())");
+        $en=$_POST['exam_number']??'';
+        $stat=$_POST['approval_status']??'Approved';
+        $cmt=$_POST['comments']??'';
+        $stmt = $conn->prepare("INSERT INTO result_approvals (exam_number,status,comments,approved_by,approval_date) VALUES (?,?,?,?," . "NOW())");
+        $stmt->bind_param("sssi", $en, $stat, $cmt, $user_id);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success']="Result $stat for $en.";
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'create_quality_review') {
-        $title=$conn->real_escape_string($_POST['review_title']??'');
-        $dept=$conn->real_escape_string($_POST['department']??'');
-        $area=$conn->real_escape_string($_POST['review_area']??'');
-        $finding=$conn->real_escape_string($_POST['findings']??'');
-        $rec=$conn->real_escape_string($_POST['recommendations']??'');
-        $stat=$conn->real_escape_string($_POST['status']??'Open');
-        $conn->query("INSERT INTO quality_assurance (review_title,department,review_area,findings,recommendations,status,reviewed_by,review_date) VALUES ('$title','$dept','$area','$finding','$rec','$stat',".intval($user_id).",NOW())");
+        $title=$_POST['review_title']??'';
+        $dept=$_POST['department']??'';
+        $area=$_POST['review_area']??'';
+        $finding=$_POST['findings']??'';
+        $rec=$_POST['recommendations']??'';
+        $stat=$_POST['status']??'Open';
+        $stmt = $conn->prepare("INSERT INTO quality_assurance (review_title,department,review_area,findings,recommendations,status,reviewed_by,review_date) VALUES (?,?,?,?,?,?,?,NOW())");
+        $stmt->bind_param("ssssssi", $title, $dept, $area, $finding, $rec, $stat, $user_id);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success']='Quality review created.';
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'assign_lecturer') {
         $lid=intval($_POST['lecturer_id']??0);
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $sem=$conn->real_escape_string($_POST['semester']??'Semester 1');
-        $ay=$conn->real_escape_string($_POST['academic_year']??date('Y').'-'.(date('Y')+1));
-        if($lid && $cc){ $conn->query("INSERT INTO course_assignments (lecturer_id,course_code,semester,academic_year,assigned_by) VALUES ($lid,'$cc','$sem','$ay',".intval($user_id).")"); $_SESSION['success']='Lecturer assigned.'; }
+        $cc=$_POST['course_code']??'';
+        $sem=$_POST['semester']??'Semester 1';
+        $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
+        if($lid && $cc){
+            $stmt = $conn->prepare("INSERT INTO course_assignments (lecturer_id,course_code,semester,academic_year,assigned_by) VALUES (?,?,?,?,?)");
+            $stmt->bind_param("isssi", $lid, $cc, $sem, $ay, $user_id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success']='Lecturer assigned.';
+        }
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'add_timetable') {
         $lid=intval($_POST['lecturer_id']??0);
-        $cc=$conn->real_escape_string($_POST['course_code']??'');
-        $dow=$conn->real_escape_string($_POST['day_of_week']??'');
+        $cc=$_POST['course_code']??'';
+        $dow=$_POST['day_of_week']??'';
         $st=$_POST['start_time']??'';
         $et=$_POST['end_time']??'';
-        $rm=$conn->real_escape_string($_POST['room']??'');
-        $conn->query("INSERT INTO timetable (lecturer_id,course_code,day_of_week,start_time,end_time,room) VALUES ($lid,'$cc','$dow','$st','$et','$rm')");
+        $rm=$_POST['room']??'';
+        $stmt = $conn->prepare("INSERT INTO timetable (lecturer_id,course_code,day_of_week,start_time,end_time,room) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("isssss", $lid, $cc, $dow, $st, $et, $rm);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success']='Timetable entry added.';
         header("Location: director-academics.php?section=$section"); exit;
     }
@@ -261,8 +312,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'record_attendance') {
         $sid=intval($_POST['student_id']??0);
         $dt=$_POST['date']??date('Y-m-d');
-        $st=$conn->real_escape_string($_POST['status']??'Present');
-        if($sid && $students_conn){ $students_conn->query("INSERT INTO student_attendance (student_id,date,status) VALUES ($sid,'$dt','$st')"); $_SESSION['success']='Attendance recorded.'; }
+        $st=$_POST['status']??'Present';
+        if($sid && $students_conn){
+            $stmt = $students_conn->prepare("INSERT INTO student_attendance (student_id,date,status) VALUES (?,?,?)");
+            $stmt->bind_param("iss", $sid, $dt, $st);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success']='Attendance recorded.';
+        }
         header("Location: director-academics.php?section=$section"); exit;
     }
 
@@ -585,8 +642,13 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                     <div id="c<?= $i ?>" class="accordion-collapse collapse" data-bs-parent="#curriculumAccordion">
                                         <div class="accordion-body p-2">
                                             <?php
-                                            $ccs=[];$r=$conn->query("SELECT * FROM academic_course_catalog WHERE program_code='".$conn->real_escape_string($p['program_code'])."' ORDER BY year_of_study,semester");
-                                            if($r) while($row=$r->fetch_assoc()) $ccs[]=$row;
+                                            $ccs=[];
+                                            $ccStmt=$conn->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? ORDER BY year_of_study,semester");
+                                            $ccStmt->bind_param("s",$p['program_code']);
+                                            $ccStmt->execute();
+                                            $ccRes=$ccStmt->get_result();
+                                            if($ccRes) while($row=$ccRes->fetch_assoc()) $ccs[]=$row;
+                                            $ccStmt->close();
                                             if(!empty($ccs)): foreach($ccs as $cc): ?>
                                             <div class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom small">
                                                 <span><code><?= htmlspecialchars($cc['course_code']) ?></code> <?= htmlspecialchars($cc['course_title']) ?></span>

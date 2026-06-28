@@ -122,14 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($conn && $action === 'record_admission') {
         if (!$canEditAdmission) { $_SESSION['error'] = 'Permission denied.'; header('Location: student-management.php'); exit; }
-        $app = $conn->real_escape_string($_POST['application_number'] ?? ('APP-'.date('Ymd').'-'.mt_rand(1000,9999)));
-        $name = $conn->real_escape_string($_POST['applicant_name'] ?? '');
-        $program = $conn->real_escape_string($_POST['program'] ?? '');
-        $year = $conn->real_escape_string($_POST['academic_year'] ?? date('Y'));
+        $app = $_POST['application_number'] ?? ('APP-'.date('Ymd').'-'.mt_rand(1000,9999));
+        $name = $_POST['applicant_name'] ?? '';
+        $program = $_POST['program'] ?? '';
+        $year = $_POST['academic_year'] ?? date('Y');
         $status = in_array($_POST['admission_status'] ?? '', ['Applied','Interview','Admitted','Rejected','Deferred','Enrolled']) ? $_POST['admission_status'] : 'Applied';
-        $date = $conn->real_escape_string($_POST['application_date'] ?? date('Y-m-d'));
+        $date = $_POST['application_date'] ?? date('Y-m-d');
         if ($name && $program) {
-            $conn->query("INSERT INTO student_admissions (application_number,applicant_name,program,academic_year,admission_status,application_date,decided_by,remarks) VALUES ('$app','$name','$program','$year','$status','$date',$uid,'') ON DUPLICATE KEY UPDATE applicant_name=VALUES(applicant_name),program=VALUES(program),admission_status=VALUES(admission_status)");
+            $stmt = $conn->prepare("INSERT INTO student_admissions (application_number,applicant_name,program,academic_year,admission_status,application_date,decided_by,remarks) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE applicant_name=VALUES(applicant_name),program=VALUES(program),admission_status=VALUES(admission_status)");
+            $stmt->bind_param("ssssssi", $app, $name, $program, $year, $status, $date, $uid);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Admission record saved.';
         }
     }
@@ -137,10 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$canEditAcademic) { $_SESSION['error'] = 'Permission denied.'; header('Location: student-management.php'); exit; }
         $sid = intval($_POST['student_id'] ?? 0);
         $cid = intval($_POST['course_id'] ?? 0);
-        $ay = $conn->real_escape_string($_POST['academic_year'] ?? date('Y'));
-        $sem = $conn->real_escape_string($_POST['semester'] ?? 'First Semester');
+        $ay = $_POST['academic_year'] ?? date('Y');
+        $sem = $_POST['semester'] ?? 'First Semester';
         if ($sid && $cid) {
-            $conn->query("INSERT INTO course_registrations (student_id,course_id,academic_year,semester,registration_status) VALUES ($sid,$cid,'$ay','$sem','Registered') ON DUPLICATE KEY UPDATE registration_status='Registered'");
+            $stmt = $conn->prepare("INSERT INTO course_registrations (student_id,course_id,academic_year,semester,registration_status) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE registration_status='Registered'");
+            $stmt->bind_param("iisss", $sid, $cid, $ay, $sem);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Course registration saved.';
         }
     }
@@ -151,7 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $score = floatval($_POST['score'] ?? 0);
         $max = floatval($_POST['max_score'] ?? 100);
         if ($session && $sid) {
-            $conn->query("INSERT INTO assessment_scores (examination_session_id,student_id,score,max_score,entered_by) VALUES ($session,$sid,$score,$max,$uid) ON DUPLICATE KEY UPDATE score=VALUES(score),max_score=VALUES(max_score)");
+            $stmt = $conn->prepare("INSERT INTO assessment_scores (examination_session_id,student_id,score,max_score,entered_by) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE score=VALUES(score),max_score=VALUES(max_score)");
+            $stmt->bind_param("iiddd", $session, $sid, $score, $max, $uid);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Score saved.';
         }
     }

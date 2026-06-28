@@ -6,8 +6,8 @@
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
     $student_id = $_SESSION['uid'];
-    $class = mysqli_real_escape_string($conn, $_POST['class']);
-    $instalment = mysqli_real_escape_string($conn, $_POST['instalment']);
+    $class = $_POST['class'] ?? '';
+    $instalment = $_POST['instalment'] ?? '';
     $amount = floatval($_POST['amount']);
     $payment_ref = 'PAY-' . time() . '-' . $student_id;
     

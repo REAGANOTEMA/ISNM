@@ -79,10 +79,18 @@ function processStoreApproval($approvalRequestId, $actionType, $comments = '', $
         if (!$ar || !($req = $ar->fetch_assoc())) return false;
         $storeReqId = (int)$req['reference_id'];
         if ($actionType === 'approve') {
-            $conn->query("UPDATE store_requests SET status='approved', approved_by=" . (int)($req['final_approval_by'] ?? 0) . ", notes=CONCAT(COALESCE(notes,''),'\n[DG Approved: " . $conn->real_escape_string($comments) . "]') WHERE id=$storeReqId");
+            $approvedBy = (int)($req['final_approval_by'] ?? 0);
+            $notesText = "[DG Approved: $comments]";
+            $stmt = $conn->prepare("UPDATE store_requests SET status='approved', approved_by=?, notes=CONCAT(COALESCE(notes,''), CHAR(10), ?) WHERE id=?");
+            $stmt->bind_param("isi", $approvedBy, $notesText, $storeReqId);
+            $stmt->execute();
+            $stmt->close();
         } elseif ($actionType === 'reject') {
-            $reason = $conn->real_escape_string($comments ?: 'Rejected by Director General');
-            $conn->query("UPDATE store_requests SET status='rejected', rejection_reason='$reason' WHERE id=$storeReqId");
+            $reason = $comments ?: 'Rejected by Director General';
+            $stmt = $conn->prepare("UPDATE store_requests SET status='rejected', rejection_reason=? WHERE id=?");
+            $stmt->bind_param("si", $reason, $storeReqId);
+            $stmt->execute();
+            $stmt->close();
         }
         return true;
     } catch (Exception $e) { error_log('processStoreApproval: ' . $e->getMessage()); return false; }
@@ -114,8 +122,11 @@ function processStudentApproval($approvalRequestId, $actionType, $comments = '',
             }
             $conn->query("UPDATE pending_students SET status='approved' WHERE id=$pendingId");
         } elseif ($actionType === 'reject') {
-            $reason = $conn->real_escape_string($comments ?: 'Rejected by Director General');
-            $conn->query("UPDATE pending_students SET status='rejected', rejection_reason='$reason' WHERE id=$pendingId");
+            $reason = $comments ?: 'Rejected by Director General';
+            $stmt = $conn->prepare("UPDATE pending_students SET status='rejected', rejection_reason=? WHERE id=?");
+            $stmt->bind_param("si", $reason, $pendingId);
+            $stmt->execute();
+            $stmt->close();
         }
         return true;
     } catch (Exception $e) { error_log('processStudentApproval: ' . $e->getMessage()); return false; }

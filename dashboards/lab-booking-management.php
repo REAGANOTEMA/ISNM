@@ -34,35 +34,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
 
     if ($action === 'create_booking') {
         $ref = 'LB-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        $course = lb_esc($ict_conn, $_POST['course_name']);
-        $instructor = lb_esc($ict_conn, $_POST['instructor_name']);
-        $email = lb_esc($ict_conn, $_POST['instructor_email'] ?? '');
-        $date = lb_esc($ict_conn, $_POST['booking_date']);
-        $slot = lb_esc($ict_conn, $_POST['time_slot']);
+        $course = trim($_POST['course_name']);
+        $instructor = trim($_POST['instructor_name']);
+        $email = trim($_POST['instructor_email'] ?? '');
+        $date = trim($_POST['booking_date']);
+        $slot = trim($_POST['time_slot']);
         $students = (int)($_POST['number_of_students'] ?? 0);
-        $purpose = lb_esc($ict_conn, $_POST['purpose'] ?? '');
-        $requirements = lb_esc($ict_conn, $_POST['special_requirements'] ?? '');
-        $lab = lb_esc($ict_conn, $_POST['lab_assigned'] ?? '');
-        $ict_conn->query("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, special_requirements, status, lab_assigned, created_by) VALUES ('$ref', '$course', '$instructor', '$email', '$date', '$slot', $students, '$purpose', '$requirements', 'pending', '$lab', $user_id)");
+        $purpose = trim($_POST['purpose'] ?? '');
+        $requirements = trim($_POST['special_requirements'] ?? '');
+        $lab = trim($_POST['lab_assigned'] ?? '');
+        $stmt = $ict_conn->prepare("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, instructor_email, booking_date, time_slot, number_of_students, purpose, special_requirements, status, lab_assigned, created_by) VALUES (?,?,?,?,?,?,?,?,'pending',?,?)");
+        if ($stmt) { $stmt->bind_param('sssssisssi', $ref, $course, $instructor, $email, $date, $slot, $students, $purpose, $requirements, $lab, $user_id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = "Booking $ref created successfully.";
         header('Location: lab-booking-management.php'); exit;
     }
 
     if ($action === 'confirm_booking') {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $ict_conn->query("UPDATE lab_bookings SET status='confirmed', approved_by=$user_id WHERE id=$id"); $_SESSION['success'] = 'Booking confirmed.'; }
+        if ($id > 0) {
+            $stmt = $ict_conn->prepare("UPDATE lab_bookings SET status='confirmed', approved_by=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ii', $user_id, $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Booking confirmed.';
+        }
         header('Location: lab-booking-management.php'); exit;
     }
 
     if ($action === 'cancel_booking') {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $ict_conn->query("UPDATE lab_bookings SET status='cancelled' WHERE id=$id"); $_SESSION['success'] = 'Booking cancelled.'; }
+        if ($id > 0) {
+            $stmt = $ict_conn->prepare("UPDATE lab_bookings SET status='cancelled' WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Booking cancelled.';
+        }
         header('Location: lab-booking-management.php'); exit;
     }
 
     if ($action === 'complete_booking') {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $ict_conn->query("UPDATE lab_bookings SET status='completed' WHERE id=$id"); $_SESSION['success'] = 'Booking marked completed.'; }
+        if ($id > 0) {
+            $stmt = $ict_conn->prepare("UPDATE lab_bookings SET status='completed' WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Booking marked completed.';
+        }
         header('Location: lab-booking-management.php'); exit;
     }
 
@@ -74,15 +87,22 @@ $confirmed_today = lb_q($ict_conn, "SELECT COUNT(*) FROM lab_bookings WHERE book
 $pending_total = lb_q($ict_conn, "SELECT COUNT(*) FROM lab_bookings WHERE status = 'pending'");
 $completed_today = lb_q($ict_conn, "SELECT COUNT(*) FROM lab_bookings WHERE booking_date = CURDATE() AND status = 'completed'");
 
-$bookings = lb_fetch($ict_conn, "SELECT * FROM lab_bookings" . ($filter_date ? " WHERE booking_date = '" . lb_esc($ict_conn, $filter_date) . "'" : "") . " ORDER BY time_slot ASC, created_at DESC");
+if ($filter_date !== '') {
+    $stmt = $ict_conn->prepare("SELECT * FROM lab_bookings WHERE booking_date = ? ORDER BY time_slot ASC, created_at DESC");
+    if ($stmt) { $stmt->bind_param('s', $filter_date); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+} else {
+    $r = $ict_conn->query("SELECT * FROM lab_bookings ORDER BY time_slot ASC, created_at DESC");
+}
+$bookings = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
 
 $time_slots = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'];
 $labs = ['Lab A', 'Lab B', 'Lab C', 'Lab D', 'Computer Lab 1', 'Computer Lab 2'];
 $availability = [];
 foreach ($labs as $lab) {
     foreach ($time_slots as $slot) {
-        $b = lb_q($ict_conn, "SELECT COUNT(*) FROM lab_bookings WHERE lab_assigned='$lab' AND time_slot='$slot' AND booking_date=CURDATE() AND status IN ('pending','confirmed')");
-        $availability[$lab][$slot] = $b === 0;
+        $stmt = $ict_conn->prepare("SELECT COUNT(*) FROM lab_bookings WHERE lab_assigned=? AND time_slot=? AND booking_date=CURDATE() AND status IN ('pending','confirmed')");
+        if ($stmt) { $stmt->bind_param('ss', $lab, $slot); $stmt->execute(); $r = $stmt->get_result(); $row = $r ? $r->fetch_row() : [0]; $stmt->close(); } else $row = [0];
+        $availability[$lab][$slot] = ((int)$row[0] === 0);
     }
 }
 

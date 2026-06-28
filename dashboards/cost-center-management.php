@@ -7,29 +7,41 @@ $user = $ctx['user'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add' || $action === 'edit') {
-        $code = $conn->real_escape_string($_POST['cost_center_code']);
-        $name = $conn->real_escape_string($_POST['cost_center_name']);
-        $dept = $conn->real_escape_string($_POST['department'] ?? '');
-        $desc = $conn->real_escape_string($_POST['description'] ?? '');
+        $code = $_POST['cost_center_code'];
+        $name = $_POST['cost_center_name'];
+        $dept = $_POST['department'] ?? '';
+        $desc = $_POST['description'] ?? '';
         if ($action === 'add') {
-            $conn->query("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES ('$code', '$name', '$dept', '$desc')");
+            $stmt = $conn->prepare("INSERT INTO cost_centers (cost_center_code, cost_center_name, department, description) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $code, $name, $dept, $desc);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = "Cost center '$name' added.";
         } else {
             $id = (int)($_POST['id'] ?? 0);
-            $conn->query("UPDATE cost_centers SET cost_center_code='$code', cost_center_name='$name', department='$dept', description='$desc' WHERE id=$id");
+            $stmt = $conn->prepare("UPDATE cost_centers SET cost_center_code=?, cost_center_name=?, department=?, description=? WHERE id=?");
+            $stmt->bind_param("ssssi", $code, $name, $dept, $desc, $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = "Cost center '$name' updated.";
         }
         header('Location: cost-center-management.php'); exit;
     }
     if ($action === 'toggle') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("UPDATE cost_centers SET is_active = NOT is_active WHERE id=$id");
+        $stmt = $conn->prepare("UPDATE cost_centers SET is_active = NOT is_active WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success'] = 'Cost center status toggled.';
         header('Location: cost-center-management.php'); exit;
     }
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("DELETE FROM cost_centers WHERE id=$id");
+        $stmt = $conn->prepare("DELETE FROM cost_centers WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['success'] = 'Cost center deleted.';
         header('Location: cost-center-management.php'); exit;
     }

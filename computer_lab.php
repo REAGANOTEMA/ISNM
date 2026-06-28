@@ -137,37 +137,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($ict) {
     if ($action === 'add_computer') {
-        $cid = $ict->real_escape_string($_POST['computer_id']);
-        $name = $ict->real_escape_string($_POST['computer_name']);
-        $loc = $ict->real_escape_string($_POST['location']);
-        $ip = $ict->real_escape_string($_POST['ip_address'] ?? '');
-        $mac = $ict->real_escape_string($_POST['mac_address'] ?? '');
-        $specs = $ict->real_escape_string($_POST['specifications'] ?? '');
-        $os = $ict->real_escape_string($_POST['os_installed'] ?? '');
-        $ict->query("INSERT IGNORE INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed) VALUES ('$cid', '$name', '$loc', 'online', '$ip', '$mac', '$specs', '$os')");
+        $cid = $_POST['computer_id'] ?? '';
+        $name = $_POST['computer_name'] ?? '';
+        $loc = $_POST['location'] ?? '';
+        $ip = $_POST['ip_address'] ?? '';
+        $mac = $_POST['mac_address'] ?? '';
+        $specs = $_POST['specifications'] ?? '';
+        $os = $_POST['os_installed'] ?? '';
+        $stmt = $ict->prepare("INSERT IGNORE INTO lab_computers (computer_id, computer_name, location, status, ip_address, mac_address, specifications, os_installed) VALUES (?, ?, ?, 'online', ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("sssssss", $cid, $name, $loc, $ip, $mac, $specs, $os);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Computer $cid added.";
         header('Location: computer_lab.php?section=computers');
         exit;
     }
 
     if ($action === 'edit_computer') {
-        $id = intval($_POST['id']);
-        $name = $ict->real_escape_string($_POST['computer_name']);
-        $loc = $ict->real_escape_string($_POST['location']);
-        $ip = $ict->real_escape_string($_POST['ip_address'] ?? '');
-        $mac = $ict->real_escape_string($_POST['mac_address'] ?? '');
-        $specs = $ict->real_escape_string($_POST['specifications'] ?? '');
-        $os = $ict->real_escape_string($_POST['os_installed'] ?? '');
-        $status = $ict->real_escape_string($_POST['status'] ?? 'online');
-        $ict->query("UPDATE lab_computers SET computer_name='$name', location='$loc', ip_address='$ip', mac_address='$mac', specifications='$specs', os_installed='$os', status='$status' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $name = $_POST['computer_name'] ?? '';
+        $loc = $_POST['location'] ?? '';
+        $ip = $_POST['ip_address'] ?? '';
+        $mac = $_POST['mac_address'] ?? '';
+        $specs = $_POST['specifications'] ?? '';
+        $os = $_POST['os_installed'] ?? '';
+        $status = $_POST['status'] ?? 'online';
+        $stmt = $ict->prepare("UPDATE lab_computers SET computer_name=?, location=?, ip_address=?, mac_address=?, specifications=?, os_installed=?, status=? WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("sssssssi", $name, $loc, $ip, $mac, $specs, $os, $status, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Computer updated.";
         header('Location: computer_lab.php?section=computers');
         exit;
     }
 
     if ($action === 'delete_computer') {
-        $id = intval($_POST['id']);
-        $ict->query("UPDATE lab_computers SET status='deleted' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $stmt = $ict->prepare("UPDATE lab_computers SET status='deleted' WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Computer removed.";
         header('Location: computer_lab.php?section=computers');
         exit;
@@ -175,23 +190,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'create_ticket') {
         $tn = 'TKT-' . date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-        $rn = $ict->real_escape_string($_POST['requester_name']);
-        $re = $ict->real_escape_string($_POST['requester_email'] ?? '');
-        $rt = $ict->real_escape_string($_POST['requester_type']);
-        $it = $ict->real_escape_string($_POST['issue_type']);
-        $pr = $ict->real_escape_string($_POST['priority']);
-        $desc = $ict->real_escape_string($_POST['description']);
-        $ict->query("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES ('$tn', '$rn', '$re', '$rt', '$it', '$pr', '$desc')");
+        $rn = $_POST['requester_name'] ?? '';
+        $re = $_POST['requester_email'] ?? '';
+        $rt = $_POST['requester_type'] ?? '';
+        $it = $_POST['issue_type'] ?? '';
+        $pr = $_POST['priority'] ?? '';
+        $desc = $_POST['description'] ?? '';
+        $stmt = $ict->prepare("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("sssssss", $tn, $rn, $re, $rt, $it, $pr, $desc);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Ticket $tn created.";
         header('Location: computer_lab.php?section=support');
         exit;
     }
 
     if ($action === 'resolve_ticket') {
-        $id = intval($_POST['ticket_id']);
-        $notes = $ict->real_escape_string($_POST['resolution_notes'] ?? '');
+        $id = (int)$_POST['ticket_id'];
+        $notes = $_POST['resolution_notes'] ?? '';
         $uname = $_SESSION['full_name'] ?? 'Lab Staff';
-        $ict->query("UPDATE it_support_tickets SET status='resolved', resolution_notes=CONCAT(resolution_notes,'\n[$uname] $notes'), resolved_at=NOW() WHERE id=$id");
+        $stmt = $ict->prepare("UPDATE it_support_tickets SET status='resolved', resolution_notes=CONCAT(resolution_notes,?), resolved_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $noteVal = "\n[$uname] $notes";
+            $stmt->bind_param("si", $noteVal, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Ticket #$id resolved.";
         header('Location: computer_lab.php?section=support');
         exit;
@@ -199,132 +225,197 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'add_booking') {
         $ref = 'BK-' . date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-        $cn = $ict->real_escape_string($_POST['course_name']);
-        $in = $ict->real_escape_string($_POST['instructor_name']);
-        $bd = $ict->real_escape_string($_POST['booking_date']);
-        $ts = $ict->real_escape_string($_POST['time_slot']);
-        $ns = intval($_POST['number_of_students']);
-        $ict->query("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, booking_date, time_slot, number_of_students, status) VALUES ('$ref', '$cn', '$in', '$bd', '$ts', $ns, 'pending')");
+        $cn = $_POST['course_name'] ?? '';
+        $in = $_POST['instructor_name'] ?? '';
+        $bd = $_POST['booking_date'] ?? '';
+        $ts = $_POST['time_slot'] ?? '';
+        $ns = (int)($_POST['number_of_students'] ?? 0);
+        $stmt = $ict->prepare("INSERT INTO lab_bookings (booking_reference, course_name, instructor_name, booking_date, time_slot, number_of_students, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
+        if ($stmt) {
+            $stmt->bind_param("sssssi", $ref, $cn, $in, $bd, $ts, $ns);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Booking $ref created.";
         header('Location: computer_lab.php?section=sessions');
         exit;
     }
 
     if ($action === 'update_booking_status') {
-        $id = intval($_POST['id']);
-        $st = $ict->real_escape_string($_POST['status']);
-        $ict->query("UPDATE lab_bookings SET status='$st' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $st = $_POST['status'] ?? '';
+        $stmt = $ict->prepare("UPDATE lab_bookings SET status=? WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("si", $st, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Booking updated.";
         header('Location: computer_lab.php?section=sessions');
         exit;
     }
 
     if ($action === 'add_equipment') {
-        $en = $ict->real_escape_string($_POST['equipment_name']);
-        $ec = $ict->real_escape_string($_POST['equipment_code']);
-        $cat = $ict->real_escape_string($_POST['category']);
-        $qty = intval($_POST['quantity']);
-        $loc = $ict->real_escape_string($_POST['location']);
-        $ict->query("INSERT INTO lab_equipment (equipment_name, equipment_code, category, quantity, location, status) VALUES ('$en', '$ec', '$cat', $qty, '$loc', 'active')");
+        $en = $_POST['equipment_name'] ?? '';
+        $ec = $_POST['equipment_code'] ?? '';
+        $cat = $_POST['category'] ?? '';
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $loc = $_POST['location'] ?? '';
+        $stmt = $ict->prepare("INSERT INTO lab_equipment (equipment_name, equipment_code, category, quantity, location, status) VALUES (?, ?, ?, ?, ?, 'active')");
+        if ($stmt) {
+            $stmt->bind_param("sssii", $en, $ec, $cat, $qty, $loc);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Equipment added.";
         header('Location: computer_lab.php?section=equipment');
         exit;
     }
 
     if ($action === 'delete_equipment') {
-        $id = intval($_POST['id']);
-        $ict->query("UPDATE lab_equipment SET status='inactive' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $stmt = $ict->prepare("UPDATE lab_equipment SET status='inactive' WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Equipment removed.";
         header('Location: computer_lab.php?section=equipment');
         exit;
     }
 
     if ($action === 'create_print_job') {
-        $pn = $ict->real_escape_string($_POST['patient_name'] ?? $_POST['document_name'] ?? 'Print Job');
-        $pt = $ict->real_escape_string($_POST['print_type']);
-        $pc = intval($_POST['page_count']);
-        $cc = intval($_POST['copy_count'] ?: 1);
-        $un = $ict->real_escape_string($_POST['user_name'] ?? $_SESSION['full_name']);
-        $ict->query("INSERT INTO lab_printing_jobs (job_name, print_type, page_count, copy_count, user_name, status) VALUES ('$pn', '$pt', $pc, $cc, '$un', 'pending')");
+        $pn = $_POST['patient_name'] ?? $_POST['document_name'] ?? 'Print Job';
+        $pt = $_POST['print_type'] ?? '';
+        $pc = (int)($_POST['page_count'] ?? 0);
+        $cc = (int)($_POST['copy_count'] ?: 1);
+        $un = $_POST['user_name'] ?? $_SESSION['full_name'] ?? '';
+        $stmt = $ict->prepare("INSERT INTO lab_printing_jobs (job_name, print_type, page_count, copy_count, user_name, status) VALUES (?, ?, ?, ?, ?, 'pending')");
+        if ($stmt) {
+            $stmt->bind_param("ssisi", $pn, $pt, $pc, $cc, $un);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Print job submitted.";
         header('Location: computer_lab.php?section=printing');
         exit;
     }
 
     if ($action === 'update_print_status') {
-        $id = intval($_POST['id']);
-        $st = $ict->real_escape_string($_POST['status']);
-        $ict->query("UPDATE lab_printing_jobs SET status='$st', completed_at=NOW() WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $st = $_POST['status'] ?? '';
+        $stmt = $ict->prepare("UPDATE lab_printing_jobs SET status=?, completed_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("si", $st, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Print job updated.";
         header('Location: computer_lab.php?section=printing');
         exit;
     }
 
     if ($action === 'add_software') {
-        $sn = $ict->real_escape_string($_POST['software_name']);
-        $sv = $ict->real_escape_string($_POST['version'] ?? '');
-        $lic = $ict->real_escape_string($_POST['license_type'] ?? '');
-        $exp = $_POST['expiry_date'] ? "'" . $ict->real_escape_string($_POST['expiry_date']) . "'" : 'NULL';
-        $ict->query("INSERT INTO software_inventory (software_name, version, license_type, expiry_date, status) VALUES ('$sn', '$sv', '$lic', $exp, 'active')");
+        $sn = $_POST['software_name'] ?? '';
+        $sv = $_POST['version'] ?? '';
+        $lic = $_POST['license_type'] ?? '';
+        $exp = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $stmt = $ict->prepare("INSERT INTO software_inventory (software_name, version, license_type, expiry_date, status) VALUES (?, ?, ?, ?, 'active')");
+        if ($stmt) {
+            $stmt->bind_param("ssss", $sn, $sv, $lic, $exp);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Software added.";
         header('Location: computer_lab.php?section=software');
         exit;
     }
 
     if ($action === 'delete_software') {
-        $id = intval($_POST['id']);
-        $ict->query("UPDATE software_inventory SET status='deleted' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $stmt = $ict->prepare("UPDATE software_inventory SET status='deleted' WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Software removed.";
         header('Location: computer_lab.php?section=software');
         exit;
     }
 
     if ($action === 'add_inventory_item') {
-        $in = $ict->real_escape_string($_POST['item_name']);
-        $ic = $ict->real_escape_string($_POST['item_code'] ?? '');
-        $cat = $ict->real_escape_string($_POST['category'] ?? '');
-        $qty = intval($_POST['quantity']);
-        $un = $ict->real_escape_string($_POST['unit'] ?? 'pcs');
-        $ict->query("INSERT INTO lab_inventory_items (item_name, item_code, category, quantity, unit) VALUES ('$in', '$ic', '$cat', $qty, '$un')");
+        $in = $_POST['item_name'] ?? '';
+        $ic = $_POST['item_code'] ?? '';
+        $cat = $_POST['category'] ?? '';
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $un = $_POST['unit'] ?? 'pcs';
+        $stmt = $ict->prepare("INSERT INTO lab_inventory_items (item_name, item_code, category, quantity, unit) VALUES (?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("sssii", $in, $ic, $cat, $qty, $un);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Inventory item added.";
         header('Location: computer_lab.php?section=inventory');
         exit;
     }
 
     if ($action === 'update_inventory_qty') {
-        $id = intval($_POST['id']);
-        $qty = intval($_POST['quantity']);
-        $ict->query("UPDATE lab_inventory_items SET quantity=$qty WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $stmt = $ict->prepare("UPDATE lab_inventory_items SET quantity=? WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("ii", $qty, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Inventory updated.";
         header('Location: computer_lab.php?section=inventory');
         exit;
     }
 
     if ($action === 'record_attendance') {
-        $sid = $ict->real_escape_string($_POST['student_id']);
-        $sn = $ict->real_escape_string($_POST['student_name']);
-        $ss = $ict->real_escape_string($_POST['session'] ?? 'Lab Session');
-        $st = $ict->real_escape_string($_POST['status'] ?? 'present');
-        $ict->query("INSERT INTO lab_attendance (student_id, student_name, session, status) VALUES ('$sid', '$sn', '$ss', '$st')");
+        $sid = $_POST['student_id'] ?? '';
+        $sn = $_POST['student_name'] ?? '';
+        $ss = $_POST['session'] ?? 'Lab Session';
+        $st = $_POST['status'] ?? 'present';
+        $stmt = $ict->prepare("INSERT INTO lab_attendance (student_id, student_name, session, status) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("ssss", $sid, $sn, $ss, $st);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Attendance recorded.";
         header('Location: computer_lab.php?section=attendance');
         exit;
     }
 
     if ($action === 'request_id_card') {
-        $sid = $ict->real_escape_string($_POST['student_id']);
-        $sn = $ict->real_escape_string($_POST['student_name']);
-        $sp = $ict->real_escape_string($_POST['program'] ?? '');
-        $ict->query("INSERT INTO lab_id_card_requests (student_id, student_name, program, status) VALUES ('$sid', '$sn', '$sp', 'pending')");
+        $sid = $_POST['student_id'] ?? '';
+        $sn = $_POST['student_name'] ?? '';
+        $sp = $_POST['program'] ?? '';
+        $stmt = $ict->prepare("INSERT INTO lab_id_card_requests (student_id, student_name, program, status) VALUES (?, ?, ?, 'pending')");
+        if ($stmt) {
+            $stmt->bind_param("sss", $sid, $sn, $sp);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "ID card request submitted.";
         header('Location: computer_lab.php?section=id-cards');
         exit;
     }
 
     if ($action === 'update_id_card_status') {
-        $id = intval($_POST['id']);
-        $st = $ict->real_escape_string($_POST['status']);
-        $ict->query("UPDATE lab_id_card_requests SET status='$st' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $st = $_POST['status'] ?? '';
+        $stmt = $ict->prepare("UPDATE lab_id_card_requests SET status=? WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("si", $st, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "ID card status updated.";
         header('Location: computer_lab.php?section=id-cards');
         exit;
@@ -674,8 +765,16 @@ $pageTitle = 'Computer Lab Manager';
                     <?php
                     $search_s = trim($_GET['student_search'] ?? '');
                     if ($search_s && $students_conn):
-                        $like = '%' . $students_conn->real_escape_string($search_s) . '%';
-                        $found = lab_fetch($students_conn, "SELECT student_id, full_name, program FROM students WHERE full_name LIKE '$like' OR student_id LIKE '$like' LIMIT 10");
+                        $like = '%' . $search_s . '%';
+                        $stmt = $students_conn->prepare("SELECT student_id, full_name, program FROM students WHERE full_name LIKE ? OR student_id LIKE ? LIMIT 10");
+                        $found = [];
+                        if ($stmt) {
+                            $stmt->bind_param("ss", $like, $like);
+                            $stmt->execute();
+                            $res = $stmt->get_result();
+                            if ($res) $found = $res->fetch_all(MYSQLI_ASSOC);
+                            $stmt->close();
+                        }
                         if (!empty($found)):
                     ?>
                     <div class="mt-2 small">

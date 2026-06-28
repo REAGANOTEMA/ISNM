@@ -6,10 +6,6 @@ $userId = (int)($user['id'] ?? 0);
 
 $conn = getConnection();
 
-function dr_esc($conn, $val) {
-    return $conn ? $conn->real_escape_string((string)$val) : $val;
-}
-
 function dr_fetch($conn, $sql) {
     if (!$conn) return [];
     $r = $conn->query($sql);
@@ -30,14 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
     if ($action === 'create') {
         $rn = 'DR-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
-        $fd = dr_esc($conn, $_POST['from_department'] ?? '');
-        $td = dr_esc($conn, $_POST['to_department'] ?? 'Store');
-        $in = dr_esc($conn, $_POST['item_name'] ?? '');
+        $fd = $_POST['from_department'] ?? '';
+        $td = $_POST['to_department'] ?? 'Store';
+        $in = $_POST['item_name'] ?? '';
         $qty = max(1, (int)($_POST['quantity'] ?? 1));
-        $un = dr_esc($conn, $_POST['unit'] ?? '');
-        $pr = dr_esc($conn, $_POST['purpose'] ?? '');
-        $ug = dr_esc($conn, $_POST['urgency'] ?? 'Normal');
-        $conn->query("INSERT INTO department_requests (request_number, from_department, to_department, item_name, quantity, unit, purpose, urgency, status, requested_by) VALUES ('$rn', '$fd', '$td', '$in', $qty, '$un', '$pr', '$ug', 'Pending', $userId)");
+        $un = $_POST['unit'] ?? '';
+        $pr = $_POST['purpose'] ?? '';
+        $ug = $_POST['urgency'] ?? 'Normal';
+        $stmt = $conn->prepare("INSERT INTO department_requests (request_number, from_department, to_department, item_name, quantity, unit, purpose, urgency, status, requested_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
+        $stmt->bind_param("ssssissii", $rn, $fd, $td, $in, $qty, $un, $pr, $ug, $userId);
+        $stmt->execute();
+        $stmt->close();
         $msg = ['t' => 'success', 'm' => "Request <strong>$rn</strong> created."];
         header('Location: department-requests.php'); exit;
     }
@@ -45,7 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if ($action === 'approve' && in_array($_POST['from'] ?? '', ['table','card'])) {
         $id = (int)($_POST['request_id'] ?? 0);
         if ($id > 0) {
-            $conn->query("UPDATE department_requests SET status='Approved', approved_by=$userId, updated_at=NOW() WHERE id=$id AND status='Pending'");
+            $stmt = $conn->prepare("UPDATE department_requests SET status='Approved', approved_by=?, updated_at=NOW() WHERE id=? AND status='Pending'");
+            $stmt->bind_param("ii", $userId, $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request approved.'];
         }
         header('Location: department-requests.php'); exit;
@@ -53,9 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
     if ($action === 'reject') {
         $id = (int)($_POST['request_id'] ?? 0);
-        $nt = dr_esc($conn, $_POST['notes'] ?? '');
+        $nt = $_POST['notes'] ?? '';
         if ($id > 0) {
-            $conn->query("UPDATE department_requests SET status='Rejected', notes='$nt', updated_at=NOW() WHERE id=$id AND status='Pending'");
+            $stmt = $conn->prepare("UPDATE department_requests SET status='Rejected', notes=?, updated_at=NOW() WHERE id=? AND status='Pending'");
+            $stmt->bind_param("si", $nt, $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request rejected.'];
         }
         header('Location: department-requests.php'); exit;
@@ -63,10 +68,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
 
     if ($action === 'fulfill') {
         $id = (int)($_POST['request_id'] ?? 0);
-        $nt = dr_esc($conn, $_POST['notes'] ?? '');
+        $nt = $_POST['notes'] ?? '';
         if ($id > 0) {
-            $sn = $nt ? ", notes=CONCAT(IFNULL(notes,''), '\n$nt')" : '';
-            $conn->query("UPDATE department_requests SET status='Fulfilled', approved_by=$userId, updated_at=NOW()$sn WHERE id=$id AND status='Approved'");
+            if ($nt) {
+                $stmt = $conn->prepare("UPDATE department_requests SET status='Fulfilled', approved_by=?, notes=CONCAT(IFNULL(notes,''), ?), updated_at=NOW() WHERE id=? AND status='Approved'");
+                $nl = "\n" . $nt;
+                $stmt->bind_param("isi", $userId, $nl, $id);
+            } else {
+                $stmt = $conn->prepare("UPDATE department_requests SET status='Fulfilled', approved_by=?, updated_at=NOW() WHERE id=? AND status='Approved'");
+                $stmt->bind_param("ii", $userId, $id);
+            }
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['dr_msg'] = ['t' => 'success', 'm' => 'Request fulfilled.'];
         }
         header('Location: department-requests.php'); exit;

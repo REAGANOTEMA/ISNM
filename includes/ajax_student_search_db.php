@@ -9,7 +9,7 @@ $term = trim($_GET['term'] ?? $_GET['q'] ?? '');
 if (strlen($term) < 1) { echo json_encode(['success'=>false,'students'=>[]]); exit; }
 $results = [];
 if ($conn) {
-    $like = '%' . $conn->real_escape_string($term) . '%';
+    $like = '%' . $term . '%';
     $sql = "SELECT student_id, student_number, index_number, registration_number, full_name, first_name, surname, other_name, program, level, set_name, phone, mobile_number, email, gender, status, passport_photo, profile_picture
             FROM students
             WHERE full_name LIKE ? OR first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR index_number LIKE ? OR phone LIKE ? OR mobile_number LIKE ?

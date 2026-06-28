@@ -238,39 +238,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'restore_record') {
         $rid = (int)($_POST['id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=0, deleted_at=NULL WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record restored.'; }
+        if ($rid > 0) {
+            $stmt = $staff_conn->prepare("UPDATE daily_sick_records SET is_deleted=0, deleted_at=NULL WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $rid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Record restored.';
+        }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
 
     if ($action === 'purge_record') {
         $rid = (int)($_POST['id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("DELETE FROM daily_sick_records WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record permanently deleted.'; }
+        if ($rid > 0) {
+            $stmt = $staff_conn->prepare("DELETE FROM daily_sick_records WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $rid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Record permanently deleted.';
+        }
         header('Location: sickbay.php?section=recycle-bin'); exit;
     }
 
     if ($action === 'save_health_record') {
         $sid = (int)($_POST['student_id'] ?? 0);
-        $sname = sb_esc($staff_conn, $_POST['student_name']);
-        $snum = sb_esc($staff_conn, $_POST['student_number']);
-        $bt = sb_esc($staff_conn, $_POST['blood_type']);
-        $allergies = sb_esc($staff_conn, $_POST['allergies']);
-        $chronic = sb_esc($staff_conn, $_POST['chronic_conditions']);
-        $meds = sb_esc($staff_conn, $_POST['medications']);
-        $ec_name = sb_esc($staff_conn, $_POST['emergency_contact_name']);
-        $ec_phone = sb_esc($staff_conn, $_POST['emergency_contact_phone']);
-        $ec_rel = sb_esc($staff_conn, $_POST['emergency_contact_relationship']);
-        $insurance = sb_esc($staff_conn, $_POST['insurance_provider']);
-        $ins_num = sb_esc($staff_conn, $_POST['insurance_number']);
-        $notes = sb_esc($staff_conn, $_POST['notes']);
-        $existing = $staff_conn->query("SELECT id FROM student_health_records WHERE student_id=" . intval($sid));
+        $sname = trim($_POST['student_name']);
+        $snum = trim($_POST['student_number']);
+        $bt = trim($_POST['blood_type']);
+        $allergies = trim($_POST['allergies']);
+        $chronic = trim($_POST['chronic_conditions']);
+        $meds = trim($_POST['medications']);
+        $ec_name = trim($_POST['emergency_contact_name']);
+        $ec_phone = trim($_POST['emergency_contact_phone']);
+        $ec_rel = trim($_POST['emergency_contact_relationship']);
+        $insurance = trim($_POST['insurance_provider']);
+        $ins_num = trim($_POST['insurance_number']);
+        $notes = trim($_POST['notes']);
+        $stmt = $staff_conn->prepare("SELECT id FROM student_health_records WHERE student_id=?");
+        if ($stmt) { $stmt->bind_param('i', $sid); $stmt->execute(); $existing = $stmt->get_result(); $stmt->close(); }
+        else $existing = null;
         if ($existing && $existing->num_rows > 0) {
             $row = $existing->fetch_assoc();
             $rid = (int)$row['id'];
-            $staff_conn->query("UPDATE student_health_records SET blood_type='$bt', allergies='$allergies', chronic_conditions='$chronic', medications='$meds', emergency_contact_name='$ec_name', emergency_contact_phone='$ec_phone', emergency_contact_relationship='$ec_rel', insurance_provider='$insurance', insurance_number='$ins_num', notes='$notes' WHERE id=" . intval($rid));
+            $stmt = $staff_conn->prepare("UPDATE student_health_records SET blood_type=?, allergies=?, chronic_conditions=?, medications=?, emergency_contact_name=?, emergency_contact_phone=?, emergency_contact_relationship=?, insurance_provider=?, insurance_number=?, notes=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssssssssssi', $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes, $rid); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Health record updated.';
         } else {
             $rn = 'HR-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
-            $staff_conn->query("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES ('$rn', " . intval($sid) . ", '$bt', '$allergies', '$chronic', '$meds', '$ec_name', '$ec_phone', '$ec_rel', '$insurance', '$ins_num', '$notes')");
+            $stmt = $staff_conn->prepare("INSERT INTO student_health_records (record_number, student_id, blood_type, allergies, chronic_conditions, medications, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, insurance_provider, insurance_number, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('sissssssssss', $rn, $sid, $bt, $allergies, $chronic, $meds, $ec_name, $ec_phone, $ec_rel, $insurance, $ins_num, $notes); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Health record created.';
         }
         header('Location: sickbay.php?section=health-records'); exit;
@@ -279,25 +291,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'save_health_incident') {
         $inc_num = 'HI-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
         $sid = (int)($_POST['student_id'] ?? 0);
-        $sname = sb_esc($staff_conn, $_POST['student_name']);
-        $itype = sb_esc($staff_conn, $_POST['incident_type']);
-        $symptoms = sb_esc($staff_conn, $_POST['symptoms']);
-        $severity = sb_esc($staff_conn, $_POST['severity']);
-        $location = sb_esc($staff_conn, $_POST['location']);
-        $action_taken = sb_esc($staff_conn, $_POST['action_taken']);
-        $treatment = sb_esc($staff_conn, $_POST['treatment_given']);
-        $referred = sb_esc($staff_conn, $_POST['referred_to']);
+        $sname = trim($_POST['student_name']);
+        $itype = trim($_POST['incident_type']);
+        $symptoms = trim($_POST['symptoms']);
+        $severity = trim($_POST['severity']);
+        $location = trim($_POST['location']);
+        $action_taken = trim($_POST['action_taken']);
+        $treatment = trim($_POST['treatment_given']);
+        $referred = trim($_POST['referred_to']);
         $parent_notified = isset($_POST['parent_notified']) ? 1 : 0;
-        $follow_up = !empty($_POST['follow_up_date']) ? "'".sb_esc($staff_conn, $_POST['follow_up_date'])."'" : 'NULL';
-        $notes = sb_esc($staff_conn, $_POST['notes']);
-        $staff_conn->query("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES ('$inc_num', " . intval($sid) . ", '$itype', '$symptoms', '$severity', '$location', '$action_taken', '$treatment', '$referred', " . intval($parent_notified) . ", $follow_up, 'Reported', " . intval($user_id) . ", '$notes')");
+        $follow_up = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
+        $notes = trim($_POST['notes']);
+        $stmt = $staff_conn->prepare("INSERT INTO health_incidents (incident_number, student_id, incident_type, symptoms, severity, location, action_taken, treatment_given, referred_to, parent_notified, follow_up_date, status, reported_by, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?, 'Reported', ?,?)");
+        if ($stmt) { $stmt->bind_param('sisssssssiiii', $inc_num, $sid, $itype, $symptoms, $severity, $location, $action_taken, $treatment, $referred, $parent_notified, $follow_up, $user_id, $notes); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Health incident reported. #'.$inc_num;
         header('Location: sickbay.php?section=health-incidents'); exit;
     }
 
     if ($action === 'resolve_incident') {
         $iid = (int)($_POST['id'] ?? 0);
-        if ($iid > 0) { $staff_conn->query("UPDATE health_incidents SET status='Resolved' WHERE id=$iid"); $_SESSION['success'] = 'Incident resolved.'; }
+        if ($iid > 0) {
+            $stmt = $staff_conn->prepare("UPDATE health_incidents SET status='Resolved' WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $iid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Incident resolved.';
+        }
         header('Location: sickbay.php?section=health-incidents'); exit;
     }
 
@@ -306,7 +323,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $threshold = (int)($_POST['low_stock_threshold'] ?? 10);
         $auto = (int)($_POST['auto_status'] ?? 1);
         $notify = (int)($_POST['notify_low_stock'] ?? 1);
-        $staff_conn->query("INSERT INTO sickbay_settings (setting_key, setting_value) VALUES ('reorder_level', '$reorder'), ('low_stock_threshold', '$threshold'), ('auto_status', '$auto'), ('notify_low_stock', '$notify') ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)");
+        $keys = ['reorder_level', 'low_stock_threshold', 'auto_status', 'notify_low_stock'];
+        $vals = [$reorder, $threshold, $auto, $notify];
+        for ($i = 0; $i < count($keys); $i++) {
+            $stmt = $staff_conn->prepare("INSERT INTO sickbay_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)");
+            if ($stmt) { $stmt->bind_param('si', $keys[$i], $vals[$i]); $stmt->execute(); $stmt->close(); }
+        }
         $_SESSION['success'] = 'Settings saved.';
         header('Location: sickbay.php?section=settings'); exit;
     }
@@ -355,8 +377,11 @@ if ($staff_on_duty < 1) $staff_on_duty = 1;
 $student_search_results = [];
 $search_query = trim($_GET['q'] ?? '');
 if ($search_query && $students_conn) {
-    $sq = sb_esc($students_conn, $search_query);
-    $student_search_results = sb_fetch($students_conn, "SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE '%$sq%' OR student_id LIKE '%$sq%' OR student_number LIKE '%$sq%' OR phone LIKE '%$sq%' LIMIT 20");
+    $like = "%$search_query%";
+    $stmt = $students_conn->prepare("SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR phone LIKE ? LIMIT 20");
+    if ($stmt) { $stmt->bind_param('ssss', $like, $like, $like, $like); $r = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
+    else $r = null;
+    $student_search_results = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 $pageTitle = 'Sickbay Management System';?>

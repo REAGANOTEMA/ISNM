@@ -34,7 +34,7 @@ if (!function_exists('processAutoDeductions')) {
         while ($sub = $subscriptions->fetch_assoc()) {
             $results['processed']++;
             $subId = (int)$sub['id'];
-            $studentId = $conn->real_escape_string($sub['student_id']);
+            $studentId = $sub['student_id'];
             $installNo = (int)$sub['installments_collected'] + 1;
             $amount = (float)$sub['installment_amount'];
             $dueDate = $sub['next_due_date'];
@@ -116,18 +116,18 @@ if (!function_exists('createSubscription')) {
         $conn = getStudentsConnection();
         if (!$conn) return ['success' => false, 'error' => 'No database connection'];
 
-        $studentId = $conn->real_escape_string($data['student_id']);
-        $type = $conn->real_escape_string($data['subscription_type'] ?? 'fee_installment');
+        $studentId = $data['student_id'];
+        $type = $data['subscription_type'] ?? 'fee_installment';
         $totalAmount = (float)($data['total_amount'] ?? 0);
         $installments = (int)($data['total_installments'] ?? 1);
         $installmentAmount = $totalAmount / max($installments, 1);
-        $frequency = $conn->real_escape_string($data['frequency'] ?? 'monthly');
-        $method = $conn->real_escape_string($data['payment_method'] ?? 'mobile_money');
-        $provider = $conn->real_escape_string($data['payment_provider'] ?? '');
-        $phone = $conn->real_escape_string($data['phone_number'] ?? '');
-        $refType = $conn->real_escape_string($data['reference_type'] ?? '');
+        $frequency = $data['frequency'] ?? 'monthly';
+        $method = $data['payment_method'] ?? 'mobile_money';
+        $provider = $data['payment_provider'] ?? '';
+        $phone = $data['phone_number'] ?? '';
+        $refType = $data['reference_type'] ?? '';
         $refId = (int)($data['reference_id'] ?? 0);
-        $notes = $conn->real_escape_string($data['notes'] ?? '');
+        $notes = $data['notes'] ?? '';
 
         $interval = $frequency === 'weekly' ? 'INTERVAL 1 WEEK' : ($frequency === 'quarterly' ? 'INTERVAL 3 MONTH' : 'INTERVAL 1 MONTH');
         $q = $conn->query("SELECT DATE_ADD(CURDATE(), $interval) AS nd"); $nextDue = ($q && ($r=$q->fetch_assoc())) ? $r['nd'] : null;
@@ -151,16 +151,20 @@ if (!function_exists('getStudentSubscriptions')) {
     function getStudentSubscriptions($studentId) {
         $conn = getStudentsConnection();
         if (!$conn) return [];
-        $sid = $conn->real_escape_string($studentId);
-        $r = $conn->query("
+        $stmt = $conn->prepare("
             SELECT ps.*,
                 (SELECT COUNT(*) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id AND sd.status = 'success') AS successful_deductions,
                 (SELECT SUM(sd.amount) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id AND sd.status = 'success') AS total_deducted
             FROM payment_subscriptions ps
-            WHERE ps.student_id = '$sid'
+            WHERE ps.student_id = ?
             ORDER BY ps.created_at DESC
         ");
-        return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->bind_param("s", $studentId);
+        $stmt->execute();
+        $r = $stmt->get_result();
+        $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->close();
+        return $result;
     }
 }
 
@@ -238,18 +242,25 @@ if (!function_exists('getAllSubscriptions')) {
     function getAllSubscriptions($status = null, $limit = 100) {
         $conn = getStudentsConnection();
         if (!$conn) return [];
-        $where = $status ? "WHERE ps.status = '" . $conn->real_escape_string($status) . "'" : '';
-        $r = $conn->query("
+        $sql = "
             SELECT ps.*, s.full_name, s.program, s.phone AS student_phone, s.student_number,
                 (SELECT SUM(sd.amount) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id AND sd.status = 'success') AS total_collected,
                 (SELECT COUNT(*) FROM subscription_deductions sd WHERE sd.subscription_id = ps.id) AS total_attempts
             FROM payment_subscriptions ps
             LEFT JOIN students s ON CAST(s.id AS CHAR) = ps.student_id
-            $where
-            ORDER BY ps.created_at DESC
-            LIMIT " . (int)$limit
-        );
-        return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        ";
+        if ($status) {
+            $sql .= " WHERE ps.status = ?";
+            $stmt = $conn->prepare($sql . " ORDER BY ps.created_at DESC LIMIT " . (int)$limit);
+            $stmt->bind_param("s", $status);
+        } else {
+            $stmt = $conn->prepare($sql . " ORDER BY ps.created_at DESC LIMIT " . (int)$limit);
+        }
+        $stmt->execute();
+        $r = $stmt->get_result();
+        $result = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->close();
+        return $result;
     }
 }
 

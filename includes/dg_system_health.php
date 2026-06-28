@@ -58,14 +58,19 @@ $dbStatuses = [
 function getTableStats($conn, $dbName) {
     $result = ['tables' => 0, 'rows' => 0];
     if (!$conn || $conn->connect_error) return $result;
-    $tables = @$conn->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" . @$conn->real_escape_string($dbName) . "' AND TABLE_TYPE = 'BASE TABLE'");
-    if (!$tables) return $result;
+    $stmt = $conn->prepare("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'BASE TABLE'");
+    if (!$stmt) return $result;
+    $stmt->bind_param("s", $dbName);
+    $stmt->execute();
+    $tables = $stmt->get_result();
+    if (!$tables) { $stmt->close(); return $result; }
     $result['tables'] = $tables->num_rows;
     while ($t = $tables->fetch_assoc()) {
         $tn = $t['TABLE_NAME'];
-        $r = @$conn->query("SELECT COUNT(*) AS cnt FROM `$tn`");
+        $r = @$conn->query("SELECT COUNT(*) AS cnt FROM `" . preg_replace('/[^a-zA-Z0-9_]/', '', $tn) . "`");
         if ($r) $result['rows'] += (int)$r->fetch_assoc()['cnt'];
     }
+    $stmt->close();
     return $result;
 }
 

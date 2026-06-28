@@ -27,20 +27,32 @@ if ($conn) {
         $hasSearch = $search !== '' || $program !== '' || $level !== '';
         if ($hasSearch) {
             $where = "WHERE status != 'Deleted'";
+            $types = '';
+            $params = [];
             if ($search !== '') {
-                $s = $conn->real_escape_string($search);
-                $where .= " AND (first_name LIKE '%$s%' OR surname LIKE '%$s%' OR other_name LIKE '%$s%' OR full_name LIKE '%$s%' OR index_number LIKE '%$s%' OR registration_number LIKE '%$s%' OR student_number LIKE '%$s%' OR national_student_id_number LIKE '%$s%' OR phone LIKE '%$s%' OR email LIKE '%$s%')";
+                $like = '%' . $search . '%';
+                $where .= " AND (first_name LIKE ? OR surname LIKE ? OR other_name LIKE ? OR full_name LIKE ? OR index_number LIKE ? OR registration_number LIKE ? OR student_number LIKE ? OR national_student_id_number LIKE ? OR phone LIKE ? OR email LIKE ?)";
+                $types .= str_repeat('s', 10);
+                $params = array_merge($params, [$like, $like, $like, $like, $like, $like, $like, $like, $like, $like]);
             }
             if ($program !== '') {
-                $p = $conn->real_escape_string($program);
-                $where .= " AND program='$p'";
+                $where .= " AND program=?";
+                $types .= 's';
+                $params[] = $program;
             }
             if ($level !== '') {
-                $l = $conn->real_escape_string($level);
-                $where .= " AND level='$l'";
+                $where .= " AND level=?";
+                $types .= 's';
+                $params[] = $level;
             }
-            $r = $conn->query("SELECT id, first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, email, program, level, set_name, year, status FROM students $where ORDER BY id DESC LIMIT 200");
-            if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
+            $stmt = $conn->prepare("SELECT id, first_name, surname, other_name, full_name, gender, index_number, registration_number, student_number, national_student_id_number, phone, email, program, level, set_name, year, status FROM students $where ORDER BY id DESC LIMIT 200");
+            if ($stmt) {
+                if (!empty($params)) $stmt->bind_param($types, ...$params);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
+                $stmt->close();
+            }
         }
 
         $progR = $conn->query("SELECT DISTINCT program FROM students WHERE status != 'Deleted' ORDER BY program");

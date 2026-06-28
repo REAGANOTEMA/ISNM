@@ -501,7 +501,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     }
 
     if ($action === 'approve_submission' && $websiteConn) {
-        $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
+        $type = trim($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
         if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subid));
         elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='approved' WHERE id=" . intval($subid));
@@ -515,7 +515,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     }
 
     if ($action === 'reject_submission' && $websiteConn) {
-        $type = $websiteConn->real_escape_string($_POST['sub_type'] ?? '');
+        $type = trim($_POST['sub_type'] ?? '');
         $subid = (int)($_POST['sub_id'] ?? 0);
         if ($type === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='spam' WHERE id=" . intval($subid));
         elseif ($type === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='rejected' WHERE id=" . intval($subid));
@@ -528,18 +528,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $aid = (int)($_POST['alert_id'] ?? 0);
         $subType = ($_POST['sub_type'] ?? '');
         $subId = (int)($_POST['sub_id'] ?? 0);
-        // alerts table is in staffs_db via $conn
         if ($aid && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE id=" . intval($aid)); $ok = true; $msg = 'Alert resolved.'; }
         if ($subType === 'all_alerts' && $conn) { $conn->query("UPDATE alerts SET status='resolved' WHERE status='active'"); $ok = true; $msg = 'All alerts resolved.'; }
-        // website submissions are in website_db via $websiteConn
         if ($subType && $subId && $websiteConn) {
-            $t = $websiteConn->real_escape_string($subType);
-            $q = '';
-            if ($t === 'contact') $q = "UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subId);
-            elseif ($t === 'volunteer') $q = "UPDATE volunteer_applications SET status='resolved' WHERE id=" . intval($subId);
-            elseif ($t === 'donation') $q = "UPDATE donations SET status='verified' WHERE id=" . intval($subId);
-            elseif ($t === 'application') $q = "UPDATE student_applications SET status='Resolved' WHERE id=" . intval($subId);
-            if ($q) { $websiteConn->query($q); $ok = true; $msg = 'Submission resolved.'; }
+            $t = trim($subType);
+            if ($t === 'contact') $websiteConn->query("UPDATE contact_submissions SET status='resolved' WHERE id=" . intval($subId));
+            elseif ($t === 'volunteer') $websiteConn->query("UPDATE volunteer_applications SET status='resolved' WHERE id=" . intval($subId));
+            elseif ($t === 'donation') $websiteConn->query("UPDATE donations SET status='verified' WHERE id=" . intval($subId));
+            elseif ($t === 'application') $websiteConn->query("UPDATE student_applications SET status='Resolved' WHERE id=" . intval($subId));
+            $ok = true; $msg = 'Submission resolved.';
         }
     }
 

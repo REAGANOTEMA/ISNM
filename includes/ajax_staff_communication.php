@@ -66,11 +66,15 @@ if ($conn && function_exists('ensureCommunicationTables')) ensureCommunicationTa
 // Resolve recipient name
 $recipient_name = '';
 if ($recipient_type === 'department' && $conn) {
-    $deptCode = $conn->real_escape_string($recipient_id);
-    $r = $conn->query("SELECT department_name FROM communication_channels WHERE department_code = '$deptCode' AND is_active = 1 LIMIT 1");
+    $deptCode = $recipient_id;
+    $stmt = $conn->prepare("SELECT department_name FROM communication_channels WHERE department_code = ? AND is_active = 1 LIMIT 1");
+    $stmt->bind_param("s", $deptCode);
+    $stmt->execute();
+    $r = $stmt->get_result();
     if ($r && ($row = $r->fetch_assoc())) {
         $recipient_name = $row['department_name'];
     }
+    $stmt->close();
     if (empty($recipient_name)) {
         $recipient_name = ucwords(str_replace('_', ' ', $recipient_id));
     }

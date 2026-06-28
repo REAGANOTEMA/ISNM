@@ -5,8 +5,8 @@ session_start();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response = "";
     $senderId = $_SESSION['uid'];
-    $class = mysqli_real_escape_string($conn, $_POST["class"]);
-    $subject = mysqli_real_escape_string($conn, $_POST["subject"]);
+    $class = $_POST["class"];
+    $subject = $_POST["subject"];
 
     $query = "SELECT * FROM `syllabus` WHERE `class`= ? AND `subject` = ?";
     $statement = mysqli_prepare($conn, $query);
@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_stmt_bind_param($statement, "ss", $class, $subject);
     mysqli_stmt_execute($statement);
     $result = mysqli_stmt_get_result($statement);
+    mysqli_stmt_close($statement);
 
 
     if (

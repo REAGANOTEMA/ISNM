@@ -31,23 +31,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
 
     if ($action === 'create_ticket') {
         $tn = 'TKT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        $rn = tkt_esc($ict_conn, $_POST['requester_name']);
-        $re = tkt_esc($ict_conn, $_POST['requester_email'] ?? '');
-        $rt = tkt_esc($ict_conn, $_POST['requester_type']);
-        $it = tkt_esc($ict_conn, $_POST['issue_type']);
-        $pr = tkt_esc($ict_conn, $_POST['priority']);
-        $desc = tkt_esc($ict_conn, $_POST['description']);
-        $ict_conn->query("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES ('$tn', '$rn', '$re', '$rt', '$it', '$pr', '$desc')");
+        $rn = trim($_POST['requester_name']);
+        $re = trim($_POST['requester_email'] ?? '');
+        $rt = trim($_POST['requester_type']);
+        $it = trim($_POST['issue_type']);
+        $pr = trim($_POST['priority']);
+        $desc = trim($_POST['description']);
+        $stmt = $ict_conn->prepare("INSERT INTO it_support_tickets (ticket_number, requester_name, requester_email, requester_type, issue_type, priority, description) VALUES (?,?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('sssssss', $tn, $rn, $re, $rt, $it, $pr, $desc); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = "Support ticket $tn created successfully.";
         header('Location: it-support-tickets.php'); exit;
     }
 
     if ($action === 'update_status') {
         $id = (int)($_POST['ticket_id'] ?? 0);
-        $status = tkt_esc($ict_conn, $_POST['status']);
+        $status = trim($_POST['status']);
         if ($id > 0) {
-            $extra = $status === 'resolved' ? ", resolved_at = NOW()" : "";
-            $ict_conn->query("UPDATE it_support_tickets SET status = '$status' $extra WHERE id = $id");
+            if ($status === 'resolved') {
+                $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status=?, resolved_at = NOW() WHERE id=?");
+                if ($stmt) { $stmt->bind_param('si', $status, $id); $stmt->execute(); $stmt->close(); }
+            } else {
+                $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status=? WHERE id=?");
+                if ($stmt) { $stmt->bind_param('si', $status, $id); $stmt->execute(); $stmt->close(); }
+            }
             $_SESSION['success'] = "Ticket #$id status updated to $status.";
         }
         header('Location: it-support-tickets.php'); exit;
@@ -57,7 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
         $id = (int)($_POST['ticket_id'] ?? 0);
         $assigned = (int)($_POST['assigned_to'] ?? 0);
         if ($id > 0) {
-            $ict_conn->query("UPDATE it_support_tickets SET assigned_to = $assigned WHERE id = $id");
+            $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET assigned_to=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ii', $assigned, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Ticket #$id assigned.";
         }
         header('Location: it-support-tickets.php'); exit;
@@ -65,9 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
 
     if ($action === 'add_resolution') {
         $id = (int)($_POST['ticket_id'] ?? 0);
-        $notes = tkt_esc($ict_conn, $_POST['resolution_notes'] ?? '');
+        $notes = trim($_POST['resolution_notes'] ?? '');
         if ($id > 0 && $notes) {
-            $ict_conn->query("UPDATE it_support_tickets SET status = 'resolved', resolution_notes = CONCAT(IFNULL(resolution_notes, ''), '\n[$user_name] $notes'), resolved_at = NOW() WHERE id = $id");
+            $fullNote = "\n[$user_name] $notes";
+            $stmt = $ict_conn->prepare("UPDATE it_support_tickets SET status = 'resolved', resolution_notes = CONCAT(IFNULL(resolution_notes, ''), ?), resolved_at = NOW() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('si', $fullNote, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Ticket #$id resolved with notes.";
         }
         header('Location: it-support-tickets.php'); exit;
@@ -75,9 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
 }
 
 $status_filter = $_GET['status'] ?? '';
+$params = [];
+$types = '';
 $status_where = '';
 if ($status_filter && in_array($status_filter, ['open', 'in_progress', 'resolved', 'closed'])) {
-    $status_where = "WHERE t.status = '$status_filter'";
+    $status_where = "WHERE t.status = ?";
+    $params[] = $status_filter;
+    $types = 's';
 }
 
 $total_tickets = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets");
@@ -85,7 +98,15 @@ $open_tickets = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE 
 $in_progress_tickets = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE status = 'in_progress'");
 $resolved_month = tkt_q($ict_conn, "SELECT COUNT(*) FROM it_support_tickets WHERE status = 'resolved' AND resolved_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
 
-$tickets = tkt_fetch($ict_conn, "SELECT t.*, s.full_name AS assigned_name FROM it_support_tickets t LEFT JOIN igangaschoolofl_staffs_db.staff s ON t.assigned_to = s.id $status_where ORDER BY FIELD(t.priority,'critical','high','medium','low'), t.created_at DESC LIMIT 100");
+$sql = "SELECT t.*, s.full_name AS assigned_name FROM it_support_tickets t LEFT JOIN igangaschoolofl_staffs_db.staff s ON t.assigned_to = s.id $status_where ORDER BY FIELD(t.priority,'critical','high','medium','low'), t.created_at DESC LIMIT 100";
+$stmt = $ict_conn->prepare($sql);
+if ($stmt) {
+    if ($types) $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $r = $stmt->get_result();
+    $stmt->close();
+} else $r = null;
+$tickets = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
 
 $staff_list = [];
 if ($staff_conn) {

@@ -23,15 +23,15 @@ try {
         // ── Employee Payroll Profiles ──
         case 'create_employee_profile':
             $staffIdParam = (int)($_POST['staff_id'] ?? 0);
-            $employmentType = $conn->real_escape_string($_POST['employment_type'] ?? 'permanent');
+            $employmentType = $_POST['employment_type'] ?? 'permanent';
             $monthlySalary = (float)($_POST['monthly_salary'] ?? 0);
-            $paymentMethod = $conn->real_escape_string($_POST['payment_method'] ?? 'bank');
-            $bankName = $conn->real_escape_string($_POST['bank_name'] ?? '');
-            $bankAccount = $conn->real_escape_string($_POST['bank_account_number'] ?? '');
-            $mobileMoney = $conn->real_escape_string($_POST['mobile_money_number'] ?? '');
-            $tin = $conn->real_escape_string($_POST['tin'] ?? '');
-            $nssfNumber = $conn->real_escape_string($_POST['nssf_number'] ?? '');
-            $nationalId = $conn->real_escape_string($_POST['national_id'] ?? '');
+            $paymentMethod = $_POST['payment_method'] ?? 'bank';
+            $bankName = $_POST['bank_name'] ?? '';
+            $bankAccount = $_POST['bank_account_number'] ?? '';
+            $mobileMoney = $_POST['mobile_money_number'] ?? '';
+            $tin = $_POST['tin'] ?? '';
+            $nssfNumber = $_POST['nssf_number'] ?? '';
+            $nationalId = $_POST['national_id'] ?? '';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -52,14 +52,14 @@ try {
         case 'update_employee_profile':
             $profileId = (int)($_POST['profile_id'] ?? 0);
             $monthlySalary = (float)($_POST['monthly_salary'] ?? 0);
-            $employmentType = $conn->real_escape_string($_POST['employment_type'] ?? 'permanent');
-            $paymentMethod = $conn->real_escape_string($_POST['payment_method'] ?? 'bank');
-            $bankName = $conn->real_escape_string($_POST['bank_name'] ?? '');
-            $bankAccount = $conn->real_escape_string($_POST['bank_account_number'] ?? '');
-            $mobileMoney = $conn->real_escape_string($_POST['mobile_money_number'] ?? '');
-            $tin = $conn->real_escape_string($_POST['tin'] ?? '');
-            $nssfNumber = $conn->real_escape_string($_POST['nssf_number'] ?? '');
-            $payrollStatus = $conn->real_escape_string($_POST['payroll_status'] ?? 'active');
+            $employmentType = $_POST['employment_type'] ?? 'permanent';
+            $paymentMethod = $_POST['payment_method'] ?? 'bank';
+            $bankName = $_POST['bank_name'] ?? '';
+            $bankAccount = $_POST['bank_account_number'] ?? '';
+            $mobileMoney = $_POST['mobile_money_number'] ?? '';
+            $tin = $_POST['tin'] ?? '';
+            $nssfNumber = $_POST['nssf_number'] ?? '';
+            $payrollStatus = $_POST['payroll_status'] ?? 'active';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -82,7 +82,7 @@ try {
             $amount = (float)($_POST['amount'] ?? 0);
             $isTaxable = isset($_POST['is_taxable']) ? 1 : 0;
             $isRecurring = isset($_POST['is_recurring']) ? 1 : 0;
-            $effectiveFrom = $conn->real_escape_string($_POST['effective_from'] ?? date('Y-m-d'));
+            $effectiveFrom = $_POST['effective_from'] ?? date('Y-m-d');
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -112,7 +112,7 @@ try {
             $typeId = (int)($_POST['deduction_type_id'] ?? 0);
             $amount = (float)($_POST['amount'] ?? 0);
             $isRecurring = isset($_POST['is_recurring']) ? 1 : 0;
-            $effectiveFrom = $conn->real_escape_string($_POST['effective_from'] ?? date('Y-m-d'));
+            $effectiveFrom = $_POST['effective_from'] ?? date('Y-m-d');
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -140,9 +140,9 @@ try {
         case 'add_overtime':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
             $hours = (float)($_POST['hours_worked'] ?? 0);
-            $type = $conn->real_escape_string($_POST['overtime_type'] ?? 'normal');
-            $date = $conn->real_escape_string($_POST['overtime_date'] ?? date('Y-m-d'));
-            $desc = $conn->real_escape_string($_POST['description'] ?? '');
+            $type = $_POST['overtime_type'] ?? 'normal';
+            $date = $_POST['overtime_date'] ?? date('Y-m-d');
+            $desc = $_POST['description'] ?? '';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
@@ -181,10 +181,10 @@ try {
         // ── Bonus ──
         case 'add_bonus':
             $peId = (int)($_POST['payroll_employee_id'] ?? 0);
-            $name = $conn->real_escape_string($_POST['bonus_name'] ?? '');
+            $name = $_POST['bonus_name'] ?? '';
             $amount = (float)($_POST['amount'] ?? 0);
-            $type = $conn->real_escape_string($_POST['bonus_type'] ?? 'one_time');
-            $date = $conn->real_escape_string($_POST['bonus_date'] ?? date('Y-m-d'));
+            $type = $_POST['bonus_type'] ?? 'one_time';
+            $date = $_POST['bonus_date'] ?? date('Y-m-d');
             $isTaxable = isset($_POST['is_taxable']) ? 1 : 0;
 
             $pconn = getPayrollConnection();
@@ -203,8 +203,8 @@ try {
             $principal = (float)($_POST['principal_amount'] ?? 0);
             $interest = (float)($_POST['interest_rate'] ?? 0);
             $installments = (int)($_POST['installments'] ?? 1);
-            $loanDate = $conn->real_escape_string($_POST['loan_date'] ?? date('Y-m-d'));
-            $loanType = $conn->real_escape_string($_POST['loan_type'] ?? 'staff_loan');
+            $loanDate = $_POST['loan_date'] ?? date('Y-m-d');
+            $loanType = $_POST['loan_type'] ?? 'staff_loan';
 
             $totalAmount = $principal + ($principal * $interest / 100);
             $installmentAmount = $installments > 0 ? round($totalAmount / $installments, 2) : $totalAmount;
@@ -237,7 +237,7 @@ try {
         case 'create_period':
             $month = (int)($_POST['month'] ?? 0);
             $year = (int)($_POST['year'] ?? 0);
-            $frequency = $conn->real_escape_string($_POST['frequency'] ?? 'monthly');
+            $frequency = $_POST['frequency'] ?? 'monthly';
             $result = createPayrollPeriod($month, $year, $frequency, $staffId);
             if ($result['success']) {
                 $_SESSION['success'] = $result['message'];
@@ -250,7 +250,10 @@ try {
             $periodId = (int)($_POST['period_id'] ?? 0);
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $pconn->query("UPDATE payroll_periods SET status='open' WHERE id=$periodId");
+            $stmt = $pconn->prepare("UPDATE payroll_periods SET status='open' WHERE id=?");
+            $stmt->bind_param("i", $periodId);
+            $stmt->execute();
+            $stmt->close();
             $pconn->close();
             logPayrollAudit($staffId, 'period_opened', 'payroll_period', $periodId, null, null);
             $_SESSION['success'] = 'Payroll period opened.';
@@ -260,7 +263,10 @@ try {
             $periodId = (int)($_POST['period_id'] ?? 0);
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $pconn->query("UPDATE payroll_periods SET status='closed', is_closed=1, closed_by=$staffId, closed_at=NOW() WHERE id=$periodId AND is_locked=1");
+            $stmt = $pconn->prepare("UPDATE payroll_periods SET status='closed', is_closed=1, closed_by=?, closed_at=NOW() WHERE id=? AND is_locked=1");
+            $stmt->bind_param("ii", $staffId, $periodId);
+            $stmt->execute();
+            $stmt->close();
             $pconn->close();
             $_SESSION['success'] = 'Payroll period closed.';
             break;
@@ -291,12 +297,15 @@ try {
         // ── Approval Actions ──
         case 'approve_run':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
-            $step = $conn->real_escape_string($_POST['step'] ?? 'Approval');
-            $comments = $conn->real_escape_string($_POST['comments'] ?? '');
+            $step = $_POST['step'] ?? 'Approval';
+            $comments = $_POST['comments'] ?? '';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $pconn->query("UPDATE payroll_runs SET status='approved', approved_by=$staffId, approved_at=NOW() WHERE id=$runId");
+            $stmt = $pconn->prepare("UPDATE payroll_runs SET status='approved', approved_by=?, approved_at=NOW() WHERE id=?");
+            $stmt->bind_param("ii", $staffId, $runId);
+            $stmt->execute();
+            $stmt->close();
             $pconn->close();
             logPayrollApproval('payroll_run', $runId, 'approved', $step, $comments, $staffId);
             $_SESSION['success'] = "Payroll run approved ($step).";
@@ -304,10 +313,13 @@ try {
 
         case 'authorize_run':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
-            $comments = $conn->real_escape_string($_POST['comments'] ?? '');
+            $comments = $_POST['comments'] ?? '';
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $pconn->query("UPDATE payroll_runs SET status='paid', paid_by=$staffId, paid_at=NOW() WHERE id=$runId");
+            $stmt = $pconn->prepare("UPDATE payroll_runs SET status='paid', paid_by=?, paid_at=NOW() WHERE id=?");
+            $stmt->bind_param("ii", $staffId, $runId);
+            $stmt->execute();
+            $stmt->close();
             $stmt = $pconn->prepare("UPDATE payroll_items SET payment_status='paid', payment_date=CURDATE() WHERE payroll_run_id=? AND status='active'");
             $stmt->bind_param('i', $runId);
             $stmt->execute();
@@ -319,10 +331,13 @@ try {
 
         case 'reject_run':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
-            $comments = $conn->real_escape_string($_POST['comments'] ?? '');
+            $comments = $_POST['comments'] ?? '';
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
-            $pconn->query("UPDATE payroll_runs SET status='draft' WHERE id=$runId");
+            $stmt = $pconn->prepare("UPDATE payroll_runs SET status='draft' WHERE id=?");
+            $stmt->bind_param("i", $runId);
+            $stmt->execute();
+            $stmt->close();
             $pconn->close();
             logPayrollApproval('payroll_run', $runId, 'rejected', 'Approval', $comments, $staffId);
             $_SESSION['error'] = 'Payroll run rejected.';
@@ -330,8 +345,8 @@ try {
 
         // ── Settings ──
         case 'update_setting':
-            $key = $conn->real_escape_string($_POST['setting_key'] ?? '');
-            $value = $conn->real_escape_string($_POST['setting_value'] ?? '');
+            $key = $_POST['setting_key'] ?? '';
+            $value = $_POST['setting_value'] ?? '';
             if ($key) {
                 $pconn = getPayrollConnection();
                 $stmt = $pconn->prepare("INSERT INTO payroll_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_by=VALUES(updated_by)");
@@ -350,7 +365,7 @@ try {
             foreach ($_POST as $key => $value) {
                 if (strpos($key, 'setting_') === 0) {
                     $settingKey = substr($key, 8);
-                    $settingValue = $conn->real_escape_string((string)$value);
+                    $settingValue = (string)$value;
                     $stmt = $pconn->prepare("INSERT INTO payroll_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_by=VALUES(updated_by)");
                     $stmt->bind_param('ssi', $settingKey, $settingValue, $staffId);
                     $stmt->execute();
@@ -364,14 +379,18 @@ try {
         // ── Payment Processing ──
         case 'record_payment':
             $runId = (int)($_POST['payroll_run_id'] ?? 0);
-            $payDate = $conn->real_escape_string($_POST['payment_date'] ?? date('Y-m-d'));
-            $payMethod = $conn->real_escape_string($_POST['payment_method'] ?? 'bank_transfer');
-            $refNumber = $conn->real_escape_string($_POST['reference_number'] ?? '');
+            $payDate = $_POST['payment_date'] ?? date('Y-m-d');
+            $payMethod = $_POST['payment_method'] ?? 'bank_transfer';
+            $refNumber = $_POST['reference_number'] ?? '';
 
             $pconn = getPayrollConnection();
             if (!$pconn) throw new Exception('Payroll DB connection failed');
 
-            $runData = $pconn->query("SELECT total_net, total_employees FROM payroll_runs WHERE id=$runId")->fetch_assoc();
+            $stmt = $pconn->prepare("SELECT total_net, total_employees FROM payroll_runs WHERE id=?");
+            $stmt->bind_param("i", $runId);
+            $stmt->execute();
+            $runData = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
             if (!$runData) throw new Exception('Payroll run not found');
 
             $stmt = $pconn->prepare("INSERT INTO payroll_payments (payroll_run_id, payment_date, payment_method, total_amount, employee_count, reference_number, status, processed_by) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?)");
@@ -379,8 +398,14 @@ try {
             $stmt->execute();
             $stmt->close();
 
-            $pconn->query("UPDATE payroll_runs SET status='paid', paid_by=$staffId, paid_at=NOW() WHERE id=$runId");
-            $pconn->query("UPDATE payroll_items SET payment_status='paid', payment_date='$payDate', payment_reference='$refNumber' WHERE payroll_run_id=$runId AND status='active'");
+            $stmt = $pconn->prepare("UPDATE payroll_runs SET status='paid', paid_by=?, paid_at=NOW() WHERE id=?");
+            $stmt->bind_param("ii", $staffId, $runId);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $pconn->prepare("UPDATE payroll_items SET payment_status='paid', payment_date=?, payment_reference=? WHERE payroll_run_id=? AND status='active'");
+            $stmt->bind_param("ssii", $payDate, $refNumber, $runId);
+            $stmt->execute();
+            $stmt->close();
             $pconn->close();
 
             $_SESSION['success'] = 'Payment recorded.';

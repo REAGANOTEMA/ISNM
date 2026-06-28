@@ -148,8 +148,8 @@ if ($reqCheck) {
 function safeCount($c, $q) { $r=$c->query($q); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
 function logAdmission($conn, $uid, $action, $module, $rid, $desc) {
     global $staff_db;
-    $a=($conn)->real_escape_string($action); $m=($conn)->real_escape_string($module); $d=($conn)->real_escape_string($desc);
-    ($conn)->query("INSERT INTO `{$staff_db}`.`admission_activity_logs` (user_id,action,module,record_id,description) VALUES (".intval($uid).",'$a','$m',".intval($rid).",'$d')");
+    $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`admission_activity_logs` (user_id,action,module,record_id,description) VALUES (?,?,?,?,?)");
+    if ($stmt) { $stmt->bind_param('issis', $uid, $action, $module, $rid, $desc); $stmt->execute(); $stmt->close(); }
 }
 function _r($s){return $s;}
 
@@ -234,22 +234,29 @@ if ($ajax === 'search_applicants') {
     $q = trim($_POST['q'] ?? ($_GET['q'] ?? ''));
     $statusFilter = trim($_POST['status'] ?? ($_GET['status'] ?? ''));
     $intakeFilter = trim($_POST['intake'] ?? ($_GET['intake'] ?? ''));
-    $where = [];
+    $where = ["1=1"];
+    $params = [];
+    $types = '';
     if ($q !== '') {
-        $sq = $conn->real_escape_string($q);
-        $where[] = "(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%' OR a.phone LIKE '%$sq%' OR a.email LIKE '%$sq%')";
+        $where[] = "(a.full_name LIKE ? OR a.application_number LIKE ? OR a.phone LIKE ? OR a.email LIKE ?)";
+        $like = "%$q%";
+        $params = array_merge($params, [$like, $like, $like, $like]);
+        $types .= 'ssss';
     }
     if ($statusFilter !== '') {
         $statuses = array_map('trim', explode(',', $statusFilter));
-        $escaped = [];
-        foreach ($statuses as $s) { $escaped[] = "'".$conn->real_escape_string($s)."'"; }
-        $where[] = "a.status IN (".implode(',', $escaped).")";
+        $placeholders = [];
+        foreach ($statuses as $s) { $placeholders[] = '?'; $params[] = $s; $types .= 's'; }
+        $where[] = "a.status IN (".implode(',', $placeholders).")";
     }
     if ($intakeFilter !== '') {
-        $where[] = "a.intake = '".$conn->real_escape_string($intakeFilter)."'";
+        $where[] = "a.intake = ?";
+        $params[] = $intakeFilter;
+        $types .= 's';
     }
-    $whereSql = $where ? 'WHERE '.implode(' AND ', $where) : '1';
-    $r = $conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,a.intake,a.status FROM `{$staff_db}`.`applicants` a $whereSql ORDER BY a.created_at DESC LIMIT 100");
+    $whereSql = 'WHERE '.implode(' AND ', $where);
+    $stmt = $conn->prepare("SELECT a.id,a.full_name,a.application_number,a.phone,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,a.intake,a.status FROM `{$staff_db}`.`applicants` a $whereSql ORDER BY a.created_at DESC LIMIT 100");
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     $out = ['data'=>[]];
     if ($r) { while($row = $r->fetch_assoc()) $out['data'][] = $row; }
     echo json_encode($out); exit;
@@ -271,26 +278,40 @@ if ($ajax === 'search_students') {
     $limit = max(1, min(100, intval($_GET['limit'] ?? ($_POST['limit'] ?? 20))));
     $offset = ($page - 1) * $limit;
 
-    $where = [];
-    $students_db_esc = $students_db;
+    $where = ["1=1"];
+    $params = [];
+    $types = '';
     if ($q !== '') {
-        $sq = $students_conn->real_escape_string($q);
-        $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE '%$sq%' OR CONCAT_WS(' ',first_name,surname) LIKE '%$sq%' OR student_number LIKE '%$sq%' OR registration_number LIKE '%$sq%' OR index_number LIKE '%$sq%' OR full_name LIKE '%$sq%' OR email LIKE '%$sq%')";
+        $where[] = "(CONCAT_WS(' ',first_name,other_name,surname) LIKE ? OR CONCAT_WS(' ',first_name,surname) LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR index_number LIKE ? OR full_name LIKE ? OR email LIKE ?)";
+        $like = "%$q%";
+        $params = array_merge($params, [$like, $like, $like, $like, $like, $like, $like]);
+        $types .= 'sssssss';
     }
-    if ($admission_no !== '') { $where[] = "student_number LIKE '%".$students_conn->real_escape_string($admission_no)."%'"; }
-    if ($reg_no !== '') { $where[] = "registration_number LIKE '%".$students_conn->real_escape_string($reg_no)."%'"; }
-    if ($phone !== '') { $sph=$students_conn->real_escape_string($phone); $where[] = "(phone LIKE '%$sph%' OR mobile_number LIKE '%$sph%')"; }
-    if ($national_id !== '') { $where[] = "national_student_id_number LIKE '%".$students_conn->real_escape_string($national_id)."%'"; }
-    if ($program !== '') { $where[] = "program LIKE '%".$students_conn->real_escape_string($program)."%'"; }
-    if ($intake !== '') { $where[] = "intake_date LIKE '%".$students_conn->real_escape_string($intake)."%'"; }
-    if ($status !== '') { $where[] = "status = '".$students_conn->real_escape_string($status)."'"; }
-    if ($year !== '') { $where[] = "year = '".$students_conn->real_escape_string($year)."'"; }
+    if ($admission_no !== '') { $where[] = "student_number LIKE ?"; $params[] = "%$admission_no%"; $types .= 's'; }
+    if ($reg_no !== '') { $where[] = "registration_number LIKE ?"; $params[] = "%$reg_no%"; $types .= 's'; }
+    if ($phone !== '') { $where[] = "(phone LIKE ? OR mobile_number LIKE ?)"; $params[] = "%$phone%"; $params[] = "%$phone%"; $types .= 'ss'; }
+    if ($national_id !== '') { $where[] = "national_student_id_number LIKE ?"; $params[] = "%$national_id%"; $types .= 's'; }
+    if ($program !== '') { $where[] = "program LIKE ?"; $params[] = "%$program%"; $types .= 's'; }
+    if ($intake !== '') { $where[] = "intake_date LIKE ?"; $params[] = "%$intake%"; $types .= 's'; }
+    if ($status !== '') { $where[] = "status = ?"; $params[] = $status; $types .= 's'; }
+    if ($year !== '') { $where[] = "year = ?"; $params[] = $year; $types .= 's'; }
 
-    $whereSql = $where ? 'WHERE '.implode(' AND ', $where) : '';
+    $whereSql = 'WHERE '.implode(' AND ', $where);
     $countResult = $students_conn->query("SELECT COUNT(*) total FROM `{$students_db_esc}`.`students` $whereSql");
     $total = ($countResult && $countResult->num_rows) ? (int)$countResult->fetch_assoc()['total'] : 0;
 
-    $r = $students_conn->query("SELECT id AS student_id,student_number AS admission_no,registration_number AS reg_no,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_date AS intake_period,year AS intake_year,status,gender,date_of_birth,address FROM `{$students_db_esc}`.`students` $whereSql ORDER BY surname,first_name LIMIT $limit OFFSET $offset");
+    $limitParam = $limit;
+    $offsetParam = $offset;
+    $stmt = $students_conn->prepare("SELECT id AS student_id,student_number AS admission_no,registration_number AS reg_no,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_date AS intake_period,year AS intake_year,status,gender,date_of_birth,address FROM `{$students_db_esc}`.`students` $whereSql ORDER BY surname,first_name LIMIT ? OFFSET ?");
+    if ($stmt) {
+        $types .= 'ii';
+        $params[] = $limitParam;
+        $params[] = $offsetParam;
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $r = $stmt->get_result();
+        $stmt->close();
+    } else $r = null;
     $students = [];
     if ($r) while ($row = $r->fetch_assoc()) $students[] = $row;
     echo json_encode(['data'=>$students,'total'=>$total,'page'=>$page,'totalPages'=>max(1,ceil($total/$limit))]);
@@ -364,18 +385,23 @@ if ($ajax === 'set_requirement_status') {
     header('Content-Type: application/json');
     $aid=intval($_POST['applicant_id']??0);
     $rid=intval($_POST['requirement_id']??0);
-    $new_status=$conn->real_escape_string(trim($_POST['status']??'Not Submitted'));
-    $remarks=$conn->real_escape_string(trim($_POST['remarks']??''));
+    $new_status=trim($_POST['status']??'Not Submitted');
+    $remarks=trim($_POST['remarks']??'');
     $valid_statuses=['Not Submitted','Submitted','Verified','Rejected','Missing'];
     if(!in_array($new_status,$valid_statuses)){echo json_encode(['success'=>false,'error'=>'Invalid status']);exit;}
     if(!$aid||!$rid){echo json_encode(['success'=>false,'error'=>'Invalid IDs']);exit;}
     $uid=intval($user_id);
-    $sub_by=($new_status==='Submitted')?",submitted_by=$uid,submitted_at=NOW()":'';
-    $ver_by=($new_status==='Verified')?",verified_by=$uid,verified_at=NOW()":'';
-    $rej_by=($new_status==='Rejected')?",rejected_by=$uid":'';
-    $remarks_sql=$remarks?",remarks='$remarks'":'';
-    $conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES (".intval($aid).",".intval($rid).",'$new_status',$uid,NOW(),NULL,NULL,NULL,'$remarks') ON DUPLICATE KEY UPDATE status='$new_status'$sub_by$ver_by$rej_by$remarks_sql");
-    $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES (".intval($aid).",".intval($rid).",'$new_status',".intval($user_id).",'$remarks')");
+    $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status,submitted_by,submitted_at,verified_by,verified_at,rejected_by,remarks) VALUES (?,?,?,?,NOW(),NULL,NULL,NULL,?) ON DUPLICATE KEY UPDATE status=?, submitted_by=IF(?='Submitted',?,submitted_by), submitted_at=IF(?='Submitted',NOW(),submitted_at), verified_by=IF(?='Verified',?,verified_by), verified_at=IF(?='Verified',NOW(),verified_at), rejected_by=IF(?='Rejected',?,rejected_by), remarks=?");
+    if ($stmt) {
+        $subBy = ($new_status==='Submitted') ? $uid : null;
+        $verBy = ($new_status==='Verified') ? $uid : null;
+        $rejBy = ($new_status==='Rejected') ? $uid : null;
+        $stmt->bind_param('iisssssisiiiiiiis', $aid, $rid, $new_status, $subBy, $remarks, $new_status, $new_status, $uid, $new_status, $uid, $new_status, $uid, $new_status, $uid, $remarks);
+        $stmt->execute();
+        $stmt->close();
+    }
+    $stmt2 = $conn->prepare("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,requirement_id,action,performed_by,remarks) VALUES (?,?,?,?,?)");
+    if ($stmt2) { $stmt2->bind_param('iisis', $aid, $rid, $new_status, $user_id, $remarks); $stmt2->execute(); $stmt2->close(); }
     $rn=$conn->query("SELECT requirement_name FROM `{$staff_db}`.`admission_requirements` WHERE id=".intval($rid));
     $req_name=($rn&&$rn->num_rows)?$rn->fetch_assoc()['requirement_name']:"requirement #$rid";
     logAdmission($conn,$user_id,"Requirement $new_status",'requirements',$rid,"$req_name $new_status for applicant #$aid");
@@ -458,13 +484,14 @@ if ($ajax === 'upload_document') {
 
 if ($ajax === 'send_notification') {
     header('Content-Type: application/json');
-    $title=$conn->real_escape_string(trim($_POST['title']??''));
-    $message=$conn->real_escape_string(trim($_POST['message']??''));
-    $recipientType=$conn->real_escape_string(trim($_POST['recipient_type']??'applicant'));
+    $title=trim($_POST['title']??'');
+    $message=trim($_POST['message']??'');
+    $recipientType=trim($_POST['recipient_type']??'applicant');
     $applicantId=intval($_POST['applicant_id']??0);
-    $channel=$conn->real_escape_string(trim($_POST['channel']??'portal'));
+    $channel=trim($_POST['channel']??'portal');
     if(!$title||!$message){echo json_encode(['success'=>false,'error'=>'Title and message required']);exit;}
-    $conn->query("INSERT INTO `{$staff_db}`.`admission_notifications` (applicant_id,recipient_type,title,message,channel,sent_by) VALUES ($applicantId,'$recipientType','$title','$message','$channel',$user_id)");
+    $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`admission_notifications` (applicant_id,recipient_type,title,message,channel,sent_by) VALUES (?,?,?,?,?,?)");
+    if ($stmt) { $stmt->bind_param('issssi', $applicantId, $recipientType, $title, $message, $channel, $user_id); $stmt->execute(); $stmt->close(); }
     logAdmission($conn,$user_id,'Send Notification','communication',$applicantId,"Notification sent: $title");
     echo json_encode(['success'=>true]);exit;
 }
@@ -472,11 +499,12 @@ if ($ajax === 'send_notification') {
 if ($ajax === 'send_message') {
     header('Content-Type: application/json');
     $applicantId=intval($_POST['applicant_id']??$_POST['id']??0);
-    $subject=$conn->real_escape_string(trim($_POST['subject']??'Admissions Message'));
-    $message=$conn->real_escape_string(trim($_POST['message']??''));
-    $recipientType=$conn->real_escape_string(trim($_POST['recipient_type']??'applicant'));
+    $subject=trim($_POST['subject']??'Admissions Message');
+    $message=trim($_POST['message']??'');
+    $recipientType=trim($_POST['recipient_type']??'applicant');
     if(!$applicantId||!$message){echo json_encode(['success'=>false,'error'=>'Message required']);exit;}
-    $conn->query("INSERT INTO `{$staff_db}`.`applicant_messages` (applicant_id,sender_id,recipient_type,subject,message) VALUES ($applicantId,$user_id,'$recipientType','$subject','$message')");
+    $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`applicant_messages` (applicant_id,sender_id,recipient_type,subject,message) VALUES (?,?,?,?,?)");
+    if ($stmt) { $stmt->bind_param('iisss', $applicantId, $user_id, $recipientType, $subject, $message); $stmt->execute(); $stmt->close(); }
     logAdmission($conn,$user_id,'Send Message','communication',$applicantId,"Message sent");
     echo json_encode(['success'=>true]);exit;
 }
@@ -492,9 +520,13 @@ if ($ajax === 'get_messages') {
 
 if ($ajax === 'get_notifications') {
     header('Content-Type: application/json');
-    $type=$conn->real_escape_string(trim($_GET['type']??'all'));
-    $where=$type!=='all'?"WHERE recipient_type='$type'":'';
-    $r=$conn->query("SELECT n.*,s.full_name sender_name FROM `{$staff_db}`.`admission_notifications` n LEFT JOIN `{$staff_db}`.`staff` s ON n.sent_by=s.id $where ORDER BY n.created_at DESC LIMIT 50");
+    $type=trim($_GET['type']??'all');
+    if ($type !== 'all') {
+        $stmt = $conn->prepare("SELECT n.*,s.full_name sender_name FROM `{$staff_db}`.`admission_notifications` n LEFT JOIN `{$staff_db}`.`staff` s ON n.sent_by=s.id WHERE recipient_type=? ORDER BY n.created_at DESC LIMIT 50");
+        if ($stmt) { $stmt->bind_param('s', $type); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+    } else {
+        $r = $conn->query("SELECT n.*,s.full_name sender_name FROM `{$staff_db}`.`admission_notifications` n LEFT JOIN `{$staff_db}`.`staff` s ON n.sent_by=s.id ORDER BY n.created_at DESC LIMIT 50");
+    }
     $out=[];if($r)while($row=$r->fetch_assoc())$out[]=$row;
     echo json_encode($out);exit;
 }
@@ -530,19 +562,22 @@ if ($ajax === 'convert_to_student') {
     $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE id=$aid LIMIT 1");
     if(!$ar||!$ar->num_rows){echo json_encode(['success'=>false,'error'=>'Applicant not found']);exit;}
     $app=$ar->fetch_assoc();
-    $check_no=$students_conn->real_escape_string($app['application_number']);
-    $check=$students_conn->query("SELECT id FROM `{$students_db}`.`students` WHERE student_number='$check_no' LIMIT 1");
+    $check_no=$app['application_number'];
+    $stmt = $students_conn->prepare("SELECT id FROM `{$students_db}`.`students` WHERE student_number=? LIMIT 1");
+    if ($stmt) { $stmt->bind_param('s', $check_no); $stmt->execute(); $check = $stmt->get_result(); $stmt->close(); } else $check = null;
     if($check&&$check->num_rows){echo json_encode(['success'=>false,'error'=>'Student already exists']);exit;}
-    $fullName=$conn->real_escape_string($app['full_name']);
-    $phone=$conn->real_escape_string($app['phone']);
-    $email=$conn->real_escape_string($app['email']);
-    $gender=$conn->real_escape_string($app['gender']?:'Other');
-    $dob=$app['date_of_birth']?"'".$conn->real_escape_string($app['date_of_birth'])."'":"NULL";
-    $intakePeriod=$conn->real_escape_string($app['intake']?:'January');
-    $studentNo=$conn->real_escape_string($app['application_number']);
+    $fullName=trim($app['full_name']);
+    $phone=trim($app['phone']);
+    $email=trim($app['email']);
+    $gender=trim($app['gender']?:'Other');
+    $dob=$app['date_of_birth'] ?: null;
+    $intakePeriod=trim($app['intake']?:'January');
+    $studentNo=trim($app['application_number']);
     $conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Registered' WHERE id=$aid");
-    $students_conn->query("INSERT INTO `{$students_db}`.`students` (student_number,full_name,phone,email,gender,date_of_birth,intake_period,status,created_at,updated_at) VALUES ('$studentNo','$fullName','$phone','$email','$gender',$dob,'$intakePeriod','Active',NOW(),NOW())");
-    if($students_conn->affected_rows>0){$newSid=$students_conn->insert_id;logAdmission($conn,$user_id,'Convert to Student','students',$newSid,"Applicant #$aid converted");echo json_encode(['success'=>true,'student_id'=>$newSid]);}
+    $stmt = $students_conn->prepare("INSERT INTO `{$students_db}`.`students` (student_number,full_name,phone,email,gender,date_of_birth,intake_period,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,NOW(),NOW())");
+    if ($stmt) { $stmt->bind_param('ssssssss', $studentNo, $fullName, $phone, $email, $gender, $dob, $intakePeriod, 'Active'); $stmt->execute(); $newSid = $students_conn->insert_id; $stmt->close(); }
+    else $newSid = 0;
+    if($newSid > 0){logAdmission($conn,$user_id,'Convert to Student','students',$newSid,"Applicant #$aid converted");echo json_encode(['success'=>true,'student_id'=>$newSid]);}
     else{echo json_encode(['success'=>false,'error'=>$students_conn->error]);}
     exit;
 }
@@ -589,13 +624,17 @@ if ($ajax === 'reports_data') {
     $format=trim($_GET['format']??($_POST['format']??'json'));
     $from=trim($_GET['from']??($_POST['from']??''));
     $to=trim($_GET['to']??($_POST['to']??''));
+    $dateParams = [];
+    $dateTypes = '';
     $dateWhere='';
-    if($from&&$to){$fromEsc=$conn->real_escape_string($from);$toEsc=$conn->real_escape_string($to);$dateWhere=" AND DATE(a.created_at) BETWEEN '$fromEsc' AND '$toEsc'";}
-    elseif($from){$fromEsc=$conn->real_escape_string($from);$dateWhere=" AND DATE(a.created_at) >= '$fromEsc'";}
-    elseif($to){$toEsc=$conn->real_escape_string($to);$dateWhere=" AND DATE(a.created_at) <= '$toEsc'";}
+    if($from&&$to){$dateWhere=" AND DATE(a.created_at) BETWEEN ? AND ?"; $dateParams[] = $from; $dateParams[] = $to; $dateTypes = 'ss';}
+    elseif($from){$dateWhere=" AND DATE(a.created_at) >= ?"; $dateParams[] = $from; $dateTypes = 's';}
+    elseif($to){$dateWhere=" AND DATE(a.created_at) <= ?"; $dateParams[] = $to; $dateTypes = 's';}
     $data=[];
     if($type==='admission'){
-        $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.created_at DESC LIMIT 500");
+        $sql = "SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.created_at DESC LIMIT 500";
+        if ($dateTypes) { $stmt = $conn->prepare($sql); $stmt->bind_param($dateTypes, ...$dateParams); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); }
+        else $r = $conn->query($sql);
         if($r)while($row=$r->fetch_assoc())$data[]=$row;
     }elseif($type==='requirements'){
         $r=$conn->query("SELECT a.id,a.full_name,a.application_number,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Submitted') submitted,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Not Submitted') not_submitted,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Missing') missing,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Rejected') rejected FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved','Registered')$dateWhere ORDER BY a.full_name LIMIT 500");
@@ -625,7 +664,8 @@ if ($ajax === 'toggle_student_status') {
     $sid=intval($_POST['student_id']??0);
     $ns=trim($_POST['new_status']??'');
     if(!$sid||!$ns||!$students_conn){echo json_encode(['success'=>false,'error'=>'Invalid']);exit;}
-    $students_conn->query("UPDATE `{$students_db}`.`students` SET status='".$students_conn->real_escape_string($ns)."' WHERE id=".intval($sid));
+    $stmt = $students_conn->prepare("UPDATE `{$students_db}`.`students` SET status=? WHERE id=?");
+    if ($stmt) { $stmt->bind_param('si', $ns, $sid); $stmt->execute(); $stmt->close(); }
     echo json_encode(['success'=>true,'message'=>'Student '.strtolower($ns)]);exit;
 }
 if ($ajax === 'clear_notifications') {
@@ -637,11 +677,12 @@ if ($ajax === 'get_requirements_tracking') {
     header('Content-Type: application/json');
     $q=trim($_GET['q']??($_POST['q']??''));
     $st=trim($_GET['status']??($_POST['status']??''));
-    $w=[];$j="";
-    if($q!==''){$sq=$conn->real_escape_string($q);$w[]="(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%')";}
-    if($st!==''){$w[]="ars.status='".$conn->real_escape_string($st)."'";}
-    $ws=$w?'WHERE '.implode(' AND ',$w):'';
-    $r=$conn->query("SELECT ars.*,a.full_name,a.application_number,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id $ws ORDER BY ars.updated_at DESC LIMIT 200");
+    $w=["1=1"];$params=[];$types='';
+    if($q!==''){$w[]="(a.full_name LIKE ? OR a.application_number LIKE ?)"; $like="%$q%"; $params[]=$like; $params[]=$like; $types.='ss';}
+    if($st!==''){$w[]="ars.status=?"; $params[]=$st; $types.='s';}
+    $ws='WHERE '.implode(' AND ',$w);
+    $stmt=$conn->prepare("SELECT ars.*,a.full_name,a.application_number,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id $ws ORDER BY ars.updated_at DESC LIMIT 200");
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
     echo json_encode(['data'=>$out]);exit;
 }
@@ -660,11 +701,12 @@ if ($ajax === 'get_documents_list') {
 if ($ajax === 'get_registration_list') {
     header('Content-Type: application/json');
     $q=trim($_POST['q']??'');$intake=trim($_POST['intake']??'');
-    $w=[];$w[]="a.status IN('Approved','Registered')";
-    if($q!==''){$sq=$conn->real_escape_string($q);$w[]="(a.full_name LIKE '%$sq%' OR a.application_number LIKE '%$sq%')";}
-    if($intake!==''){$w[]="a.intake='".$conn->real_escape_string($intake)."'";}
+    $w=["a.status IN('Approved','Registered')"];$params=[];$types='';
+    if($q!==''){$w[]="(a.full_name LIKE ? OR a.application_number LIKE ?)"; $like="%$q%"; $params[]=$like; $params[]=$like; $types.='ss';}
+    if($intake!==''){$w[]="a.intake=?"; $params[]=$intake; $types.='s';}
     $ws='WHERE '.implode(' AND ',$w);
-    $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(CASE WHEN a.status='Registered' THEN 1 ELSE 0 END) is_registered FROM `{$staff_db}`.`applicants` a $ws ORDER BY a.full_name LIMIT 200");
+    $stmt=$conn->prepare("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(CASE WHEN a.status='Registered' THEN 1 ELSE 0 END) is_registered FROM `{$staff_db}`.`applicants` a $ws ORDER BY a.full_name LIMIT 200");
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     $out=[];if($r)while($row=$r->fetch_assoc()){$out[]=$row;}
     echo json_encode(['data'=>$out]);exit;
 }
@@ -678,9 +720,10 @@ if ($ajax === 'verify_document') {
     header('Content-Type: application/json');
     $docId=intval($_POST['doc_id']??$_POST['id']??0);
     $newStatus=$_POST['status']??'';
-    $remarks=$conn->real_escape_string(trim($_POST['remarks']??''));
+    $remarks=trim($_POST['remarks']??'');
     if(!$docId||!in_array($newStatus,['Verified','Rejected'])){echo json_encode(['success'=>false,'error'=>'Invalid']);exit;}
-    $conn->query("UPDATE `{$staff_db}`.`student_documents` SET verification_status='$newStatus',verified_by=".intval($user_id).",verified_at=NOW(),remarks='$remarks' WHERE id=".intval($docId));
+    $stmt = $conn->prepare("UPDATE `{$staff_db}`.`student_documents` SET verification_status=?,verified_by=?,verified_at=NOW(),remarks=? WHERE id=?");
+    if ($stmt) { $stmt->bind_param('sisi', $newStatus, $user_id, $remarks, $docId); $stmt->execute(); $stmt->close(); }
     echo json_encode(['success'=>true]);exit;
 }
 
@@ -690,30 +733,47 @@ if ($ajax === 'verify_document') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_applicant') {
-        $fn=$conn->real_escape_string(trim($_POST['full_name']??''));
-        $dob=$_POST['date_of_birth']??null;$gen=$conn->real_escape_string(trim($_POST['gender']??'Other'));
-        $ph=$conn->real_escape_string(trim($_POST['phone']??''));$em=$conn->real_escape_string(trim($_POST['email']??''));
-        $addr=$conn->real_escape_string(trim($_POST['address']??''));$gn=$conn->real_escape_string(trim($_POST['guardian_name']??''));
-        $gp=$conn->real_escape_string(trim($_POST['guardian_phone']??''));$gr=$conn->real_escape_string(trim($_POST['guardian_relationship']??''));
-        $prog_id=intval($_POST['program_id']??0);$intake=$conn->real_escape_string(trim($_POST['intake']??''));
+        $fn=trim($_POST['full_name']??'');
+        $dob=$_POST['date_of_birth']??null;
+        $gen=trim($_POST['gender']??'Other');
+        $ph=trim($_POST['phone']??'');
+        $em=trim($_POST['email']??'');
+        $addr=trim($_POST['address']??'');
+        $gn=trim($_POST['guardian_name']??'');
+        $gp=trim($_POST['guardian_phone']??'');
+        $gr=trim($_POST['guardian_relationship']??'');
+        $prog_id=intval($_POST['program_id']??0);
+        $intake=trim($_POST['intake']??'');
         $app_num='APP-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
         if(!$fn){$_SESSION['error']='Full name required.';header("Location: director-admissions.php");exit;}
-        if($ph){$dup=$conn->query("SELECT id FROM `{$staff_db}`.`applicants` WHERE phone='$ph' LIMIT 1");if($dup&&$dup->num_rows){$_SESSION['error']='Phone already exists.';header("Location: director-admissions.php");exit;}}
-        if($em){$dup=$conn->query("SELECT id FROM `{$staff_db}`.`applicants` WHERE email='$em' LIMIT 1");if($dup&&$dup->num_rows){$_SESSION['error']='Email already exists.';header("Location: director-admissions.php");exit;}}
-        $conn->query("INSERT INTO `{$staff_db}`.`applicants` (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES ('$fn','$dob','$gen','$ph','$em','$addr','$gn','$gp','$gr','$app_num',".intval($prog_id).",'$intake',CURDATE(),'New Applicant')");
-        if($conn->affected_rows>0){$aid=$conn->insert_id;foreach($req_items as $ri){$conn->query("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status) VALUES (".intval($aid).",".intval($ri['id']).",'Not Submitted')");}logAdmission($conn,$user_id,'Add Applicant','applicants',$aid,"Added applicant: $fn ($app_num)");$_SESSION['success']="Applicant '$fn' added. App No: $app_num";}
+        if($ph){$stmt=$conn->prepare("SELECT id FROM `{$staff_db}`.`applicants` WHERE phone=? LIMIT 1");if($stmt){$stmt->bind_param('s',$ph);$stmt->execute();$dup=$stmt->get_result();$stmt->close();if($dup&&$dup->num_rows){$_SESSION['error']='Phone already exists.';header("Location: director-admissions.php");exit;}}}
+        if($em){$stmt=$conn->prepare("SELECT id FROM `{$staff_db}`.`applicants` WHERE email=? LIMIT 1");if($stmt){$stmt->bind_param('s',$em);$stmt->execute();$dup=$stmt->get_result();$stmt->close();if($dup&&$dup->num_rows){$_SESSION['error']='Email already exists.';header("Location: director-admissions.php");exit;}}}
+        $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`applicants` (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES (?,?,?, ?,?, ?,?, ?,?, ?,?,?,CURDATE(),'New Applicant')");
+        if ($stmt) { $stmt->bind_param('ssssssssssis', $fn, $dob, $gen, $ph, $em, $addr, $gn, $gp, $gr, $app_num, $prog_id, $intake); $stmt->execute(); $aid = $conn->insert_id; $stmt->close(); }
+        else $aid = 0;
+        if($aid > 0){foreach($req_items as $ri){$stmt2=$conn->prepare("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status) VALUES (?,?,?)");if($stmt2){$s='Not Submitted';$stmt2->bind_param('iis',$aid,$ri['id'],$s);$stmt2->execute();$stmt2->close();}}logAdmission($conn,$user_id,'Add Applicant','applicants',$aid,"Added applicant: $fn ($app_num)");$_SESSION['success']="Applicant '$fn' added. App No: $app_num";}
         else{$_SESSION['error']='Failed: '.$conn->error;}
         header("Location: director-admissions.php");exit;
     }
     if ($action === 'edit_applicant') {
-        $aid=intval($_POST['id']??$_POST['applicant_id']??0);$fn=$conn->real_escape_string(trim($_POST['full_name']??''));
-        $dob=$_POST['date_of_birth']??$conn->real_escape_string(trim($_POST['dob']??''));
-        $gen=$conn->real_escape_string(trim($_POST['gender']??'Other'));$ph=$conn->real_escape_string(trim($_POST['phone']??''));
-        $em=$conn->real_escape_string(trim($_POST['email']??''));$addr=$conn->real_escape_string(trim($_POST['address']??''));
-        $gn=$conn->real_escape_string(trim($_POST['guardian_name']??''));$gp=$conn->real_escape_string(trim($_POST['guardian_phone']??''));
-        $gr=$conn->real_escape_string(trim($_POST['guardian_relationship']??''));$prog_id=intval($_POST['program_id']??0);
-        $intake=$conn->real_escape_string(trim($_POST['intake']??''));$status=$conn->real_escape_string(trim($_POST['status']??'New Applicant'));
-        if($aid&&$fn){$conn->query("UPDATE `{$staff_db}`.`applicants` SET full_name='$fn',date_of_birth='$dob',gender='$gen',phone='$ph',email='$em',address='$addr',guardian_name='$gn',guardian_phone='$gp',guardian_relationship='$gr',program_id=".intval($prog_id).",intake='$intake',status='$status' WHERE id=".intval($aid));logAdmission($conn,$user_id,'Edit Applicant','applicants',$aid,"Edited applicant: $fn");$_SESSION['success']="Applicant updated.";}
+        $aid=intval($_POST['id']??$_POST['applicant_id']??0);
+        $fn=trim($_POST['full_name']??'');
+        $dob=$_POST['date_of_birth']??trim($_POST['dob']??'');
+        $gen=trim($_POST['gender']??'Other');
+        $ph=trim($_POST['phone']??'');
+        $em=trim($_POST['email']??'');
+        $addr=trim($_POST['address']??'');
+        $gn=trim($_POST['guardian_name']??'');
+        $gp=trim($_POST['guardian_phone']??'');
+        $gr=trim($_POST['guardian_relationship']??'');
+        $prog_id=intval($_POST['program_id']??0);
+        $intake=trim($_POST['intake']??'');
+        $status=trim($_POST['status']??'New Applicant');
+        if($aid&&$fn){
+            $stmt=$conn->prepare("UPDATE `{$staff_db}`.`applicants` SET full_name=?,date_of_birth=?,gender=?,phone=?,email=?,address=?,guardian_name=?,guardian_phone=?,guardian_relationship=?,program_id=?,intake=?,status=? WHERE id=?");
+            if($stmt){$stmt->bind_param('sssssssssisii',$fn,$dob,$gen,$ph,$em,$addr,$gn,$gp,$gr,$prog_id,$intake,$status,$aid);$stmt->execute();$stmt->close();}
+            logAdmission($conn,$user_id,'Edit Applicant','applicants',$aid,"Edited applicant: $fn");$_SESSION['success']="Applicant updated.";
+        }
         else{$_SESSION['error']='Edit failed: missing data.';}
         header("Location: director-admissions.php");exit;
     }
@@ -724,8 +784,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: director-admissions.php");exit;
     }
     if ($action === 'edit_student') {
-        $sid=intval($_POST['student_id']??0);$status=$conn->real_escape_string(trim($_POST['status']??''));
-        if($sid&&$students_conn){$students_conn->query("UPDATE `{$students_db}`.`students` SET status='$status' WHERE id=$sid");}
+        $sid=intval($_POST['student_id']??0);$status=trim($_POST['status']??'');
+        if($sid&&$students_conn){$stmt=$students_conn->prepare("UPDATE `{$students_db}`.`students` SET status=? WHERE id=?");if($stmt){$stmt->bind_param('si',$status,$sid);$stmt->execute();$stmt->close();}}
         echo json_encode(['success'=>true]);exit;
     }
     header("Location: director-admissions.php");exit;

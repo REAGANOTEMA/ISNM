@@ -21,17 +21,47 @@ if ($conn) {
     if ($r) $late = (int)$r->fetch_assoc()['c'];
     $r = $conn->query("SELECT COUNT(*) c FROM student_attendance");
     if ($r) $total = (int)$r->fetch_assoc()['c'];
-    $d = $conn->real_escape_string($dateFilter);
-    $w = "a.attendance_date='$d'";
-    if ($searchFilter !== '') { $s = $conn->real_escape_string($searchFilter); $w .= " AND (CONCAT(s.first_name,' ',s.surname) LIKE '%$s%' OR s.index_number LIKE '%$s%' OR s.student_number LIKE '%$s%')"; }
-    $q = $conn->query("SELECT a.*, CONCAT(s.first_name,' ',s.surname) student_name, s.index_number, s.student_number FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id WHERE $w ORDER BY a.time_in DESC");
-    if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+    $types = 's';
+    $params = [$dateFilter];
+    $w = "a.attendance_date=?";
+    if ($searchFilter !== '') {
+        $like = '%' . $searchFilter . '%';
+        $w .= " AND (CONCAT(s.first_name,' ',s.surname) LIKE ? OR s.index_number LIKE ? OR s.student_number LIKE ?)";
+        $types .= 'sss';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+    $stmt = $conn->prepare("SELECT a.*, CONCAT(s.first_name,' ',s.surname) student_name, s.index_number, s.student_number FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id WHERE $w ORDER BY a.time_in DESC");
+    if ($stmt) {
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $q = $stmt->get_result();
+        if ($q) $records = $q->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    }
     if ($programFilter !== '' || $levelFilter !== '') {
         $aw = "WHERE status='Active'";
-        if ($programFilter !== '') { $p = $conn->real_escape_string($programFilter); $aw .= " AND program='$p'"; }
-        if ($levelFilter !== '') { $l = $conn->real_escape_string($levelFilter); $aw .= " AND level='$l'"; }
-        $sr = $conn->query("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number FROM students $aw ORDER BY surname LIMIT 300");
-        if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
+        $ptypes = '';
+        $pparams = [];
+        if ($programFilter !== '') {
+            $aw .= " AND program=?";
+            $ptypes .= 's';
+            $pparams[] = $programFilter;
+        }
+        if ($levelFilter !== '') {
+            $aw .= " AND level=?";
+            $ptypes .= 's';
+            $pparams[] = $levelFilter;
+        }
+        $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) full_name, index_number FROM students $aw ORDER BY surname LIMIT 300");
+        if ($stmt) {
+            if (!empty($pparams)) $stmt->bind_param($ptypes, ...$pparams);
+            $stmt->execute();
+            $sr = $stmt->get_result();
+            if ($sr) while ($row = $sr->fetch_assoc()) $students[] = $row;
+            $stmt->close();
+        }
     }
 }
 
@@ -40,16 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$conn) { $_SESSION['error'] = 'DB connection failed'; header('Location: student-attendance.php'); exit; }
 
     if ($action === 'record_attendance') {
-        $attendanceDate = $conn->real_escape_string($_POST['attendance_date'] ?? date('Y-m-d'));
+        $attendanceDate = $_POST['attendance_date'] ?? date('Y-m-d');
         $entries = $_POST['attendance'] ?? [];
         $count = 0;
         $stmt = $conn->prepare("INSERT IGNORE INTO student_attendance (student_id, attendance_date, time_in, time_out, status) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
             foreach ($entries as $sid => $data) {
                 $sid = intval($sid);
-                $timeIn = $conn->real_escape_string($data['time_in'] ?? date('H:i:s'));
-                $timeOut = $conn->real_escape_string($data['time_out'] ?? '');
-                $status = $conn->real_escape_string($data['status'] ?? 'Present');
+                $timeIn = $data['time_in'] ?? date('H:i:s');
+                $timeOut = $data['time_out'] ?? '';
+                $status = $data['status'] ?? 'Present';
                 $stmt->bind_param("issss", $sid, $attendanceDate, $timeIn, $timeOut, $status);
                 if ($stmt->execute()) $count++;
             }
