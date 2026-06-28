@@ -538,7 +538,7 @@ if ($conn) {
                 case 'welfareCase':
                     modalTitle.textContent = 'Create Welfare Case';
                     modalBody.innerHTML = `
-                        <form action="../../handlers/welfare_handler.php" method="POST">
+                        <form action="../handlers/welfare_handler.php" method="POST">
                             <input type="hidden" name="action" value="create_welfare_case">
                             <div class="mb-3">
                                 <label class="form-label">Student ID</label>
@@ -586,7 +586,7 @@ if ($conn) {
                 case 'scheduleSession':
                     modalTitle.textContent = 'Schedule Counseling Session';
                     modalBody.innerHTML = `
-                        <form action="../../handlers/welfare_handler.php" method="POST">
+                        <form action="../handlers/welfare_handler.php" method="POST">
                             <input type="hidden" name="action" value="schedule_session">
                             <div class="mb-3">
                                 <label class="form-label">Session Type</label>
@@ -627,7 +627,7 @@ if ($conn) {
                 case 'disciplineCase':
                     modalTitle.textContent = 'Create Discipline Case';
                     modalBody.innerHTML = `
-                        <form action="../../handlers/welfare_handler.php" method="POST">
+                        <form action="../handlers/welfare_handler.php" method="POST">
                             <input type="hidden" name="action" value="create_discipline_case">
                             <div class="mb-3">
                                 <label class="form-label">Student ID</label>

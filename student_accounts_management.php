@@ -4,6 +4,10 @@ include_once 'includes/functions.php';
 include_once 'includes/photo_upload.php';
 include_once 'security-middleware.php';
 
+// Override global $conn to use students_db (students table belongs there)
+$studentsDb = getStudentsConnection();
+if ($studentsDb) { global $conn; $conn = $studentsDb; }
+
 // Check if user is logged in and has permission to create students
 requireStudentCreationPermission();
 

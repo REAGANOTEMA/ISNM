@@ -1854,7 +1854,7 @@ CREATE TABLE `fee_adjustments` (
 --
 
 DROP TABLE IF EXISTS `fee_payments`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
 
 -- --------------------------------------------------------
 
@@ -5173,7 +5173,7 @@ CREATE TABLE `users` (
 --
 
 DROP VIEW IF EXISTS `fee_payments`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fee_payments` AS select `igangaschoolofl_students_db`.`payments`.`id` AS `id`,`igangaschoolofl_students_db`.`payments`.`student_id` AS `student_id`,`igangaschoolofl_students_db`.`payments`.`invoice_id` AS `fee_account_id`,`igangaschoolofl_students_db`.`payments`.`amount_received` AS `amount_paid`,`igangaschoolofl_students_db`.`payments`.`payment_method` AS `payment_method`,`igangaschoolofl_students_db`.`payments`.`payment_reference` AS `receipt_number`,`igangaschoolofl_students_db`.`payments`.`status` AS `status`,`igangaschoolofl_students_db`.`payments`.`payment_date` AS `payment_date`,`igangaschoolofl_students_db`.`payments`.`notes` AS `notes`,`igangaschoolofl_students_db`.`payments`.`received_by` AS `processed_by`,`igangaschoolofl_students_db`.`payments`.`created_at` AS `created_at`,`igangaschoolofl_students_db`.`payments`.`updated_at` AS `updated_at` from `igangaschoolofl_students_db`.`payments`;
 
 -- --------------------------------------------------------
 
@@ -5182,7 +5182,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 
 DROP PROCEDURE IF EXISTS `get_dashboard_statistics`;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_dashboard_statistics`(IN p_user_id INT, IN p_role VARCHAR(100))
+CREATE PROCEDURE `get_dashboard_statistics`(IN p_user_id INT, IN p_role VARCHAR(100))
 BEGIN
     SELECT
         (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.staff WHERE status='Active') AS total_staff,
@@ -5194,7 +5194,7 @@ BEGIN
 END;
 
 DROP PROCEDURE IF EXISTS `get_staff_performance_summary`;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_staff_performance_summary`(IN p_user_id INT)
+CREATE PROCEDURE `get_staff_performance_summary`(IN p_user_id INT)
 BEGIN
     SELECT s.id, s.full_name, sr.role_name, s.department, s.status,
            0 AS performance_score, 'Good' AS rating

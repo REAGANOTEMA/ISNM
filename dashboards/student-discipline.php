@@ -16,7 +16,7 @@ if ($staffDb) {
         if ($r) $resolvedCases = (int)$r->fetch_assoc()['c'];
         $r = $staffDb->query("SELECT COUNT(*) as c FROM disciplinary_records WHERE action_taken LIKE '%warning%'");
         if ($r) $warningCases = (int)$r->fetch_assoc()['c'];
-        $r = $staffDb->query("SELECT d.*, CONCAT(s.first_name,' ',s.last_name) as student_name FROM disciplinary_records d LEFT JOIN igangaschoolofl_students_db.students s ON d.student_id=s.id ORDER BY d.date DESC LIMIT 100");
+        $r = $staffDb->query("SELECT d.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM disciplinary_records d LEFT JOIN igangaschoolofl_students_db.students s ON d.student_id=s.id ORDER BY d.date DESC LIMIT 100");
         if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
     } catch (Exception $e) {}
 }

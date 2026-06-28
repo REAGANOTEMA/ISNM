@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['lecturer', 'hods', 'registrar', 'admin']);
-$conn = $ctx['staff'];
+$conn = $ctx['students'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $pageTitle = 'Student Attendance';

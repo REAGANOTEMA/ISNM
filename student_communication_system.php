@@ -5,6 +5,10 @@ include_once 'includes/photo_upload.php';
 include_once 'includes/student_profile_component.php';
 include_once 'security-middleware.php';
 
+// Override global $conn to use students_db (messages/notifications belong there)
+$studentsDb = getStudentsConnection();
+if ($studentsDb) { global $conn; $conn = $studentsDb; }
+
 // Check if user is logged in
 requireAuth();
 
@@ -29,6 +33,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
     }
+}
+
+// Permission check: can sender message this recipient role?
+function canSendMessageTo($recipient_role, $sender_role) {
+    $allowed = [
+        'admin'      => ['student', 'staff', 'admin'],
+        'registrar'  => ['student', 'staff'],
+        'lecturer'   => ['student'],
+        'hod'        => ['student', 'staff'],
+        'director'   => ['student', 'staff', 'admin'],
+        'principal'  => ['student', 'staff', 'admin'],
+        'deputy'     => ['student', 'staff'],
+        'bursar'     => ['student'],
+        'secretary'  => ['student', 'staff'],
+        'hr'         => ['staff'],
+        'ict'        => ['staff'],
+        'student'    => ['staff', 'admin'],
+    ];
+    $sender = strtolower($sender_role);
+    $recipient = strtolower($recipient_role);
+    if ($sender === 'admin' || $sender === 'principal' || $sender === 'director') return true;
+    return isset($allowed[$sender]) && in_array($recipient, $allowed[$sender]);
 }
 
 // Handle sending individual message - WITH PERMISSION CHECKS
@@ -109,7 +135,7 @@ function handleSendBulkMessage() {
         $sql = "INSERT INTO messages (student_id, sender_id, sender_role, subject, message_content, message_type, priority, sent_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 'sent')";
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssss", $student_id, $sender_id, $sender_role, $subject, $message, $message_type, $priority);
+    $stmt->bind_param("sssssss", $student_id, $sender_id, $sender_role, $subject, $message, $message_type, $priority);
         
         if ($stmt->execute()) {
             // Create notification for student

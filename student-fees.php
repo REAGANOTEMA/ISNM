@@ -28,16 +28,22 @@ $balanceInfo = ['total_billed' => 0, 'total_paid' => 0, 'balance' => 0];
 if ($studentNumber && $studentsDb) {
     try {
         $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number = ?");
-        $stmt->execute([$studentNumber]);
-        $studentInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->bind_param("s", $studentNumber);
+        $stmt->execute();
+        $studentInfo = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
 
         $stmt2 = $studentsDb->prepare("SELECT si.*, fs.program, fs.academic_year FROM student_invoices si LEFT JOIN fee_structures fs ON si.fee_structure_id = fs.id WHERE si.student_id = ? ORDER BY si.created_at DESC");
-        $stmt2->execute([$studentNumber]);
-        $invoices = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+        $stmt2->bind_param("s", $studentNumber);
+        $stmt2->execute();
+        $invoices = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2->close();
 
         $stmt3 = $studentsDb->prepare("SELECT * FROM payments WHERE student_id = ? ORDER BY created_at DESC LIMIT 50");
-        $stmt3->execute([$studentNumber]);
-        $payments = $stmt3->fetchAll(PDO::FETCH_ASSOC);
+        $stmt3->bind_param("s", $studentNumber);
+        $stmt3->execute();
+        $payments = $stmt3->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt3->close();
 
         $totalBilled = 0; $totalPaid = 0;
         foreach ($invoices as $inv) {
@@ -285,8 +291,10 @@ CSS;
 $receipts = [];
 try {
     $stmt = $studentsDb->prepare("SELECT * FROM payment_receipts WHERE student_id = ? ORDER BY created_at DESC");
-    $stmt->execute([$studentNumber]);
-    $receipts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->bind_param("s", $studentNumber);
+    $stmt->execute();
+    $receipts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 } catch (Exception $e) {}
 ?>
 <?php if (count($receipts) > 0): ?>
