@@ -646,13 +646,6 @@ CREATE TABLE IF NOT EXISTS `api_keys` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-
-
-
-
-
-
-
 -- LIBRARY
 
 CREATE TABLE IF NOT EXISTS `library_members` (
@@ -699,10 +692,6 @@ CREATE TABLE IF NOT EXISTS `library_borrowing` (
   `status` VARCHAR(20) DEFAULT 'borrowed',
   `renewal_count` INT DEFAULT 0, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-
-
 
 -- SECURITY & FACILITIES
 
@@ -1002,21 +991,12 @@ CREATE TABLE IF NOT EXISTS `accreditation_management` (
   `documents` JSON, `notes` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
-
 CREATE TABLE IF NOT EXISTS `compliance_tracking` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `requirement_id` INT, `period` VARCHAR(50),
   `status` VARCHAR(20) DEFAULT 'pending', `evidence_path` VARCHAR(500),
   `submitted_by` INT, `verified_by` INT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-
-
-
 
 
 -- REMAINING TABLES
@@ -1038,14 +1018,6 @@ CREATE TABLE IF NOT EXISTS `cost_centers` (
   `budget_spent` DECIMAL(15,2) DEFAULT 0,
   `status` VARCHAR(20) DEFAULT 'active', `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-
-
-
-
-
-
 
 CREATE TABLE IF NOT EXISTS `programs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -1094,46 +1066,6 @@ CREATE TABLE IF NOT EXISTS `proof_of_payments` (
 
 
 
--- ============================================================
--- VIEWS
--- ============================================================
-
-CREATE OR REPLACE VIEW `hr_leave_summary` AS
-SELECT lr.id, lr.staff_id, s.first_name, s.last_name,
-  lt.type_name AS leave_type, lr.start_date, lr.end_date,
-  DATEDIFF(lr.end_date, lr.start_date) + 1 AS days_requested,
-  lr.status, lr.reason, lr.created_at
-FROM leave_requests lr
-LEFT JOIN staff s ON lr.staff_id = s.id
-LEFT JOIN leave_types lt ON lr.leave_type_id = lt.id;
-
-CREATE OR REPLACE VIEW `hr_performance_summary` AS
-SELECT pr.id, pr.staff_id, s.first_name, s.last_name,
-  d.name AS department, pr.review_period, pr.overall_score,
-  pr.status, pr.created_at
-FROM performance_reviews pr
-LEFT JOIN staff s ON pr.staff_id = s.id
-LEFT JOIN staff_departments sd ON s.id = sd.staff_id
-LEFT JOIN departments d ON sd.department_id = d.id;
-
-CREATE OR REPLACE VIEW `hr_staff_by_department` AS
-SELECT s.id AS staff_id, s.first_name, s.last_name, s.email,
-  d.name AS department, s.employment_status, s.date_of_joining
-FROM staff s
-LEFT JOIN staff_departments sd ON s.id = sd.staff_id
-LEFT JOIN departments d ON sd.department_id = d.id;
-
-CREATE OR REPLACE VIEW `hr_staff_search_view` AS
-SELECT s.id, s.staff_id AS staff_number, s.first_name, s.last_name,
-  CONCAT(s.first_name, ' ', s.last_name) AS full_name,
-  s.email, s.phone, d.name AS department, s.position, s.employment_status
-FROM staff s
-LEFT JOIN staff_departments sd ON s.id = sd.staff_id
-LEFT JOIN departments d ON sd.department_id = d.id;
-
-CREATE OR REPLACE VIEW `all_students_view` AS
-SELECT st.id, st.student_id AS student_number, st.first_name, st.last_name,
-  CONCAT(st.first_name, ' ', st.last_name) AS full_name,
-  st.email, st.phone, st.program, st.department,
-  st.year_of_study, st.status
-FROM students st;
+-- Views removed: hr_leave_summary, hr_performance_summary, hr_staff_by_department,
+-- hr_staff_search_view, all_students_view
+-- These can be created manually after both SQL files are imported if needed.
