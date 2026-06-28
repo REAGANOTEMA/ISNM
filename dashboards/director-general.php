@@ -382,7 +382,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     if ($title && $body && $studentsConn) {
         $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
         if ($stmt) {
-            $stmt->bind_param('sss si', $title, $body, $target, $priority, $user_id);
+            $stmt->bind_param('ssssi', $title, $body, $target, $priority, $user_id);
             $stmt->execute();
             $stmt->close();
         }
