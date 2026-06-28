@@ -4,6 +4,12 @@ $ctx = bootstrapStaffDashboard(['director', 'academics', 'principal', 'head']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
+
+if ($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS `{$staff_db}`.`academic_curriculum_development` (id INT AUTO_INCREMENT PRIMARY KEY, program_code VARCHAR(50) NOT NULL, revision_number INT DEFAULT 1, academic_year VARCHAR(20) DEFAULT NULL, description TEXT, status VARCHAR(50) DEFAULT 'Draft', created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_program (program_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 $curricula = [];
 if ($conn) {
     $r = $conn->query("SELECT c.*, p.program_name FROM academic_curriculum_development c LEFT JOIN academic_programs p ON c.program_code = p.program_code ORDER BY c.created_at DESC LIMIT 50");

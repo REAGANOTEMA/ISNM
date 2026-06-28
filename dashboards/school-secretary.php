@@ -284,9 +284,9 @@ if ($view === 'letter_update' && $ajax === '1' && $staff) {
 }
 if ($view === 'circular_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $ci = $staff->real_escape_string($_POST['title']??''); $cr = $staff->real_escape_string($_POST['reference']??''); $cb = $staff->real_escape_string($_POST['body']??''); $cd = $staff->real_escape_string($_POST['department']??''); $fn = '';
+    $ci = $_POST['title']??''; $cr = $_POST['reference']??''; $cb = $_POST['body']??''; $cd = $_POST['department']??''; $fn = '';
     if (!empty($_FILES['circ_file']['name'])) { $ud = __DIR__.'/../uploads/circulars/'; if(!is_dir($ud)) @mkdir($ud,0755,true); $fn = time().'_'.basename($_FILES['circ_file']['name']); move_uploaded_file($_FILES['circ_file']['tmp_name'],$ud.$fn); }
-    if ($ci) { $fp = $staff->real_escape_string('uploads/circulars/'.$fn); if ($staff->query("INSERT INTO {$students_db}.circulars (title,reference,body,department,file_name,file_path,issued_by,created_by) VALUES ('$ci','$cr','$cb','$cd','$fn','$fp','$uname',$uid)")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Create failed']); exit; }
+    if ($ci) { $fp = 'uploads/circulars/'.$fn; $stmt = $staff->prepare("INSERT INTO {$students_db}.circulars (title,reference,body,department,file_name,file_path,issued_by,created_by) VALUES (?,?,?,?,?,?,?,?)"); if ($stmt) { $stmt->bind_param('sssssssi', $ci, $cr, $cb, $cd, $fn, $fp, $uname, $uid); if ($stmt->execute()) { echo json_encode(['success'=>true]); $stmt->close(); exit; } $stmt->close(); } echo json_encode(['success'=>false,'error'=>'Create failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'circular_list' && $ajax === '1' && $staff) {

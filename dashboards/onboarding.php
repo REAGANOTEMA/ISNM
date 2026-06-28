@@ -21,8 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_i
 }
 
 $checklist = [];
-$r = $conn->query("SELECT * FROM onboarding_checklist ORDER BY created_at DESC");
-if ($r) while ($row = $r->fetch_assoc()) $checklist[] = $row;
+if ($conn) {
+    $r = $conn->query("SELECT * FROM onboarding_checklist ORDER BY created_at DESC");
+    if ($r) while ($row = $r->fetch_assoc()) $checklist[] = $row;
+}
 
 $pageTitle = 'Onboarding & Orientation';
 ?>
