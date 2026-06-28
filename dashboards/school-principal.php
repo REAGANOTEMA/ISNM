@@ -1,11 +1,11 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['school principal', 'principal']);
+$ctx = bootstrapStaffDashboard(['school principal']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Principal';
 // Strict role check: only exact 'school principal' or 'principal' allowed (no substring match for 'deputy principal')
-$strictAllowed = ['school principal', 'principal'];
+$strictAllowed = ['school principal'];
 $roleNorm = strtolower(trim($role));
 $isStrictPrincipal = in_array($roleNorm, $strictAllowed, true);
 if (!$isStrictPrincipal) {

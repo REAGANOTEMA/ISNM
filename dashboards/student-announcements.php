@@ -81,12 +81,15 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     if ($conn && $action==='toggle_active') {
         $id = (int)($_POST['id']??0);
         $current = (int)($_POST['current']??0);
-        $conn->query("UPDATE announcements SET is_active=".(1-$current)." WHERE id=$id");
+        $newActive = 1 - $current;
+        $stmt = $conn->prepare("UPDATE announcements SET is_active=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('ii', $newActive, $id); $stmt->execute(); $stmt->close(); }
         header('Location: student-announcements.php'); exit;
     }
     if ($conn && $action==='delete_announcement') {
         $id = (int)($_POST['id']??0);
-        $conn->query("DELETE FROM announcements WHERE id=$id");
+        $stmt = $conn->prepare("DELETE FROM announcements WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Announcement deleted.';
         header('Location: student-announcements.php'); exit;
     }

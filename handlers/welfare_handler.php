@@ -21,7 +21,8 @@ switch ($action) {
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Welfare case created successfully.";
             } else {
-                $_SESSION['error'] = "Error creating welfare case: " . $conn->error;
+                error_log("welfare_handler create_welfare_case error: " . $conn->error);
+                $_SESSION['error'] = "Error creating welfare case. Please try again.";
             }
             $stmt->close();
         }
@@ -41,7 +42,8 @@ switch ($action) {
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Counseling session scheduled successfully.";
             } else {
-                $_SESSION['error'] = "Error scheduling session: " . $conn->error;
+                error_log("welfare_handler schedule_session error: " . $conn->error);
+                $_SESSION['error'] = "Error scheduling session. Please try again.";
             }
             $stmt->close();
         }
@@ -59,7 +61,8 @@ switch ($action) {
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Discipline case created successfully.";
             } else {
-                $_SESSION['error'] = "Error creating discipline case: " . $conn->error;
+                error_log("welfare_handler create_discipline_case error: " . $conn->error);
+                $_SESSION['error'] = "Error creating discipline case. Please try again.";
             }
             $stmt->close();
         }
@@ -77,7 +80,8 @@ switch ($action) {
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Health incident recorded successfully.";
             } else {
-                $_SESSION['error'] = "Error recording health incident: " . $conn->error;
+                error_log("welfare_handler create_health_incident error: " . $conn->error);
+                $_SESSION['error'] = "Error recording health incident. Please try again.";
             }
             $stmt->close();
         }

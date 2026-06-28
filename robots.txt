@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboards/
+Disallow: /handlers/
+Disallow: /includes/
+Disallow: /ajax/
+Disallow: /config/
+Disallow: /sql/
+Disallow: /.env
+Disallow: /logs/
+Sitemap: http://localhost/ISNM/sitemap.xml

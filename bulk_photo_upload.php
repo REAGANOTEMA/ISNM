@@ -274,19 +274,19 @@ $students = executeQuery($students_sql);
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="text-center">
-                            <h3 class="text-success"><?php echo $_SESSION['bulk_upload_results']['uploaded']; ?></h3>
+                            <h3 class="text-success"><?php echo (int)$_SESSION['bulk_upload_results']['uploaded']; ?></h3>
                             <p class="text-muted">Successful Uploads</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center">
-                            <h3 class="text-danger"><?php echo $_SESSION['bulk_upload_results']['errors']; ?></h3>
+                            <h3 class="text-danger"><?php echo (int)$_SESSION['bulk_upload_results']['errors']; ?></h3>
                             <p class="text-muted">Errors</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center">
-                            <h3 class="text-primary"><?php echo count($_SESSION['bulk_upload_results']['results']); ?></h3>
+                            <h3 class="text-primary"><?php echo (int)count($_SESSION['bulk_upload_results']['results']); ?></h3>
                             <p class="text-muted">Total Processed</p>
                         </div>
                     </div>

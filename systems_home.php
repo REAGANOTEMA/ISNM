@@ -534,7 +534,7 @@
         <div class="footer">
             <p><strong>ISNM Financial & HR Management Systems</strong></p>
             <p>Professional • Complete • Production Ready</p>
-            <p>© 2025 Iganga School of Nursing and Midwifery. All rights reserved.</p>
+            <p>© <?php echo date('Y'); ?> Iganga School of Nursing and Midwifery. All rights reserved.</p>
             <p style="margin-top: 20px; font-size: 11px; color: #999;">
                 For support and customization, contact your system administrator.
             </p>

@@ -20,7 +20,8 @@ if ($action === 'report_incident' && $conn) {
         if ($stmt->execute()) {
             $_SESSION['success'] = "Incident reported successfully.";
         } else {
-            $_SESSION['error'] = "Error reporting incident: " . $conn->error;
+            error_log("security_handler report_incident error: " . $conn->error);
+            $_SESSION['error'] = "Error reporting incident. Please try again.";
         }
         $stmt->close();
     } else {

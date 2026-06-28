@@ -157,9 +157,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'mark_paid') {
         $rid  = (int)($_POST['run_id'] ?? 0);
         $meth = $_POST['payment_method'] ?? 'bank_transfer';
-        $staff_conn->query("UPDATE payroll_details SET payment_method='$meth', payment_status='paid', payment_date=CURDATE() WHERE payroll_run_id=$rid");
-        $staff_conn->query("UPDATE payslips SET status='paid', payment_method='$meth', payment_date=CURDATE() WHERE payroll_run_id=$rid AND status='generated'");
-        $staff_conn->query("UPDATE payroll_runs SET status='paid' WHERE id=$rid");
+        $allowed_methods = ['bank_transfer','cash','cheque','mobile_money_mtn','mobile_money_airtel'];
+        if (!in_array($meth, $allowed_methods, true)) { $meth = 'bank_transfer'; }
+        $stmt1 = $staff_conn->prepare("UPDATE payroll_details SET payment_method=?, payment_status='paid', payment_date=CURDATE() WHERE payroll_run_id=?");
+        if ($stmt1) { $stmt1->bind_param('si', $meth, $rid); $stmt1->execute(); $stmt1->close(); }
+        $stmt2 = $staff_conn->prepare("UPDATE payslips SET status='paid', payment_method=?, payment_date=CURDATE() WHERE payroll_run_id=? AND status='generated'");
+        if ($stmt2) { $stmt2->bind_param('si', $meth, $rid); $stmt2->execute(); $stmt2->close(); }
+        $stmt3 = $staff_conn->prepare("UPDATE payroll_runs SET status='paid' WHERE id=?");
+        if ($stmt3) { $stmt3->bind_param('i', $rid); $stmt3->execute(); $stmt3->close(); }
         $_SESSION['success']="Payroll run #$rid marked as paid.";
         header('Location: bursar-payroll.php?tab=payment'); exit;
     }

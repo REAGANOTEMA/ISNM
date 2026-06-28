@@ -57,8 +57,7 @@ function tryHrAuth(string $email, string $password) {
         if ($res->num_rows !== 1) return null;
 
         $u    = $res->fetch_assoc();
-        $ok   = password_verify($password, $u['password_hash'])
-             || $u['password_hash'] === $password;
+        $ok   = password_verify($password, $u['password_hash']);
         if (!$ok) return null;
 
         $map = [
@@ -110,8 +109,7 @@ function tryBursarAuth(string $email, string $password) {
         if ($res->num_rows !== 1) return null;
 
         $u    = $res->fetch_assoc();
-        $ok   = password_verify($password, $u['password_hash'])
-             || $u['password_hash'] === $password;
+        $ok   = password_verify($password, $u['password_hash']);
         if (!$ok) return null;
 
         $map = [
@@ -264,7 +262,9 @@ switch ($action) {
                 $target = $_SESSION['login_redirect_url'];
                 unset($_SESSION['login_redirect_url']);
                 $_SESSION['success'] = 'Welcome, ' . ($result['user']['full_name'] ?? 'User');
-                header("Location: $target");
+                $parsed = parse_url($target);
+                $sameOrigin = (!$parsed || !isset($parsed['host']) || $parsed['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($target, '://') === false;
+                header('Location: ' . ($sameOrigin ? $target : $dashboard));
                 exit();
             }
 
@@ -431,7 +431,10 @@ function handleCreateStudent() {
     ];
     $res = $auth_service->createStudentAccount($data);
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
-    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'staff-login.php'));
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $parsedRef = parse_url($referer);
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    header('Location: ' . $safeRef);
     exit();
 }
 
@@ -452,7 +455,10 @@ function handleCreateStaff() {
     ];
     $res = $auth_service->createStaffAccount($data);
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
-    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'staff-login.php'));
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $parsedRef = parse_url($referer);
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    header('Location: ' . $safeRef);
     exit();
 }
 

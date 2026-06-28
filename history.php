@@ -374,9 +374,6 @@
 
   </main>
 
-<?php include('shared/_footer.php');?>
-
-
 <script>
     // Animated Counter for Statistics
     function animateCounter() {
@@ -425,3 +422,5 @@
       animateCounter();
     });
 </script>
+
+<?php include('shared/_footer.php');?>

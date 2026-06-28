@@ -1,8 +1,14 @@
 <?php
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
+}
+$allowedStaffRoles = ['admin','bursar','accountant','finance','deputy principal','school principal','director','registrar','exam_officer','ict','hr'];
+$staffRole = strtolower(trim($_SESSION['role'] ?? ''));
+if (!in_array($staffRole, $allowedStaffRoles)) {
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
     exit;
 }
 require_once __DIR__ . '/../config/database.php';
@@ -21,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Student deleted successfully.']);
     } else {
-        echo json_encode(['success' => false, 'error' => 'Delete failed: ' . $conn->error]);
+        error_log("update_student delete error: " . $conn->error);
+        echo json_encode(['success' => false, 'error' => 'Delete failed']);
     }
     $stmt->close();
     exit;
@@ -125,6 +132,7 @@ $stmt->bind_param("ssssssssssssssssisssssssssssssssisi",
 if ($stmt->execute()) {
     echo json_encode(['success' => true, 'message' => 'Student updated successfully.']);
 } else {
-    echo json_encode(['success' => false, 'error' => 'Update failed: ' . $conn->error]);
+    error_log("update_student update error: " . $conn->error);
+    echo json_encode(['success' => false, 'error' => 'Update failed']);
 }
 $stmt->close();

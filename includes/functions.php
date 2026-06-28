@@ -539,4 +539,20 @@ function renderOfficialDuties(int $roleId, $conn) {
     <?php
 }
 }
+
+if (!function_exists('generateCSRFToken')) {
+    function generateCSRFToken() {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+}
+
+if (!function_exists('verifyCSRFToken')) {
+    function verifyCSRFToken() {
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        return hash_equals($_SESSION['csrf_token'] ?? '', $token);
+    }
+}
 ?>

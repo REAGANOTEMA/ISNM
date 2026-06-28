@@ -13,6 +13,21 @@
     </FilesMatch>
 </IfModule>
 
+# ── Block .git directory ─────────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteRule (^|/)\.git(/|$) - [F,L]
+</IfModule>
+
+# Block .htaccess itself
+<Files ".htaccess">
+    Require all denied
+</Files>
+
+# Block sensitive config files
+<FilesMatch "\.(config|ini|bak|sql|conf)$">
+    Require all denied
+</FilesMatch>
+
 # ── Security: Deny sensitive files ────────────────────────────
 <FilesMatch "\.(sql|md|log|bat|ps1)$">
     Require all denied

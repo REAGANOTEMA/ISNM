@@ -92,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_attendance') {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
-            $conn->query("DELETE FROM student_attendance WHERE id=$id");
+            $stmt = $conn->prepare("DELETE FROM student_attendance WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Attendance record deleted.';
         }
         header('Location: student-attendance.php?date=' . urlencode($dateFilter)); exit;

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['deputy', 'principal']);
+$ctx = bootstrapStaffDashboard(['deputy principal']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Deputy Principal';

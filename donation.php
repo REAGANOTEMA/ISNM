@@ -690,64 +690,39 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
       
-      // Collect donation data
-      const donationData = {
-        reference: document.getElementById('donationReference').textContent,
-        name: document.getElementById('donorName').value,
-        email: document.getElementById('donorEmail').value,
-        phone: document.getElementById('donorPhone').value,
-        address: document.getElementById('donorAddress').value,
-        type: document.getElementById('donationType').value,
-        amount: document.getElementById('donationAmount').value,
-        purpose: document.getElementById('donationPurpose').value,
-        message: document.getElementById('donorMessage').value,
-        anonymous: document.getElementById('anonymousDonation').checked,
-        paymentMethod: selectedMethod,
-        timestamp: new Date().toISOString()
-      };
+      // Build FormData from the form
+      const formData = new FormData(form);
+      formData.set('paymentMethod', selectedMethod);
+      formData.set('anonymous', document.getElementById('anonymousDonation').checked ? '1' : '0');
       
-      // Add payment method specific data
-      if (selectedMethod === 'visa' || selectedMethod === 'mastercard') {
-        donationData.cardNumber = document.getElementById('cardNumber').value;
-        donationData.cardName = document.getElementById('cardName').value;
-        donationData.expiryDate = document.getElementById('expiryDate').value;
-        donationData.cvv = document.getElementById('cvv').value;
-        donationData.billingZip = document.getElementById('billingZip').value;
-      } else if (selectedMethod === 'mobile-money' || selectedMethod === 'mtn' || selectedMethod === 'airtel') {
-        donationData.mobileProvider = document.getElementById('mobileProvider').value;
-        donationData.mobileNumber = document.getElementById('mobileNumber').value;
-      }
-      
-      // Simulate processing (in real implementation, this would send data to server)
-      setTimeout(() => {
-        // Show success message based on payment method
-        let successMessage = 'Thank you for your donation!\n\n';
-        successMessage += `Reference: ${donationData.reference}\n`;
-        successMessage += `Amount: UGX ${parseInt(donationData.amount).toLocaleString()}\n\n`;
-        
-        if (selectedMethod === 'visa' || selectedMethod === 'mastercard') {
-          successMessage += 'Your credit card payment has been processed successfully.\n';
-          successMessage += 'A receipt will be sent to your email.';
-        } else if (selectedMethod === 'mobile-money' || selectedMethod === 'mtn' || selectedMethod === 'airtel') {
-          successMessage += 'Please check your mobile phone for the payment prompt.\n';
-          successMessage += 'Complete the payment to finalize your donation.';
-        } else if (selectedMethod === 'bank-transfer') {
-          successMessage += 'Please complete the bank transfer using the provided details.\n';
-          successMessage += 'Send payment confirmation to accounts@isnm.ac.ug';
+      // Send AJAX request to process-donation.php
+      fetch('process-donation.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          let successMessage = 'Thank you for your donation!\n\n';
+          successMessage += 'Reference: ' + (data.reference || 'N/A') + '\n';
+          successMessage += 'Amount: UGX ' + parseInt(formData.get('amount')).toLocaleString() + '\n\n';
+          successMessage += (data.message || 'Your donation has been recorded successfully.');
+          successMessage += '\n\nThank you for supporting ISNM!';
+          
+          alert(successMessage);
+          closeDonationModal();
+        } else {
+          alert('Donation Error: ' + (data.message || 'Something went wrong. Please try again.'));
         }
-        
-        successMessage += '\nThank you for supporting ISNM!';
-        
-        alert(successMessage);
-        
-        // Reset form and close modal
-        closeDonationModal();
+      })
+      .catch(error => {
+        console.error('Donation AJAX error:', error);
+        alert('A network error occurred. Please check your connection and try again.');
+      })
+      .finally(() => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Process Donation';
-        
-        // In a real implementation, you would send this data to your server
-        console.log('Donation Data:', donationData);
-      }, 2000);
+      });
     }
 
     // Close modal function

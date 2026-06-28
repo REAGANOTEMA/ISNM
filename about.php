@@ -400,6 +400,8 @@
                 <span class="indicator" onclick="goToSlide(8)"></span>
                 <span class="indicator" onclick="goToSlide(9)"></span>
                 <span class="indicator" onclick="goToSlide(10)"></span>
+                <span class="indicator" onclick="goToSlide(11)"></span>
+                <span class="indicator" onclick="goToSlide(12)"></span>
               </div>
             </div>
           </div>
@@ -450,6 +452,21 @@
 
   </main>
 
+  <!-- Apply Now & Donate CTA Section -->
+  <section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+      <h2 class="mb-4">Start Your Healthcare Journey Today</h2>
+      <p class="lead mb-4">Join Iganga School of Nursing and Midwifery and become a healthcare professional</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="application.php" class="btn btn-light btn-lg px-5">
+          <i class="fas fa-paper-plane me-2"></i> Apply Now
+        </a>
+        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
+          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
+        </a>
+      </div>
+    </div>
+  </section>
 
   <script>
     // Campus Life Slider JavaScript
@@ -573,21 +590,5 @@
       }
     });
   </script>
-
-  <!-- Apply Now & Donate CTA Section -->
-  <section class="cta-section py-5 bg-primary text-white">
-    <div class="container text-center">
-      <h2 class="mb-4">Start Your Healthcare Journey Today</h2>
-      <p class="lead mb-4">Join Iganga School of Nursing and Midwifery and become a healthcare professional</p>
-      <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="application.php" class="btn btn-light btn-lg px-5">
-          <i class="fas fa-paper-plane me-2"></i> Apply Now
-        </a>
-        <a href="donation.php" class="btn btn-outline-light btn-lg px-5">
-          <i class="fas fa-hand-holding-heart me-2"></i> Support Us
-        </a>
-      </div>
-    </div>
-  </section>
 
   <?php include('shared/_footer.php'); ?>

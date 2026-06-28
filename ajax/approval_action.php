@@ -11,6 +11,12 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['type'] ?? '') !== 'staff') {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
+$allowedApprovalRoles = ['admin','director','school principal','director general','registrar','bursar'];
+$approvalRole = strtolower(trim($_SESSION['role'] ?? ''));
+if (!in_array($approvalRole, $allowedApprovalRoles)) {
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions for approval actions']);
+    exit;
+}
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';

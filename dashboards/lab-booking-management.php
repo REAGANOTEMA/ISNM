@@ -240,7 +240,8 @@ switch($b['status']) {
 <thead class="table-light"><tr><th>Time Slot</th><th>Bookings</th><th>Status</th></tr></thead>
 <tbody>
 <?php foreach($time_slots as $ts):
-$count = lb_q($ict_conn, "SELECT COUNT(*) FROM lab_bookings WHERE time_slot='$ts' AND booking_date='$filter_date' AND status IN ('pending','confirmed')");
+$stmt = $ict_conn->prepare("SELECT COUNT(*) FROM lab_bookings WHERE time_slot=? AND booking_date=? AND status IN ('pending','confirmed')");
+if ($stmt) { $stmt->bind_param('ss', $ts, $filter_date); $stmt->execute(); $row = $stmt->get_result()->fetch_row(); $count = (int)$row[0]; $stmt->close(); } else $count = 0;
 $stat = $count === 0 ? '<span class="badge bg-success">Available</span>' : ($count < 3 ? '<span class="badge bg-warning text-dark">Limited</span>' : '<span class="badge bg-danger">Full</span>');
 ?>
 <tr><td><?=htmlspecialchars($ts)?></td><td><?=$count?></td><td><?=$stat?></td></tr>

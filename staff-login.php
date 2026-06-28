@@ -651,7 +651,7 @@ body{
     </div>
     <div class="hero-stats">
       <div class="hero-stat"><div class="hero-stat-num">20+</div><div class="hero-stat-label">Programs</div></div>
-      <div class="hero-stat"><div class="hero-stat-num">1500+</div><div class="hero-stat-label">Students</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">315+</div><div class="hero-stat-label">Students</div></div>
       <div class="hero-stat"><div class="hero-stat-num">50+</div><div class="hero-stat-label">Staff</div></div>
       <div class="hero-stat"><div class="hero-stat-num">15+</div><div class="hero-stat-label">Years</div></div>
     </div>
@@ -671,7 +671,7 @@ body{
       <div class="card-title">Staff Portal Login</div>
       <div class="card-subtitle">Welcome back. Please sign in to continue.</div>
       <?php if ($requested_position): ?>
-        <div class="role-badge"><i class="fas fa-star"></i> <?=htmlspecialchars($requested_position)?></div>
+        <div class="role-badge"><i class="fas fa-star"></i> <?=htmlspecialchars($requested_position, ENT_QUOTES, 'UTF-8')?></div>
       <?php endif; ?>
       <?php if ($login_error): ?>
         <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i><?=htmlspecialchars($login_error)?></div>

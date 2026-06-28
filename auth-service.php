@@ -193,7 +193,7 @@ class AuthenticationService {
         if ($existing && !empty($existing['password'])) {
             if (empty($password))
                 return ['success' => false, 'message' => 'Password is required for this account.'];
-            if (!password_verify($password, $existing['password']) && $existing['password'] !== $password) {
+            if (!password_verify($password, $existing['password'])) {
                 $this->recordStudentFailedAttempt($indexNumber);
                 return ['success' => false, 'message' => 'Invalid password. Please try again.'];
             }
@@ -222,7 +222,7 @@ class AuthenticationService {
         if (!empty($student['password'])) {
             if (empty($password))
                 return ['success' => false, 'message' => 'Password is required for this student account.'];
-            if (!password_verify($password, $student['password']) && $student['password'] !== $password) {
+            if (!password_verify($password, $student['password'])) {
                 $this->recordStudentFailedAttempt($indexNumber);
                 return ['success' => false, 'message' => 'Invalid student credentials. Please check your password.'];
             }
@@ -303,11 +303,8 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
-        // Check password - allow both hashed and plain text (as fallback)
-        $hash_valid = password_verify($password, $staff['password']);
-        $plain_valid = $staff['password'] === $password;
-
-        if (!$hash_valid && !$plain_valid) {
+        // Check password - hashed only
+        if (!password_verify($password, $staff['password'])) {
             $this->recordStaffFailedAttempt($email);
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
