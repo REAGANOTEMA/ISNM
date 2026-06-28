@@ -22,12 +22,17 @@ $timetable = [];
 $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 if ($studentsDb) {
-    $sid = $studentsDb->real_escape_string($studentNumber);
-    $sr = $studentsDb->query("SELECT * FROM students WHERE student_number='$sid' OR id=$userId LIMIT 1");
-    $studentInfo = $sr ? $sr->fetch_assoc() : [];
+    $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("si", $studentNumber, $userId);
+        $stmt->execute();
+        $sr = $stmt->get_result();
+        $studentInfo = $sr ? $sr->fetch_assoc() : [];
+        $stmt->close();
+    }
 
     $sidInt = (int)($studentInfo['id'] ?? $userId);
-    $program = $studentsDb->real_escape_string($studentInfo['program']??'');
+    $program = $studentInfo['program']??'';
     $year = (int)($studentInfo['year_of_study']??1);
 
     // Try student_timetables first, then timetable
@@ -35,9 +40,15 @@ if ($studentsDb) {
     if ($tt && $tt->num_rows > 0) {
         $timetable = $tt->fetch_all(MYSQLI_ASSOC);
     } else {
-        $tt2 = $studentsDb->query("SELECT * FROM timetable WHERE program='$program' AND year_of_study=$year");
-        if ($tt2) {
-            $timetable = $tt2->fetch_all(MYSQLI_ASSOC);
+        $stmt2 = $studentsDb->prepare("SELECT * FROM timetable WHERE program=? AND year_of_study=?");
+        if ($stmt2) {
+            $stmt2->bind_param("si", $program, $year);
+            $stmt2->execute();
+            $tt2 = $stmt2->get_result();
+            if ($tt2) {
+                $timetable = $tt2->fetch_all(MYSQLI_ASSOC);
+            }
+            $stmt2->close();
         }
     }
 }

@@ -7,12 +7,13 @@ $user = $ctx['user'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     if ($action === 'add_project' && ($_POST['title'] ?? '')) {
-        $title = $conn->real_escape_string($_POST['title']);
-        $researcher = $conn->real_escape_string($_POST['researcher'] ?? '');
-        $dept = $conn->real_escape_string($_POST['department'] ?? '');
-        $status = $conn->real_escape_string($_POST['status'] ?? 'proposed');
-        $desc = $conn->real_escape_string($_POST['description'] ?? '');
-        $conn->query("INSERT INTO research_projects (title, researcher, department, status, description, created_at) VALUES ('$title', '$researcher', '$dept', '$status', '$desc', NOW())");
+        $title = trim($_POST['title']);
+        $researcher = trim($_POST['researcher'] ?? '');
+        $dept = trim($_POST['department'] ?? '');
+        $status = trim($_POST['status'] ?? 'proposed');
+        $desc = trim($_POST['description'] ?? '');
+        $stmt = $conn->prepare("INSERT INTO research_projects (title, researcher, department, status, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+        if ($stmt) { $stmt->bind_param('sssss', $title, $researcher, $dept, $status, $desc); $stmt->execute(); $stmt->close(); }
         header('Location: research-projects.php'); exit;
     }
 }
