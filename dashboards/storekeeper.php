@@ -119,8 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Reject request
     if ($action === 'reject_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
-        $reason = $staffConn->real_escape_string(trim($_POST['rejection_reason'] ?? 'No reason'));
-        $staffConn->query("UPDATE store_requests SET status='rejected', rejection_reason='$reason' WHERE id=" . intval($reqId));
+        $reason = trim($_POST['rejection_reason'] ?? 'No reason');
+        $stmt = $staffConn->prepare("UPDATE store_requests SET status='rejected', rejection_reason=? WHERE id=?");
+        $stmt->bind_param("si", $reason, $reqId);
+        $stmt->execute();
+        $stmt->close();
         header('Location: storekeeper.php'); exit;
     }
 
