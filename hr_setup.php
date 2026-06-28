@@ -13,8 +13,8 @@ try {
     $conn = getStaffConnection();
     
     // 1. Create HR user if not exists
-    $hr_email = 'hr@igangaschoolofnursingandmidwifery.ac.ug';
-    $hr_password = 'Lovely2God';
+    $hr_email = isnm_env('HR_EMAIL', 'hr@igangaschoolofnursingandmidwifery.ac.ug');
+    $hr_password = isnm_env('HR_PASSWORD');
     $hr_password_hash = password_hash($hr_password, PASSWORD_BCRYPT);
     
     // Check if user exists

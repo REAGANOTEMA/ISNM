@@ -16,28 +16,35 @@ if ($conn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_scale' && ($_POST['grade'] ?? '')) {
-        $grade = $conn->real_escape_string($_POST['grade']);
+        $grade = trim($_POST['grade']);
         $minScore = (float)($_POST['min_score'] ?? 0);
         $maxScore = (float)($_POST['max_score'] ?? 100);
         $gp = (float)($_POST['grade_point'] ?? 0);
-        $remark = $conn->real_escape_string($_POST['remark'] ?? '');
-        $conn->query("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES ('$grade', $minScore, $maxScore, $gp, '$remark', $userId) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
+        $remark = trim($_POST['remark'] ?? '');
+        $stmt = $conn->prepare("INSERT INTO grade_scales (grade_letter, min_percentage, max_percentage, grade_point, remark, created_by) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE min_percentage=VALUES(min_percentage), max_percentage=VALUES(max_percentage), grade_point=VALUES(grade_point), remark=VALUES(remark)");
+        if ($stmt) { $stmt->bind_param('sdddsi', $grade, $minScore, $maxScore, $gp, $remark, $userId); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = "Grade scale '$grade' added.";
         header('Location: grade-scales.php'); exit;
     }
     if ($action === 'delete_scale') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("DELETE FROM grade_scales WHERE id=$id");
+        $stmt = $conn->prepare("DELETE FROM grade_scales WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Grade scale deleted.';
         header('Location: grade-scales.php'); exit;
     }
 }
 
 $search = trim($_GET['search'] ?? '');
-$where = "1=1";
-if ($search !== '') { $s = $conn->real_escape_string($search); $where .= " AND (grade_letter LIKE '%$s%' OR remark LIKE '%$s%')"; }
 $scales = [];
-$r = $conn->query("SELECT * FROM grade_scales WHERE $where ORDER BY min_percentage DESC");
+if ($search !== '') {
+    $like = "%$search%";
+    $stmt = $conn->prepare("SELECT * FROM grade_scales WHERE grade_letter LIKE ? OR remark LIKE ? ORDER BY min_percentage DESC");
+    if ($stmt) { $stmt->bind_param('ss', $like, $like); $r = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
+    else $r = null;
+} else {
+    $r = $conn->query("SELECT * FROM grade_scales WHERE 1=1 ORDER BY min_percentage DESC");
+}
 if ($r) while ($row = $r->fetch_assoc()) $scales[] = $row;
 
 $pageTitle = 'Grade Scales & Grading System';

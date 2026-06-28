@@ -121,7 +121,7 @@ if ($ajax === 'procurement_list' && $staff) {
 }
 if ($ajax === 'approval_list' && $staff) {
     header('Content-Type: application/json');
-    $rows=[]; $type=$staff->real_escape_string($_GET['type']??'');
+    $rows=[]; $type=$_GET['type']??'';
     $tables = ['budget_approvals','expenditure_approvals','payroll_approvals'];
     foreach($tables as $tbl) {
         if($type && $tbl !== $type.'_approvals') continue;
@@ -137,8 +137,11 @@ if ($ajax === 'budget_variance_data' && $staff) {
 }
 if ($ajax === 'cash_flow_data' && $staff) {
     header('Content-Type: application/json');
-    $f=$staff->real_escape_string($_GET['from']??date('Y-01-01')); $t=$staff->real_escape_string($_GET['to']??date('Y-m-d')); $rows=[];
-    if ($students) { $r=$students->query("SELECT DATE(payment_date) dt,COALESCE(SUM(amount_received),0) inflow,0 outflow FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$f' AND '$t' GROUP BY DATE(payment_date) ORDER BY dt"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw; }
+    $f=$_GET['from']??date('Y-01-01'); $t=$_GET['to']??date('Y-m-d'); $rows=[];
+    if ($students) {
+        $stmt=$students->prepare("SELECT DATE(payment_date) dt,COALESCE(SUM(amount_received),0) inflow,0 outflow FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ? GROUP BY DATE(payment_date) ORDER BY dt");
+        if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
+    }
     echo json_encode($rows); exit;
 }
 
@@ -146,42 +149,39 @@ if ($ajax === 'cash_flow_data' && $staff) {
 
 if ($ajax === 'create_budget' && $staff) {
     header('Content-Type: application/json');
-    $code=$staff->real_escape_string($_POST['budget_code']??'BGT-'.date('Y').'-'.mt_rand(100,999));
-    $name=$staff->real_escape_string($_POST['budget_name']??'');
-    $cat=$staff->real_escape_string($_POST['budget_category']??'Operations');
-    $dept=$staff->real_escape_string($_POST['department']??'');
-    $fy=$staff->real_escape_string($_POST['fiscal_year']??date('Y'));
+    $code=$_POST['budget_code']??'BGT-'.date('Y').'-'.mt_rand(100,999);
+    $name=$_POST['budget_name']??'';
+    $cat=$_POST['budget_category']??'Operations';
+    $dept=$_POST['department']??'';
+    $fy=$_POST['fiscal_year']??date('Y');
     $amt=(float)($_POST['allocated_amount']??0);
-    $desc=$staff->real_escape_string($_POST['description']??'');
+    $desc=$_POST['description']??'';
     if(!$name||!$amt){ echo json_encode(['success'=>false,'error'=>'Name and amount required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES ('$code','$name','$cat','$dept','$fy',$amt,0,'Draft',$uid)")){
-        echo json_encode(['success'=>true,'code'=>$code]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES (?,?,?,?,?,?,0,'Draft',?)");
+    if($stmt){$stmt->bind_param('sssssdi',$code,$name,$cat,$dept,$fy,$amt,$uid);if($stmt->execute()){echo json_encode(['success'=>true,'code'=>$code]);exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'approve_budget_request' && $staff) {
     header('Content-Type: application/json');
-    $id=(int)($_POST['id']??0); $st=$staff->real_escape_string($_POST['status']??'approved');
-    $cmt=$staff->real_escape_string($_POST['comments']??'');
+    $id=(int)($_POST['id']??0); $st=$_POST['status']??'approved';
+    $cmt=$_POST['comments']??'';
     if($id){
-        $upd="UPDATE {$students_db}.budget_approvals SET status='$st',approver_id=$uid,approver_name='$uname',approver_comments='$cmt' WHERE id=$id";
-        if($staff->query($upd) && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        $stmt=$staff->prepare("UPDATE {$students_db}.budget_approvals SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
+        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'create_expenditure' && $staff) {
     header('Content-Type: application/json');
-    $cat=$staff->real_escape_string($_POST['category']??'');
-    $desc=$staff->real_escape_string($_POST['description']??'');
+    $cat=$_POST['category']??'';
+    $desc=$_POST['description']??'';
     $amt=(float)($_POST['amount']??0);
     $dt=$_POST['expense_date']??date('Y-m-d');
     $eid='EXP-'.date('Ymd').'-'.mt_rand(1000,9999);
     if(!$cat||!$desc||!$amt){ echo json_encode(['success'=>false,'error'=>'Required fields missing']); exit; }
-    if($staff->query("INSERT INTO expenses (expense_id,description,expense_category,amount,expense_date,status,requested_by) VALUES ('$eid','$desc','$cat',$amt,'$dt','pending',$uid)")){
-        echo json_encode(['success'=>true,'id'=>$eid]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO expenses (expense_id,description,expense_category,amount,expense_date,status,requested_by) VALUES (?,?,?,?,?,'pending',?)");
+    if($stmt){$stmt->bind_param('sssdsi',$eid,$desc,$cat,$amt,$dt,$uid);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$eid]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'approve_expenditure' && $staff) {
     header('Content-Type: application/json');
@@ -197,155 +197,151 @@ if ($ajax === 'reject_expenditure' && $staff) {
 }
 if ($ajax === 'approve_payroll' && $staff) {
     header('Content-Type: application/json');
-    $id=(int)($_POST['id']??0); $st=$staff->real_escape_string($_POST['status']??'approved');
-    $cmt=$staff->real_escape_string($_POST['comments']??'');
+    $id=(int)($_POST['id']??0); $st=$_POST['status']??'approved';
+    $cmt=$_POST['comments']??'';
     if($id){
-        if($staff->query("UPDATE {$students_db}.payroll_approvals SET status='$st',approver_id=$uid,approver_name='$uname',approver_comments='$cmt' WHERE id=$id") && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; }
-        echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+        $stmt=$staff->prepare("UPDATE {$students_db}.payroll_approvals SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
+        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
     }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'submit_approval_action' && $staff) {
     header('Content-Type: application/json');
-    $id=(int)($_POST['id']??0); $tbl=$staff->real_escape_string($_POST['table']??'');
-    $st=$staff->real_escape_string($_POST['status']??'approved');
-    $cmt=$staff->real_escape_string($_POST['comments']??'');
+    $id=(int)($_POST['id']??0); $tbl=$_POST['table']??'';
+    $st=$_POST['status']??'approved';
+    $cmt=$_POST['comments']??'';
     $escl=(int)($_POST['escalated_to']??0);
     $validTables = ['budget_approvals','expenditure_approvals','payroll_approvals'];
     if(!$id||!$tbl||!in_array($tbl,$validTables)){ echo json_encode(['success'=>false,'error'=>'Invalid parameters']); exit; }
-    $sql = "UPDATE {$students_db}.$tbl SET status='$st',approver_id=$uid,approver_name='$uname',approver_comments='$cmt'";
-    if($st==='escalated') $sql.=",escalated_to=$escl";
-    $sql.=" WHERE id=$id";
-    if($staff->query($sql) && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; }
+    if($st==='escalated'){
+        $stmt=$staff->prepare("UPDATE {$students_db}.$tbl SET status=?,approver_id=?,approver_name=?,approver_comments=?,escalated_to=? WHERE id=?");
+        if($stmt){$stmt->bind_param('sisiii',$st,$uid,$uname,$cmt,$escl,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+    } else {
+        $stmt=$staff->prepare("UPDATE {$students_db}.$tbl SET status=?,approver_id=?,approver_name=?,approver_comments=? WHERE id=?");
+        if($stmt){$stmt->bind_param('sisii',$st,$uid,$uname,$cmt,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+    }
     echo json_encode(['success'=>false,'error'=>'Update failed or no changes']); exit;
 }
 if ($ajax === 'create_supplier' && $staff) {
     header('Content-Type: application/json');
-    $sn=$staff->real_escape_string($_POST['supplier_name']??'');
-    $cp=$staff->real_escape_string($_POST['contact_person']??'');
-    $ph=$staff->real_escape_string($_POST['phone']??'');
-    $em=$staff->real_escape_string($_POST['email']??'');
-    $ad=$staff->real_escape_string($_POST['address']??'');
-    $ct=$staff->real_escape_string($_POST['category']??'General');
+    $sn=$_POST['supplier_name']??'';
+    $cp=$_POST['contact_person']??'';
+    $ph=$_POST['phone']??'';
+    $em=$_POST['email']??'';
+    $ad=$_POST['address']??'';
+    $ct=$_POST['category']??'General';
     if(!$sn){ echo json_encode(['success'=>false,'error'=>'Supplier name required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.suppliers (supplier_name,contact_person,phone,email,address,category) VALUES ('$sn','$cp','$ph','$em','$ad','$ct')")){
-        echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.suppliers (supplier_name,contact_person,phone,email,address,category) VALUES (?,?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('ssssss',$sn,$cp,$ph,$em,$ad,$ct);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$staff->insert_id]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'record_supplier_payment' && $staff) {
     header('Content-Type: application/json');
     $sid=(int)($_POST['supplier_id']??0); $amt=(float)($_POST['amount']??0);
-    $pm=$staff->real_escape_string($_POST['payment_method']??'bank');
-    $pd=$_POST['payment_date']??date('Y-m-d'); $ir=$staff->real_escape_string($_POST['invoice_ref']??'');
+    $pm=$_POST['payment_method']??'bank';
+    $pd=$_POST['payment_date']??date('Y-m-d'); $ir=$_POST['invoice_ref']??'';
     $pn='SP-'.date('Ymd').'-'.mt_rand(1000,9999);
     if(!$sid||!$amt){ echo json_encode(['success'=>false,'error'=>'Supplier and amount required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.supplier_payments (supplier_id,payment_number,amount,payment_method,payment_date,invoice_ref,status,created_by) VALUES ($sid,'$pn',$amt,'$pm','$pd','$ir','pending',$uid)")){
-        echo json_encode(['success'=>true,'ref'=>$pn]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $status = 'pending';
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.supplier_payments (supplier_id,payment_number,amount,payment_method,payment_date,invoice_ref,status,created_by) VALUES (?,?,?,?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('idsssssi',$sid,$pn,$amt,$pm,$pd,$ir,$status,$uid);if($stmt->execute()){echo json_encode(['success'=>true,'ref'=>$pn]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_asset' && $staff) {
     header('Content-Type: application/json');
-    $an=$staff->real_escape_string($_POST['asset_name']??'');
-    $at=$staff->real_escape_string($_POST['asset_tag']??'');
-    $ac=$staff->real_escape_string($_POST['category']??'Equipment');
+    $an=$_POST['asset_name']??'';
+    $at=$_POST['asset_tag']??'';
+    $ac=$_POST['category']??'Equipment';
     $pd=$_POST['purchase_date']??date('Y-m-d');
     $pp=(float)($_POST['purchase_price']??0);
     $dr=(float)($_POST['depreciation_rate']??0);
-    $lo=$staff->real_escape_string($_POST['location']??'');
-    $as=$staff->real_escape_string($_POST['assigned_to']??'');
+    $lo=$_POST['location']??'';
+    $as=$_POST['assigned_to']??'';
     if(!$an){ echo json_encode(['success'=>false,'error'=>'Asset name required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.finance_assets (asset_name,asset_tag,category,purchase_date,purchase_price,current_value,depreciation_rate,location,assigned_to) VALUES ('$an','$at','$ac','$pd',$pp,$pp,$dr,'$lo','$as')")){
-        echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.finance_assets (asset_name,asset_tag,category,purchase_date,purchase_price,current_value,depreciation_rate,location,assigned_to) VALUES (?,?,?,?,?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('ssssddsss',$an,$at,$ac,$pd,$pp,$pp,$dr,$lo,$as);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$staff->insert_id]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_project' && $staff) {
     header('Content-Type: application/json');
-    $pn=$staff->real_escape_string($_POST['project_name']??'');
-    $pc=$staff->real_escape_string($_POST['project_code']??'PRJ-'.date('Y').'-'.mt_rand(100,999));
+    $pn=$_POST['project_name']??'';
+    $pc=$_POST['project_code']??'PRJ-'.date('Y').'-'.mt_rand(100,999);
     $bd=(float)($_POST['budget']??0);
     $sd=$_POST['start_date']??date('Y-m-d'); $ed=$_POST['end_date']??'';
     if(!$pn){ echo json_encode(['success'=>false,'error'=>'Project name required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.capital_projects (project_name,project_code,budget,spent,start_date,end_date,status) VALUES ('$pn','$pc',$bd,0,'$sd','$ed','planning')")){
-        echo json_encode(['success'=>true,'code'=>$pc]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $status = 'planning';
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.capital_projects (project_name,project_code,budget,spent,start_date,end_date,status) VALUES (?,?,?,0,?,?,?)");
+    if($stmt){$stmt->bind_param('ssdsss',$pn,$pc,$bd,$sd,$ed,$status);if($stmt->execute()){echo json_encode(['success'=>true,'code'=>$pc]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_audit_finding' && $staff) {
     header('Content-Type: application/json');
-    $ft=$staff->real_escape_string($_POST['finding_title']??'');
-    $fd=$staff->real_escape_string($_POST['description']??'');
-    $fv=$staff->real_escape_string($_POST['severity']??'medium');
-    $fdep=$staff->real_escape_string($_POST['department']??'');
+    $ft=$_POST['finding_title']??'';
+    $fd=$_POST['description']??'';
+    $fv=$_POST['severity']??'medium';
+    $fdep=$_POST['department']??'';
     if(!$ft){ echo json_encode(['success'=>false,'error'=>'Finding title required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.audit_findings (finding_title,description,severity,department,reported_by) VALUES ('$ft','$fd','$fv','$fdep','$uname')")){
-        echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.audit_findings (finding_title,description,severity,department,reported_by) VALUES (?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('sssss',$ft,$fd,$fv,$fdep,$uname);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$staff->insert_id]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_risk' && $staff) {
     header('Content-Type: application/json');
-    $rn=$staff->real_escape_string($_POST['risk_name']??'');
-    $rd=$staff->real_escape_string($_POST['description']??'');
-    $rc=$staff->real_escape_string($_POST['category']??'');
-    $rl=$staff->real_escape_string($_POST['likelihood']??'medium');
-    $ri=$staff->real_escape_string($_POST['impact']??'medium');
-    $rm=$staff->real_escape_string($_POST['mitigation']??'');
+    $rn=$_POST['risk_name']??'';
+    $rd=$_POST['description']??'';
+    $rc=$_POST['category']??'';
+    $rl=$_POST['likelihood']??'medium';
+    $ri=$_POST['impact']??'medium';
+    $rm=$_POST['mitigation']??'';
     if(!$rn){ echo json_encode(['success'=>false,'error'=>'Risk name required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.risk_register (risk_name,description,category,likelihood,impact,mitigation) VALUES ('$rn','$rd','$rc','$rl','$ri','$rm')")){
-        echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.risk_register (risk_name,description,category,likelihood,impact,mitigation) VALUES (?,?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('ssssss',$rn,$rd,$rc,$rl,$ri,$rm);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$staff->insert_id]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_compliance_alert' && $staff) {
     header('Content-Type: application/json');
-    $at=$staff->real_escape_string($_POST['alert_title']??'');
-    $ad=$staff->real_escape_string($_POST['description']??'');
-    $ct=$staff->real_escape_string($_POST['compliance_type']??'financial');
-    $sv=$staff->real_escape_string($_POST['severity']??'medium');
+    $at=$_POST['alert_title']??'';
+    $ad=$_POST['description']??'';
+    $ct=$_POST['compliance_type']??'financial';
+    $sv=$_POST['severity']??'medium';
     if(!$at){ echo json_encode(['success'=>false,'error'=>'Alert title required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.compliance_alerts (alert_title,description,compliance_type,severity) VALUES ('$at','$ad','$ct','$sv')")){
-        echo json_encode(['success'=>true,'id'=>$staff->insert_id]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.compliance_alerts (alert_title,description,compliance_type,severity) VALUES (?,?,?,?)");
+    if($stmt){$stmt->bind_param('ssss',$at,$ad,$ct,$sv);if($stmt->execute()){echo json_encode(['success'=>true,'id'=>$staff->insert_id]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'create_procurement' && $staff) {
     header('Content-Type: application/json');
-    $pt=$staff->real_escape_string($_POST['title']??'');
-    $pd=$staff->real_escape_string($_POST['description']??'');
+    $pt=$_POST['title']??'';
+    $pd=$_POST['description']??'';
     $pa=(float)($_POST['amount']??0);
-    $pdep=$staff->real_escape_string($_POST['department']??'');
-    $ps=$staff->real_escape_string($_POST['supplier_name']??'');
+    $pdep=$_POST['department']??'';
+    $ps=$_POST['supplier_name']??'';
     $prn='PR-'.date('Ymd').'-'.mt_rand(1000,9999);
     if(!$pt){ echo json_encode(['success'=>false,'error'=>'Title required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.procurement_requests (pr_number,title,description,amount,department,supplier_name,status,requested_by) VALUES ('$prn','$pt','$pd',$pa,'$pdep','$ps','draft',$uid)")){
-        echo json_encode(['success'=>true,'pr'=>$prn]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $status = 'draft';
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.procurement_requests (pr_number,title,description,amount,department,supplier_name,status,requested_by) VALUES (?,?,?,?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('sssdsssi',$prn,$pt,$pd,$pa,$pdep,$ps,$status,$uid);if($stmt->execute()){echo json_encode(['success'=>true,'pr'=>$prn]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'send_finance_message' && $staff) {
     header('Content-Type: application/json');
-    $subj=$staff->real_escape_string($_POST['subject']??'');
-    $msg=$staff->real_escape_string($_POST['message']??'');
-    $rr=$staff->real_escape_string($_POST['recipient_role']??'all');
+    $subj=$_POST['subject']??'';
+    $msg=$_POST['message']??'';
+    $rr=$_POST['recipient_role']??'all';
     if(!$subj||!$msg){ echo json_encode(['success'=>false,'error'=>'Subject and message required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.finance_messages (sender_id,sender_name,recipient_role,subject,message) VALUES ($uid,'$uname','$rr','$subj','$msg')")){
-        echo json_encode(['success'=>true]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.finance_messages (sender_id,sender_name,recipient_role,subject,message) VALUES (?,?,?,?,?)");
+    if($stmt){$stmt->bind_param('issss',$uid,$uname,$rr,$subj,$msg);if($stmt->execute()){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 if ($ajax === 'publish_finance_notice' && $staff) {
     header('Content-Type: application/json');
-    $t=$staff->real_escape_string($_POST['title']??'');
-    $c=$staff->real_escape_string($_POST['content']??'');
-    $a=$staff->real_escape_string($_POST['audience']??'all');
+    $t=$_POST['title']??'';
+    $c=$_POST['content']??'';
+    $a=$_POST['audience']??'all';
     if(!$t||!$c){ echo json_encode(['success'=>false,'error'=>'Title and content required']); exit; }
-    if($staff->query("INSERT INTO {$students_db}.finance_notices (title,content,audience,published_by) VALUES ('$t','$c','$a','$uname')")){
-        echo json_encode(['success'=>true]); exit;
-    }
-    echo json_encode(['success'=>false,'error'=>$staff->error]); exit;
+    $stmt=$staff->prepare("INSERT INTO {$students_db}.finance_notices (title,content,audience,published_by) VALUES (?,?,?,?)");
+    if($stmt){$stmt->bind_param('ssss',$t,$c,$a,$uname);if($stmt->execute()){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>$stmt->error]);$stmt->close();exit;}
+    echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit;
 }
 
 if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
@@ -354,12 +350,15 @@ if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
     if ($act === 'add_expense' && $staff) {
-        $cat=$staff->real_escape_string($_POST['category']??'');
-        $desc=$staff->real_escape_string($_POST['description']??'');
+        $cat=$_POST['category']??'';
+        $desc=$_POST['description']??'';
         $amt=(float)($_POST['amount']??0);
         $dt=$_POST['expense_date']??date('Y-m-d');
         $eid='EXP-'.date('Ymd').'-'.mt_rand(1000,9999);
-        if($cat&&$desc&&$amt){ if($staff->query("INSERT INTO expenses (expense_id,description,expense_category,amount,expense_date,status,requested_by) VALUES ('$eid','$desc','$cat',$amt,'$dt','pending',$uid)")){ fin_success("Expense $eid created."); }else{ fin_error('Write failed.'); } }else{ fin_error('Required fields missing.'); }
+        if($cat&&$desc&&$amt){
+            $stmt=$staff->prepare("INSERT INTO expenses (expense_id,description,expense_category,amount,expense_date,status,requested_by) VALUES (?,?,?,?,?,'pending',?)");
+            if($stmt){$stmt->bind_param('sssdsi',$eid,$desc,$cat,$amt,$dt,$uid);if($stmt->execute()){fin_success("Expense $eid created.");}else{fin_error('Write failed.');}$stmt->close();}else{fin_error('Write failed.');}
+        }else{ fin_error('Required fields missing.'); }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'approve_expense' && $staff) {
@@ -373,13 +372,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'create_budget' && $staff) {
-        $code=$staff->real_escape_string($_POST['budget_code']??'BGT-'.date('Y').'-'.mt_rand(100,999));
-        $name=$staff->real_escape_string($_POST['budget_name']??'');
-        $cat=$staff->real_escape_string($_POST['budget_category']??'Operations');
-        $dept=$staff->real_escape_string($_POST['department']??'');
-        $fy=$staff->real_escape_string($_POST['fiscal_year']??date('Y'));
+        $code=$_POST['budget_code']??'BGT-'.date('Y').'-'.mt_rand(100,999);
+        $name=$_POST['budget_name']??'';
+        $cat=$_POST['budget_category']??'Operations';
+        $dept=$_POST['department']??'';
+        $fy=$_POST['fiscal_year']??date('Y');
         $amt=(float)($_POST['allocated_amount']??0);
-        if($name&&$amt){ if($staff->query("INSERT INTO {$students_db}.budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES ('$code','$name','$cat','$dept','$fy',$amt,0,'Draft',$uid)")){ fin_success("Budget $code created."); }else{ fin_error('Write failed.'); } }else{ fin_error('Name and amount required.'); }
+        if($name&&$amt){
+            $stmt=$staff->prepare("INSERT INTO {$students_db}.budget_records (budget_code,budget_name,budget_category,department,fiscal_year,allocated_amount,spent_amount,status,created_by) VALUES (?,?,?,?,?,?,0,'Draft',?)");
+            if($stmt){$stmt->bind_param('sssssdi',$code,$name,$cat,$dept,$fy,$amt,$uid);if($stmt->execute()){fin_success("Budget $code created.");}else{fin_error('Write failed.');}$stmt->close();}else{fin_error('Write failed.');}
+        }else{ fin_error('Name and amount required.'); }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
     if ($act === 'approve_budget' && $staff) {
@@ -389,9 +391,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'record_payment' && $staff) {
         $sid=(int)($_POST['student_id']??0); $amt=(float)($_POST['amount']??0);
-        $pm=$staff->real_escape_string($_POST['payment_method']??'cash');
+        $pm=$_POST['payment_method']??'cash';
         $ref='RCT-'.date('Ymd').'-'.mt_rand(1000,9999);
-        if($students&&$sid&&$amt){ if($students->query("INSERT INTO {$students_db}.payments (payment_reference,student_id,amount_received,payment_method,payment_date,status,processed_by) VALUES ('$ref',$sid,$amt,'$pm',CURDATE(),'pending',$uid)")){ fin_success("Payment $ref recorded."); }else{ fin_error('Write failed.'); } }else{ fin_error('Student and amount required.'); }
+        $payDate = date('Y-m-d');
+        if($students&&$sid&&$amt){
+            $stmt=$students->prepare("INSERT INTO {$students_db}.payments (payment_reference,student_id,amount_received,payment_method,payment_date,status,processed_by) VALUES (?,?,?,?,?,?,?)");
+            if($stmt){$stmt->bind_param('sidsssi',$ref,$sid,$amt,$pm,$payDate,'pending',$uid);if($stmt->execute()){fin_success("Payment $ref recorded.");}else{fin_error('Write failed.');}$stmt->close();}else{fin_error('Write failed.');}
+        }else{ fin_error('Student and amount required.'); }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }
     if ($act === 'approve_payment' && $staff) {
@@ -1897,8 +1903,11 @@ if ($ajax === 'finance_notice_list' && $staff) {
 }
 if ($ajax === 'update_audit_status' && $staff) {
     header('Content-Type: application/json');
-    $id=(int)($_POST['id']??0); $st=$staff->real_escape_string($_POST['status']??'');
-    if($id&&$st){ if($staff->query("UPDATE {$students_db}.audit_findings SET status='$st' WHERE id=$id") && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Update failed']); exit; }
+    $id=(int)($_POST['id']??0); $st=$_POST['status']??'';
+    if($id&&$st){
+        $stmt=$staff->prepare("UPDATE {$students_db}.audit_findings SET status=? WHERE id=?");
+        if($stmt){$stmt->bind_param('si',$st,$id);if($stmt->execute()&&$stmt->affected_rows>0){echo json_encode(['success'=>true]);$stmt->close();exit;}echo json_encode(['success'=>false,'error'=>'Update failed']);$stmt->close();exit;}
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'supplier_payment_list' && $staff) {
@@ -1911,15 +1920,21 @@ if ($ajax === 'supplier_payment_list' && $staff) {
 $report = $_GET['report'] ?? '';
 if ($report) {
     header('Content-Type: text/html; charset=utf-8');
-    $from = $staff->real_escape_string($_GET['from'] ?? date('Y-m-01', strtotime('-1 month')));
-    $to = $staff->real_escape_string($_GET['to'] ?? date('Y-m-d'));
+    $from = $_GET['from'] ?? date('Y-m-01', strtotime('-1 month'));
+    $to = $_GET['to'] ?? date('Y-m-d');
     echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}.text-end{text-align:right}.fw-bold{font-weight:700}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
     echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
 
     if ($report === 'income_statement') {
         echo '<h2>Income Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev = $students ? (float)(($r=$students->query("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['t']:0) : 0;
-        $exp = (float)(($r=$staff->query("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['t']:0);
+        $rev = 0;
+        if ($students) {
+            $stmt = $students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");
+            if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); if ($r) $rev = (float)$r->fetch_assoc()['t']; $stmt->close(); }
+        }
+        $exp = 0;
+        $stmt = $staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");
+        if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); if ($r) $exp = (float)$r->fetch_assoc()['t']; $stmt->close(); }
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
         echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
         echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';

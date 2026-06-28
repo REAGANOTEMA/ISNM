@@ -16,24 +16,27 @@ if ($conn) {
     $expiredCount = (int)(($r=$conn->query("SELECT COUNT(*) c FROM institutional_alerts WHERE expires_at IS NOT NULL AND expires_at < NOW()"))&&$r?$r->fetch_assoc()['c']:0);
 
     $where = ["1=1"];
-    if ($search) $where[] = "(alert_title LIKE '%" . $conn->real_escape_string($search) . "%' OR alert_message LIKE '%" . $conn->real_escape_string($search) . "%')";
-    if ($filterPriority) $where[] = "priority='" . $conn->real_escape_string($filterPriority) . "'";
+    $params = [];
+    $types = '';
+    if ($search) { $where[] = "(alert_title LIKE ? OR alert_message LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; $types .= 'ss'; }
+    if ($filterPriority) { $where[] = "priority=?"; $params[] = $filterPriority; $types .= 's'; }
     $ws = implode(' AND ', $where);
-    $r = $conn->query("SELECT * FROM institutional_alerts WHERE $ws ORDER BY created_at DESC LIMIT 100");
+    $stmt = $conn->prepare("SELECT * FROM institutional_alerts WHERE $ws ORDER BY created_at DESC LIMIT 100");
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     if ($r) while ($row = $r->fetch_assoc()) $alerts[] = $row;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($conn && $action === 'add_alert') {
-        $title = $conn->real_escape_string($_POST['title'] ?? '');
-        $message = $conn->real_escape_string($_POST['alert_message'] ?? '');
-        $priority = $conn->real_escape_string($_POST['priority'] ?? 'Medium');
-        $category = $conn->real_escape_string($_POST['category'] ?? 'other');
-        $expires = $conn->real_escape_string($_POST['expires_at'] ?? '');
-        $expVal = $expires ? "'$expires'" : 'NULL';
+        $title = trim($_POST['title'] ?? '');
+        $message = trim($_POST['alert_message'] ?? '');
+        $priority = trim($_POST['priority'] ?? 'Medium');
+        $category = trim($_POST['category'] ?? 'other');
+        $expires = trim($_POST['expires_at'] ?? '');
         if ($title && $message) {
-            $conn->query("INSERT INTO institutional_alerts (alert_title, alert_message, priority, category, expires_at, created_at) VALUES ('$title', '$message', '$priority', '$category', $expVal, NOW())");
+            $stmt = $conn->prepare("INSERT INTO institutional_alerts (alert_title, alert_message, priority, category, expires_at, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+            if ($stmt) { $expVal = $expires !== '' ? $expires : null; $stmt->bind_param('sssss', $title, $message, $priority, $category, $expVal); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Alert created and broadcast.';
         }
         header('Location: institutional-alerts.php');
@@ -42,15 +45,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn && $action === 'toggle_resolved') {
         $id = (int)($_POST['id'] ?? 0);
         $current = (int)($_POST['current'] ?? 0);
-        $newVal = $current ? 'NULL, resolved_at=NULL, resolved_by=NULL' : '1, resolved_at=NOW(), resolved_by=' . (int)($user['id'] ?? 0);
-        $conn->query("UPDATE institutional_alerts SET is_resolved=$newVal WHERE id=$id");
+        if ($current) {
+            $stmt = $conn->prepare("UPDATE institutional_alerts SET is_resolved=NULL, resolved_at=NULL, resolved_by=NULL WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+        } else {
+            $resolvedBy = (int)($user['id'] ?? 0);
+            $stmt = $conn->prepare("UPDATE institutional_alerts SET is_resolved=1, resolved_at=NOW(), resolved_by=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ii', $resolvedBy, $id); $stmt->execute(); $stmt->close(); }
+        }
         header('Location: institutional-alerts.php');
         exit;
     }
     if ($conn && $action === 'delete_alert') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("DELETE FROM alert_recipients WHERE alert_id=$id");
-        $conn->query("DELETE FROM institutional_alerts WHERE id=$id");
+        $stmt1 = $conn->prepare("DELETE FROM alert_recipients WHERE alert_id=?");
+        if ($stmt1) { $stmt1->bind_param('i', $id); $stmt1->execute(); $stmt1->close(); }
+        $stmt2 = $conn->prepare("DELETE FROM institutional_alerts WHERE id=?");
+        if ($stmt2) { $stmt2->bind_param('i', $id); $stmt2->execute(); $stmt2->close(); }
         $_SESSION['success'] = 'Alert deleted.';
         header('Location: institutional-alerts.php');
         exit;

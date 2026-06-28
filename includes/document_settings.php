@@ -86,9 +86,12 @@ function saveDocumentSetting($key, $value) {
 
         if (!$db || $db->connect_error) return false;
 
-        $k = $db->real_escape_string($key);
-        $v = $db->real_escape_string($value);
-        $db->query("INSERT INTO document_settings (setting_key, setting_value, updated_at) VALUES ('$k', '$v', NOW()) ON DUPLICATE KEY UPDATE setting_value='$v', updated_at=NOW()");
+        $stmt = $db->prepare("INSERT INTO document_settings (setting_key, setting_value, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value=?, updated_at=NOW()");
+        if ($stmt) {
+            $stmt->bind_param("sss", $key, $value, $value);
+            $stmt->execute();
+            $stmt->close();
+        }
         $db->close();
         return true;
     } catch (Exception $e) {

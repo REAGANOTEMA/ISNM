@@ -11,8 +11,8 @@ ini_set('display_errors', 1);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $noticeId = (int) ($_POST["noticeId"]);
     $disks = $_POST["disks"];
-    $body =  mysqli_real_escape_string($conn, $_POST["body"]);
-    $title =  mysqli_real_escape_string($conn, $_POST["title"]);
+    $body = $_POST["body"];
+    $title = $_POST["title"];
     
     $editorId = $_SESSION['uid'];
 

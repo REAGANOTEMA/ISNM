@@ -106,14 +106,24 @@ if (!function_exists('sendStaffCommunication')) {
             $to_emails = [];
 
             if ($recipient_type === 'department' && $recipient_id) {
-                $deptCode = $conn->real_escape_string($recipient_id);
-                $r = $conn->query("SELECT routing_email FROM communication_channels WHERE department_code = '$deptCode' AND is_active = 1 LIMIT 1");
-                if ($r && ($row = $r->fetch_assoc()) && !empty($row['routing_email'])) {
-                    $to_emails[] = $row['routing_email'];
+                $stmt1 = $conn->prepare("SELECT routing_email FROM communication_channels WHERE department_code = ? AND is_active = 1 LIMIT 1");
+                if ($stmt1) {
+                    $stmt1->bind_param("s", $recipient_id);
+                    $stmt1->execute();
+                    $r = $stmt1->get_result();
+                    if ($r && ($row = $r->fetch_assoc()) && !empty($row['routing_email'])) {
+                        $to_emails[] = $row['routing_email'];
+                    }
+                    $stmt1->close();
                 }
-                $deptName = $conn->real_escape_string($recipient_name);
-                $sr = $conn->query("SELECT email FROM staff WHERE department = '$deptName' AND email IS NOT NULL AND email != '' AND status = 'Active'");
-                if ($sr) while ($srow = $sr->fetch_assoc()) $to_emails[] = $srow['email'];
+                $stmt2 = $conn->prepare("SELECT email FROM staff WHERE department = ? AND email IS NOT NULL AND email != '' AND status = 'Active'");
+                if ($stmt2) {
+                    $stmt2->bind_param("s", $recipient_name);
+                    $stmt2->execute();
+                    $sr = $stmt2->get_result();
+                    if ($sr) while ($srow = $sr->fetch_assoc()) $to_emails[] = $srow['email'];
+                    $stmt2->close();
+                }
             } elseif ($recipient_type === 'all_staff') {
                 $sr = $conn->query("SELECT email FROM staff WHERE email IS NOT NULL AND email != '' AND status = 'Active'");
                 if ($sr) while ($srow = $sr->fetch_assoc()) $to_emails[] = $srow['email'];

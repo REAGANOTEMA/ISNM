@@ -13,8 +13,8 @@ try {
     $conn = getStudentsConnection();
     
     // 1. Create bursar user if not exists
-    $bursar_email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-    $bursar_password = 'bursar@isnm';
+    $bursar_email = isnm_env('BURSAR_EMAIL', 'bursar@igangaschoolofnursingandmidwifery.ac.ug');
+    $bursar_password = isnm_env('BURSAR_PASSWORD');
     $bursar_password_hash = password_hash($bursar_password, PASSWORD_BCRYPT);
     
     // Check if user exists

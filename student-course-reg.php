@@ -22,11 +22,16 @@ $registrations = [];
 $availableCourses = [];
 
 if ($studentsDb) {
-    $sid = $studentsDb->real_escape_string($studentNumber);
-    $sr = $studentsDb->query("SELECT * FROM students WHERE student_number='$sid' OR id=$userId LIMIT 1");
-    $studentInfo = $sr ? $sr->fetch_assoc() : [];
+    $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("si", $studentNumber, $userId);
+        $stmt->execute();
+        $sr = $stmt->get_result();
+        $studentInfo = $sr ? $sr->fetch_assoc() : [];
+        $stmt->close();
+    }
     $sidInt = (int)($studentInfo['id'] ?? $userId);
-    $program = $studentsDb->real_escape_string($studentInfo['program']??'');
+    $program = $studentInfo['program']??'';
     $year = (int)($studentInfo['year_of_study']??1);
 
     $rg = $studentsDb->query("SELECT cr.*, ac.course_title, ac.credits FROM student_course_registrations cr LEFT JOIN academic_course_catalog ac ON cr.course_id = ac.id WHERE cr.student_id = " . (int)$sidInt . " ORDER BY cr.registration_date DESC");
@@ -37,9 +42,15 @@ if ($studentsDb) {
         $registrations = $rg->fetch_all(MYSQLI_ASSOC);
     }
 
-    $avail = $studentsDb->query("SELECT * FROM academic_course_catalog WHERE program_code='$program' AND year_of_study=$year AND status='Active'");
-    if ($avail) {
-        $availableCourses = $avail->fetch_all(MYSQLI_ASSOC);
+    $stmt2 = $studentsDb->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? AND year_of_study=? AND status='Active'");
+    if ($stmt2) {
+        $stmt2->bind_param("si", $program, $year);
+        $stmt2->execute();
+        $avail = $stmt2->get_result();
+        if ($avail) {
+            $availableCourses = $avail->fetch_all(MYSQLI_ASSOC);
+        }
+        $stmt2->close();
     }
 }
 

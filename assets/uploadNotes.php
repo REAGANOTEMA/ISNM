@@ -4,11 +4,11 @@
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response = "";
 
-    $title = mysqli_real_escape_string($conn, $_POST["title"]);
-    $comment = mysqli_real_escape_string($conn, $_POST["comment"]);
+    $title = $_POST["title"];
+    $comment = $_POST["comment"];
 
-    $class = mysqli_real_escape_string($conn, $_POST["class"]);
-    $subject = mysqli_real_escape_string($conn, $_POST["subject"]);
+    $class = $_POST["class"];
+    $subject = $_POST["subject"];
     $senderId = $_SESSION['uid'];
 
     if (

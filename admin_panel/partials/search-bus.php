@@ -1,16 +1,17 @@
 <?php
 include("config.php");
 
-// Sanitize user input to prevent SQL injection
-$input = mysqli_real_escape_string($conn, $_POST["val"]);
-
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql = "SELECT * FROM students WHERE request = 'Accepted' AND fname LIKE '{$input}%'";
+$input = $_POST["val"] ?? "";
+$like = $input . "%";
 
-$result = mysqli_query($conn, $sql);
+$stmt = $conn->prepare("SELECT * FROM students WHERE request = 'Accepted' AND fname LIKE ?");
+$stmt->bind_param("s", $like);
+$result = $stmt->execute();
+$result = $stmt->get_result();
 
 if ($result) {
     if(mysqli_num_rows($result) > 0) {
@@ -24,8 +25,9 @@ if ($result) {
         echo "No pending requests.";
     }
 } else {
-    echo "Error: " . mysqli_error($conn);
+    echo "Error: " . $conn->error;
 }
 
+$stmt->close();
 mysqli_close($conn);
 ?>

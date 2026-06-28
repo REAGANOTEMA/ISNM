@@ -7,8 +7,8 @@
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth-service.php';
 
-$bursar_email = 'bursar@igangaschoolofnursingandmidwifery.ac.ug';
-$bursar_password = 'bursar@isnm';
+$bursar_email = isnm_env('BURSAR_EMAIL', 'bursar@igangaschoolofnursingandmidwifery.ac.ug');
+$bursar_password = isnm_env('BURSAR_PASSWORD');
 $bursar_name = 'School Bursar';
 $bursar_phone = '0782990403';
 

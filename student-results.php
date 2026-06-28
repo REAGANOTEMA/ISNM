@@ -23,9 +23,14 @@ $semesters = [];
 $gpaBySemester = [];
 
 if ($studentsDb) {
-    $sid = $studentsDb->real_escape_string($studentNumber);
-    $sr = $studentsDb->query("SELECT * FROM students WHERE student_number='$sid' OR id=$userId LIMIT 1");
-    $studentInfo = $sr ? $sr->fetch_assoc() : [];
+    $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("si", $studentNumber, $userId);
+        $stmt->execute();
+        $sr = $stmt->get_result();
+        $studentInfo = $sr ? $sr->fetch_assoc() : [];
+        $stmt->close();
+    }
     $sidInt = (int)($studentInfo['id'] ?? $userId);
 
     $er = $studentsDb->query("SELECT * FROM examination_records WHERE student_id=$sidInt ORDER BY academic_year DESC, FIELD(semester,'Semester 1','Semester 2','Semester 3','Semester 4','Semester 5','Semester 6')");

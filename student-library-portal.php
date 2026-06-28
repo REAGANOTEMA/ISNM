@@ -23,21 +23,31 @@ $borrowings = [];
 $fines = [];
 
 if ($studentsDb) {
-    $sid = $studentsDb->real_escape_string($studentNumber);
-    $sr = $studentsDb->query("SELECT * FROM students WHERE student_number='$sid' OR id=$userId LIMIT 1");
+    $stmt = $studentsDb->prepare("SELECT * FROM students WHERE student_number=? OR id=? LIMIT 1");
+    $stmt->bind_param("si", $studentNumber, $userId);
+    $stmt->execute();
+    $sr = $stmt->get_result();
     $studentInfo = $sr ? $sr->fetch_assoc() : [];
+    $stmt->close();
     $sidInt = (int)($studentInfo['id'] ?? $userId);
-    $program = $studentsDb->real_escape_string($studentInfo['program']??'');
 
     // Try students_db library tables first
     $bk = $studentsDb->query("SELECT * FROM library_books ORDER BY book_title LIMIT 50");
     if ($bk) $books = $bk->fetch_all(MYSQLI_ASSOC);
 
-    $bw = $studentsDb->query("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id=" . (int)$sidInt . " ORDER BY lb.borrow_date DESC LIMIT 20");
+    $stmt = $studentsDb->prepare("SELECT lb.*, lk.book_title FROM library_borrowing lb LEFT JOIN library_books lk ON lb.book_id = lk.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC LIMIT 20");
+    $stmt->bind_param("i", $sidInt);
+    $stmt->execute();
+    $bw = $stmt->get_result();
     if ($bw) $borrowings = $bw->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 
-    $fn = $studentsDb->query("SELECT * FROM library_fines WHERE student_id=$sidInt AND paid=0");
+    $stmt = $studentsDb->prepare("SELECT * FROM library_fines WHERE student_id=? AND paid=0");
+    $stmt->bind_param("i", $sidInt);
+    $stmt->execute();
+    $fn = $stmt->get_result();
     if ($fn) $fines = $fn->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 
     // Fallback to staffs_db
     if (empty($books) && $staffDb) {

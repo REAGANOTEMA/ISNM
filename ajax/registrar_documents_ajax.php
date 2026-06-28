@@ -41,13 +41,13 @@ if ($action === 'lookup_student') {
 }
 
 if ($action === 'create_student') {
-    $fn  = $students_conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-    $sn  = $students_conn->real_escape_string(trim($_POST['surname'] ?? ''));
-    $on  = $students_conn->real_escape_string(trim($_POST['other_name'] ?? ''));
-    $gen = $students_conn->real_escape_string(trim($_POST['gender'] ?? 'Other'));
-    $crs = $students_conn->real_escape_string(trim($_POST['course'] ?? ''));
-    $ph  = $students_conn->real_escape_string(trim($_POST['phone'] ?? ''));
-    $em  = $students_conn->real_escape_string(trim($_POST['email'] ?? ''));
+    $fn  = trim($_POST['first_name'] ?? '');
+    $sn  = trim($_POST['surname'] ?? '');
+    $on  = trim($_POST['other_name'] ?? '');
+    $gen = trim($_POST['gender'] ?? 'Other');
+    $crs = trim($_POST['course'] ?? '');
+    $ph  = trim($_POST['phone'] ?? '');
+    $em  = trim($_POST['email'] ?? '');
     
     if (empty($fn) || empty($sn)) {
         echo json_encode(['success' => false, 'error' => 'First name and surname required']);
@@ -58,8 +58,9 @@ if ($action === 'create_student') {
     $full = trim("$fn $on $sn");
     $reg = 'REG-'.date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
     
-    $sql = "INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, status, created_at) VALUES ('$snum','$reg','$fn','$sn','$on','$full','$gen','$crs','$crs','$ph','$em','Active',NOW())";
-    if ($students_conn->query($sql)) {
+    $stmt = $students_conn->prepare("INSERT INTO students (student_number, registration_number, first_name, surname, other_name, full_name, gender, course, program, phone, email, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
+    $stmt->bind_param("sssssssssss", $snum, $reg, $fn, $sn, $on, $full, $gen, $crs, $crs, $ph, $em);
+    if ($stmt->execute()) {
         $id = $students_conn->insert_id;
         echo json_encode(['success' => true, 'student' => [
             'id' => $id,
@@ -74,6 +75,7 @@ if ($action === 'create_student') {
     } else {
         echo json_encode(['success' => false, 'error' => $students_conn->error]);
     }
+    $stmt->close();
     exit;
 }
 
@@ -81,27 +83,48 @@ if ($action === 'get_student_detail') {
     $sid = intval($_GET['student_id'] ?? 0);
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
     
-    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+    $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
+    $stmt->bind_param("i", $sid);
+    $stmt->execute();
+    $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
+    $stmt->close();
     if (!$student) { echo json_encode(['error' => 'Student not found']); exit; }
     
     // Get exam records count
-    $er = $staff_conn->query("SELECT COUNT(*) c FROM examination_records WHERE student_id=$sid");
+    $stmt2 = $staff_conn->prepare("SELECT COUNT(*) c FROM examination_records WHERE student_id = ?");
+    $stmt2->bind_param("i", $sid);
+    $stmt2->execute();
+    $er = $stmt2->get_result();
     $er_row = $er ? $er->fetch_assoc() : null;
     $exam_count = $er_row ? intval($er_row['c']) : 0;
+    $stmt2->close();
     
     // Get courses
-    $cr = $staff_conn->query("SELECT COUNT(*) c FROM course_registrations WHERE student_id=$sid");
+    $stmt3 = $staff_conn->prepare("SELECT COUNT(*) c FROM course_registrations WHERE student_id = ?");
+    $stmt3->bind_param("i", $sid);
+    $stmt3->execute();
+    $cr = $stmt3->get_result();
     $cr_row = $cr ? $cr->fetch_assoc() : null;
     $course_count = $cr_row ? intval($cr_row['c']) : 0;
+    $stmt3->close();
     
     // Get invoices/payments summary
-    $inv_r = $students_conn->query("SELECT COALESCE(SUM(total_amount),0) ti FROM student_invoices WHERE student_id=$sid");
+    $stmt4 = $students_conn->prepare("SELECT COALESCE(SUM(total_amount),0) ti FROM student_invoices WHERE student_id = ?");
+    $stmt4->bind_param("i", $sid);
+    $stmt4->execute();
+    $inv_r = $stmt4->get_result();
     $inv_row = $inv_r ? $inv_r->fetch_assoc() : null;
     $total_inv = $inv_row ? floatval($inv_row['ti']) : 0;
-    $pay_r = $students_conn->query("SELECT COALESCE(SUM(amount_received),0) tp FROM payments WHERE student_id=$sid");
+    $stmt4->close();
+    
+    $stmt5 = $students_conn->prepare("SELECT COALESCE(SUM(amount_received),0) tp FROM payments WHERE student_id = ?");
+    $stmt5->bind_param("i", $sid);
+    $stmt5->execute();
+    $pay_r = $stmt5->get_result();
     $pay_row = $pay_r ? $pay_r->fetch_assoc() : null;
     $total_pay = $pay_row ? floatval($pay_row['tp']) : 0;
+    $stmt5->close();
     
     $student['exam_count'] = $exam_count;
     $student['course_count'] = $course_count;
@@ -118,19 +141,31 @@ if ($action === 'generate_transcript') {
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
     
     // Fetch student
-    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+    $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
+    $stmt->bind_param("i", $sid);
+    $stmt->execute();
+    $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
+    $stmt->close();
     if (!$student) { echo json_encode(['error' => 'Student not found']); exit; }
     
     // Fetch courses/exam records
     $courses = [];
-    $er = $staff_conn->query("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id=$sid AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2->bind_param("i", $sid);
+    $stmt2->execute();
+    $er = $stmt2->get_result();
     if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
+    $stmt2->close();
     
     // If no exam records, get course registrations
     if (empty($courses)) {
-        $cr = $staff_conn->query("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id=$sid AND cr.status='Approved'");
+        $stmt3 = $staff_conn->prepare("SELECT cr.*, cc.course_name, cc.course_code, cc.credit_hours FROM course_registrations cr LEFT JOIN academic_course_catalog cc ON cr.course_id = cc.id WHERE cr.student_id = ? AND cr.status='Approved'");
+        $stmt3->bind_param("i", $sid);
+        $stmt3->execute();
+        $cr = $stmt3->get_result();
         if ($cr) while ($row = $cr->fetch_assoc()) $courses[] = $row;
+        $stmt3->close();
     }
     
     // Fetch settings
@@ -152,14 +187,20 @@ if ($action === 'generate_transcript') {
     $html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
     
     // Store in database
-    $title = $students_conn->real_escape_string("Academic Transcript - ".($student['full_name']??''));
-    $html_escaped = $staff_conn->real_escape_string($html);
-    $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', $sid, 1, '$title', '$html_escaped', NOW())");
+    $title = "Academic Transcript - ".($student['full_name']??'');
+    $stmt4 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+    $stmt4->bind_param("iss", $sid, $title, $html);
+    $stmt4->execute();
     $doc_id = $staff_conn->insert_id;
+    $stmt4->close();
     
     // Also update registrar_transcripts
-    $course_esc = $staff_conn->real_escape_string($student['course']??'');
-    $staff_conn->query("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES ('$tnum', $sid, '".date('Y')."', '$course_esc', 'Ready', NOW(), 1)");
+    $course_val = $student['course']??'';
+    $academic_year = date('Y');
+    $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
+    $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
+    $stmt5->execute();
+    $stmt5->close();
     
     echo json_encode([
         'success' => true,

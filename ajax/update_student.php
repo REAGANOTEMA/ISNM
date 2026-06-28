@@ -31,12 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetch']) && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     if ($id < 1) { echo json_encode(['success' => false, 'error' => 'Invalid ID']); exit; }
-    $r = $conn->query("SELECT * FROM students WHERE id=$id LIMIT 1");
+    $stmt = $conn->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $r = $stmt->get_result();
     if ($r && $row = $r->fetch_assoc()) {
         echo json_encode($row);
     } else {
         echo json_encode(['success' => false, 'error' => 'Student not found']);
     }
+    $stmt->close();
     exit;
 }
 
@@ -45,65 +49,82 @@ if ($id < 1) {
     echo json_encode(['success' => false, 'error' => 'Invalid student ID']);
     exit;
 }
-$first_name = $conn->real_escape_string(trim($_POST['first_name'] ?? ''));
-$surname = $conn->real_escape_string(trim($_POST['surname'] ?? ''));
-$other_name = $conn->real_escape_string(trim($_POST['other_name'] ?? ''));
+$first_name = trim($_POST['first_name'] ?? '');
+$surname = trim($_POST['surname'] ?? '');
+$other_name = trim($_POST['other_name'] ?? '');
 $full_name = trim($_POST['full_name'] ?? '');
 if (empty($full_name)) $full_name = trim("$first_name $other_name $surname");
-$full_name = $conn->real_escape_string($full_name);
-$gender = $conn->real_escape_string($_POST['gender'] ?? 'Other');
-$index_number = $conn->real_escape_string(trim($_POST['index_number'] ?? ''));
-$registration_number = $conn->real_escape_string(trim($_POST['registration_number'] ?? ''));
-$student_number = $conn->real_escape_string(trim($_POST['student_number'] ?? ''));
-$national_id = $conn->real_escape_string(trim($_POST['national_student_id_number'] ?? ''));
-$phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
-$mobile_number = $conn->real_escape_string(trim($_POST['mobile_number'] ?? ''));
+$gender = $_POST['gender'] ?? 'Other';
+$index_number = trim($_POST['index_number'] ?? '');
+$registration_number = trim($_POST['registration_number'] ?? '');
+$student_number = trim($_POST['student_number'] ?? '');
+$national_id = trim($_POST['national_student_id_number'] ?? '');
+$phone = trim($_POST['phone'] ?? '');
+$mobile_number = trim($_POST['mobile_number'] ?? '');
 if (empty($mobile_number)) $mobile_number = $phone;
 if (empty($phone)) $phone = $mobile_number;
-$email = $conn->real_escape_string(trim($_POST['email'] ?? ''));
-$program = $conn->real_escape_string(trim($_POST['program'] ?? ''));
-$course = $conn->real_escape_string(trim($_POST['course'] ?? ''));
-$level = $conn->real_escape_string(trim($_POST['level'] ?? ''));
-$set_name = $conn->real_escape_string(trim($_POST['set_name'] ?? ''));
+$email = trim($_POST['email'] ?? '');
+$program = trim($_POST['program'] ?? '');
+$course = trim($_POST['course'] ?? '');
+$level = trim($_POST['level'] ?? '');
+$set_name = trim($_POST['set_name'] ?? '');
 $current_year = intval($_POST['current_year'] ?? 0);
-$current_semester = $conn->real_escape_string(trim($_POST['current_semester'] ?? ''));
-$status = $conn->real_escape_string(trim($_POST['status'] ?? 'Active'));
-$dob = $conn->real_escape_string(trim($_POST['date_of_birth'] ?? ''));
-$nationality = $conn->real_escape_string(trim($_POST['nationality'] ?? ''));
-$address = $conn->real_escape_string(trim($_POST['address'] ?? ''));
-$district = $conn->real_escape_string(trim($_POST['district'] ?? ''));
-$guardian_name = $conn->real_escape_string(trim($_POST['guardian_name'] ?? ''));
-$guardian_phone = $conn->real_escape_string(trim($_POST['guardian_phone'] ?? ''));
-$guardian_email = $conn->real_escape_string(trim($_POST['guardian_email'] ?? ''));
-$emergency_contact_name = $conn->real_escape_string(trim($_POST['emergency_contact_name'] ?? ''));
-$emergency_contact_phone = $conn->real_escape_string(trim($_POST['emergency_contact_phone'] ?? ''));
-$emergency_contact_email = $conn->real_escape_string(trim($_POST['emergency_contact_email'] ?? ''));
-$sponsor = $conn->real_escape_string(trim($_POST['sponsor'] ?? ''));
-$marital_status = $conn->real_escape_string(trim($_POST['marital_status'] ?? ''));
-$religion = $conn->real_escape_string(trim($_POST['religion'] ?? ''));
+$current_semester = trim($_POST['current_semester'] ?? '');
+$status = trim($_POST['status'] ?? 'Active');
+$dob = trim($_POST['date_of_birth'] ?? '');
+$nationality = trim($_POST['nationality'] ?? '');
+$address = trim($_POST['address'] ?? '');
+$district = trim($_POST['district'] ?? '');
+$guardian_name = trim($_POST['guardian_name'] ?? '');
+$guardian_phone = trim($_POST['guardian_phone'] ?? '');
+$guardian_email = trim($_POST['guardian_email'] ?? '');
+$emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
+$emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
+$emergency_contact_email = trim($_POST['emergency_contact_email'] ?? '');
+$sponsor = trim($_POST['sponsor'] ?? '');
+$marital_status = trim($_POST['marital_status'] ?? '');
+$religion = trim($_POST['religion'] ?? '');
 $intake_year = intval($_POST['intake_year'] ?? 0);
-$intake_period = $conn->real_escape_string(trim($_POST['intake_period'] ?? ''));
-$student_category = $conn->real_escape_string(trim($_POST['student_category'] ?? ''));
+$intake_period = trim($_POST['intake_period'] ?? '');
+$student_category = trim($_POST['student_category'] ?? '');
 
-$sql = "UPDATE students SET 
-    first_name='$first_name', surname='$surname', other_name='$other_name', 
-    full_name='$full_name', gender='$gender', 
-    index_number='$index_number', registration_number='$registration_number', 
-    student_number='$student_number', national_student_id_number='$national_id', 
-    phone='$phone', mobile_number='$mobile_number', email='$email', 
-    program='$program', course='$course', level='$level', 
-    set_name='$set_name', current_year=$current_year, current_semester='$current_semester',
-    status='$status', date_of_birth='$dob', nationality='$nationality',
-    address='$address', district='$district',
-    guardian_name='$guardian_name', guardian_phone='$guardian_phone', guardian_email='$guardian_email',
-    emergency_contact_name='$emergency_contact_name', emergency_contact_phone='$emergency_contact_phone',
-    emergency_contact_email='$emergency_contact_email',
-    sponsor='$sponsor', marital_status='$marital_status', religion='$religion',
-    intake_year=$intake_year, intake_period='$intake_period', student_category='$student_category',
-    updated_at=NOW() WHERE id=$id";
+$stmt = $conn->prepare("UPDATE students SET 
+    first_name=?, surname=?, other_name=?, 
+    full_name=?, gender=?, 
+    index_number=?, registration_number=?, 
+    student_number=?, national_student_id_number=?, 
+    phone=?, mobile_number=?, email=?, 
+    program=?, course=?, level=?, 
+    set_name=?, current_year=?, current_semester=?,
+    status=?, date_of_birth=?, nationality=?,
+    address=?, district=?,
+    guardian_name=?, guardian_phone=?, guardian_email=?,
+    emergency_contact_name=?, emergency_contact_phone=?,
+    emergency_contact_email=?,
+    sponsor=?, marital_status=?, religion=?,
+    intake_year=?, intake_period=?, student_category=?,
+    updated_at=NOW() WHERE id=?");
+$stmt->bind_param("ssssssssssssssssisssssssssssssssisi",
+    $first_name, $surname, $other_name,
+    $full_name, $gender,
+    $index_number, $registration_number,
+    $student_number, $national_id,
+    $phone, $mobile_number, $email,
+    $program, $course, $level,
+    $set_name, $current_year, $current_semester,
+    $status, $dob, $nationality,
+    $address, $district,
+    $guardian_name, $guardian_phone, $guardian_email,
+    $emergency_contact_name, $emergency_contact_phone,
+    $emergency_contact_email,
+    $sponsor, $marital_status, $religion,
+    $intake_year, $intake_period, $student_category,
+    $id
+);
 
-if ($conn->query($sql)) {
+if ($stmt->execute()) {
     echo json_encode(['success' => true, 'message' => 'Student updated successfully.']);
 } else {
     echo json_encode(['success' => false, 'error' => 'Update failed: ' . $conn->error]);
 }
+$stmt->close();

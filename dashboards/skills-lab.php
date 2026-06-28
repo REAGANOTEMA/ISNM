@@ -26,9 +26,18 @@ if ($view === 'equipment' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE name LIKE '%" . $db->real_escape_string($q) . "%' OR equipment_code LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT * FROM lab_equipment $cond ORDER BY name ASC");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT * FROM lab_equipment WHERE name LIKE ? OR equipment_code LIKE ? ORDER BY name ASC");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT * FROM lab_equipment ORDER BY name ASC");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -37,27 +46,33 @@ if ($view === 'equipment' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $code = $db->real_escape_string($data['equipment_code'] ?? '');
-    $name = $db->real_escape_string($data['name'] ?? '');
-    $desc = $db->real_escape_string($data['description'] ?? '');
-    $cat = $db->real_escape_string($data['category'] ?? 'other');
+    $code = $data['equipment_code'] ?? '';
+    $name = $data['name'] ?? '';
+    $desc = $data['description'] ?? '';
+    $cat = $data['category'] ?? 'other';
     $qty = (int)($data['quantity'] ?? 1);
     $avail = (int)($data['available_quantity'] ?? $qty);
-    $cond = $db->real_escape_string($data['condition_status'] ?? 'good');
-    $loc = $db->real_escape_string($data['location'] ?? '');
-    $serial = $db->real_escape_string($data['serial_number'] ?? '');
-    $pdate = $data['purchase_date'] ? "'" . $db->real_escape_string($data['purchase_date']) . "'" : 'NULL';
-    $pcost = $data['purchase_cost'] !== '' ? (float)$data['purchase_cost'] : 'NULL';
-    $supplier = $db->real_escape_string($data['supplier'] ?? '');
-    $lmaint = $data['last_maintenance_date'] ? "'" . $db->real_escape_string($data['last_maintenance_date']) . "'" : 'NULL';
-    $nmaint = $data['next_maintenance_date'] ? "'" . $db->real_escape_string($data['next_maintenance_date']) . "'" : 'NULL';
-    $stat = $db->real_escape_string($data['status'] ?? 'active');
-    $notes = $db->real_escape_string($data['notes'] ?? '');
+    $cond = $data['condition_status'] ?? 'good';
+    $loc = $data['location'] ?? '';
+    $serial = $data['serial_number'] ?? '';
+    $pdate = $data['purchase_date'] ?: null;
+    $pcost = $data['purchase_cost'] !== '' ? (float)$data['purchase_cost'] : null;
+    $supplier = $data['supplier'] ?? '';
+    $lmaint = $data['last_maintenance_date'] ?: null;
+    $nmaint = $data['next_maintenance_date'] ?: null;
+    $stat = $data['status'] ?? 'active';
+    $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $db->query("UPDATE lab_equipment SET equipment_code='$code', name='$name', description='$desc', category='$cat', quantity=$qty, available_quantity=$avail, condition_status='$cond', location='$loc', serial_number='$serial', purchase_date=$pdate, purchase_cost=$pcost, supplier='$supplier', last_maintenance_date=$lmaint, next_maintenance_date=$nmaint, status='$stat', notes='$notes' WHERE id=" . intval($id));
+            $stmt = $db->prepare("UPDATE lab_equipment SET equipment_code=?, name=?, description=?, category=?, quantity=?, available_quantity=?, condition_status=?, location=?, serial_number=?, purchase_date=?, purchase_cost=?, supplier=?, last_maintenance_date=?, next_maintenance_date=?, status=?, notes=? WHERE id=?");
+            $stmt->bind_param("ssssiiissssdsssi", $code, $name, $desc, $cat, $qty, $avail, $cond, $loc, $serial, $pdate, $pcost, $supplier, $lmaint, $nmaint, $stat, $notes, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_equipment (equipment_code, name, description, category, quantity, available_quantity, condition_status, location, serial_number, purchase_date, purchase_cost, supplier, last_maintenance_date, next_maintenance_date, status, notes) VALUES ('$code','$name','$desc','$cat',$qty,$avail,'$cond','$loc','$serial',$pdate,$pcost,'$supplier',$lmaint,$nmaint,'$stat','$notes')");
+            $stmt = $db->prepare("INSERT INTO lab_equipment (equipment_code, name, description, category, quantity, available_quantity, condition_status, location, serial_number, purchase_date, purchase_cost, supplier, last_maintenance_date, next_maintenance_date, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssiiissssdssss", $code, $name, $desc, $cat, $qty, $avail, $cond, $loc, $serial, $pdate, $pcost, $supplier, $lmaint, $nmaint, $stat, $notes);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -76,9 +91,18 @@ if ($view === 'checkouts' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE c.student_id LIKE '%" . $db->real_escape_string($q) . "%' OR e.name LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT c.*, e.name AS equipment_name, e.equipment_code FROM lab_equipment_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id $cond ORDER BY c.checkout_date DESC LIMIT 200");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT c.*, e.name AS equipment_name, e.equipment_code FROM lab_equipment_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id WHERE c.student_id LIKE ? OR e.name LIKE ? ORDER BY c.checkout_date DESC LIMIT 200");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT c.*, e.name AS equipment_name, e.equipment_code FROM lab_equipment_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -88,21 +112,30 @@ if ($view === 'checkouts' && $ajax === 'save') {
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
     $eid = (int)($data['equipment_id'] ?? 0);
-    $sid = $db->real_escape_string($data['student_id'] ?? '');
+    $sid = $data['student_id'] ?? '';
     $cb = (int)($user['id'] ?? 0);
-    $erd = $db->real_escape_string($data['expected_return_date'] ?? '');
+    $erd = $data['expected_return_date'] ?? '';
     $qty = (int)($data['quantity_checked_out'] ?? 1);
-    $purp = $db->real_escape_string($data['purpose'] ?? '');
-    $notes = $db->real_escape_string($data['notes'] ?? '');
+    $purp = $data['purpose'] ?? '';
+    $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $ard = $data['actual_return_date'] ? "'" . $db->real_escape_string($data['actual_return_date']) . "'" : 'NULL';
+            $ard = $data['actual_return_date'] ?: null;
             $qr = (int)($data['quantity_returned'] ?? 0);
-            $stat = $db->real_escape_string($data['status'] ?? 'checked_out');
-            $db->query("UPDATE lab_equipment_checkouts SET expected_return_date='$erd', actual_return_date=$ard, quantity_returned=$qr, status='$stat', notes='$notes' WHERE id=" . intval($id));
+            $stat = $data['status'] ?? 'checked_out';
+            $stmt = $db->prepare("UPDATE lab_equipment_checkouts SET expected_return_date=?, actual_return_date=?, quantity_returned=?, status=?, notes=? WHERE id=?");
+            $stmt->bind_param("ssisii", $erd, $ard, $qr, $stat, $notes, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_equipment_checkouts (equipment_id, student_id, checked_out_by, expected_return_date, quantity_checked_out, purpose, notes) VALUES (" . intval($eid) . ",'$sid'," . intval($cb) . ",'$erd'," . intval($qty) . ",'$purp','$notes')");
-            $db->query("UPDATE lab_equipment SET available_quantity = GREATEST(available_quantity - " . intval($qty) . ", 0) WHERE id=" . intval($eid));
+            $stmt = $db->prepare("INSERT INTO lab_equipment_checkouts (equipment_id, student_id, checked_out_by, expected_return_date, quantity_checked_out, purpose, notes) VALUES (?,?,?,?,?,?,?)");
+            $stmt->bind_param("iisisss", $eid, $sid, $cb, $erd, $qty, $purp, $notes);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $db->prepare("UPDATE lab_equipment SET available_quantity = GREATEST(available_quantity - ?, 0) WHERE id=?");
+            $stmt->bind_param("ii", $qty, $eid);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -111,12 +144,23 @@ if ($view === 'checkouts' && $ajax === 'save') {
 if ($view === 'checkouts' && $ajax === 'return' && $id) {
     header('Content-Type: application/json');
     try {
-        $r = $db->query("SELECT equipment_id, quantity_checked_out FROM lab_equipment_checkouts WHERE id=" . intval($id));
+        $stmt = $db->prepare("SELECT equipment_id, quantity_checked_out FROM lab_equipment_checkouts WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $r = $stmt->get_result();
         if ($c = $r->fetch_assoc()) {
-            $db->query("UPDATE lab_equipment_checkouts SET actual_return_date=NOW(), quantity_returned=quantity_checked_out, status='returned' WHERE id=" . intval($id));
-            $db->query("UPDATE lab_equipment SET available_quantity = available_quantity + {$c['quantity_checked_out']} WHERE id={$c['equipment_id']}");
+            $stmt->close();
+            $stmt = $db->prepare("UPDATE lab_equipment_checkouts SET actual_return_date=NOW(), quantity_returned=quantity_checked_out, status='returned' WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $db->prepare("UPDATE lab_equipment SET available_quantity = available_quantity + ? WHERE id=?");
+            $stmt->bind_param("ii", $c['quantity_checked_out'], $c['equipment_id']);
+            $stmt->execute();
+            $stmt->close();
             echo json_encode(['success' => true]);
         } else {
+            $stmt->close();
             echo json_encode(['success' => false, 'error' => 'Not found']);
         }
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }

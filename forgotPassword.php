@@ -14,8 +14,8 @@ error_reporting(0);
 
     if(isset($_POST['otp']) && isset($_POST['email'])){
 
-        $email = mysqli_real_escape_string($conn, $_POST['email']);
-        $otp = mysqli_real_escape_string($conn, $_POST['otp']) . '';
+        $email = $_POST['email'] ?? '';
+        $otp = ($_POST['otp'] ?? '') . '';
 
         $generatedOtp = $_SESSION['otp'];
 
@@ -31,8 +31,8 @@ error_reporting(0);
 
     }else if(isset($_POST['password']) && isset($_POST['email'])){
 
-        $email = mysqli_real_escape_string($conn, $_POST['email']);
-        $password = mysqli_real_escape_string($conn, $_POST['password']);
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -62,7 +62,7 @@ error_reporting(0);
     }
     else if(isset($_POST['email'])){
 
-        $email = mysqli_real_escape_string($conn, $_POST['email']);
+        $email = $_POST['email'] ?? '';
 
         function domain_exists($email, $record = 'MX'){
             list($user, $domain) = explode('@', $email);
@@ -130,7 +130,7 @@ function getEmailObject($reciever, $otp){
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
     $mail->Username = 'erp.schoolmanagementsystem@gmail.com';
-    $mail->Password = 'whqbysomdhdjthvr'; 
+    $mail->Password = isnm_env('SMTP_PASSWORD');
     $mail->SMTPSecure = 'tls';  
     $mail->Port = 587;
     

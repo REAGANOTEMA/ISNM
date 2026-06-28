@@ -13,7 +13,7 @@ if (!function_exists('findStudents')) {
         try {
             $conn = getStudentsConnection();
             if ($conn) {
-                $like = '%' . $conn->real_escape_string($term) . '%';
+                $like = '%' . $term . '%';
                 $sql  = "SELECT
                             id,
                             COALESCE(student_number, index_number) AS student_number,
@@ -28,22 +28,30 @@ if (!function_exists('findStudents')) {
                         FROM students
                         WHERE status = 'Active'
                           AND (
-                            index_number LIKE '$like'
-                            OR student_number LIKE '$like'
-                            OR first_name LIKE '$like'
-                            OR surname LIKE '$like'
-                            OR other_name LIKE '$like'
-                            OR CONCAT(first_name,' ',surname) LIKE '$like'
-                            OR email LIKE '$like'
-                            OR phone LIKE '$like'
+                            index_number LIKE ?
+                            OR student_number LIKE ?
+                            OR first_name LIKE ?
+                            OR surname LIKE ?
+                            OR other_name LIKE ?
+                            OR CONCAT(first_name,' ',surname) LIKE ?
+                            OR email LIKE ?
+                            OR phone LIKE ?
                           )
                         ORDER BY surname, first_name
-                        LIMIT $limit";
-                $res = $conn->query($sql);
-                if ($res) {
-                    while ($row = $res->fetch_assoc()) {
-                        $results[] = $row;
+                        LIMIT ?";
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $types = 'ssssssssi';
+                    $params = [$like, $like, $like, $like, $like, $like, $like, $like, $limit];
+                    $stmt->bind_param($types, ...$params);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    if ($res) {
+                        while ($row = $res->fetch_assoc()) {
+                            $results[] = $row;
+                        }
                     }
+                    $stmt->close();
                 }
             }
         } catch (Throwable $e) {

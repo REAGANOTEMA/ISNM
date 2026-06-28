@@ -146,9 +146,15 @@ function renderStudentSetViewer($conn, array $options = []) {
     $viewStudent   = null;
     if ($viewStudentId && $conn) {
         try {
-            $sid = $conn->real_escape_string($viewStudentId);
-            $r = $conn->query("SELECT * FROM students WHERE student_id = '$sid' OR index_number = '$sid' OR id = " . intval($sid) . " LIMIT 1");
-            if ($r) $viewStudent = $r->fetch_assoc();
+            $stmt = $conn->prepare("SELECT * FROM students WHERE student_id = ? OR index_number = ? OR id = ? LIMIT 1");
+            if ($stmt) {
+                $viewStudentIdInt = intval($viewStudentId);
+                $stmt->bind_param("ssi", $viewStudentId, $viewStudentId, $viewStudentIdInt);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $viewStudent = $r->fetch_assoc();
+                $stmt->close();
+            }
         } catch (Exception $e) {}
     }
 
