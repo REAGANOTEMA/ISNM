@@ -488,7 +488,7 @@ try {
     if ($students) {
         $r = $students->query("SELECT COUNT(*) c FROM students WHERE status='Active'"); if ($r) $totalStudents = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT ROUND(AVG(IFNULL(attendance_percentage,0)),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $attRate = (float)($r->fetch_assoc()['v']??0);
-        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM examination_records WHERE grade IS NOT NULL) t FROM examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
+        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.examination_records WHERE grade IS NOT NULL) t FROM igangaschoolofl_staffs_db.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $passRate=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $welfareAlerts = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $upMt = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT IFNULL(SUM(amount_paid),0) v FROM payments WHERE MONTH(payment_date)=MONTH(CURDATE()) AND YEAR(payment_date)=YEAR(CURDATE()) AND status='completed'"); if ($r) $revTotal = (float)$r->fetch_assoc()['v'];
