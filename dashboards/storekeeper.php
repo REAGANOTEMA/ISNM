@@ -4,9 +4,9 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['storekeeper', 'store', 'inventory']);
 $staffConn = $ctx['staff'];
 $user = $ctx['user'];
-$user_role = $_SESSION['role'] ?? '';
+$user_role = $user['role'] ?? '';
 
-$userId = (int)($_SESSION['user_id'] ?? 0);
+$userId = (int)($user['id'] ?? 0);
 $userName = $user['full_name'] ?? 'Store Keeper';
 
 // --- Handle POST actions ---
