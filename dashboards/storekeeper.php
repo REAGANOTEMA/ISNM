@@ -17,10 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (in_array($action, ['add_stock', 'remove_stock', 'adjust_stock'])) {
         $itemId = (int)($_POST['item_id'] ?? 0);
         $qty = (float)($_POST['quantity'] ?? 0);
-        $reason = $staffConn->real_escape_string(trim($_POST['reason'] ?? $action));
+        $reason = trim($_POST['reason'] ?? $action);
 
-        $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=" . intval($itemId));
-        $curRow = $cur ? $cur->fetch_assoc() : null;
+        $cur = $staffConn->prepare("SELECT quantity FROM store_inventory WHERE id=?");
+        $cur->bind_param("i", $itemId);
+        $cur->execute();
+        $curRow = $cur->get_result()->fetch_assoc();
+        $cur->close();
         $qtyBefore = $curRow ? (float)$curRow['quantity'] : 0;
 
         if ($action === 'add_stock') {
@@ -36,8 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $type = 'adjust';
         }
 
-        $staffConn->query("UPDATE store_inventory SET quantity=$qtyAfter WHERE id=" . intval($itemId));
-        $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (" . intval($itemId) . ", '$type', $qty, $qtyBefore, $qtyAfter, '$reason', " . intval($userId) . ")");
+        $stmt = $staffConn->prepare("UPDATE store_inventory SET quantity=? WHERE id=?");
+        $stmt->bind_param("di", $qtyAfter, $itemId);
+        $stmt->execute();
+        $stmt->close();
+        $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isddd si", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Stock updated successfully.'];
         header('Location: storekeeper.php'); exit;
     }
@@ -50,14 +59,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $reqId = (int)($_POST['request_id'] ?? 0);
 
         if ($qty > 0) {
-            $cur = $staffConn->query("SELECT quantity FROM store_inventory WHERE id=" . intval($itemId));
-            $curRow = $cur->fetch_assoc();
+            $cur = $staffConn->prepare("SELECT quantity FROM store_inventory WHERE id=?");
+            $cur->bind_param("i", $itemId);
+            $cur->execute();
+            $curRow = $cur->get_result()->fetch_assoc();
+            $cur->close();
             $avail = $curRow ? (float)$curRow['quantity'] : 0;
             $qty = min($qty, $avail);
 
-            $staffConn->query("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+$qty, status='fulfilled' WHERE id=" . intval($reqItemId));
-            $staffConn->query("UPDATE store_inventory SET quantity=quantity-$qty WHERE id=" . intval($itemId));
-            $staffConn->query("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (" . intval($itemId) . ", 'request_fulfilled', $qty, 'Fulfilled request #$reqId', " . intval($userId) . ", 'request', " . intval($reqId) . ")");
+            $stmt = $staffConn->prepare("UPDATE store_request_items SET quantity_fulfilled=quantity_fulfilled+?, status='fulfilled' WHERE id=?");
+            $stmt->bind_param("di", $qty, $reqItemId);
+            $stmt->execute();
+            $stmt->close();
+            $stmt = $staffConn->prepare("UPDATE store_inventory SET quantity=quantity-? WHERE id=?");
+            $stmt->bind_param("di", $qty, $itemId);
+            $stmt->execute();
+            $stmt->close();
+            $reason = "Fulfilled request #$reqId";
+            $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, reason, created_by, reference_type, reference_id) VALUES (?, 'request_fulfilled', ?, ?, ?, 'request', ?)");
+            $stmt->bind_param("idssi", $itemId, $qty, $reason, $userId, $reqId);
+            $stmt->execute();
+            $stmt->close();
         }
         header('Location: storekeeper.php'); exit;
     }
@@ -66,8 +88,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($action === 'forward_request') {
         $reqId = (int)($_POST['request_id'] ?? 0);
         $forwardTo = (int)($_POST['forward_to'] ?? 0);
-        $forwardRole = $staffConn->real_escape_string($_POST['forward_role'] ?? '');
-        $staffConn->query("UPDATE store_requests SET status='forwarded', forwarded_to=" . intval($forwardTo) . ", forwarded_to_role='$forwardRole' WHERE id=" . intval($reqId));
+        $forwardRole = $_POST['forward_role'] ?? '';
+        $stmt = $staffConn->prepare("UPDATE store_requests SET status='forwarded', forwarded_to=?, forwarded_to_role=? WHERE id=?");
+        $stmt->bind_param("isi", $forwardTo, $forwardRole, $reqId);
+        $stmt->execute();
+        $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Request forwarded for approval.'];
         header('Location: storekeeper.php'); exit;
     }

@@ -9,20 +9,10 @@ $user_name = $user['full_name'] ?? 'Chemical Staff';
 $user_role = $user['role'] ?? '';
 $user_id = (int)($user['id'] ?? 0);
 
-function ci_q($conn, $sql) {
-    if (!$conn) return 0;
-    try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
-    catch (Exception $e) { return 0; }
-}
-
 function ci_fetch($conn, $sql) {
     if (!$conn) return [];
     try { $r = $conn->query($sql); if (!$r) return []; return $r->fetch_all(MYSQLI_ASSOC); }
     catch (Exception $e) { return []; }
-}
-
-function ci_esc($conn, $val) {
-    return $conn ? $conn->real_escape_string((string)$val) : $val;
 }
 
 $active_section = $_GET['section'] ?? 'dashboard';
@@ -33,35 +23,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'save_chemical') {
         $id = (int)($_POST['id'] ?? 0);
-        $code = ci_esc($staff_conn, $_POST['chemical_code']);
-        $name = ci_esc($staff_conn, $_POST['chemical_name']);
-        $type = ci_esc($staff_conn, $_POST['chemical_type']);
-        $cas = ci_esc($staff_conn, $_POST['cas_number'] ?? '');
-        $hazard = ci_esc($staff_conn, $_POST['hazard_class']);
-        $loc = ci_esc($staff_conn, $_POST['storage_location'] ?? '');
+        $code = $_POST['chemical_code'];
+        $name = $_POST['chemical_name'];
+        $type = $_POST['chemical_type'];
+        $cas = $_POST['cas_number'] ?? '';
+        $hazard = $_POST['hazard_class'];
+        $loc = $_POST['storage_location'] ?? '';
         $qty = (float)($_POST['quantity_on_hand'] ?? 0);
-        $unit = ci_esc($staff_conn, $_POST['unit_of_measure'] ?? 'ml');
-        $rol = !empty($_POST['reorder_level']) ? (float)$_POST['reorder_level'] : 'NULL';
-        $supplier = ci_esc($staff_conn, $_POST['supplier'] ?? '');
-        $expiry = !empty($_POST['expiry_date']) ? "'" . ci_esc($staff_conn, $_POST['expiry_date']) . "'" : 'NULL';
-        $received = !empty($_POST['date_received']) ? "'" . ci_esc($staff_conn, $_POST['date_received']) . "'" : 'NULL';
-        $status = ci_esc($staff_conn, $_POST['status']);
+        $unit = $_POST['unit_of_measure'] ?? 'ml';
+        $rol = !empty($_POST['reorder_level']) ? (float)$_POST['reorder_level'] : null;
+        $supplier = $_POST['supplier'] ?? '';
+        $expiry = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $received = !empty($_POST['date_received']) ? $_POST['date_received'] : null;
+        $status = $_POST['status'];
 
         // Auto-calculate status based on qty and expiry
         $expiry_dt = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : '';
         if ($expiry_dt && $expiry_dt <= date('Y-m-d')) {
             $status = 'Expired';
-        } elseif ($status === 'In Stock' && $rol !== 'NULL' && $qty <= $rol) {
+        } elseif ($status === 'In Stock' && $rol !== null && $qty <= $rol) {
             $status = 'Low Stock';
         } elseif ($status === 'In Stock' && $qty <= 0) {
             $status = 'Discontinued';
         }
 
         if ($id > 0) {
-            $staff_conn->query("UPDATE chemical_inventory SET chemical_code='$code', chemical_name='$name', chemical_type='$type', cas_number='$cas', hazard_class='$hazard', storage_location='$loc', quantity_on_hand=$qty, unit_of_measure='$unit', reorder_level=$rol, supplier='$supplier', expiry_date=$expiry, date_received=$received, status='$status' WHERE id=" . intval($id));
+            $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET chemical_code=?, chemical_name=?, chemical_type=?, cas_number=?, hazard_class=?, storage_location=?, quantity_on_hand=?, unit_of_measure=?, reorder_level=?, supplier=?, expiry_date=?, date_received=?, status=? WHERE id=?");
+            $stmt->bind_param("sssssssdsssssi", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $status, $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Chemical updated successfully.';
         } else {
-            $staff_conn->query("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES ('$code','$name','$type','$cas','$hazard','$loc',$qty,'$unit',$rol,'$supplier',$expiry,$received," . intval($user_id) . ",'$status')");
+            $received_by = intval($user_id);
+            $stmt = $staff_conn->prepare("INSERT INTO chemical_inventory (chemical_code, chemical_name, chemical_type, cas_number, hazard_class, storage_location, quantity_on_hand, unit_of_measure, reorder_level, supplier, expiry_date, date_received, received_by, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("sssssssdssssis", $code, $name, $type, $cas, $hazard, $loc, $qty, $unit, $rol, $supplier, $expiry, $received, $received_by, $status);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Chemical added successfully.';
         }
         header('Location: chemical-inventory.php'); exit;
@@ -69,17 +66,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'stock_adjust') {
         $id = (int)($_POST['id'] ?? 0);
-        $adjust_type = ci_esc($staff_conn, $_POST['adjust_type']);
+        $adjust_type = $_POST['adjust_type'];
         $adjust_qty = (float)($_POST['adjust_quantity'] ?? 0);
         if ($id > 0 && $adjust_qty > 0) {
-            $qrChem = $staff_conn->query("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id=" . intval($id)); $chem = $qrChem ? $qrChem->fetch_assoc() : null;
+            $stmt = $staff_conn->prepare("SELECT quantity_on_hand, reorder_level, expiry_date FROM chemical_inventory WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $qrChem = $stmt->get_result();
+            $chem = $qrChem ? $qrChem->fetch_assoc() : null;
+            $stmt->close();
             if ($chem) {
                 $cq = (float)$chem['quantity_on_hand'];
                 $nq = ($adjust_type === 'add') ? $cq + $adjust_qty : max(0, $cq - $adjust_qty);
                 $rol = $chem['reorder_level'];
                 $exp = $chem['expiry_date'];
                 $ns = ($exp && $exp <= date('Y-m-d')) ? 'Expired' : ($nq <= 0 ? 'Discontinued' : ($rol !== null && $nq <= (float)$rol ? 'Low Stock' : 'In Stock'));
-                $staff_conn->query("UPDATE chemical_inventory SET quantity_on_hand=$nq, status='$ns' WHERE id=" . intval($id));
+                $stmt2 = $staff_conn->prepare("UPDATE chemical_inventory SET quantity_on_hand=?, status=? WHERE id=?");
+                $stmt2->bind_param("dsi", $nq, $ns, $id);
+                $stmt2->execute();
+                $stmt2->close();
                 $_SESSION['success'] = "Stock adjusted. New qty: $nq";
             }
         }
@@ -89,7 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'mark_disposed') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            $staff_conn->query("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=" . intval($id));
+            $stmt = $staff_conn->prepare("UPDATE chemical_inventory SET status='Discontinued', quantity_on_hand=0 WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Chemical marked as disposed.';
         }
         header('Location: chemical-inventory.php'); exit;
@@ -98,7 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'delete_chemical') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            $staff_conn->query("DELETE FROM chemical_inventory WHERE id=" . intval($id));
+            $stmt = $staff_conn->prepare("DELETE FROM chemical_inventory WHERE id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Chemical deleted.';
         }
         header('Location: chemical-inventory.php'); exit;
@@ -106,6 +117,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 }
 
 // Stats
+function ci_q($conn, $sql) {
+    if (!$conn) return 0;
+    try { $r = $conn->query($sql); if (!$r) return 0; $row = $r->fetch_assoc(); return (int)($row[array_key_first($row)] ?? 0); }
+    catch (Exception $e) { return 0; }
+}
+
 $total_chemicals = ci_q($staff_conn, "SELECT COUNT(*) FROM chemical_inventory");
 $in_stock = ci_q($staff_conn, "SELECT COUNT(*) FROM chemical_inventory WHERE status = 'In Stock'");
 $low_stock = ci_q($staff_conn, "SELECT COUNT(*) FROM chemical_inventory WHERE status = 'Low Stock'");

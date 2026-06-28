@@ -224,12 +224,19 @@ function loadStudentData($db, $id) {
         return $s;
     }
     // Try by student_number
-    $id_esc = $db->real_escape_string((string)$id);
-    $q = $db->query("SELECT * FROM students WHERE student_number = '$id_esc' OR registration_number = '$id_esc' LIMIT 1");
-    if ($q && ($s = $q->fetch_assoc())) {
-        $s['full_name'] = $s['full_name'] ?: trim(($s['first_name']??'') . ' ' . ($s['surname']??'') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
-        $s['registration_number'] = $s['registration_number'] ?: $s['student_number'] ?: '';
-        return $s;
+    $stmt = $db->prepare("SELECT * FROM students WHERE student_number = ? OR registration_number = ? LIMIT 1");
+    if ($stmt) {
+        $idStr = (string)$id;
+        $stmt->bind_param("ss", $idStr, $idStr);
+        $stmt->execute();
+        $q = $stmt->get_result();
+        if ($q && ($s = $q->fetch_assoc())) {
+            $s['full_name'] = $s['full_name'] ?: trim(($s['first_name']??'') . ' ' . ($s['surname']??'') . ($s['other_name'] ? ' ' . $s['other_name'] : ''));
+            $s['registration_number'] = $s['registration_number'] ?: $s['student_number'] ?: '';
+            $stmt->close();
+            return $s;
+        }
+        $stmt->close();
     }
     return [];
 }
@@ -255,10 +262,16 @@ function loadAcademicRecords($db, $student, $id) {
 
 function loadExaminationRecords($db, $studentNumber) {
     $records = [];
-    $sn = $db->real_escape_string((string)$studentNumber);
     // Find student in staffs_db
-    $s = $db->query("SELECT id FROM students WHERE student_number = '$sn' OR registration_number = '$sn' OR id = $sn LIMIT 1");
-    if (!$s || !($srow = $s->fetch_assoc())) return $records;
+    $stmt = $db->prepare("SELECT id FROM students WHERE student_number = ? OR registration_number = ? OR id = ? LIMIT 1");
+    if (!$stmt) return $records;
+    $sn = (string)$studentNumber;
+    $snInt = (int)$studentNumber;
+    $stmt->bind_param("ssi", $sn, $sn, $snInt);
+    $stmt->execute();
+    $s = $stmt->get_result();
+    if (!$s || !($srow = $s->fetch_assoc())) { $stmt->close(); return $records; }
+    $stmt->close();
     $sid = (int)$srow['id'];
     $r = $db->query("SELECT er.*, cc.course_title AS course_name, cc.credits FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = $sid AND er.grade_status = 'Published' ORDER BY er.created_at ASC");
     if ($r) while ($row = $r->fetch_assoc()) {

@@ -218,8 +218,12 @@ if ($action === 'generate_certificate') {
     if ($sid <= 0) { echo json_encode(['error' => 'Invalid student']); exit; }
     
     // Fetch student
-    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+    $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
+    $stmt->bind_param("i", $sid);
+    $stmt->execute();
+    $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
+    $stmt->close();
     if (!$student) { echo json_encode(['error' => 'Student not found']); exit; }
     
     // Fetch settings
@@ -232,7 +236,10 @@ if ($action === 'generate_certificate') {
     
     // Determine class of award from GPA
     $class_of_award = '';
-    $gpa_r = $staff_conn->query("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id=$sid AND marks_obtained IS NOT NULL");
+    $stmt2 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
+    $stmt2->bind_param("i", $sid);
+    $stmt2->execute();
+    $gpa_r = $stmt2->get_result();
     if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
         $avg = floatval($gpa_row['avg_m'] ?? 0);
         if ($avg >= 80) $class_of_award = 'First Class Honours';
@@ -241,6 +248,7 @@ if ($action === 'generate_certificate') {
         elseif ($avg >= 50) $class_of_award = 'Pass';
         else $class_of_award = 'Fail';
     }
+    $stmt2->close();
     
     // Generate certificate number
     $cnum = 'CERT'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
@@ -249,16 +257,20 @@ if ($action === 'generate_certificate') {
     $html = generateProfessionalCertificate($student, $settings, $cert_type, $cnum, $class_of_award);
     
     // Store in database
-    $title = $students_conn->real_escape_string("Certificate of $cert_type - ".($student['full_name']??''));
-    $html_escaped = $staff_conn->real_escape_string($html);
-    $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', $sid, 1, '$title', '$html_escaped', NOW())");
+    $title = "Certificate of $cert_type - ".($student['full_name']??'');
+    $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+    $stmt3->bind_param("iss", $sid, $title, $html);
+    $stmt3->execute();
     $doc_id = $staff_conn->insert_id;
+    $stmt3->close();
     
     // Also update registrar_certificates
-    $cert_type_esc = $staff_conn->real_escape_string($cert_type);
-    $full_name_esc = $staff_conn->real_escape_string($student['full_name']??'');
-    $course_esc = $staff_conn->real_escape_string($student['course']??'');
-    $staff_conn->query("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES ('$cnum', $sid, '$full_name_esc', '$course_esc', '$cert_type_esc', 'Generated', 1, NOW())");
+    $full_name_val = $student['full_name']??'';
+    $course_val = $student['course']??'';
+    $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
+    $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
+    $stmt4->execute();
+    $stmt4->close();
     
     echo json_encode([
         'success' => true,
@@ -274,8 +286,12 @@ if ($action === 'preview_document') {
     $doc_id = intval($_GET['doc_id'] ?? 0);
     if ($doc_id <= 0) { echo "Invalid document"; exit; }
     
-    $r = $staff_conn->query("SELECT document_content, document_title, document_type FROM generated_documents WHERE id=$doc_id");
+    $stmt = $staff_conn->prepare("SELECT document_content, document_title, document_type FROM generated_documents WHERE id = ?");
+    $stmt->bind_param("i", $doc_id);
+    $stmt->execute();
+    $r = $stmt->get_result();
     $doc = $r ? $r->fetch_assoc() : null;
+    $stmt->close();
     if (!$doc) { echo "Document not found"; exit; }
     
     header('Content-Type: text/html; charset=utf-8');
@@ -294,8 +310,12 @@ if ($action === 'auto_generate_all') {
     $_GET['action'] = 'generate_transcript';
     // We need to re-execute the logic... let's just call the functions directly
     
-    $r = $students_conn->query("SELECT * FROM students WHERE id=$sid");
+    $stmt = $students_conn->prepare("SELECT * FROM students WHERE id = ?");
+    $stmt->bind_param("i", $sid);
+    $stmt->execute();
+    $r = $stmt->get_result();
     $student = $r ? $r->fetch_assoc() : null;
+    $stmt->close();
     if (!$student) { echo json_encode(['error' => 'Student not found']); exit; }
     
     $settings = [];
@@ -305,19 +325,28 @@ if ($action === 'auto_generate_all') {
     
     // Transcript
     $courses = [];
-    $er = $staff_conn->query("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id=$sid AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2 = $staff_conn->prepare("SELECT er.*, cc.course_name, cc.credit_hours FROM examination_records er LEFT JOIN academic_course_catalog cc ON er.course_code = cc.course_code WHERE er.student_id = ? AND er.marks_obtained IS NOT NULL ORDER BY er.created_at ASC");
+    $stmt2->bind_param("i", $sid);
+    $stmt2->execute();
+    $er = $stmt2->get_result();
     if ($er) while ($row = $er->fetch_assoc()) $courses[] = $row;
+    $stmt2->close();
     
     $tnum = 'T'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
     $t_html = generateProfessionalTranscript($student, $courses, $settings, $tnum);
-    $title_t = $staff_conn->real_escape_string("Academic Transcript - ".($student['full_name']??''));
-    $t_esc = $staff_conn->real_escape_string($t_html);
-    $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', $sid, 1, '$title_t', '$t_esc', NOW())");
+    $title_t = "Academic Transcript - ".($student['full_name']??'');
+    $stmt3 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Transcript', ?, 1, ?, ?, NOW())");
+    $stmt3->bind_param("iss", $sid, $title_t, $t_html);
+    $stmt3->execute();
     $t_doc_id = $staff_conn->insert_id;
+    $stmt3->close();
     
     // Certificate
     $class_of_award = '';
-    $gpa_r = $staff_conn->query("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id=$sid AND marks_obtained IS NOT NULL");
+    $stmt4 = $staff_conn->prepare("SELECT AVG(marks_obtained) avg_m FROM examination_records WHERE student_id = ? AND marks_obtained IS NOT NULL");
+    $stmt4->bind_param("i", $sid);
+    $stmt4->execute();
+    $gpa_r = $stmt4->get_result();
     if ($gpa_r && $gpa_row = $gpa_r->fetch_assoc()) {
         $avg = floatval($gpa_row['avg_m'] ?? 0);
         if ($avg >= 80) $class_of_award = 'First Class Honours';
@@ -326,13 +355,16 @@ if ($action === 'auto_generate_all') {
         elseif ($avg >= 50) $class_of_award = 'Pass';
         else $class_of_award = 'Fail';
     }
+    $stmt4->close();
     
     $cnum = 'CERT'.date('Ymd').str_pad(mt_rand(100,999),3,'0',STR_PAD_LEFT);
     $c_html = generateProfessionalCertificate($student, $settings, 'Diploma', $cnum, $class_of_award);
-    $title_c = $staff_conn->real_escape_string("Certificate - ".($student['full_name']??''));
-    $c_esc = $staff_conn->real_escape_string($c_html);
-    $staff_conn->query("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', $sid, 1, '$title_c', '$c_esc', NOW())");
+    $title_c = "Certificate - ".($student['full_name']??'');
+    $stmt5 = $staff_conn->prepare("INSERT INTO generated_documents (document_type, student_id, generated_by, document_title, document_content, generation_date) VALUES ('Certificate', ?, 1, ?, ?, NOW())");
+    $stmt5->bind_param("iss", $sid, $title_c, $c_html);
+    $stmt5->execute();
     $c_doc_id = $staff_conn->insert_id;
+    $stmt5->close();
     
     echo json_encode([
         'success' => true,

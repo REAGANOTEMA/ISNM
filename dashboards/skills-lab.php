@@ -199,25 +199,31 @@ if ($view === 'sessions' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $sc = $db->real_escape_string($data['session_code'] ?? '');
-    $title = $db->real_escape_string($data['title'] ?? '');
-    $desc = $db->real_escape_string($data['description'] ?? '');
-    $inst = $db->real_escape_string($data['instructor'] ?? '');
-    $prog = $db->real_escape_string($data['program'] ?? '');
-    $yl = $db->real_escape_string($data['year_level'] ?? '');
-    $sem = $db->real_escape_string($data['semester'] ?? '');
-    $sdate = $db->real_escape_string($data['session_date'] ?? '');
-    $stime = $data['start_time'] ? "'" . $db->real_escape_string($data['start_time']) . "'" : 'NULL';
-    $etime = $data['end_time'] ? "'" . $db->real_escape_string($data['end_time']) . "'" : 'NULL';
-    $loc = $db->real_escape_string($data['location'] ?? '');
+    $sc = $data['session_code'] ?? '';
+    $title = $data['title'] ?? '';
+    $desc = $data['description'] ?? '';
+    $inst = $data['instructor'] ?? '';
+    $prog = $data['program'] ?? '';
+    $yl = $data['year_level'] ?? '';
+    $sem = $data['semester'] ?? '';
+    $sdate = $data['session_date'] ?? '';
+    $stime = $data['start_time'] ?: null;
+    $etime = $data['end_time'] ?: null;
+    $loc = $data['location'] ?? '';
     $max = (int)($data['max_students'] ?? 30);
-    $stat = $db->real_escape_string($data['status'] ?? 'scheduled');
-    $notes = $db->real_escape_string($data['notes'] ?? '');
+    $stat = $data['status'] ?? 'scheduled';
+    $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $db->query("UPDATE lab_practical_sessions SET session_code='$sc', title='$title', description='$desc', instructor='$inst', program='$prog', year_level='$yl', semester='$sem', session_date='$sdate', start_time=$stime, end_time=$etime, location='$loc', max_students=" . intval($max) . ", status='$stat', notes='$notes' WHERE id=" . intval($id));
+            $stmt = $db->prepare("UPDATE lab_practical_sessions SET session_code=?, title=?, description=?, instructor=?, program=?, year_level=?, semester=?, session_date=?, start_time=?, end_time=?, location=?, max_students=?, status=?, notes=? WHERE id=?");
+            $stmt->bind_param("sssssssssssisii", $sc, $title, $desc, $inst, $prog, $yl, $sem, $sdate, $stime, $etime, $loc, $max, $stat, $notes, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_practical_sessions (session_code, title, description, instructor, program, year_level, semester, session_date, start_time, end_time, location, max_students, status, notes) VALUES ('$sc','$title','$desc','$inst','$prog','$yl','$sem','$sdate',$stime,$etime,'$loc',$max,'$stat','$notes')");
+            $stmt = $db->prepare("INSERT INTO lab_practical_sessions (session_code, title, description, instructor, program, year_level, semester, session_date, start_time, end_time, location, max_students, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssssssssssss", $sc, $title, $desc, $inst, $prog, $yl, $sem, $sdate, $stime, $etime, $loc, $max, $stat, $notes);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -236,9 +242,18 @@ if ($view === 'skills' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE s.skill_name LIKE '%" . $db->real_escape_string($q) . "%' OR s.student_id LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT s.* FROM lab_skills_demonstrations s $cond ORDER BY s.date_demonstrated DESC LIMIT 200");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT s.* FROM lab_skills_demonstrations s WHERE s.skill_name LIKE ? OR s.student_id LIKE ? ORDER BY s.date_demonstrated DESC LIMIT 200");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT s.* FROM lab_skills_demonstrations s ORDER BY s.date_demonstrated DESC LIMIT 200");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -247,21 +262,27 @@ if ($view === 'skills' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $sid = $db->real_escape_string($data['student_id'] ?? '');
-    $skn = $db->real_escape_string($data['skill_name'] ?? '');
-    $skc = $db->real_escape_string($data['skill_category'] ?? '');
-    $inst = $db->real_escape_string($data['instructor'] ?? '');
-    $dd = $db->real_escape_string($data['date_demonstrated'] ?? date('Y-m-d'));
-    $comp = $db->real_escape_string($data['competency'] ?? 'meets_expectations');
+    $sid = $data['student_id'] ?? '';
+    $skn = $data['skill_name'] ?? '';
+    $skc = $data['skill_category'] ?? '';
+    $inst = $data['instructor'] ?? '';
+    $dd = $data['date_demonstrated'] ?? date('Y-m-d');
+    $comp = $data['competency'] ?? 'meets_expectations';
     $att = (int)($data['attempt_number'] ?? 1);
-    $notes = $db->real_escape_string($data['notes'] ?? '');
-    $nrd = $data['next_review_date'] ? "'" . $db->real_escape_string($data['next_review_date']) . "'" : 'NULL';
+    $notes = $data['notes'] ?? '';
+    $nrd = $data['next_review_date'] ?: null;
     $uid = (int)($user['id'] ?? 0);
     try {
         if ($id) {
-            $db->query("UPDATE lab_skills_demonstrations SET student_id='$sid', skill_name='$skn', skill_category='$skc', instructor='$inst', date_demonstrated='$dd', competency='$comp', attempt_number=" . intval($att) . ", notes='$notes', next_review_date=$nrd WHERE id=" . intval($id));
+            $stmt = $db->prepare("UPDATE lab_skills_demonstrations SET student_id=?, skill_name=?, skill_category=?, instructor=?, date_demonstrated=?, competency=?, attempt_number=?, notes=?, next_review_date=? WHERE id=?");
+            $stmt->bind_param("ssssssisis", $sid, $skn, $skc, $inst, $dd, $comp, $att, $notes, $nrd, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_skills_demonstrations (student_id, skill_name, skill_category, instructor, date_demonstrated, competency, attempt_number, notes, next_review_date, verified_by) VALUES ('$sid','$skn','$skc','$inst','$dd','$comp'," . intval($att) . ",'$notes',$nrd," . intval($uid) . ")");
+            $stmt = $db->prepare("INSERT INTO lab_skills_demonstrations (student_id, skill_name, skill_category, instructor, date_demonstrated, competency, attempt_number, notes, next_review_date, verified_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssssisis", $sid, $skn, $skc, $inst, $dd, $comp, $att, $notes, $nrd, $uid);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -280,9 +301,18 @@ if ($view === 'consumables' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE item_name LIKE '%" . $db->real_escape_string($q) . "%' OR category LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT * FROM lab_consumables $cond ORDER BY item_name ASC");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT * FROM lab_consumables WHERE item_name LIKE ? OR category LIKE ? ORDER BY item_name ASC");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT * FROM lab_consumables ORDER BY item_name ASC");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -291,20 +321,26 @@ if ($view === 'consumables' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $in = $db->real_escape_string($data['item_name'] ?? '');
-    $cat = $db->real_escape_string($data['category'] ?? '');
+    $in = $data['item_name'] ?? '';
+    $cat = $data['category'] ?? '';
     $qty = (float)($data['quantity'] ?? 0);
-    $unit = $db->real_escape_string($data['unit'] ?? 'pieces');
+    $unit = $data['unit'] ?? 'pieces';
     $msl = (float)($data['min_stock_level'] ?? 10);
     $uc = (float)($data['unit_cost'] ?? 0);
-    $supp = $db->real_escape_string($data['supplier'] ?? '');
-    $lod = $data['last_ordered_date'] ? "'" . $db->real_escape_string($data['last_ordered_date']) . "'" : 'NULL';
-    $notes = $db->real_escape_string($data['notes'] ?? '');
+    $supp = $data['supplier'] ?? '';
+    $lod = $data['last_ordered_date'] ?: null;
+    $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $db->query("UPDATE lab_consumables SET item_name='$in', category='$cat', quantity=$qty, unit='$unit', min_stock_level=$msl, unit_cost=$uc, supplier='$supp', last_ordered_date=$lod, notes='$notes' WHERE id=" . intval($id));
+            $stmt = $db->prepare("UPDATE lab_consumables SET item_name=?, category=?, quantity=?, unit=?, min_stock_level=?, unit_cost=?, supplier=?, last_ordered_date=?, notes=? WHERE id=?");
+            $stmt->bind_param("sssd ddssii", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES ('$in','$cat',$qty,'$unit',$msl,$uc,'$supp',$lod,'$notes')");
+            $stmt = $db->prepare("INSERT INTO lab_consumables (item_name, category, quantity, unit, min_stock_level, unit_cost, supplier, last_ordered_date, notes) VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("sssd ddsis", $in, $cat, $qty, $unit, $msl, $uc, $supp, $lod, $notes);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
@@ -323,9 +359,18 @@ if ($view === 'attendance' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $sessionFilter = isset($_GET['session_id']) ? "WHERE a.session_id=" . (int)$_GET['session_id'] : '';
-            $r = $db->query("SELECT a.*, s.title AS session_title, s.session_date FROM lab_attendance a JOIN lab_practical_sessions s ON a.session_id=s.id $sessionFilter ORDER BY a.created_at DESC LIMIT 300");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            $sessionId = isset($_GET['session_id']) ? (int)$_GET['session_id'] : 0;
+            if ($sessionId) {
+                $stmt = $db->prepare("SELECT a.*, s.title AS session_title, s.session_date FROM lab_attendance a JOIN lab_practical_sessions s ON a.session_id=s.id WHERE a.session_id=? ORDER BY a.created_at DESC LIMIT 300");
+                $stmt->bind_param("i", $sessionId);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT a.*, s.title AS session_title, s.session_date FROM lab_attendance a JOIN lab_practical_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -338,15 +383,18 @@ if ($view === 'attendance' && $ajax === 'save') {
     if (!is_array($students)) $students = [];
     $mid = (int)($user['id'] ?? 0);
     $success = 0;
+    $stmt = $db->prepare("INSERT INTO lab_attendance (session_id, student_id, attendance_status, check_in_time, marked_by) VALUES (?, ?, ?, CURTIME(), ?) ON DUPLICATE KEY UPDATE attendance_status=?, marked_by=?");
     foreach ($students as $s) {
-        $stid = $db->real_escape_string($s['student_id'] ?? '');
-        $stat = $db->real_escape_string($s['attendance_status'] ?? 'present');
+        $stid = $s['student_id'] ?? '';
+        $stat = $s['attendance_status'] ?? 'present';
         if (!$stid) continue;
         try {
-            $db->query("INSERT INTO lab_attendance (session_id, student_id, attendance_status, check_in_time, marked_by) VALUES (" . intval($sid) . ", '$stid', '$stat', CURTIME(), " . intval($mid) . ") ON DUPLICATE KEY UPDATE attendance_status='$stat', marked_by=" . intval($mid));
+            $stmt->bind_param("isssii", $sid, $stid, $stat, $mid, $stat, $mid);
+            $stmt->execute();
             $success++;
         } catch (Exception $e) {}
     }
+    $stmt->close();
     echo json_encode(['success' => true, 'updated' => $success]); exit;
 }
 if ($view === 'attendance' && $ajax === 'delete' && $id) {
@@ -375,9 +423,18 @@ if ($view === 'incidents' && $ajax === 'get') {
     $rows = [];
     if ($db) {
         try {
-            $cond = $q ? "WHERE description LIKE '%" . $db->real_escape_string($q) . "%' OR incident_type LIKE '%" . $db->real_escape_string($q) . "%'" : '';
-            $r = $db->query("SELECT * FROM lab_incidents $cond ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
-            if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            if ($q) {
+                $like = '%' . $q . '%';
+                $stmt = $db->prepare("SELECT * FROM lab_incidents WHERE description LIKE ? OR incident_type LIKE ? ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
+                $stmt->bind_param("ss", $like, $like);
+                $stmt->execute();
+                $r = $stmt->get_result();
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+            } else {
+                $r = $db->query("SELECT * FROM lab_incidents ORDER BY incident_date DESC, incident_time DESC LIMIT 200");
+                if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(['data' => $rows]); exit;
@@ -386,21 +443,27 @@ if ($view === 'incidents' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $idate = $db->real_escape_string($data['incident_date'] ?? date('Y-m-d'));
-    $itime = $data['incident_time'] ? "'" . $db->real_escape_string($data['incident_time']) . "'" : 'NULL';
-    $itype = $db->real_escape_string($data['incident_type'] ?? 'other');
-    $sev = $db->real_escape_string($data['severity'] ?? 'minor');
-    $desc = $db->real_escape_string($data['description'] ?? '');
-    $ei = $db->real_escape_string($data['equipment_involved'] ?? '');
-    $si = $db->real_escape_string($data['student_involved'] ?? '');
-    $at = $db->real_escape_string($data['action_taken'] ?? '');
-    $stat = $db->real_escape_string($data['status'] ?? 'open');
+    $idate = $data['incident_date'] ?? date('Y-m-d');
+    $itime = $data['incident_time'] ?: null;
+    $itype = $data['incident_type'] ?? 'other';
+    $sev = $data['severity'] ?? 'minor';
+    $desc = $data['description'] ?? '';
+    $ei = $data['equipment_involved'] ?? '';
+    $si = $data['student_involved'] ?? '';
+    $at = $data['action_taken'] ?? '';
+    $stat = $data['status'] ?? 'open';
     $uid = (int)($user['id'] ?? 0);
     try {
         if ($id) {
-            $db->query("UPDATE lab_incidents SET incident_date='$idate', incident_time=$itime, incident_type='$itype', severity='$sev', description='$desc', equipment_involved='$ei', student_involved='$si', action_taken='$at', status='$stat' WHERE id=" . intval($id));
+            $stmt = $db->prepare("UPDATE lab_incidents SET incident_date=?, incident_time=?, incident_type=?, severity=?, description=?, equipment_involved=?, student_involved=?, action_taken=?, status=? WHERE id=?");
+            $stmt->bind_param("sssssssssi", $idate, $itime, $itype, $sev, $desc, $ei, $si, $at, $stat, $id);
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $db->query("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES ('$idate',$itime," . intval($uid) . ",'$itype','$sev','$desc','$ei','$si','$at','$stat')");
+            $stmt = $db->prepare("INSERT INTO lab_incidents (incident_date, incident_time, reported_by, incident_type, severity, description, equipment_involved, student_involved, action_taken, status) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssiissssss", $idate, $itime, $uid, $itype, $sev, $desc, $ei, $si, $at, $stat);
+            $stmt->execute();
+            $stmt->close();
         }
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }

@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             $reqNum = 'SRQ-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
             $userId = (int)$_SESSION['user_id'];
-            $dept = $staffConn->real_escape_string($_POST['department'] ?? $user['department'] ?? '');
+            $dept = $_POST['department'] ?? $user['department'] ?? '';
 
             $submitDg = !empty($_POST['submit_for_dg']);
             $status = $submitDg ? 'pending_approval' : 'pending';

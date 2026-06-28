@@ -7,10 +7,18 @@ $userId = (int)($_SESSION['user_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'add_requirement') {
-        $name = $conn->real_escape_string($_POST['name']);
-        $desc = $conn->real_escape_string($_POST['description'] ?? '');
-        $deadline = $conn->real_escape_string($_POST['deadline'] ?? '');
-        $conn->query("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES ('$name', '$desc', " . ($deadline ? "'$deadline'" : "NULL") . ", 'pending', $userId)");
+        $name = $_POST['name'];
+        $desc = $_POST['description'] ?? '';
+        $deadline = $_POST['deadline'] ?? '';
+        if ($deadline) {
+            $stmt = $conn->prepare("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES (?, ?, ?, 'pending', ?)");
+            $stmt->bind_param("sssi", $name, $desc, $deadline, $userId);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO compliance_requirements (requirement_name, description, deadline, status, created_by) VALUES (?, ?, NULL, 'pending', ?)");
+            $stmt->bind_param("ssi", $name, $desc, $userId);
+        }
+        $stmt->execute();
+        $stmt->close();
         header('Location: accreditation.php'); exit;
     }
 }

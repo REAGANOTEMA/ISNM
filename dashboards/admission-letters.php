@@ -15,8 +15,12 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'applicant_detail' && isset($_GET[
     $id = intval($_GET['id']);
     $data = null;
     if ($wconn) {
-        $r = $wconn->query("SELECT * FROM student_applications WHERE id=" . intval($id));
+        $stmt = $wconn->prepare("SELECT * FROM student_applications WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $r = $stmt->get_result();
         if ($r) $data = $r->fetch_assoc();
+        $stmt->close();
     }
     echo json_encode($data);
     exit;
@@ -29,14 +33,41 @@ $clearanceData = []; $totalReqs = 0;
 
 if ($wconn) {
     $where = "1=1";
-    if ($search !== '') { $s = $wconn->real_escape_string($search); $where .= " AND (application_number LIKE '%$s%' OR first_name LIKE '%$s%' OR surname LIKE '%$s%' OR phone LIKE '%$s%' OR email LIKE '%$s%' OR program_applied LIKE '%$s%')"; }
-    if ($statusFilter !== '') { $st = $wconn->real_escape_string($statusFilter); $where .= " AND status='$st'"; }
+    $params = [];
+    $types = '';
+    
+    if ($search !== '') { 
+        $like = "%$search%";
+        $where .= " AND (application_number LIKE ? OR first_name LIKE ? OR surname LIKE ? OR phone LIKE ? OR email LIKE ? OR program_applied LIKE ?)"; 
+        $types .= 'ssssss';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+    if ($statusFilter !== '') { 
+        $where .= " AND status=?"; 
+        $types .= 's';
+        $params[] = $statusFilter;
+    }
+    
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'"); $pendingCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Admitted'"); $admittedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Rejected'"); $rejectedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
     $r = $wconn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Shortlisted'"); $shortlistedCount = $r ? (int)$r->fetch_assoc()['c'] : 0;
-    $r = $wconn->query("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT 150");
+    
+    if (!empty($params)) {
+        $stmt = $wconn->prepare("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT 150");
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $r = $stmt->get_result();
+    } else {
+        $r = $wconn->query("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT 150");
+    }
     if ($r) while ($row = $r->fetch_assoc()) $applicants[] = $row;
+    if (!empty($params)) $stmt->close();
 
     if ($view === 'clearance') {
         $r = $wconn->query("SELECT COUNT(*) c FROM admission_requirements WHERE is_active=1"); if ($r) $totalReqs = (int)$r->fetch_assoc()['c'];
@@ -52,13 +83,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update_status' && $wconn && $staffDb) {
         $id = intval($_POST['id'] ?? 0);
-        $newStatus = $wconn->real_escape_string($_POST['status'] ?? '');
+        $newStatus = $_POST['status'] ?? '';
         $allowed = ['Shortlisted', 'Admitted', 'Rejected', 'Withdrawn'];
         if (in_array($newStatus, $allowed) && $id > 0) {
-            $wconn->query("UPDATE student_applications SET status='$newStatus', reviewed_by=" . intval($_SESSION['user_id']) . ", reviewed_at=NOW() WHERE id=" . intval($id));
+            $userId = intval($_SESSION['user_id']);
+            $stmt = $wconn->prepare("UPDATE student_applications SET status=?, reviewed_by=?, reviewed_at=NOW() WHERE id=?");
+            $stmt->bind_param("iii", $newStatus, $userId, $id);
+            $stmt->execute();
+            $stmt->close();
             if ($newStatus === 'Admitted') {
-                $app = $wconn->query("SELECT * FROM student_applications WHERE id=" . intval($id));
+                $stmt2 = $wconn->prepare("SELECT * FROM student_applications WHERE id = ?");
+                $stmt2->bind_param("i", $id);
+                $stmt2->execute();
+                $app = $stmt2->get_result();
                 if ($app && ($a = $app->fetch_assoc())) {
+                    $stmt2->close();
                     $admNo = 'ADM-' . date('Y') . '-' . str_pad($id, 4, '0', STR_PAD_LEFT);
                     $stmt = $staffDb->prepare("INSERT IGNORE INTO students (first_name, surname, other_name, full_name, gender, index_number, phone, email, program, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
                     if ($stmt) {
@@ -69,9 +108,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $studentId = $stmt->insert_id;
                         $stmt->close();
                         if ($studentId > 0) {
-                            $staffDb->query("INSERT IGNORE INTO student_admissions (admission_number, student_id, academic_year, program, admission_date, admission_status) VALUES ('$admNo', $studentId, '" . date('Y') . '/' . (date('Y')+1) . "', '" . $staffDb->real_escape_string($a['program_applied']) . "', CURDATE(), 'Approved')");
+                            $program_applied = $a['program_applied'];
+                            $academic_year = date('Y') . '/' . (date('Y')+1);
+                            $stmt3 = $staffDb->prepare("INSERT IGNORE INTO student_admissions (admission_number, student_id, academic_year, program, admission_date, admission_status) VALUES (?, ?, ?, ?, CURDATE(), 'Approved')");
+                            $stmt3->bind_param("siss", $admNo, $studentId, $academic_year, $program_applied);
+                            $stmt3->execute();
+                            $stmt3->close();
                         }
                     }
+                } else {
+                    $stmt2->close();
                 }
             }
             $_SESSION['success'] = "Applicant status updated to '$newStatus'.";

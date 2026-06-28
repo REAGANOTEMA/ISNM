@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $item_id = (int)($_POST['item_id'] ?? 0);
 
     if ($action === 'restore' && $item_id) {
-        // Get item details
         $q = $conn->prepare("SELECT * FROM recycle_bin WHERE id = ?");
         $q->bind_param('i', $item_id);
         $q->execute();
@@ -26,12 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $q->close();
 
         if ($item) {
-            $table = $conn->real_escape_string($item['original_table']);
-            $col = $conn->real_escape_string($item['original_id_column']);
+            $table = $item['original_table'];
+            $col = $item['original_id_column'];
             $original_id = (int)$item['original_id'];
-            $restore = $conn->query("UPDATE $table SET is_deleted = 0, deleted_at = NULL WHERE $col = $original_id AND is_deleted = 1");
+            $allowed_tables = ['documents','templates','student_documents','staff_documents','payment_invoices','student_payments','student_invoices','student_receipts'];
+            $allowed_cols = ['id','student_id','invoice_id','payment_id','receipt_id'];
+            if (!in_array($table, $allowed_tables) || !in_array($col, $allowed_cols)) {
+                $_SESSION['error'] = 'Invalid restore target.';
+                header('Location: recycle_bin.php');
+                exit;
+            }
+            $restore = $conn->query("UPDATE `$table` SET is_deleted = 0, deleted_at = NULL WHERE `$col` = $original_id AND is_deleted = 1");
             if ($restore) {
-                $conn->query("DELETE FROM recycle_bin WHERE id = $item_id");
+                $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
+                if ($stmt) { $stmt->bind_param('i', $item_id); $stmt->execute(); $stmt->close(); }
                 $_SESSION['success'] = 'Item restored successfully.';
             } else {
                 $_SESSION['error'] = 'Failed to restore item: ' . $conn->error;
@@ -49,11 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $q->close();
 
         if ($item) {
-            $table = $conn->real_escape_string($item['original_table']);
-            $col = $conn->real_escape_string($item['original_id_column']);
+            $table = $item['original_table'];
+            $col = $item['original_id_column'];
             $original_id = (int)$item['original_id'];
-            $conn->query("DELETE FROM $table WHERE $col = $original_id");
-            $conn->query("DELETE FROM recycle_bin WHERE id = $item_id");
+            $allowed_tables = ['documents','templates','student_documents','staff_documents','payment_invoices','student_payments','student_invoices','student_receipts'];
+            $allowed_cols = ['id','student_id','invoice_id','payment_id','receipt_id'];
+            if (!in_array($table, $allowed_tables) || !in_array($col, $allowed_cols)) {
+                $_SESSION['error'] = 'Invalid delete target.';
+                header('Location: recycle_bin.php');
+                exit;
+            }
+            $conn->query("DELETE FROM `$table` WHERE `$col` = $original_id");
+            $stmt = $conn->prepare("DELETE FROM recycle_bin WHERE id = ?");
+            if ($stmt) { $stmt->bind_param('i', $item_id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Item permanently deleted.';
         }
         header('Location: recycle_bin.php');

@@ -7,29 +7,33 @@ $user = $ctx['user'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'add' || $action === 'edit') {
-        $name = $conn->real_escape_string($_POST['penalty_name']);
-        $type = $conn->real_escape_string($_POST['penalty_type'] ?? '');
+        $name = trim($_POST['penalty_name']);
+        $type = trim($_POST['penalty_type'] ?? '');
         $amount = (float)($_POST['amount'] ?? 0);
-        $desc = $conn->real_escape_string($_POST['description'] ?? '');
+        $desc = trim($_POST['description'] ?? '');
         if ($action === 'add') {
-            $conn->query("INSERT INTO penalty_configurations (penalty_name, penalty_type, amount, description) VALUES ('$name', '$type', $amount, '$desc')");
+            $stmt = $conn->prepare("INSERT INTO penalty_configurations (penalty_name, penalty_type, amount, description) VALUES (?, ?, ?, ?)");
+            if ($stmt) { $stmt->bind_param('ssds', $name, $type, $amount, $desc); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Penalty '$name' added.";
         } else {
             $id = (int)($_POST['id'] ?? 0);
-            $conn->query("UPDATE penalty_configurations SET penalty_name='$name', penalty_type='$type', amount=$amount, description='$desc' WHERE id=$id");
+            $stmt = $conn->prepare("UPDATE penalty_configurations SET penalty_name=?, penalty_type=?, amount=?, description=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssdsi', $name, $type, $amount, $desc, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Penalty '$name' updated.";
         }
         header('Location: penalty-configurations.php'); exit;
     }
     if ($action === 'toggle') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("UPDATE penalty_configurations SET is_active = NOT is_active WHERE id=$id");
+        $stmt = $conn->prepare("UPDATE penalty_configurations SET is_active = NOT is_active WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Penalty status toggled.';
         header('Location: penalty-configurations.php'); exit;
     }
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
-        $conn->query("DELETE FROM penalty_configurations WHERE id=$id");
+        $stmt = $conn->prepare("DELETE FROM penalty_configurations WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Penalty deleted.';
         header('Location: penalty-configurations.php'); exit;
     }

@@ -20,14 +20,17 @@ if ($conn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     $action = $_POST['action'] ?? '';
     if ($action === 'add_calendar') {
-        $ay = $conn->real_escape_string($_POST['academic_year'] ?? '');
-        $sem = $conn->real_escape_string($_POST['semester'] ?? '');
+        $ay = $_POST['academic_year'] ?? '';
+        $sem = $_POST['semester'] ?? '';
         $sd = $_POST['start_date'] ?? null;
         $ed = $_POST['end_date'] ?? null;
         $esd = $_POST['exam_start_date'] ?? null;
         $eed = $_POST['exam_end_date'] ?? null;
         if ($ay) {
-            $conn->query("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES ('$ay','$sem','$sd','$ed','$esd','$eed','Active')");
+            $stmt = $conn->prepare("INSERT INTO academic_calendar (academic_year, semester, start_date, end_date, exam_start_date, exam_end_date, status) VALUES (?,?,?,?,'Active')");
+            $stmt->bind_param("ssssss", $ay, $sem, $sd, $ed, $esd, $eed);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = "Calendar entry added for $ay.";
         }
         header('Location: academic-calendar.php'); exit;
@@ -35,7 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if ($action === 'delete_calendar') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
-            $conn->query("DELETE FROM academic_calendar WHERE id=$id");
+            $stmt = $conn->prepare("DELETE FROM academic_calendar WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
             $_SESSION['success'] = 'Calendar entry deleted.';
         }
         header('Location: academic-calendar.php'); exit;

@@ -31,9 +31,12 @@ $active_section = $_GET['section'] ?? 'dashboard';
 $action_get = $_GET['action'] ?? '';
 if ($action_get === 'search_student' && $students_conn) {
     header('Content-Type: application/json');
-    $q = sb_esc($students_conn, $_GET['q'] ?? '');
+    $q = trim($_GET['q'] ?? '');
     if (strlen($q) >= 2) {
-        $result = $students_conn->query("SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE '%$q%' OR student_id LIKE '%$q%' OR student_number LIKE '%$q%' OR phone LIKE '%$q%' LIMIT 10");
+        $like = "%$q%";
+        $stmt = $students_conn->prepare("SELECT id, full_name, student_id, student_number, program, phone FROM students WHERE full_name LIKE ? OR student_id LIKE ? OR student_number LIKE ? OR phone LIKE ? LIMIT 10");
+        if ($stmt) { $stmt->bind_param('ssss', $like, $like, $like, $like); $result = $stmt->execute() ? $stmt->get_result() : null; $stmt->close(); }
+        else $result = null;
         $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         echo json_encode($rows);
     } else { echo json_encode([]); }
@@ -42,7 +45,9 @@ if ($action_get === 'search_student' && $students_conn) {
 if ($action_get === 'get_transactions' && $staff_conn) {
     $mid = (int)($_GET['id'] ?? 0);
     if ($mid > 0) {
-        $txns = sb_fetch($staff_conn, "SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id WHERE mst.medicine_id = " . intval($mid) . " ORDER BY mst.created_at DESC LIMIT 50");
+        $stmt = $staff_conn->prepare("SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id WHERE mst.medicine_id = ? ORDER BY mst.created_at DESC LIMIT 50");
+        if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+        $txns = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
         if (!empty($txns)) {
             echo '<table class="table table-sm"><thead><tr><th>Date</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead><tbody>';
             foreach ($txns as $t) { echo '<tr><td>'.htmlspecialchars($t['transaction_date']??$t['created_at']??'').'</td><td><span class="badge bg-info">'.htmlspecialchars($t['transaction_type']??'N/A').'</span></td><td>'.(int)($t['quantity']??0).'</td><td>'.htmlspecialchars($t['notes']??'').'</td></tr>'; }
@@ -58,19 +63,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'save_sickness') {
         $id = (int)($_POST['id'] ?? 0);
-        $code = sb_esc($staff_conn, $_POST['sickness_code']);
-        $name = sb_esc($staff_conn, $_POST['sickness_name']);
-        $cat = sb_esc($staff_conn, $_POST['category']);
-        $symptoms = sb_esc($staff_conn, $_POST['common_symptoms']);
-        $desc = sb_esc($staff_conn, $_POST['description']);
+        $code = trim($_POST['sickness_code']);
+        $name = trim($_POST['sickness_name']);
+        $cat = trim($_POST['category']);
+        $symptoms = trim($_POST['common_symptoms']);
+        $desc = trim($_POST['description']);
         $contagious = isset($_POST['is_contagious']) ? 1 : 0;
-        $treatment = sb_esc($staff_conn, $_POST['typical_treatment']);
-        $s = sb_esc($staff_conn, $_POST['status']);
+        $treatment = trim($_POST['typical_treatment']);
+        $s = trim($_POST['status']);
         if ($id > 0) {
-            $staff_conn->query("UPDATE sickness_directory SET sickness_code='$code', sickness_name='$name', category='$cat', common_symptoms='$symptoms', description='$desc', is_contagious=" . intval($contagious) . ", typical_treatment='$treatment', status='$s' WHERE id=" . intval($id));
+            $stmt = $staff_conn->prepare("UPDATE sickness_directory SET sickness_code=?, sickness_name=?, category=?, common_symptoms=?, description=?, is_contagious=?, typical_treatment=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssisii', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Sickness updated successfully.';
         } else {
-            $staff_conn->query("INSERT INTO sickness_directory (sickness_code, sickness_name, category, common_symptoms, description, is_contagious, typical_treatment, status, created_by) VALUES ('$code','$name','$cat','$symptoms','$desc'," . intval($contagious) . ",'$treatment','$s'," . intval($user_id) . ")");
+            $stmt = $staff_conn->prepare("INSERT INTO sickness_directory (sickness_code, sickness_name, category, common_symptoms, description, is_contagious, typical_treatment, status, created_by) VALUES (?,?,?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('sssssissi', $code, $name, $cat, $symptoms, $desc, $contagious, $treatment, $s, $user_id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Sickness added successfully.';
         }
         header('Location: sickbay.php?section=sickness'); exit;
@@ -78,98 +85,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'delete_sickness') {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $staff_conn->query("UPDATE sickness_directory SET status='Inactive' WHERE id=" . intval($id)); $_SESSION['success'] = 'Sickness deactivated.'; }
+        if ($id > 0) {
+            $stmt = $staff_conn->prepare("UPDATE sickness_directory SET status='Inactive' WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Sickness deactivated.';
+        }
         header('Location: sickbay.php?section=sickness'); exit;
     }
 
     if ($action === 'save_sick_record') {
         $rec_num = 'DSR-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
         $sid = (int)($_POST['student_id'] ?? 0);
-        $sname = sb_esc($staff_conn, $_POST['student_name']);
-        $snum = sb_esc($staff_conn, $_POST['student_number']);
-        $prog = sb_esc($staff_conn, $_POST['program']);
+        $sname = trim($_POST['student_name']);
+        $snum = trim($_POST['student_number']);
+        $prog = trim($_POST['program']);
         $year = (int)($_POST['year_of_study'] ?? 0);
-        $sick_id = !empty($_POST['sickness_id']) ? (int)$_POST['sickness_id'] : 'NULL';
-        $sick_name = sb_esc($staff_conn, $_POST['sickness_name']);
-        $temp = sb_esc($staff_conn, $_POST['temperature']);
-        $bp = sb_esc($staff_conn, $_POST['blood_pressure']);
-        $symp = sb_esc($staff_conn, $_POST['symptoms']);
-        $diag = sb_esc($staff_conn, $_POST['diagnosis']);
-        $treat = sb_esc($staff_conn, $_POST['treatment_given']);
-        $meds = sb_esc($staff_conn, $_POST['medicines_prescribed']);
-        $sev = sb_esc($staff_conn, $_POST['severity']);
-        $stat = sb_esc($staff_conn, $_POST['status']);
-        $ref = sb_esc($staff_conn, $_POST['referred_to']);
-        $vdate = sb_esc($staff_conn, $_POST['visit_date']);
-        $vtime = sb_esc($staff_conn, $_POST['visit_time'] ?: date('H:i:s'));
-        $fud = !empty($_POST['follow_up_date']) ? "'".sb_esc($staff_conn, $_POST['follow_up_date'])."'" : 'NULL';
-        $notes = sb_esc($staff_conn, $_POST['notes']);
-        $staff_conn->query("INSERT INTO daily_sick_records (record_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, temperature, blood_pressure, symptoms, diagnosis, treatment_given, medicines_prescribed, severity, status, referred_to, attended_by, visit_date, visit_time, follow_up_date, notes, created_by) VALUES ('$rec_num', " . intval($sid) . ", '$sname', '$snum', '$prog', " . intval($year) . ", $sick_id, '$sick_name', '$temp', '$bp', '$symp', '$diag', '$treat', '$meds', '$sev', '$stat', '$ref', '$user_name', '$vdate', '$vtime', $fud, '$notes', " . intval($user_id) . ")");
+        $sick_id = !empty($_POST['sickness_id']) ? (int)$_POST['sickness_id'] : null;
+        $sick_name = trim($_POST['sickness_name']);
+        $temp = trim($_POST['temperature']);
+        $bp = trim($_POST['blood_pressure']);
+        $symp = trim($_POST['symptoms']);
+        $diag = trim($_POST['diagnosis']);
+        $treat = trim($_POST['treatment_given']);
+        $meds = trim($_POST['medicines_prescribed']);
+        $sev = trim($_POST['severity']);
+        $stat = trim($_POST['status']);
+        $ref = trim($_POST['referred_to']);
+        $vdate = trim($_POST['visit_date']);
+        $vtime = trim($_POST['visit_time'] ?: date('H:i:s'));
+        $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
+        $notes = trim($_POST['notes']);
+        $stmt = $staff_conn->prepare("INSERT INTO daily_sick_records (record_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, temperature, blood_pressure, symptoms, diagnosis, treatment_given, medicines_prescribed, severity, status, referred_to, attended_by, visit_date, visit_time, follow_up_date, notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('sissssisissssssssssssii', $rec_num, $sid, $sname, $snum, $prog, $year, $sick_id, $sick_name, $temp, $bp, $symp, $diag, $treat, $meds, $sev, $stat, $ref, $user_name, $vdate, $vtime, $fud, $notes, $user_id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Sick record saved. #'.$rec_num;
         header('Location: sickbay.php?section=daily-records'); exit;
     }
 
     if ($action === 'delete_sick_record') {
         $rid = (int)($_POST['record_id'] ?? 0);
-        if ($rid > 0) { $staff_conn->query("UPDATE daily_sick_records SET is_deleted=1, deleted_at=NOW() WHERE id=" . intval($rid)); $_SESSION['success'] = 'Record moved to Recycle Bin.'; }
+        if ($rid > 0) {
+            $stmt = $staff_conn->prepare("UPDATE daily_sick_records SET is_deleted=1, deleted_at=NOW() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $rid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Record moved to Recycle Bin.';
+        }
         header('Location: sickbay.php?section=daily-records'); exit;
     }
 
     if ($action === 'save_leave') {
         $leave_num = 'SL-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
         $sid = (int)($_POST['student_id'] ?? 0);
-        $sname = sb_esc($staff_conn, $_POST['student_name']);
-        $snum = sb_esc($staff_conn, $_POST['student_number']);
-        $prog = sb_esc($staff_conn, $_POST['program']);
+        $sname = trim($_POST['student_name']);
+        $snum = trim($_POST['student_number']);
+        $prog = trim($_POST['program']);
         $year = (int)($_POST['year_of_study'] ?? 0);
-        $sick_id = !empty($_POST['sickness_id']) ? (int)$_POST['sickness_id'] : 'NULL';
-        $other_sick = sb_esc($staff_conn, $_POST['other_sickness']);
-        $from = sb_esc($staff_conn, $_POST['start_date']);
-        $to = sb_esc($staff_conn, $_POST['end_date']);
+        $sick_id = !empty($_POST['sickness_id']) ? (int)$_POST['sickness_id'] : null;
+        $other_sick = trim($_POST['other_sickness']);
+        $from = trim($_POST['start_date']);
+        $to = trim($_POST['end_date']);
         $bed = ($_POST['bed_rest_required'] ?? 'Yes') === 'Yes' ? 1 : 0;
-        $recs = sb_esc($staff_conn, $_POST['recommendations']);
-        $recommender = sb_esc($staff_conn, $_POST['recommended_by'] ?? $user_name);
-        $staff_conn->query("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES ('$leave_num', " . intval($sid) . ", '$sname', '$snum', '$prog', " . intval($year) . ", $sick_id, '$other_sick', '$from', '$to', 'Pending', '$recommender', " . intval($bed) . ", '$recs', " . intval($user_id) . ")");
+        $recs = trim($_POST['recommendations']);
+        $recommender = trim($_POST['recommended_by'] ?? $user_name);
+        $stmt = $staff_conn->prepare("INSERT INTO student_sick_leave (leave_number, student_id, student_name, student_number, program, year_of_study, sickness_id, sickness_name, leave_from, leave_to, status, recommended_by, bed_rest_required, doctor_notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?, 'Pending', ?, ?, ?, ?)");
+        if ($stmt) { $stmt->bind_param('sisssisssssiiii', $leave_num, $sid, $sname, $snum, $prog, $year, $sick_id, $other_sick, $from, $to, $recommender, $bed, $recs, $user_id); $stmt->execute(); $stmt->close(); }
         $_SESSION['success'] = 'Sick leave issued. #'.$leave_num;
         header('Location: sickbay.php?section=leave'); exit;
     }
 
     if ($action === 'delete_leave') {
         $lid = (int)($_POST['id'] ?? 0);
-        if ($lid > 0) { $staff_conn->query("UPDATE student_sick_leave SET is_deleted=1, deleted_at=NOW() WHERE id=" . intval($lid)); $_SESSION['success'] = 'Leave moved to Recycle Bin.'; }
+        if ($lid > 0) {
+            $stmt = $staff_conn->prepare("UPDATE student_sick_leave SET is_deleted=1, deleted_at=NOW() WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $lid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Leave moved to Recycle Bin.';
+        }
         header('Location: sickbay.php?section=leave'); exit;
     }
 
     if ($action === 'save_medicine') {
         $id = (int)($_POST['id'] ?? 0);
-        $code = sb_esc($staff_conn, $_POST['medicine_code']);
-        $mname = sb_esc($staff_conn, $_POST['medicine_name']);
-        $generic = sb_esc($staff_conn, $_POST['generic_name']);
-        $cat = sb_esc($staff_conn, $_POST['category']);
-        $form = sb_esc($staff_conn, $_POST['dosage_form']);
-        $strength = sb_esc($staff_conn, $_POST['strength']);
-        $mfr = sb_esc($staff_conn, $_POST['manufacturer']);
-        $sup = sb_esc($staff_conn, $_POST['supplier']);
+        $code = trim($_POST['medicine_code']);
+        $mname = trim($_POST['medicine_name']);
+        $generic = trim($_POST['generic_name']);
+        $cat = trim($_POST['category']);
+        $form = trim($_POST['dosage_form']);
+        $strength = trim($_POST['strength']);
+        $mfr = trim($_POST['manufacturer']);
+        $sup = trim($_POST['supplier']);
         $qty = (int)($_POST['quantity_in_stock'] ?? 0);
-        $unit = sb_esc($staff_conn, $_POST['unit']);
+        $unit = trim($_POST['unit']);
         $rol = (int)($_POST['reorder_level'] ?? 10);
         $uc = (float)($_POST['unit_cost'] ?? 0);
         $sp = (float)($_POST['selling_price'] ?? 0);
-        $cur = sb_esc($staff_conn, $_POST['currency'] ?? 'UGX');
-        $batch = sb_esc($staff_conn, $_POST['batch_number']);
-        $exp = !empty($_POST['expiry_date']) ? "'".sb_esc($staff_conn, $_POST['expiry_date'])."'" : 'NULL';
-        $loc = sb_esc($staff_conn, $_POST['storage_location']);
+        $cur = trim($_POST['currency'] ?? 'UGX');
+        $batch = trim($_POST['batch_number']);
+        $exp = !empty($_POST['expiry_date']) ? trim($_POST['expiry_date']) : null;
+        $loc = trim($_POST['storage_location']);
         $rx = isset($_POST['requires_prescription']) ? 1 : 0;
-        $inst = sb_esc($staff_conn, $_POST['instructions']);
-        $se = sb_esc($staff_conn, $_POST['side_effects']);
-        $stat = sb_esc($staff_conn, $_POST['status']);
-        $restocked = !empty($_POST['last_restocked']) ? "'".sb_esc($staff_conn, $_POST['last_restocked'])."'" : 'NULL';
+        $inst = trim($_POST['instructions']);
+        $se = trim($_POST['side_effects']);
+        $stat = trim($_POST['status']);
+        $restocked = !empty($_POST['last_restocked']) ? trim($_POST['last_restocked']) : null;
         $status_calc = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
-            $staff_conn->query("UPDATE medicine_stock SET medicine_code='$code', medicine_name='$mname', generic_name='$generic', category='$cat', dosage_form='$form', strength='$strength', manufacturer='$mfr', supplier='$sup', quantity_in_stock=" . intval($qty) . ", unit='$unit', reorder_level=" . intval($rol) . ", unit_cost=$uc, selling_price=$sp, currency='$cur', batch_number='$batch', expiry_date=$exp, storage_location='$loc', requires_prescription=" . intval($rx) . ", instructions='$inst', side_effects='$se', status='$status_calc', last_restocked=$restocked WHERE id=" . intval($id));
+            $stmt = $staff_conn->prepare("UPDATE medicine_stock SET medicine_code=?, medicine_name=?, generic_name=?, category=?, dosage_form=?, strength=?, manufacturer=?, supplier=?, quantity_in_stock=?, unit=?, reorder_level=?, unit_cost=?, selling_price=?, currency=?, batch_number=?, expiry_date=?, storage_location=?, requires_prescription=?, instructions=?, side_effects=?, status=?, last_restocked=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssssssiddsssssissi', $code, $mname, $generic, $cat, $form, $strength, $mfr, $sup, $qty, $unit, $rol, $uc, $sp, $cur, $batch, $exp, $loc, $rx, $inst, $se, $status_calc, $restocked, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Medicine updated.';
         } else {
-            $staff_conn->query("INSERT INTO medicine_stock (medicine_code, medicine_name, generic_name, category, dosage_form, strength, manufacturer, supplier, quantity_in_stock, unit, reorder_level, unit_cost, selling_price, currency, batch_number, expiry_date, storage_location, requires_prescription, instructions, side_effects, status, last_restocked, created_by) VALUES ('$code','$mname','$generic','$cat','$form','$strength','$mfr','$sup'," . intval($qty) . ",'$unit'," . intval($rol) . ",$uc,$sp,'$cur','$batch',$exp,'$loc'," . intval($rx) . ",'$inst','$se','$status_calc',$restocked," . intval($user_id) . ")");
+            $stmt = $staff_conn->prepare("INSERT INTO medicine_stock (medicine_code, medicine_name, generic_name, category, dosage_form, strength, manufacturer, supplier, quantity_in_stock, unit, reorder_level, unit_cost, selling_price, currency, batch_number, expiry_date, storage_location, requires_prescription, instructions, side_effects, status, last_restocked, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('sssssssssiddsssssissii', $code, $mname, $generic, $cat, $form, $strength, $mfr, $sup, $qty, $unit, $rol, $uc, $sp, $cur, $batch, $exp, $loc, $rx, $inst, $se, $status_calc, $restocked, $user_id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Medicine added.';
         }
         header('Location: sickbay.php?section=medicine'); exit;
@@ -177,25 +200,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
 
     if ($action === 'delete_medicine') {
         $mid = (int)($_POST['medicine_id'] ?? 0);
-        if ($mid > 0) { $staff_conn->query("DELETE FROM medicine_stock WHERE id=" . intval($mid)); $_SESSION['success'] = 'Medicine deleted.'; }
+        if ($mid > 0) {
+            $stmt = $staff_conn->prepare("DELETE FROM medicine_stock WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Medicine deleted.';
+        }
         header('Location: sickbay.php?section=medicine'); exit;
     }
 
     if ($action === 'stock_transaction') {
         $mid = (int)($_POST['medicine_id'] ?? 0);
-        $ttype = sb_esc($staff_conn, $_POST['transaction_type']);
+        $ttype = trim($_POST['transaction_type']);
         $qty = (int)($_POST['quantity'] ?? 0);
-        $tdate = sb_esc($staff_conn, $_POST['transaction_date'] ?: date('Y-m-d'));
-        $notes = sb_esc($staff_conn, $_POST['notes']);
+        $tdate = trim($_POST['transaction_date'] ?: date('Y-m-d'));
+        $notes = trim($_POST['notes']);
         $trans_num = 'MST-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
         if ($mid > 0 && $qty > 0) {
-            $qrMed = $staff_conn->query("SELECT quantity_in_stock FROM medicine_stock WHERE id=" . intval($mid)); $med = $qrMed ? $qrMed->fetch_assoc() : null;
+            $stmt = $staff_conn->prepare("SELECT quantity_in_stock FROM medicine_stock WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $qrMed = $stmt->get_result(); $stmt->close(); } else $qrMed = null;
+            $med = $qrMed ? $qrMed->fetch_assoc() : null;
             if ($med) {
                 $cq = (int)$med['quantity_in_stock'];
                 $nq = ($ttype === 'Purchase' || $ttype === 'Return') ? $cq + $qty : max(0, $cq - $qty);
-                $qrRl = $staff_conn->query("SELECT reorder_level FROM medicine_stock WHERE id=" . intval($mid)); $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0; $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
-                $staff_conn->query("UPDATE medicine_stock SET quantity_in_stock=$nq, status='$ns' WHERE id=" . intval($mid));
-                $staff_conn->query("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES ('$trans_num', " . intval($mid) . ", '$ttype', $qty, " . intval($user_id) . ", '$tdate', '$notes')");
+                $stmt = $staff_conn->prepare("SELECT reorder_level FROM medicine_stock WHERE id=?");
+                if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $qrRl = $stmt->get_result(); $stmt->close(); } else $qrRl = null;
+                $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0;
+                $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
+                $stmt = $staff_conn->prepare("UPDATE medicine_stock SET quantity_in_stock=?, status=? WHERE id=?");
+                if ($stmt) { $stmt->bind_param('sii', $ns, $nq, $mid); $stmt->execute(); $stmt->close(); }
+                $stmt = $staff_conn->prepare("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES (?,?,?,?,?,?,?)");
+                if ($stmt) { $stmt->bind_param('sisiiis', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); $stmt->execute(); $stmt->close(); }
                 $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
             }
         }

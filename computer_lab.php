@@ -73,48 +73,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Student handlers (students DB — works without ICT DB)
     if ($action === 'add_student' && $students_conn) {
         $index = 'ISNM/' . date('Y') . '/' . str_pad(mt_rand(0, 99999), 5, '0', STR_PAD_LEFT);
-        $fn = $students_conn->real_escape_string($_POST['full_name']);
-        $parts = explode(' ', trim($fn), 2);
+        $fn = trim($_POST['full_name'] ?? '');
+        $parts = explode(' ', $fn, 2);
         $first = $parts[0];
         $surname = $parts[1] ?? '';
-        $phone = $students_conn->real_escape_string($_POST['phone'] ?? '');
-        $email = $students_conn->real_escape_string($_POST['email'] ?? '');
-        $prog = $students_conn->real_escape_string($_POST['program'] ?? '');
-        $gender = $students_conn->real_escape_string($_POST['gender'] ?? '');
-        $set = $students_conn->real_escape_string($_POST['set_name'] ?? date('Y'));
-        $dob = $_POST['date_of_birth'] ? "'" . $students_conn->real_escape_string($_POST['date_of_birth']) . "'" : 'NULL';
-        $sql = "INSERT INTO students (index_number, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, status, is_first_login, created_at) VALUES ('$index', '$first', '$surname', '$fn', '$phone', '$email', '$prog', '$gender', '$set', $dob, '" . date('Y') . "', 'Active', 1, NOW())";
-        if ($students_conn->query($sql)) {
-            $_SESSION['success'] = "Student $fn added. Index: $index — they can sign in at student-login.php";
-        } else {
-            $_SESSION['error'] = "Error: " . $students_conn->error;
+        $phone = $_POST['phone'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $prog = $_POST['program'] ?? '';
+        $gender = $_POST['gender'] ?? '';
+        $set = $_POST['set_name'] ?? date('Y');
+        $dob = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
+        $intakeYear = date('Y');
+        $stmt = $students_conn->prepare("INSERT INTO students (index_number, first_name, surname, full_name, phone, email, program, gender, set_name, date_of_birth, intake_year, status, is_first_login, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1, NOW())");
+        if ($stmt) {
+            $stmt->bind_param("ssssssssssi", $index, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $dob, $intakeYear);
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Student $fn added. Index: $index — they can sign in at student-login.php";
+            } else {
+                $_SESSION['error'] = "Error: " . $stmt->error;
+            }
+            $stmt->close();
         }
         header('Location: computer_lab.php');
         exit;
     }
 
     if ($action === 'edit_student' && $students_conn) {
-        $id = intval($_POST['id']);
-        $fn = $students_conn->real_escape_string($_POST['full_name']);
-        $parts = explode(' ', trim($fn), 2);
+        $id = (int)$_POST['id'];
+        $fn = trim($_POST['full_name'] ?? '');
+        $parts = explode(' ', $fn, 2);
         $first = $parts[0];
         $surname = $parts[1] ?? '';
-        $phone = $students_conn->real_escape_string($_POST['phone'] ?? '');
-        $email = $students_conn->real_escape_string($_POST['email'] ?? '');
-        $prog = $students_conn->real_escape_string($_POST['program'] ?? '');
-        $gender = $students_conn->real_escape_string($_POST['gender'] ?? '');
-        $set = $students_conn->real_escape_string($_POST['set_name'] ?? '');
-        $status = $students_conn->real_escape_string($_POST['status'] ?? 'Active');
-        $idx = $students_conn->real_escape_string($_POST['index_number'] ?? '');
-        $students_conn->query("UPDATE students SET index_number='$idx', first_name='$first', surname='$surname', full_name='$fn', phone='$phone', email='$email', program='$prog', gender='$gender', set_name='$set', status='$status', updated_at=NOW() WHERE id=$id");
+        $phone = $_POST['phone'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $prog = $_POST['program'] ?? '';
+        $gender = $_POST['gender'] ?? '';
+        $set = $_POST['set_name'] ?? '';
+        $status = $_POST['status'] ?? 'Active';
+        $idx = $_POST['index_number'] ?? '';
+        $stmt = $students_conn->prepare("UPDATE students SET index_number=?, first_name=?, surname=?, full_name=?, phone=?, email=?, program=?, gender=?, set_name=?, status=?, updated_at=NOW() WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("ssssssssssi", $idx, $first, $surname, $fn, $phone, $email, $prog, $gender, $set, $status, $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Student $fn updated.";
         header('Location: computer_lab.php?section=students');
         exit;
     }
 
     if ($action === 'delete_student' && $students_conn) {
-        $id = intval($_POST['id']);
-        $students_conn->query("UPDATE students SET status='deleted' WHERE id=$id");
+        $id = (int)$_POST['id'];
+        $stmt = $students_conn->prepare("UPDATE students SET status='deleted' WHERE id=?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->close();
+        }
         $_SESSION['success'] = "Student removed.";
         header('Location: computer_lab.php?section=students');
         exit;
