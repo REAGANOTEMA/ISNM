@@ -439,11 +439,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
     $ok = false; $msg = '';
 
     if ($action === 'add_department' && $conn) {
-        $name = $conn->real_escape_string(trim($_POST['dept_name'] ?? ''));
-        $code = $conn->real_escape_string(strtoupper(trim($_POST['dept_code'] ?? '')));
-        $level = $conn->real_escape_string(trim($_POST['dept_level'] ?? ''));
+        $name = trim($_POST['dept_name'] ?? '');
+        $code = strtoupper(trim($_POST['dept_code'] ?? ''));
+        $level = trim($_POST['dept_level'] ?? '');
         if ($name && $code) {
-            $conn->query("INSERT INTO staff_departments (department_name,department_code,department_level) VALUES ('$name','$code','$level')");
+            $stmt = $conn->prepare("INSERT INTO staff_departments (department_name,department_code,department_level) VALUES (?,?,?)");
+            if ($stmt) { $stmt->bind_param('sss', $name, $code, $level); $stmt->execute(); $stmt->close(); }
             $ok = true; $msg = "Department $name added.";
         } else { $msg = 'Name and code required.'; }
     }
@@ -452,21 +453,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $id = (int)($_POST['dept_id'] ?? 0);
         if ($id) { $conn->query("DELETE FROM staff_departments WHERE id=" . intval($id)); $ok = true; $msg = 'Department deleted.'; }
         else {
-            $code = $conn->real_escape_string($_POST['dept_code'] ?? '');
-            if ($code) { $conn->query("DELETE FROM staff_departments WHERE department_code='$code'"); $ok = true; $msg = 'Department deleted.'; }
+            $code = $_POST['dept_code'] ?? '';
+            if ($code) { $stmt = $conn->prepare("DELETE FROM staff_departments WHERE department_code=?"); if ($stmt) { $stmt->bind_param('s', $code); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Department deleted.'; }
         }
     }
 
     if ($action === 'add_staff' && $conn) {
-        $name = $conn->real_escape_string(trim($_POST['staff_name'] ?? ''));
-        $sid = $conn->real_escape_string(trim($_POST['staff_id'] ?? ''));
-        $em = $conn->real_escape_string(trim($_POST['staff_email'] ?? ''));
-        $ph = $conn->real_escape_string(trim($_POST['staff_phone'] ?? ''));
-        $dp = $conn->real_escape_string(trim($_POST['staff_dept'] ?? ''));
-        $ro = $conn->real_escape_string(trim($_POST['staff_role'] ?? 'staff'));
-        $st = $conn->real_escape_string(trim($_POST['staff_status'] ?? 'Active'));
+        $name = trim($_POST['staff_name'] ?? '');
+        $sid = trim($_POST['staff_id'] ?? '');
+        $em = trim($_POST['staff_email'] ?? '');
+        $ph = trim($_POST['staff_phone'] ?? '');
+        $dp = trim($_POST['staff_dept'] ?? '');
+        $ro = trim($_POST['staff_role'] ?? 'staff');
+        $st = trim($_POST['staff_status'] ?? 'Active');
         if ($name && $sid) {
-            $conn->query("INSERT INTO staff (staff_id,full_name,email,phone,department,position,status) VALUES ('$sid','$name','$em','$ph','$dp','$ro','$st')");
+            $stmt = $conn->prepare("INSERT INTO staff (staff_id,full_name,email,phone,department,position,status) VALUES (?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('sssssss', $sid, $name, $em, $ph, $dp, $ro, $st); $stmt->execute(); $stmt->close(); }
             $ok = true; $msg = "Staff $name added.";
         } else { $msg = 'Name and Staff ID required.'; }
     }
@@ -478,15 +480,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
 
     if ($action === 'edit_staff' && $conn) {
         $eid = (int)($_POST['edit_staff_id'] ?? 0);
-        $ename = $conn->real_escape_string(trim($_POST['edit_staff_name'] ?? ''));
-        $eidno = $conn->real_escape_string(trim($_POST['edit_staff_idno'] ?? ''));
-        $eem = $conn->real_escape_string(trim($_POST['edit_staff_email'] ?? ''));
-        $eph = $conn->real_escape_string(trim($_POST['edit_staff_phone'] ?? ''));
-        $edp = $conn->real_escape_string(trim($_POST['edit_staff_dept'] ?? ''));
-        $ero = $conn->real_escape_string(trim($_POST['edit_staff_role'] ?? ''));
-        $est = $conn->real_escape_string(trim($_POST['edit_staff_status'] ?? 'Active'));
+        $ename = trim($_POST['edit_staff_name'] ?? '');
+        $eidno = trim($_POST['edit_staff_idno'] ?? '');
+        $eem = trim($_POST['edit_staff_email'] ?? '');
+        $eph = trim($_POST['edit_staff_phone'] ?? '');
+        $edp = trim($_POST['edit_staff_dept'] ?? '');
+        $ero = trim($_POST['edit_staff_role'] ?? '');
+        $est = trim($_POST['edit_staff_status'] ?? 'Active');
         if ($eid && $ename) {
-            $conn->query("UPDATE staff SET full_name='$ename', staff_id='$eidno', email='$eem', phone='$eph', department='$edp', position='$ero', status='$est' WHERE id=$eid");
+            $stmt = $conn->prepare("UPDATE staff SET full_name=?, staff_id=?, email=?, phone=?, department=?, position=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssssi', $ename, $eidno, $eem, $eph, $edp, $ero, $est, $eid); $stmt->execute(); $stmt->close(); }
             $ok = true; $msg = "Staff $ename updated.";
         } else { $msg = 'Name required.'; }
     }
