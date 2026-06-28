@@ -49,53 +49,39 @@ if ($ajax === 'finance_stats' && $staff) {
 }
 if ($ajax === 'revenue_data' && $staff) {
     header('Content-Type: application/json');
-    $f = $staff->real_escape_string($_GET['from']??date('Y-m-01')); $t = $staff->real_escape_string($_GET['to']??date('Y-m-d')); $rows=[];
-    if ($students) { $r=$students->query("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN '$f' AND '$t' ORDER BY p.payment_date DESC LIMIT 200"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw; }
+    $f = $_GET['from']??date('Y-m-01'); $t = $_GET['to']??date('Y-m-d'); $rows=[];
+    if ($students) { $stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
     echo json_encode($rows); exit;
 }
 if ($ajax === 'fee_collection_data' && $staff) {
     header('Content-Type: application/json');
-    $f = $staff->real_escape_string($_GET['from']??date('Y-m-01')); $t = $staff->real_escape_string($_GET['to']??date('Y-m-d')); $rows=[];
-    if ($students) { $r=$students->query("SELECT si.*,s.full_name student_name,s.student_number,s.program FROM {$students_db}.student_invoices si LEFT JOIN {$students_db}.students s ON si.student_id=s.id WHERE DATE(si.created_at) BETWEEN '$f' AND '$t' ORDER BY si.created_at DESC LIMIT 200"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw; }
+    $f = $_GET['from']??date('Y-m-01'); $t = $_GET['to']??date('Y-m-d'); $rows=[];
+    if ($students) { $stmt=$students->prepare("SELECT si.*,s.full_name student_name,s.student_number,s.program FROM {$students_db}.student_invoices si LEFT JOIN {$students_db}.students s ON si.student_id=s.id WHERE DATE(si.created_at) BETWEEN ? AND ? ORDER BY si.created_at DESC LIMIT 200"); if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();} }
     echo json_encode($rows); exit;
 }
 if ($ajax === 'payment_list' && $staff) {
     header('Content-Type: application/json');
-    $st = $staff->real_escape_string($_GET['status']??''); $rows=[];
-    if ($students) { $sql="SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id"; if($st)$sql.=" WHERE p.status='$st'"; $sql.=" ORDER BY p.payment_date DESC LIMIT 200"; $r=$students->query($sql); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw; }
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'budget_list' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.budget_records ORDER BY created_at DESC LIMIT 100"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    $st = $_GET['status']??''; $rows=[];
+    if ($students) {
+        if($st){$stmt=$students->prepare("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE p.status=? ORDER BY p.payment_date DESC LIMIT 200");$stmt->bind_param('s',$st);$stmt->execute();$r=$stmt->get_result();$stmt->close();}
+        else{$r=$students->query("SELECT p.*,s.full_name student_name,s.student_number FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id ORDER BY p.payment_date DESC LIMIT 200");}
+        if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;
+    }
     echo json_encode($rows); exit;
 }
 if ($ajax === 'expenditure_list' && $staff) {
     header('Content-Type: application/json');
-    $st = $staff->real_escape_string($_GET['status']??''); $rows=[];
-    $sql="SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id"; if($st)$sql.=" WHERE e.status='$st'"; $sql.=" ORDER BY e.created_at DESC LIMIT 200";
-    $r=$staff->query($sql); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'payroll_data' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT ss.*,st.full_name staff_name,st.position,st.department FROM salary_structures ss LEFT JOIN staff st ON ss.staff_id=st.id WHERE ss.status='active' ORDER BY st.full_name"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'payroll_history_data' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT pr.*,st.full_name staff_name FROM payroll_records pr LEFT JOIN staff st ON pr.staff_id=st.id ORDER BY pr.created_at DESC LIMIT 100"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
-    echo json_encode($rows); exit;
-}
-if ($ajax === 'staff_cost_data' && $staff) {
-    header('Content-Type: application/json');
-    $rows=[]; $r=$staff->query("SELECT st.department,COUNT(*) staff_count,COALESCE(SUM(ss.basic_salary),0) total_salary FROM staff st LEFT JOIN salary_structures ss ON st.id=ss.staff_id AND ss.status='active' WHERE st.status='Active' GROUP BY st.department ORDER BY total_salary DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    $st = $_GET['status']??''; $rows=[];
+    if($st){$stmt=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE e.status=? ORDER BY e.created_at DESC LIMIT 200");$stmt->bind_param('s',$st);$stmt->execute();$r=$stmt->get_result();$stmt->close();}
+    else{$r=$staff->query("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id ORDER BY e.created_at DESC LIMIT 200");}
+    if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;
     echo json_encode($rows); exit;
 }
 if ($ajax === 'ledger_data' && $staff) {
     header('Content-Type: application/json');
-    $f=$staff->real_escape_string($_GET['from']??date('Y-m-01')); $t=$staff->real_escape_string($_GET['to']??date('Y-m-d')); $rows=[];
-    $r=$staff->query("SELECT * FROM {$students_db}.general_ledger WHERE entry_date BETWEEN '$f' AND '$t' ORDER BY entry_date DESC LIMIT 200"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    $f=$_GET['from']??date('Y-m-01'); $t=$_GET['to']??date('Y-m-d'); $rows=[];
+    $stmt=$staff->prepare("SELECT * FROM {$students_db}.general_ledger WHERE entry_date BETWEEN ? AND ? ORDER BY entry_date DESC LIMIT 200");
+    if($stmt){$stmt->bind_param('ss',$f,$t);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$rows[]=$rw;$stmt->close();}
     echo json_encode($rows); exit;
 }
 if ($ajax === 'supplier_list' && $staff) {
