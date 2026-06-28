@@ -650,8 +650,8 @@ body{
       <span class="motto-sub">Based on a disciplined mind for health action.</span>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-num">4</div><div class="hero-stat-label">Programs</div></div>
-      <div class="hero-stat"><div class="hero-stat-num">315+</div><div class="hero-stat-label">Students</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-label">Programs</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">1000+</div><div class="hero-stat-label">Students</div></div>
       <div class="hero-stat"><div class="hero-stat-num">50+</div><div class="hero-stat-label">Staff</div></div>
       <div class="hero-stat"><div class="hero-stat-num">15+</div><div class="hero-stat-label">Years</div></div>
     </div>
