@@ -21,10 +21,6 @@ function tkt_fetch($conn, $sql) {
     catch (Exception $e) { return []; }
 }
 
-function tkt_esc($conn, $val) {
-    return $conn ? $conn->real_escape_string((string)$val) : $val;
-}
-
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {
     $action = $_POST['action'] ?? '';

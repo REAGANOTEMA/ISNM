@@ -23,10 +23,6 @@ function lb_fetch($conn, $sql) {
     catch (Exception $e) { return []; }
 }
 
-function lb_esc($conn, $val) {
-    return $conn ? $conn->real_escape_string((string)$val) : $val;
-}
-
 $filter_date = $_GET['filter_date'] ?? date('Y-m-d');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ict_conn) {

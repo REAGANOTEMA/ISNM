@@ -138,8 +138,8 @@ if ($reqCheck) {
         ];
         $order = 1;
         foreach ($defaultReqs as $rname) {
-            $esc = $conn->real_escape_string($rname);
-            $conn->query("INSERT INTO `{$staff_db}`.`admission_requirements` (requirement_name,is_active,display_order) VALUES ('$esc',1,$order)");
+            $stmt = $conn->prepare("INSERT INTO `{$staff_db}`.`admission_requirements` (requirement_name,is_active,display_order) VALUES (?,?,?)");
+            if ($stmt) { $stmt->bind_param('sii', $rname, $one, $order); $one = 1; $stmt->execute(); $stmt->close(); }
             $order++;
         }
     }
@@ -327,10 +327,18 @@ if ($ajax === 'get_student_profile') {
     if (empty($info)) { echo json_encode(['success'=>false,'error'=>'Student not found']); exit; }
 
     $aid=0; $applicant=[];
-    $studentNo = $conn->real_escape_string($info['student_number']??'');
-    $fullName  = $conn->real_escape_string(trim($info['full_name']??''));
-    if ($studentNo) { $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE application_number LIKE '%$studentNo%' LIMIT 1"); if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];} }
-    if (!$aid&&$fullName){ $ar=$conn->query("SELECT * FROM `{$staff_db}`.`applicants` WHERE full_name LIKE '%$fullName%' LIMIT 1"); if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];} }
+    $studentNo = $info['student_number']??'';
+    $fullName  = trim($info['full_name']??'');
+    if ($studentNo) {
+        $stmt = $conn->prepare("SELECT * FROM `{$staff_db}`.`applicants` WHERE application_number LIKE ? LIMIT 1");
+        if ($stmt) { $like = "%$studentNo%"; $stmt->bind_param('s', $like); $stmt->execute(); $ar = $stmt->get_result(); $stmt->close(); } else $ar = null;
+        if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];}
+    }
+    if (!$aid&&$fullName){
+        $stmt = $conn->prepare("SELECT * FROM `{$staff_db}`.`applicants` WHERE full_name LIKE ? LIMIT 1");
+        if ($stmt) { $like = "%$fullName%"; $stmt->bind_param('s', $like); $stmt->execute(); $ar = $stmt->get_result(); $stmt->close(); } else $ar = null;
+        if($ar&&$ar->num_rows){$applicant=$ar->fetch_assoc();$aid=(int)$applicant['id'];}
+    }
 
     $reqs=[];
     $rr=$conn->query("SELECT adr.id requirement_id,adr.requirement_name,adr.display_order,ars.status,ars.verified_by,ars.remarks,ars.submitted_at,ars.verified_at,ars.received_by,ars.received_at FROM `{$staff_db}`.`admission_requirements` adr LEFT JOIN `{$staff_db}`.`applicant_requirement_status` ars ON ars.requirement_id=adr.id AND ars.applicant_id=".intval($aid)." WHERE adr.is_active=1 ORDER BY adr.display_order");

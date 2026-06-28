@@ -12,10 +12,11 @@ $uid = $_SESSION['user_id'] ?? 0;
 // ── AJAX endpoint for exam student list ────────────────
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'exam_students' && isset($_GET['exam'])) {
     header('Content-Type: application/json');
-    $examNumber = $conn ? $conn->real_escape_string($_GET['exam']) : '';
+    $examNumber = trim($_GET['exam']);
     $data = [];
     if ($conn && $examNumber) {
-        $r = $conn->query("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM examination_records er JOIN igangaschoolofl_students_db.students s ON er.student_id=s.id WHERE er.exam_number='$examNumber' ORDER BY s.surname, s.first_name");
+        $stmt = $conn->prepare("SELECT er.id, er.student_id, er.continuous_assessment_marks, er.final_exam_marks, er.marks_obtained, er.grade, CONCAT(s.first_name,' ',s.surname) full_name, s.index_number, s.student_number FROM examination_records er JOIN igangaschoolofl_students_db.students s ON er.student_id=s.id WHERE er.exam_number=? ORDER BY s.surname, s.first_name");
+        if ($stmt) { $stmt->bind_param('s', $examNumber); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         if ($r) while ($row = $r->fetch_assoc()) $data[] = $row;
     }
     echo json_encode($data);
@@ -35,10 +36,13 @@ if ($conn) {
     $filterType = trim($_GET['exam_type'] ?? '');
     $filterStatus = trim($_GET['status'] ?? '');
     $where = "1=1";
-    if ($search !== '') { $s = $conn->real_escape_string($search); $where .= " AND (er.exam_number LIKE '%$s%' OR er.course_code LIKE '%$s%' OR cc.course_title LIKE '%$s%' OR er.exam_type LIKE '%$s%')"; }
-    if ($filterType !== '') { $t = $conn->real_escape_string($filterType); $where .= " AND er.exam_type='$t'"; }
-    if ($filterStatus !== '') { $st = $conn->real_escape_string($filterStatus); $where .= " AND er.grade_status='$st'"; }
-    $r = $conn->query("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM examination_records er LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
+    $params = [];
+    $types = '';
+    if ($search !== '') { $where .= " AND (er.exam_number LIKE ? OR er.course_code LIKE ? OR cc.course_title LIKE ? OR er.exam_type LIKE ?)"; $like = "%$search%"; $params = array_merge($params, [$like, $like, $like, $like]); $types .= 'ssss'; }
+    if ($filterType !== '') { $where .= " AND er.exam_type=?"; $params[] = $filterType; $types .= 's'; }
+    if ($filterStatus !== '') { $where .= " AND er.grade_status=?"; $params[] = $filterStatus; $types .= 's'; }
+    $stmt = $conn->prepare("SELECT er.exam_number, er.exam_type, er.course_code, cc.course_title course_name, er.grade_status, MIN(er.created_at) exam_date, COUNT(er.student_id) total_students FROM examination_records er LEFT JOIN igangaschoolofl_staffs_db.academic_course_catalog cc ON er.course_code=cc.course_code WHERE $where GROUP BY er.exam_number, er.exam_type, er.course_code, cc.course_title, er.grade_status ORDER BY exam_date DESC LIMIT 100");
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     if ($r) while ($row = $r->fetch_assoc()) $exams[] = $row;
 
     $cr = $conn->query("SELECT course_code, course_title FROM academic_course_catalog WHERE status='Active' ORDER BY course_code");
@@ -52,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$conn) { $_SESSION['error'] = 'Database connection failed'; header('Location: exams-results.php'); exit; }
 
     if ($action === 'create_exam') {
-        $course_code = $conn->real_escape_string($_POST['course_code'] ?? '');
-        $exam_type = $conn->real_escape_string($_POST['exam_type'] ?? 'Final');
+        $course_code = trim($_POST['course_code'] ?? '');
+        $exam_type = trim($_POST['exam_type'] ?? 'Final');
         $total_marks = floatval($_POST['total_marks'] ?? 100);
         $exam_number = strtoupper(substr($exam_type,0,3)) . '-' . $course_code . '-' . date('Ymd') . '-' . mt_rand(100,999);
         $student_ids = $_POST['student_ids'] ?? [];
@@ -77,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'enter_marks') {
-        $exam_number = $conn->real_escape_string($_POST['exam_number'] ?? '');
+        $exam_number = trim($_POST['exam_number'] ?? '');
         $students_data = $_POST['students'] ?? [];
         if (empty($exam_number) || empty($students_data)) {
             $_SESSION['error'] = 'Exam number and student marks required.';
@@ -102,20 +106,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'update_status') {
-        $exam_number = $conn->real_escape_string($_POST['exam_number'] ?? '');
-        $new_status = $conn->real_escape_string($_POST['new_status'] ?? '');
+        $exam_number = trim($_POST['exam_number'] ?? '');
+        $new_status = trim($_POST['new_status'] ?? '');
         $allowed = ['Draft','Submitted','Under Review','Approved','Published','Rejected'];
         if (in_array($new_status, $allowed) && $exam_number) {
-            $conn->query("UPDATE examination_records SET grade_status='$new_status' WHERE exam_number='$exam_number'");
+            $stmt = $conn->prepare("UPDATE examination_records SET grade_status=? WHERE exam_number=?");
+            if ($stmt) { $stmt->bind_param('ss', $new_status, $exam_number); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Exam status updated to '$new_status'.";
         }
         header('Location: exams-results.php'); exit;
     }
 
     if ($action === 'delete_exam') {
-        $exam_number = $conn->real_escape_string($_POST['exam_number'] ?? '');
+        $exam_number = trim($_POST['exam_number'] ?? '');
         if ($exam_number) {
-            $conn->query("DELETE FROM examination_records WHERE exam_number='$exam_number'");
+            $stmt = $conn->prepare("DELETE FROM examination_records WHERE exam_number=?");
+            if ($stmt) { $stmt->bind_param('s', $exam_number); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = "Exam '$exam_number' deleted.";
         }
         header('Location: exams-results.php'); exit;

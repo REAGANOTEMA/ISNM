@@ -29,18 +29,17 @@ function sec_error($m) { $_SESSION['sec_error'] = $m; }if ($view === 'comms_send
     header('Content-Type: application/json');
     $rt = $_POST['recipient_type'] ?? ''; $subj = $_POST['subject'] ?? ''; $msg = $_POST['message'] ?? '';
     if ($subj && $msg) {
-        $subjS = $staff->real_escape_string($subj); $msgS = $staff->real_escape_string($msg);
-        $sname = $staff->real_escape_string($uname); $ok = false;
+        $ok = false;
         if ($rt === 'staff_all' || $rt === 'staff') {
             $r = $staff->query("SELECT id FROM staff WHERE status='Active'");
             $ins = $staff->prepare("INSERT INTO {$students_db}.secretary_messages (sender_id,sender_name,recipient_type,recipient_id,subject,message) VALUES (?,?,'staff',?,?,?)");
-            if ($ins) { while ($rw = $r->fetch_assoc()) { $ins->bind_param("issis", $uid, $sname, $rw['id'], $subjS, $msgS); $ins->execute(); } $ins->close(); $ok = true; }
+            if ($ins) { while ($rw = $r->fetch_assoc()) { $ins->bind_param("issis", $uid, $uname, $rw['id'], $subj, $msg); $ins->execute(); } $ins->close(); $ok = true; }
         } elseif ($rt === 'students_all' || $rt === 'students') {
             $ins = $staff->prepare("INSERT INTO {$students_db}.secretary_messages (sender_id,sender_name,recipient_type,recipient_id,subject,message) VALUES (?,?,'students',0,?,?)");
-            if ($ins) { $ins->bind_param("isss", $uid, $sname, $subjS, $msgS); $ok = $ins->execute(); $ins->close(); }
+            if ($ins) { $ins->bind_param("isss", $uid, $uname, $subj, $msg); $ok = $ins->execute(); $ins->close(); }
         } else {
             $ins = $staff->prepare("INSERT INTO {$students_db}.secretary_messages (sender_id,sender_name,recipient_type,recipient_id,subject,message) VALUES (?,?,?,0,?,?)");
-            if ($ins) { $ins->bind_param("issss", $uid, $sname, $rt, $subjS, $msgS); $ok = $ins->execute(); $ins->close(); }
+            if ($ins) { $ins->bind_param("issss", $uid, $uname, $rt, $subj, $msg); $ok = $ins->execute(); $ins->close(); }
         }
         echo json_encode(['success'=>$ok]); exit;
     }
@@ -80,8 +79,12 @@ if ($view === 'appointment_list' && $ajax === '1' && $staff) {
 }
 if ($view === 'appointment_update' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $aid = (int)($_POST['id']??0); $st = $staff->real_escape_string($_POST['status']??'');
-    if ($aid && $st) { if ($staff->query("UPDATE {$students_db}.appointments SET status='$st' WHERE id=$aid")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Update failed']); exit; }
+    $aid = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
+    if ($aid && $st) {
+        $stmt = $staff->prepare("UPDATE {$students_db}.appointments SET status=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $st, $aid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        echo json_encode(['success'=>$ok]); exit;
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'meeting_create' && $ajax === '1' && $staff) {
@@ -124,8 +127,12 @@ if ($view === 'meeting_get' && $ajax === '1' && $staff) {
 }
 if ($view === 'meeting_save_minutes' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $mid = (int)($_POST['meeting_id']??0); $min = $staff->real_escape_string($_POST['minutes']??'');
-    if ($mid) { if ($staff->query("UPDATE {$students_db}.meetings SET minutes='$min', status='completed' WHERE id=$mid")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Save failed']); exit; }
+    $mid = (int)($_POST['meeting_id']??0); $min = trim($_POST['minutes']??'');
+    if ($mid) {
+        $stmt = $staff->prepare("UPDATE {$students_db}.meetings SET minutes=?, status='completed' WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $min, $mid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        echo json_encode(['success'=>$ok]); exit;
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'doc_upload' && $ajax === '1' && $staff) {
@@ -152,14 +159,23 @@ if ($view === 'doc_upload' && $ajax === '1' && $staff) {
 }
 if ($view === 'doc_list' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $sf = $staff->real_escape_string($_GET['status']??'');
-    $sql = "SELECT * FROM {$students_db}.document_tracking"; if ($sf) $sql .= " WHERE status='$sf'"; $sql .= " ORDER BY created_at DESC LIMIT 50";
-    $r = $staff->query($sql); $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+    $sf = trim($_GET['status']??'');
+    if ($sf) {
+        $stmt = $staff->prepare("SELECT * FROM {$students_db}.document_tracking WHERE status=? ORDER BY created_at DESC LIMIT 50");
+        if ($stmt) { $stmt->bind_param('s', $sf); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+    } else {
+        $r = $staff->query("SELECT * FROM {$students_db}.document_tracking ORDER BY created_at DESC LIMIT 50");
+    }
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 if ($view === 'doc_update' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $did = (int)($_POST['id']??0); $st = $staff->real_escape_string($_POST['status']??'');
-    if ($did && $st) { if ($staff->query("UPDATE {$students_db}.document_tracking SET status='$st' WHERE id=$did")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Update failed']); exit; }
+    $did = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
+    if ($did && $st) {
+        $stmt = $staff->prepare("UPDATE {$students_db}.document_tracking SET status=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $st, $did); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        echo json_encode(['success'=>$ok]); exit;
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'request_create' && $ajax === '1' && $staff) {
@@ -194,30 +210,36 @@ if ($view === 'request_list' && $ajax === '1' && $staff) {
 }
 if ($view === 'request_update' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $rid = (int)($_POST['id']??0); $st = $staff->real_escape_string($_POST['status']??'');
-    if ($rid && $st) { if ($staff->query("UPDATE {$students_db}.request_tracking SET status='$st' WHERE id=$rid")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Update failed']); exit; }
+    $rid = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
+    if ($rid && $st) {
+        $stmt = $staff->prepare("UPDATE {$students_db}.request_tracking SET status=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $st, $rid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        echo json_encode(['success'=>$ok]); exit;
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'staff_search' && $ajax === '1' && $q && $staff) {
     header('Content-Type: application/json');
-    $qs = $staff->real_escape_string($q);
-    $r = $staff->query("SELECT id, full_name, position, department, phone, email FROM staff WHERE full_name LIKE '%$qs%' OR position LIKE '%$qs%' OR department LIKE '%$qs%' OR phone LIKE '%$qs%' LIMIT 20");
+    $like = "%$q%";
+    $stmt = $staff->prepare("SELECT id, full_name, position, department, phone, email FROM staff WHERE full_name LIKE ? OR position LIKE ? OR department LIKE ? OR phone LIKE ? LIMIT 20");
+    if ($stmt) { $stmt->bind_param('ssss', $like, $like, $like, $like); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 if ($view === 'applicant_search' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $q = $staff->real_escape_string($_GET['q']??'');
-    $prog = $staff->real_escape_string($_GET['program']??'');
-    $intake = $staff->real_escape_string($_GET['intake']??'');
-    $status = $staff->real_escape_string($_GET['status']??'');
-    $w = []; if ($q) $w[] = "(CONCAT(IFNULL(surname,''),' ',IFNULL(first_name,'')) LIKE '%$q%' OR student_number LIKE '%$q%')";
-    if ($prog) $w[] = "program='$prog'";
-    if ($intake) $w[] = "(intake_year LIKE '%$intake%' OR intake_period LIKE '%$intake%')";
-    if ($status) $w[] = "status='$status'";
-    $sql = "SELECT student_number, first_name, surname, other_name, program, intake_year, intake_period, phone, email, status FROM {$students_db}.students";
-    if ($w) $sql .= " WHERE " . implode(" AND ", $w);
-    $sql .= " ORDER BY surname ASC LIMIT 100";
-    $r = $staff->query($sql); $rows = [];
+    $q = trim($_GET['q']??'');
+    $prog = trim($_GET['program']??'');
+    $intake = trim($_GET['intake']??'');
+    $status = trim($_GET['status']??'');
+    $w = ["1=1"]; $params = []; $types = '';
+    if ($q) { $w[] = "(CONCAT(IFNULL(surname,''),' ',IFNULL(first_name,'')) LIKE ? OR student_number LIKE ?)"; $like = "%$q%"; $params[] = $like; $params[] = $like; $types .= 'ss'; }
+    if ($prog) { $w[] = "program=?"; $params[] = $prog; $types .= 's'; }
+    if ($intake) { $w[] = "(intake_year LIKE ? OR intake_period LIKE ?)"; $like2 = "%$intake%"; $params[] = $like2; $params[] = $like2; $types .= 'ss'; }
+    if ($status) { $w[] = "status=?"; $params[] = $status; $types .= 's'; }
+    $sql = "SELECT student_number, first_name, surname, other_name, program, intake_year, intake_period, phone, email, status FROM {$students_db}.students WHERE " . implode(" AND ", $w) . " ORDER BY surname ASC LIMIT 100";
+    $stmt = $staff->prepare($sql);
+    if ($stmt) { if ($types) $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+    $rows = [];
     if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw;
     echo json_encode($rows); exit;
 }
@@ -249,11 +271,14 @@ if ($view === 'correspondence_create' && $ajax === '1' && $staff) {
 }
 if ($view === 'correspondence_list' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $f = $staff->real_escape_string($_GET['filter']??'');
-    $sql = "SELECT * FROM {$students_db}.correspondence";
-    if ($f === 'incoming') $sql .= " WHERE type='incoming'"; elseif ($f === 'outgoing') $sql .= " WHERE type='outgoing'";
-    $sql .= " ORDER BY created_at DESC LIMIT 50";
-    $r = $staff->query($sql); $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
+    $f = trim($_GET['filter']??'');
+    if ($f === 'incoming' || $f === 'outgoing') {
+        $stmt = $staff->prepare("SELECT * FROM {$students_db}.correspondence WHERE type=? ORDER BY created_at DESC LIMIT 50");
+        if ($stmt) { $stmt->bind_param('s', $f); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+    } else {
+        $r = $staff->query("SELECT * FROM {$students_db}.correspondence ORDER BY created_at DESC LIMIT 50");
+    }
+    $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 if ($view === 'letter_create' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
@@ -278,8 +303,12 @@ if ($view === 'letter_list' && $ajax === '1' && $staff) {
 }
 if ($view === 'letter_update' && $ajax === '1' && $staff) {
     header('Content-Type: application/json');
-    $lid = (int)($_POST['id']??0); $st = $staff->real_escape_string($_POST['status']??'');
-    if ($lid && $st) { if ($staff->query("UPDATE {$students_db}.official_letters SET status='$st' WHERE id=$lid")) { echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Update failed']); exit; }
+    $lid = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
+    if ($lid && $st) {
+        $stmt = $staff->prepare("UPDATE {$students_db}.official_letters SET status=? WHERE id=?");
+        if ($stmt) { $stmt->bind_param('si', $st, $lid); $stmt->execute(); $ok = $stmt->affected_rows > 0; $stmt->close(); } else $ok = false;
+        echo json_encode(['success'=>$ok]); exit;
+    }
     echo json_encode(['success'=>false]); exit;
 }
 if ($view === 'circular_create' && $ajax === '1' && $staff) {
@@ -308,10 +337,14 @@ if ($view === 'contact_list' && $ajax === '1' && $staff) {
 if ($view === 'report_data' && $ajax === '1') {
     header('Content-Type: application/json');
     if (!$staff) { echo json_encode([]); exit; }
-    $from = $staff->real_escape_string($_GET['from']??date('Y-m-01')); $to = $staff->real_escape_string($_GET['to']??date('Y-m-d')); $tp = $staff->real_escape_string($_GET['type']??'appointments');
+    $from = trim($_GET['from']??date('Y-m-01')); $to = trim($_GET['to']??date('Y-m-d')); $tp = trim($_GET['type']??'appointments');
+    $allowed_types = ['meetings','documents','requests','communications','appointments'];
+    if (!in_array($tp, $allowed_types)) $tp = 'appointments';
     $table = $tp === 'meetings' ? 'meetings' : ($tp === 'documents' ? 'document_tracking' : ($tp === 'requests' ? 'request_tracking' : ($tp === 'communications' ? 'secretary_messages' : 'appointments')));
-    $dateCol = $tp === 'meetings' ? 'meeting_date' : ($tp === 'documents' ? 'created_at' : ($tp === 'requests' ? 'created_at' : ($tp === 'communications' ? 'created_at' : 'appointment_date')));
-    $r = $staff->query("SELECT * FROM {$students_db}.{$table} WHERE {$dateCol} >= '{$from}' AND {$dateCol} <= '{$to}' ORDER BY {$dateCol} DESC LIMIT 200");
+    $dateCol = $tp === 'meetings' ? 'meeting_date' : 'created_at';
+    if ($tp === 'appointments') $dateCol = 'appointment_date';
+    $stmt = $staff->prepare("SELECT * FROM {$students_db}.{$table} WHERE {$dateCol} >= ? AND {$dateCol} <= ? ORDER BY {$dateCol} DESC LIMIT 200");
+    if ($stmt) { $stmt->bind_param('ss', $from, $to); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
     $rows = []; if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw; echo json_encode($rows); exit;
 }
 if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }

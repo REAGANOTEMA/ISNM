@@ -240,22 +240,46 @@ class DepartmentRestrictions {
             return false;
         }
         
+        $data_id = intval($data_id);
+        $dept_id = intval($this->user_department);
+        
         switch ($data_type) {
             case 'students':
-                $query = "SELECT s.program_id FROM students s LEFT JOIN programs p ON s.program_id = p.id WHERE s.id = $data_id AND p.department_id = $this->user_department";
-                break;
+                $stmt = $this->conn->prepare("SELECT s.program_id FROM students s LEFT JOIN programs p ON s.program_id = p.id WHERE s.id = ? AND p.department_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $dept_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             case 'courses':
-                $query = "SELECT id FROM courses WHERE id = $data_id AND department_id = $this->user_department";
-                break;
+                $stmt = $this->conn->prepare("SELECT id FROM courses WHERE id = ? AND department_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $dept_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             case 'academic':
-                $query = "SELECT ar.id FROM academic_records ar JOIN students s ON ar.student_id = s.id LEFT JOIN programs p ON s.program_id = p.id WHERE ar.id = $data_id AND p.department_id = $this->user_department";
-                break;
+                $stmt = $this->conn->prepare("SELECT ar.id FROM academic_records ar JOIN students s ON ar.student_id = s.id LEFT JOIN programs p ON s.program_id = p.id WHERE ar.id = ? AND p.department_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $dept_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             default:
                 return false;
         }
-        
-        $result = $this->conn->query($query);
-        return $result->num_rows > 0;
     }
     
     /**
@@ -266,22 +290,46 @@ class DepartmentRestrictions {
             return false;
         }
         
+        $data_id = intval($data_id);
+        $uid = intval($this->user_id);
+        
         switch ($data_type) {
             case 'courses':
-                $query = "SELECT id FROM course_assignments WHERE course_id = $data_id AND lecturer_id = $this->user_id";
-                break;
+                $stmt = $this->conn->prepare("SELECT id FROM course_assignments WHERE course_id = ? AND lecturer_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $uid);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             case 'students':
-                $query = "SELECT s.id FROM students s JOIN enrollments e ON s.id = e.student_id WHERE s.id = $data_id AND e.lecturer_id = $this->user_id";
-                break;
+                $stmt = $this->conn->prepare("SELECT s.id FROM students s JOIN enrollments e ON s.id = e.student_id WHERE s.id = ? AND e.lecturer_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $uid);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             case 'grades':
-                $query = "SELECT id FROM academic_records WHERE id = $data_id AND lecturer_id = $this->user_id";
-                break;
+                $stmt = $this->conn->prepare("SELECT id FROM academic_records WHERE id = ? AND lecturer_id = ?");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $data_id, $uid);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result->num_rows;
+                    $stmt->close();
+                    return $count > 0;
+                }
+                return false;
             default:
                 return false;
         }
-        
-        $result = $this->conn->query($query);
-        return $result->num_rows > 0;
     }
     
     /**
@@ -349,16 +397,18 @@ class DepartmentRestrictions {
      */
     public function logAccess($action, $resource_type, $resource_id = null, $access_granted = false) {
         $user_id = intval($this->user_id);
-        $user_role = $this->conn->real_escape_string($this->user_role);
-        $action_clean = $this->conn->real_escape_string($action);
-        $resource_type_clean = $this->conn->real_escape_string($resource_type);
-        $resource_id_clean = $resource_id ? intval($resource_id) : 'NULL';
+        $user_role = $this->user_role;
+        $action_clean = $action;
+        $resource_type_clean = $resource_type;
+        $resource_id_clean = $resource_id ? intval($resource_id) : null;
         $granted = $access_granted ? 1 : 0;
         
-        $query = "INSERT INTO access_logs (user_id, user_role, action, resource_type, resource_id, access_granted, created_at) 
-                  VALUES ($user_id, '$user_role', '$action_clean', '$resource_type_clean', $resource_id_clean, $granted, NOW())";
-        
-        $this->conn->query($query);
+        $stmt = $this->conn->prepare("INSERT INTO access_logs (user_id, user_role, action, resource_type, resource_id, access_granted, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        if ($stmt) {
+            $stmt->bind_param("isssii", $user_id, $user_role, $action_clean, $resource_type_clean, $resource_id_clean, $granted);
+            $stmt->execute();
+            $stmt->close();
+        }
     }
 }
 

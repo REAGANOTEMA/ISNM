@@ -25,14 +25,33 @@ if ($staffDb) {
         $r = $staffDb->query("SELECT COUNT(*) c FROM library_borrowing WHERE return_status='Overdue'"); if ($r) $stats['overdue'] = (int)$r->fetch_assoc()['c'];
 
         $where = "WHERE 1=1";
+        $types = '';
+        $params = [];
         if ($q !== '') {
-            $sq = $staffDb->real_escape_string($q);
-            $where .= " AND (title LIKE '%$sq%' OR author LIKE '%$sq%' OR isbn LIKE '%$sq%' OR category LIKE '%$sq%')";
+            $like = '%' . $q . '%';
+            $where .= " AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR category LIKE ?)";
+            $types .= 'ssss';
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
         }
-        $r = $staffDb->query("SELECT COUNT(*) c FROM library_books $where");
-        if ($r) $totalBooks = (int)$r->fetch_assoc()['c'];
-        $r = $staffDb->query("SELECT b.*, COALESCE(br.return_status, 'Available') as avail_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.return_status IN ('Borrowed','Overdue') $where ORDER BY b.title LIMIT " . intval($limit) . " OFFSET " . intval($offset));
-        if ($r) $books = $r->fetch_all(MYSQLI_ASSOC);
+        $stmt = $staffDb->prepare("SELECT COUNT(*) c FROM library_books $where");
+        if ($stmt) {
+            if (!empty($params)) $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if ($r) $totalBooks = (int)$r->fetch_assoc()['c'];
+            $stmt->close();
+        }
+        $stmt = $staffDb->prepare("SELECT b.*, COALESCE(br.return_status, 'Available') as avail_status FROM library_books b LEFT JOIN library_borrowing br ON b.id=br.book_id AND br.return_status IN ('Borrowed','Overdue') $where ORDER BY b.title LIMIT " . intval($limit) . " OFFSET " . intval($offset));
+        if ($stmt) {
+            if (!empty($params)) $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            if ($r) $books = $r->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+        }
 
         if ($userId) {
             $r = $staffDb->query("SELECT b.title, b.author, b.isbn, br.borrow_date, br.due_date, br.return_status, br.late_fee FROM library_borrowing br JOIN library_books b ON br.book_id=b.id WHERE (br.student_id=" . intval($userId) . " OR br.borrower_id=" . intval($userId) . ") AND br.return_status IN ('Borrowed','Overdue') ORDER BY br.due_date ASC");

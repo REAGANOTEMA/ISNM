@@ -236,6 +236,8 @@ class DatabaseConnection {
     public static function sanitizeInput($input) {
         return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
     }
+
+    public static function beginTransaction($database) {
         $database = self::resolveDatabaseName($database);
         $conn = self::getConnection($database);
         $conn->begin_transaction();
@@ -253,11 +255,6 @@ class DatabaseConnection {
         $conn->rollback();
     }
 
-    public static function escapeString($database, $string) {
-        $database = self::resolveDatabaseName($database);
-        $conn = self::getConnection($database);
-        return $conn->real_escape_string($string);
-    }
 }
 
 // Legacy compatibility functions
@@ -300,12 +297,6 @@ if (!function_exists('executeUpdate')) {
 if (!function_exists('sanitizeInput')) {
     function sanitizeInput($input) {
         return DatabaseConnection::sanitizeInput($input);
-    }
-}
-
-if (!function_exists('escapeString')) {
-    function escapeString($database, $string) {
-        return DatabaseConnection::escapeString($database, $string);
     }
 }
 

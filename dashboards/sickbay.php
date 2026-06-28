@@ -21,10 +21,6 @@ function sb_fetch($conn, $sql) {
     catch (Exception $e) { return []; }
 }
 
-function sb_esc($conn, $val) {
-    return $conn ? $conn->real_escape_string((string)$val) : $val;
-}
-
 $active_section = $_GET['section'] ?? 'dashboard';
 
 // Handle GET actions (AJAX)
