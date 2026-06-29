@@ -11,8 +11,8 @@ $user_id = (int)($user['id'] ?? 0);
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Director Admissions';
 
-$students_db = defined('STUDENTS_DB') ? STUDENTS_DB : 'igangaschoolofl_students_db';
-$staff_db = defined('STAFF_DB') ? STAFF_DB : 'igangaschoolofl_staffs_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
 
 // ── Auto-migration ──
 $migrate_tables = [

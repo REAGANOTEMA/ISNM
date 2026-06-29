@@ -201,8 +201,8 @@ $flashMessages = getFlashMessages();
                     <h2><?php echo $pageTitle; ?></h2>
                     <div class="text-muted">
                         <i class="fas fa-user me-2"></i>
-                        <?php echo $_SESSION['full_name']; ?> 
-                        <span class="badge bg-secondary ms-2"><?php echo $_SESSION['role_name']; ?></span>
+                        <?php echo htmlspecialchars($_SESSION['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> 
+                        <span class="badge bg-secondary ms-2"><?php echo htmlspecialchars($_SESSION['role_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                 </div>
 

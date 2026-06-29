@@ -10,7 +10,7 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
-$students_db_name = defined('STUDENTS_DB') ? STUDENTS_DB : 'igangaschoolofl_students_db';
+$students_db_name = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 // Get library statistics from database
 $students_db = $ctx['students'];

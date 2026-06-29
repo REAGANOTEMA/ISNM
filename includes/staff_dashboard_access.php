@@ -70,6 +70,22 @@ if (!function_exists('bootstrapStaffDashboard')) {
             exit();
         }
 
+        // ── Ensure CSRF token exists before validating ──
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        // ── Centralized CSRF validation for all POST requests ──
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+            if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Invalid or missing security token. Please refresh the page.']);
+                exit();
+            }
+        }
+
         $role = $_SESSION['role'] ?? '';
 
         // Refresh role from database if session is stale (handles role reassignments)
@@ -180,5 +196,12 @@ if (!function_exists('getDashboardStats')) {
 if (!function_exists('staffRequireRole')) {
     function staffRequireRole(array $roleKeywords) {
         bootstrapStaffDashboard($roleKeywords);
+    }
+}
+
+// ── Fallback for renderEmptyState if dashboard_components.php wasn't loaded ──
+if (!function_exists('renderEmptyState')) {
+    function renderEmptyState($message = 'No data available', $icon = 'fa-info-circle', $extra = '') {
+        echo '<div class="empty-state text-center py-5"><i class="fa ' . htmlspecialchars($icon) . ' fa-3x text-muted mb-3"></i><p class="text-muted">' . htmlspecialchars($message) . '</p>' . ($extra ? '<p>' . $extra . '</p>' : '') . '</div>';
     }
 }

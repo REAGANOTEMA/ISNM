@@ -21,7 +21,7 @@ ini_set('log_errors', 1);
 
         $generatedOtp = $_SESSION['otp'];
 
-        if($otp == $generatedOtp){
+        if((int)$otp === $generatedOtp){
             $response['status'] = 'success';
             $response['message'] = 'otp matched';
             unset($_SESSION['otp']);
@@ -112,8 +112,8 @@ ini_set('log_errors', 1);
 
     echo json_encode($response);
 
-function generateOTP(){
-    return rand(100000, 999999);
+function generateOTP(): int {
+    return random_int(100000, 999999);
 }
 
 function getEmailObject($reciever, $otp){

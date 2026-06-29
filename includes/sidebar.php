@@ -53,8 +53,10 @@ if ($user_type === 'student') {
 }
 
 require_once __DIR__ . '/module_config.php';
+require_once __DIR__ . '/sidebar_config.php';
 
 $modules = getFilteredModules($user_role);
+$sidebarConfig = getSidebarConfig($user_role);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -68,6 +70,20 @@ $admissionsGroups = ['Admissions','Approvals & Workflow','Settings'];
 $hrGroups = ['Human Resources','Staff Directory','Staff Attendance','Leave Management','Performance','Training & CPD','Recruitment','Contracts','Disciplinary','Onboarding','Resignations','Duty Rosters','Licenses','My Profile'];
 $ictGroups = ['ICT Department','System Administration','Digital Learning','Cybersecurity','ICT Policy','Computer Lab','IT Support','Lab Booking'];
 $acadRegGroups = ['Academic Registrar','Academic Records','Examinations','Results','Timetable','Registration','Programs','Quality Assurance','Accreditation','Research','Partnerships'];
+$securityGroups = ['Security & Transport','Security Dashboard','Visitor Management','Security Reports','Incidents','Patrol','Access Control'];
+$librarianGroups = ['Overview','Library Dashboard','Books Catalog','Book Borrowing','Library Members','Fines & Penalties','Digital Resources','Library Reports'];
+$nursingGroups = ['Overview','Nursing Dashboard','Clinical Placements','Nursing Students','Nursing Timetable','Nursing Courses','Department Staff'];
+$midwiferyGroups = ['Overview','Midwifery Dashboard','Clinical Placements','Midwifery Students','Midwifery Timetable','Midwifery Courses','Department Staff'];
+$seniorLecturerGroups = ['Overview','Senior Lecturer Dashboard','My Classes','Timetable','Attendance','Marks Entry','Lecture Notes','Research','Leave'];
+$lecturerGroups = ['Overview','Lecturer Dashboard','My Classes','Timetable','Attendance','Marks Entry','Lecture Notes','Leave'];
+$matronGroups = ['Overview','Matron Dashboard','Health Records','Hostel Management','Meals & Accommodation','Sick Bay','Student Welfare'];
+$wardenGroups = ['Overview','Warden Dashboard','Hostel Management','Discipline','Student Welfare','Hostel Reports'];
+$sickbayGroups = ['Overview','Sickbay Dashboard','Patient Records','Medicine Stock','Sick Leave','Health Directory','Health Reports'];
+$driverGroups = ['Overview','Driver Dashboard','Fleet Management','Fuel & Trips','Trip Logs','Vehicle Maintenance','Insurance','Transport Reports'];
+$storeGroups = ['Overview','Store Dashboard','Inventory','Store Requests','Purchase Orders','Suppliers','Stock Reports','Stock Adjustments'];
+$guildGroups = ['Overview','Guild Dashboard','Student Body','Student Welfare','Events','Feedback','Guild Reports'];
+$computerLabGroups = ['Overview','Computer Lab Dashboard','Computers Inventory','Lab Bookings','Maintenance','Usage Statistics','Lab Reports'];
+$skillsLabGroups = ['Overview','Skills Lab Dashboard','Equipment','Practical Sessions','Bookings','Chemical Inventory','Maintenance','Attendance','Skills Lab Reports'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -110,11 +126,43 @@ $pageGroupAllowList = [
     'recruitment.php'       => $hrGroups,
     'onboarding.php'        => $hrGroups,
     'director-ict.php'      => $ictGroups,
+    'security.php'          => $securityGroups,
     'academic-registrar.php'=> $acadRegGroups,
     'exams-results.php'     => $acadRegGroups,
     'grade-scales.php'      => $acadRegGroups,
     'curriculum-management.php'=>$acadRegGroups,
     'programs.php'          => $acadRegGroups,
+
+    // ── Library ──
+    'school-librarian.php'  => $librarianGroups,
+
+    // ── Nursing Department ──
+    'head-nursing.php'      => $nursingGroups,
+
+    // ── Midwifery Department ──
+    'head-midwifery.php'    => $midwiferyGroups,
+
+    // ── Academic ──
+    'senior-lecturers.php'  => $seniorLecturerGroups,
+    'lecturers.php'         => $lecturerGroups,
+
+    // ── Student Services ──
+    'matrons.php'           => $matronGroups,
+    'wardens.php'           => $wardenGroups,
+    'sickbay.php'           => $sickbayGroups,
+
+    // ── Security & Transport ──
+    'drivers.php'           => $driverGroups,
+
+    // ── Store & Assets ──
+    'storekeeper.php'       => $storeGroups,
+
+    // ── Student Government ──
+    'guild-president.php'   => $guildGroups,
+
+    // ── Labs ──
+    'computer_lab.php'      => $computerLabGroups,
+    'skills-lab.php'        => $skillsLabGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only
@@ -815,6 +863,22 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         </div>
         <?php else: ?>
         <!-- ═══ STANDARD SIDEBAR (non-DG) ═══ -->
+        <?php if (empty($modules) && !empty($sidebarConfig['modules'])): ?>
+        <div class="menu-divider"><span><i class="fas fa-th-large" style="color:#3b82f6;"></i> <?= htmlspecialchars($sidebarConfig['brand']) ?></span></div>
+        <?php foreach ($sidebarConfig['modules'] as $key => $mod):
+            $link = htmlspecialchars($mod['link'] ?? '#');
+            $label = htmlspecialchars($mod['label'] ?? ucfirst($key));
+            $icon = htmlspecialchars($mod['icon'] ?? 'fas fa-circle');
+            $isActive = strpos($_SERVER['REQUEST_URI'], $link) !== false || (basename($link) === $currentFile);
+        ?>
+        <div class="menu-group <?= $isActive ? 'expanded' : '' ?>" data-group="<?= $key ?>">
+            <div class="menu-group-header" style="cursor:pointer" onclick="window.location.href='<?= $link ?>'">
+                <span class="menu-icon"><i class="<?= $icon ?>"></i></span>
+                <span class="menu-label"><?= $label ?></span>
+            </div>
+        </div>
+        <?php endforeach; ?>
+        <?php else: ?>
         <div class="menu-divider"><span><i class="fas fa-th-large" style="color:#3b82f6;"></i> Navigation</span></div>
         <?php foreach ($modules as $parent):
             $parentId = preg_replace('/[^a-z0-9]/', '', strtolower($parent['title']));
@@ -878,6 +942,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             <?php endif; ?>
         </div>
         <?php endforeach; ?>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 

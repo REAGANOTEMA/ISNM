@@ -199,21 +199,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
     exit();
 }
 
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+// Allow GET for logout (sidebar link uses GET)
+if ($action === 'logout') {
+    handleLogout();
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: organogram.php');
     exit();
 }
-
-$action = $_POST['action'] ?? '';
 
 // CSRF verification on all POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
         $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
-        header('Location: organogram.php');
-        exit();
-    }
+    header('Location: staff-login.php');
+    exit();
+}
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -508,6 +514,6 @@ function handleLogout() {
     }
     session_unset();
     session_destroy();
-    header('Location: organogram.php');
+    header('Location: staff-login.php');
     exit();
 }

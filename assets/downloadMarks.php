@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 </div>
             </div>
         </div>
-            <input type="hidden" value="<?php echo $_POST['examId']; ?>">
+            <input type="hidden" value="<?php echo htmlspecialchars($_POST['examId'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
 
         <script>
 

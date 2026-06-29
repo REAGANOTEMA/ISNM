@@ -82,6 +82,19 @@ $(document).ajaxSend(function(e, xhr, opts) {
         }
     }
 });
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.CSRF_TOKEN) {
+        document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(form) {
+            if (!form.querySelector('input[name="csrf_token"]')) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'csrf_token';
+                input.value = window.CSRF_TOKEN;
+                form.appendChild(input);
+            }
+        });
+    }
+});
 </script>
 <script>
 if (!window._isnmErrorHandlerInstalled) {
@@ -100,6 +113,12 @@ if (!window._isnmErrorHandlerInstalled) {
         }
     });
 }
+</script>
+<script>
+window.onerror = function(msg, url) {
+    if (url && url.indexOf('chrome-extension://') === 0) return true;
+    return false;
+};
 </script>
 
 <!-- Favicon — all sizes, all devices -->
@@ -136,6 +155,10 @@ if (!window._isnmErrorHandlerInstalled) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Dashboard Analytics Engine (Chart.js + AI) -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-charts.js?v=<?= $v ?>" defer></script>
+<!-- Flatpickr date picker (used by academic-registrar and other dashboards) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>if(typeof flatpickr==='undefined'){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js';s.onload=function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css';document.head.appendChild(l)};document.head.appendChild(s)}</script>
 <!-- Push Notification Subscription -->
 <script>
 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {

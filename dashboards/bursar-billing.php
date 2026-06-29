@@ -8,7 +8,7 @@ $students = $ctx['students'];
 $website = $ctx['website'];
 $user = $ctx['user'];
 
-$students_db = defined('STUDENTS_DB') ? STUDENTS_DB : 'igangaschoolofl_students_db';
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 $view = $_GET['view'] ?? 'overview';
 $ajax = $_GET['ajax'] ?? '';

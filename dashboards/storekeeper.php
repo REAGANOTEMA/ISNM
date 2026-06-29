@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt->execute();
         $stmt->close();
         $stmt = $staffConn->prepare("INSERT INTO store_inventory_transactions (item_id, transaction_type, quantity, quantity_before, quantity_after, reason, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isddd si", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
+        $stmt->bind_param("isddddsi", $itemId, $type, $qty, $qtyBefore, $qtyAfter, $reason, $userId);
         $stmt->execute();
         $stmt->close();
         $_SESSION['store_msg'] = ['type'=>'success','text'=>'Stock updated successfully.'];

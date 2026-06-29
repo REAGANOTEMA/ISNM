@@ -1335,8 +1335,8 @@ function addSecurityLog() {
 function filterTickets(s) { $('#ticketTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('backup-row-'+s)); }); }
 function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter-pill[onclick*="'${s}'"]`).addClass('active'); $('.section-card tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
-<?php if (function_exists('renderDepartmentApprovalScripts')) renderDepartmentApprovalScripts(); ?>
 </script>
+<?php if (function_exists('renderDepartmentApprovalScripts')) renderDepartmentApprovalScripts(); ?>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

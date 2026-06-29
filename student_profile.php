@@ -394,11 +394,21 @@ function handlePasswordChange() {
         exit();
     }
     
-    // Verify current password
-    if (!password_verify($current_password, $user['password']) && $current_password !== $user['password']) {
-        $_SESSION['error'] = "Current password is incorrect";
-        header("Location: student_profile.php");
-        exit();
+    // Verify current password using bcrypt, with legacy plaintext upgrade
+    if (!password_verify($current_password, $user['password'])) {
+        if ($current_password === $user['password']) {
+            $newHash = password_hash($current_password, PASSWORD_DEFAULT);
+            $upStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            if ($upStmt) {
+                $upStmt->bind_param('si', $newHash, $user['id']);
+                $upStmt->execute();
+                $upStmt->close();
+            }
+        } else {
+            $_SESSION['error'] = "Current password is incorrect";
+            header("Location: student_profile.php");
+            exit();
+        }
     }
     
     // Validate new password

@@ -867,7 +867,14 @@ $sectionTitles = [
 <script>
 $(document).ready(function() {
     if ($.fn.DataTable) { $('.data-table').DataTable({ pageLength: 25, responsive: true, searching: true, ordering: true }); }
-    flatpickr('input[type="date"]', { dateFormat: 'Y-m-d' });
+    if (typeof flatpickr === 'function') {
+        flatpickr('input[type="date"]', { dateFormat: 'Y-m-d' });
+    } else {
+        var fpScript = document.createElement('script');
+        fpScript.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+        fpScript.onload = function() { flatpickr('input[type="date"]', { dateFormat: 'Y-m-d' }); };
+        document.head.appendChild(fpScript);
+    }
     var hash = window.location.hash.replace('#', '');
     if (hash) switchSection(hash);
 });

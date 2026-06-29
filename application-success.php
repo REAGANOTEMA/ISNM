@@ -24,7 +24,7 @@
             <div class="success-card">
               <?php
               if (isset($_SESSION['success_message'])) {
-                  echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
+                  echo '<div class="alert alert-success">' . htmlspecialchars($_SESSION['success_message'], ENT_QUOTES, 'UTF-8') . '</div>';
                   unset($_SESSION['success_message']);
               }
               ?>
