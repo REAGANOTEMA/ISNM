@@ -223,7 +223,7 @@ $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`ac
 if($r) while($row=$r->fetch_assoc()) $pending_applicants[]=$row;
 
 $view = $_GET['section'] ?? 'overview';
-$ajax = $_REQUEST['ajax'] ?? '';
+$ajax = $_REQUEST['ajax'] ?? $_REQUEST['action'] ?? '';
 
 // ══════════════════════════════════════════════════════════════════════
 // AJAX ENDPOINTS
@@ -297,12 +297,12 @@ if ($ajax === 'search_students') {
     if ($year !== '') { $where[] = "year = ?"; $params[] = $year; $types .= 's'; }
 
     $whereSql = 'WHERE '.implode(' AND ', $where);
-    $countResult = $students_conn->query("SELECT COUNT(*) total FROM `{$students_db_esc}`.`students` $whereSql");
+    $countResult = $students_conn->query("SELECT COUNT(*) total FROM `{$students_db}`.`students` $whereSql");
     $total = ($countResult && $countResult->num_rows) ? (int)$countResult->fetch_assoc()['total'] : 0;
 
     $limitParam = $limit;
     $offsetParam = $offset;
-    $stmt = $students_conn->prepare("SELECT id AS student_id,student_number AS admission_no,registration_number AS reg_no,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_date AS intake_period,year AS intake_year,status,gender,date_of_birth,address FROM `{$students_db_esc}`.`students` $whereSql ORDER BY surname,first_name LIMIT ? OFFSET ?");
+    $stmt = $students_conn->prepare("SELECT id AS student_id,student_number AS admission_no,registration_number AS reg_no,national_student_id_number,first_name,other_name,surname,full_name,phone,mobile_number,email,program,intake_date AS intake_period,year AS intake_year,status,gender,date_of_birth,address FROM `{$students_db}`.`students` $whereSql ORDER BY surname,first_name LIMIT ? OFFSET ?");
     if ($stmt) {
         $types .= 'ii';
         $params[] = $limitParam;
@@ -599,7 +599,13 @@ if ($ajax === 'approve_applicant_ajax') {
 if ($ajax === 'reject_applicant_ajax') {
     header('Content-Type: application/json');
     $aid=intval($_POST['applicant_id']??0);
-    if($aid){$conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Rejected' WHERE id=".intval($aid));logAdmission($conn,$user_id,'Reject','applicants',$aid,"Applicant rejected");echo json_encode(['success'=>true]);exit;}
+    $reason=trim($_POST['reason']??'');
+    if($aid){
+        $reasonEsc=$conn->real_escape_string($reason);
+        $conn->query("UPDATE `{$staff_db}`.`applicants` SET status='Rejected',rejection_reason='$reasonEsc' WHERE id=".intval($aid));
+        logAdmission($conn,$user_id,'Reject','applicants',$aid,"Applicant rejected".($reason?" — $reason":''));
+        echo json_encode(['success'=>true]);exit;
+    }
     echo json_encode(['success'=>false]);exit;
 }
 if ($ajax === 'get_applicant_data') {

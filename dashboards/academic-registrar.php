@@ -200,38 +200,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
         redirectBack('courses');
     }
     if ($action === 'register_student') {
-        $fn = trim($_POST['first_name'] ?? ''); $sn = trim($_POST['surname'] ?? '');
-        $on = trim($_POST['other_name'] ?? ''); $gen = trim($_POST['gender'] ?? 'Other');
-        $course = trim($_POST['course'] ?? ''); $yr = intval($_POST['current_year'] ?? 1);
-        $set = trim($_POST['set_name'] ?? ''); $ph = trim($_POST['phone'] ?? '');
-        $em = trim($_POST['email'] ?? ''); $nat = trim($_POST['nationality'] ?? 'Ugandan');
-        $addr = trim($_POST['address'] ?? ''); $gname = trim($_POST['guardian_name'] ?? '');
-        $gphone = trim($_POST['guardian_phone'] ?? ''); $dob = $_POST['date_of_birth'] ?? null;
-        $ecname = trim($_POST['emergency_contact_name'] ?? '');
-        $ecphone = trim($_POST['emergency_contact_phone'] ?? ''); $regno = trim($_POST['registration_number'] ?? '');
-        if ($fn && $sn && $course) {
-            $fullName = trim("$fn $on $sn"); $studentNum = 'STU-' . date('Y') . '-' . strtoupper(substr(uniqid(), -6));
-            $stmt = $students->prepare("INSERT INTO students (student_number, registration_number, full_name, first_name, surname, email, phone, course, current_year, set_name, status, guardian_name, guardian_phone, date_of_birth, gender, address, nationality, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?)");
-            if ($stmt) { $stmt->bind_param('sssssssisissssssss', $studentNum, $regno, $fullName, $fn, $sn, $em, $ph, $course, $yr, $set, $gname, $gphone, $dob, $gen, $addr, $nat, $ecname, $ecphone);
+        $fn = trim($_POST['first_name'] ?? ''); $ln = trim($_POST['last_name'] ?? '');
+        $gen = trim($_POST['gender'] ?? 'Other');
+        $program = trim($_POST['program'] ?? ''); $level = intval($_POST['level'] ?? 1);
+        $ph = trim($_POST['phone'] ?? '');
+        $em = trim($_POST['email'] ?? '');
+        if ($fn && $ln && $program) {
+            $fullName = trim("$fn $ln"); $studentNum = 'STU-' . date('Y') . '-' . strtoupper(substr(uniqid(), -6));
+            $stmt = $students->prepare("INSERT INTO students (student_number, full_name, first_name, last_name, program, level, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')");
+            if ($stmt) { $stmt->bind_param('sssssi', $studentNum, $fullName, $fn, $ln, $program, $level);
                 if ($stmt->execute()) {
                     $sid = $stmt->insert_id; $ay = date('Y'); $semName = 'First Semester';
                     $stmt2 = $staff->prepare("INSERT INTO registrar_student_registration (student_id, academic_year, semester, registration_date, registration_status, registered_by) VALUES (?, ?, ?, CURDATE(), 'Registered', ?)");
                     if ($stmt2) { $stmt2->bind_param('issi', $sid, $ay, $semName, $user_id); $stmt2->execute(); $stmt2->close(); }
                     $_SESSION['success'] = "Student $fullName registered (#$studentNum)."; logAudit($staff, $user_id, 'CREATE', 'student', $sid, "Registered student $fullName ($studentNum)");
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
-        } else $_SESSION['error'] = 'First name, surname, and course are required.';
+        } else $_SESSION['error'] = 'First name, last name, and program are required.';
         redirectBack('student-records');
     }
     if ($action === 'transfer_student') {
         $sid = intval($_POST['student_id'] ?? 0); $newProgram = trim($_POST['new_program'] ?? '');
-        $newYear = intval($_POST['new_year'] ?? 1); $remarks = trim($_POST['remarks'] ?? '');
+        $newLevel = intval($_POST['new_level'] ?? 1); $remarks = trim($_POST['remarks'] ?? '');
         if ($sid && $newProgram) {
-            $stmt = $students->prepare("UPDATE students SET course = ?, current_year = ? WHERE id = ?");
-            if ($stmt) { $stmt->bind_param('sii', $newProgram, $newYear, $sid);
+            $stmt = $students->prepare("UPDATE students SET program = ?, level = ? WHERE id = ?");
+            if ($stmt) { $stmt->bind_param('sii', $newProgram, $newLevel, $sid);
                 if ($stmt->execute()) {
                     $stmt2 = $staff->prepare("INSERT INTO student_progression (student_id, to_year, academic_year, progression_type, approved_by, status) VALUES (?, ?, ?, 'Transfer', ?, 'Approved')");
-                    if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newYear, date('Y'), $user_id); $stmt2->execute(); $stmt2->close(); }
-                    $_SESSION['success'] = 'Student transferred successfully.'; logAudit($staff, $user_id, 'TRANSFER', 'student', $sid, "Transferred to $newProgram year $newYear. $remarks");
+                    if ($stmt2) { $stmt2->bind_param('iisi', $sid, $newLevel, date('Y'), $user_id); $stmt2->execute(); $stmt2->close(); }
+                    $_SESSION['success'] = 'Student transferred successfully.'; logAudit($staff, $user_id, 'TRANSFER', 'student', $sid, "Transferred to $newProgram level $newLevel. $remarks");
                 } else $_SESSION['error'] = 'Failed: ' . $stmt->error; $stmt->close(); }
         } else $_SESSION['error'] = 'Student ID and new program required.';
         redirectBack('student-records');
@@ -428,7 +424,7 @@ $ajaxSid = intval($_GET['student_id'] ?? 0);
 if ($ajaxAction === 'lookup_student' && $ajaxSid > 0) {
     header('Content-Type: application/json');
     if (!$students) { echo json_encode(['error' => 'No DB connection']); exit; }
-    $stmt = $students->prepare("SELECT id, student_number, registration_number, full_name, first_name, surname, email, phone, course, current_year, set_name, status, gender, date_of_birth, nationality, address, guardian_name, guardian_phone, emergency_contact_name, emergency_contact_phone FROM students WHERE id = ?");
+    $stmt = $students->prepare("SELECT id, student_number, full_name, first_name, last_name, email, phone, program, level, status, gender FROM students WHERE id = ?");
     if (!$stmt) { echo json_encode(['error' => $students->error]); exit; }
     $stmt->bind_param('i', $ajaxSid);
     $stmt->execute();
@@ -444,9 +440,9 @@ if ($ajaxAction === 'search_students') {
     $q = trim($_GET['q'] ?? '');
     if (!$students || strlen($q) < 2) { echo json_encode([]); exit; }
     $like = '%' . $q . '%';
-    $stmt = $students->prepare("SELECT id, student_number, registration_number, full_name, course, current_year, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY full_name LIMIT 30");
+    $stmt = $students->prepare("SELECT id, student_number, full_name, program, level, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY full_name LIMIT 30");
     if (!$stmt) { echo json_encode([]); exit; }
-    $stmt->bind_param('sssss', $like, $like, $like, $like, $like);
+    $stmt->bind_param('ssss', $like, $like, $like, $like);
     $stmt->execute();
     $r = $stmt->get_result();
     $data = [];
@@ -510,7 +506,7 @@ if ($ajaxAction === 'get_workflow') {
 if ($ajaxAction === 'get_transcript_preview') {
     $sid = intval($_GET['student_id'] ?? 0);
     if (!$staff) { echo '<p class="text-muted">No connection</p>'; exit; }
-    $stmt = $staff->prepare("SELECT t.*, s.full_name, s.student_number, s.course FROM transcripts t JOIN {$students_db}.students s ON t.student_id = s.id WHERE t.student_id = ? ORDER BY t.generated_at DESC LIMIT 1");
+    $stmt = $staff->prepare("SELECT t.*, s.full_name, s.student_number, s.program FROM transcripts t JOIN {$students_db}.students s ON t.student_id = s.id WHERE t.student_id = ? ORDER BY t.generated_at DESC LIMIT 1");
     if (!$stmt) { echo '<p>Error preparing statement</p>'; exit; }
     $stmt->bind_param('i', $sid);
     $stmt->execute();
@@ -532,7 +528,7 @@ if ($ajaxAction === 'get_transcript_preview') {
     echo '<h3 class="text-center mb-1">IGANGA SCHOOL OF NURSING AND MIDWIFERY</h3>';
     echo '<p class="text-center text-muted small mb-3">ACADEMIC TRANSCRIPT</p><hr>';
     echo '<p><strong>Student:</strong> ' . htmlspecialchars($t['full_name']) . ' &nbsp;&nbsp; <strong>#:</strong> ' . htmlspecialchars($t['student_number']) . '</p>';
-    echo '<p><strong>Program:</strong> ' . htmlspecialchars($t['course']) . ' &nbsp;&nbsp; <strong>Transcript No:</strong> ' . htmlspecialchars($t['transcript_number']) . '</p>';
+    echo '<p><strong>Program:</strong> ' . htmlspecialchars($t['program']) . ' &nbsp;&nbsp; <strong>Transcript No:</strong> ' . htmlspecialchars($t['transcript_number']) . '</p>';
     echo '<table class="table table-bordered table-sm mt-3"><thead><tr><th>#</th><th>Course Code</th><th>Marks</th><th>Grade</th><th>GP</th></tr></thead><tbody>';
     $i = 1;
     foreach ($items as $it) {
@@ -546,7 +542,7 @@ if ($ajaxAction === 'get_transcript_preview') {
 if ($ajaxAction === 'get_certificate_preview') {
     $sid = intval($_GET['student_id'] ?? 0);
     if (!$staff) { echo '<p class="text-muted">No connection</p>'; exit; }
-    $stmt = $staff->prepare("SELECT c.*, s.full_name, s.course, s.gender FROM certificates c JOIN {$students_db}.students s ON c.student_id = s.id WHERE c.student_id = ? ORDER BY c.generated_at DESC LIMIT 1");
+    $stmt = $staff->prepare("SELECT c.*, s.full_name, s.program, s.gender FROM certificates c JOIN {$students_db}.students s ON c.student_id = s.id WHERE c.student_id = ? ORDER BY c.generated_at DESC LIMIT 1");
     if (!$stmt) { echo '<p>Error preparing statement</p>'; exit; }
     $stmt->bind_param('i', $sid);
     $stmt->execute();
@@ -561,7 +557,7 @@ if ($ajaxAction === 'get_certificate_preview') {
     echo '<p class="mt-4 lead">This is to certify that</p>';
     echo '<h3 class="fw-bold">' . htmlspecialchars($c['full_name']) . '</h3>';
     echo '<p>has successfully completed the program in</p>';
-    echo '<h4 class="fw-bold">' . htmlspecialchars($c['program_name'] ?: $c['course']) . '</h4>';
+    echo '<h4 class="fw-bold">' . htmlspecialchars($c['program_name'] ?: $c['program']) . '</h4>';
     if ($c['completion_date']) echo '<p class="mt-3">Completion Date: ' . htmlspecialchars($c['completion_date']) . '</p>';
     echo '<p class="mt-2"><strong>Certificate No:</strong> ' . htmlspecialchars($c['certificate_number']) . '</p>';
     if ($c['issue_date']) echo '<p><strong>Issue Date:</strong> ' . htmlspecialchars($c['issue_date']) . '</p>';
@@ -630,7 +626,7 @@ $programs = getProgramOptions($staff);
 $courses = getCourseOptions($staff);
 $studentsList = [];
 if ($students) {
-    $sR = $students->query("SELECT id, student_number, registration_number, full_name, course, current_year, status, phone, email FROM students ORDER BY id DESC LIMIT 100");
+    $sR = $students->query("SELECT id, student_number, full_name, program, level, status, phone, email FROM students ORDER BY id DESC LIMIT 100");
     if ($sR) { while ($row = $sR->fetch_assoc()) $studentsList[] = $row; $sR->close(); }
 }
 $sectionTitles = [
@@ -924,14 +920,14 @@ document.querySelectorAll('.student-lookup').forEach(function(input) {
                         data.forEach(function(s) {
                             var div = document.createElement('div');
                             div.className = 'lookup-item';
-                            div.innerHTML = '<strong>' + escJs(s.full_name) + '</strong> <small class="text-muted">' + escJs(s.student_number) + ' | ' + escJs(s.course) + ' | Yr ' + s.current_year + '</small>';
+                            div.innerHTML = '<strong>' + escJs(s.full_name) + '</strong> <small class="text-muted">' + escJs(s.student_number) + ' | ' + escJs(s.program) + ' | Lvl ' + s.level + '</small>';
                             div.addEventListener('click', function() {
                                 hidden.value = s.id;
                                 input.value = s.full_name + ' (' + s.student_number + ')';
                                 results.style.display = 'none';
                                 if (info) {
                                     info.classList.remove('d-none');
-                                    info.innerHTML = '<strong>' + escJs(s.full_name) + '</strong><br><small>#' + escJs(s.student_number) + ' | ' + escJs(s.course) + ' | Status: ' + s.status + '</small>';
+                                    info.innerHTML = '<strong>' + escJs(s.full_name) + '</strong><br><small>#' + escJs(s.student_number) + ' | ' + escJs(s.program) + ' | Status: ' + s.status + '</small>';
                                 }
                             });
                             results.appendChild(div);
@@ -950,8 +946,8 @@ function previewStudent(data) {
     var html = '<div class="p-3"><h6 class="fw-bold mb-3">' + escJs(data.full_name) + '</h6>';
     html += '<table class="table table-sm table-bordered"><tr><td><strong>Student #</strong></td><td>' + escJs(data.student_number) + '</td></tr>';
     html += '<tr><td><strong>Reg #</strong></td><td>' + escJs(data.registration_number || '-') + '</td></tr>';
-    html += '<tr><td><strong>Program</strong></td><td>' + escJs(data.course) + '</td></tr>';
-    html += '<tr><td><strong>Year</strong></td><td>' + (data.current_year || '-') + '</td></tr>';
+    html += '<tr><td><strong>Program</strong></td><td>' + escJs(data.program) + '</td></tr>';
+    html += '<tr><td><strong>Level</strong></td><td>' + (data.level || '-') + '</td></tr>';
     html += '<tr><td><strong>Status</strong></td><td>' + escJs(data.status) + '</td></tr>';
     html += '<tr><td><strong>Phone</strong></td><td>' + escJs(data.phone || '-') + '</td></tr>';
     html += '<tr><td><strong>Email</strong></td><td>' + escJs(data.email || '-') + '</td></tr></table></div>';
@@ -1044,19 +1040,18 @@ document.addEventListener('click', function(e) {
       <div class="table-responsive">
         <table class="table table-hover mb-0 data-table">
           <thead class="table-light">
-            <tr><th>#</th><th>Student #</th><th>Reg #</th><th>Full Name</th><th>Program</th><th>Year</th><th>Status</th><th>Phone</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Student #</th><th>Full Name</th><th>Program</th><th>Level</th><th>Status</th><th>Phone</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <?php if (empty($studentsList)): ?>
-            <tr><td colspan="9" class="text-center py-4 text-muted">No student records found.</td></tr>
+            <tr><td colspan="8" class="text-center py-4 text-muted">No student records found.</td></tr>
             <?php else: $idx = 0; foreach ($studentsList as $s): $idx++; ?>
             <tr>
               <td><?= $idx ?></td>
               <td><code><?= htmlspecialchars($s['student_number']) ?></code></td>
-              <td><?= htmlspecialchars($s['registration_number'] ?? '-') ?></td>
               <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-              <td><?= htmlspecialchars($s['course']) ?></td>
-              <td><?= $s['current_year'] ?></td>
+              <td><?= htmlspecialchars($s['program']) ?></td>
+              <td><?= $s['level'] ?></td>
               <td><span class="badge bg-<?= $s['status'] === 'Active' ? 'success' : ($s['status'] === 'Deferred' ? 'warning' : ($s['status'] === 'Withdrawn' ? 'danger' : 'secondary')) ?>"><?= htmlspecialchars($s['status']) ?></span></td>
               <td><?= htmlspecialchars($s['phone']) ?></td>
               <td>
@@ -1079,7 +1074,7 @@ document.addEventListener('click', function(e) {
     <?php
     $allPrograms = [];
     if ($staff) {
-      $pR = $staff->query("SELECT p.*, (SELECT COUNT(*) FROM {$students_db}.students s WHERE s.course = p.program_name AND s.status='Active') enrolled FROM academic_programs p ORDER BY p.program_name");
+      $pR = $staff->query("SELECT p.*, (SELECT COUNT(*) FROM {$students_db}.students s WHERE s.program = p.program_name AND s.status='Active') enrolled FROM academic_programs p ORDER BY p.program_name");
       if ($pR) { while ($row = $pR->fetch_assoc()) $allPrograms[] = $row; $pR->close(); }
     }
     ?>
@@ -1659,6 +1654,117 @@ document.addEventListener('click', function(e) {
           <div class="mb-3"><label class="form-label">Description</label><input type="text" name="description" class="form-control"></div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-reg"><i class="fas fa-save me-1"></i>Save</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="registerStudentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form method="POST" class="modal-content">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" name="action" value="register_student">
+          <div class="row g-3">
+            <div class="col-md-4"><label class="form-label">First Name *</label><input type="text" name="first_name" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label">Last Name *</label><input type="text" name="last_name" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label">Gender</label><select name="gender" class="form-select"><option>Male</option><option>Female</option><option>Other</option></select></div>
+            <div class="col-md-6"><label class="form-label">Program *</label><select name="program" class="form-select" required><?php foreach ($programs as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-6"><label class="form-label">Level</label><select name="level" class="form-select"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option></select></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-reg"><i class="fas fa-save me-1"></i>Register</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="transferStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Transfer Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" name="action" value="transfer_student">
+          <div class="mb-3">
+            <label class="form-label">Student *</label>
+            <div class="student-lookup-wrapper">
+              <input type="text" class="form-control student-lookup" placeholder="Search student...">
+              <input type="hidden" name="student_id" class="student-id-target">
+              <div class="lookup-results"></div>
+            </div>
+            <div class="selected-student-info d-none mt-2 p-2 small bg-light rounded"></div>
+          </div>
+          <div class="mb-3"><label class="form-label">New Program *</label><select name="new_program" class="form-select" required><?php foreach ($programs as $p): ?><option value="<?= htmlspecialchars($p['program_name']) ?>"><?= htmlspecialchars($p['program_name']) ?></option><?php endforeach; ?></select></div>
+          <div class="mb-3"><label class="form-label">New Level</label><select name="new_level" class="form-select"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option></select></div>
+          <div class="mb-3"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-reg"><i class="fas fa-save me-1"></i>Transfer</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deferStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <div class="modal-header bg-warning"><h5 class="modal-title"><i class="fas fa-pause me-2"></i>Defer Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" name="action" value="defer_student">
+          <div class="mb-3">
+            <label class="form-label">Student *</label>
+            <div class="student-lookup-wrapper">
+              <input type="text" class="form-control student-lookup" placeholder="Search student...">
+              <input type="hidden" name="student_id" class="student-id-target">
+              <div class="lookup-results"></div>
+            </div>
+            <div class="selected-student-info d-none mt-2 p-2 small bg-light rounded"></div>
+          </div>
+          <div class="mb-3"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-warning"><i class="fas fa-pause me-1"></i>Defer</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="withdrawStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-times me-2"></i>Withdraw Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" name="action" value="withdraw_student">
+          <div class="mb-3">
+            <label class="form-label">Student *</label>
+            <div class="student-lookup-wrapper">
+              <input type="text" class="form-control student-lookup" placeholder="Search student...">
+              <input type="hidden" name="student_id" class="student-id-target">
+              <div class="lookup-results"></div>
+            </div>
+            <div class="selected-student-info d-none mt-2 p-2 small bg-light rounded"></div>
+          </div>
+          <div class="mb-3"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger"><i class="fas fa-times me-1"></i>Withdraw</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="readmitStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" class="modal-content">
+        <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-undo me-2"></i>Readmit Student</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" name="action" value="readmit_student">
+          <div class="mb-3">
+            <label class="form-label">Student *</label>
+            <div class="student-lookup-wrapper">
+              <input type="text" class="form-control student-lookup" placeholder="Search student...">
+              <input type="hidden" name="student_id" class="student-id-target">
+              <div class="lookup-results"></div>
+            </div>
+            <div class="selected-student-info d-none mt-2 p-2 small bg-light rounded"></div>
+          </div>
+          <div class="mb-3"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success"><i class="fas fa-undo me-1"></i>Readmit</button></div>
       </form>
     </div>
   </div>

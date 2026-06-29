@@ -233,7 +233,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
                     <h2><i class="fas fa-hdd me-2 text-purple"></i>Database Info</h2>
                     <div class="small">
                         <div class="d-flex justify-content-between py-1"><span>Database Size</span><strong><?= number_format($db_size_mb, 2) ?> MB</strong></div>
-                        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= count($ict->query("SHOW TABLES")->fetch_all()) ?></strong></div>
+                        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count($ict->query("SHOW TABLES")->fetch_all()) : 0 ?></strong></div>
                         <div class="d-flex justify-content-between py-1"><span>Backups Today</span><strong><?= $today_backups ?></strong></div>
                         <div class="d-flex justify-content-between py-1"><span>Total Assets</span><strong><?= $total_assets ?></strong></div>
                     </div>
@@ -306,7 +306,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
                     <div style="max-height:300px;overflow-y:auto">
                     <?php if (empty($asset_cats)): ?><div class="text-muted small">No categories</div>
                     <?php else: foreach ($asset_cats as $c): ?>
-                    <div class="py-1 border-bottom small"><?= htmlspecialchars($c['category_name']) ?> <span class="badge bg-secondary float-end"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_assets WHERE category_id={$c['id']}") ?></span></div>
+                    <div class="py-1 border-bottom small"><?= htmlspecialchars($c['category_name']) ?> <span class="badge bg-secondary float-end"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_assets WHERE category_id=" . (int)$c['id']) ?></span></div>
                     <?php endforeach; endif; ?>
                     </div>
                 </div>
@@ -751,7 +751,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
                     <h2><i class="fas fa-tag me-2 text-success"></i>Asset Categories</h2>
                     <div style="max-height:300px;overflow-y:auto">
                     <?php foreach ($asset_cats as $c): ?>
-                    <div class="d-flex justify-content-between py-1 border-bottom small"><?= htmlspecialchars($c['category_name']) ?> <span class="badge bg-secondary"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_assets WHERE category_id={$c['id']}") ?></span></div>
+                    <div class="d-flex justify-content-between py-1 border-bottom small"><?= htmlspecialchars($c['category_name']) ?> <span class="badge bg-secondary"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_assets WHERE category_id=" . (int)$c['id']) ?></span></div>
                     <?php endforeach; ?>
                     </div>
                 </div>
@@ -1173,8 +1173,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
 </div></div>
 
 <?php if (function_exists('renderDepartmentApprovalModal')) renderDepartmentApprovalModal(); ?>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- jQuery & Bootstrap already loaded in dashboard_head.php — do NOT re-add here -->
 <script>
 const ICT_HANDLER = '../handlers/ict_handler.php';
 function showAlert(m, t) { $('.content-area').prepend(`<div class="alert alert-${t} alert-dismissible fade show py-2">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`); setTimeout(()=>$('.alert').alert('close'),5000); }

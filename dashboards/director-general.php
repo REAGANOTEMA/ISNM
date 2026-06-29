@@ -118,7 +118,7 @@ if ($dg_cached) {
 
     $recent_payments = [];
     if ($conn) {
-        $rp = $conn->query("SELECT p.*, s.first_name, s.last_name, s.student_number FROM igangaschoolofl_students_db.payments p LEFT JOIN igangaschoolofl_students_db.students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
+        $rp = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number FROM igangaschoolofl_students_db.payments p LEFT JOIN igangaschoolofl_students_db.students s ON p.student_id = s.id ORDER BY p.payment_date DESC LIMIT 5");
         if ($rp) while ($row = $rp->fetch_assoc()) $recent_payments[] = $row;
     }
 
@@ -1817,7 +1817,7 @@ document.addEventListener('DOMContentLoaded', function() {
     el.addEventListener('hide.bs.collapse', function(){ ch.classList.remove('rotated'); });
   }
   function initChevrons() {
-    ['quickActionsContent','employeeAnalysisContent','financialOverviewContent','studentManagementContent','staffTableCollapse'].forEach(bindChevron);
+    ['quickActionsContent','financialOverviewContent','studentManagementContent'].forEach(bindChevron);
   }
   if (document.readyState === 'complete') initChevrons();
   else document.addEventListener('DOMContentLoaded', initChevrons);

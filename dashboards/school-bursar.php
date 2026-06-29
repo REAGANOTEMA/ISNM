@@ -24,6 +24,7 @@ $bursarMigrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_messages (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT NOT NULL, sender_role VARCHAR(100), recipient_role VARCHAR(100), subject VARCHAR(200), message TEXT, read_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_notices (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), content TEXT, audience VARCHAR(50) DEFAULT 'all', published_by INT DEFAULT NULL, published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_clearance (id INT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(50) NOT NULL, academic_year VARCHAR(20), semester VARCHAR(20) DEFAULT 'Annual', clearance_status VARCHAR(50) DEFAULT 'Pending Review', cleared_by INT DEFAULT NULL, cleared_at DATETIME DEFAULT NULL, remarks TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_student_clearance (student_id, academic_year, semester)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.notifications (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, type VARCHAR(50), title VARCHAR(255), message TEXT, is_read TINYINT DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $bursarMigrate($staff);
 // Also try to create via students_db connection
@@ -1800,10 +1801,42 @@ echo $assetRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No a
                 </div>
             </form>
             <?php
+            function sendReminders() {
+                global $students, $staff, $students_db;
+                if (!$students || !$staff) return 0;
+                $students->set_charset('utf8mb4');
+                $query = "SELECT s.id, s.first_name, s.surname, s.email,
+                            SUM(sfa.total_fees) AS total_fees,
+                            SUM(sfa.balance) AS total_balance,
+                            SUM(sfa.amount_paid) AS total_paid
+                         FROM student_fee_accounts sfa
+                         LEFT JOIN {$students_db}.students s ON sfa.student_id = s.student_id
+                         WHERE sfa.status NOT IN ('fully_paid', 'cancelled')
+                         GROUP BY s.id, s.first_name, s.surname, s.email
+                         HAVING total_balance > 0";
+                $result = $staff->query($query);
+                if (!$result) return 0;
+                $count = 0;
+                while ($row = $result->fetch_assoc()) {
+                    $balance = $row['total_balance'];
+                    $msg = sprintf('Dear %s %s, your outstanding balance is UGX %s. Please pay promptly.',
+                        $row['first_name'], $row['surname'], number_format($balance));
+                    $stmt = $students->prepare("INSERT INTO {$students_db}.notifications (user_id, type, title, message, is_read, created_at) VALUES (?, 'fee_reminder', 'Fee Reminder', ?, 0, NOW())");
+                    if ($stmt) {
+                        $stmt->bind_param("is", $row['id'], $msg);
+                        $stmt->execute();
+                        $stmt->close();
+                        $count++;
+                    }
+                }
+                return $count;
+            }
+
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'send_reminders') {
                 $target = $_POST['target'] ?? 'all_outstanding';
                 $message = trim($_POST['message'] ?? 'Your fees are due.');
-                $_SESSION['success'] = "Fee reminders sent to outstanding students.";
+                $sentCount = sendReminders();
+                $_SESSION['success'] = "Fee reminders sent to $sentCount outstanding students.";
                 echo '<script>window.location.href="school-bursar.php?section=fee_reminders";</script>';
             }
             ?>

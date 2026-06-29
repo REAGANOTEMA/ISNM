@@ -419,6 +419,7 @@ if ($staff_conn) {
 if ($staff_conn) {
     $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'"); if ($r) $openVacancies = (int)$r->fetch_assoc()['c'];
     $r = $staff_conn->query("SELECT COUNT(*) c FROM job_applications"); if ($r) $applicants = (int)$r->fetch_assoc()['c'];
+    $r = $staff_conn->query("SELECT COUNT(*) c FROM job_applications WHERE status='Shortlisted'"); if ($r) $shortlisted = (int)$r->fetch_assoc()['c'];
 } ?>
                         <div class="row g-2 text-center mb-3">
                             <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $open_vacancies ?></div><small>Open Positions</small></div></div>
@@ -482,10 +483,15 @@ if ($staff_conn) {
                 <div class="form-card">
                     <div class="hd"><i class="fas fa-gavel me-2"></i>Disciplinary Cases</div>
                     <div class="bd">
+<?php $underInvestigation = 0; $resolvedCases = 0;
+if ($staff_conn) {
+    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Under Investigation'"); if ($r) $underInvestigation = (int)$r->fetch_assoc()['c'];
+    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Resolved'"); if ($r) $resolvedCases = (int)$r->fetch_assoc()['c'];
+} ?>
                         <div class="row g-2 text-center mb-3">
                             <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-danger"><?= $open_cases ?></div><small>Open</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $underInvestigation = 0 ?></div><small>Investigating</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $resolved = 0 ?></div><small>Resolved</small></div></div>
+                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $underInvestigation ?></div><small>Investigating</small></div></div>
+                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $resolvedCases ?></div><small>Resolved</small></div></div>
                         </div>
                         <a href="staff-disciplinary.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-balance-scale me-1"></i>Manage Disciplinary Cases</a>
                     </div>
@@ -573,10 +579,16 @@ if ($staff_conn) {
                     <div class="hd"><i class="fas fa-chalkboard-teacher me-2"></i>Teaching & Instructor Allocation</div>
                     <div class="bd">
                         <p class="small text-muted">Track teaching hours, clinical supervision hours, and instructor deployment across departments.</p>
+<?php $instructorCount = 0; $clinicalSites = 0; $activeRotations = 0;
+if ($staff_conn) {
+    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff WHERE employment_category='academic' AND status='Active'"); if ($r) $instructorCount = (int)$r->fetch_assoc()['c'];
+    $r = $staff_conn->query("SELECT COUNT(DISTINCT facility_name) c FROM clinical_placements WHERE status='Active'"); if ($r) $clinicalSites = (int)$r->fetch_assoc()['c'];
+    $r = $staff_conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Active' AND CURDATE() BETWEEN IFNULL(start_date, CURDATE()) AND IFNULL(end_date, CURDATE())"); if ($r) $activeRotations = (int)$r->fetch_assoc()['c'];
+} ?>
                         <div class="row g-2 text-center mb-3">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary">0</div><small>Instructors</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success">0</div><small>Clinical Sites</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info">0</div><small>Active Rotations</small></div></div>
+                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $instructorCount ?></div><small>Instructors</small></div></div>
+                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $clinicalSites ?></div><small>Clinical Sites</small></div></div>
+                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $activeRotations ?></div><small>Active Rotations</small></div></div>
                         </div>
                     </div>
                 </div>

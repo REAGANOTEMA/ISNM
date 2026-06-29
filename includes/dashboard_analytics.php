@@ -309,13 +309,15 @@ function renderAdminAnalytics($conn, $studentsConn, $websiteConn) {
     @media (max-width:576px) { .aa-kpi-grid { grid-template-columns:1fr 1fr;gap:10px; } .aa-forecast-grid { grid-template-columns:1fr 1fr; } .aa-health { flex-direction:column; } .aa-health-breakdown { grid-template-columns:1fr; } .aa-kpi-card { padding:14px 12px; } .aa-kpi-card .aa-value { font-size:18px; } .aa-card { padding:14px; } }
     </style>
 
-    <!-- ═══ LIVE BAR ═══ -->
+    <!-- ═══ LIVE BAR ═══ (removed — DOM element did not exist) -->
+    <!--
     <div class="aa-live-bar" id="aaLiveBar">
         <span class="aa-live-dot"></span>
         <span><strong>Live Analytics</strong> — <span id="aaLastUpdated">just now</span></span>
         <span style="color:#64748b;font-size:11px;" id="aaNextRefresh">Auto-refresh in 30s</span>
         <button class="aa-refresh-btn" onclick="aaRefresh()"><i class="fas fa-sync-alt me-1"></i>Refresh Now</button>
     </div>
+    -->
 
     <!-- ═══ KPI GRID ═══ -->
     <div class="aa-kpi-grid" id="aaKpiGrid">
