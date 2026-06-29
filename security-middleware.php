@@ -146,7 +146,7 @@ class SecurityMiddleware {
         if (isset($_SESSION['type']) && $_SESSION['type'] === 'student') {
             header('Location: student-login.php');
         } else {
-            header('Location: staff-login.php');
+            header('Location: organogram.php');
         }
         exit();
     }

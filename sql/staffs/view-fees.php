@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 1. Security Check: Authenticated and Authorized (Staff with profile viewing rights)
 if (!$auth_service->isAuthenticated() || !$auth_service->canSearchStudentProfiles($_SESSION['role'])) {
     $_SESSION['error'] = "Unauthorized access to financial records.";
-    header('Location: ../staff-login.php');
+    header('Location: ../organogram.php');
     exit();
 }
 

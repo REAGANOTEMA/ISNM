@@ -1,28 +1,25 @@
 <?php
 $conn = new mysqli('localhost', 'root', '', 'igangaschoolofl_staffs_db', 3307);
-if ($conn->connect_error) die('DB error: ' . $conn->connect_error);
-
-// Check payroll_allowance_types structure
-echo "=== payroll_allowance_types ===\n";
-$r = $conn->query("SHOW CREATE TABLE payroll_allowance_types");
-$row = $r->fetch_assoc();
-echo $row['Create Table'] . "\n\n";
-
-// Check payroll_deduction_types structure
-echo "=== payroll_deduction_types ===\n";
-$r = $conn->query("SHOW CREATE TABLE payroll_deduction_types");
-$row = $r->fetch_assoc();
-echo $row['Create Table'] . "\n\n";
-
-// Check existing data
-echo "=== Existing allowance types ===\n";
-$r = $conn->query("SELECT * FROM payroll_allowance_types");
+$r = $conn->query("SHOW COLUMNS FROM lab_attendance");
+echo "=== lab_attendance columns ===\n";
 while ($row = $r->fetch_assoc()) {
-    echo json_encode($row) . "\n";
+    echo "  {$row['Field']} | {$row['Type']}\n";
 }
 
-echo "\n=== Existing deduction types ===\n";
-$r = $conn->query("SELECT * FROM payroll_deduction_types");
-while ($row = $r->fetch_assoc()) {
-    echo json_encode($row) . "\n";
+$r2 = $conn->query("SHOW COLUMNS FROM lab_practical_sessions");
+echo "\n=== lab_practical_sessions columns ===\n";
+while ($row = $r2->fetch_assoc()) {
+    echo "  {$row['Field']} | {$row['Type']}\n";
+}
+
+$r3 = $conn->query("SHOW COLUMNS FROM payroll_overtime");
+echo "\n=== payroll_overtime columns ===\n";
+while ($row = $r3->fetch_assoc()) {
+    echo "  {$row['Field']} | {$row['Type']}\n";
+}
+
+$r4 = $conn->query("SHOW COLUMNS FROM student_welfare_cases");
+echo "\n=== student_welfare_cases columns ===\n";
+while ($row = $r4->fetch_assoc()) {
+    echo "  {$row['Field']} | {$row['Type']}\n";
 }

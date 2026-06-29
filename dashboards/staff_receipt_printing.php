@@ -22,7 +22,7 @@ if (stripos($staff_role, 'Director') !== false ||
 
 if (!$can_generate_receipts) {
     $_SESSION['error'] = "You don't have permission to generate receipts.";
-    header("Location: staff-login.php");
+    header("Location: ../organogram.php");
     exit();
 }
 

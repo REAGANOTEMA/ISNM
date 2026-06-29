@@ -17,7 +17,7 @@
         $role = strtolower($row['role'] ?? '');
         if ($role !== 'student') {
             include('../assets/logout.php');
-            header("Location: ../staff-login.php");
+            header("Location: ../student-login.php");
             exit();
         }
     } else {

@@ -16,7 +16,7 @@
 
         }else{
             include('../../logout.php');
-            header("Location: ../staff-login.php");
+            header("Location: ../../organogram.php");
             exit();
         }
 

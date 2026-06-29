@@ -55,7 +55,7 @@ if (!function_exists('bootstrapStaffDashboard')) {
         // Compute correct relative path to staff-login.php
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $dirDepth = substr_count(dirname($scriptName), '/');
-        $loginPath = $dirDepth > 1 ? str_repeat('../', $dirDepth - 1) . 'staff-login.php' : 'staff-login.php';
+        $loginPath = $dirDepth > 1 ? str_repeat('../', $dirDepth - 1) . 'organogram.php' : 'organogram.php';
 
         if (!$auth_service->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
             $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';

@@ -27,13 +27,13 @@
                             // Admin access granted
                         }else{
                             include('../assets/logout.php');
-                            header("Location: ../staff-login.php");
+                            header("Location: ../organogram.php");
                             exit();
                         }
                     } else {
                         // User not found - logout and redirect
                         include('../assets/logout.php');
-                        header("Location: ../staff-login.php");
+                        header("Location: ../organogram.php");
                         exit();
                     }
                 } else {

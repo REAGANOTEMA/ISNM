@@ -24,7 +24,7 @@ if (stripos($staff_role, 'Academic Registrar') !== false ||
 
 if (!$can_generate_transcripts) {
     $_SESSION['error'] = "You don't have permission to generate transcripts.";
-    header("Location: staff-login.php");
+    header("Location: ../organogram.php");
     exit();
 }
 

@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_s
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: staff-login.php');
+    header('Location: organogram.php');
     exit();
 }
 
@@ -209,7 +209,7 @@ switch ($action) {
 
         if ($email === '' || $password === '') {
             $_SESSION['error'] = 'Email and password are required.';
-            header('Location: staff-login.php');
+            header('Location: organogram.php');
             exit();
         }
 
@@ -273,7 +273,7 @@ switch ($action) {
             exit();
         } else {
             $_SESSION['error'] = ($result['message'] ?? 'Invalid email or password.');
-            $redirectUrl = 'staff-login.php';
+            $redirectUrl = 'organogram.php';
             $redirectPosition = $requested_position ?: ($_SESSION['requested_position'] ?? '');
             $redirectParam = $redirect_url ? '&redirect=' . urlencode($redirect_url) : '';
             if ($redirectPosition !== '') {
@@ -416,7 +416,7 @@ function handleCreateStudent() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
-        header('Location: staff-login.php'); exit();
+        header('Location: organogram.php'); exit();
     }
     $data = [
         'index_number' => $_POST['index_number'] ?? '',
@@ -433,7 +433,7 @@ function handleCreateStudent() {
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
-    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'organogram.php';
     header('Location: ' . $safeRef);
     exit();
 }
@@ -442,7 +442,7 @@ function handleCreateStaff() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
-        header('Location: staff-login.php'); exit();
+        header('Location: organogram.php'); exit();
     }
     $data = [
         'full_name'  => $_POST['full_name']  ?? '',
@@ -457,7 +457,7 @@ function handleCreateStaff() {
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
-    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'organogram.php';
     header('Location: ' . $safeRef);
     exit();
 }

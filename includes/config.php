@@ -86,7 +86,7 @@ function isLoggedIn() {
 
 function checkAccessLevel($required_level) {
     if (!isset($_SESSION['access_level']) || $_SESSION['access_level'] < $required_level) {
-        header('Location: ../staff-login.php');
+        header('Location: ../organogram.php');
         exit();
     }
 }
