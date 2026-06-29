@@ -628,6 +628,7 @@ $pageTitle = 'Bursar Dashboard';
 <style>
 .print-only{display:none}
 @media print{.d-print-none{display:none!important}.print-only{display:block!important}.cc{border:1px solid #ddd!important;break-inside:avoid}.cc .ch{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.table th{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
 </style>
 
     <div class="ph">

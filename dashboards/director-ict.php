@@ -72,7 +72,7 @@ $assignments  = ict_fetch($ict, "SELECT a.*, ast.asset_number, ast.asset_name FR
 $maintenance  = ict_fetch($ict, "SELECT m.*, a.asset_number, a.asset_name FROM ict_asset_maintenance m LEFT JOIN ict_assets a ON m.asset_id=a.id ORDER BY m.created_at DESC LIMIT 20");
 
 // ── User & Access ──
-$staff_accounts  = ict_fetch($staff_conn, "SELECT id, full_name, email, role, status, last_login FROM staff ORDER BY full_name LIMIT 20");
+$staff_accounts  = ict_fetch($staff_conn, "SELECT s.id, s.full_name, s.email, sr.role_name AS role, s.status, s.last_login FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
 $staff_count     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff");
 $student_count   = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
 $active_sessions = ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'");
@@ -96,14 +96,18 @@ $tab = $_GET['tab'] ?? 'dashboard';
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-:root { --sidebar-width: 260px; }
-.stat-card { background:#fff; border-radius:12px; padding:16px; border:1px solid #e5e7eb; display:flex; align-items:center; gap:14px; transition:all .2s; }
-.stat-card:hover { box-shadow:0 4px 14px rgba(0,0,0,0.07); transform:translateY(-1px); }
-.stat-card .icon-circle { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.stat-card h4 { font-size:18px; font-weight:700; margin:0; line-height:1.2; }
-.stat-card p { margin:0; font-size:11px; color:#6b7280; }
-.section-card { background:#fff; border-radius:12px; padding:18px; border:1px solid #e5e7eb; margin-bottom:14px; }
-.section-card h2 { font-size:14px; font-weight:700; margin-bottom:12px; color:#111827; }
+:root { --sidebar-width:260px; --accent:#2563eb; --accent-light:#eff6ff; --radius:14px; --shadow-sm:0 1px 3px rgba(0,0,0,.06); --shadow-md:0 4px 16px rgba(0,0,0,.08); --shadow-lg:0 8px 30px rgba(0,0,0,.1); }
+.page-content { padding:20px 24px 40px; background:#f0f2f5; min-height:100vh; }
+.page-content .content-area { max-width:1400px; margin:0 auto; }
+.stat-card { background:#fff; border-radius:var(--radius); padding:18px 20px; border:1px solid #e5e7eb; display:flex; align-items:center; gap:14px; transition:all .25s ease; box-shadow:var(--shadow-sm); }
+.stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:#d1d5db; }
+.stat-card .icon-circle { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; transition:transform .2s; }
+.stat-card:hover .icon-circle { transform:scale(1.08); }
+.stat-card h4 { font-size:22px; font-weight:800; margin:0; line-height:1.1; color:#111827; }
+.stat-card p { margin:0; font-size:12px; color:#6b7280; font-weight:500; letter-spacing:.02em; }
+.section-card { background:#fff; border-radius:var(--radius); padding:22px 24px; border:1px solid #e5e7eb; margin-bottom:16px; box-shadow:var(--shadow-sm); transition:box-shadow .25s; }
+.section-card:hover { box-shadow:var(--shadow-sm); }
+.section-card h2 { font-size:15px; font-weight:700; margin-bottom:14px; color:#111827; letter-spacing:-.01em; }
 .bg-blue-soft { background:#eff6ff; color:#2563eb; }
 .bg-green-soft { background:#f0fdf4; color:#16a34a; }
 .bg-red-soft { background:#fef2f2; color:#dc2626; }
@@ -114,20 +118,39 @@ $tab = $_GET['tab'] ?? 'dashboard';
 .bg-pink-soft { background:#fdf2f8; color:#db2777; }
 .bg-indigo-soft { background:#eef2ff; color:#4f46e5; }
 .bg-cyan-soft { background:#ecfeff; color:#0891b2; }
-.monitor-card { background:#1e293b; border-radius:10px; padding:14px; color:#e2e8f0; text-align:center; }
-.monitor-card h3 { font-size:28px; font-weight:700; margin:0; }
-.monitor-card p { font-size:11px; color:#94a3b8; margin:4px 0 0; }
-.monitor-card .progress { height:4px; margin-top:8px; }
-.nav-pills-ict { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:14px; padding:6px; background:#f9fafb; border-radius:10px; border:1px solid #e5e7eb; }
-.nav-pills-ict .nav-link { padding:5px 10px; border-radius:6px; font-size:11px; font-weight:500; color:#4b5563; text-decoration:none; white-space:nowrap; }
-.nav-pills-ict .nav-link:hover { background:#e5e7eb; }
-.nav-pills-ict .nav-link.active { background:#2563eb; color:#fff; }
-.filter-pill { display:inline-flex; padding:5px 12px; border-radius:6px; font-size:11px; font-weight:500; color:#4b5563; background:#f3f4f6; text-decoration:none; }
-.filter-pill:hover { background:#e5e7eb; }
-.filter-pill.active { background:#2563eb; color:#fff; }
+.monitor-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-radius:12px; padding:18px 16px; color:#e2e8f0; text-align:center; transition:transform .2s,box-shadow .2s; }
+.monitor-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.3); }
+.monitor-card h3 { font-size:30px; font-weight:800; margin:0; background:linear-gradient(135deg,#fff,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.monitor-card p { font-size:11px; color:#94a3b8; margin:4px 0 0; font-weight:500; }
+.monitor-card .progress { height:5px; margin-top:10px; border-radius:10px; background:#334155; }
+.monitor-card .progress-bar { border-radius:10px; }
+.nav-pills-ict { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:18px; padding:8px 10px; background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:var(--shadow-sm); }
+.nav-pills-ict .nav-link { padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; color:#4b5563; text-decoration:none; white-space:nowrap; transition:all .2s; border:1px solid transparent; }
+.nav-pills-ict .nav-link:hover { background:#f3f4f6; border-color:#e5e7eb; color:#111827; }
+.nav-pills-ict .nav-link.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); border-color:transparent; }
+.filter-pill { display:inline-flex; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; color:#4b5563; background:#f3f4f6; text-decoration:none; transition:all .2s; border:1px solid transparent; }
+.filter-pill:hover { background:#e5e7eb; color:#111827; }
+.filter-pill.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); }
 .badge-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
-.status-led { width:10px; height:10px; border-radius:50%; display:inline-block; }
-.table-small td, .table-small th { padding:4px 8px!important; font-size:12px; }
+.status-led { width:10px; height:10px; border-radius:50%; display:inline-block; box-shadow:0 0 6px rgba(0,0,0,.15); }
+.table-small td, .table-small th { padding:8px 10px!important; font-size:12px; vertical-align:middle; }
+.table-small thead th { font-weight:700; color:#374151; border-bottom-width:2px; text-transform:uppercase; font-size:10px; letter-spacing:.05em; }
+.table-small tbody tr { transition:background .15s; }
+.table-small tbody tr:hover { background:#f8fafc; }
+.table-responsive { border-radius:10px; border:1px solid #e5e7eb; }
+.table-responsive table { margin-bottom:0; }
+.btn { border-radius:8px; font-weight:600; font-size:12px; transition:all .2s; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.alert { border-radius:10px; font-size:13px; }
+.modal-content { border-radius:var(--radius); border:none; box-shadow:var(--shadow-lg); }
+.modal-header { border-radius:var(--radius) var(--radius) 0 0; }
+.form-control, .form-select { border-radius:8px; font-size:13px; border-color:#d1d5db; }
+.form-control:focus, .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+.form-label { font-weight:600; font-size:12px; color:#374151; margin-bottom:4px; }
+code { font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569; }
+.badge { font-weight:600; font-size:10px; padding:3px 8px; border-radius:6px; letter-spacing:.02em; }
+@media(max-width:768px){ .page-content{padding:12px 12px 30px;} .stat-card{padding:14px;} .stat-card h4{font-size:18px;} .section-card{padding:16px;} .nav-pills-ict{gap:2px;padding:6px;} .nav-pills-ict .nav-link{padding:5px 8px;font-size:11px;} .table-small td,.table-small th{padding:6px 6px!important;font-size:11px;} }
+@media(max-width:576px){ .stat-card .icon-circle{width:38px;height:38px;font-size:16px;} .monitor-card h3{font-size:24px;} }
 </style>
 </head>
 <body>
@@ -1224,11 +1247,69 @@ function saveSetting(key, value, group) {
     $.post(ICT_HANDLER, { action: 'save_setting', setting_key: key, setting_value: value, setting_group: group || 'general' }).done(r => { if(r.success) showAlert('Setting saved','success'); else showAlert(r.message,'danger'); });
 }
 function saveBackupSetting(key, value) { saveSetting(key, value, 'backup'); }
-function editAsset(id) { showAlert('Edit via modal coming soon for asset #'+id, 'info'); }
-function assignAsset(id) { showAlert('Assign modal coming soon for asset #'+id, 'info'); }
-function logMaint(id) { showAlert('Maintenance log modal coming soon', 'info'); }
-function editServer(id) { showAlert('Edit via modal coming soon', 'info'); }
-function updateTicket(id) { showAlert('Update ticket modal coming soon', 'info'); }
+function editAsset(id) {
+    $.get(ICT_HANDLER, {action:'get_asset', id:id}).done(function(r){
+        if(!r.success){showAlert(r.message,'danger');return;}
+        var d=r.data;
+        var html='<form id="editAssetForm"><input type="hidden" name="action" value="edit_asset"><input type="hidden" name="id" value="'+d.id+'">';
+        html+='<div class="mb-2"><label class="form-label">Name</label><input type="text" name="asset_name" class="form-control" value="'+(d.asset_name||'')+'" required></div>';
+        html+='<div class="row mb-2"><div class="col-6"><label class="form-label">Type</label><select name="asset_type" class="form-select"><option value="hardware"'+(d.asset_type==='hardware'?' selected':'')+'>Hardware</option><option value="software"'+(d.asset_type==='software'?' selected':'')+'>Software</option><option value="network"'+(d.asset_type==='network'?' selected':'')+'>Network</option></select></div><div class="col-6"><label class="form-label">Status</label><select name="current_status" class="form-select"><option value="active"'+(d.current_status==='active'?' selected':'')+'>Active</option><option value="in_maintenance"'+(d.current_status==='in_maintenance'?' selected':'')+'>Maintenance</option><option value="retired"'+(d.current_status==='retired'?' selected':'')+'>Retired</option></select></div></div>';
+        html+='<div class="mb-2"><label class="form-label">Location</label><input type="text" name="current_location" class="form-control" value="'+(d.current_location||'')+'"></div>';
+        html+='<button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-1"></i>Save Changes</button></form>';
+        showBootstrapModal('Edit Asset', html, 'editAssetModal');
+        $('#editAssetForm').submit(function(e){e.preventDefault();doAjax('editAssetForm');});
+    });
+}
+function assignAsset(id) {
+    var staffHtml='<form id="assignAssetForm"><input type="hidden" name="action" value="assign_asset"><input type="hidden" name="asset_id" value="'+id+'">';
+    staffHtml+='<div class="mb-2"><label class="form-label">Staff ID</label><input type="number" name="assigned_to_staff_id" class="form-control" required></div>';
+    staffHtml+='<div class="mb-2"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>';
+    staffHtml+='<button type="submit" class="btn btn-info text-white w-100"><i class="fas fa-user-tag me-1"></i>Assign Asset</button></form>';
+    showBootstrapModal('Assign Asset', staffHtml, 'assignAssetModal');
+    $('#assignAssetForm').submit(function(e){e.preventDefault();doAjax('assignAssetForm');});
+}
+function logMaint(id) {
+    var mHtml='<form id="maintForm"><input type="hidden" name="action" value="add_asset_maintenance"><input type="hidden" name="asset_id" value="'+id+'">';
+    mHtml+='<div class="mb-2"><label class="form-label">Type</label><select name="maintenance_type" class="form-select"><option value="preventive">Preventive</option><option value="corrective">Corrective</option><option value="emergency">Emergency</option></select></div>';
+    mHtml+='<div class="mb-2"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2" required></textarea></div>';
+    mHtml+='<div class="mb-2"><label class="form-label">Cost</label><input type="number" step="0.01" name="cost" class="form-control" value="0"></div>';
+    mHtml+='<button type="submit" class="btn btn-warning w-100"><i class="fas fa-tools me-1"></i>Log Maintenance</button></form>';
+    showBootstrapModal('Log Maintenance', mHtml, 'maintModal');
+    $('#maintForm').submit(function(e){e.preventDefault();doAjax('maintForm');});
+}
+function editServer(id) {
+    $.get(ICT_HANDLER, {action:'get_server', id:id}).done(function(r){
+        if(!r.success){showAlert(r.message,'danger');return;}
+        var d=r.data;
+        var html='<form id="editServerForm"><input type="hidden" name="action" value="edit_server"><input type="hidden" name="id" value="'+d.id+'">';
+        html+='<div class="mb-2"><label class="form-label">Name</label><input type="text" name="server_name" class="form-control" value="'+(d.server_name||'')+'" required></div>';
+        html+='<div class="row mb-2"><div class="col-6"><label class="form-label">IP</label><input type="text" name="ip_address" class="form-control" value="'+(d.ip_address||'')+'"></div><div class="col-6"><label class="form-label">Type</label><input type="text" name="server_type" class="form-control" value="'+(d.server_type||'')+'"></div></div>';
+        html+='<div class="row mb-2"><div class="col-6"><label class="form-label">OS</label><input type="text" name="os" class="form-control" value="'+(d.os||'')+'"></div><div class="col-6"><label class="form-label">Status</label><select name="status" class="form-select"><option value="online"'+(d.status==='online'?' selected':'')+'>Online</option><option value="offline"'+(d.status==='offline'?' selected':'')+'>Offline</option><option value="maintenance"'+(d.status==='maintenance'?' selected':'')+'>Maintenance</option></select></div></div>';
+        html+='<button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-1"></i>Save</button></form>';
+        showBootstrapModal('Edit Server', html, 'editServerModal');
+        $('#editServerForm').submit(function(e){e.preventDefault();doAjax('editServerForm');});
+    });
+}
+function updateTicket(id) {
+    $.get(ICT_HANDLER, {action:'get_ticket', id:id}).done(function(r){
+        if(!r.success){showAlert(r.message,'danger');return;}
+        var d=r.data;
+        var html='<form id="updateTicketForm"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="id" value="'+d.id+'">';
+        html+='<div class="mb-2"><label class="form-label">Status</label><select name="status" class="form-select"><option value="open"'+(d.status==='open'?' selected':'')+'>Open</option><option value="in_progress"'+(d.status==='in_progress'?' selected':'')+'>In Progress</option><option value="resolved"'+(d.status==='resolved'?' selected':'')+'>Resolved</option><option value="closed"'+(d.status==='closed'?' selected':'')+'>Closed</option></select></div>';
+        html+='<div class="mb-2"><label class="form-label">Assigned To (Staff ID)</label><input type="number" name="assigned_to" class="form-control" value="'+(d.assigned_to||'')+'"></div>';
+        html+='<div class="mb-2"><label class="form-label">Resolution Notes</label><textarea name="resolution_notes" class="form-control" rows="3"></textarea></div>';
+        html+='<button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-1"></i>Update Ticket</button></form>';
+        showBootstrapModal('Update Ticket', html, 'updateTicketModal');
+        $('#updateTicketForm').submit(function(e){e.preventDefault();doAjax('updateTicketForm');});
+    });
+}
+function showBootstrapModal(title, body, id) {
+    var existing = document.getElementById(id);
+    if(existing) existing.remove();
+    var modal='<div class="modal fade" id="'+id+'" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">'+title+'</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body">'+body+'</div></div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', modal);
+    new bootstrap.Modal(document.getElementById(id)).show();
+}
 
 function createQuickBackup() {
     $.post(ICT_HANDLER, { action: 'create_backup', backup_name: 'QuickBackup-'+new Date().toISOString().slice(0,19), backup_type: 'full', target_database: 'all' }).done(r => { if(r.success) { showAlert('Quick backup started','success'); setTimeout(()=>location.reload(),600); } else showAlert(r.message,'danger'); });

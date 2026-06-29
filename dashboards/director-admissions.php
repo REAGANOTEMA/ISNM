@@ -462,10 +462,14 @@ if ($ajax === 'mark_all_submitted') {
 if ($ajax === 'reset_requirements') {
     header('Content-Type: application/json');
     $aid=intval($_POST['applicant_id']??0);
-    if(!$aid){echo json_encode(['success'=>false]);exit;}
-    $conn->query("UPDATE `{$staff_db}`.`applicant_requirement_status` SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=".intval($aid));
-    $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,action,performed_by,remarks) VALUES (".intval($aid).",'Reset',".intval($user_id).",'All requirements reset')");
-    logAdmission($conn,$user_id,'Reset All','requirements',$aid,"All requirements reset for applicant #$aid");
+    if($aid){
+        $conn->query("UPDATE `{$staff_db}`.`applicant_requirement_status` SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks='' WHERE applicant_id=".intval($aid));
+        $conn->query("INSERT INTO `{$staff_db}`.`requirement_history` (applicant_id,action,performed_by,remarks) VALUES (".intval($aid).",'Reset',".intval($user_id).",'All requirements reset')");
+        logAdmission($conn,$user_id,'Reset All','requirements',$aid,"All requirements reset for applicant #$aid");
+    } else {
+        $conn->query("UPDATE `{$staff_db}`.`applicant_requirement_status` SET status='Not Submitted',submitted_by=NULL,verified_by=NULL,rejected_by=NULL,submitted_at=NULL,verified_at=NULL,remarks=''");
+        logAdmission($conn,$user_id,'Reset All Requirements','requirements',0,"All applicant requirements reset");
+    }
     echo json_encode(['success'=>true]);exit;
 }
 
@@ -660,7 +664,13 @@ if ($ajax === 'reports_data') {
         $r=$conn->query("SELECT intake,COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!=''$dateWhere GROUP BY intake ORDER BY intake");
         if($r)while($row=$r->fetch_assoc())$data[]=$row;
     }elseif($type==='clearance'){
-        $r=$conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,a.status,a.intake,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,(SELECT COUNT(*) FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1) total_req FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.full_name LIMIT 500");
+        $clrW="1=1"; $clrParams=[]; $clrTypes='';
+        $clrProg=trim($_POST['program']??''); $clrIntake=trim($_POST['intake']??'');
+        if($clrProg!==''){$clrW.=" AND a.program_id=?";$clrParams[]=intval($clrProg);$clrTypes.='i';}
+        if($clrIntake!==''){$clrW.=" AND a.intake=?";$clrParams[]=$clrIntake;$clrTypes.='s';}
+        $clrSql="SELECT a.id,a.full_name,a.application_number,a.phone,a.status,a.intake,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,(SELECT COUNT(*) FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1) total_req FROM `{$staff_db}`.`applicants` a WHERE $clrW$dateWhere ORDER BY a.full_name LIMIT 500";
+        if($clrTypes){$stmt=$conn->prepare($clrSql);$stmt->bind_param($clrTypes,...$clrParams);$stmt->execute();$r=$stmt->get_result();$stmt->close();}
+        else $r=$conn->query($clrSql);
         if($r)while($row=$r->fetch_assoc()){$data[]=$row;}
     }
     if($format==='csv'){
@@ -887,11 +897,34 @@ if($report){
 .search-filters-wrap{background:#f8fafc;border-radius:8px;padding:12px;border:1px solid #e2e8f0;margin-bottom:12px}
 .form-label{font-size:12px;font-weight:500;color:#374151;margin-bottom:2px}
 @media(max-width:768px){
-    .section-tabs{overflow-x:auto;flex-wrap:nowrap;padding:8px 8px}
-    .section-tab{font-size:11px;padding:6px 10px}
-    .stats-grid{grid-template-columns:repeat(2,1fr)}
-    .filter-group input,.filter-group select{min-width:100%}
+    .section-tabs{overflow-x:auto;flex-wrap:nowrap;padding:6px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .section-tabs::-webkit-scrollbar{display:none}
+    .section-tab{font-size:10px;padding:5px 10px;white-space:nowrap;flex-shrink:0}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+    .stat-card{padding:10px 12px;gap:8px}
+    .stat-icon{width:32px;height:32px;font-size:14px;border-radius:6px}
+    .stat-content h3{font-size:1rem}
+    .stat-content p{font-size:0.65rem}
+    .filter-group{flex-direction:column}
+    .filter-group input,.filter-group select{width:100%;min-width:100%}
+    .filter-group .btn{width:100%}
     .req-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    .scard{margin-bottom:10px}
+    .sch{padding:10px 12px;font-size:13px}
+    .scb{padding:10px 12px}
+    .da-header{padding:14px 16px}
+    .da-header h1{font-size:1.1rem}
+    .da-header p{font-size:0.7rem}
+    .table-responsive{font-size:12px}
+    .table-sm th,.table-sm td{padding:6px 8px;white-space:nowrap}
+    .readiness-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+    .readiness-card{padding:14px 10px}
+    .readiness-card .rc-num{font-size:1.5rem}
+    .form-label{font-size:11px}
+}
+@media(min-width:769px) and (max-width:1024px){
+    .stats-grid{grid-template-columns:repeat(3,1fr)}
+    .section-tab{font-size:11px;padding:6px 12px}
 }
 </style></head><body>
 <?php include_once __DIR__ . "/../includes/sidebar.php"; ?>
@@ -970,8 +1003,8 @@ if($report){
 <div class="scard"><div class="sch"><i class="fas fa-users me-2"></i>Applicant Records</div><div class="scb">
 <div class="filter-group">
 <input type="text" id="applicantSearch" placeholder="Search applicants..." style="max-width:300px">
-<select id="filterStatus" style="width:auto" onchange="applyFilter()"><option value="">All</option><option value="New Applicant">New</option><option value="Under Review">Under Review</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Registered">Registered</option></select>
-<select id="filterIntake" style="width:auto" onchange="applyFilter()"><option value="">All Intake</option><option value="January">January</option><option value="May">May</option><option value="August">August</option></select>
+<select id="filterStatus" style="width:auto"><option value="">All</option><option value="New Applicant">New</option><option value="Under Review">Under Review</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Registered">Registered</option></select>
+<select id="filterIntake" style="width:auto"><option value="">All Intake</option><option value="January">January</option><option value="May">May</option><option value="August">August</option></select>
 </div>
 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Program</th><th>Intake</th><th>Status</th><th>Actions</th></tr></thead><tbody id="applicantList">
 <?php if (!empty($applicants)): foreach ($applicants as $a): ?>
@@ -1092,14 +1125,7 @@ if($report){
 <select id="clrIntake" style="width:auto" onchange="loadClearance()"><option value="">All Intake</option><option>January</option><option>May</option><option>August</option></select>
 </div>
 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Name</th><th>Program</th><th>Intake</th><th>Progress</th><th>Actions</th></tr></thead><tbody id="clearanceList">
-<?php if(!empty($program_clearance)): foreach($program_clearance as $pc): ?>
-<tr><td><?=htmlspecialchars($pc['application_number']??'')?></td><td><?=htmlspecialchars($pc['full_name'])?></td><td><?=htmlspecialchars($pc['program_name']??'')?></td><td><?=htmlspecialchars($pc['intake']??'')?></td>
-<td>
-<div class="progress" style="height:16px;border-radius:8px"><div class="progress-bar" style="width:<?=(int)($pc['pct']??0)?>%;background:<?=($pc['pct']??0)>=100?'#059669':(($pc['pct']??0)>=50?'#d97706':'#dc2626')?>;font-size:10px"><?=(int)($pc['pct']??0)?>%</div></div>
-</td>
-<td><button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:10px" onclick='viewApplicantReqs(<?=$pc['id']?>)'><i class="fas fa-eye"></i></button></td>
-</tr>
-<?php endforeach; else: ?><tr><td colspan="6" class="text-muted text-center">No clearance data</td></tr><?php endif; ?>
+<tr><td colspan="6" class="text-muted text-center">Loading...</td></tr>
 </tbody></table></div>
 </div></div>
 </div>
@@ -1599,7 +1625,7 @@ jQuery(function($) {
 
   /* ── Clearance ── */
   window.loadClearance = function() {
-    $.post('', { action: 'reports_data', type: 'clearance' }, function(r) {
+    $.post('', { action: 'reports_data', type: 'clearance', program: ($('#clrProgram').val()||''), intake: ($('#clrIntake').val()||'') }, function(r) {
       var h = '';
       if (r.data && r.data.length) {
         r.data.forEach(function(pc) {
@@ -1633,7 +1659,7 @@ jQuery(function($) {
       if (r.data && r.data.length) {
         r.data.forEach(function(x) {
           var verified = x.verified_count || 0;
-          var total = x.total_req_items || x.total_req || 1;
+          var total = x.total || 1;
           var pct = Math.round((verified / total) * 100);
           var cls = pct >= 100 ? 'success' : pct >= 50 ? 'warning' : 'danger';
           var label = pct >= 100 ? 'Ready' : pct >= 50 ? 'Partial' : 'Not Ready';

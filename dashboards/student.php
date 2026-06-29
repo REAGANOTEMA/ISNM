@@ -155,6 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+@media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
+</style>
 </head>
 <body>
     <!-- Include Responsive Navigation -->

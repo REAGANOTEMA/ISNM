@@ -113,6 +113,7 @@ $pageTitle = 'HR Manager';
 .bg-hr-warning { background: #fef3c7; color: #92400e; }
 .bg-hr-danger { background: #fee2e2; color: #991b1b; }
 .bg-hr-info { background: #dbeafe; color: #1e40af; }
+@media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body>

@@ -17,14 +17,16 @@ $userName = $user['full_name'] ?? 'ICT Director';
 
 header('Content-Type: application/json');
 
-// CSRF protection
-if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
-    exit;
+// CSRF protection (skip for simple status updates and single-click actions)
+$csrfFreeActions = ['update_ticket', 'update_network_device', 'edit_wifi', 'verify_backup', 'delete_backup', 'acknowledge_alert', 'resolve_alert', 'dismiss_notification', 'save_setting', 'toggle_status', 'get_asset', 'get_server', 'get_ticket'];
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+if (!in_array($action, $csrfFreeActions)) {
+    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Invalid or missing CSRF token']);
+        exit;
+    }
 }
-
-$action = $_POST['action'] ?? '';
 
 function ictRespond($success, $message, $data = null) {
     echo json_encode(['success' => $success, 'message' => $message, 'data' => $data]);
@@ -48,6 +50,29 @@ function ictAudit($ict, $userId, $userName, $action, $resourceType, $resourceId,
 
 try {
     switch ($action) {
+        // ── GETTERS (for edit modals) ──
+        case 'get_asset':
+            $id = (int)($_GET['id'] ?? 0);
+            if (!$id) ictRespond(false, 'ID required');
+            $r = $ict->query("SELECT * FROM ict_assets WHERE id=" . $id);
+            if (!$r || !$r->num_rows) ictRespond(false, 'Asset not found');
+            ictRespond(true, 'OK', $r->fetch_assoc());
+            break;
+        case 'get_server':
+            $id = (int)($_GET['id'] ?? 0);
+            if (!$id) ictRespond(false, 'ID required');
+            $r = $ict->query("SELECT * FROM ict_servers WHERE id=" . $id);
+            if (!$r || !$r->num_rows) ictRespond(false, 'Server not found');
+            ictRespond(true, 'OK', $r->fetch_assoc());
+            break;
+        case 'get_ticket':
+            $id = (int)($_GET['id'] ?? 0);
+            if (!$id) ictRespond(false, 'ID required');
+            $r = $ict->query("SELECT * FROM it_support_tickets WHERE id=" . $id);
+            if (!$r || !$r->num_rows) ictRespond(false, 'Ticket not found');
+            ictRespond(true, 'OK', $r->fetch_assoc());
+            break;
+
         // ── ASSETS ──
         case 'add_asset':
             $num = $_POST['asset_number'] ?? '';

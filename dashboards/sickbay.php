@@ -367,7 +367,7 @@ if ($staff_conn) {
     } catch (Exception $e) {}
 }
 
-$staff_on_duty = sb_q($staff_conn, "SELECT COUNT(*) FROM staff WHERE (department LIKE '%Sickbay%' OR department LIKE '%Health%' OR role LIKE '%Sickbay%') AND status = 'Active'");
+$staff_on_duty = sb_q($staff_conn, "SELECT COUNT(*) FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id WHERE (s.department LIKE '%Sickbay%' OR s.department LIKE '%Health%' OR sr.role_name LIKE '%Sickbay%') AND s.status = 'Active'");
 if ($staff_on_duty < 1) $staff_on_duty = 1;
 
 $student_search_results = [];
