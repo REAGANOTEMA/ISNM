@@ -84,6 +84,24 @@ function dgHandleMarkRead($conn, $userId): void {
         echo json_encode(['ok' => true]);
         exit;
     }
+    if ($action === 'delete_notification' && !empty($_POST['notif_key'])) {
+        $key = $_POST['notif_key'];
+        if ($conn) {
+            $stmt = $conn->prepare("INSERT IGNORE INTO dg_read_notifications (notification_key, user_id) VALUES (?, ?)");
+            $stmt->bind_param("si", $key, $userId);
+            $stmt->execute();
+            $stmt->close();
+        }
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+    if ($action === 'delete_all_notifications') {
+        if ($conn) {
+            $conn->query("DELETE FROM dg_read_notifications WHERE user_id=" . (int)$userId);
+        }
+        echo json_encode(['ok' => true]);
+        exit;
+    }
 }
 
 /**
@@ -764,6 +782,9 @@ function renderNotificationsCenter($conn, $studentsConn, $websiteConn, int $user
                     <i class="fas fa-check-circle"></i>
                 </button>
                 <?php endif; ?>
+                <button class="dg-nc-delete" onclick="dgDeleteNotif('<?= htmlspecialchars($n['key'], ENT_QUOTES) ?>', this)" title="Delete" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:4px;font-size:13px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         </div>
         <?php endforeach; ?>
@@ -771,8 +792,14 @@ function renderNotificationsCenter($conn, $studentsConn, $websiteConn, int $user
     </div>
 
     <div class="dg-nc-footer">
-        <i class="fas fa-sync-alt me-1"></i> Auto-updates every 60s &middot;
-        <strong><?= $unreadCounts['all'] ?></strong> unread of <strong><?= $counts['all'] ?></strong> total
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <span><i class="fas fa-sync-alt me-1"></i> Auto-updates every 60s &middot;
+            <strong><?= $unreadCounts['all'] ?></strong> unread of <strong><?= $counts['all'] ?></strong> total</span>
+            <div class="d-flex gap-2">
+                <button id="dgMarkAllBtn" class="btn btn-sm btn-outline-primary" onclick="dgMarkAllRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="dgDeleteAllNotifs()"><i class="fas fa-trash-alt"></i> Clear All</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -841,6 +868,43 @@ function renderNotificationsCenter($conn, $studentsConn, $websiteConn, int $user
             }
         };
         xhr.send('dg_notif_action=mark_all_read&keys=' + encodeURIComponent(JSON.stringify(keys)) + '&dg_uid=' + dgNotifData.userId);
+    };
+
+    window.dgDeleteNotif = function(key, btn) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var item = btn ? btn.closest('.dg-nc-item') : null;
+                if (item) {
+                    item.style.transition = 'opacity 0.3s, max-height 0.3s';
+                    item.style.opacity = '0';
+                    item.style.maxHeight = '0';
+                    item.style.overflow = 'hidden';
+                    setTimeout(function() { item.remove(); dgUpdateCounts(); }, 300);
+                }
+            }
+        };
+        xhr.send('dg_notif_action=delete_notification&notif_key=' + encodeURIComponent(key) + '&dg_uid=' + dgNotifData.userId);
+    };
+
+    window.dgDeleteAllNotifs = function() {
+        if (!confirm('Remove all notifications from view?')) return;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                document.querySelectorAll('.dg-nc-item').forEach(function(item) {
+                    item.style.transition = 'opacity 0.3s';
+                    item.style.opacity = '0';
+                    setTimeout(function() { item.remove(); }, 300);
+                });
+                setTimeout(function() { dgUpdateCounts(); }, 350);
+            }
+        };
+        xhr.send('dg_notif_action=delete_all_notifications&dg_uid=' + dgNotifData.userId);
     };
 
     window.dgNavigateTo = function(url) {

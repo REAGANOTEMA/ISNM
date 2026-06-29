@@ -364,11 +364,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
     }
 
     if ($action === 'delete' && $news_id) {
+        $imgStmt = $conn->prepare("SELECT featured_image FROM director_news WHERE id=?");
+        if ($imgStmt) { $imgStmt->bind_param('i', $news_id); $imgStmt->execute(); $imgRow = $imgStmt->get_result()->fetch_assoc(); $imgStmt->close(); }
         $stmt = $conn->prepare("DELETE FROM director_news WHERE id=?");
         if ($stmt) {
             $stmt->bind_param('i', $news_id);
             $stmt->execute();
             $stmt->close();
+            if (!empty($imgRow['featured_image'])) { $imgPath = __DIR__ . '/../' . $imgRow['featured_image']; if (file_exists($imgPath)) @unlink($imgPath); }
             if ($websiteConn) {
                 $ws = $websiteConn->prepare("DELETE FROM news WHERE id=?");
                 if ($ws) { $ws->bind_param('i', $news_id); $ws->execute(); $ws->close(); }
@@ -874,6 +877,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
 </div>
 <?php unset($_SESSION['success']); endif; ?>
+<?php if(!empty($_SESSION['error'])): ?>
+<div class="alert alert-danger alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;">
+  <i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($_SESSION['error']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
+</div>
+<?php unset($_SESSION['error']); endif; ?>
 
 <!-- ═══ SECTION: SERVICES (Pending Submissions) ═══ -->
 <div id="services" class="content-section dashboard-section<?= $dgSection === 'services' ? ' active' : '' ?>" data-section="services">
