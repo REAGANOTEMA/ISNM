@@ -115,7 +115,7 @@
                                         <option value="B">B</option>
                                         <option value="C">C</option> -->
                                         <option value="null">Not Applicable</option>
-                                        <?php include('partials/selelct_section.php') ?>
+                                        <?php include('partials/select_section.php') ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         required!

@@ -108,7 +108,7 @@
 
                                             <option>B</option>
                                             <option>C</option> -->
-                                            <?php include('partials/selelct_section.php') ?>
+                                            <?php include('partials/select_section.php') ?>
                                         </select>
                                     </div>
                                 </div>
@@ -254,7 +254,7 @@
                                             <!-- <option selected>A</option>
                                             <option>B</option>
                                             <option>C</option> -->
-                                            <?php include('partials/selelct_section.php') ?>
+                                            <?php include('partials/select_section.php') ?>
                                         </select>
                                     </div>
                                 </div>

@@ -1,5 +1,5 @@
 <?php
-require 'C:\xampp\htdocs\ISNM\config\database.php';
+require __DIR__ . '/../config/database.php';
 $conn = getStaffConnection();
 
 // Seed `roles` table (id, name, description, created_at) from `staff_roles` (id, role_name, role_description, created_at)

@@ -681,6 +681,7 @@ body{
       <?php endif; ?>
       <form method="POST" action="auth-handler.php">
         <input type="hidden" name="action" value="staff_login">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
         <?php if ($requested_position): ?>
           <input type="hidden" name="requested_position" value="<?=htmlspecialchars($requested_position)?>">
         <?php endif; ?>

@@ -118,7 +118,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("INSERT INTO payroll_employee_deductions (payroll_employee_id, deduction_type_id, amount, is_recurring, effective_from, status, created_by) VALUES (?, ?, ?, ?, ?, 'active', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $stmt->bind_param('iidissi', $peId, $typeId, $amount, $isRecurring, $effectiveFrom, $staffId);
+            $stmt->bind_param('iidisi', $peId, $typeId, $amount, $isRecurring, $effectiveFrom, $staffId);
             $stmt->execute() ? $_SESSION['success'] = 'Deduction assigned.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
             $stmt->close();
             $pconn->close();
@@ -214,7 +214,7 @@ try {
             if (!$pconn) throw new Exception('Payroll DB connection failed');
             $stmt = $pconn->prepare("INSERT INTO payroll_loans (payroll_employee_id, loan_number, loan_type, principal_amount, interest_rate, installments, installment_amount, loan_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) throw new Exception('Prepare failed: ' . $pconn->error);
-            $stmt->bind_param('issdiiidsi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
+            $stmt->bind_param('issdddsi', $peId, $loanNumber, $loanType, $principal, $interest, $installments, $installmentAmount, $loanDate, $staffId);
             $stmt->execute() ? $_SESSION['success'] = 'Loan recorded.' : $_SESSION['error'] = 'Failed: ' . $stmt->error;
             $stmt->close();
             $pconn->close();
@@ -403,7 +403,7 @@ try {
             $stmt->execute();
             $stmt->close();
             $stmt = $pconn->prepare("UPDATE payroll_items SET payment_status='paid', payment_date=?, payment_reference=? WHERE payroll_run_id=? AND status='active'");
-            $stmt->bind_param("ssii", $payDate, $refNumber, $runId);
+            $stmt->bind_param("ssi", $payDate, $refNumber, $runId);
             $stmt->execute();
             $stmt->close();
             $pconn->close();

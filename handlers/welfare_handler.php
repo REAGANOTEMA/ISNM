@@ -37,8 +37,8 @@ switch ($action) {
         $issues = trim($_POST['issues_discussed'] ?? '');
         if ($student_id && $session_date) {
             $session_id = 'CS-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (session_id, student_id, counselor_id, session_date, session_time, session_type, issues_discussed) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("siissss", $session_id, $student_id, $user_id, $session_date, $session_time, $session_type, $issues);
+            $stmt = $conn->prepare("INSERT INTO student_counseling_sessions (student_id, counselor_id, session_date, session_time, session_type, issues_discussed, location) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iisssss", $student_id, $user_id, $session_date, $session_time, $session_type, $issues, $location);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Counseling session scheduled successfully.";
             } else {
@@ -56,8 +56,8 @@ switch ($action) {
         $action_taken = trim($_POST['action_taken'] ?? 'Warning');
         $description = trim($_POST['description'] ?? '');
         if ($student_id && $incident_type) {
-            $stmt = $conn->prepare("INSERT INTO student_discipline_records (student_id, incident_date, incident_type, description, action_taken, reported_by, status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')");
-            $stmt->bind_param("issssi", $student_id, $incident_date, $incident_type, $description, $action_taken, $user_id);
+            $stmt = $conn->prepare("INSERT INTO student_discipline_records (student_id, incident_type, description, action_taken, reported_by, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+            $stmt->bind_param("isssi", $student_id, $incident_type, $description, $action_taken, $user_id);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Discipline case created successfully.";
             } else {
@@ -74,9 +74,8 @@ switch ($action) {
         $description = trim($_POST['description'] ?? '');
         $actions_taken = trim($_POST['actions_taken'] ?? '');
         if ($student_id) {
-            $incident_id = 'HI-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-            $stmt = $conn->prepare("INSERT INTO student_health_incidents (incident_id, student_id, incident_date, incident_type, description, actions_taken, reported_by) VALUES (?, ?, CURDATE(), ?, ?, ?, ?)");
-            $stmt->bind_param("sisssi", $incident_id, $student_id, $incident_type, $description, $actions_taken, $user_id);
+            $stmt = $conn->prepare("INSERT INTO student_health_incidents (student_id, incident_type, description, action_taken, recorded_by) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("isssi", $student_id, $incident_type, $description, $actions_taken, $user_id);
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Health incident recorded successfully.";
             } else {

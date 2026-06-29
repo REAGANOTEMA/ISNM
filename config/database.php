@@ -75,7 +75,11 @@ if (!defined('STUDENTS_DB_USER')) {
     define('STUDENTS_DB_USER', isnm_env('STUDENTS_DB_USER', 'root'));
 }
 if (!defined('STUDENTS_DB_PASS')) {
-    define('STUDENTS_DB_PASS', isnm_env('STUDENTS_DB_PASS', ''));
+    $val = isnm_env('STUDENTS_DB_PASS', 'root');
+    if ($val === '' && getenv('APP_ENV') !== 'development') {
+        error_log('FATAL: STUDENTS_DB_PASS is empty in production. Set it in .env');
+    }
+    define('STUDENTS_DB_PASS', $val);
 }
 if (!defined('STUDENTS_DB_CHARSET')) {
     define('STUDENTS_DB_CHARSET', isnm_env('STUDENTS_DB_CHARSET', DB_CHARSET));
@@ -94,7 +98,11 @@ if (!defined('STAFF_DB_USER')) {
     define('STAFF_DB_USER', isnm_env('STAFF_DB_USER', 'root'));
 }
 if (!defined('STAFF_DB_PASS')) {
-    define('STAFF_DB_PASS', isnm_env('STAFF_DB_PASS', ''));
+    $val = isnm_env('STAFF_DB_PASS', 'root');
+    if ($val === '' && getenv('APP_ENV') !== 'development') {
+        error_log('FATAL: STAFF_DB_PASS is empty in production. Set it in .env');
+    }
+    define('STAFF_DB_PASS', $val);
 }
 if (!defined('STAFF_DB_CHARSET')) {
     define('STAFF_DB_CHARSET', isnm_env('STAFF_DB_CHARSET', DB_CHARSET));

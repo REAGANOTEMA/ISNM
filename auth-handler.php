@@ -15,7 +15,19 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/auth-service.php';
 
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.use_strict_mode', 1);
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        ini_set('session.cookie_secure', 1);
+    }
     session_start();
+}
+
+// CSRF token generation for auth forms
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $auth_service = new AuthenticationService();
@@ -156,10 +168,24 @@ function applyLegacyUserSession(array $user_entry): void {
 }
 
 // ── route ──────────────────────────────────────────────────────────────────
+// ── rate limit: check_student endpoint ──────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'check_student') {
     header('Content-Type: application/json');
     $indexNumber = trim($_GET['index_number'] ?? '');
     if (empty($indexNumber)) { echo json_encode(['exists' => false]); exit(); }
+
+    // Rate limit: max 10 lookups per IP per minute
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateKey = 'rate_check_student_' . $ip;
+    $now = time();
+    if (!isset($_SESSION[$rateKey])) $_SESSION[$rateKey] = [];
+    $_SESSION[$rateKey] = array_filter($_SESSION[$rateKey], fn($t) => $t > $now - 60);
+    if (count($_SESSION[$rateKey]) >= 10) {
+        echo json_encode(['exists' => false, 'error' => 'rate_limited']);
+        exit();
+    }
+    $_SESSION[$rateKey][] = $now;
+
     $conn = getConnection();
     if (!$conn) { echo json_encode(['exists' => false]); exit(); }
     $q = $conn->prepare("SELECT id, password FROM students WHERE index_number = ? LIMIT 1");
@@ -179,6 +205,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $action = $_POST['action'] ?? '';
+
+// CSRF verification on all POST actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
+        header('Location: organogram.php');
+        exit();
+    }
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 switch ($action) {
@@ -464,6 +500,12 @@ function handleCreateStaff() {
 
 function handleLogout() {
     if (session_status() === PHP_SESSION_NONE) session_start();
+    session_regenerate_id(true);
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
     session_unset();
     session_destroy();
     header('Location: organogram.php');

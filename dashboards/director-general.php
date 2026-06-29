@@ -24,6 +24,8 @@ $studentsConn = $ctx['students'];
 $websiteConn  = $ctx['website'];
 $user         = $ctx['user'];
 
+if (function_exists('generateCSRFToken')) { generateCSRFToken(); }
+
 $user_id   = (int)($user['id'] ?? 0);
 $user_role = $user['role'] ?? '';
 $user_name = $user['full_name'] ?? ($_SESSION['full_name'] ?? 'Director General');
@@ -245,6 +247,10 @@ function dgToolbar(string $title, string $icon, string $badgeText = '', string $
 
 // ── News Management POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php?page=news'); exit;
+    }
     $action   = $_POST['dg_news_action'];
     $title    = trim($_POST['dg_news_title'] ?? '');
     $content  = trim($_POST['dg_news_content'] ?? '');
@@ -375,6 +381,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_news_action'])) {
 
 // POST handlers
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php'); exit;
+    }
     $title    = trim($_POST['ann_title'] ?? '');
     $body     = trim($_POST['ann_body'] ?? '');
     $target   = $_POST['ann_target'] ?? 'All';
@@ -399,6 +409,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php'); exit;
+    }
     $first_name   = trim($_POST['first_name'] ?? '');
     $middle_name  = trim($_POST['middle_name'] ?? '');
     $last_name    = trim($_POST['last_name'] ?? '');
@@ -441,6 +455,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name'])) {
 
 // ── CRUD POST handlers ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['error'] = 'Invalid security token. Please try again.';
+        header('Location: director-general.php'); exit;
+    }
     $action = $_POST['dg_action'];
     $ok = false; $msg = '';
 
@@ -1209,7 +1227,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 // Student performance prediction data
 $perfData = ['labels'=>[],'actual'=>[],'predicted'=>[],'courses'=>[]];
 if ($conn) {
-    $pr = $conn->query("SELECT c.course_name, AVG(e.score) avg_score, COUNT(e.id) total FROM igangaschoolofl_students_db.examination_records e JOIN academic_course_catalog c ON e.course_id=c.id WHERE e.score IS NOT NULL GROUP BY e.course_id ORDER BY avg_score DESC LIMIT 8");
+    $pr = $conn->query("SELECT c.course_name, AVG(e.marks_obtained) avg_score, COUNT(e.id) total FROM examination_records e JOIN academic_course_catalog c ON e.course_code=c.course_code WHERE e.marks_obtained IS NOT NULL GROUP BY e.course_code ORDER BY avg_score DESC LIMIT 8");
     if ($pr) {
         $allCourses = []; $scores = [];
         while ($row = $pr->fetch_assoc()) {
@@ -1570,7 +1588,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php
     $allRoles = [];
     if ($conn) {
-      $r = $conn->query("SELECT sr.*, (SELECT COUNT(*) FROM staff s WHERE s.role_id=sr.id) AS staff_count FROM staff_roles sr ORDER BY sr.hierarchy_level");
+      $r = $conn->query("SELECT sr.*, (SELECT COUNT(*) FROM staff s WHERE s.role_id=sr.id) AS staff_count FROM staff_roles sr ORDER BY sr.role_level");
       if ($r) while ($row = $r->fetch_assoc()) $allRoles[] = $row;
     }
     ?>
@@ -1584,7 +1602,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><span class="badge bg-info"><?= htmlspecialchars($r['role_level'] ?? '') ?></span></td>
             <td><?= (int)($r['staff_count'] ?? 0) ?></td>
             <td><small><?= htmlspecialchars($r['dashboard_path'] ?? '-') ?></small></td>
-            <td><?= (int)($r['hierarchy_level'] ?? 99) ?></td>
+            <td><?= (int)($r['role_level'] ?? 99) ?></td>
             <td><?= ($r['is_executive'] ?? 0) ? '✅' : '' ?></td>
           </tr>
           <?php endforeach; ?>
@@ -2041,6 +2059,22 @@ function dgExportCSV() {
   </div>
 </div>
 
+<script>
+// ═══ CSRF token auto-inject for all forms ═══
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var token = window.CSRF_TOKEN || document.querySelector('meta[name="csrf-token"]')?.content || '';
+    if (!token) return;
+    document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(form){
+      if (!form.querySelector('input[name="csrf_token"]')) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'csrf_token'; inp.value = token;
+        form.appendChild(inp);
+      }
+    });
+  });
+})();
+</script>
 <script>
 // ═══ NEWS MANAGEMENT ═══
 var dgNewsData = <?= json_encode($dgNewsList) ?>;

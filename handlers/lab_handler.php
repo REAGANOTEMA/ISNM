@@ -435,8 +435,15 @@ try {
             $cost = (float)($_POST['cost'] ?? 0);
             $technician = $_POST['assigned_technician'] ?? '';
             if (!$id) throw new Exception('Repair ID required');
-            $stmt = $ict->prepare("UPDATE computer_repairs SET status=?, diagnosis=?, resolution=?, parts_replaced=?, cost=?, assigned_technician=?" . ($statusR === 'diagnosed' ? ", diagnosed_date=NOW()" : "") . ($statusR === 'completed' || $statusR === 'closed' ? ", completed_date=NOW()" : "") . " WHERE id=?");
-            $stmt->bind_param('ssssdsi', $statusR, $diagnosis, $resolution, $parts, $cost, $technician, $id);
+            $sets = ['status=?', 'diagnosis=?', 'resolution=?', 'parts_replaced=?', 'cost=?', 'assigned_technician=?'];
+            $params = [$statusR, $diagnosis, $resolution, $parts, $cost, $technician];
+            $types = 'ssssds';
+            if ($statusR === 'diagnosed') { $sets[] = "diagnosed_date=NOW()"; }
+            if ($statusR === 'completed' || $statusR === 'closed') { $sets[] = "completed_date=NOW()"; }
+            $params[] = $id;
+            $types .= 'i';
+            $stmt = $ict->prepare("UPDATE computer_repairs SET " . implode(',', $sets) . " WHERE id=?");
+            $stmt->bind_param($types, ...$params);
             $stmt->execute();
             respond(true, 'Repair updated');
             break;
@@ -530,7 +537,7 @@ try {
             $value = $_POST['setting_value'] ?? '';
             if (!$key) throw new Exception('Setting key required');
             $stmt = $ict->prepare("INSERT INTO ict_system_settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=?, updated_by=?");
-            $stmt->bind_param('ssiii', $key, $value, $userId, $value, $userId);
+            $stmt->bind_param('ssisi', $key, $value, $userId, $value, $userId);
             $stmt->execute();
             respond(true, 'Setting saved');
             break;

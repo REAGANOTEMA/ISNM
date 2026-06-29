@@ -1,5 +1,5 @@
 <?php
-require 'C:\xampp\htdocs\ISNM\config\database.php';
+require __DIR__ . '/../config/database.php';
 $conn = getStaffConnection();
 
 // Reset HR Manager password to a known value

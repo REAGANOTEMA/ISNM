@@ -325,7 +325,7 @@ try {
             $group = $_POST['setting_group'] ?? 'general';
             if (!$key) ictRespond(false, 'Setting key required');
             $stmt = $ict->prepare("INSERT INTO ict_system_settings (setting_key, setting_value, setting_group, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE setting_value=?, updated_by=?");
-            $stmt->bind_param('sssiii', $key, $value, $group, $userId, $value, $userId);
+            $stmt->bind_param('sssisi', $key, $value, $group, $userId, $value, $userId);
             $stmt->execute();
             ictRespond(true, 'Setting saved');
             break;

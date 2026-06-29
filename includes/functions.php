@@ -532,7 +532,7 @@ function renderOfficialDuties(int $roleId, $conn) {
         <?php foreach ($duties as $duty): ?>
         <div class="duty-card">
             <i class="<?= htmlspecialchars($duty['duty_icon'] ?? 'fas fa-tasks') ?> text-primary"></i>
-            <span><?= $duty['duty_title'] ?></span>
+            <span><?= htmlspecialchars($duty['duty_title']) ?></span>
         </div>
         <?php endforeach; ?>
     </div>

@@ -325,6 +325,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 
       <form method="POST" action="auth-handler.php" id="password-form">
         <input type="hidden" name="action" value="student_set_password">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 
         <div class="form-group">
           <label class="form-label" for="password">

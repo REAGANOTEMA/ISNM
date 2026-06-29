@@ -364,7 +364,16 @@ class AuthenticationService {
     }
 
     public function createSecureSession($user) {
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.use_only_cookies', 1);
+            ini_set('session.cookie_httponly', 1);
+            ini_set('session.cookie_samesite', 'Lax');
+            ini_set('session.use_strict_mode', 1);
+            if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+                ini_set('session.cookie_secure', 1);
+            }
+            session_start();
+        }
         session_regenerate_id(true);
         $_SESSION['user_id']        = $user['id'];
         $_SESSION['email']          = $user['email'];
@@ -646,8 +655,8 @@ class AuthenticationService {
         $chk = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
         if ($chk) { $chk->bind_param('s', $index); $chk->execute(); if ($chk->get_result()->num_rows > 0) { $chk->close(); return ['success' => false, 'message' => 'A student with this index number already exists.']; } $chk->close(); }
 
-        if (file_exists(__DIR__ . '/../views/student_data_loader.php')) {
-            require_once __DIR__ . '/../views/student_data_loader.php';
+        if (file_exists(__DIR__ . '/views/student_data_loader.php')) {
+            require_once __DIR__ . '/views/student_data_loader.php';
             try {
                 $loader = new StudentDataLoader();
                 $match  = $this->findStudentInDataFiles($loader, $index, $phone);
@@ -673,7 +682,8 @@ class AuthenticationService {
             $s->execute();
             return ['success' => true, 'message' => 'Student account created successfully', 'data' => ['index_number' => $index, 'full_name' => $fullName, 'set' => $setName, 'program' => $program, 'level' => $level]];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Failed to create student account: ' . $e->getMessage()];
+            error_log('createStudentAccount error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to create student account. Please try again or contact an administrator.'];
         }
     }
 
@@ -705,7 +715,8 @@ class AuthenticationService {
             $s->execute();
             return ['success' => true, 'message' => 'Staff account created successfully'];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Failed to create staff account: ' . $e->getMessage()];
+            error_log('createStaffAccount error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to create staff account. Please try again or contact an administrator.'];
         }
     }
 }

@@ -607,6 +607,7 @@ if ($login_success) { unset($_SESSION['success']); }
 
       <form method="POST" action="auth-handler.php" id="login-form">
         <input type="hidden" name="action" value="student_login">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
         <?php if ($student_hint): ?>
           <input type="hidden" name="student_role" value="<?php echo htmlspecialchars($student_hint); ?>">
         <?php endif; ?>

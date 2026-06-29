@@ -145,7 +145,7 @@
                                         <!-- <option value="A">A</option>
                                         <option value="B">B</option>
                                         <option value="C">C</option> -->
-                                        <?php include('partials/selelct_section.php') ?>
+                                        <?php include('partials/select_section.php') ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         required!
@@ -575,7 +575,7 @@
                                             <!-- <option selected>A</option>
                                             <option>B</option>
                                             <option>C</option> -->
-                                            <?php include('partials/selelct_section.php') ?>
+                                            <?php include('partials/select_section.php') ?>
                                         </select>
                                     </div>
                                 </div>
