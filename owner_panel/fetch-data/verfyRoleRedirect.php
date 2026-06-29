@@ -1,6 +1,6 @@
 <?php
     error_reporting(0);
-    include('../assets/config.php');
+    include('../../config/database.php');
     if(isset($_SESSION['uid'])){
 
         $userId = $_SESSION['uid'];
@@ -15,7 +15,7 @@
         if($row['role'] == 'owner'){
 
         }else{
-            include('../assets/logout.php');
+            include('../../logout.php');
             header("Location: ../staff-login.php");
             exit();
         }

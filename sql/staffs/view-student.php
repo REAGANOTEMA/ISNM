@@ -4,9 +4,9 @@
  * Accessible by authorized staff to view complete student records.
  */
 
-require_once '../auth-service.php';
-require_once '../config/database.php';
-require_once '../includes/functions.php';
+require_once '../../auth-service.php';
+require_once '../../config/database.php';
+require_once '../../includes/functions.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

@@ -4,9 +4,9 @@
  * Provides a detailed financial breakdown for a specific student.
  */
 
-require_once '../auth-service.php';
-require_once '../config/database.php';
-require_once '../includes/functions.php';
+require_once '../../auth-service.php';
+require_once '../../config/database.php';
+require_once '../../includes/functions.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

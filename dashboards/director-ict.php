@@ -825,7 +825,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
                             </tbody>
                         </table>
                     </div>
-                    <p class="mt-2 small text-muted"><i class="fas fa-info-circle me-1"></i>Full account management is in <a href="../system-admin.php">System Administration</a>.</p>
+                    <p class="mt-2 small text-muted"><i class="fas fa-info-circle me-1"></i>Full account management is in <a href="system-admin.php">System Administration</a>.</p>
                 </div>
                 <div class="section-card">
                     <h2><i class="fas fa-shield-alt me-2 text-danger"></i>Recent Failed Logins</h2>
@@ -886,9 +886,9 @@ $tab = $_GET['tab'] ?? 'dashboard';
             <div class="col-md-5">
                 <div class="section-card">
                     <h2><i class="fas fa-cog me-2 text-warning"></i>ERP Configuration</h2>
-                    <p class="small text-muted">Full ERP configuration & module management is available in <a href="../system-admin.php">System Administration</a>.</p>
+                    <p class="small text-muted">Full ERP configuration & module management is available in <a href="system-admin.php">System Administration</a>.</p>
                     <div class="d-grid gap-2 mt-2">
-                        <a href="../system-admin.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-cog me-1"></i>System Administration</a>
+                        <a href="system-admin.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-cog me-1"></i>System Administration</a>
                         <a href="../index.php" class="btn btn-sm btn-outline-info"><i class="fas fa-home me-1"></i>ERP Home</a>
                     </div>
                 </div>
@@ -907,7 +907,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
                     <div class="d-grid gap-2">
                         <button class="btn btn-sm btn-outline-success text-start" onclick="createQuickBackup()"><i class="fas fa-database me-2"></i>Quick Backup</button>
                         <button class="btn btn-sm btn-outline-info text-start" onclick="addHealthCheck()"><i class="fas fa-heartbeat me-2"></i>Run System Health Check</button>
-                        <a href="../system-admin.php" class="btn btn-sm btn-outline-primary text-start"><i class="fas fa-user-shield me-2"></i>User Permissions</a>
+                        <a href="system-admin.php" class="btn btn-sm btn-outline-primary text-start"><i class="fas fa-user-shield me-2"></i>User Permissions</a>
                     </div>
                 </div>
             </div>

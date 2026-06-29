@@ -65,6 +65,9 @@ $directorFinanceGroups = ['Finance','Revenue Management','Fee Oversight','Paymen
 $principalGroups = ['Executive','Academic Oversight','Student Affairs','Staff Oversight','Institutional Operations','Meetings & Governance','Principal Approvals','Principal Reports','Principal Communications'];
 $deputyGroups = ['Academic Support','Student Support','Operational Monitoring','Deputy Approvals','Deputy Reports','Deputy QA','Deputy Communications'];
 $admissionsGroups = ['Admissions','Approvals & Workflow','Settings'];
+$hrGroups = ['Human Resources','Staff Directory','Staff Attendance','Leave Management','Performance','Training & CPD','Recruitment','Contracts','Disciplinary','Onboarding','Resignations','Duty Rosters','Licenses','My Profile'];
+$ictGroups = ['ICT Department','System Administration','Digital Learning','Cybersecurity','ICT Policy','Computer Lab','IT Support','Lab Booking'];
+$acadRegGroups = ['Academic Registrar','Academic Records','Examinations','Results','Timetable','Registration','Programs','Quality Assurance','Accreditation','Research','Partnerships'];
 $pageGroupAllowList = [
     'school-secretary.php'  => $secretaryGroups,
     'school-bursar.php'     => $bursarGroups,
@@ -99,6 +102,19 @@ $pageGroupAllowList = [
     'director-admissions.php'=> $admissionsGroups,
     'admission-letters.php' => $admissionsGroups,
     'intake-planning.php'   => $admissionsGroups,
+    'hr-manager.php'        => $hrGroups,
+    'leave-management.php'  => $hrGroups,
+    'staff-disciplinary.php'=> $hrGroups,
+    'professional-licenses.php'=>$hrGroups,
+    'training-cpd.php'      => $hrGroups,
+    'recruitment.php'       => $hrGroups,
+    'onboarding.php'        => $hrGroups,
+    'director-ict.php'      => $ictGroups,
+    'academic-registrar.php'=> $acadRegGroups,
+    'exams-results.php'     => $acadRegGroups,
+    'grade-scales.php'      => $acadRegGroups,
+    'curriculum-management.php'=>$acadRegGroups,
+    'programs.php'          => $acadRegGroups,
 ];
 
 // When on a page in the allow list, restrict modules to those groups only
