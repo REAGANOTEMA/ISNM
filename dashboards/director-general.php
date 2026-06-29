@@ -15,8 +15,6 @@ require_once __DIR__ . '/../includes/approval_center.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
 require_once __DIR__ . '/../includes/dashboard_analytics.php';
 
-$loader = new StudentDataLoader();
-
 $ctx          = bootstrapStaffDashboard(['director general', 'ceo', 'system admin', 'principal']);
 $auth_service = $ctx['auth'];
 $conn         = $ctx['staff'];
