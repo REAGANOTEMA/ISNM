@@ -460,7 +460,7 @@ if ($staff_conn) {
                     <div class="hd"><i class="fas fa-file-invoice me-2"></i>Payslips</div>
                     <div class="bd">
                         <a href="../payroll.php?section=payslips" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-file-invoice me-1"></i>View Payslips</a>
-                        <a href="bursar-payroll.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-calculator me-1"></i>Payroll Processing</a>
+                        <a href="../payroll.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-calculator me-1"></i>Payroll Processing</a>
                     </div>
                 </div>
             </div>

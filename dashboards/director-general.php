@@ -1039,7 +1039,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             <a href="../dashboards/director-finance.php" class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-coins me-1"></i>Finance Dashboard</a>
             <a href="../dashboards/school-bursar.php" class="btn btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:8px;"><i class="fas fa-money-bill me-1"></i>Bursar Panel</a>
             <a href="../dashboards/budget-management.php" class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:8px;"><i class="fas fa-chart-line me-1"></i>Budget</a>
-            <a href="../dashboards/bursar-payroll.php" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;"><i class="fas fa-file-invoice-dollar me-1"></i>Payroll</a>
+                <a href="../payroll.php" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;"><i class="fas fa-file-invoice-dollar me-1"></i>Payroll</a>
           </div>
         </div>
       </div>

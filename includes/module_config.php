@@ -163,9 +163,8 @@ function getModuleConfig(): array {
             'icon'     => 'fas fa-money-check-alt',
             'roles'    => ['bursar','finance','accountant','payroll','hr','manager','auditor'],
             'children' => [
-                ['title' => 'Payroll Dashboard', 'route' => 'bursar-payroll.php','roles' => '*'],
+                ['title' => 'Payroll Dashboard', 'route' => 'payroll.php','roles' => '*'],
                 ['title' => 'Enterprise Payroll', 'route' => 'payroll.php','roles' => '*'],
-                ['title' => 'Salary Processing', 'route' => 'school-bursar.php?section=payroll','roles' => '*'],
             ],
         ],
         [
@@ -216,7 +215,6 @@ function getModuleConfig(): array {
             'children' => [
                 ['title' => 'Collection Reports','route' => 'school-bursar.php?section=financial_reports','roles' => '*'],
                 ['title' => 'Debtors Reports',   'route' => 'school-bursar.php?section=debtors_list','roles' => '*'],
-                ['title' => 'Payroll Reports',   'route' => 'school-bursar.php?section=payroll','roles' => '*'],
                 ['title' => 'Audit Reports',     'route' => 'school-bursar.php?section=audit_trail','roles' => '*'],
                 ['title' => 'Financial Clearance','route' => 'school-bursar.php?section=clearance','roles' => '*'],
             ],
@@ -227,7 +225,6 @@ function getModuleConfig(): array {
             'roles'    => ['bursar','finance','accountant'],
             'children' => [
                 ['title' => 'Fee Reminders',         'route' => 'school-bursar.php?section=fee_reminders','roles' => '*'],
-                ['title' => 'Assets',                'route' => 'school-bursar.php?section=assets','roles' => '*'],
                 ['title' => 'Auto Deductions',       'route' => 'payment-subscriptions.php','roles' => '*'],
                 ['title' => 'Penalty Configurations','route' => 'penalty-configurations.php','roles' => '*'],
             ],
