@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$ctx = bootstrapStaffDashboard(['skills lab', 'skills', 'lab manager', 'laboratory']);
+$ctx = bootstrapStaffDashboard(['skills lab']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';

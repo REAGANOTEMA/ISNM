@@ -42,8 +42,7 @@ if (!empty($_SESSION['logged_in']) && ($_SESSION['type'] ?? '') === 'staff') {
 }
 
 // Shared Component Library — available to ALL dashboards
-$compFile = __DIR__ . '/dashboard_components.php';
-if (file_exists($compFile)) { try { include_once $compFile; } catch (Exception $e) {} }
+try { require_once __DIR__ . '/dashboard_components.php'; } catch (Exception $e) { error_log('dashboard_components.php load failed: ' . $e->getMessage()); }
 
 // Shared Dashboard Toolbar — available to ALL dashboards
 $toolFile = __DIR__ . '/dashboard_toolbar.php';

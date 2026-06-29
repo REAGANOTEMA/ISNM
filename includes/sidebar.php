@@ -14,6 +14,15 @@ $user_type = $_SESSION['type'];
 $user_name = $_SESSION['full_name'] ?? ($_SESSION['first_name'] ?? 'User');
 $user_id   = (int)($_SESSION['user_id'] ?? 0);
 
+// Try dynamic sidebar first
+$useDynamicSidebar = false;
+if (file_exists(__DIR__ . '/dynamic_sidebar.php')) {
+    require_once __DIR__ . '/dynamic_sidebar.php';
+    if (function_exists('renderDynamicSidebar') && isset($_SESSION['role'])) {
+        $useDynamicSidebar = true;
+    }
+}
+
 // Load profile image
 $profileImage = '../images/username.png';
 $profileClickHandler = "if(typeof openProfileModal==='function')openProfileModal();";
@@ -391,7 +400,10 @@ $accordionMode = true;
 // Detect current page for active highlighting
 $currentDir  = dirname($_SERVER['PHP_SELF']);
 ?>
-<nav class="isnm-sidebar" id="isnmSidebar">
+<?php if ($useDynamicSidebar): ?>
+<?php renderDynamicSidebar(); ?>
+<?php else: ?>
+<nav class="isnm-sidebar sidebar" id="isnmSidebar">
     <div class="sidebar-brand">
         <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
             <i class="fas fa-bars"></i>
@@ -1022,6 +1034,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
         </div>
     </div>
 </nav>
+<?php endif; ?>
 
 <!-- Mobile overlay + toggle -->
 <div class="isnm-overlay" id="isnmOverlay"></div>

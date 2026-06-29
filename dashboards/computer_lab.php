@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['lab', 'ict', 'it', 'director']);
+$ctx = bootstrapStaffDashboard(['computer lab']);
 $staff_conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
-$ctx = bootstrapStaffDashboard(['school bursar','bursar']);
+$ctx = bootstrapStaffDashboard(['school bursar', 'director finance', 'bursar']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
@@ -50,7 +50,7 @@ if ($view === 'clearance' && $ajax === '1' && $sid) {
     $status = 'Pending Review';
     try {
         if ($staff) {
-            $stmt = $staff->prepare("SELECT clearance_status FROM igangaschoolofl_students_db.financial_clearance WHERE student_id = ? ORDER BY updated_at DESC LIMIT 1");
+            $stmt = $staff->prepare("SELECT clearance_status FROM {$students_db}.financial_clearance WHERE student_id = ? ORDER BY updated_at DESC LIMIT 1");
             if ($stmt) { $stmt->bind_param("s", $sid); $stmt->execute(); $res = $stmt->get_result(); if ($r = $res->fetch_assoc()) $status = $r['clearance_status']; $stmt->close(); }
         }
     } catch (Exception $e) {}
@@ -67,7 +67,7 @@ if ($view === 'clearance' && ($_POST['ajax_clearance'] ?? '') === '1') {
             $year = date('Y');
             if ($stuId) {
                 $uidClear = $user['id'];
-                $stmt = $staff->prepare("INSERT INTO igangaschoolofl_students_db.financial_clearance (student_id, academic_year, semester, clearance_status, cleared_by, cleared_at, remarks) VALUES (?, ?, 'Annual', ?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE clearance_status=VALUES(clearance_status), cleared_by=VALUES(cleared_by), cleared_at=NOW(), remarks=VALUES(remarks)");
+                $stmt = $staff->prepare("INSERT INTO {$students_db}.financial_clearance (student_id, academic_year, semester, clearance_status, cleared_by, cleared_at, remarks) VALUES (?, ?, 'Annual', ?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE clearance_status=VALUES(clearance_status), cleared_by=VALUES(cleared_by), cleared_at=NOW(), remarks=VALUES(remarks)");
                 if ($stmt) {
                     $stmt->bind_param("sssis", $stuId, $year, $cStatus, $uidClear, $remarks);
                     $stmt->execute();
@@ -161,7 +161,7 @@ if ($view === 'receipt_print' && $ajax === '1' && $q) {
     try {
         if ($staff && $students) {
             $like = "%$q%";
-            $stmt = $staff->prepare("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.payment_reference AS ref, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id WHERE fp.receipt_number LIKE ? OR fp.student_id LIKE ? OR s.first_name LIKE ? OR s.surname LIKE ? ORDER BY fp.payment_date DESC LIMIT 1");
+            $stmt = $staff->prepare("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.payment_reference AS ref, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN {$students_db}.students s ON fp.student_id = s.student_id WHERE fp.receipt_number LIKE ? OR fp.student_id LIKE ? OR s.first_name LIKE ? OR s.surname LIKE ? ORDER BY fp.payment_date DESC LIMIT 1");
             if ($stmt) {
                 $stmt->bind_param("ssss", $like, $like, $like, $like);
                 $stmt->execute();
@@ -243,7 +243,7 @@ if ($view === 'daily_collections' && $ajax === '1') {
     $data = ['total' => 0, 'count' => 0, 'methods' => [], 'payments' => []];
     try {
         if ($staff) {
-            $stmt = $staff->prepare("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = ? AND fp.status='verified' ORDER BY fp.payment_date DESC");
+            $stmt = $staff->prepare("SELECT fp.*, s.first_name, s.surname FROM fee_payments fp LEFT JOIN {$students_db}.students s ON fp.student_id = s.student_id WHERE DATE(fp.payment_date) = ? AND fp.status='verified' ORDER BY fp.payment_date DESC");
             if ($stmt) { $stmt->bind_param('s', $date); $stmt->execute(); $r = $stmt->get_result(); } else { $r = null; }
             if ($r) {
                 $data['count'] = $r->num_rows;
@@ -297,7 +297,9 @@ if ($view === 'student_search' && $ajax === '1' && $sid) {
                 $recent = [];
                 if ($lastPay) while ($lp = $lastPay->fetch_assoc()) $recent[] = $lp;
                 if (isset($stmt3)) $stmt3->close();
-                $clear = $staff->query("SELECT clearance_status, remarks, updated_at FROM igangaschoolofl_students_db.financial_clearance WHERE student_id = '$sidFull' ORDER BY updated_at DESC LIMIT 1");
+                $clearStmt = $staff->prepare("SELECT clearance_status, remarks, updated_at FROM {$students_db}.financial_clearance WHERE student_id = ? ORDER BY updated_at DESC LIMIT 1");
+                $clear = false;
+                if ($clearStmt) { $clearStmt->bind_param('s', $sidFull); $clearStmt->execute(); $clear = $clearStmt->get_result(); $clearStmt->close(); }
                 $clearStatus = ($clear && ($c = $clear->fetch_assoc())) ? $c['clearance_status'] : 'Not Requested';
                 $data['found'] = true;
                 $data['student'] = $s;
@@ -555,7 +557,7 @@ if ($cached) {
     $recent_txns = [];
     try {
         if ($staff) {
-            $rp = $staff->query("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN igangaschoolofl_students_db.students s ON fp.student_id = s.student_id ORDER BY fp.payment_date DESC LIMIT 10");
+            $rp = $staff->query("SELECT fp.payment_id, fp.student_id, fp.amount_paid, fp.payment_method, fp.receipt_number, fp.payment_date, fp.status, s.first_name, s.surname FROM fee_payments fp LEFT JOIN {$students_db}.students s ON fp.student_id = s.student_id ORDER BY fp.payment_date DESC LIMIT 10");
             if ($rp) {
                 while ($row = $rp->fetch_assoc()) {
                     $recent_txns[] = $row;
@@ -569,8 +571,8 @@ if ($cached) {
         if ($staff) {
             $payments_stmt = $staff->query("
                 SELECT p.*, s.first_name, s.surname, s.student_number, s.index_number 
-                FROM igangaschoolofl_students_db.payments p 
-                JOIN igangaschoolofl_students_db.students s ON p.student_id = s.id 
+                FROM {$students_db}.payments p 
+                JOIN {$students_db}.students s ON p.student_id = s.id 
                 ORDER BY p.payment_date DESC 
                 LIMIT 10
             ");
@@ -1203,11 +1205,11 @@ echo $budgetRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No 
         $due_date = trim($_POST['due_date'] ?? date('Y-m-d', strtotime('+30 days')));
         if ($program && $amount > 0 && $staff) {
             try {
-                $stmt = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',surname) AS name FROM igangaschoolofl_students_db.students WHERE program = ? AND status='Active'");
+                $stmt = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',surname) AS name FROM {$students_db}.students WHERE program = ? AND status='Active'");
                 if ($stmt) { $stmt->bind_param('s', $program); $stmt->execute(); $stuList = $stmt->get_result(); } else { $stuList = null; }
                 if ($year && $stuList) {
                     $stuList->close();
-                    $stmt2 = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',surname) AS name FROM igangaschoolofl_students_db.students WHERE program = ? AND year = ? AND status='Active'");
+                    $stmt2 = $staff->prepare("SELECT student_id, student_number, CONCAT(first_name,' ',surname) AS name FROM {$students_db}.students WHERE program = ? AND year = ? AND status='Active'");
                     if ($stmt2) { $stmt2->bind_param('ss', $program, $year); $stmt2->execute(); $stuList = $stmt2->get_result(); }
                 }
                 $r = $stuList;
@@ -1356,7 +1358,7 @@ echo $schRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No sch
 $pvRows = '';
 try {
     if ($staff) {
-        $r = $staff->query("SELECT p.*, s.first_name, s.surname FROM fee_payments p LEFT JOIN igangaschoolofl_students_db.students s ON p.student_id=s.student_id WHERE p.status='pending' ORDER BY p.payment_date DESC LIMIT 50");
+        $r = $staff->query("SELECT p.*, s.first_name, s.surname FROM fee_payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.student_id WHERE p.status='pending' ORDER BY p.payment_date DESC LIMIT 50");
         if ($r && $r->num_rows) {
             while ($p = $r->fetch_assoc()) {
                 $pvRows .= '<tr><td><code>' . htmlspecialchars($p['receipt_number'] ?? '-') . '</code></td><td>' . htmlspecialchars(($p['surname'] ?? '') . ' ' . ($p['first_name'] ?? '')) . '</td><td><strong>' . currency($p['amount_paid']) . '</strong></td><td>' . htmlspecialchars(ucfirst(str_replace('_', ' ', $p['payment_method'] ?? ''))) . '</td><td>' . htmlspecialchars($p['payment_date']) . '</td><td>' . bsBadge($p['status']) . '</td></tr>';
@@ -1802,7 +1804,7 @@ echo $assetRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No a
                 </div>
             </form>
             <?php
-            function sendReminders() {
+            if (!function_exists('sendReminders')) { function sendReminders() {
                 global $students, $staff, $students_db;
                 if (!$students || !$staff) return 0;
                 $students->set_charset('utf8mb4');
@@ -1831,7 +1833,7 @@ echo $assetRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No a
                     }
                 }
                 return $count;
-            }
+            } }
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'send_reminders') {
                 $target = $_POST['target'] ?? 'all_outstanding';
@@ -2002,7 +2004,7 @@ echo $donRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No don
 $clearRows = '';
 try {
     if ($staff) {
-        $cr = $staff->query("SELECT fc.*, s.full_name cleared_by_name FROM igangaschoolofl_students_db.financial_clearance fc LEFT JOIN staff s ON fc.cleared_by=s.id ORDER BY fc.updated_at DESC LIMIT 30");
+        $cr = $staff->query("SELECT fc.*, s.full_name cleared_by_name FROM {$students_db}.financial_clearance fc LEFT JOIN staff s ON fc.cleared_by=s.id ORDER BY fc.updated_at DESC LIMIT 30");
         if ($cr && $cr->num_rows) {
             while ($c = $cr->fetch_assoc()) {
                 $cs = $c['clearance_status'] === 'Cleared' ? 'success' : ($c['clearance_status'] === 'Not Cleared' ? 'danger' : 'warning text-dark');
@@ -2242,7 +2244,7 @@ echo $refRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No ref
 $aprRows = '';
 try {
     if ($staff) {
-        $apr = $staff->query("SELECT p.*, s.first_name, s.surname FROM fee_payments p LEFT JOIN igangaschoolofl_students_db.students s ON p.student_id = s.student_id WHERE p.status='pending' ORDER BY p.payment_date DESC LIMIT 30");
+        $apr = $staff->query("SELECT p.*, s.first_name, s.surname FROM fee_payments p LEFT JOIN {$students_db}.students s ON p.student_id = s.student_id WHERE p.status='pending' ORDER BY p.payment_date DESC LIMIT 30");
         if ($apr && $apr->num_rows) {
             while ($a = $apr->fetch_assoc()) {
                 $aprRows .= '<tr><td>' . $a['payment_id'] . '</td><td>' . htmlspecialchars(($a['surname'] ?? '') . ' ' . ($a['first_name'] ?? '')) . '<br><small>' . htmlspecialchars($a['student_id']) . '</small></td><td>' . currency($a['amount_paid']) . '</td><td>' . htmlspecialchars($a['payment_date']) . '</td><td><span class="badge bg-warning text-dark">Pending</span></td>

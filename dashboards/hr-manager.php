@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 
-$ctx          = bootstrapStaffDashboard(['hr', 'manager']);
+$ctx          = bootstrapStaffDashboard(['hr manager']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
 $user_role    = $_SESSION['role'] ?? '';

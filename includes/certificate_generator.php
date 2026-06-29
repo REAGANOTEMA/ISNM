@@ -128,18 +128,22 @@ function generateCertificateHTML(array $data): string {
 }
 }
 
+if (!function_exists('gradePoint')) {
+function gradePoint(string $grade): float {
+    $g = strtoupper(trim($grade));
+    if ($g === 'A') return 4.0;
+    if ($g === 'B' || $g === 'B+') return 3.5;
+    if ($g === 'C' || $g === 'C+') return 3.0;
+    if ($g === 'D') return 2.0;
+    if ($g === 'E') return 1.0;
+    return 0.0;
+}
+}
+
 if (!function_exists('generateTranscriptHTML')) {
 function generateTranscriptHTML(array $student, array $records, string $type = 'progress', array $settings = []): string {
     $levels = max(0, substr_count(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') - 1);
     $assets = str_repeat('../', $levels) . 'images/';
-    $total_credits = array_sum(array_column($records, 'credits'));
-    $total_marks = array_sum(array_column($records, 'marks'));
-    $count = count($records);
-    $avg = $count > 0 ? round($total_marks / $count, 2) : 0;
-
-    $gpa_map = [80 => 4.0, 75 => 3.5, 70 => 3.0, 65 => 2.5, 60 => 2.0, 50 => 1.5, 40 => 1.0, 0 => 0.0];
-    $gpa = 0;
-    foreach ($gpa_map as $min => $gp) { if ($avg >= $min) { $gpa = $gp; break; } }
 
     // Load settings
     $inst_name  = $settings['institution_name'] ?? 'Iganga School of Nursing &amp; Midwifery';
@@ -153,19 +157,46 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
     $registrar  = $settings['registrar_name'] ?? '________________';
     $footer_txt = $settings['transcript_footer'] ?? 'This is an electronically generated document.';
 
-    $rows = '';
+    // Group records by semester for per-semester GPA
+    $semesters = [];
     foreach ($records as $r) {
-        $course = htmlspecialchars($r['course_code'] ?? $r['course_name'] ?? '---');
-        $name = htmlspecialchars($r['course_name'] ?? '---');
-        $cred = (int)($r['credits'] ?? 0);
-        $sem = htmlspecialchars($r['semester'] ?? '---');
-        $year = htmlspecialchars($r['academic_year'] ?? '---');
-        $marks = $r['marks'] ?? '---';
-        $grade = $r['grade'] ?? ($marks !== '---' ? ($marks >= 80 ? 'A' : ($marks >= 70 ? 'B' : ($marks >= 60 ? 'C' : ($marks >= 50 ? 'D' : 'F')))) : '---');
-        $rows .= '<tr><td>' . $course . '</td><td>' . $name . '</td><td>' . $cred . '</td><td>' . $sem . '</td><td>' . $year . '</td><td>' . $marks . '</td><td>' . $grade . '</td></tr>';
+        $key = ($r['academic_year'] ?? '') . '|' . ($r['semester'] ?? '');
+        $semesters[$key][] = $r;
     }
 
-    $standing = $gpa >= 3.5 ? 'Excellent' : ($gpa >= 3.0 ? 'Good' : ($gpa >= 2.0 ? 'Satisfactory' : 'Probation'));
+    $all_rows = '';
+    $cumulative_points = 0;
+    $cumulative_credits = 0;
+    $total_courses = count($records);
+
+    foreach ($semesters as $key => $sem_records) {
+        [$sem_year, $sem_name] = explode('|', $key, 2);
+        $sem_points = 0;
+        $sem_credits = 0;
+
+        foreach ($sem_records as $r) {
+            $course = htmlspecialchars($r['course_code'] ?? '---');
+            $name = htmlspecialchars($r['course_name'] ?? '---');
+            $cred = (int)($r['credits'] ?? 0);
+            $marks = $r['marks'] ?? $r['total_marks'] ?? '---';
+            $grade = $r['grade'] ?? '---';
+            $gp = gradePoint($grade);
+
+            $sem_points += $gp * $cred;
+            $sem_credits += $cred;
+
+            $all_rows .= '<tr><td>' . $course . '</td><td>' . $name . '</td><td>' . $cred . '</td><td>' . htmlspecialchars($sem_name) . '</td><td>' . htmlspecialchars($sem_year) . '</td><td>' . (is_numeric($marks) ? number_format((float)$marks, 1) : $marks) . '</td><td>' . $grade . '</td><td>' . number_format($gp, 1) . '</td></tr>';
+        }
+
+        $sem_gpa = $sem_credits > 0 ? round($sem_points / $sem_credits, 2) : 0;
+        $cumulative_points += $sem_points;
+        $cumulative_credits += $sem_credits;
+
+        $all_rows .= '<tr style="background:#f0f2ff;font-weight:700"><td colspan="8" style="text-align:right;padding:5px 8px;color:' . $bg_color . ';font-size:11px">Semester GPA: ' . number_format($sem_gpa, 2) . ' | Credits: ' . $sem_credits . '</td></tr>';
+    }
+
+    $cgpa = $cumulative_credits > 0 ? round($cumulative_points / $cumulative_credits, 2) : 0;
+    $standing = $cgpa >= 3.5 ? 'Excellent' : ($cgpa >= 3.0 ? 'Good' : ($cgpa >= 2.0 ? 'Satisfactory' : 'Probation'));
 
     $bg_gradient = "linear-gradient(135deg, {$bg_color} 0%, #1a6b4e 50%, {$bg_color} 100%)";
     $accent_gradient = "linear-gradient(135deg, {$accent}, #f5d76e, {$accent})";
@@ -236,17 +267,17 @@ function generateTranscriptHTML(array $student, array $records, string $type = '
         <div class="t-section">
             <div class="t-section-title">Academic Records</div>
             <table class="t-records">
-                <thead><tr><th>Course</th><th>Course Name</th><th>Credits</th><th>Semester</th><th>Year</th><th>Marks</th><th>Grade</th></tr></thead>
-                <tbody>' . $rows . '</tbody>
+                <thead><tr><th>Course Code</th><th>Course Name</th><th>Credits</th><th>Semester</th><th>Year</th><th>Marks</th><th>Grade</th><th>Grade Points</th></tr></thead>
+                <tbody>' . $all_rows . '</tbody>
             </table>
         </div>
         <div class="t-section">
             <div class="t-section-title">Performance Summary</div>
             <div class="t-summary">
-                <div class="t-summary-item"><div class="lbl">Total Courses</div><div class="val">' . $count . '</div></div>
-                <div class="t-summary-item"><div class="lbl">Total Credits</div><div class="val">' . $total_credits . '</div></div>
-                <div class="t-summary-item"><div class="lbl">Average Score</div><div class="val">' . $avg . '%</div></div>
-                <div class="t-summary-item"><div class="lbl">CGPA</div><div class="val">' . number_format($gpa, 2) . '</div></div>
+                <div class="t-summary-item"><div class="lbl">Total Courses</div><div class="val">' . $total_courses . '</div></div>
+                <div class="t-summary-item"><div class="lbl">Total Credits</div><div class="val">' . $cumulative_credits . '</div></div>
+                <div class="t-summary-item"><div class="lbl">Total Grade Points</div><div class="val">' . number_format($cumulative_points, 2) . '</div></div>
+                <div class="t-summary-item"><div class="lbl">CGPA</div><div class="val">' . number_format($cgpa, 2) . '</div></div>
             </div>
             <div style="text-align:center;margin-top:10px;"><span class="t-stamp">' . strtoupper($standing) . ' STANDING</span></div>
         </div>

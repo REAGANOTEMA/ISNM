@@ -2,12 +2,23 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 
-$ctx = bootstrapStaffDashboard(['head', 'midwifery']);
+$ctx = bootstrapStaffDashboard(['head of midwifery']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Midwifery';
+$user_id = (int)($user['id'] ?? 0);
+
+$profileImageUrl = '../images/username.png';
+$profileSettingsFile = __DIR__ . '/../includes/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    include_once $profileSettingsFile;
+    if (function_exists('getStaffProfileImageUrl')) {
+        $url = getStaffProfileImageUrl($user_id);
+        if ($url) $profileImageUrl = $url;
+    }
+}
 
 // Set dashboard statistics from database
 $total_students = 0;

@@ -213,13 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // CSRF verification on all POST actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
-        $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
-    header('Location: staff-login.php');
+$token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
+    header('Location: organogram.php');
     exit();
-}
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -278,6 +276,37 @@ switch ($action) {
                 $auth_service->createSecureSession($result['user']);
             }
 
+            // Role-to-dashboard mapping
+            $dashboardMap = [
+                'Director General'       => 'dashboards/director-general.php',
+                'CEO'                    => 'dashboards/ceo.php',
+                'Director Academics'     => 'dashboards/director-academics.php',
+                'Director Finance'       => 'dashboards/director-finance.php',
+                'Director ICT'           => 'dashboards/director-ict.php',
+                'Director Admissions'    => 'dashboards/director-admissions.php',
+                'School Principal'       => 'dashboards/school-principal.php',
+                'Deputy Principal'       => 'dashboards/deputy-principal.php',
+                'Academic Registrar'     => 'dashboards/academic-registrar.php',
+                'School Bursar'          => 'dashboards/school-bursar.php',
+                'School Secretary'       => 'dashboards/school-secretary.php',
+                'HR Manager'             => 'dashboards/hr-manager.php',
+                'School Librarian'       => 'dashboards/school-librarian.php',
+                'Head of Nursing'        => 'dashboards/head-nursing.php',
+                'Head of Midwifery'      => 'dashboards/head-midwifery.php',
+                'Senior Lecturer'        => 'dashboards/senior-lecturers.php',
+                'Lecturer'               => 'dashboards/lecturers.php',
+                'Security Officer'       => 'dashboards/security.php',
+                'Storekeeper'            => 'dashboards/storekeeper.php',
+                'Driver'                 => 'dashboards/drivers.php',
+                'Matron'                 => 'dashboards/matrons.php',
+                'Warden'                 => 'dashboards/wardens.php',
+                'Guild President'        => 'dashboards/guild-president.php',
+                'Sickbay Nurse'          => 'dashboards/sickbay.php',
+                'Computer Lab Manager'   => 'dashboards/computer_lab.php',
+                'Skills Lab Technician'  => 'dashboards/skills-lab.php',
+                'System Administrator'   => 'dashboards/system-admin.php',
+            ];
+
             // Determine dashboard: prefer requested_position (organogram card clicked)
             $dashboard = null;
             if (!empty($requested_position)) {
@@ -287,10 +316,13 @@ switch ($action) {
                     $dashboard = $auth_service->getDashboardRoute($resolvedForDashboard);
                 }
             }
-            // Fall back to the authenticated role
+            // Fall back to the authenticated role using the map
             if (!$dashboard) {
                 $sessionRole = $result['user']['role'] ?? ($_SESSION['role'] ?? '');
-                $dashboard   = $auth_service->getDashboardRouteFromKey($sessionRole);
+                $dashboard = $dashboardMap[$sessionRole] ?? null;
+                if (!$dashboard) {
+                    $dashboard = $auth_service->getDashboardRouteFromKey($sessionRole);
+                }
                 if (!$dashboard) {
                     $dashboard = $auth_service->getDashboardRoute($sessionRole);
                 }
@@ -315,13 +347,17 @@ switch ($action) {
             exit();
         } else {
             $_SESSION['error'] = ($result['message'] ?? 'Invalid email or password.');
-            $redirectUrl = 'organogram.php';
             $redirectPosition = $requested_position ?: ($_SESSION['requested_position'] ?? '');
-            $redirectParam = $redirect_url ? '&redirect=' . urlencode($redirect_url) : '';
+            $redirectUrl = 'staff-login.php';
+            $params = [];
             if ($redirectPosition !== '') {
-                $redirectUrl .= '?position=' . urlencode($redirectPosition) . $redirectParam;
-            } elseif ($redirect_url) {
-                $redirectUrl .= '?redirect=' . urlencode($redirect_url);
+                $params[] = 'position=' . urlencode($redirectPosition);
+            }
+            if ($redirect_url) {
+                $params[] = 'redirect=' . urlencode($redirect_url);
+            }
+            if (!empty($params)) {
+                $redirectUrl .= '?' . implode('&', $params);
             }
             header("Location: $redirectUrl");
         }
@@ -505,15 +541,13 @@ function handleCreateStaff() {
 }
 
 function handleLogout() {
+    global $auth_service;
     if (session_status() === PHP_SESSION_NONE) session_start();
-    session_regenerate_id(true);
-    $_SESSION = [];
+    $auth_service->logout();
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
-    session_unset();
-    session_destroy();
     header('Location: staff-login.php');
     exit();
 }

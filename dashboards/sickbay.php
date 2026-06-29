@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 
-$ctx = bootstrapStaffDashboard(['sickbay']);
+$ctx = bootstrapStaffDashboard(['sickbay nurse']);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];

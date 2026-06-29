@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 
-$ctx = bootstrapStaffDashboard(['director', 'academics']);
+$ctx = bootstrapStaffDashboard(['director academics', 'director general', 'ceo', 'principal']);
 $conn = $ctx['staff'];
 $user = $ctx['user'];
 $user_role = $_SESSION['role'] ?? '';
@@ -14,6 +14,16 @@ $user_name = $user['full_name'] ?? 'Director of Academics';
 $website_conn = $ctx['website'];
 $students_conn = $ctx['students'] ?? null;
 $user_id = (int)($user['id'] ?? 0);
+
+$profileImageUrl = '../images/username.png';
+$profileSettingsFile = __DIR__ . '/../includes/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    include_once $profileSettingsFile;
+    if (function_exists('getStaffProfileImageUrl')) {
+        $url = getStaffProfileImageUrl($user_id);
+        if ($url) $profileImageUrl = $url;
+    }
+}
 
 function sc($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
 

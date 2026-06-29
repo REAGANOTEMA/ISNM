@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/department_approval_request.php';
 try {
-    $ctx = bootstrapStaffDashboard(['director', 'ict', 'it', 'system admin']);
+    $ctx = bootstrapStaffDashboard(['director ict', 'system admin']);
 } catch (Throwable $e) {
     if (ob_get_level()) ob_clean();
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Access Error</title></head><body>';
@@ -18,6 +18,7 @@ $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'ICT Director';
 $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) {}
+$staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
 
 function ict_q($conn, $sql) {
     if (!$conn) return 0;
@@ -84,7 +85,7 @@ $pending_tickets = ict_fetch($ict, "SELECT * FROM it_support_tickets WHERE statu
 $pending_approval_requests = [];
 if ($staff_conn) {
     try {
-        $r = $staff_conn->query("SELECT ar.*, ws.workflow_name, ws.category FROM igangaschoolofl_staffs_db.approval_requests ar LEFT JOIN igangaschoolofl_staffs_db.approval_workflows ws ON ar.workflow_id = ws.id WHERE ar.status = 'Active' AND (ws.category = 'ICT' OR ws.category IS NULL) ORDER BY FIELD(ar.priority,'Critical','High','Medium','Normal'), ar.created_at DESC LIMIT 15");
+        $r = $staff_conn->query("SELECT ar.*, ws.workflow_name, ws.category FROM {$staff_db}.approval_requests ar LEFT JOIN {$staff_db}.approval_workflows ws ON ar.workflow_id = ws.id WHERE ar.status = 'Active' AND (ws.category = 'ICT' OR ws.category IS NULL) ORDER BY FIELD(ar.priority,'Critical','High','Medium','Normal'), ar.created_at DESC LIMIT 15");
         if ($r) while ($row = $r->fetch_assoc()) $pending_approval_requests[] = $row;
     } catch (Exception $e) {}
 }
@@ -1086,9 +1087,9 @@ code { font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px; c
                 <div class="section-card">
                     <h2><i class="fas fa-chart-line me-2 text-success"></i>DG Request Summary</h2>
                     <div class="small">
-                        <div class="d-flex justify-content-between py-1"><span>Active Requests</span><span class="badge bg-primary"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Active'") : 0 ?></span></div>
-                        <div class="d-flex justify-content-between py-1"><span>Approved</span><span class="badge bg-success"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE status='Approved'") : 0 ?></span></div>
-                        <div class="d-flex justify-content-between py-1"><span>My Requests</span><span class="badge bg-info"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM igangaschoolofl_staffs_db.approval_requests WHERE requester_id=" . (int)($user_id)) : 0 ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>Active Requests</span><span class="badge bg-primary"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM {$staff_db}.approval_requests WHERE status='Active'") : 0 ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>Approved</span><span class="badge bg-success"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM {$staff_db}.approval_requests WHERE status='Approved'") : 0 ?></span></div>
+                        <div class="d-flex justify-content-between py-1"><span>My Requests</span><span class="badge bg-info"><?= ($staff_conn) ? ict_q($staff_conn, "SELECT COUNT(*) FROM {$staff_db}.approval_requests WHERE requester_id=" . (int)($user_id)) : 0 ?></span></div>
                     </div>
                 </div>
                 <?php if (function_exists('renderMyApprovalRequestsWidget')): ?>

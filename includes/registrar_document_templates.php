@@ -172,14 +172,12 @@ function generateProfessionalTranscript($student, $courses, $settings, $transcri
             $total = $c['marks_obtained'] ?? $c['total'] ?? $c['total_marks'] ?? '-';
             $grade = $c['grade'] ?? '-';
             
-            // Grade points
+            // Grade points (A=4.0, B=3.5, C=3.0, D=2.0, E=1.0, F=0.0)
             $gp = 0;
             $g = strtoupper($grade);
-            if ($g === 'A') $gp = 5.0;
-            elseif ($g === 'B+') $gp = 4.5;
-            elseif ($g === 'B') $gp = 4.0;
-            elseif ($g === 'C+') $gp = 3.5;
-            elseif ($g === 'C') $gp = 3.0;
+            if ($g === 'A') $gp = 4.0;
+            elseif ($g === 'B' || $g === 'B+') $gp = 3.5;
+            elseif ($g === 'C' || $g === 'C+') $gp = 3.0;
             elseif ($g === 'D') $gp = 2.0;
             elseif ($g === 'E') $gp = 1.0;
             elseif ($g === 'F') $gp = 0.0;
@@ -214,10 +212,10 @@ function generateProfessionalTranscript($student, $courses, $settings, $transcri
     
     // Classification
     $class = '';
-    if ($cgpa >= 4.5) $class = 'First Class Honours';
-    elseif ($cgpa >= 3.5) $class = 'Second Class Upper Division';
-    elseif ($cgpa >= 2.5) $class = 'Second Class Lower Division';
-    elseif ($cgpa >= 2.0) $class = 'Pass';
+    if ($cgpa >= 3.5) $class = 'First Class';
+    elseif ($cgpa >= 3.0) $class = 'Second Class Upper Division';
+    elseif ($cgpa >= 2.0) $class = 'Second Class Lower Division';
+    elseif ($cgpa >= 1.0) $class = 'Pass';
     else $class = 'Fail';
     
     $html .= '<div class="gpa-summary"><table><tr>';

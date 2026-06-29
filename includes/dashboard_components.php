@@ -78,17 +78,12 @@ function renderStatusBadge($status, $size = 'sm') {
 
 // ─── Empty State ───
 if (!function_exists('renderEmptyState')) {
-function renderEmptyState($icon = 'fas fa-inbox', $title = 'No data found', $message = 'There are no records to display.', $action = null) {
-    $btn = '';
-    if ($action) {
-        $btn = '<a href="'.htmlspecialchars($action['url']).'" class="btn btn-primary btn-sm mt-3" style="border-radius:8px;font-size:13px;">'.
-            ($action['icon']?'<i class="'.htmlspecialchars($action['icon']).' me-1"></i>':'').htmlspecialchars($action['label']).'</a>';
-    }
+function renderEmptyState($message, $icon = 'fas fa-inbox', $extra = '') {
     return '<div class="empty-state" style="text-align:center;padding:40px 20px;">'.
-        '<div style="font-size:48px;color:#cbd5e1;margin-bottom:16px;"><i class="'.$icon.'"></i></div>'.
-        '<h6 style="color:#475569;font-weight:600;margin-bottom:4px;">'.$title.'</h6>'.
-        '<p style="color:#94a3b8;font-size:13px;margin-bottom:0;">'.$message.'</p>'.
-        $btn.'</div>';
+        '<div style="font-size:48px;color:#cbd5e1;margin-bottom:16px;"><i class="' . htmlspecialchars($icon) . '"></i></div>'.
+        '<h6 style="color:#475569;font-weight:600;margin-bottom:4px;">' . htmlspecialchars($message) . '</h6>'.
+        ($extra ? '<p style="color:#94a3b8;font-size:13px;margin-bottom:0;">' . $extra . '</p>' : '').
+        '</div>';
 }
 }
 

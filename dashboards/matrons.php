@@ -10,6 +10,16 @@ $user_role = $user['role'] ?? '';
 $user_email = $user['email'] ?? '';
 $user_name = $user['full_name'] ?? '';
 
+$profileImageUrl = '../images/username.png';
+$profileSettingsFile = __DIR__ . '/../includes/profile_settings.php';
+if (file_exists($profileSettingsFile)) {
+    include_once $profileSettingsFile;
+    if (function_exists('getStaffProfileImageUrl')) {
+        $url = getStaffProfileImageUrl($user_id);
+        if ($url) $profileImageUrl = $url;
+    }
+}
+
 // Get matron statistics from database
 $students_db = $ctx['students'];
 $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
