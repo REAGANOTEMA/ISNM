@@ -3,10 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2026 at 06:36 PM
+-- Generation Time: Jun 29, 2026 at 05:19 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -20,12 +21,15 @@ SET time_zone = "+00:00";
 --
 -- Database: `igangaschoolofl_website_db`
 --
+DROP DATABASE IF EXISTS `igangaschoolofl_website_db`;
+CREATE DATABASE IF NOT EXISTS `igangaschoolofl_website_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `igangaschoolofl_website_db`;
 
 DELIMITER $$
 --
 -- Procedures
 --
-CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -42,6 +46,8 @@ DELIMITER ;
 --
 -- Table structure for table `contact_submissions`
 --
+-- Creation: Jun 21, 2026 at 09:11 AM
+--
 
 CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `id` int NOT NULL,
@@ -56,12 +62,14 @@ CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `replied_at` datetime DEFAULT NULL,
   `replied_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `daily_sick_records`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `daily_sick_records` (
@@ -98,6 +106,8 @@ CREATE TABLE IF NOT EXISTS `daily_sick_records` (
 --
 -- Table structure for table `donations`
 --
+-- Creation: Jun 17, 2026 at 10:28 AM
+--
 
 CREATE TABLE IF NOT EXISTS `donations` (
   `id` int NOT NULL,
@@ -116,12 +126,14 @@ CREATE TABLE IF NOT EXISTS `donations` (
   `acknowledged_at` datetime DEFAULT NULL,
   `acknowledged_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `medicine_stock`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `medicine_stock` (
@@ -157,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `medicine_stock` (
 -- Dumping data for table `medicine_stock`
 --
 
-INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'PARA001', 'Paracetamol', 'Acetaminophen', 'Painkiller', 'Tablet', '500mg', NULL, NULL, 200, 'tablets', 50, 50.00, NULL, 'UGX', NULL, '2027-12-31', 'Cabinet A1', 0, '1-2 tablets every 4-6 hours as needed for pain/fever', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
 (2, 'IBU001', 'Ibuprofen', 'Ibuprofen', 'Anti-inflammatory', 'Tablet', '400mg', NULL, NULL, 150, 'tablets', 30, 100.00, NULL, 'UGX', NULL, '2027-10-31', 'Cabinet A1', 0, '1 tablet 3 times daily after meals', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
 (3, 'AMOX001', 'Amoxicillin', 'Amoxicillin', 'Antibiotic', 'Capsule', '500mg', NULL, NULL, 100, 'capsules', 20, 200.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet B1', 1, '1 capsule 3 times daily for 7 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
@@ -189,6 +201,8 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 --
 -- Table structure for table `medicine_stock_transactions`
 --
+-- Creation: Jun 20, 2026 at 08:42 AM
+--
 
 CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
@@ -213,6 +227,8 @@ CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
 --
 -- Table structure for table `news`
 --
+-- Creation: Jun 29, 2026 at 01:47 PM
+--
 
 CREATE TABLE IF NOT EXISTS `news` (
   `id` int NOT NULL,
@@ -228,12 +244,14 @@ CREATE TABLE IF NOT EXISTS `news` (
   `published_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `notifications`
+--
+-- Creation: Jun 17, 2026 at 10:28 AM
 --
 
 CREATE TABLE IF NOT EXISTS `notifications` (
@@ -247,12 +265,14 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `sent_at` datetime DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `notification_reads`
+--
+-- Creation: Jun 17, 2026 at 10:28 AM
 --
 
 CREATE TABLE IF NOT EXISTS `notification_reads` (
@@ -261,12 +281,14 @@ CREATE TABLE IF NOT EXISTS `notification_reads` (
   `user_id` int NOT NULL COMMENT 'FK to staffs_db.staff.id or students_db.students.id',
   `user_type` enum('staff','student') NOT NULL DEFAULT 'staff',
   `read_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `pages`
+--
+-- Creation: Jun 17, 2026 at 10:28 AM
 --
 
 CREATE TABLE IF NOT EXISTS `pages` (
@@ -282,12 +304,14 @@ CREATE TABLE IF NOT EXISTS `pages` (
   `page_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `portal_messages`
+--
+-- Creation: Jun 17, 2026 at 10:28 AM
 --
 
 CREATE TABLE IF NOT EXISTS `portal_messages` (
@@ -300,12 +324,14 @@ CREATE TABLE IF NOT EXISTS `portal_messages` (
   `is_read` tinyint(1) DEFAULT '0',
   `read_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `push_subscriptions`
+--
+-- Creation: Jun 22, 2026 at 06:21 PM
 --
 
 CREATE TABLE IF NOT EXISTS `push_subscriptions` (
@@ -327,6 +353,8 @@ CREATE TABLE IF NOT EXISTS `push_subscriptions` (
 --
 -- Table structure for table `sickness_directory`
 --
+-- Creation: Jun 20, 2026 at 08:42 AM
+--
 
 CREATE TABLE IF NOT EXISTS `sickness_directory` (
   `id` int NOT NULL,
@@ -347,7 +375,7 @@ CREATE TABLE IF NOT EXISTS `sickness_directory` (
 -- Dumping data for table `sickness_directory`
 --
 
-INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'MLR', 'Malaria', 'Infectious', 'Fever, chills, headache, sweating, fatigue', 'Mosquito-borne parasitic infection common in tropical regions', 0, 'Artemisinin-based combination therapy, antimalarials', 'Active', NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
 (2, 'TYP', 'Typhoid', 'Infectious', 'Prolonged fever, abdominal pain, headache, constipation or diarrhea', 'Bacterial infection spread through contaminated food/water', 1, 'Antibiotics (ciprofloxacin, azithromycin), hydration', 'Active', NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
 (3, 'FLU', 'Influenza', 'Infectious', 'Fever, cough, sore throat, body aches, fatigue', 'Viral respiratory infection spread through droplets', 1, 'Rest, fluids, antipyretics, antivirals if severe', 'Active', NULL, '2026-06-20 08:42:46', '2026-06-20 08:42:46'),
@@ -379,6 +407,8 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 --
 -- Table structure for table `student_applications`
 --
+-- Creation: Jun 21, 2026 at 09:11 AM
+--
 
 CREATE TABLE IF NOT EXISTS `student_applications` (
   `id` int NOT NULL,
@@ -400,12 +430,14 @@ CREATE TABLE IF NOT EXISTS `student_applications` (
   `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `reviewed_by` int DEFAULT NULL,
   `reviewed_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_sick_leave`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_sick_leave` (
@@ -448,6 +480,8 @@ CREATE TABLE IF NOT EXISTS `student_sick_leave` (
 --
 -- Table structure for table `volunteer_applications`
 --
+-- Creation: Jun 17, 2026 at 10:28 AM
+--
 
 CREATE TABLE IF NOT EXISTS `volunteer_applications` (
   `id` int NOT NULL,
@@ -468,7 +502,7 @@ CREATE TABLE IF NOT EXISTS `volunteer_applications` (
   `reviewed_at` datetime DEFAULT NULL,
   `reviewed_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Indexes for dumped tables
@@ -539,7 +573,8 @@ ALTER TABLE `news`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_news_status_date` (`status`,`created_at`),
   ADD KEY `idx_news_date` (`created_at`),
-  ADD KEY `idx_news_status` (`status`);
+  ADD KEY `idx_news_status` (`status`),
+  ADD KEY `idx_news_slug` (`slug`);
 
 --
 -- Indexes for table `notifications`
@@ -736,6 +771,7 @@ ALTER TABLE `notification_reads`
 --
 ALTER TABLE `student_sick_leave`
   ADD CONSTRAINT `student_sick_leave_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -3,10 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2026 at 06:35 PM
+-- Generation Time: Jun 29, 2026 at 05:19 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -20,12 +21,15 @@ SET time_zone = "+00:00";
 --
 -- Database: `igangaschoolofl_ict`
 --
+DROP DATABASE IF EXISTS `igangaschoolofl_ict`;
+CREATE DATABASE IF NOT EXISTS `igangaschoolofl_ict` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `igangaschoolofl_ict`;
 
 DELIMITER $$
 --
 -- Procedures
 --
-CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -35,7 +39,7 @@ CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VAR
     END IF;
 END$$
 
-CREATE PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_role_description_col_if_missing` ()   BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END;
     ALTER TABLE staff_roles ADD COLUMN role_description TEXT AFTER role_name;
 END$$
@@ -46,6 +50,8 @@ DELIMITER ;
 
 --
 -- Table structure for table `daily_sick_records`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `daily_sick_records` (
@@ -82,6 +88,8 @@ CREATE TABLE IF NOT EXISTS `daily_sick_records` (
 --
 -- Table structure for table `it_support_tickets`
 --
+-- Creation: Jun 29, 2026 at 01:47 PM
+--
 
 CREATE TABLE IF NOT EXISTS `it_support_tickets` (
   `id` int NOT NULL,
@@ -104,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `it_support_tickets` (
 -- Dumping data for table `it_support_tickets`
 --
 
-INSERT INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requester_email`, `requester_type`, `issue_type`, `priority`, `description`, `status`, `assigned_to`, `resolution_notes`, `resolved_at`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requester_email`, `requester_type`, `issue_type`, `priority`, `description`, `status`, `assigned_to`, `resolution_notes`, `resolved_at`, `created_at`, `updated_at`) VALUES
 (1, 'TKT-2024-001', 'John Mugisha', 'jmugisha@student.isnm.ac.ug', 'student', 'software', 'medium', 'Unable to access SPSS software on Lab A computers', 'open', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (2, 'TKT-2024-002', 'Dr. Emily Achieng', 'eachieng@isnm.ac.ug', 'staff', 'hardware', 'high', 'Projector in Lab B not displaying properly', 'in_progress', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (3, 'TKT-2024-003', 'Peter Kato', 'pkato@student.isnm.ac.ug', 'student', 'account', 'low', 'Forgot password for student portal', 'open', NULL, NULL, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
@@ -114,6 +122,8 @@ INSERT INTO `it_support_tickets` (`id`, `ticket_number`, `requester_name`, `requ
 
 --
 -- Table structure for table `lab_bookings`
+--
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_bookings` (
@@ -138,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `lab_bookings` (
 -- Dumping data for table `lab_bookings`
 --
 
-INSERT INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructor_name`, `instructor_email`, `booking_date`, `time_slot`, `number_of_students`, `purpose`, `special_requirements`, `status`, `approved_by`, `lab_assigned`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructor_name`, `instructor_email`, `booking_date`, `time_slot`, `number_of_students`, `purpose`, `special_requirements`, `status`, `approved_by`, `lab_assigned`, `created_at`, `updated_at`) VALUES
 (1, 'BK-2024-001', 'Introduction to Nursing Informatics', 'Dr. Sarah Johnson', 'sjohnson@isnm.ac.ug', '2024-06-10', '09:00 AM - 11:00 AM', 25, 'Practical session on electronic health records', NULL, 'confirmed', NULL, 'Lab A', '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
 (2, 'BK-2024-002', 'Research Methods', 'Prof. Michael Okonkwo', 'mokonkwo@isnm.ac.ug', '2024-06-10', '02:00 PM - 04:00 PM', 30, 'Data analysis using SPSS', NULL, 'pending', NULL, 'Lab B', '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
 (3, 'BK-2024-003', 'Computer Literacy', 'Ms. Grace Namukasa', 'gnamukasa@isnm.ac.ug', '2024-06-11', '09:00 AM - 11:00 AM', 20, 'Basic computer skills training', NULL, 'confirmed', NULL, 'Lab A', '2026-06-14 18:38:55', '2026-06-14 18:38:55');
@@ -147,6 +157,8 @@ INSERT INTO `lab_bookings` (`id`, `booking_reference`, `course_name`, `instructo
 
 --
 -- Table structure for table `lab_computers`
+--
+-- Creation: Jun 21, 2026 at 09:11 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_computers` (
@@ -173,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `lab_computers` (
 -- Dumping data for table `lab_computers`
 --
 
-INSERT INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `location`, `status`, `ip_address`, `mac_address`, `specifications`, `os_installed`, `last_maintenance`, `next_maintenance`, `issues_reported`, `assigned_to`, `purchase_date`, `warranty_expiry`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `location`, `status`, `ip_address`, `mac_address`, `specifications`, `os_installed`, `last_maintenance`, `next_maintenance`, `issues_reported`, `assigned_to`, `purchase_date`, `warranty_expiry`, `created_at`, `updated_at`) VALUES
 (1, 'LAB-A-001', 'Computer Lab A - Station 1', 'Lab A - Floor 1', 'online', '192.168.1.101', 'AA:BB:CC:DD:EE:01', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', NULL, NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
 (2, 'LAB-A-002', 'Computer Lab A - Station 2', 'Lab A - Floor 1', 'online', '192.168.1.102', 'AA:BB:CC:DD:EE:02', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', NULL, NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
 (3, 'LAB-A-003', 'Computer Lab A - Station 3', 'Lab A - Floor 1', 'offline', '192.168.1.103', 'AA:BB:CC:DD:EE:03', 'Intel i5, 8GB RAM, 256GB SSD', 'Windows 11 Pro', '2024-05-01', '2024-08-01', 'Hardware issue - PSU replacement needed', NULL, NULL, NULL, '2026-06-14 18:38:55', '2026-06-14 18:38:55'),
@@ -184,6 +196,8 @@ INSERT INTO `lab_computers` (`id`, `computer_id`, `computer_name`, `location`, `
 
 --
 -- Table structure for table `lab_usage_stats`
+--
+-- Creation: Jun 17, 2026 at 10:23 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_usage_stats` (
@@ -204,7 +218,7 @@ CREATE TABLE IF NOT EXISTS `lab_usage_stats` (
 -- Dumping data for table `lab_usage_stats`
 --
 
-INSERT INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `total_users`, `peak_concurrent_users`, `average_session_duration`, `computers_used`, `computers_available`, `notes`, `created_at`) VALUES
+INSERT DELAYED IGNORE INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `total_users`, `peak_concurrent_users`, `average_session_duration`, `computers_used`, `computers_available`, `notes`, `created_at`) VALUES
 (1, 'Lab A', '2024-06-05', 8, 45, 25, 90, 22, 25, NULL, '2026-06-14 18:38:56'),
 (2, 'Lab B', '2024-06-05', 6, 35, 20, 85, 18, 20, NULL, '2026-06-14 18:38:56'),
 (3, 'Lab A', '2024-06-06', 10, 55, 28, 95, 24, 25, NULL, '2026-06-14 18:38:56'),
@@ -214,6 +228,8 @@ INSERT INTO `lab_usage_stats` (`id`, `lab_name`, `date`, `total_sessions`, `tota
 
 --
 -- Table structure for table `maintenance_logs`
+--
+-- Creation: Jun 17, 2026 at 10:23 AM
 --
 
 CREATE TABLE IF NOT EXISTS `maintenance_logs` (
@@ -235,7 +251,7 @@ CREATE TABLE IF NOT EXISTS `maintenance_logs` (
 -- Dumping data for table `maintenance_logs`
 --
 
-INSERT INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `description`, `performed_by`, `cost`, `parts_replaced`, `status`, `scheduled_date`, `completed_date`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `description`, `performed_by`, `cost`, `parts_replaced`, `status`, `scheduled_date`, `completed_date`, `created_at`, `updated_at`) VALUES
 (1, 'LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, NULL, 'scheduled', '2024-06-12', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (2, 'LAB-B-002', 'routine', 'Operating system reinstallation and updates', 'IT Technician - Sarah', 0.00, NULL, 'in_progress', '2024-06-10', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (3, 'LAB-A-003', 'repair', 'Power supply unit replacement required', 'IT Technician - James', 150.00, NULL, 'scheduled', '2024-06-12', NULL, '2026-06-15 04:19:05', '2026-06-15 04:19:05'),
@@ -245,6 +261,8 @@ INSERT INTO `maintenance_logs` (`id`, `computer_id`, `maintenance_type`, `descri
 
 --
 -- Table structure for table `medicine_stock`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `medicine_stock` (
@@ -280,7 +298,7 @@ CREATE TABLE IF NOT EXISTS `medicine_stock` (
 -- Dumping data for table `medicine_stock`
 --
 
-INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'PARA001', 'Paracetamol', 'Acetaminophen', 'Painkiller', 'Tablet', '500mg', NULL, NULL, 200, 'tablets', 50, 50.00, NULL, 'UGX', NULL, '2027-12-31', 'Cabinet A1', 0, '1-2 tablets every 4-6 hours as needed for pain/fever', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:34', '2026-06-20 08:42:34'),
 (2, 'IBU001', 'Ibuprofen', 'Ibuprofen', 'Anti-inflammatory', 'Tablet', '400mg', NULL, NULL, 150, 'tablets', 30, 100.00, NULL, 'UGX', NULL, '2027-10-31', 'Cabinet A1', 0, '1 tablet 3 times daily after meals', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:34', '2026-06-20 08:42:34'),
 (3, 'AMOX001', 'Amoxicillin', 'Amoxicillin', 'Antibiotic', 'Capsule', '500mg', NULL, NULL, 100, 'capsules', 20, 200.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet B1', 1, '1 capsule 3 times daily for 7 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:34', '2026-06-20 08:42:34'),
@@ -312,6 +330,8 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 --
 -- Table structure for table `medicine_stock_transactions`
 --
+-- Creation: Jun 20, 2026 at 08:42 AM
+--
 
 CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
@@ -336,6 +356,8 @@ CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
 --
 -- Table structure for table `network_devices`
 --
+-- Creation: Jun 29, 2026 at 01:47 PM
+--
 
 CREATE TABLE IF NOT EXISTS `network_devices` (
   `id` int NOT NULL,
@@ -357,7 +379,7 @@ CREATE TABLE IF NOT EXISTS `network_devices` (
 -- Dumping data for table `network_devices`
 --
 
-INSERT INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`, `mac_address`, `location`, `status`, `firmware_version`, `last_check`, `uptime_hours`, `notes`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`, `mac_address`, `location`, `status`, `firmware_version`, `last_check`, `uptime_hours`, `notes`, `created_at`, `updated_at`) VALUES
 (1, 'Main Router', 'router', '192.168.0.1', '00:11:22:33:44:55', 'Server Room', 'online', 'v2.1.0', NULL, 720, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (2, 'Lab A Switch', 'switch', '192.168.1.1', '00:11:22:33:44:56', 'Lab A - Floor 1', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (3, 'Lab B Switch', 'switch', '192.168.2.1', '00:11:22:33:44:57', 'Lab B - Floor 2', 'online', 'v1.5.2', NULL, 480, NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
@@ -375,6 +397,8 @@ INSERT INTO `network_devices` (`id`, `device_name`, `device_type`, `ip_address`,
 
 --
 -- Table structure for table `sickness_directory`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `sickness_directory` (
@@ -396,7 +420,7 @@ CREATE TABLE IF NOT EXISTS `sickness_directory` (
 -- Dumping data for table `sickness_directory`
 --
 
-INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'MLR', 'Malaria', 'Infectious', 'Fever, chills, headache, sweating, fatigue', 'Mosquito-borne parasitic infection common in tropical regions', 0, 'Artemisinin-based combination therapy, antimalarials', 'Active', NULL, '2026-06-20 08:42:33', '2026-06-20 08:42:33'),
 (2, 'TYP', 'Typhoid', 'Infectious', 'Prolonged fever, abdominal pain, headache, constipation or diarrhea', 'Bacterial infection spread through contaminated food/water', 1, 'Antibiotics (ciprofloxacin, azithromycin), hydration', 'Active', NULL, '2026-06-20 08:42:33', '2026-06-20 08:42:33'),
 (3, 'FLU', 'Influenza', 'Infectious', 'Fever, cough, sore throat, body aches, fatigue', 'Viral respiratory infection spread through droplets', 1, 'Rest, fluids, antipyretics, antivirals if severe', 'Active', NULL, '2026-06-20 08:42:33', '2026-06-20 08:42:33'),
@@ -428,6 +452,8 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 --
 -- Table structure for table `software_inventory`
 --
+-- Creation: Jun 17, 2026 at 10:23 AM
+--
 
 CREATE TABLE IF NOT EXISTS `software_inventory` (
   `id` int NOT NULL,
@@ -450,7 +476,7 @@ CREATE TABLE IF NOT EXISTS `software_inventory` (
 -- Dumping data for table `software_inventory`
 --
 
-INSERT INTO `software_inventory` (`id`, `software_name`, `version`, `license_key`, `license_type`, `license_expiry`, `installation_count`, `update_available`, `latest_version`, `download_url`, `category`, `notes`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `software_inventory` (`id`, `software_name`, `version`, `license_key`, `license_type`, `license_expiry`, `installation_count`, `update_available`, `latest_version`, `download_url`, `category`, `notes`, `created_at`, `updated_at`) VALUES
 (1, 'Microsoft Office 365', '2024', NULL, 'educational', '2025-12-31', 50, 0, '2024', NULL, 'office', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (2, 'SPSS Statistics', '29.0', NULL, 'commercial', '2024-12-31', 25, 1, '30.0', NULL, 'development', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
 (3, 'Windows 11 Pro', '23H2', NULL, 'educational', '2026-06-30', 50, 0, '23H2', NULL, 'os', NULL, '2026-06-14 18:38:56', '2026-06-14 18:38:56'),
@@ -466,6 +492,8 @@ INSERT INTO `software_inventory` (`id`, `software_name`, `version`, `license_key
 
 --
 -- Table structure for table `student_sick_leave`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_sick_leave` (
@@ -509,7 +537,7 @@ CREATE TABLE IF NOT EXISTS `student_sick_leave` (
 -- Stand-in structure for view `v_active_tickets`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `v_active_tickets` (
+CREATE TABLE `v_active_tickets` (
 `priority` enum('low','medium','high','critical')
 ,`ticket_count` bigint
 ,`ticket_numbers` text
@@ -521,7 +549,7 @@ CREATE TABLE IF NOT EXISTS `v_active_tickets` (
 -- Stand-in structure for view `v_computer_availability`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `v_computer_availability` (
+CREATE TABLE `v_computer_availability` (
 `location` varchar(100)
 ,`total_computers` bigint
 ,`online_count` decimal(23,0)
@@ -536,8 +564,10 @@ CREATE TABLE IF NOT EXISTS `v_computer_availability` (
 -- Structure for view `v_active_tickets`
 --
 DROP TABLE IF EXISTS `v_active_tickets`;
+-- Creation: Jun 17, 2026 at 10:23 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_active_tickets`  AS SELECT `it_support_tickets`.`priority` AS `priority`, count(0) AS `ticket_count`, group_concat(`it_support_tickets`.`ticket_number` separator ',') AS `ticket_numbers` FROM `it_support_tickets` WHERE (`it_support_tickets`.`status` in ('open','in_progress')) GROUP BY `it_support_tickets`.`priority` ORDER BY (case `it_support_tickets`.`priority` when 'critical' then 1 when 'high' then 2 when 'medium' then 3 else 4 end) ASC ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `v_active_tickets`  AS SELECT `it_support_tickets`.`priority` AS `priority`, count(0) AS `ticket_count`, group_concat(`it_support_tickets`.`ticket_number` separator ',') AS `ticket_numbers` FROM `it_support_tickets` WHERE (`it_support_tickets`.`status` in ('open','in_progress')) GROUP BY `it_support_tickets`.`priority` ORDER BY (case `it_support_tickets`.`priority` when 'critical' then 1 when 'high' then 2 when 'medium' then 3 else 4 end) ASC ;
 
 -- --------------------------------------------------------
 
@@ -545,8 +575,10 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_active_tickets`  AS SELE
 -- Structure for view `v_computer_availability`
 --
 DROP TABLE IF EXISTS `v_computer_availability`;
+-- Creation: Jun 17, 2026 at 10:23 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_computer_availability`  AS SELECT `lab_computers`.`location` AS `location`, count(0) AS `total_computers`, sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) AS `online_count`, sum((case when (`lab_computers`.`status` = 'offline') then 1 else 0 end)) AS `offline_count`, sum((case when (`lab_computers`.`status` = 'maintenance') then 1 else 0 end)) AS `maintenance_count`, round(((sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) * 100.0) / count(0)),2) AS `availability_percentage` FROM `lab_computers` WHERE (`lab_computers`.`status` <> 'deleted') GROUP BY `lab_computers`.`location` ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `v_computer_availability`  AS SELECT `lab_computers`.`location` AS `location`, count(0) AS `total_computers`, sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) AS `online_count`, sum((case when (`lab_computers`.`status` = 'offline') then 1 else 0 end)) AS `offline_count`, sum((case when (`lab_computers`.`status` = 'maintenance') then 1 else 0 end)) AS `maintenance_count`, round(((sum((case when (`lab_computers`.`status` = 'online') then 1 else 0 end)) * 100.0) / count(0)),2) AS `availability_percentage` FROM `lab_computers` WHERE (`lab_computers`.`status` <> 'deleted') GROUP BY `lab_computers`.`location` ;
 
 --
 -- Indexes for dumped tables
@@ -578,7 +610,8 @@ ALTER TABLE `it_support_tickets`
   ADD KEY `idx_requester` (`requester_name`),
   ADD KEY `idx_type` (`issue_type`),
   ADD KEY `idx_ist_status` (`status`),
-  ADD KEY `idx_ist_priority` (`priority`);
+  ADD KEY `idx_ist_priority` (`priority`),
+  ADD KEY `idx_ist_status_priority` (`status`,`priority`);
 
 --
 -- Indexes for table `lab_bookings`
@@ -589,7 +622,8 @@ ALTER TABLE `lab_bookings`
   ADD KEY `idx_date` (`booking_date`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_instructor` (`instructor_name`),
-  ADD KEY `idx_lb_date` (`booking_date`);
+  ADD KEY `idx_lb_date` (`booking_date`),
+  ADD KEY `idx_lb_date_status` (`booking_date`,`status`);
 
 --
 -- Indexes for table `lab_computers`
@@ -651,7 +685,8 @@ ALTER TABLE `network_devices`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_type` (`device_type`),
-  ADD KEY `idx_ip` (`ip_address`);
+  ADD KEY `idx_ip` (`ip_address`),
+  ADD KEY `idx_nd_type_status` (`device_type`,`status`);
 
 --
 -- Indexes for table `sickness_directory`
@@ -783,6 +818,7 @@ ALTER TABLE `medicine_stock_transactions`
 --
 ALTER TABLE `student_sick_leave`
   ADD CONSTRAINT `student_sick_leave_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

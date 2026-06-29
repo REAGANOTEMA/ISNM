@@ -1,9 +1,1865 @@
+<!doctype html>
+<html lang="en_GB" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,notranslate">
+  <meta name="google" content="notranslate">
+  <style id="cfs-style">html{display: none;}</style>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" type="text/css" href="./themes/pmahomme/jquery/jquery-ui.css">
+  <link rel="stylesheet" type="text/css" href="js/vendor/codemirror/lib/codemirror.css?v=5.2.1">
+  <link rel="stylesheet" type="text/css" href="js/vendor/codemirror/addon/hint/show-hint.css?v=5.2.1">
+  <link rel="stylesheet" type="text/css" href="js/vendor/codemirror/addon/lint/lint.css?v=5.2.1">
+  <link rel="stylesheet" type="text/css" href="./themes/pmahomme/css/theme.css?v=5.2.1">
+  <title>localhost / 127.0.0.1 / igangaschoolofl_staffs_db | phpMyAdmin 5.2.1</title>
+    <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery.min.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery-migrate.min.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/sprintf.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/ajax.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/keyhandler.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery-ui.min.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/name-conflict-fixes.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/bootstrap/bootstrap.bundle.min.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/js.cookie.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery.validate.min.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery-ui-timepicker-addon.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/jquery/jquery.debounce-1.0.6.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/menu_resizer.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/cross_framing_protection.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/messages.php?l=en_GB&v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/config.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/doclinks.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/functions.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/navigation.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/indexes.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/common.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/page_settings.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/export_output.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/lib/codemirror.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/mode/sql/sql.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/addon/runmode/runmode.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/addon/hint/show-hint.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/addon/hint/sql-hint.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/codemirror/addon/lint/lint.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/codemirror/addon/lint/sql-lint.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/vendor/tracekit.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/error_report.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/drag_drop_import.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/shortcuts_handler.js?v=5.2.1"></script>
+  <script data-cfasync="false" type="text/javascript" src="js/dist/console.js?v=5.2.1"></script>
+
+<script data-cfasync="false" type="text/javascript">
+// <![CDATA[
+CommonParams.setAll({common_query:"",opendb_url:"index.php?route=/database/structure",lang:"en_GB",server:"1",table:"",db:"igangaschoolofl_staffs_db",token:"3c2c5a76494f674f7e63395c632a2d3d",text_dir:"ltr",LimitChars:"50",pftext:"P",confirm:true,LoginCookieValidity:"1440",session_gc_maxlifetime:"1440",logged_in:true,is_https:false,rootPath:"/phpmyadmin/",arg_separator:"&",version:"5.2.1",auth_type:"config",user:"root"});
+var firstDayOfCalendar = '0';
+var themeImagePath = '.\/themes\/pmahomme\/img\/';
+var mysqlDocTemplate = '.\/url.php\u003Furl\u003Dhttps\u00253A\u00252F\u00252Fdev.mysql.com\u00252Fdoc\u00252Frefman\u00252F8.0\u00252Fen\u00252F\u002525s.html';
+var maxInputVars = 1000;
+
+if ($.datepicker) {
+  $.datepicker.regional[''].closeText = 'Done';
+  $.datepicker.regional[''].prevText = 'Prev';
+  $.datepicker.regional[''].nextText = 'Next';
+  $.datepicker.regional[''].currentText = 'Today';
+  $.datepicker.regional[''].monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  $.datepicker.regional[''].monthNamesShort = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  $.datepicker.regional[''].dayNames = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+  $.datepicker.regional[''].dayNamesShort = [
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+  ];
+  $.datepicker.regional[''].dayNamesMin = [
+    'Su',
+    'Mo',
+    'Tu',
+    'We',
+    'Th',
+    'Fr',
+    'Sa',
+  ];
+  $.datepicker.regional[''].weekHeader = 'Wk';
+  $.datepicker.regional[''].showMonthAfterYear = false;
+  $.datepicker.regional[''].yearSuffix = '';
+  $.extend($.datepicker._defaults, $.datepicker.regional['']);
+}
+
+if ($.timepicker) {
+  $.timepicker.regional[''].timeText = 'Time';
+  $.timepicker.regional[''].hourText = 'Hour';
+  $.timepicker.regional[''].minuteText = 'Minute';
+  $.timepicker.regional[''].secondText = 'Second';
+  $.extend($.timepicker._defaults, $.timepicker.regional['']);
+}
+
+function extendingValidatorMessages () {
+  $.extend($.validator.messages, {
+    required: 'This\u0020field\u0020is\u0020required',
+    remote: 'Please\u0020fix\u0020this\u0020field',
+    email: 'Please\u0020enter\u0020a\u0020valid\u0020email\u0020address',
+    url: 'Please\u0020enter\u0020a\u0020valid\u0020URL',
+    date: 'Please\u0020enter\u0020a\u0020valid\u0020date',
+    dateISO: 'Please\u0020enter\u0020a\u0020valid\u0020date\u0020\u0028ISO\u0029',
+    number: 'Please\u0020enter\u0020a\u0020valid\u0020number',
+    creditcard: 'Please\u0020enter\u0020a\u0020valid\u0020credit\u0020card\u0020number',
+    digits: 'Please\u0020enter\u0020only\u0020digits',
+    equalTo: 'Please\u0020enter\u0020the\u0020same\u0020value\u0020again',
+    maxlength: $.validator.format('Please\u0020enter\u0020no\u0020more\u0020than\u0020\u007B0\u007D\u0020characters'),
+    minlength: $.validator.format('Please\u0020enter\u0020at\u0020least\u0020\u007B0\u007D\u0020characters'),
+    rangelength: $.validator.format('Please\u0020enter\u0020a\u0020value\u0020between\u0020\u007B0\u007D\u0020and\u0020\u007B1\u007D\u0020characters\u0020long'),
+    range: $.validator.format('Please\u0020enter\u0020a\u0020value\u0020between\u0020\u007B0\u007D\u0020and\u0020\u007B1\u007D'),
+    max: $.validator.format('Please\u0020enter\u0020a\u0020value\u0020less\u0020than\u0020or\u0020equal\u0020to\u0020\u007B0\u007D'),
+    min: $.validator.format('Please\u0020enter\u0020a\u0020value\u0020greater\u0020than\u0020or\u0020equal\u0020to\u0020\u007B0\u007D'),
+    validationFunctionForDateTime: $.validator.format('Please\u0020enter\u0020a\u0020valid\u0020date\u0020or\u0020time'),
+    validationFunctionForHex: $.validator.format('Please\u0020enter\u0020a\u0020valid\u0020HEX\u0020input'),
+    validationFunctionForMd5: $.validator.format('This\u0020column\u0020can\u0020not\u0020contain\u0020a\u002032\u0020chars\u0020value'),
+    validationFunctionForAesDesEncrypt: $.validator.format('These\u0020functions\u0020are\u0020meant\u0020to\u0020return\u0020a\u0020binary\u0020result\u003B\u0020to\u0020avoid\u0020inconsistent\u0020results\u0020you\u0020should\u0020store\u0020it\u0020in\u0020a\u0020BINARY,\u0020VARBINARY,\u0020or\u0020BLOB\u0020column.')
+  });
+}
+
+ConsoleEnterExecutes=false
+
+AJAX.scriptHandler
+  .add('vendor/jquery/jquery.min.js', 0)
+  .add('vendor/jquery/jquery-migrate.min.js', 0)
+  .add('vendor/sprintf.js', 1)
+  .add('ajax.js', 0)
+  .add('keyhandler.js', 1)
+  .add('vendor/jquery/jquery-ui.min.js', 0)
+  .add('name-conflict-fixes.js', 1)
+  .add('vendor/bootstrap/bootstrap.bundle.min.js', 1)
+  .add('vendor/js.cookie.js', 1)
+  .add('vendor/jquery/jquery.validate.min.js', 0)
+  .add('vendor/jquery/jquery-ui-timepicker-addon.js', 0)
+  .add('vendor/jquery/jquery.debounce-1.0.6.js', 0)
+  .add('menu_resizer.js', 1)
+  .add('cross_framing_protection.js', 0)
+  .add('messages.php', 0)
+  .add('config.js', 1)
+  .add('doclinks.js', 1)
+  .add('functions.js', 1)
+  .add('navigation.js', 1)
+  .add('indexes.js', 1)
+  .add('common.js', 1)
+  .add('page_settings.js', 1)
+  .add('export_output.js', 1)
+  .add('vendor/codemirror/lib/codemirror.js', 0)
+  .add('vendor/codemirror/mode/sql/sql.js', 0)
+  .add('vendor/codemirror/addon/runmode/runmode.js', 0)
+  .add('vendor/codemirror/addon/hint/show-hint.js', 0)
+  .add('vendor/codemirror/addon/hint/sql-hint.js', 0)
+  .add('vendor/codemirror/addon/lint/lint.js', 0)
+  .add('codemirror/addon/lint/sql-lint.js', 0)
+  .add('vendor/tracekit.js', 1)
+  .add('error_report.js', 1)
+  .add('drag_drop_import.js', 1)
+  .add('shortcuts_handler.js', 1)
+  .add('console.js', 1)
+;
+$(function() {
+        AJAX.fireOnload('vendor/sprintf.js');
+        AJAX.fireOnload('keyhandler.js');
+        AJAX.fireOnload('name-conflict-fixes.js');
+      AJAX.fireOnload('vendor/bootstrap/bootstrap.bundle.min.js');
+      AJAX.fireOnload('vendor/js.cookie.js');
+            AJAX.fireOnload('menu_resizer.js');
+          AJAX.fireOnload('config.js');
+      AJAX.fireOnload('doclinks.js');
+      AJAX.fireOnload('functions.js');
+      AJAX.fireOnload('navigation.js');
+      AJAX.fireOnload('indexes.js');
+      AJAX.fireOnload('common.js');
+      AJAX.fireOnload('page_settings.js');
+      AJAX.fireOnload('export_output.js');
+                    AJAX.fireOnload('vendor/tracekit.js');
+      AJAX.fireOnload('error_report.js');
+      AJAX.fireOnload('drag_drop_import.js');
+      AJAX.fireOnload('shortcuts_handler.js');
+      AJAX.fireOnload('console.js');
+  });
+// ]]>
+</script>
+
+  <noscript><style>html{display:block}</style></noscript>
+</head>
+<body>
+    <div id="pma_navigation" class="d-print-none" data-config-navigation-width="240">
+    <div id="pma_navigation_resizer"></div>
+    <div id="pma_navigation_collapser"></div>
+    <div id="pma_navigation_content">
+      <div id="pma_navigation_header">
+
+                  <div id="pmalogo">
+                          <a href="index.php">
+                                      <img id="imgpmalogo" src="./themes/pmahomme/img/logo_left.png" alt="phpMyAdmin">
+                                      </a>
+                      </div>
+        
+        <div id="navipanellinks">
+          <a href="index.php?route=/" title="Home"><img src="themes/dot.gif" title="Home" alt="Home" class="icon ic_b_home"></a>
+
+                      <a class="logout disableAjax" href="index.php?route=/logout" title="Empty session data"><img src="themes/dot.gif" title="Empty session data" alt="Empty session data" class="icon ic_s_loggoff"></a>
+          
+          <a href="./doc/html/index.html" title="phpMyAdmin documentation" target="_blank" rel="noopener noreferrer"><img src="themes/dot.gif" title="phpMyAdmin documentation" alt="phpMyAdmin documentation" class="icon ic_b_docs"></a>
+
+          <a href="./url.php?url=https%3A%2F%2Fdev.mysql.com%2Fdoc%2Frefman%2F8.0%2Fen%2Findex.html" title="MySQL Documentation" target="_blank" rel="noopener noreferrer"><img src="themes/dot.gif" title="MySQL Documentation" alt="MySQL Documentation" class="icon ic_b_sqlhelp"></a>
+
+          <a id="pma_navigation_settings_icon" href="#" title="Navigation panel settings"><img src="themes/dot.gif" title="Navigation panel settings" alt="Navigation panel settings" class="icon ic_s_cog"></a>
+
+          <a id="pma_navigation_reload" href="#" title="Reload navigation panel"><img src="themes/dot.gif" title="Reload navigation panel" alt="Reload navigation panel" class="icon ic_s_reload"></a>
+        </div>
+
+        
+        <img src="themes/dot.gif" title="Loading…" alt="Loading…" style="visibility: hidden; display:none" class="icon ic_ajax_clock_small throbber">
+      </div>
+      <div id="pma_navigation_tree" class="list_container synced highlight autoexpand">
+
+  <div class="pma_quick_warp">
+    <div class="drop_list"><button title="Recent tables" class="drop_button btn">Recent</button><ul id="pma_recent_list"><li class="warp_link">
+            There are no recent tables.    </li>
+</ul></div>    <div class="drop_list"><button title="Favourite tables" class="drop_button btn">Favourites</button><ul id="pma_favorite_list"><li class="warp_link">
+            There are no favourite tables.    </li>
+</ul></div>    <div class="clearfloat"></div>
+</div>
+
+
+<div class="clearfloat"></div>
+
+<ul>
+  
+  <!-- CONTROLS START -->
+<li id="navigation_controls_outer">
+    <div id="navigation_controls">
+        <a href="#" id="pma_navigation_collapse" title="Collapse all"><img src="themes/dot.gif" title="Collapse all" alt="Collapse all" class="icon ic_s_collapseall"></a>
+        <a href="#" id="pma_navigation_sync" title="Unlink from main panel"><img src="themes/dot.gif" title="Unlink from main panel" alt="Unlink from main panel" class="icon ic_s_link"></a>
+    </div>
+</li>
+<!-- CONTROLS ENDS -->
+
+</ul>
+
+
+
+<div id='pma_navigation_tree_content'>
+  <ul>
+      <li class="first new_database italics">
+    <div class="block">
+      <i class="first"></i>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/server/databases"><img src="themes/dot.gif" title="New" alt="New" class="icon ic_b_newdb"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/server/databases" title="New">New</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="navGroup">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander loaded container" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==" data-vpath="cm9vdA==.aWdhbmdhc2Nob29sb2Zs" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+          <div class="fst-italic">
+    
+          <div class="block second">
+        <u><img src="themes/dot.gif" title="Groups" alt="Groups" class="icon ic_b_group"></u>
+      </div>
+      &nbsp;igangaschoolofl
+    
+    
+
+          </div>
+    
+    <div class="clearfloat"></div>
+
+  <div class="list_container" style="display: none;">
+    <ul>
+  <li class="database database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aWdhbmdhc2Nob29sb2ZsX2ljdA==" data-vpath="cm9vdA==.aWdhbmdhc2Nob29sb2Zs.aWN0" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=igangaschoolofl_ict"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=igangaschoolofl_ict" title="Structure">igangaschoolofl_ict</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aWdhbmdhc2Nob29sb2ZsX3N0YWZmc19kYg==" data-vpath="cm9vdA==.aWdhbmdhc2Nob29sb2Zs.c3RhZmZzX2Ri" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=igangaschoolofl_staffs_db"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=igangaschoolofl_staffs_db" title="Structure">igangaschoolofl_staffs_db</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aWdhbmdhc2Nob29sb2ZsX3N0dWRlbnRzX2Ri" data-vpath="cm9vdA==.aWdhbmdhc2Nob29sb2Zs.c3R1ZGVudHNfZGI=" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=igangaschoolofl_students_db"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=igangaschoolofl_students_db" title="Structure">igangaschoolofl_students_db</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database last database">
+    <div class="block">
+      <i></i>
+              
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aWdhbmdhc2Nob29sb2ZsX3dlYnNpdGVfZGI=" data-vpath="cm9vdA==.aWdhbmdhc2Nob29sb2Zs.d2Vic2l0ZV9kYg==" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=igangaschoolofl_website_db"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=igangaschoolofl_website_db" title="Structure">igangaschoolofl_website_db</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+
+    </ul>
+  </div>
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aW5mb3JtYXRpb25fc2NoZW1h" data-vpath="cm9vdA==.aW5mb3JtYXRpb25fc2NoZW1h" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=information_schema"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=information_schema" title="Structure">information_schema</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.aXNubV9kYg==" data-vpath="cm9vdA==.aXNubV9kYg==" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=isnm_db"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=isnm_db" title="Structure">isnm_db</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.bXlzcWw=" data-vpath="cm9vdA==.bXlzcWw=" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=mysql"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=mysql" title="Structure">mysql</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.cGVyZm9ybWFuY2Vfc2NoZW1h" data-vpath="cm9vdA==.cGVyZm9ybWFuY2Vfc2NoZW1h" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=performance_schema"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=performance_schema" title="Structure">performance_schema</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.c2FraWxh" data-vpath="cm9vdA==.c2FraWxh" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=sakila"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=sakila" title="Structure">sakila</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.c2FsZW0tZG9taW5pb24tbWluaXN0cmllcw==" data-vpath="cm9vdA==.c2FsZW0tZG9taW5pb24tbWluaXN0cmllcw==" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=salem-dominion-ministries"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=salem-dominion-ministries" title="Structure">salem-dominion-ministries</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="database">
+    <div class="block">
+      <i></i>
+              <b></b>
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.c3lz" data-vpath="cm9vdA==.c3lz" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=sys"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=sys" title="Structure">sys</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+  <li class="last database">
+    <div class="block">
+      <i></i>
+              
+        <a class="expander" href="#">
+          <span class="hide paths_nav" data-apath="cm9vdA==.d29ybGQ=" data-vpath="cm9vdA==.d29ybGQ=" data-pos="0"></span>
+                    <img src="themes/dot.gif" title="Expand/Collapse" alt="Expand/Collapse" class="icon ic_b_plus">
+        </a>
+          </div>
+    
+          <div class="block second">
+                  <a href="index.php?route=/database/operations&db=world"><img src="themes/dot.gif" title="Database operations" alt="Database operations" class="icon ic_s_db"></a>
+              </div>
+
+              <a class="hover_show_full" href="index.php?route=/database/structure&db=world" title="Structure">world</a>
+          
+    
+
+    
+    <div class="clearfloat"></div>
+
+
+
+  </li>
+
+  </ul>
+</div>
+
+
+      </div>
+
+      <div id="pma_navi_settings_container">
+                  <div id="pma_navigation_settings"><div class="page_settings"><form method="post" action="index.php&#x3F;route&#x3D;&#x25;2Fexport&amp;db&#x3D;igangaschoolofl_staffs_db&amp;server&#x3D;1" class="config-form disableAjax">
+  <input type="hidden" name="tab_hash" value="">
+      <input type="hidden" name="check_page_refresh" id="check_page_refresh" value="">
+    <input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d">
+  <input type="hidden" name="submit_save" value="Navi">
+
+  <ul class="nav nav-tabs" id="configFormDisplayTab" role="tablist">
+          <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="Navi_panel-tab" href="#Navi_panel" data-bs-toggle="tab" role="tab" aria-controls="Navi_panel" aria-selected="true">Navigation panel</a>
+      </li>
+          <li class="nav-item" role="presentation">
+        <a class="nav-link" id="Navi_tree-tab" href="#Navi_tree" data-bs-toggle="tab" role="tab" aria-controls="Navi_tree" aria-selected="false">Navigation tree</a>
+      </li>
+          <li class="nav-item" role="presentation">
+        <a class="nav-link" id="Navi_servers-tab" href="#Navi_servers" data-bs-toggle="tab" role="tab" aria-controls="Navi_servers" aria-selected="false">Servers</a>
+      </li>
+          <li class="nav-item" role="presentation">
+        <a class="nav-link" id="Navi_databases-tab" href="#Navi_databases" data-bs-toggle="tab" role="tab" aria-controls="Navi_databases" aria-selected="false">Databases</a>
+      </li>
+          <li class="nav-item" role="presentation">
+        <a class="nav-link" id="Navi_tables-tab" href="#Navi_tables" data-bs-toggle="tab" role="tab" aria-controls="Navi_tables" aria-selected="false">Tables</a>
+      </li>
+      </ul>
+  <div class="tab-content">
+          <div class="tab-pane fade show active" id="Navi_panel" role="tabpanel" aria-labelledby="Navi_panel-tab">
+        <div class="card border-top-0">
+          <div class="card-body">
+            <h5 class="card-title visually-hidden">Navigation panel</h5>
+                          <h6 class="card-subtitle mb-2 text-muted">Customise appearance of the navigation panel.</h6>
+            
+            <fieldset class="optbox">
+              <legend>Navigation panel</legend>
+
+                            
+              <table class="table table-borderless">
+                <tr>
+  <th>
+    <label for="ShowDatabasesNavigationAsTree">Show databases navigation as tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_ShowDatabasesNavigationAsTree" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>In the navigation panel, replaces the database tree with a selector</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="ShowDatabasesNavigationAsTree" id="ShowDatabasesNavigationAsTree" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#ShowDatabasesNavigationAsTree" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationLinkWithMainPanel">Link with main panel</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationLinkWithMainPanel" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Link with main panel by highlighting the current database or table.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationLinkWithMainPanel" id="NavigationLinkWithMainPanel" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationLinkWithMainPanel" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationDisplayLogo">Display logo</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationDisplayLogo" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Show logo in navigation panel.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationDisplayLogo" id="NavigationDisplayLogo" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationDisplayLogo" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationLogoLink">Logo link URL</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationLogoLink" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>URL where logo in the navigation panel will point to.</small>
+      </th>
+
+  <td>
+          <input type="text" name="NavigationLogoLink" id="NavigationLogoLink" value="index.php" class="w-75">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationLogoLink" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationLogoLinkWindow">Logo link target</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationLogoLinkWindow" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Open the linked page in the main window (<code>main</code>) or in a new one (<code>new</code>).</small>
+      </th>
+
+  <td>
+          <select name="NavigationLogoLinkWindow" id="NavigationLogoLinkWindow" class="w-75">
+                            <option value="main" selected>main</option>
+                            <option value="new">new</option>
+              </select>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationLogoLinkWindow" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreePointerEnable">Enable highlighting</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreePointerEnable" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Highlight server under the mouse cursor.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreePointerEnable" id="NavigationTreePointerEnable" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreePointerEnable" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="FirstLevelNavigationItems">Maximum items on first level</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_FirstLevelNavigationItems" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>The number of items that can be displayed on each page on the first level of the navigation tree.</small>
+      </th>
+
+  <td>
+          <input type="number" name="FirstLevelNavigationItems" id="FirstLevelNavigationItems" value="100" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#FirstLevelNavigationItems" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeDisplayItemFilterMinimum">Minimum number of items to display the filter box</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeDisplayItemFilterMinimum" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Defines the minimum number of items (tables, views, routines and events) to display a filter box.</small>
+      </th>
+
+  <td>
+          <input type="number" name="NavigationTreeDisplayItemFilterMinimum" id="NavigationTreeDisplayItemFilterMinimum" value="30" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeDisplayItemFilterMinimum" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NumRecentTables">Recently used tables</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NumRecentTables" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Maximum number of recently used tables; set 0 to disable.</small>
+      </th>
+
+  <td>
+          <input type="number" name="NumRecentTables" id="NumRecentTables" value="10" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NumRecentTables" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NumFavoriteTables">Favourite tables</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NumFavoriteTables" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Maximum number of favourite tables; set 0 to disable.</small>
+      </th>
+
+  <td>
+          <input type="number" name="NumFavoriteTables" id="NumFavoriteTables" value="10" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NumFavoriteTables" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationWidth">Navigation panel width</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationWidth" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Set to 0 to collapse navigation panel.</small>
+      </th>
+
+  <td>
+          <input type="number" name="NavigationWidth" id="NavigationWidth" value="240" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationWidth" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+
+              </table>
+            </fieldset>
+          </div>
+
+                  </div>
+      </div>
+          <div class="tab-pane fade" id="Navi_tree" role="tabpanel" aria-labelledby="Navi_tree-tab">
+        <div class="card border-top-0">
+          <div class="card-body">
+            <h5 class="card-title visually-hidden">Navigation tree</h5>
+                          <h6 class="card-subtitle mb-2 text-muted">Customise the navigation tree.</h6>
+            
+            <fieldset class="optbox">
+              <legend>Navigation tree</legend>
+
+                            
+              <table class="table table-borderless">
+                <tr>
+  <th>
+    <label for="MaxNavigationItems">Maximum items in branch</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_MaxNavigationItems" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>The number of items that can be displayed on each page of the navigation tree.</small>
+      </th>
+
+  <td>
+          <input type="number" name="MaxNavigationItems" id="MaxNavigationItems" value="50" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#MaxNavigationItems" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeEnableGrouping">Group items in the tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeEnableGrouping" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Group items in the navigation tree (determined by the separator defined in the Databases and Tables tabs above).</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeEnableGrouping" id="NavigationTreeEnableGrouping" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeEnableGrouping" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeEnableExpansion">Enable navigation tree expansion</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeEnableExpansion" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to offer the possibility of tree expansion in the navigation panel.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeEnableExpansion" id="NavigationTreeEnableExpansion" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeEnableExpansion" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeShowTables">Show tables in tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeShowTables" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to show tables under database in the navigation tree</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeShowTables" id="NavigationTreeShowTables" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeShowTables" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeShowViews">Show views in tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeShowViews" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to show views under database in the navigation tree</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeShowViews" id="NavigationTreeShowViews" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeShowViews" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeShowFunctions">Show functions in tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeShowFunctions" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to show functions under database in the navigation tree</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeShowFunctions" id="NavigationTreeShowFunctions" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeShowFunctions" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeShowProcedures">Show procedures in tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeShowProcedures" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to show procedures under database in the navigation tree</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeShowProcedures" id="NavigationTreeShowProcedures" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeShowProcedures" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeShowEvents">Show events in tree</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeShowEvents" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to show events under database in the navigation tree</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeShowEvents" id="NavigationTreeShowEvents" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeShowEvents" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeAutoexpandSingleDb">Expand single database</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeAutoexpandSingleDb" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Whether to expand single database in the navigation tree automatically.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationTreeAutoexpandSingleDb" id="NavigationTreeAutoexpandSingleDb" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeAutoexpandSingleDb" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+
+              </table>
+            </fieldset>
+          </div>
+
+                  </div>
+      </div>
+          <div class="tab-pane fade" id="Navi_servers" role="tabpanel" aria-labelledby="Navi_servers-tab">
+        <div class="card border-top-0">
+          <div class="card-body">
+            <h5 class="card-title visually-hidden">Servers</h5>
+                          <h6 class="card-subtitle mb-2 text-muted">Servers display options.</h6>
+            
+            <fieldset class="optbox">
+              <legend>Servers</legend>
+
+                            
+              <table class="table table-borderless">
+                <tr>
+  <th>
+    <label for="NavigationDisplayServers">Display servers selection</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationDisplayServers" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Display server choice at the top of the navigation panel.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="NavigationDisplayServers" id="NavigationDisplayServers" checked>
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationDisplayServers" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="DisplayServersList">Display servers as a list</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_DisplayServersList" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>Show server listing as a list instead of a drop down.</small>
+      </th>
+
+  <td>
+          <span class="checkbox">
+        <input type="checkbox" name="DisplayServersList" id="DisplayServersList">
+      </span>
+    
+    
+    
+          <a class="restore-default hide" href="#DisplayServersList" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+
+              </table>
+            </fieldset>
+          </div>
+
+                  </div>
+      </div>
+          <div class="tab-pane fade" id="Navi_databases" role="tabpanel" aria-labelledby="Navi_databases-tab">
+        <div class="card border-top-0">
+          <div class="card-body">
+            <h5 class="card-title visually-hidden">Databases</h5>
+                          <h6 class="card-subtitle mb-2 text-muted">Databases display options.</h6>
+            
+            <fieldset class="optbox">
+              <legend>Databases</legend>
+
+                            
+              <table class="table table-borderless">
+                <tr>
+  <th>
+    <label for="NavigationTreeDisplayDbFilterMinimum">Minimum number of databases to display the database filter box</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeDisplayDbFilterMinimum" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+      </th>
+
+  <td>
+          <input type="number" name="NavigationTreeDisplayDbFilterMinimum" id="NavigationTreeDisplayDbFilterMinimum" value="30" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeDisplayDbFilterMinimum" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeDbSeparator">Database tree separator</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeDbSeparator" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>String that separates databases into different tree levels.</small>
+      </th>
+
+  <td>
+                <input type="text" size="25" name="NavigationTreeDbSeparator" id="NavigationTreeDbSeparator" value="_" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeDbSeparator" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+
+              </table>
+            </fieldset>
+          </div>
+
+                  </div>
+      </div>
+          <div class="tab-pane fade" id="Navi_tables" role="tabpanel" aria-labelledby="Navi_tables-tab">
+        <div class="card border-top-0">
+          <div class="card-body">
+            <h5 class="card-title visually-hidden">Tables</h5>
+                          <h6 class="card-subtitle mb-2 text-muted">Tables display options.</h6>
+            
+            <fieldset class="optbox">
+              <legend>Tables</legend>
+
+                            
+              <table class="table table-borderless">
+                <tr>
+  <th>
+    <label for="NavigationTreeDefaultTabTable">Target for quick access icon</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeDefaultTabTable" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+      </th>
+
+  <td>
+          <select name="NavigationTreeDefaultTabTable" id="NavigationTreeDefaultTabTable" class="w-75">
+                            <option value="structure" selected>Structure</option>
+                            <option value="sql">SQL</option>
+                            <option value="search">Search</option>
+                            <option value="insert">Insert</option>
+                            <option value="browse">Browse</option>
+              </select>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeDefaultTabTable" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeDefaultTabTable2">Target for second quick access icon</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeDefaultTabTable2" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+      </th>
+
+  <td>
+          <select name="NavigationTreeDefaultTabTable2" id="NavigationTreeDefaultTabTable2" class="w-75">
+                            <option value="" selected></option>
+                            <option value="structure">Structure</option>
+                            <option value="sql">SQL</option>
+                            <option value="search">Search</option>
+                            <option value="insert">Insert</option>
+                            <option value="browse">Browse</option>
+              </select>
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeDefaultTabTable2" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeTableSeparator">Table tree separator</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeTableSeparator" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+          <small>String that separates tables into different tree levels.</small>
+      </th>
+
+  <td>
+                <input type="text" size="25" name="NavigationTreeTableSeparator" id="NavigationTreeTableSeparator" value="__" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeTableSeparator" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+<tr>
+  <th>
+    <label for="NavigationTreeTableLevel">Maximum table tree depth</label>
+
+          <span class="doc">
+        <a href="./doc/html/config.html#cfg_NavigationTreeTableLevel" target="documentation"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+      </span>
+    
+    
+      </th>
+
+  <td>
+          <input type="number" name="NavigationTreeTableLevel" id="NavigationTreeTableLevel" value="1" class="">
+    
+    
+    
+          <a class="restore-default hide" href="#NavigationTreeTableLevel" title="Restore default value"><img src="themes/dot.gif" title="Restore default value" alt="Restore default value" class="icon ic_s_reload"></a>
+    
+          </td>
+
+  </tr>
+
+              </table>
+            </fieldset>
+          </div>
+
+                  </div>
+      </div>
+      </div>
+</form>
+
+<script type="text/javascript">
+  if (typeof configInlineParams === 'undefined' || !Array.isArray(configInlineParams)) {
+    configInlineParams = [];
+  }
+  configInlineParams.push(function () {
+    registerFieldValidator('FirstLevelNavigationItems', 'validatePositiveNumber', true);
+registerFieldValidator('NavigationTreeDisplayItemFilterMinimum', 'validatePositiveNumber', true);
+registerFieldValidator('NumRecentTables', 'validateNonNegativeNumber', true);
+registerFieldValidator('NumFavoriteTables', 'validateNonNegativeNumber', true);
+registerFieldValidator('NavigationWidth', 'validateNonNegativeNumber', true);
+registerFieldValidator('MaxNavigationItems', 'validatePositiveNumber', true);
+registerFieldValidator('NavigationTreeTableLevel', 'validatePositiveNumber', true);
+
+    $.extend(Messages, {
+      'error_nan_p': 'Not\u0020a\u0020positive\u0020number\u0021',
+      'error_nan_nneg': 'Not\u0020a\u0020non\u002Dnegative\u0020number\u0021',
+      'error_incorrect_port': 'Not\u0020a\u0020valid\u0020port\u0020number\u0021',
+      'error_invalid_value': 'Incorrect\u0020value\u0021',
+      'error_value_lte': 'Value\u0020must\u0020be\u0020less\u0020than\u0020or\u0020equal\u0020to\u0020\u0025s\u0021',
+    });
+
+    $.extend(defaultValues, {
+      'ShowDatabasesNavigationAsTree': true,
+      'NavigationLinkWithMainPanel': true,
+      'NavigationDisplayLogo': true,
+      'NavigationLogoLink': 'index.php',
+      'NavigationLogoLinkWindow': ['main'],
+      'NavigationTreePointerEnable': true,
+      'FirstLevelNavigationItems': '100',
+      'NavigationTreeDisplayItemFilterMinimum': '30',
+      'NumRecentTables': '10',
+      'NumFavoriteTables': '10',
+      'NavigationWidth': '240',
+      'MaxNavigationItems': '50',
+      'NavigationTreeEnableGrouping': true,
+      'NavigationTreeEnableExpansion': true,
+      'NavigationTreeShowTables': true,
+      'NavigationTreeShowViews': true,
+      'NavigationTreeShowFunctions': true,
+      'NavigationTreeShowProcedures': true,
+      'NavigationTreeShowEvents': true,
+      'NavigationTreeAutoexpandSingleDb': true,
+      'NavigationDisplayServers': true,
+      'DisplayServersList': false,
+      'NavigationTreeDisplayDbFilterMinimum': '30',
+      'NavigationTreeDbSeparator': '_',
+      'NavigationTreeDefaultTabTable': ['structure'],
+      'NavigationTreeDefaultTabTable2': [''],
+      'NavigationTreeTableSeparator': '__',
+      'NavigationTreeTableLevel': '1'
+    });
+  });
+  if (typeof configScriptLoaded !== 'undefined' && configInlineParams) {
+    loadInlineConfig();
+  }
+</script>
+</div></div>
+              </div>
+    </div>
+
+          <div class="pma_drop_handler">
+        Drop files here      </div>
+      <div class="pma_sql_import_status">
+        <h2>
+          SQL upload          ( <span class="pma_import_count">0</span> )
+          <span class="close">x</span>
+          <span class="minimize">-</span>
+        </h2>
+        <div></div>
+      </div>
+      </div>
+  <div class="modal fade" id="unhideNavItemModal" tabindex="-1" aria-labelledby="unhideNavItemModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="unhideNavItemModalLabel">Show hidden navigation tree items.</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="modal fade" id="createViewModal" tabindex="-1" aria-labelledby="createViewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" id="createViewModalDialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createViewModalLabel">Create view</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="createViewModalGoButton">Go</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
+  <div id="prefs_autoload" class="alert alert-primary d-print-none hide" role="alert">
+    <form action="index.php?route=/preferences/manage" method="post" class="disableAjax">
+        <input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d">
+        <input type="hidden" name="json" value="">
+        <input type="hidden" name="submit_import" value="1">
+        <input type="hidden" name="return_url" value="index.php?route=%2Fexport">
+        Your browser has phpMyAdmin configuration for this domain. Would you like to import it for current session?        <br>
+        <a href="#yes">Yes</a>
+        / <a href="#no">No</a>
+        / <a href="#delete">Delete settings</a>
+    </form>
+</div>
+
+
+  
+      <noscript>
+      <div class="alert alert-danger" role="alert">
+  <img src="themes/dot.gif" title="" alt="" class="icon ic_s_error"> Javascript must be enabled past this point!
+</div>
+
+    </noscript>
+  
+      <div id="floating_menubar" class="d-print-none"></div>
+<nav id="server-breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb breadcrumb-navbar">
+    <li class="breadcrumb-item">
+      <img src="themes/dot.gif" title="" alt="" class="icon ic_s_host">
+      <a href="index.php?route=/" data-raw-text="127.0.0.1" draggable="false">
+        Server:        127.0.0.1
+      </a>
+    </li>
+
+          <li class="breadcrumb-item">
+        <img src="themes/dot.gif" title="" alt="" class="icon ic_s_db">
+        <a href="index.php?route=/database/structure&db=igangaschoolofl_staffs_db" data-raw-text="igangaschoolofl_staffs_db" draggable="false">
+          Database:          igangaschoolofl_staffs_db
+        </a>
+      </li>
+
+            </ol>
+</nav>
+<div id="topmenucontainer" class="menucontainer">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation" aria-controls="navbarNav" aria-expanded="false">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul id="topmenu" class="navbar-nav">
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/structure&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Structure" alt="Structure" class="icon ic_b_props">&nbsp;Structure
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/sql&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="SQL" alt="SQL" class="icon ic_b_sql">&nbsp;SQL
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/search&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Search" alt="Search" class="icon ic_b_search">&nbsp;Search
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/multi-table-query&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Query" alt="Query" class="icon ic_s_db">&nbsp;Query
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/export&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Export" alt="Export" class="icon ic_b_export">&nbsp;Export
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/import&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Import" alt="Import" class="icon ic_b_import">&nbsp;Import
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/operations&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Operations" alt="Operations" class="icon ic_b_tblops">&nbsp;Operations
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/server/privileges&db=igangaschoolofl_staffs_db&checkprivsdb=igangaschoolofl_staffs_db&viewing_mode=db">
+              <img src="themes/dot.gif" title="Privileges" alt="Privileges" class="icon ic_s_rights">&nbsp;Privileges
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/routines&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Routines" alt="Routines" class="icon ic_b_routines">&nbsp;Routines
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/events&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Events" alt="Events" class="icon ic_b_events">&nbsp;Events
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/triggers&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Triggers" alt="Triggers" class="icon ic_b_triggers">&nbsp;Triggers
+                          </a>
+          </li>
+                  <li class="nav-item">
+            <a class="nav-link text-nowrap" href="index.php?route=/database/designer&db=igangaschoolofl_staffs_db">
+              <img src="themes/dot.gif" title="Designer" alt="Designer" class="icon ic_b_relations">&nbsp;Designer
+                          </a>
+          </li>
+              </ul>
+    </div>
+  </nav>
+</div>
+
+    <span id="page_nav_icons" class="d-print-none">
+      <span id="lock_page_icon"></span>
+      <span id="page_settings_icon">
+        <img src="themes/dot.gif" title="Page-related settings" alt="Page-related settings" class="icon ic_s_cog">
+      </span>
+      <a id="goto_pagetop" href="#"><img src="themes/dot.gif" title="Click on the bar to scroll to top of page" alt="Click on the bar to scroll to top of page" class="icon ic_s_top"></a>
+    </span>
+  
+  <div id="pma_console_container" class="d-print-none">
+    <div id="pma_console">
+                <div class="toolbar collapsed">
+                    <div class="switch_button console_switch">
+            <img src="themes/dot.gif" title="SQL Query Console" alt="SQL Query Console" class="icon ic_console">
+            <span>Console</span>
+        </div>
+                            <div class="button clear">
+            
+            <span>Clear</span>
+        </div>
+                            <div class="button history">
+            
+            <span>History</span>
+        </div>
+                            <div class="button options">
+            
+            <span>Options</span>
+        </div>
+                                        <div class="button debug hide">
+            
+            <span>Debug SQL</span>
+        </div>
+            </div>
+                <div class="content">
+            <div class="console_message_container">
+                <div class="message welcome">
+                    <span id="instructions-0">
+                        Press Ctrl+Enter to execute query                    </span>
+                    <span class="hide" id="instructions-1">
+                        Press Enter to execute query                    </span>
+                </div>
+                            </div><!-- console_message_container -->
+            <div class="query_input">
+                <span class="console_query_input"></span>
+            </div>
+        </div><!-- message end -->
+                <div class="mid_layer"></div>
+                <div class="card" id="debug_console">
+            <div class="toolbar ">
+                    <div class="button order order_asc">
+            
+            <span>ascending</span>
+        </div>
+                            <div class="button order order_desc">
+            
+            <span>descending</span>
+        </div>
+                            <div class="text">
+            
+            <span>Order:</span>
+        </div>
+                            <div class="switch_button">
+            
+            <span>Debug SQL</span>
+        </div>
+                            <div class="button order_by sort_count">
+            
+            <span>Count</span>
+        </div>
+                            <div class="button order_by sort_exec">
+            
+            <span>Execution order</span>
+        </div>
+                            <div class="button order_by sort_time">
+            
+            <span>Time taken</span>
+        </div>
+                            <div class="text">
+            
+            <span>Order by:</span>
+        </div>
+                            <div class="button group_queries">
+            
+            <span>Group queries</span>
+        </div>
+                            <div class="button ungroup_queries">
+            
+            <span>Ungroup queries</span>
+        </div>
+            </div>
+            <div class="content debug">
+                <div class="message welcome"></div>
+                <div class="debugLog"></div>
+            </div> <!-- Content -->
+            <div class="templates">
+                <div class="debug_query action_content">
+                    <span class="action collapse">
+            Collapse
+                    </span>
+                            <span class="action expand">
+            Expand
+                    </span>
+                            <span class="action dbg_show_trace">
+            Show trace
+                    </span>
+                            <span class="action dbg_hide_trace">
+            Hide trace
+                    </span>
+                            <span class="text count hide">
+            Count
+                            : <span></span>
+                    </span>
+                            <span class="text time">
+            Time taken
+                            : <span></span>
+                    </span>
+            </div>
+            </div> <!-- Template -->
+        </div> <!-- Debug SQL card -->
+                        <div class="card" id="pma_console_options">
+            <div class="toolbar ">
+                    <div class="switch_button">
+            
+            <span>Options</span>
+        </div>
+                            <div class="button default">
+            
+            <span>Set default</span>
+        </div>
+            </div>
+            <div class="content">
+                <label>
+                    <input type="checkbox" name="always_expand">Always expand query messages                </label>
+                <br>
+                <label>
+                    <input type="checkbox" name="start_history">Show query history at start                </label>
+                <br>
+                <label>
+                    <input type="checkbox" name="current_query">Show current browsing query                </label>
+                <br>
+                <label>
+                    <input type="checkbox" name="enter_executes">
+                        Execute queries on Enter and insert new line with Shift+Enter. To make this permanent, view settings.                </label>
+                <br>
+                <label>
+                    <input type="checkbox" name="dark_theme">Switch to dark theme                </label>
+                <br>
+            </div>
+        </div> <!-- Options card -->
+        <div class="templates">
+                        <div class="query_actions">
+                    <span class="action collapse">
+            Collapse
+                    </span>
+                            <span class="action expand">
+            Expand
+                    </span>
+                            <span class="action requery">
+            Requery
+                    </span>
+                            <span class="action edit">
+            Edit
+                    </span>
+                            <span class="action explain">
+            Explain
+                    </span>
+                            <span class="action profiling">
+            Profiling
+                    </span>
+                            <span class="">
+            
+                    </span>
+                            <span class="text failed">
+            Query failed
+                    </span>
+                            <span class="text targetdb">
+            Database
+                            : <span></span>
+                    </span>
+                            <span class="text query_time">
+            Queried time
+                            : <span></span>
+                    </span>
+            </div>
+        </div>
+    </div> <!-- #console end -->
+</div> <!-- #console_container end -->
+
+
+  <div id="page_content">
+    
+
+    <div class="modal fade" id="previewSqlModal" tabindex="-1" aria-labelledby="previewSqlModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewSqlModalLabel">Loading</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="modal fade" id="enumEditorModal" tabindex="-1" aria-labelledby="enumEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="enumEditorModalLabel">ENUM/SET editor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="enumEditorGoButton" data-bs-dismiss="modal">Go</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="modal fade" id="createViewModal" tabindex="-1" aria-labelledby="createViewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" id="createViewModalDialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createViewModalLabel">Create view</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="createViewModalGoButton">Go</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 28, 2026 at 05:58 PM
+-- Generation Time: Jun 29, 2026 at 05:18 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -47,21 +1903,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_staff_performance_summary` (IN 
     WHERE s.status = 'Active'
     ORDER BY s.full_name
     LIMIT 20;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fix_stage_cols` ()   BEGIN
-  IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA='igangaschoolofl_staffs_db' AND TABLE_NAME='approval_stages' AND COLUMN_NAME='assigned_role_id') THEN
-    ALTER TABLE igangaschoolofl_staffs_db.approval_stages ADD COLUMN assigned_role_id INT DEFAULT NULL;
-  END IF;
-  IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA='igangaschoolofl_staffs_db' AND TABLE_NAME='approval_stages' AND COLUMN_NAME='assigned_role_name') THEN
-    ALTER TABLE igangaschoolofl_staffs_db.approval_stages ADD COLUMN assigned_role_name VARCHAR(255) DEFAULT NULL;
-  END IF;
-  IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA='igangaschoolofl_staffs_db' AND TABLE_NAME='approval_stages' AND COLUMN_NAME='is_final') THEN
-    ALTER TABLE igangaschoolofl_staffs_db.approval_stages ADD COLUMN is_final TINYINT(1) DEFAULT 0;
-  END IF;
 END$$
 
 DELIMITER ;
@@ -336,18 +2177,36 @@ CREATE TABLE IF NOT EXISTS `academic_timetable` (
 --
 -- Table structure for table `access_control_logs`
 --
--- Creation: Jun 27, 2026 at 05:00 PM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `access_control_logs` (
   `id` int NOT NULL,
+  `person_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `person_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Visitor',
+  `access_point` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `access_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `access_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Entry',
+  `badge_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `access_logs`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `access_logs` (
+  `id` int NOT NULL,
   `user_id` int DEFAULT NULL,
-  `user_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `action` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `resource` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `access_time` datetime DEFAULT NULL,
+  `user_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'staff',
+  `action` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `module` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'success',
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -376,7 +2235,7 @@ CREATE TABLE IF NOT EXISTS `accreditation_management` (
 --
 -- Table structure for table `activity_log`
 --
--- Creation: Jun 27, 2026 at 05:00 PM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `activity_log` (
@@ -394,7 +2253,7 @@ CREATE TABLE IF NOT EXISTS `activity_log` (
 --
 -- Table structure for table `activity_logs`
 --
--- Creation: Jun 27, 2026 at 05:00 PM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `activity_logs` (
@@ -415,7 +2274,7 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
 --
 -- Table structure for table `admission_activity_logs`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 -- Last update: Jun 28, 2026 at 04:21 AM
 --
 
@@ -628,7 +2487,7 @@ CREATE TABLE IF NOT EXISTS `api_keys` (
 --
 -- Table structure for table `applicants`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `applicants` (
@@ -693,6 +2552,33 @@ CREATE TABLE IF NOT EXISTS `applicant_requirement_status` (
   `verified_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `applications`
+--
+-- Creation: Jun 29, 2026 at 12:44 PM
+--
+
+CREATE TABLE IF NOT EXISTS `applications` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `applicant_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `intake` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `application_type` enum('Admission','Transfer','Readmission','Scholarship','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Admission',
+  `status` enum('Pending','Reviewed','Accepted','Rejected','Waitlisted','Enrolled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -867,16 +2753,16 @@ CREATE TABLE IF NOT EXISTS `approval_stages` (
 --
 
 INSERT DELAYED IGNORE INTO `approval_stages` (`id`, `workflow_id`, `stage_name`, `stage_order`, `assigned_role_id`, `assigned_role_name`, `is_final`, `created_at`) VALUES
-(138, 125, 'Director ICT Review', 1, NULL, 'Director ICT', 0, '2026-06-27 00:17:17'),
-(139, 125, 'Director General Final Approval', 2, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(140, 122, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(141, 123, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(142, 124, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(143, 126, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(144, 127, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(145, 128, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(146, 129, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17'),
-(147, 130, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-27 00:17:17');
+(188, 125, 'Director ICT Review', 1, NULL, 'Director ICT', 0, '2026-06-29 13:42:01'),
+(189, 125, 'Director General Final Approval', 2, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(190, 122, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(191, 123, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(192, 124, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(193, 126, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(194, 127, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(195, 128, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(196, 129, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01'),
+(197, 130, 'Director General Approval', 1, NULL, 'Director General', 1, '2026-06-29 13:42:01');
 
 -- --------------------------------------------------------
 
@@ -910,6 +2796,44 @@ INSERT DELAYED IGNORE INTO `approval_workflows` (`id`, `workflow_name`, `categor
 (128, 'Library Request', 'Library', 'Library resource and service requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
 (129, 'Store Requisition', 'Store & Assets', 'Store and asset requisitions requiring Director General approval', 1, '2026-06-27 00:17:17'),
 (130, 'Student Registration', 'Academic', 'Student registration requests requiring Director General approval', 1, '2026-06-27 00:17:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assessments`
+--
+-- Creation: Jun 29, 2026 at 03:05 PM
+--
+
+CREATE TABLE IF NOT EXISTS `assessments` (
+  `id` int NOT NULL,
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_id` int DEFAULT NULL,
+  `assessment_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_marks` int DEFAULT '100',
+  `due_date` date DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assessment_scores`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `assessment_scores` (
+  `id` int NOT NULL,
+  `assessment_id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `score` decimal(5,2) DEFAULT NULL,
+  `feedback` text COLLATE utf8mb4_unicode_ci,
+  `graded_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -949,6 +2873,25 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   `marked_by` int UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `attendance_status`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `attendance_status` (
+  `id` int NOT NULL,
+  `staff_id` int DEFAULT NULL,
+  `attendance_date` date NOT NULL,
+  `check_in_time` time DEFAULT NULL,
+  `check_out_time` time DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Present',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1619,6 +3562,22 @@ CREATE TABLE IF NOT EXISTS `bursar_withholding_tax` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cache_data`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `cache_data` (
+  `id` int NOT NULL,
+  `cache_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cache_value` longtext COLLATE utf8mb4_unicode_ci,
+  `expires_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cache_management`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -1861,6 +3820,28 @@ CREATE TABLE IF NOT EXISTS `clinical_rotations` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `clinical_training`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `clinical_training` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `rotation_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `supervisor` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Scheduled',
+  `evaluation_score` decimal(5,2) DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `communications`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -2023,6 +4004,27 @@ CREATE TABLE IF NOT EXISTS `counseling_sessions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `courses`
+--
+-- Creation: Jun 29, 2026 at 12:44 PM
+--
+
+CREATE TABLE IF NOT EXISTS `courses` (
+  `id` int NOT NULL,
+  `course_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `credits` int DEFAULT '0',
+  `level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `course_assignments`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -2047,7 +4049,7 @@ CREATE TABLE IF NOT EXISTS `course_assignments` (
 --
 -- Table structure for table `course_registrations`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `course_registrations` (
@@ -2066,7 +4068,7 @@ CREATE TABLE IF NOT EXISTS `course_registrations` (
 --
 -- Table structure for table `daily_sick_records`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `daily_sick_records` (
@@ -2374,17 +4376,17 @@ CREATE TABLE IF NOT EXISTS `director_performance_reviews` (
 --
 -- Table structure for table `disciplinary_actions`
 --
--- Creation: Jun 27, 2026 at 04:59 PM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `disciplinary_actions` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
-  `incident_date` date DEFAULT NULL,
-  `incident_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `incident_date` date NOT NULL,
+  `offense_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `action_taken` text COLLATE utf8mb4_unicode_ci,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
   `reported_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2593,6 +4595,24 @@ CREATE TABLE IF NOT EXISTS `emergency_contacts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `employee_training`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `employee_training` (
+  `id` int NOT NULL,
+  `training_id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Enrolled',
+  `completion_date` date DEFAULT NULL,
+  `certificate_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `employment_contracts`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -2676,6 +4696,29 @@ CREATE TABLE IF NOT EXISTS `examination_records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `examination_results`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `examination_results` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `course_id` int DEFAULT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ca_score` decimal(5,2) DEFAULT NULL,
+  `exam_score` decimal(5,2) DEFAULT NULL,
+  `total_score` decimal(5,2) DEFAULT NULL,
+  `grade` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `entered_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `exams`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -2702,7 +4745,7 @@ CREATE TABLE IF NOT EXISTS `exams` (
 --
 -- Table structure for table `exam_results`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `exam_results` (
@@ -3210,6 +5253,23 @@ CREATE TABLE IF NOT EXISTS `grading_approval_workflow` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `grading_approval_workflow_log`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `grading_approval_workflow_log` (
+  `id` int NOT NULL,
+  `result_id` int DEFAULT NULL,
+  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `acted_by` int DEFAULT NULL,
+  `comments` text COLLATE utf8mb4_unicode_ci,
+  `acted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `grading_notifications`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -3305,6 +5365,68 @@ CREATE TABLE IF NOT EXISTS `health_incidents` (
   `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Reported',
   `reported_by` int DEFAULT NULL,
   `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_clearance`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `hostel_clearance` (
+  `id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `hostel_allocation_id` int DEFAULT NULL,
+  `cleared_by` int DEFAULT NULL,
+  `clearance_date` date DEFAULT NULL,
+  `condition_notes` text COLLATE utf8mb4_unicode_ci,
+  `key_returned` tinyint(1) DEFAULT '0',
+  `status` enum('Pending','Cleared','Rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_inspections`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `hostel_inspections` (
+  `id` int NOT NULL,
+  `hostel_room_id` int DEFAULT NULL,
+  `inspection_date` date NOT NULL,
+  `inspected_by` int DEFAULT NULL,
+  `condition_rating` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Good',
+  `cleanliness_rating` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Good',
+  `findings` text COLLATE utf8mb4_unicode_ci,
+  `recommendations` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('Open','In Progress','Completed','Closed') COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hostel_maintenance_requests`
+--
+-- Creation: Jun 29, 2026 at 03:05 PM
+--
+
+CREATE TABLE IF NOT EXISTS `hostel_maintenance_requests` (
+  `id` int NOT NULL,
+  `hostel_room_id` int DEFAULT NULL,
+  `requested_by` int DEFAULT NULL,
+  `issue_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `priority` enum('Low','Medium','High','Urgent') COLLATE utf8mb4_unicode_ci DEFAULT 'Medium',
+  `status` enum('Open','In Progress','Completed','Closed') COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
+  `assigned_to` int DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3437,6 +5559,137 @@ CREATE TABLE IF NOT EXISTS `hr_users` (
   `last_login` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.bank_accounts`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.bank_accounts` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `bank_name` varchar(200) DEFAULT NULL,
+  `account_number` varchar(50) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.fee_structure`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.fee_structure` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `fee_type` varchar(100) DEFAULT NULL,
+  `total_amount` decimal(15,2) DEFAULT '0.00',
+  `amount_paid` decimal(15,2) DEFAULT '0.00',
+  `balance` decimal(15,2) DEFAULT '0.00',
+  `academic_year` varchar(20) DEFAULT NULL,
+  `semester` varchar(20) DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.journal_entries`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.journal_entries` (
+  `id` int NOT NULL,
+  `entry_date` date NOT NULL,
+  `description` text,
+  `reference_number` varchar(100) DEFAULT NULL,
+  `total_debit` decimal(15,2) DEFAULT '0.00',
+  `total_credit` decimal(15,2) DEFAULT '0.00',
+  `status` varchar(50) DEFAULT 'Draft',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.journal_entry_lines`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.journal_entry_lines` (
+  `id` int NOT NULL,
+  `entry_id` int DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `debit` decimal(15,2) DEFAULT '0.00',
+  `credit` decimal(15,2) DEFAULT '0.00',
+  `description` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.notifications`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.notifications` (
+  `id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `message` text,
+  `is_read` tinyint(1) DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.scholarships`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.scholarships` (
+  `id` int NOT NULL,
+  `scholarship_name` varchar(200) NOT NULL,
+  `description` text,
+  `amount` decimal(15,2) DEFAULT '0.00',
+  `eligibility` text,
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `igangaschoolofl_students_db.student_scholarships`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `igangaschoolofl_students_db.student_scholarships` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `scholarship_id` int DEFAULT NULL,
+  `awarded_date` date DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT '0.00',
+  `status` varchar(50) DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -3716,20 +5969,21 @@ CREATE TABLE IF NOT EXISTS `it_infrastructure` (
 --
 -- Table structure for table `job_applications`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `job_applications` (
-  `id` int UNSIGNED NOT NULL,
-  `recruitment_id` int UNSIGNED DEFAULT NULL,
-  `applicant_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `cover_letter` text COLLATE utf8mb4_general_ci,
-  `resume_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `applied_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `id` int NOT NULL,
+  `position_id` int DEFAULT NULL,
+  `applicant_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cv_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_letter` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Received',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -3776,6 +6030,26 @@ CREATE TABLE IF NOT EXISTS `job_vacancies` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_attendance`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_attendance` (
+  `id` int NOT NULL,
+  `session_id` int NOT NULL,
+  `student_id` int NOT NULL,
+  `student_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `session` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `attendance_status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Present',
+  `check_in_time` time DEFAULT NULL,
+  `marked_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_chemical_inventory`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -3793,6 +6067,103 @@ CREATE TABLE IF NOT EXISTS `lab_chemical_inventory` (
   `reorder_level` decimal(10,2) DEFAULT NULL,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'in_stock',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_consumables`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_consumables` (
+  `id` int NOT NULL,
+  `item_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `quantity` int DEFAULT '0',
+  `unit` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'piece',
+  `min_stock_level` int DEFAULT '5',
+  `unit_cost` decimal(15,2) DEFAULT '0.00',
+  `supplier` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_ordered_date` date DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_equipment`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_equipment` (
+  `id` int NOT NULL,
+  `equipment_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `quantity` int DEFAULT '1',
+  `available_quantity` int DEFAULT '1',
+  `condition_status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Good',
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `serial_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `purchase_date` date DEFAULT NULL,
+  `purchase_cost` decimal(15,2) DEFAULT NULL,
+  `supplier` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_maintenance_date` date DEFAULT NULL,
+  `next_maintenance_date` date DEFAULT NULL,
+  `status` enum('active','maintenance','retired') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_equipment_checkout`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_equipment_checkout` (
+  `id` int NOT NULL,
+  `equipment_id` int DEFAULT NULL,
+  `student_id` int DEFAULT NULL,
+  `checked_out_by` int DEFAULT NULL,
+  `checkout_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `expected_return_date` datetime DEFAULT NULL,
+  `actual_return_date` datetime DEFAULT NULL,
+  `quantity` int DEFAULT '1',
+  `purpose` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'checked_out',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_equipment_checkouts`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_equipment_checkouts` (
+  `id` int NOT NULL,
+  `equipment_id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `checked_out_by` int DEFAULT NULL,
+  `checkout_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `expected_return_date` datetime DEFAULT NULL,
+  `actual_return_date` datetime DEFAULT NULL,
+  `quantity_checked_out` int DEFAULT '1',
+  `quantity_returned` int DEFAULT '0',
+  `purpose` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('checked_out','returned','overdue') COLLATE utf8mb4_unicode_ci DEFAULT 'checked_out',
+  `notes` text COLLATE utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3841,6 +6212,48 @@ CREATE TABLE IF NOT EXISTS `lab_experiments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_id_card_requests`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_id_card_requests` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `request_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'new',
+  `reason` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','approved','printed','rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `requested_by` int DEFAULT NULL,
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_incidents`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_incidents` (
+  `id` int NOT NULL,
+  `incident_date` date NOT NULL,
+  `incident_time` time DEFAULT NULL,
+  `reported_by` int DEFAULT NULL,
+  `incident_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `severity` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Medium',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `equipment_involved` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_involved` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `action_taken` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('open','investigating','resolved','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_inventory`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -3862,6 +6275,55 @@ CREATE TABLE IF NOT EXISTS `lab_inventory` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_practical_sessions`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_practical_sessions` (
+  `id` int NOT NULL,
+  `session_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instructor_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `instructor` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `year_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `session_date` date DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `max_students` int DEFAULT '30',
+  `status` enum('scheduled','ongoing','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'scheduled',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_printing_jobs`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_printing_jobs` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `document_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pages` int DEFAULT '1',
+  `copies` int DEFAULT '1',
+  `cost` decimal(10,2) DEFAULT '0.00',
+  `status` enum('pending','printing','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `requested_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_safety_records`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -3877,6 +6339,29 @@ CREATE TABLE IF NOT EXISTS `lab_safety_records` (
   `action_taken` text COLLATE utf8mb4_unicode_ci,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'open',
   `inspection_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_skills_demonstrations`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_skills_demonstrations` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `skill_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `skill_category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instructor` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `date_demonstrated` date DEFAULT NULL,
+  `competency` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Beginner',
+  `attempt_number` int DEFAULT '1',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `next_review_date` date DEFAULT NULL,
+  `verified_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3942,18 +6427,18 @@ CREATE TABLE IF NOT EXISTS `leaves` (
 --
 -- Table structure for table `leave_balance`
 --
--- Creation: Jun 27, 2026 at 04:59 PM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `leave_balance` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `leave_type_id` int DEFAULT NULL,
-  `year` int DEFAULT NULL,
-  `total_days` int DEFAULT '0',
+  `year` int NOT NULL,
+  `total_days` int DEFAULT '30',
   `used_days` int DEFAULT '0',
-  `remaining_days` int DEFAULT '0',
-  `balance_days` int DEFAULT '0',
+  `remaining_days` int DEFAULT '30',
+  `balance_days` int DEFAULT '30',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3981,19 +6466,18 @@ CREATE TABLE IF NOT EXISTS `leave_balances` (
 --
 -- Table structure for table `leave_requests`
 --
--- Creation: Jun 27, 2026 at 04:59 PM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `leave_requests` (
   `id` int NOT NULL,
   `staff_id` int NOT NULL,
   `leave_type_id` int DEFAULT NULL,
-  `start_date` date DEFAULT NULL,
-  `end_date` date DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
   `reason` text COLLATE utf8mb4_unicode_ci,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `reviewed_by` int DEFAULT NULL,
-  `approval_date` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -4002,7 +6486,8 @@ CREATE TABLE IF NOT EXISTS `leave_requests` (
 --
 -- Table structure for table `leave_types`
 --
--- Creation: Jun 27, 2026 at 04:59 PM
+-- Creation: Jun 29, 2026 at 01:38 PM
+-- Last update: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `leave_types` (
@@ -4013,6 +6498,50 @@ CREATE TABLE IF NOT EXISTS `leave_types` (
   `description` text COLLATE utf8mb4_unicode_ci,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `leave_types`
+--
+
+INSERT DELAYED IGNORE INTO `leave_types` (`id`, `type_name`, `leave_type_name`, `days_per_year`, `description`, `is_active`, `created_at`) VALUES
+(1, 'Annual Leave', NULL, 30, NULL, 1, '2026-06-29 13:38:26'),
+(2, 'Sick Leave', NULL, 14, NULL, 1, '2026-06-29 13:38:26'),
+(3, 'Maternity Leave', NULL, 90, NULL, 1, '2026-06-29 13:38:26'),
+(4, 'Paternity Leave', NULL, 7, NULL, 1, '2026-06-29 13:38:26'),
+(5, 'Compassionate Leave', NULL, 5, NULL, 1, '2026-06-29 13:38:26'),
+(6, 'Study Leave', NULL, 30, NULL, 1, '2026-06-29 13:38:26'),
+(7, 'Casual Leave', NULL, 10, NULL, 1, '2026-06-29 13:38:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_acquisitions`
+--
+-- Creation: Jun 29, 2026 at 03:05 PM
+--
+
+CREATE TABLE IF NOT EXISTS `library_acquisitions` (
+  `id` int NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `isbn` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publisher` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publication_year` year DEFAULT NULL,
+  `acquisition_type` enum('Purchase','Donation','Exchange','Subscription','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Purchase',
+  `quantity` int DEFAULT '1',
+  `unit_cost` decimal(15,2) DEFAULT NULL,
+  `total_cost` decimal(15,2) DEFAULT NULL,
+  `supplier` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `invoice_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `acquisition_date` date NOT NULL,
+  `received_date` date DEFAULT NULL,
+  `shelf_location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Ordered','Received','Processed','Rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'Ordered',
+  `acquired_by` int DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -4053,6 +6582,24 @@ CREATE TABLE IF NOT EXISTS `library_borrowing` (
   `return_date` date DEFAULT NULL,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'borrowed',
   `renewal_count` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `library_clearance`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `library_clearance` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `cleared_by` int DEFAULT NULL,
+  `clearance_date` datetime DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `notes` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -4184,7 +6731,7 @@ CREATE TABLE IF NOT EXISTS `meal_tracking` (
 --
 -- Table structure for table `medicine_stock`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 -- Last update: Jun 28, 2026 at 04:21 AM
 --
 
@@ -4253,7 +6800,7 @@ INSERT DELAYED IGNORE INTO `medicine_stock` (`id`, `medicine_code`, `medicine_na
 --
 -- Table structure for table `medicine_stock_transactions`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
@@ -4273,6 +6820,314 @@ CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `transaction_date` date NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_groups`
+--
+-- Creation: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 01:16 PM
+--
+
+CREATE TABLE IF NOT EXISTS `menu_groups` (
+  `id` int NOT NULL,
+  `group_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique identifier like executive, finance, library',
+  `display_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Shown in sidebar',
+  `icon` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'fas fa-circle',
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `menu_groups`
+--
+
+INSERT DELAYED IGNORE INTO `menu_groups` (`id`, `group_name`, `display_name`, `icon`, `sort_order`, `status`) VALUES
+(1, 'executive', 'Executive', 'fas fa-crown', 1, 'active'),
+(2, 'academic_mgmt', 'Academic Management', 'fas fa-graduation-cap', 2, 'active'),
+(3, 'academic_registrar', 'Academic Registrar', 'fas fa-clipboard-list', 3, 'active'),
+(4, 'overview', 'Overview', 'fas fa-chart-pie', 4, 'active'),
+(5, 'student_fees', 'Student Fees', 'fas fa-money-bill-wave', 5, 'active'),
+(6, 'payments', 'Payments', 'fas fa-credit-card', 6, 'active'),
+(7, 'payroll', 'Payroll', 'fas fa-wallet', 7, 'active'),
+(8, 'budgets', 'Budgets & Expenditure', 'fas fa-chart-line', 8, 'active'),
+(9, 'accounts', 'Accounts', 'fas fa-book', 9, 'active'),
+(10, 'requisitions', 'Requisitions', 'fas fa-shopping-cart', 10, 'active'),
+(11, 'communications', 'Communications', 'fas fa-envelope', 11, 'active'),
+(12, 'reports', 'Reports', 'fas fa-file-alt', 12, 'active'),
+(13, 'tools', 'Tools', 'fas fa-tools', 13, 'active'),
+(14, 'admissions', 'Admissions', 'fas fa-door-open', 14, 'active'),
+(15, 'human_resources', 'Human Resources', 'fas fa-users', 15, 'active'),
+(16, 'ict', 'ICT Department', 'fas fa-laptop', 16, 'active'),
+(17, 'security', 'Security & Transport', 'fas fa-shield-alt', 17, 'active'),
+(18, 'library', 'Library', 'fas fa-book-open', 18, 'active'),
+(19, 'nursing', 'Nursing Department', 'fas fa-user-md', 19, 'active'),
+(20, 'midwifery', 'Midwifery Department', 'fas fa-baby', 20, 'active'),
+(21, 'health_center', 'Health Center', 'fas fa-heartbeat', 21, 'active'),
+(22, 'hostel', 'Hostel Management', 'fas fa-bed', 22, 'active'),
+(23, 'store', 'Store & Assets', 'fas fa-boxes', 23, 'active'),
+(24, 'transport', 'Transport', 'fas fa-truck', 24, 'active'),
+(25, 'skills_lab', 'Skills Laboratory', 'fas fa-flask', 25, 'active'),
+(26, 'computer_lab', 'Computer Lab', 'fas fa-desktop', 26, 'active'),
+(27, 'guild', 'Student Government', 'fas fa-handshake', 27, 'active'),
+(28, 'secretary', 'Secretary', 'fas fa-archive', 28, 'active'),
+(29, 'student_welfare', 'Student Welfare', 'fas fa-heart', 29, 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_items`
+--
+-- Creation: Jun 29, 2026 at 01:16 PM
+--
+
+CREATE TABLE IF NOT EXISTS `menu_items` (
+  `id` int NOT NULL,
+  `group_id` int NOT NULL,
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `route` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'File path or URL',
+  `icon` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'fas fa-link',
+  `sort_order` int DEFAULT '0',
+  `target` enum('self','blank') COLLATE utf8mb4_unicode_ci DEFAULT 'self',
+  `requires_module` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Module check like module_config key',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_roles`
+--
+-- Creation: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 01:16 PM
+--
+
+CREATE TABLE IF NOT EXISTS `menu_roles` (
+  `id` int NOT NULL,
+  `role_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Lowercase role name like director general, registrar, lecturer',
+  `display_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dashboard_file` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Primary dashboard file',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `menu_roles`
+--
+
+INSERT DELAYED IGNORE INTO `menu_roles` (`id`, `role_key`, `display_name`, `dashboard_file`, `status`) VALUES
+(1, 'director general', 'Director General', 'director-general.php', 'active'),
+(2, 'ceo', 'Chief Executive Officer', 'ceo.php', 'active'),
+(3, 'director academics', 'Director Academics', 'director-academics.php', 'active'),
+(4, 'director finance', 'Director Finance', 'director-finance.php', 'active'),
+(5, 'director ict', 'Director ICT', 'director-ict.php', 'active'),
+(6, 'director admissions', 'Director Admissions', 'director-admissions.php', 'active'),
+(7, 'school principal', 'School Principal', 'school-principal.php', 'active'),
+(8, 'deputy principal', 'Deputy Principal', 'deputy-principal.php', 'active'),
+(9, 'academic registrar', 'Academic Registrar', 'academic-registrar.php', 'active'),
+(10, 'school bursar', 'School Bursar', 'school-bursar.php', 'active'),
+(11, 'school secretary', 'School Secretary', 'school-secretary.php', 'active'),
+(12, 'hr manager', 'HR Manager', 'hr-manager.php', 'active'),
+(13, 'school librarian', 'School Librarian', 'school-librarian.php', 'active'),
+(14, 'head of nursing', 'Head of Nursing', 'head-nursing.php', 'active'),
+(15, 'head of midwifery', 'Head of Midwifery', 'head-midwifery.php', 'active'),
+(16, 'senior lecturer', 'Senior Lecturer', 'senior-lecturers.php', 'active'),
+(17, 'lecturer', 'Lecturer', 'lecturers.php', 'active'),
+(18, 'security officer', 'Security Officer', 'security.php', 'active'),
+(19, 'storekeeper', 'Storekeeper', 'storekeeper.php', 'active'),
+(20, 'driver', 'Driver', 'drivers.php', 'active'),
+(21, 'matron', 'Matron', 'matrons.php', 'active'),
+(22, 'warden', 'Warden', 'wardens.php', 'active'),
+(23, 'guild president', 'Guild President', 'guild-president.php', 'active'),
+(24, 'sickbay nurse', 'Sickbay Nurse', 'sickbay.php', 'active'),
+(25, 'computer lab', 'Computer Lab Manager', 'computer_lab.php', 'active'),
+(26, 'skills lab', 'Skills Lab Technician', 'skills-lab.php', 'active'),
+(27, 'system administrator', 'System Administrator', 'system-admin.php', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_role_groups`
+--
+-- Creation: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 01:16 PM
+--
+
+CREATE TABLE IF NOT EXISTS `menu_role_groups` (
+  `id` int NOT NULL,
+  `role_id` int NOT NULL,
+  `group_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `menu_role_groups`
+--
+
+INSERT DELAYED IGNORE INTO `menu_role_groups` (`id`, `role_id`, `group_id`) VALUES
+(8, 1, 1),
+(1, 1, 2),
+(2, 1, 3),
+(17, 1, 4),
+(26, 1, 5),
+(18, 1, 6),
+(19, 1, 7),
+(5, 1, 8),
+(3, 1, 9),
+(21, 1, 10),
+(6, 1, 11),
+(20, 1, 12),
+(28, 1, 13),
+(4, 1, 14),
+(12, 1, 15),
+(13, 1, 16),
+(23, 1, 17),
+(14, 1, 18),
+(16, 1, 19),
+(15, 1, 20),
+(10, 1, 21),
+(11, 1, 22),
+(25, 1, 23),
+(29, 1, 24),
+(24, 1, 25),
+(7, 1, 26),
+(9, 1, 27),
+(22, 1, 28),
+(27, 1, 29),
+(39, 2, 1),
+(32, 2, 2),
+(33, 2, 3),
+(48, 2, 4),
+(57, 2, 5),
+(49, 2, 6),
+(50, 2, 7),
+(36, 2, 8),
+(34, 2, 9),
+(52, 2, 10),
+(37, 2, 11),
+(51, 2, 12),
+(59, 2, 13),
+(35, 2, 14),
+(43, 2, 15),
+(44, 2, 16),
+(54, 2, 17),
+(45, 2, 18),
+(47, 2, 19),
+(46, 2, 20),
+(41, 2, 21),
+(42, 2, 22),
+(56, 2, 23),
+(60, 2, 24),
+(55, 2, 25),
+(38, 2, 26),
+(40, 2, 27),
+(53, 2, 28),
+(58, 2, 29),
+(74, 3, 1),
+(70, 3, 2),
+(71, 3, 3),
+(73, 3, 11),
+(75, 3, 12),
+(72, 3, 14),
+(80, 4, 1),
+(81, 4, 4),
+(86, 4, 5),
+(82, 4, 6),
+(83, 4, 7),
+(78, 4, 8),
+(77, 4, 9),
+(85, 4, 10),
+(79, 4, 11),
+(84, 4, 12),
+(94, 5, 1),
+(92, 5, 11),
+(96, 5, 12),
+(97, 5, 13),
+(95, 5, 16),
+(93, 5, 26),
+(101, 6, 1),
+(100, 6, 11),
+(102, 6, 12),
+(99, 6, 14),
+(110, 7, 1),
+(106, 7, 2),
+(107, 7, 3),
+(109, 7, 11),
+(116, 7, 12),
+(108, 7, 14),
+(112, 7, 15),
+(117, 7, 17),
+(113, 7, 18),
+(115, 7, 19),
+(114, 7, 20),
+(111, 7, 22),
+(118, 7, 23),
+(120, 7, 24),
+(119, 7, 29),
+(121, 8, 2),
+(122, 8, 3),
+(123, 8, 11),
+(125, 8, 12),
+(124, 8, 22),
+(126, 8, 29),
+(128, 9, 2),
+(129, 9, 3),
+(131, 9, 11),
+(132, 9, 12),
+(130, 9, 14),
+(138, 10, 4),
+(143, 10, 5),
+(139, 10, 6),
+(140, 10, 7),
+(136, 10, 8),
+(135, 10, 9),
+(142, 10, 10),
+(137, 10, 11),
+(141, 10, 12),
+(144, 10, 13),
+(151, 11, 11),
+(152, 11, 12),
+(150, 11, 14),
+(153, 11, 28),
+(154, 11, 29),
+(158, 12, 1),
+(157, 12, 11),
+(160, 12, 12),
+(159, 12, 15),
+(165, 13, 12),
+(164, 13, 18),
+(167, 14, 11),
+(170, 14, 12),
+(168, 14, 15),
+(169, 14, 19),
+(171, 14, 25),
+(174, 15, 11),
+(177, 15, 12),
+(175, 15, 15),
+(176, 15, 20),
+(178, 15, 25),
+(181, 16, 2),
+(182, 16, 12),
+(184, 17, 2),
+(185, 17, 12),
+(187, 18, 17),
+(188, 19, 23),
+(189, 20, 24),
+(190, 21, 21),
+(191, 21, 22),
+(192, 21, 29),
+(193, 22, 22),
+(194, 22, 29),
+(196, 23, 11),
+(197, 23, 27),
+(198, 23, 29),
+(199, 24, 21),
+(200, 25, 26),
+(201, 26, 25),
+(64, 27, 1),
+(63, 27, 11),
+(66, 27, 12),
+(67, 27, 13),
+(65, 27, 16);
 
 -- --------------------------------------------------------
 
@@ -4458,7 +7313,7 @@ CREATE TABLE IF NOT EXISTS `news_views` (
 --
 -- Table structure for table `notifications`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `notifications` (
@@ -4612,19 +7467,17 @@ CREATE TABLE IF NOT EXISTS `official_duties` (
 --
 -- Table structure for table `onboarding_checklist`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `onboarding_checklist` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED DEFAULT NULL,
-  `task_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `assigned_to` int UNSIGNED DEFAULT NULL,
-  `due_date` date DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `completed_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `id` int NOT NULL,
+  `item_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -4879,40 +7732,37 @@ CREATE TABLE IF NOT EXISTS `payroll_allowances` (
 --
 -- Table structure for table `payroll_allowance_types`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
--- Last update: Jun 28, 2026 at 07:11 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
+-- Last update: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_allowance_types` (
   `id` int NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `allowance_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `allowance_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `is_taxable` tinyint(1) DEFAULT '1',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `payroll_allowance_types`
 --
 
-INSERT DELAYED IGNORE INTO `payroll_allowance_types` (`id`, `name`, `description`, `is_active`, `created_at`) VALUES
-(1, 'Transportation Allowance', 'Monthly transportation allowance', 1, '2026-06-28 05:57:40'),
-(2, 'Meal Allowance', 'Monthly meal allowance', 1, '2026-06-28 05:57:40'),
-(3, 'Housing Allowance', 'Monthly housing allowance', 1, '2026-06-28 05:57:40'),
-(4, 'Clothing Allowance', 'Annual clothing allowance', 1, '2026-06-28 05:57:40'),
-(5, 'Rice Subsidy', 'Monthly rice subsidy', 1, '2026-06-28 05:57:40'),
-(6, 'Transportation Allowance', 'Monthly transportation allowance', 1, '2026-06-28 07:11:22'),
-(7, 'Meal Allowance', 'Monthly meal allowance', 1, '2026-06-28 07:11:22'),
-(8, 'Housing Allowance', 'Monthly housing allowance', 1, '2026-06-28 07:11:22'),
-(9, 'Clothing Allowance', 'Annual clothing allowance', 1, '2026-06-28 07:11:22'),
-(10, 'Rice Subsidy', 'Monthly rice subsidy', 1, '2026-06-28 07:11:22');
+INSERT DELAYED IGNORE INTO `payroll_allowance_types` (`id`, `allowance_code`, `allowance_name`, `description`, `is_taxable`, `status`, `created_at`) VALUES
+(1, 'HRA', 'Housing Allowance', NULL, 1, 'active', '2026-06-29 13:38:20'),
+(2, 'TRANSPORT', 'Transport Allowance', NULL, 1, 'active', '2026-06-29 13:38:20'),
+(3, 'MEDICAL', 'Medical Allowance', NULL, 0, 'active', '2026-06-29 13:38:20'),
+(4, 'LUNCH', 'Lunch Allowance', NULL, 1, 'active', '2026-06-29 13:38:20'),
+(5, 'UTILITY', 'Utility Allowance', NULL, 1, 'active', '2026-06-29 13:38:20');
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payroll_approvals`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_approvals` (
@@ -4924,6 +7774,66 @@ CREATE TABLE IF NOT EXISTS `payroll_approvals` (
   `comments` text COLLATE utf8mb4_general_ci,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_approval_history`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `payroll_approval_history` (
+  `id` int NOT NULL,
+  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_id` int NOT NULL,
+  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `step` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `comments` text COLLATE utf8mb4_unicode_ci,
+  `acted_by` int DEFAULT NULL,
+  `acted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_audit_logs`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `payroll_audit_logs` (
+  `id` int NOT NULL,
+  `staff_id` int DEFAULT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` int DEFAULT NULL,
+  `old_values` text COLLATE utf8mb4_unicode_ci,
+  `new_values` text COLLATE utf8mb4_unicode_ci,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_bonus`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `payroll_bonus` (
+  `id` int NOT NULL,
+  `payroll_employee_id` int DEFAULT NULL,
+  `bonus_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT '0.00',
+  `bonus_date` date DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `approved_by` int DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -4967,33 +7877,30 @@ CREATE TABLE IF NOT EXISTS `payroll_deductions` (
 --
 -- Table structure for table `payroll_deduction_types`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
--- Last update: Jun 28, 2026 at 07:11 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
+-- Last update: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_deduction_types` (
   `id` int NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deduction_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deduction_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `is_statutory` tinyint(1) DEFAULT '0',
+  `category` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'other',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `payroll_deduction_types`
 --
 
-INSERT DELAYED IGNORE INTO `payroll_deduction_types` (`id`, `name`, `description`, `is_active`, `created_at`) VALUES
-(1, 'SSS Contribution', 'Social Security System contribution', 1, '2026-06-28 05:57:40'),
-(2, 'PhilHealth', 'Philippine Health Insurance Corporation contribution', 1, '2026-06-28 05:57:40'),
-(3, 'Pag-IBIG', 'Home Development Mutual Fund contribution', 1, '2026-06-28 05:57:40'),
-(4, 'Withholding Tax', 'Income tax withholding', 1, '2026-06-28 05:57:40'),
-(5, 'Loan Payment', 'Salary loan deduction', 1, '2026-06-28 05:57:40'),
-(6, 'SSS Contribution', 'Social Security System contribution', 1, '2026-06-28 07:11:22'),
-(7, 'PhilHealth', 'Philippine Health Insurance Corporation contribution', 1, '2026-06-28 07:11:22'),
-(8, 'Pag-IBIG', 'Home Development Mutual Fund contribution', 1, '2026-06-28 07:11:22'),
-(9, 'Withholding Tax', 'Income tax withholding', 1, '2026-06-28 07:11:22'),
-(10, 'Loan Payment', 'Salary loan deduction', 1, '2026-06-28 07:11:22');
+INSERT DELAYED IGNORE INTO `payroll_deduction_types` (`id`, `deduction_code`, `deduction_name`, `description`, `is_statutory`, `category`, `status`, `created_at`) VALUES
+(1, 'NSSF', 'NSSF Employee', NULL, 1, 'statutory', 'active', '2026-06-29 13:38:20'),
+(2, 'PAYE', 'PAYE Tax', NULL, 1, 'statutory', 'active', '2026-06-29 13:38:20'),
+(3, 'LOAN', 'Staff Loan', NULL, 0, 'voluntary', 'active', '2026-06-29 13:38:20'),
+(4, 'ADVANCE', 'Salary Advance', NULL, 0, 'voluntary', 'active', '2026-06-29 13:38:20');
 
 -- --------------------------------------------------------
 
@@ -5056,17 +7963,21 @@ CREATE TABLE IF NOT EXISTS `payroll_employees` (
 --
 -- Table structure for table `payroll_employee_allowances`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_employee_allowances` (
   `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `allowance_type_id` int NOT NULL,
-  `amount` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `month` int NOT NULL,
-  `year` int NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `payroll_employee_id` int NOT NULL,
+  `allowance_type_id` int DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `is_taxable` tinyint(1) DEFAULT '1',
+  `is_recurring` tinyint(1) DEFAULT '1',
+  `effective_from` date DEFAULT NULL,
+  `effective_to` date DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5074,17 +7985,20 @@ CREATE TABLE IF NOT EXISTS `payroll_employee_allowances` (
 --
 -- Table structure for table `payroll_employee_deductions`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_employee_deductions` (
   `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `deduction_type_id` int NOT NULL,
-  `amount` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `month` int NOT NULL,
-  `year` int NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `payroll_employee_id` int NOT NULL,
+  `deduction_type_id` int DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `is_recurring` tinyint(1) DEFAULT '1',
+  `effective_from` date DEFAULT NULL,
+  `effective_to` date DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5092,18 +8006,20 @@ CREATE TABLE IF NOT EXISTS `payroll_employee_deductions` (
 --
 -- Table structure for table `payroll_items`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_items` (
   `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `period_id` int NOT NULL,
-  `basic_salary` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `allowances` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `deductions` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `net_pay` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `payroll_run_id` int DEFAULT NULL,
+  `payroll_employee_id` int DEFAULT NULL,
+  `staff_id` int DEFAULT NULL,
+  `basic_salary` decimal(15,2) DEFAULT '0.00',
+  `total_allowances` decimal(15,2) DEFAULT '0.00',
+  `total_deductions` decimal(15,2) DEFAULT '0.00',
+  `net_salary` decimal(15,2) DEFAULT '0.00',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5111,18 +8027,26 @@ CREATE TABLE IF NOT EXISTS `payroll_items` (
 --
 -- Table structure for table `payroll_loans`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_loans` (
   `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `amount` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `monthly_deduction` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `remaining_balance` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `status` enum('pending','active','completed','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `payroll_employee_id` int NOT NULL,
+  `loan_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `loan_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'staff_loan',
+  `principal_amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `interest_rate` decimal(5,2) DEFAULT '0.00',
+  `installments` int DEFAULT '1',
+  `installment_amount` decimal(15,2) DEFAULT '0.00',
+  `loan_date` date DEFAULT NULL,
+  `amount_paid` decimal(15,2) DEFAULT '0.00',
+  `installments_paid` int DEFAULT '0',
+  `status` enum('pending','active','completed','defaulted') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_by` int DEFAULT NULL,
   `approved_by` int DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `approved_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5151,18 +8075,20 @@ CREATE TABLE IF NOT EXISTS `payroll_overtime` (
 --
 -- Table structure for table `payroll_payments`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_payments` (
   `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `payroll_run_id` int DEFAULT NULL,
-  `amount` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'bank_transfer',
+  `payroll_run_id` int NOT NULL,
   `payment_date` date NOT NULL,
+  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'bank_transfer',
+  `total_amount` decimal(15,2) DEFAULT '0.00',
+  `employee_count` int DEFAULT '0',
   `reference_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `status` enum('pending','completed','failed') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5170,19 +8096,20 @@ CREATE TABLE IF NOT EXISTS `payroll_payments` (
 --
 -- Table structure for table `payroll_payslips`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_payslips` (
   `id` int NOT NULL,
+  `payroll_item_id` int NOT NULL,
+  `payroll_run_id` int NOT NULL,
+  `payroll_employee_id` int NOT NULL,
   `staff_id` int NOT NULL,
-  `period_id` int NOT NULL,
-  `basic_salary` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `allowances_total` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `deductions_total` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `net_pay` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `generated_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `payslip_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payslip_html` longtext COLLATE utf8mb4_unicode_ci,
+  `pdf_generated` tinyint(1) DEFAULT '0',
+  `generated_by` int DEFAULT NULL,
+  `generated_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5190,16 +8117,17 @@ CREATE TABLE IF NOT EXISTS `payroll_payslips` (
 --
 -- Table structure for table `payroll_periods`
 --
--- Creation: Jun 28, 2026 at 05:57 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_periods` (
   `id` int NOT NULL,
-  `month` int NOT NULL,
-  `year` int NOT NULL,
-  `status` enum('draft','open','processing','closed','paid') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
-  `created_by` int NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `period_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Open',
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -5207,7 +8135,7 @@ CREATE TABLE IF NOT EXISTS `payroll_periods` (
 --
 -- Table structure for table `payroll_records`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 -- Last update: Jun 28, 2026 at 04:21 AM
 --
 
@@ -5543,20 +8471,19 @@ CREATE TABLE IF NOT EXISTS `portal_messages` (
 --
 -- Table structure for table `professional_licenses`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 01:38 PM
 --
 
 CREATE TABLE IF NOT EXISTS `professional_licenses` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `license_number` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `license_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `issuing_body` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `issue_date` date DEFAULT NULL,
+  `id` int NOT NULL,
+  `staff_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `license_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `expiry_date` date DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `document_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `issuing_body` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -5901,6 +8828,24 @@ CREATE TABLE IF NOT EXISTS `research_projects` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `result_approvals`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `result_approvals` (
+  `id` int NOT NULL,
+  `result_id` int NOT NULL,
+  `approved_by` int DEFAULT NULL,
+  `approval_date` datetime DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `comments` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `result_publication`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -6017,6 +8962,49 @@ CREATE TABLE IF NOT EXISTS `room_inspections` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `route_schedules`
+--
+-- Creation: Jun 29, 2026 at 03:05 PM
+--
+
+CREATE TABLE IF NOT EXISTS `route_schedules` (
+  `id` int NOT NULL,
+  `route_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vehicle_id` int DEFAULT NULL,
+  `driver_id` int DEFAULT NULL,
+  `departure_time` time DEFAULT NULL,
+  `arrival_time` time DEFAULT NULL,
+  `route_start` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `route_end` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `salary_structures`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `salary_structures` (
+  `id` int NOT NULL,
+  `role_id` int DEFAULT NULL,
+  `role_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `base_salary` decimal(15,2) DEFAULT '0.00',
+  `housing_allowance` decimal(15,2) DEFAULT '0.00',
+  `transport_allowance` decimal(15,2) DEFAULT '0.00',
+  `medical_allowance` decimal(15,2) DEFAULT '0.00',
+  `effective_from` date DEFAULT NULL,
+  `effective_to` date DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `scholarships`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -6053,6 +9041,46 @@ CREATE TABLE IF NOT EXISTS `security_access_logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `security_emergency_contacts`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `security_emergency_contacts` (
+  `id` int NOT NULL,
+  `contact_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contact_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `organization` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_equipment`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `security_equipment` (
+  `id` int NOT NULL,
+  `equipment_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `equipment_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Operational','Maintenance','Retired','Damaged') COLLATE utf8mb4_unicode_ci DEFAULT 'Operational',
+  `purchase_date` date DEFAULT NULL,
+  `last_maintenance_date` date DEFAULT NULL,
+  `next_maintenance_date` date DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `security_incidents`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -6068,6 +9096,52 @@ CREATE TABLE IF NOT EXISTS `security_incidents` (
   `resolved_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_patrols`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `security_patrols` (
+  `id` int NOT NULL,
+  `guard_id` int DEFAULT NULL,
+  `patrol_area` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `patrol_date` date NOT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `status` enum('Scheduled','In Progress','Completed','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Scheduled',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_visitors`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `security_visitors` (
+  `id` int NOT NULL,
+  `visitor_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `visitor_phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `visitor_nature` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `person_to_visit_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `visit_date` date NOT NULL,
+  `expected_arrival` time DEFAULT NULL,
+  `actual_arrival` time DEFAULT NULL,
+  `expected_departure` time DEFAULT NULL,
+  `actual_departure` time DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Expected',
+  `badge_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -6173,6 +9247,23 @@ INSERT DELAYED IGNORE INTO `sickness_directory` (`id`, `sickness_code`, `sicknes
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `skills_laboratory`
+--
+-- Creation: Jun 29, 2026 at 01:38 PM
+--
+
+CREATE TABLE IF NOT EXISTS `skills_laboratory` (
+  `id` int NOT NULL,
+  `lab_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `capacity` int DEFAULT '30',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sports_events`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -6212,8 +9303,7 @@ CREATE TABLE IF NOT EXISTS `sports_teams` (
 --
 -- Table structure for table `staff`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 --
 
 CREATE TABLE IF NOT EXISTS `staff` (
@@ -6551,7 +9641,7 @@ CREATE TABLE IF NOT EXISTS `staff_appraisals` (
 --
 -- Table structure for table `staff_attendance`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jun 29, 2026 at 12:49 PM
 -- Last update: Jun 28, 2026 at 04:21 AM
 --
 
@@ -6655,1202 +9745,6 @@ CREATE TABLE IF NOT EXISTS `staff_departments` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `staff_departments`
---
-
-INSERT DELAYED IGNORE INTO `staff_departments` (`id`, `department_name`, `department_code`, `department_level`, `description`, `is_active`, `created_at`) VALUES
-(1, 'Executive Leadership', 'EXEC', 1, NULL, 1, '2026-06-19 23:58:56'),
-(2, 'Academic Affairs', 'ACAD', 2, NULL, 1, '2026-06-19 23:58:56'),
-(3, 'Finance & Accounts', 'FIN', 3, NULL, 1, '2026-06-19 23:58:56'),
-(4, 'Human Resources', 'HR', 4, NULL, 1, '2026-06-19 23:58:56'),
-(5, 'Nursing Department', 'NUR', 5, NULL, 1, '2026-06-19 23:58:56'),
-(6, 'Midwifery Department', 'MID', 6, NULL, 1, '2026-06-19 23:58:56'),
-(7, 'ICT', 'ICT', 7, NULL, 1, '2026-06-19 23:58:56'),
-(8, 'Admissions', 'ADM', 8, NULL, 1, '2026-06-19 23:58:56'),
-(9, 'Library', 'LIB', 9, NULL, 1, '2026-06-19 23:58:56'),
-(10, 'Security & Transport', 'SEC', 10, NULL, 1, '2026-06-19 23:58:56'),
-(11, 'Store & Assets', 'STR', 11, NULL, 1, '2026-06-19 23:58:56'),
-(12, 'Student Services', 'SVS', 12, NULL, 1, '2026-06-19 23:58:56');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_leave_requests`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_leave_requests` (
-  `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `leave_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('pending','approved','rejected','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `approved_by` int DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_licenses`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_licenses` (
-  `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `license_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `license_number` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `issuing_authority` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `issue_date` date NOT NULL,
-  `expiry_date` date DEFAULT NULL,
-  `status` enum('active','expired','suspended','revoked') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_login_sessions`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_login_sessions` (
-  `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `session_token` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `expires_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff_login_sessions`
---
-
-INSERT DELAYED IGNORE INTO `staff_login_sessions` (`id`, `staff_id`, `session_token`, `ip_address`, `user_agent`, `created_at`, `expires_at`) VALUES
-(1, 1, 'pu2hvlihjqangi7jviepaf0ob7', '::1', 'curl/8.19.0', '2026-06-09 23:06:48', '2026-06-09 23:36:48'),
-(2, 4, '83656fpgh06q9gouhm60nk3tuq', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-09 23:07:33', '2026-06-09 23:37:33'),
-(3, 4, 'lh39hd80nldj2uegqkjhjk2efn', '::1', 'curl/8.19.0', '2026-06-09 23:16:40', '2026-06-09 23:46:40'),
-(4, 1, '7ljqo58oc291b11bqi2s3cjffg', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-09 23:27:04', '2026-06-09 23:57:04'),
-(5, 25, 'hlr81jh15cqvlf6nl6j8nlhk3f', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 00:57:13', '2026-06-10 01:27:13'),
-(6, 24, 'ae3he9cgsdvgdf024bolec2r14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 01:02:10', '2026-06-10 01:32:10'),
-(7, 9, 'dr24ed01jpd3hparhq890kpnf0', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 06:12:56', '2026-06-10 06:42:56'),
-(8, 1, 'k8j0smrve1hncrjkq2he9fu0rh', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-17 03:34:12', '2026-06-17 04:04:12'),
-(9, 1, '2f99647bj7odhsl4cj6vhlals8', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-17 22:18:02', '2026-06-17 22:48:02'),
-(10, 2, 'suho7uaqglfdjpgt6f6bpr0nqb', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:15:02', '2026-06-18 02:45:02'),
-(11, 3, 'gn380t4p7ebopr4pbmd83r3098', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:20:34', '2026-06-18 02:50:34'),
-(12, 4, 'j0bvg0i2bsstfd5f2b71pnbhv2', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:21:40', '2026-06-18 02:51:40'),
-(13, 5, '1p2sqtjhn2q39oq8uok2bka2s6', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:23:54', '2026-06-18 02:53:54'),
-(14, 6, 'ebpn95qsf7pvk6jr5iad1vi3lk', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:25:03', '2026-06-18 02:55:03'),
-(15, 25, 's2q2c95audemj51h44e3vmah41', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:34:25', '2026-06-18 03:04:25'),
-(16, 24, 'qf5sbbkufe4onpt0j5qdg8cfp4', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:35:42', '2026-06-18 03:05:42'),
-(17, 1, '1359ma7hua0fmmvl8espcd9an7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 09:31:15', '2026-06-18 10:01:15'),
-(18, 2, 'blmvsuvsqc3h3fq4ed857p8asq', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:01:58', '2026-06-18 10:31:58'),
-(19, 25, 'vv9i7126ujrh0ht0sekerd5vnq', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:03:51', '2026-06-18 10:33:51'),
-(20, 1, 'sc7nqfk1p54kusvoh7959k81c7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:50:50', '2026-06-18 11:20:50'),
-(21, 25, '6rclk83t17947n4pj1ngh9hj81', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:29:16', '2026-06-18 11:59:16'),
-(22, 7, '30mj4uha05dsb1rdea48hkrgb5', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:56:46', '2026-06-18 12:26:46'),
-(23, 7, '2hlgnoq56hhvf37ar4im2ue7nm', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:44', '2026-06-18 13:47:44'),
-(24, 7, 'gpqmln2qp7o00ek4rjjenf4khj', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:56', '2026-06-18 13:47:56'),
-(25, 23, '34mpge2kds50ab697a1agal7us', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:19:17', '2026-06-18 13:49:17'),
-(26, 22, 'mmt06pq180c82ofjuf8hgihiva', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:20:23', '2026-06-18 13:50:23'),
-(27, 22, 'jef954p75gcad385f70ig9tadc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:37:05', '2026-06-18 14:07:05'),
-(28, 24, 't8g4s4ib33vp3villv4iv8p5no', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:37:22', '2026-06-18 14:07:22'),
-(29, 24, 'h0l3knqrvi229h6laq5ltln2to', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:44:53', '2026-06-18 14:14:53'),
-(30, 24, 'jv52bv72042nq2v2vileprunqr', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:47:26', '2026-06-18 14:17:26'),
-(31, 7, '0pa58vehm4juir1f0924c929eu', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 20:38:19', '2026-06-18 21:08:19'),
-(32, 17, 'gv23nhcevrnc6cu2sqj1q6ksp0', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-19 22:33:02', '2026-06-19 23:03:02'),
-(33, 1, 'erd3bpes4jq9qfk173g5561tn7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-19 23:52:59', '2026-06-20 00:22:59'),
-(34, 2, 'c31ettfnja46ueh449bkq22vh7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 03:31:21', '2026-06-20 04:01:21'),
-(35, 25, '79007ugk7c1mi07d7m5c9l9c71', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:07:31', '2026-06-20 04:37:31'),
-(36, 17, '6a3hb5erpafv3av162128t5dpb', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:08:13', '2026-06-20 04:38:13'),
-(37, 1, 'qbin2lntmfe0ctm7s80b5ccsi6', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 11:16:50', '2026-06-20 11:46:50'),
-(38, 25, '63qd2kbtvalb6jlf259akkthcc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 12:18:33', '2026-06-20 12:48:33'),
-(39, 1, '5adsl9dnpdml0l9089vi78sk1j', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 15:41:52', '2026-06-20 16:11:52'),
-(40, 1, 'titkd3lgrb6p0n2s92875b1f1l', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 00:45:04', '2026-06-21 01:15:04'),
-(41, 1, 'np4ea04g9arhbh2ticlj8a8jk0', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:19:30', '2026-06-21 02:49:30'),
-(42, 2, '06f1nkaks13lc7ht4kvuq2sl56', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:27:16', '2026-06-21 02:57:16'),
-(43, 3, 'dqv8stll1pfe9kmc8lkvchal44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:02:29', '2026-06-21 03:32:29'),
-(44, 4, 'mkqhi86baa63c035veice145ll', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:38:32', '2026-06-21 04:08:32'),
-(45, 25, '5tu70v12sp531pvi6bnd4ktr1f', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:40:07', '2026-06-21 04:10:07'),
-(46, 24, '2pgtv3ai29nri6qac8qrc9ff13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:41:15', '2026-06-21 04:11:15'),
-(47, 8, '3fjn3qhpi54ad00ig5jr46adrh', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:23:34', '2026-06-21 08:53:34'),
-(48, 7, 'mfufdau7qocjbtu885pm8ko2od', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:28:06', '2026-06-21 08:58:06'),
-(49, 10, 'rvau0732fn5eb7aq561lc5qkm1', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:38:59', '2026-06-21 09:08:59'),
-(50, 9, 'vbguukqdpatqmm20c3m9gjjkcf', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:41:11', '2026-06-21 09:11:11'),
-(51, 22, 'tq6q7ogmro8nmn0207kngvd21h', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:42:51', '2026-06-21 10:12:51'),
-(52, 17, 'u7kckp0ni8u4jro21r3902smaj', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:46:09', '2026-06-21 10:16:09'),
-(53, 17, 'vmp1feirc6evkuqm4kr14kivj1', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:48:32', '2026-06-21 10:18:32'),
-(54, 24, '0a98v19vemano2jnpabb2j1p2g', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:58:10', '2026-06-21 10:28:10'),
-(55, 24, '0s7tbe4ouk2fiht3obv1nvphav', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:58:20', '2026-06-21 10:28:20'),
-(56, 24, 'cukgdorpavsii00locajfjqpci', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:31:07', '2026-06-21 11:01:07'),
-(57, 24, 'lslmk523ctp75jif1nie3uqd82', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:32:28', '2026-06-21 11:02:28'),
-(58, 24, 'veofu3mv8j6t624aa4fs53p2fn', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:33:45', '2026-06-21 11:03:45'),
-(59, 24, '4cqichecqd00evma1u7sbk3j2q', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:36:09', '2026-06-21 11:06:09'),
-(60, 7, 'd522eht2ekupd06is4b5571tss', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:37:24', '2026-06-21 11:07:24'),
-(61, 7, 'irrr02lhbcgfrpu4l69j7d7fvl', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:03:10', '2026-06-21 21:33:10'),
-(62, 24, 'f2v52677oj0d7cv0fts20sga63', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:14:03', '2026-06-21 21:44:03'),
-(63, 8, 'q96npe7qia97egg4delvjpcd0u', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:14:44', '2026-06-21 21:44:44'),
-(64, 24, 'jmg7854n7jgeu8odup6l9iot29', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:26:55', '2026-06-21 21:56:55'),
-(65, 24, '4tblptijta3l5tfta0pvb25601', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 22:56:35', '2026-06-21 23:26:35'),
-(66, 24, 'hpq3utci8urukiaruh92vob8mn', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 00:35:45', '2026-06-22 01:05:45'),
-(67, 24, 't49b41nfcaruon5ro15p15mltc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:09:10', '2026-06-22 01:39:10'),
-(68, 24, 'osoor0p43434atvgr7j66t22f6', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:13:52', '2026-06-22 01:43:52'),
-(69, 24, '0me8chv0u24pr6jfgg9oe23lov', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:19:57', '2026-06-22 01:49:57'),
-(70, 24, 'kdlr506tct65oilrnuj67pb72i', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:23:38', '2026-06-22 01:53:38'),
-(71, 24, 'jslvmsv36efl4ukgf1q7g2skrt', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 10:50:07', '2026-06-22 11:20:07'),
-(72, 24, 'hdvul1svlg8ui13hcqk01cclda', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:15:10', '2026-06-22 11:45:10'),
-(73, 24, '18d7dqitp2ml8j9nqte0qvvtbc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:34:00', '2026-06-22 12:04:00'),
-(74, 24, 'ur2fs528fiomfrd25ggfbntevu', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:57:49', '2026-06-22 12:27:49'),
-(75, 1, 'qrs5r3d0crst274csne31s6bik', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:48:39', '2026-06-22 13:18:39'),
-(76, 24, 'pqumq7aq89oarcoi7u0vfc4euc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:59:31', '2026-06-22 13:29:31'),
-(77, 1, '4dfl0lha5fktfpih6dio8m629n', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:06:59', '2026-06-22 13:36:59'),
-(78, 4, 'uoi1qs187pr2gd1799ousa63cu', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:10:22', '2026-06-22 13:40:22'),
-(79, 1, '1s9luflbvjvmdor92928kc9lbf', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:59:47', '2026-06-22 14:29:47'),
-(80, 24, 'ttjcmn74g42n5lstnqmv6pijpu', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 14:59:19', '2026-06-22 15:29:19'),
-(81, 1, '1pmpbl6de5stu5mdelph4h475e', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 22:02:54', '2026-06-22 22:32:54'),
-(82, 24, 'hljpb5ph7e3j24ckvan8mauluh', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 01:21:00', '2026-06-23 01:51:00'),
-(83, 25, 'ks1tultbpko3s70j5fhq4e4t9h', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 05:12:44', '2026-06-23 05:42:44'),
-(84, 1, 'rf0mklksts3um16lm1c90l2gbq', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 22:40:59', '2026-06-23 23:10:59'),
-(85, 1, 'ppfvcia8sprhfv7t5i2dsn38a0', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:42:32', '2026-06-24 04:12:32'),
-(86, 3, 'lgp10qeu8kiecak9fv098pjglo', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:55:07', '2026-06-24 04:25:07'),
-(87, 5, '6pu90rj74r1pq47q228fcjoniu', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:23', '2026-06-24 05:56:23'),
-(88, 9, 'jfn6065k8m3goqpe3sprr17b6p', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:54', '2026-06-24 05:56:54'),
-(89, 1, '794af9ukhkur706kvkfku12iaq', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 06:46:58', '2026-06-24 07:16:58'),
-(90, 24, '9jebpeo9cqldprvn4khlrnr9vi', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 07:01:17', '2026-06-24 07:31:17'),
-(91, 25, '8a4liolknvm9st9v1kv3r106fl', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:02:15', '2026-06-24 08:32:15'),
-(92, 1, '25vgr9ffnilj3iaufkdi2olvgd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:04:28', '2026-06-24 08:34:28'),
-(93, 17, 'f584elfqqdtdaneqgvu4j2sgb5', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:10:06', '2026-06-24 08:40:06'),
-(94, 25, 'ik5cfqa2gkgjgfmgmefk090jjd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 23:37:39', '2026-06-25 00:07:39'),
-(95, 9, '34ca3u1j6isj17ocoq43vba38c', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 01:36:50', '2026-06-25 02:06:50'),
-(96, 4, 'e5vsb9gmjeun7kito01jamqs3d', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 02:39:53', '2026-06-25 03:09:53'),
-(97, 3, '7rqduhslro0lq0nplmpbunpgf0', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:18', '2026-06-25 03:41:18'),
-(98, 5, 'tl71050ga502dbhf0tggle7b8d', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:55', '2026-06-25 03:41:55'),
-(99, 6, '89n9gmr0fjrhmuuolavg7bh7vj', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:33:47', '2026-06-25 04:03:47'),
-(100, 5, 't5s26jd6cbasdfv24scv7oqgnc', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:44:45', '2026-06-25 04:14:45'),
-(101, 24, 'p2ek6i7irhqbkkppvei7r15olf', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:47:18', '2026-06-25 04:17:18'),
-(102, 24, 'btumr0h7kam4vbeliviv0vht80', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 07:25:54', '2026-06-25 07:55:54'),
-(103, 1, 'affknfo0e0cod2oi2jru0qjgph', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 08:58:55', '2026-06-25 09:28:55'),
-(104, 2, 'h447aeemqdhvj8dlaofabvmss9', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:22:04', '2026-06-25 09:52:04'),
-(105, 4, 'a087m1fgf0fu8elbeoe57g6il1', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:22:40', '2026-06-25 09:52:40'),
-(106, 17, 'n9o9l07t52qa71jjmg3l9egl3q', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 04:07:21', '2026-06-26 04:37:21'),
-(107, 8, 'j92qk81fhdbtt122h79ckue45f', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 04:18:03', '2026-06-26 04:48:03'),
-(108, 8, 'edj83pm5bjgr8g6vbeci45ajod', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:39:08', '2026-06-26 06:09:08'),
-(109, 25, '41s1vms3719jbporauptnbjumd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:48:03', '2026-06-26 06:18:03'),
-(110, 8, '3vg1268gsos1b49pha89j8qcdl', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:02:14', '2026-06-26 06:32:14'),
-(111, 8, 't0va2mgidaq269fsdhp6dscgr3', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:02:22', '2026-06-26 06:32:22'),
-(112, 25, 'gq0ncrfvok3ljs5trl2u2meclg', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:03:07', '2026-06-26 06:33:07'),
-(113, 8, '22gvam5engahgclurhh82mppuh', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:03:20', '2026-06-26 06:33:20'),
-(114, 7, 'nj45vbijbkug1j88nncnts0oah', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 06:36:27', '2026-06-26 07:06:27'),
-(115, 23, '9m3qh7jl3j8bq9fm0qafu02snb', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 07:09:45', '2026-06-26 07:39:45'),
-(116, 23, '3tnohnrv7m0us60fmm0slh4vjn', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 12:36:42', '2026-06-26 13:06:42'),
-(117, 23, 'odl6daac37jvuiaqq30ebv211t', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 14:05:09', '2026-06-26 14:35:09'),
-(118, 23, 'vgh2eulctao8s12rdgdu77t1q7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 21:23:13', '2026-06-26 21:53:13'),
-(119, 1, 'ijjcb8ppqqeg0eh07rctuob530', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:04:55', '2026-06-26 22:34:55'),
-(120, 23, '98sb0ebgrcuh2adlceuj198qfm', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:09:09', '2026-06-26 22:39:09'),
-(121, 22, '6undm5ctv6iltdc39d2cnr2kom', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:12:56', '2026-06-26 22:42:56'),
-(122, 23, '1vhpuhmg2t9v6s93e4vt1gdasl', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:43:32', '2026-06-26 23:13:32'),
-(123, 22, '7qj0v2vurgdm825hnht7cc6cki', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:44:41', '2026-06-26 23:14:41'),
-(124, 22, '384f35su5t0cqbgqg2q623n8e7', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:26:56', '2026-06-26 23:56:56'),
-(125, 23, 'cl13gqakjddlkkagtdm07brjs2', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:31', '2026-06-27 00:08:31'),
-(126, 22, 'hvq4ej7521ircu9s4qdi9a4nu8', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:51', '2026-06-27 00:08:51'),
-(127, 22, '89a3kokapu2e5308u309ftsdoa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:55:47', '2026-06-27 00:25:47'),
-(128, 1, 'obs5jdudi11f3h2ffk564c90j6', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-27 07:26:14', '2026-06-27 07:56:14');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_profiles`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_profiles` (
-  `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `profile_picture` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `bio` text COLLATE utf8mb4_general_ci,
-  `department` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `address` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff_profiles`
---
-
-INSERT DELAYED IGNORE INTO `staff_profiles` (`id`, `staff_id`, `profile_picture`, `bio`, `department`, `phone`, `address`, `created_at`, `updated_at`) VALUES
-(3, 1, NULL, '', NULL, NULL, NULL, '2026-06-24 00:08:59', '2026-06-24 00:08:59'),
-(4, 24, NULL, '', NULL, NULL, NULL, '2026-06-24 07:01:59', '2026-06-24 07:01:59');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_resignations`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_resignations` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `resignation_date` date DEFAULT NULL,
-  `last_working_date` date DEFAULT NULL,
-  `reason` text COLLATE utf8mb4_general_ci,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `approved_by` int UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_roles`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_roles` (
-  `id` int NOT NULL,
-  `role_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `role_description` text COLLATE utf8mb4_general_ci,
-  `role_level` int DEFAULT '5',
-  `dashboard_path` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ;
-
---
--- Dumping data for table `staff_roles`
---
-
-INSERT DELAYED IGNORE INTO `staff_roles` (`id`, `role_name`, `role_description`, `role_level`, `dashboard_path`, `permissions`, `created_at`, `updated_at`) VALUES
-(1, 'Director General', NULL, 1, 'dashboards/director-general.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(2, 'CEO', NULL, 1, 'dashboards/ceo.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(3, 'Director Academics', NULL, 2, 'dashboards/director-academics.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(4, 'Director Finance', NULL, 2, 'dashboards/director-finance.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(5, 'Director ICT', NULL, 2, 'dashboards/director-ict.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(6, 'School Principal', NULL, 2, 'dashboards/school-principal.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(7, 'Deputy Principal', NULL, 3, 'dashboards/deputy-principal.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(8, 'Academic Registrar', NULL, 3, 'dashboards/academic-registrar.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(9, 'HR Manager', NULL, 3, 'dashboards/hr-manager.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(10, 'School Secretary', NULL, 4, 'dashboards/school-secretary.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(11, 'School Librarian', NULL, 4, 'dashboards/school-librarian.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(12, 'Head Nursing', NULL, 3, 'dashboards/head-nursing.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(13, 'Head Midwifery', NULL, 3, 'dashboards/head-midwifery.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(14, 'Senior Lecturers', NULL, 4, 'dashboards/senior-lecturers.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(15, 'Lecturers', NULL, 5, 'dashboards/lecturers.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(16, 'Matrons', NULL, 4, 'dashboards/matrons.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(17, 'Wardens', NULL, 5, 'dashboards/wardens.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(18, 'Sickbay', NULL, 5, 'dashboards/sickbay.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(19, 'Drivers', NULL, 6, 'dashboards/drivers.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(20, 'Security', NULL, 6, 'dashboards/security.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(21, 'Storekeeper', NULL, 5, 'dashboards/storekeeper.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(22, 'Guild President', NULL, 5, 'dashboards/guild-president.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(23, 'Computer Lab Manager', NULL, 3, 'computer_lab.php', NULL, '2026-06-09 22:56:09', '2026-06-09 22:56:09'),
-(24, 'School Bursar', NULL, 3, 'dashboards/school-bursar.php', NULL, '2026-06-09 22:56:09', '2026-06-26 05:57:33'),
-(25, 'Store Keeper', 'Store inventory', 0, 'dashboards/storekeeper.php', '{\"store\":true,\"inventory\":true}', '2026-06-13 02:38:49', '2026-06-13 02:38:49'),
-(26, 'Director Admissions & Requirements', 'Admissions management', 0, 'dashboards/director-admissions.php', '{\"admissions\":true,\"requirements\":true}', '2026-06-13 02:38:49', '2026-06-13 02:38:49'),
-(27, 'Bursar', 'Bursar assistant', 0, 'dashboards/school-bursar.php', '{\"financial\":true,\"fees\":true}', '2026-06-13 02:38:49', '2026-06-26 05:57:33');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_salaries`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_salaries` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `basic_salary` decimal(12,2) DEFAULT '0.00',
-  `allowances` decimal(12,2) DEFAULT '0.00',
-  `overtime_rate` decimal(12,2) DEFAULT '0.00',
-  `nssf_tax` decimal(12,2) DEFAULT '0.00',
-  `paye_tax` decimal(12,2) DEFAULT '0.00',
-  `effective_date` date DEFAULT NULL,
-  `created_by` int DEFAULT NULL,
-  `bonus` decimal(10,2) DEFAULT '0.00',
-  `deductions` decimal(10,2) DEFAULT '0.00',
-  `net_salary` decimal(12,2) DEFAULT '0.00',
-  `payment_month` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `payment_year` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff_salaries`
---
-
-INSERT DELAYED IGNORE INTO `staff_salaries` (`id`, `staff_id`, `basic_salary`, `allowances`, `overtime_rate`, `nssf_tax`, `paye_tax`, `effective_date`, `created_by`, `bonus`, `deductions`, `net_salary`, `payment_month`, `payment_year`, `status`, `created_at`, `updated_at`) VALUES
-(1, 7, 1500000.00, 0.00, 0.00, 0.00, 0.02, '2026-06-25', 25, 0.00, 0.02, 1499999.98, NULL, NULL, 'Active', '2026-06-25 00:35:20', '2026-06-25 00:35:20');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_training`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_training` (
-  `id` int NOT NULL,
-  `staff_id` int NOT NULL,
-  `training_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `status` enum('enrolled','in_progress','completed','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'enrolled',
-  `certificate_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `store_orders`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `store_orders` (
-  `id` int NOT NULL,
-  `order_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `supplier` varchar(200) COLLATE utf8mb4_general_ci DEFAULT 'Internal Requisition',
-  `notes` text COLLATE utf8mb4_general_ci,
-  `total_amount` decimal(15,2) DEFAULT '0.00',
-  `status` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'pending_approval',
-  `requested_by` int DEFAULT NULL,
-  `approved_by` int DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
-  `received_by` int DEFAULT NULL,
-  `received_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `store_requests`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `store_requests` (
-  `id` int UNSIGNED NOT NULL,
-  `request_number` varchar(60) COLLATE utf8mb4_general_ci NOT NULL,
-  `requested_by` int UNSIGNED DEFAULT NULL,
-  `department` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `items` text COLLATE utf8mb4_general_ci,
-  `urgency` varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'medium',
-  `status` varchar(30) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
-  `forwarded_to` int UNSIGNED DEFAULT NULL,
-  `approval_request_id` int UNSIGNED DEFAULT NULL,
-  `approved_by` int UNSIGNED DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `store_requests`
---
-
-INSERT DELAYED IGNORE INTO `store_requests` (`id`, `request_number`, `requested_by`, `department`, `items`, `urgency`, `status`, `forwarded_to`, `approval_request_id`, `approved_by`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 'SR-2026-0001', 1, NULL, NULL, 'medium', 'pending_approval', NULL, 1, NULL, NULL, '2026-06-08 08:58:56', '2026-06-20 00:47:50'),
-(2, 'SR-2026-0002', 1, NULL, NULL, 'urgent', 'pending_approval', NULL, 2, NULL, NULL, '2026-06-10 08:58:56', '2026-06-20 00:47:50'),
-(3, 'SR-2026-0003', 1, NULL, NULL, 'medium', 'pending_approval', NULL, 3, NULL, NULL, '2026-06-10 08:58:56', '2026-06-20 00:47:50'),
-(4, 'SR-2026-0004', 1, NULL, NULL, 'high', 'pending', NULL, NULL, NULL, NULL, '2026-06-14 08:58:56', NULL),
-(5, 'SR-2026-0005', 1, NULL, NULL, 'high', 'pending', NULL, NULL, NULL, NULL, '2026-06-18 08:58:56', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `students`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `students` (
-  `id` int UNSIGNED NOT NULL,
-  `first_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `last_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `student_number` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `full_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `program` varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `level` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'Active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `students`
---
-
-INSERT DELAYED IGNORE INTO `students` (`id`, `first_name`, `last_name`, `student_number`, `full_name`, `program`, `level`, `status`) VALUES
-(1, 'Grace', 'Nakato', 'ISNM-2024-001', 'Grace Nakato', 'Diploma Nursing', NULL, 'Active'),
-(2, 'David', 'Ssali', 'ISNM-2024-002', 'David Ssali', 'Certificate Midwifery', NULL, 'Active'),
-(3, 'Mary', 'Nalwoga', 'ISNM-2024-003', 'Mary Nalwoga', 'Certificate Nursing', NULL, 'Active'),
-(4, 'James', 'Okello', 'ISNM-2024-004', 'James Okello', 'Diploma Midwifery', NULL, 'Active'),
-(5, 'Sarah', 'Kyomugisha', 'ISNM-2024-005', 'Sarah Kyomugisha', 'Diploma Nursing', NULL, 'Active');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_academic_profiles`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_academic_profiles` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `gpa` decimal(3,2) DEFAULT NULL,
-  `credits_earned` int NOT NULL DEFAULT '0',
-  `academic_standing` enum('good','probation','suspension','expelled','graduated') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'good',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_admissions`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_admissions` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `admission_date` date NOT NULL,
-  `program` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `admission_type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'regular',
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_counseling_sessions`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_counseling_sessions` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `counselor_id` int NOT NULL,
-  `session_date` date NOT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `follow_up_date` date DEFAULT NULL,
-  `status` enum('scheduled','completed','cancelled','follow_up') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'scheduled',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_discipline`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_discipline` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `incident_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `action_taken` text COLLATE utf8mb4_unicode_ci,
-  `reported_by` int NOT NULL,
-  `status` enum('pending','investigating','resolved','escalated') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_discipline_records`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_discipline_records` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `incident_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `reported_by` int UNSIGNED DEFAULT NULL,
-  `action_taken` text COLLATE utf8mb4_general_ci,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `resolved_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_documents`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_documents` (
-  `id` int NOT NULL,
-  `applicant_id` int NOT NULL,
-  `requirement_id` int DEFAULT NULL,
-  `document_type` varchar(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Other',
-  `document_title` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `file_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `file_path` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
-  `file_size` int DEFAULT NULL,
-  `mime_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `verification_status` enum('Pending','Verified','Rejected') COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `verified_by` int DEFAULT NULL,
-  `verified_at` datetime DEFAULT NULL,
-  `remarks` text COLLATE utf8mb4_general_ci,
-  `document_status` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `uploaded_by` int NOT NULL,
-  `uploaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_emergency_contacts`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_emergency_contacts` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `contact_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `relationship` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_fees`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_fees` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `fee_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `amount` decimal(12,2) DEFAULT '0.00',
-  `balance` decimal(12,2) DEFAULT '0.00',
-  `due_date` date DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_fee_accounts`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_fee_accounts` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `total_fees` decimal(12,2) DEFAULT '0.00',
-  `amount_paid` decimal(12,2) DEFAULT '0.00',
-  `balance` decimal(12,2) DEFAULT '0.00',
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
-  `due_date` date DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `program` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_fee_assignments`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_fee_assignments` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `fee_structure_id` int UNSIGNED DEFAULT NULL,
-  `total_amount` decimal(12,2) DEFAULT NULL,
-  `amount_paid` decimal(12,2) DEFAULT '0.00',
-  `balance` decimal(12,2) DEFAULT '0.00',
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `assigned_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_health_incidents`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_health_incidents` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `incident_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `severity` enum('low','medium','high','critical') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'low',
-  `action_taken` text COLLATE utf8mb4_unicode_ci,
-  `recorded_by` int NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_health_records`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_health_records` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `record_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recorded_by` int NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_hostel_allocations`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_hostel_allocations` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `room_id` int UNSIGNED DEFAULT NULL,
-  `allocation_date` date DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `checkout_date` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_invoices`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_invoices` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED DEFAULT NULL,
-  `invoice_number` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `total_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `amount_paid` decimal(12,2) DEFAULT '0.00',
-  `balance` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `status` varchar(30) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
-  `due_date` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `student_invoices`
---
-
-INSERT DELAYED IGNORE INTO `student_invoices` (`id`, `student_id`, `invoice_number`, `total_amount`, `amount_paid`, `balance`, `status`, `due_date`, `created_at`) VALUES
-(1, 1, 'INV-2024-001', 1500000.00, 1000000.00, 500000.00, 'partial', '2024-12-31', '2026-06-19 23:59:17'),
-(2, 2, 'INV-2024-002', 1200000.00, 1200000.00, 0.00, 'paid', '2024-11-30', '2026-06-19 23:59:17'),
-(3, 3, 'INV-2024-003', 1500000.00, 0.00, 1500000.00, 'pending', '2025-01-31', '2026-06-19 23:59:17'),
-(4, 4, 'INV-2024-004', 1800000.00, 800000.00, 1000000.00, 'partial', '2025-02-28', '2026-06-19 23:59:17'),
-(5, 5, 'INV-2024-005', 1500000.00, 500000.00, 1000000.00, 'partial', '2025-03-31', '2026-06-19 23:59:17');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_messages`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_messages` (
-  `id` int NOT NULL,
-  `sender_id` int NOT NULL,
-  `recipient_id` int NOT NULL,
-  `subject` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_read` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_password_resets`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_password_resets` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `token` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `used_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_penalties`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_penalties` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `penalty_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `amount` decimal(10,2) DEFAULT '0.00',
-  `reason` text COLLATE utf8mb4_general_ci,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `waived_by` int UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_profiles`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_profiles` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `bio` text COLLATE utf8mb4_general_ci,
-  `emergency_contact` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `emergency_phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `medical_info` text COLLATE utf8mb4_general_ci,
-  `guardian_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `guardian_phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `guardian_email` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_progression`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_progression` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `from_year` int DEFAULT NULL,
-  `from_semester` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `to_year` int DEFAULT NULL,
-  `to_semester` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `cgpa` decimal(4,2) DEFAULT NULL,
-  `decision` enum('promoted','probation','repeat','withdrawn','supplementary') COLLATE utf8mb4_general_ci DEFAULT 'promoted',
-  `remarks` text COLLATE utf8mb4_general_ci,
-  `decided_by` int DEFAULT NULL,
-  `decided_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_requests`
---
--- Creation: Jun 28, 2026 at 05:57 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_requests` (
-  `id` int NOT NULL,
-  `student_id` int NOT NULL,
-  `request_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('pending','in_progress','completed','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `assigned_to` int DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_sick_leave`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_sick_leave` (
-  `id` int NOT NULL,
-  `leave_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `student_id` int NOT NULL,
-  `student_name` varchar(300) COLLATE utf8mb4_general_ci NOT NULL,
-  `student_number` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `program` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `year_of_study` int DEFAULT NULL,
-  `sickness_id` int DEFAULT NULL,
-  `sickness_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `diagnosis` text COLLATE utf8mb4_general_ci,
-  `leave_from` date NOT NULL,
-  `leave_to` date NOT NULL,
-  `total_days` int GENERATED ALWAYS AS (((to_days(`leave_to`) - to_days(`leave_from`)) + 1)) STORED,
-  `leave_type` enum('Medical','Sick','Maternity','Injury','Quarantine','Other') COLLATE utf8mb4_general_ci DEFAULT 'Sick',
-  `recommended_by` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `recommender_title` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `approved_by` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` enum('Pending','Approved','Rejected','Expired','Extended') COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `is_deleted` tinyint(1) DEFAULT '0',
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  `extended_to` date DEFAULT NULL,
-  `extension_reason` text COLLATE utf8mb4_general_ci,
-  `doctor_notes` text COLLATE utf8mb4_general_ci,
-  `bed_rest_required` tinyint(1) DEFAULT '1',
-  `parent_guardian_notified` tinyint(1) DEFAULT '0',
-  `matron_notified` tinyint(1) DEFAULT '0',
-  `class_teacher_notified` tinyint(1) DEFAULT '0',
-  `documents_submitted` tinyint(1) DEFAULT '0',
-  `documents_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `return_date_actual` date DEFAULT NULL,
-  `return_notes` text COLLATE utf8mb4_general_ci,
-  `created_by` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_timetables`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_timetables` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `course_code` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `course_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `day_of_week` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `start_time` time DEFAULT NULL,
-  `end_time` time DEFAULT NULL,
-  `location` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `lecturer` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `semester` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_welfare_cases`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `student_welfare_cases` (
-  `id` int UNSIGNED NOT NULL,
-  `student_id` int UNSIGNED NOT NULL,
-  `case_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'open',
-  `assigned_to` int UNSIGNED DEFAULT NULL,
-  `resolved_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `subjects`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `subjects` (
-  `id` int UNSIGNED NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
-  `code` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `department_id` int UNSIGNED DEFAULT NULL,
-  `credits` int DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `subscription_deductions`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `subscription_deductions` (
-  `id` int UNSIGNED NOT NULL,
-  `subscription_id` int UNSIGNED NOT NULL,
-  `amount` decimal(12,2) DEFAULT NULL,
-  `deduction_date` date DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `reference` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `system_logs`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `system_logs` (
-  `id` int UNSIGNED NOT NULL,
-  `log_type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `message` text COLLATE utf8mb4_general_ci,
-  `user_id` int UNSIGNED DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `teachers`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `teachers` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `department_id` int UNSIGNED DEFAULT NULL,
-  `specialization` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `qualification` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `employment_type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'full-time',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `teaching_quality_reviews`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `teaching_quality_reviews` (
-  `id` int NOT NULL,
-  `lecturer_id` int DEFAULT NULL,
-  `review_date` date DEFAULT NULL,
-  `teaching_score` decimal(5,2) DEFAULT NULL,
-  `course_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `observer` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `feedback` text COLLATE utf8mb4_general_ci,
-  `status` enum('draft','completed','reviewed') COLLATE utf8mb4_general_ci DEFAULT 'draft',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `timetables`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `timetables` (
-  `id` int UNSIGNED NOT NULL,
-  `class_id` int UNSIGNED DEFAULT NULL,
-  `subject_id` int UNSIGNED DEFAULT NULL,
-  `teacher_id` int UNSIGNED DEFAULT NULL,
-  `day_of_week` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `start_time` time DEFAULT NULL,
-  `end_time` time DEFAULT NULL,
-  `room` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `semester` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `transcripts`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `transcripts` (
-  `id` int NOT NULL,
-  `transcript_number` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `student_id` int NOT NULL,
-  `program` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_year` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `cgpa` decimal(4,2) DEFAULT '0.00',
-  `total_credits` int DEFAULT '0',
-  `class_of_degree` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `academic_standing` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'Good Standing',
-  `purpose` text COLLATE utf8mb4_general_ci,
-  `status` enum('draft','pending','approved','rejected','generated','issued') COLLATE utf8mb4_general_ci DEFAULT 'draft',
-  `requested_by` int DEFAULT NULL,
-  `requested_at` datetime DEFAULT NULL,
-  `approved_by` int DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
-  `rejected_by` int DEFAULT NULL,
-  `rejected_at` datetime DEFAULT NULL,
-  `rejection_reason` text COLLATE utf8mb4_general_ci,
-  `generated_by` int DEFAULT NULL,
-  `generated_at` datetime DEFAULT NULL,
-  `file_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `is_archived` tinyint(1) DEFAULT '0',
-  `student_downloadable` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `transcript_items`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `transcript_items` (
-  `id` int NOT NULL,
-  `transcript_id` int NOT NULL,
-  `semester` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `course_code` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `course_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `credit_units` decimal(4,1) DEFAULT '0.0',
-  `marks` decimal(5,2) DEFAULT '0.00',
-  `grade` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `grade_points` decimal(4,2) DEFAULT '0.00',
-  `semester_gpa` decimal(4,2) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `transcript_templates`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `transcript_templates` (
-  `id` int NOT NULL,
-  `template_name` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
-  `template_data` longtext COLLATE utf8mb4_general_ci,
-  `is_default` tinyint(1) DEFAULT '0',
-  `status` enum('active','inactive') COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `created_by` int DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `ura_reports`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `ura_reports` (
-  `id` int NOT NULL,
-  `report_name` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `tax_period` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `amount` decimal(15,2) DEFAULT '0.00',
-  `status` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `report_date` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int UNSIGNED NOT NULL,
-  `username` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `role` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'staff',
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `staff_id` int UNSIGNED DEFAULT NULL,
-  `last_login` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `user_sessions`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `user_sessions` (
-  `id` int UNSIGNED NOT NULL,
-  `user_id` int UNSIGNED NOT NULL,
-  `token` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_general_ci,
-  `expires_at` datetime NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 
 --
@@ -7944,8 +9838,14 @@ ALTER TABLE `academic_timetable`
 -- Indexes for table `access_control_logs`
 --
 ALTER TABLE `access_control_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `access_logs`
+--
+ALTER TABLE `access_logs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_access_time` (`access_time`);
+  ADD KEY `idx_access_user` (`user_id`);
 
 --
 -- Indexes for table `accreditation_management`
@@ -7958,7 +9858,8 @@ ALTER TABLE `accreditation_management`
 --
 ALTER TABLE `activity_log`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`);
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_al_user_date` (`user_id`,`created_at`);
 
 --
 -- Indexes for table `activity_logs`
@@ -7966,7 +9867,8 @@ ALTER TABLE `activity_log`
 ALTER TABLE `activity_logs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_module` (`module`);
+  ADD KEY `idx_module` (`module`),
+  ADD KEY `idx_als_user_date` (`user_id`,`created_at`);
 
 --
 -- Indexes for table `admission_activity_logs`
@@ -7976,7 +9878,8 @@ ALTER TABLE `admission_activity_logs`
   ADD KEY `idx_aal_user` (`user_id`),
   ADD KEY `idx_aal_module` (`module`),
   ADD KEY `idx_aal_action` (`action`),
-  ADD KEY `idx_aal_created` (`created_at`);
+  ADD KEY `idx_aal_created` (`created_at`),
+  ADD KEY `idx_aal_module_action` (`module`,`action`,`created_at`);
 
 --
 -- Indexes for table `admission_notifications`
@@ -8042,7 +9945,10 @@ ALTER TABLE `applicants`
   ADD UNIQUE KEY `uk_app_number` (`application_number`),
   ADD KEY `idx_applicant_name` (`full_name`),
   ADD KEY `idx_applicant_phone` (`phone`),
-  ADD KEY `idx_applicant_status` (`status`);
+  ADD KEY `idx_applicant_status` (`status`),
+  ADD KEY `idx_app_status_date` (`status`,`created_at`),
+  ADD KEY `idx_app_phone` (`phone`),
+  ADD KEY `idx_app_email` (`email`);
 
 --
 -- Indexes for table `applicant_messages`
@@ -8059,6 +9965,16 @@ ALTER TABLE `applicant_requirement_status`
   ADD KEY `idx_ars_applicant` (`applicant_id`),
   ADD KEY `idx_ars_requirement` (`requirement_id`),
   ADD KEY `idx_ars_status` (`status`);
+
+--
+-- Indexes for table `applications`
+--
+ALTER TABLE `applications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app_student` (`student_id`),
+  ADD KEY `idx_app_status` (`status`),
+  ADD KEY `idx_app_program` (`program`),
+  ADD KEY `idx_app_email` (`email`);
 
 --
 -- Indexes for table `application_reviews`
@@ -8117,6 +10033,22 @@ ALTER TABLE `approval_workflows`
   ADD UNIQUE KEY `uq_workflow_name` (`workflow_name`);
 
 --
+-- Indexes for table `assessments`
+--
+ALTER TABLE `assessments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_assessments_course` (`course_id`),
+  ADD KEY `fk_assessments_creator` (`created_by`);
+
+--
+-- Indexes for table `assessment_scores`
+--
+ALTER TABLE `assessment_scores`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_score_assessment` (`assessment_id`),
+  ADD KEY `idx_score_student` (`student_id`);
+
+--
 -- Indexes for table `asset_depreciation`
 --
 ALTER TABLE `asset_depreciation`
@@ -8128,6 +10060,13 @@ ALTER TABLE `asset_depreciation`
 ALTER TABLE `attendance`
   ADD PRIMARY KEY (`id`),
   ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `attendance_status`
+--
+ALTER TABLE `attendance_status`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_att_staff` (`staff_id`);
 
 --
 -- Indexes for table `audit_trail`
@@ -8354,6 +10293,13 @@ ALTER TABLE `bursar_withholding_tax`
   ADD KEY `idx_wht_date` (`tax_date`);
 
 --
+-- Indexes for table `cache_data`
+--
+ALTER TABLE `cache_data`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_cache_key` (`cache_key`);
+
+--
 -- Indexes for table `cache_management`
 --
 ALTER TABLE `cache_management`
@@ -8432,6 +10378,12 @@ ALTER TABLE `clinical_rotations`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `clinical_training`
+--
+ALTER TABLE `clinical_training`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `communications`
 --
 ALTER TABLE `communications`
@@ -8479,6 +10431,15 @@ ALTER TABLE `counseling_sessions`
   ADD KEY `student_id` (`student_id`);
 
 --
+-- Indexes for table `courses`
+--
+ALTER TABLE `courses`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `course_code` (`course_code`),
+  ADD KEY `idx_courses_department` (`department`),
+  ADD KEY `idx_courses_status` (`status`);
+
+--
 -- Indexes for table `course_assignments`
 --
 ALTER TABLE `course_assignments`
@@ -8493,7 +10454,8 @@ ALTER TABLE `course_registrations`
   ADD KEY `student_id` (`student_id`),
   ADD KEY `course_id` (`course_id`),
   ADD KEY `status` (`status`),
-  ADD KEY `idx_cr_student` (`student_id`);
+  ADD KEY `idx_cr_student` (`student_id`),
+  ADD KEY `idx_cr_course_student` (`course_id`,`student_id`);
 
 --
 -- Indexes for table `daily_sick_records`
@@ -8508,7 +10470,9 @@ ALTER TABLE `daily_sick_records`
   ADD KEY `severity` (`severity`),
   ADD KEY `student_name` (`student_name`),
   ADD KEY `program` (`program`),
-  ADD KEY `dsr_student_date` (`student_id`,`visit_date`);
+  ADD KEY `dsr_student_date` (`student_id`,`visit_date`),
+  ADD KEY `idx_dsr_date_severity` (`visit_date`,`severity`),
+  ADD KEY `idx_dsr_status_date` (`status`,`visit_date`);
 
 --
 -- Indexes for table `dashboard_configs`
@@ -8606,7 +10570,7 @@ ALTER TABLE `director_performance_reviews`
 --
 ALTER TABLE `disciplinary_actions`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`);
+  ADD KEY `idx_da_staff` (`staff_id`);
 
 --
 -- Indexes for table `disciplinary_cases`
@@ -8672,6 +10636,14 @@ ALTER TABLE `emergency_contacts`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `employee_training`
+--
+ALTER TABLE `employee_training`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_et_training` (`training_id`),
+  ADD KEY `idx_et_staff` (`staff_id`);
+
+--
 -- Indexes for table `employment_contracts`
 --
 ALTER TABLE `employment_contracts`
@@ -8704,6 +10676,12 @@ ALTER TABLE `examination_records`
   ADD KEY `idx_exam_status` (`grade_status`);
 
 --
+-- Indexes for table `examination_results`
+--
+ALTER TABLE `examination_results`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `exams`
 --
 ALTER TABLE `exams`
@@ -8715,7 +10693,8 @@ ALTER TABLE `exams`
 ALTER TABLE `exam_results`
   ADD PRIMARY KEY (`id`),
   ADD KEY `exam_id` (`exam_id`),
-  ADD KEY `student_id` (`student_id`);
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `idx_er_exam_student` (`exam_id`,`student_id`);
 
 --
 -- Indexes for table `exam_schedules`
@@ -8857,6 +10836,12 @@ ALTER TABLE `grading_approval_workflow`
   ADD KEY `status` (`status`);
 
 --
+-- Indexes for table `grading_approval_workflow_log`
+--
+ALTER TABLE `grading_approval_workflow_log`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `grading_notifications`
 --
 ALTER TABLE `grading_notifications`
@@ -8884,6 +10869,26 @@ ALTER TABLE `graduation_candidates`
 ALTER TABLE `health_incidents`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student_id` (`student_id`);
+
+--
+-- Indexes for table `hostel_clearance`
+--
+ALTER TABLE `hostel_clearance`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hostel_inspections`
+--
+ALTER TABLE `hostel_inspections`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hostel_maintenance_requests`
+--
+ALTER TABLE `hostel_maintenance_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_hmr_requested` (`requested_by`),
+  ADD KEY `fk_hmr_assigned` (`assigned_to`);
 
 --
 -- Indexes for table `hostel_management`
@@ -8930,6 +10935,53 @@ ALTER TABLE `hr_settings`
 ALTER TABLE `hr_users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_email` (`email`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.bank_accounts`
+--
+ALTER TABLE `igangaschoolofl_students_db.bank_accounts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ba_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.fee_structure`
+--
+ALTER TABLE `igangaschoolofl_students_db.fee_structure`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_fs_student` (`student_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.journal_entries`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.journal_entry_lines`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_jel_entry` (`entry_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.notifications`
+--
+ALTER TABLE `igangaschoolofl_students_db.notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_user` (`user_id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.scholarships`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `igangaschoolofl_students_db.student_scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.student_scholarships`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ss_student` (`student_id`);
 
 --
 -- Indexes for table `incident_reports`
@@ -9010,7 +11062,8 @@ ALTER TABLE `it_infrastructure`
 -- Indexes for table `job_applications`
 --
 ALTER TABLE `job_applications`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app_position` (`position_id`);
 
 --
 -- Indexes for table `job_offers`
@@ -9026,10 +11079,44 @@ ALTER TABLE `job_vacancies`
   ADD KEY `idx_status` (`status`);
 
 --
+-- Indexes for table `lab_attendance`
+--
+ALTER TABLE `lab_attendance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_lab_attendance` (`session_id`,`student_id`);
+
+--
 -- Indexes for table `lab_chemical_inventory`
 --
 ALTER TABLE `lab_chemical_inventory`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_consumables`
+--
+ALTER TABLE `lab_consumables`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_equipment`
+--
+ALTER TABLE `lab_equipment`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_equip_code` (`equipment_code`);
+
+--
+-- Indexes for table `lab_equipment_checkout`
+--
+ALTER TABLE `lab_equipment_checkout`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_lec_equipment` (`equipment_id`);
+
+--
+-- Indexes for table `lab_equipment_checkouts`
+--
+ALTER TABLE `lab_equipment_checkouts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_checkout_equipment` (`equipment_id`);
 
 --
 -- Indexes for table `lab_equipment_maintenance`
@@ -9044,15 +11131,46 @@ ALTER TABLE `lab_experiments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `lab_id_card_requests`
+--
+ALTER TABLE `lab_id_card_requests`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_incidents`
+--
+ALTER TABLE `lab_incidents`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `lab_inventory`
 --
 ALTER TABLE `lab_inventory`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `lab_practical_sessions`
+--
+ALTER TABLE `lab_practical_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_session_code` (`session_code`);
+
+--
+-- Indexes for table `lab_printing_jobs`
+--
+ALTER TABLE `lab_printing_jobs`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `lab_safety_records`
 --
 ALTER TABLE `lab_safety_records`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_skills_demonstrations`
+--
+ALTER TABLE `lab_skills_demonstrations`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -9079,7 +11197,7 @@ ALTER TABLE `leaves`
 --
 ALTER TABLE `leave_balance`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`);
+  ADD KEY `idx_lb_staff` (`staff_id`);
 
 --
 -- Indexes for table `leave_balances`
@@ -9093,13 +11211,24 @@ ALTER TABLE `leave_balances`
 --
 ALTER TABLE `leave_requests`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`);
+  ADD KEY `idx_lreq_staff` (`staff_id`);
 
 --
 -- Indexes for table `leave_types`
 --
 ALTER TABLE `leave_types`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `library_acquisitions`
+--
+ALTER TABLE `library_acquisitions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_la_date` (`acquisition_date`),
+  ADD KEY `idx_la_type` (`acquisition_type`),
+  ADD KEY `idx_la_status` (`status`),
+  ADD KEY `idx_la_isbn` (`isbn`),
+  ADD KEY `fk_la_acquired` (`acquired_by`);
 
 --
 -- Indexes for table `library_books`
@@ -9112,6 +11241,13 @@ ALTER TABLE `library_books`
 --
 ALTER TABLE `library_borrowing`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `library_clearance`
+--
+ALTER TABLE `library_clearance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_lc_student` (`student_id`);
 
 --
 -- Indexes for table `library_digital_resources`
@@ -9163,7 +11299,9 @@ ALTER TABLE `medicine_stock`
   ADD KEY `expiry_date` (`expiry_date`),
   ADD KEY `status` (`status`),
   ADD KEY `supplier` (`supplier`),
-  ADD KEY `ms_expiry_status` (`expiry_date`,`status`);
+  ADD KEY `ms_expiry_status` (`expiry_date`,`status`),
+  ADD KEY `idx_ms_category_status` (`category`,`status`),
+  ADD KEY `idx_ms_supplier` (`supplier`);
 
 --
 -- Indexes for table `medicine_stock_transactions`
@@ -9175,7 +11313,38 @@ ALTER TABLE `medicine_stock_transactions`
   ADD KEY `transaction_type` (`transaction_type`),
   ADD KEY `transaction_date` (`transaction_date`),
   ADD KEY `student_id` (`student_id`),
-  ADD KEY `mst_medicine_date` (`medicine_id`,`transaction_date`);
+  ADD KEY `mst_medicine_date` (`medicine_id`,`transaction_date`),
+  ADD KEY `idx_mst_type_date` (`transaction_type`,`transaction_date`);
+
+--
+-- Indexes for table `menu_groups`
+--
+ALTER TABLE `menu_groups`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `group_name` (`group_name`);
+
+--
+-- Indexes for table `menu_items`
+--
+ALTER TABLE `menu_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_mi_group` (`group_id`),
+  ADD KEY `idx_mi_status` (`status`);
+
+--
+-- Indexes for table `menu_roles`
+--
+ALTER TABLE `menu_roles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `role_key` (`role_key`);
+
+--
+-- Indexes for table `menu_role_groups`
+--
+ALTER TABLE `menu_role_groups`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `role_group` (`role_id`,`group_id`),
+  ADD KEY `idx_mrg_group` (`group_id`);
 
 --
 -- Indexes for table `midwifery_antenatal_care`
@@ -9243,7 +11412,8 @@ ALTER TABLE `news_views`
 -- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_created` (`created_at`);
 
 --
 -- Indexes for table `notification_reads`
@@ -9367,14 +11537,36 @@ ALTER TABLE `payroll_allowances`
 --
 ALTER TABLE `payroll_allowance_types`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_is_active` (`is_active`);
+  ADD UNIQUE KEY `uk_allowance_code` (`allowance_code`);
 
 --
 -- Indexes for table `payroll_approvals`
 --
 ALTER TABLE `payroll_approvals`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_run_level` (`payroll_run_id`,`level`);
+  ADD UNIQUE KEY `uq_run_level` (`payroll_run_id`,`level`),
+  ADD KEY `idx_pa_approver` (`approved_by`);
+
+--
+-- Indexes for table `payroll_approval_history`
+--
+ALTER TABLE `payroll_approval_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_approval_entity` (`entity_type`,`entity_id`);
+
+--
+-- Indexes for table `payroll_audit_logs`
+--
+ALTER TABLE `payroll_audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_staff` (`staff_id`);
+
+--
+-- Indexes for table `payroll_bonus`
+--
+ALTER TABLE `payroll_bonus`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pb_employee` (`payroll_employee_id`);
 
 --
 -- Indexes for table `payroll_bonuses`
@@ -9393,7 +11585,7 @@ ALTER TABLE `payroll_deductions`
 --
 ALTER TABLE `payroll_deduction_types`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_is_active` (`is_active`);
+  ADD UNIQUE KEY `uk_deduction_code` (`deduction_code`);
 
 --
 -- Indexes for table `payroll_details`
@@ -9413,35 +11605,30 @@ ALTER TABLE `payroll_employees`
 --
 ALTER TABLE `payroll_employee_allowances`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_allowance_type_id` (`allowance_type_id`),
-  ADD KEY `idx_period` (`month`,`year`);
+  ADD KEY `idx_pea_employee` (`payroll_employee_id`);
 
 --
 -- Indexes for table `payroll_employee_deductions`
 --
 ALTER TABLE `payroll_employee_deductions`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_deduction_type_id` (`deduction_type_id`),
-  ADD KEY `idx_period` (`month`,`year`);
+  ADD KEY `idx_ped_employee` (`payroll_employee_id`);
 
 --
 -- Indexes for table `payroll_items`
 --
 ALTER TABLE `payroll_items`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_staff_period` (`staff_id`,`period_id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_period_id` (`period_id`);
+  ADD KEY `idx_pi_employee` (`payroll_employee_id`),
+  ADD KEY `idx_pi_status` (`status`);
 
 --
 -- Indexes for table `payroll_loans`
 --
 ALTER TABLE `payroll_loans`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_status` (`status`);
+  ADD UNIQUE KEY `uk_loan_number` (`loan_number`),
+  ADD KEY `idx_loan_employee` (`payroll_employee_id`);
 
 --
 -- Indexes for table `payroll_overtime`
@@ -9454,26 +11641,20 @@ ALTER TABLE `payroll_overtime`
 --
 ALTER TABLE `payroll_payments`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_payment_date` (`payment_date`),
-  ADD KEY `idx_reference_number` (`reference_number`);
+  ADD KEY `idx_payment_run` (`payroll_run_id`);
 
 --
 -- Indexes for table `payroll_payslips`
 --
 ALTER TABLE `payroll_payslips`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_staff_period` (`staff_id`,`period_id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_period_id` (`period_id`);
+  ADD UNIQUE KEY `uk_payslip_number` (`payslip_number`);
 
 --
 -- Indexes for table `payroll_periods`
 --
 ALTER TABLE `payroll_periods`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_month_year` (`month`,`year`),
-  ADD KEY `idx_status` (`status`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `payroll_records`
@@ -9482,7 +11663,8 @@ ALTER TABLE `payroll_records`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_staff_period` (`staff_id`,`month`,`year`),
   ADD KEY `idx_period` (`month`,`year`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_pr_staff_year` (`staff_id`,`year`);
 
 --
 -- Indexes for table `payroll_reports`
@@ -9571,8 +11753,7 @@ ALTER TABLE `portal_messages`
 -- Indexes for table `professional_licenses`
 --
 ALTER TABLE `professional_licenses`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `staff_id` (`staff_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `programs`
@@ -9684,6 +11865,12 @@ ALTER TABLE `research_projects`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `result_approvals`
+--
+ALTER TABLE `result_approvals`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `result_publication`
 --
 ALTER TABLE `result_publication`
@@ -9710,6 +11897,20 @@ ALTER TABLE `room_inspections`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_rs_vehicle` (`vehicle_id`),
+  ADD KEY `fk_rs_driver` (`driver_id`);
+
+--
+-- Indexes for table `salary_structures`
+--
+ALTER TABLE `salary_structures`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `scholarships`
 --
 ALTER TABLE `scholarships`
@@ -9723,9 +11924,33 @@ ALTER TABLE `security_access_logs`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `security_emergency_contacts`
+--
+ALTER TABLE `security_emergency_contacts`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `security_equipment`
+--
+ALTER TABLE `security_equipment`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `security_incidents`
 --
 ALTER TABLE `security_incidents`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `security_patrols`
+--
+ALTER TABLE `security_patrols`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `security_visitors`
+--
+ALTER TABLE `security_visitors`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -9752,6 +11977,12 @@ ALTER TABLE `sickness_directory`
   ADD KEY `status` (`status`);
 
 --
+-- Indexes for table `skills_laboratory`
+--
+ALTER TABLE `skills_laboratory`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `sports_events`
 --
 ALTER TABLE `sports_events`
@@ -9769,7 +12000,10 @@ ALTER TABLE `sports_teams`
 ALTER TABLE `staff`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `role_id` (`role_id`);
+  ADD KEY `role_id` (`role_id`),
+  ADD KEY `idx_staff_email` (`email`),
+  ADD KEY `idx_staff_status` (`status`),
+  ADD KEY `idx_staff_role_status` (`role_id`,`status`);
 
 --
 -- Indexes for table `staff_activity_log`
@@ -9790,7 +12024,9 @@ ALTER TABLE `staff_attendance`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_attendance_staff_date` (`staff_id`,`date`),
   ADD KEY `idx_attendance_date` (`date`),
-  ADD KEY `idx_attendance_status` (`status`);
+  ADD KEY `idx_attendance_status` (`status`),
+  ADD KEY `idx_sa_staff_date` (`staff_id`,`date`),
+  ADD KEY `idx_sa_status_date` (`status`,`date`);
 
 --
 -- Indexes for table `staff_communications`
@@ -9815,366 +12051,6 @@ ALTER TABLE `staff_contracts`
 ALTER TABLE `staff_departments`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uk_dept_name` (`department_name`);
-
---
--- Indexes for table `staff_leave_requests`
---
-ALTER TABLE `staff_leave_requests`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_dates` (`start_date`,`end_date`);
-
---
--- Indexes for table `staff_licenses`
---
-ALTER TABLE `staff_licenses`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_expiry_date` (`expiry_date`),
-  ADD KEY `idx_license_number` (`license_number`);
-
---
--- Indexes for table `staff_login_sessions`
---
-ALTER TABLE `staff_login_sessions`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `staff_profiles`
---
-ALTER TABLE `staff_profiles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `staff_id` (`staff_id`);
-
---
--- Indexes for table `staff_resignations`
---
-ALTER TABLE `staff_resignations`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `staff_id` (`staff_id`);
-
---
--- Indexes for table `staff_roles`
---
-ALTER TABLE `staff_roles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `role_name` (`role_name`);
-
---
--- Indexes for table `staff_salaries`
---
-ALTER TABLE `staff_salaries`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `staff_training`
---
-ALTER TABLE `staff_training`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_staff_id` (`staff_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_dates` (`start_date`,`end_date`);
-
---
--- Indexes for table `store_orders`
---
-ALTER TABLE `store_orders`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_orders_status` (`status`);
-
---
--- Indexes for table `store_requests`
---
-ALTER TABLE `store_requests`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_request_number` (`request_number`),
-  ADD KEY `idx_store_status` (`status`),
-  ADD KEY `idx_store_urgency` (`urgency`),
-  ADD KEY `idx_approval` (`approval_request_id`);
-
---
--- Indexes for table `students`
---
-ALTER TABLE `students`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_student_number` (`student_number`);
-
---
--- Indexes for table `student_academic_profiles`
---
-ALTER TABLE `student_academic_profiles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_student_year` (`student_id`,`academic_year`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_academic_year` (`academic_year`),
-  ADD KEY `idx_academic_standing` (`academic_standing`);
-
---
--- Indexes for table `student_admissions`
---
-ALTER TABLE `student_admissions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `idx_sa_student` (`student_id`);
-
---
--- Indexes for table `student_counseling_sessions`
---
-ALTER TABLE `student_counseling_sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_counselor_id` (`counselor_id`),
-  ADD KEY `idx_session_date` (`session_date`),
-  ADD KEY `idx_status` (`status`);
-
---
--- Indexes for table `student_discipline`
---
-ALTER TABLE `student_discipline`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_reported_by` (`reported_by`);
-
---
--- Indexes for table `student_discipline_records`
---
-ALTER TABLE `student_discipline_records`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_documents`
---
-ALTER TABLE `student_documents`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_docs_applicant` (`applicant_id`),
-  ADD KEY `idx_docs_status` (`verification_status`),
-  ADD KEY `idx_doc_requirement` (`requirement_id`);
-
---
--- Indexes for table `student_emergency_contacts`
---
-ALTER TABLE `student_emergency_contacts`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_phone` (`phone`);
-
---
--- Indexes for table `student_fees`
---
-ALTER TABLE `student_fees`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_fee_accounts`
---
-ALTER TABLE `student_fee_accounts`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `status` (`status`),
-  ADD KEY `invoice_number` (`invoice_number`);
-
---
--- Indexes for table `student_fee_assignments`
---
-ALTER TABLE `student_fee_assignments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_health_incidents`
---
-ALTER TABLE `student_health_incidents`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_severity` (`severity`),
-  ADD KEY `idx_incident_type` (`incident_type`);
-
---
--- Indexes for table `student_health_records`
---
-ALTER TABLE `student_health_records`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_record_type` (`record_type`);
-
---
--- Indexes for table `student_hostel_allocations`
---
-ALTER TABLE `student_hostel_allocations`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_invoices`
---
-ALTER TABLE `student_invoices`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_invoices_status` (`status`),
-  ADD KEY `idx_invoices_student` (`student_id`);
-
---
--- Indexes for table `student_messages`
---
-ALTER TABLE `student_messages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sender_id` (`sender_id`),
-  ADD KEY `idx_recipient_id` (`recipient_id`),
-  ADD KEY `idx_is_read` (`is_read`),
-  ADD KEY `idx_created_at` (`created_at`);
-
---
--- Indexes for table `student_password_resets`
---
-ALTER TABLE `student_password_resets`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `token` (`token`);
-
---
--- Indexes for table `student_penalties`
---
-ALTER TABLE `student_penalties`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_profiles`
---
-ALTER TABLE `student_profiles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_progression`
---
-ALTER TABLE `student_progression`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sp_student` (`student_id`),
-  ADD KEY `idx_sp_decision` (`decision`);
-
---
--- Indexes for table `student_requests`
---
-ALTER TABLE `student_requests`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_student_id` (`student_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_assigned_to` (`assigned_to`);
-
---
--- Indexes for table `student_sick_leave`
---
-ALTER TABLE `student_sick_leave`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `leave_number` (`leave_number`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `sickness_id` (`sickness_id`),
-  ADD KEY `leave_from` (`leave_from`),
-  ADD KEY `leave_to` (`leave_to`),
-  ADD KEY `status` (`status`),
-  ADD KEY `student_name` (`student_name`),
-  ADD KEY `program` (`program`),
-  ADD KEY `ssl_student_status` (`student_id`,`status`);
-
---
--- Indexes for table `student_timetables`
---
-ALTER TABLE `student_timetables`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `student_welfare_cases`
---
-ALTER TABLE `student_welfare_cases`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id` (`student_id`);
-
---
--- Indexes for table `subjects`
---
-ALTER TABLE `subjects`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `subscription_deductions`
---
-ALTER TABLE `subscription_deductions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `subscription_id` (`subscription_id`);
-
---
--- Indexes for table `system_logs`
---
-ALTER TABLE `system_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `log_type` (`log_type`);
-
---
--- Indexes for table `teachers`
---
-ALTER TABLE `teachers`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `teaching_quality_reviews`
---
-ALTER TABLE `teaching_quality_reviews`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `timetables`
---
-ALTER TABLE `timetables`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `transcripts`
---
-ALTER TABLE `transcripts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `transcript_number` (`transcript_number`),
-  ADD KEY `idx_t_student` (`student_id`),
-  ADD KEY `idx_t_status` (`status`);
-
---
--- Indexes for table `transcript_items`
---
-ALTER TABLE `transcript_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_ti_transcript` (`transcript_id`);
-
---
--- Indexes for table `transcript_templates`
---
-ALTER TABLE `transcript_templates`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `ura_reports`
---
-ALTER TABLE `ura_reports`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
-
---
--- Indexes for table `user_sessions`
---
-ALTER TABLE `user_sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `token` (`token`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -10244,6 +12120,12 @@ ALTER TABLE `academic_timetable`
 -- AUTO_INCREMENT for table `access_control_logs`
 --
 ALTER TABLE `access_control_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `access_logs`
+--
+ALTER TABLE `access_logs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -10337,6 +12219,12 @@ ALTER TABLE `applicant_requirement_status`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `applications`
+--
+ALTER TABLE `applications`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `application_reviews`
 --
 ALTER TABLE `application_reviews`
@@ -10376,13 +12264,25 @@ ALTER TABLE `approval_requests`
 -- AUTO_INCREMENT for table `approval_stages`
 --
 ALTER TABLE `approval_stages`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=158;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=198;
 
 --
 -- AUTO_INCREMENT for table `approval_workflows`
 --
 ALTER TABLE `approval_workflows`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+
+--
+-- AUTO_INCREMENT for table `assessments`
+--
+ALTER TABLE `assessments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `assessment_scores`
+--
+ALTER TABLE `assessment_scores`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `asset_depreciation`
@@ -10395,6 +12295,12 @@ ALTER TABLE `asset_depreciation`
 --
 ALTER TABLE `attendance`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `attendance_status`
+--
+ALTER TABLE `attendance_status`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `audit_trail`
@@ -10607,6 +12513,12 @@ ALTER TABLE `bursar_withholding_tax`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `cache_data`
+--
+ALTER TABLE `cache_data`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `cache_management`
 --
 ALTER TABLE `cache_management`
@@ -10673,6 +12585,12 @@ ALTER TABLE `clinical_rotations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `clinical_training`
+--
+ALTER TABLE `clinical_training`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `communications`
 --
 ALTER TABLE `communications`
@@ -10713,6 +12631,12 @@ ALTER TABLE `cost_centers`
 --
 ALTER TABLE `counseling_sessions`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `courses`
+--
+ALTER TABLE `courses`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `course_assignments`
@@ -10877,6 +12801,12 @@ ALTER TABLE `emergency_contacts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `employee_training`
+--
+ALTER TABLE `employee_training`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `employment_contracts`
 --
 ALTER TABLE `employment_contracts`
@@ -10898,6 +12828,12 @@ ALTER TABLE `error_logs`
 -- AUTO_INCREMENT for table `examination_records`
 --
 ALTER TABLE `examination_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `examination_results`
+--
+ALTER TABLE `examination_results`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11033,6 +12969,12 @@ ALTER TABLE `grading_approval_workflow`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `grading_approval_workflow_log`
+--
+ALTER TABLE `grading_approval_workflow_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `grading_notifications`
 --
 ALTER TABLE `grading_notifications`
@@ -11054,6 +12996,24 @@ ALTER TABLE `graduation_candidates`
 -- AUTO_INCREMENT for table `health_incidents`
 --
 ALTER TABLE `health_incidents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_clearance`
+--
+ALTER TABLE `hostel_clearance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_inspections`
+--
+ALTER TABLE `hostel_inspections`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `hostel_maintenance_requests`
+--
+ALTER TABLE `hostel_maintenance_requests`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11096,6 +13056,48 @@ ALTER TABLE `hr_settings`
 -- AUTO_INCREMENT for table `hr_users`
 --
 ALTER TABLE `hr_users`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.bank_accounts`
+--
+ALTER TABLE `igangaschoolofl_students_db.bank_accounts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.fee_structure`
+--
+ALTER TABLE `igangaschoolofl_students_db.fee_structure`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.journal_entries`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entries`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.journal_entry_lines`
+--
+ALTER TABLE `igangaschoolofl_students_db.journal_entry_lines`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.notifications`
+--
+ALTER TABLE `igangaschoolofl_students_db.notifications`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.scholarships`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `igangaschoolofl_students_db.student_scholarships`
+--
+ALTER TABLE `igangaschoolofl_students_db.student_scholarships`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11168,7 +13170,7 @@ ALTER TABLE `it_infrastructure`
 -- AUTO_INCREMENT for table `job_applications`
 --
 ALTER TABLE `job_applications`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `job_offers`
@@ -11183,9 +13185,39 @@ ALTER TABLE `job_vacancies`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_attendance`
+--
+ALTER TABLE `lab_attendance`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_chemical_inventory`
 --
 ALTER TABLE `lab_chemical_inventory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_consumables`
+--
+ALTER TABLE `lab_consumables`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_equipment`
+--
+ALTER TABLE `lab_equipment`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_equipment_checkout`
+--
+ALTER TABLE `lab_equipment_checkout`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_equipment_checkouts`
+--
+ALTER TABLE `lab_equipment_checkouts`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11201,15 +13233,45 @@ ALTER TABLE `lab_experiments`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_id_card_requests`
+--
+ALTER TABLE `lab_id_card_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_incidents`
+--
+ALTER TABLE `lab_incidents`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_inventory`
 --
 ALTER TABLE `lab_inventory`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_practical_sessions`
+--
+ALTER TABLE `lab_practical_sessions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_printing_jobs`
+--
+ALTER TABLE `lab_printing_jobs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_safety_records`
 --
 ALTER TABLE `lab_safety_records`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_skills_demonstrations`
+--
+ALTER TABLE `lab_skills_demonstrations`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11252,6 +13314,12 @@ ALTER TABLE `leave_requests`
 -- AUTO_INCREMENT for table `leave_types`
 --
 ALTER TABLE `leave_types`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `library_acquisitions`
+--
+ALTER TABLE `library_acquisitions`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11264,6 +13332,12 @@ ALTER TABLE `library_books`
 -- AUTO_INCREMENT for table `library_borrowing`
 --
 ALTER TABLE `library_borrowing`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `library_clearance`
+--
+ALTER TABLE `library_clearance`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11313,6 +13387,30 @@ ALTER TABLE `medicine_stock`
 --
 ALTER TABLE `medicine_stock_transactions`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `menu_groups`
+--
+ALTER TABLE `menu_groups`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+
+--
+-- AUTO_INCREMENT for table `menu_items`
+--
+ALTER TABLE `menu_items`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `menu_roles`
+--
+ALTER TABLE `menu_roles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+
+--
+-- AUTO_INCREMENT for table `menu_role_groups`
+--
+ALTER TABLE `menu_role_groups`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
 
 --
 -- AUTO_INCREMENT for table `midwifery_antenatal_care`
@@ -11420,7 +13518,7 @@ ALTER TABLE `official_duties`
 -- AUTO_INCREMENT for table `onboarding_checklist`
 --
 ALTER TABLE `onboarding_checklist`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `partnerships`
@@ -11486,12 +13584,30 @@ ALTER TABLE `payroll_allowances`
 -- AUTO_INCREMENT for table `payroll_allowance_types`
 --
 ALTER TABLE `payroll_allowance_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `payroll_approvals`
 --
 ALTER TABLE `payroll_approvals`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payroll_approval_history`
+--
+ALTER TABLE `payroll_approval_history`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payroll_audit_logs`
+--
+ALTER TABLE `payroll_audit_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payroll_bonus`
+--
+ALTER TABLE `payroll_bonus`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -11510,7 +13626,7 @@ ALTER TABLE `payroll_deductions`
 -- AUTO_INCREMENT for table `payroll_deduction_types`
 --
 ALTER TABLE `payroll_deduction_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `payroll_details`
@@ -11594,7 +13710,7 @@ ALTER TABLE `payroll_runs`
 -- AUTO_INCREMENT for table `payroll_settings`
 --
 ALTER TABLE `payroll_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `payslips`
@@ -11654,7 +13770,7 @@ ALTER TABLE `portal_messages`
 -- AUTO_INCREMENT for table `professional_licenses`
 --
 ALTER TABLE `professional_licenses`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `programs`
@@ -11759,6 +13875,12 @@ ALTER TABLE `research_projects`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `result_approvals`
+--
+ALTER TABLE `result_approvals`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `result_publication`
 --
 ALTER TABLE `result_publication`
@@ -11783,6 +13905,18 @@ ALTER TABLE `room_inspections`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `salary_structures`
+--
+ALTER TABLE `salary_structures`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `scholarships`
 --
 ALTER TABLE `scholarships`
@@ -11795,10 +13929,34 @@ ALTER TABLE `security_access_logs`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `security_emergency_contacts`
+--
+ALTER TABLE `security_emergency_contacts`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `security_equipment`
+--
+ALTER TABLE `security_equipment`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `security_incidents`
 --
 ALTER TABLE `security_incidents`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `security_patrols`
+--
+ALTER TABLE `security_patrols`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `security_visitors`
+--
+ALTER TABLE `security_visitors`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `semesters`
@@ -11817,6 +13975,12 @@ ALTER TABLE `sickbay_settings`
 --
 ALTER TABLE `sickness_directory`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+
+--
+-- AUTO_INCREMENT for table `skills_laboratory`
+--
+ALTER TABLE `skills_laboratory`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sports_events`
@@ -11870,282 +14034,6 @@ ALTER TABLE `staff_contracts`
 -- AUTO_INCREMENT for table `staff_departments`
 --
 ALTER TABLE `staff_departments`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT for table `staff_leave_requests`
---
-ALTER TABLE `staff_leave_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_licenses`
---
-ALTER TABLE `staff_licenses`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_login_sessions`
---
-ALTER TABLE `staff_login_sessions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
-
---
--- AUTO_INCREMENT for table `staff_profiles`
---
-ALTER TABLE `staff_profiles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `staff_resignations`
---
-ALTER TABLE `staff_resignations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_roles`
---
-ALTER TABLE `staff_roles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_salaries`
---
-ALTER TABLE `staff_salaries`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `staff_training`
---
-ALTER TABLE `staff_training`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_orders`
---
-ALTER TABLE `store_orders`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `store_requests`
---
-ALTER TABLE `store_requests`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `students`
---
-ALTER TABLE `students`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `student_academic_profiles`
---
-ALTER TABLE `student_academic_profiles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_admissions`
---
-ALTER TABLE `student_admissions`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_counseling_sessions`
---
-ALTER TABLE `student_counseling_sessions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_discipline`
---
-ALTER TABLE `student_discipline`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_discipline_records`
---
-ALTER TABLE `student_discipline_records`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_documents`
---
-ALTER TABLE `student_documents`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_emergency_contacts`
---
-ALTER TABLE `student_emergency_contacts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_fees`
---
-ALTER TABLE `student_fees`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_fee_accounts`
---
-ALTER TABLE `student_fee_accounts`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_fee_assignments`
---
-ALTER TABLE `student_fee_assignments`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_health_incidents`
---
-ALTER TABLE `student_health_incidents`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_health_records`
---
-ALTER TABLE `student_health_records`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_hostel_allocations`
---
-ALTER TABLE `student_hostel_allocations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_invoices`
---
-ALTER TABLE `student_invoices`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `student_messages`
---
-ALTER TABLE `student_messages`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_password_resets`
---
-ALTER TABLE `student_password_resets`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_penalties`
---
-ALTER TABLE `student_penalties`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_profiles`
---
-ALTER TABLE `student_profiles`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_progression`
---
-ALTER TABLE `student_progression`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_requests`
---
-ALTER TABLE `student_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_sick_leave`
---
-ALTER TABLE `student_sick_leave`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_timetables`
---
-ALTER TABLE `student_timetables`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `student_welfare_cases`
---
-ALTER TABLE `student_welfare_cases`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `subjects`
---
-ALTER TABLE `subjects`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `subscription_deductions`
---
-ALTER TABLE `subscription_deductions`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `system_logs`
---
-ALTER TABLE `system_logs`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teachers`
---
-ALTER TABLE `teachers`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teaching_quality_reviews`
---
-ALTER TABLE `teaching_quality_reviews`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `timetables`
---
-ALTER TABLE `timetables`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transcripts`
---
-ALTER TABLE `transcripts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transcript_items`
---
-ALTER TABLE `transcript_items`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transcript_templates`
---
-ALTER TABLE `transcript_templates`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `ura_reports`
---
-ALTER TABLE `ura_reports`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `user_sessions`
---
-ALTER TABLE `user_sessions`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -12160,28 +14048,36 @@ ALTER TABLE `applicant_requirement_status`
   ADD CONSTRAINT `applicant_requirement_status_ibfk_2` FOREIGN KEY (`requirement_id`) REFERENCES `admission_requirements` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `assessments`
+--
+ALTER TABLE `assessments`
+  ADD CONSTRAINT `fk_assessments_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_assessments_creator` FOREIGN KEY (`created_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `daily_sick_records`
 --
 ALTER TABLE `daily_sick_records`
   ADD CONSTRAINT `daily_sick_records_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `hostel_maintenance_requests`
+--
+ALTER TABLE `hostel_maintenance_requests`
+  ADD CONSTRAINT `fk_hmr_assigned` FOREIGN KEY (`assigned_to`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_hmr_requested` FOREIGN KEY (`requested_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `library_acquisitions`
+--
+ALTER TABLE `library_acquisitions`
+  ADD CONSTRAINT `fk_la_acquired` FOREIGN KEY (`acquired_by`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `medicine_stock_transactions`
 --
 ALTER TABLE `medicine_stock_transactions`
   ADD CONSTRAINT `medicine_stock_transactions_ibfk_1` FOREIGN KEY (`medicine_id`) REFERENCES `medicine_stock` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `payroll_employee_allowances`
---
-ALTER TABLE `payroll_employee_allowances`
-  ADD CONSTRAINT `fk_ea_allowance_type` FOREIGN KEY (`allowance_type_id`) REFERENCES `payroll_allowance_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `payroll_employee_deductions`
---
-ALTER TABLE `payroll_employee_deductions`
-  ADD CONSTRAINT `fk_ed_deduction_type` FOREIGN KEY (`deduction_type_id`) REFERENCES `payroll_deduction_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `requirement_history`
@@ -12191,31 +14087,86 @@ ALTER TABLE `requirement_history`
   ADD CONSTRAINT `requirement_history_ibfk_2` FOREIGN KEY (`requirement_id`) REFERENCES `admission_requirements` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `staff_profiles`
+-- Constraints for table `route_schedules`
 --
-ALTER TABLE `staff_profiles`
-  ADD CONSTRAINT `staff_profiles_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `student_documents`
---
-ALTER TABLE `student_documents`
-  ADD CONSTRAINT `student_documents_ibfk_1` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `student_sick_leave`
---
-ALTER TABLE `student_sick_leave`
-  ADD CONSTRAINT `student_sick_leave_ibfk_1` FOREIGN KEY (`sickness_id`) REFERENCES `sickness_directory` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `transcript_items`
---
-ALTER TABLE `transcript_items`
-  ADD CONSTRAINT `fk_ti_transcript` FOREIGN KEY (`transcript_id`) REFERENCES `transcripts` (`id`) ON DELETE CASCADE;
+ALTER TABLE `route_schedules`
+  ADD CONSTRAINT `fk_rs_driver` FOREIGN KEY (`driver_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rs_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+  </div>
+      <div id="selflink" class="d-print-none">
+      <a href="index.php?route=%2Fexport&amp;db=igangaschoolofl_staffs_db&amp;server=1" title="Open new phpMyAdmin window" target="_blank" rel="noopener noreferrer">
+                  <img src="themes/dot.gif" title="Open new phpMyAdmin window" alt="Open new phpMyAdmin window" class="icon ic_window-new">
+              </a>
+    </div>
+  
+  <div class="clearfloat d-print-none" id="pma_errors">
+    <div class="alert alert-danger" role="alert"><strong>Warning</strong> in .\libraries\classes\Export.php#790<br>
+<img src="themes/dot.gif" title="" alt="" class="icon ic_s_error"> Undefined global variable $maxsize<br>
+<br>
+<strong>Backtrace</strong><br>
+<br>
+ExportController.php#561: PhpMyAdmin\Export->exportDatabase(<br>
+	string &#039;igangaschoolofl_staffs_db&#039;,<br>
+	array,<br>
+	string &#039;structure_and_data&#039;,<br>
+	array,<br>
+	array,<br>
+	<Class:PhpMyAdmin\Plugins\Export\ExportSql>,<br>
+	string &#039;
+&#039;,<br>
+	string &#039;index.php?route=/database/export&amp;db=igangaschoolofl_staffs_db&#039;,<br>
+	string &#039;database&#039;,<br>
+	boolean true,<br>
+	boolean true,<br>
+	boolean true,<br>
+	boolean true,<br>
+	array,<br>
+	string &#039;&#039;,<br>
+)<br>
+Routing.php#191: PhpMyAdmin\Controllers\Export\ExportController->__invoke(<br>
+	<Class:PhpMyAdmin\Http\ServerRequest>,<br>
+	array,<br>
+)<br>
+index.php#43: PhpMyAdmin\Routing::callControllerForRoute(<br>
+	<Class:PhpMyAdmin\Http\ServerRequest>,<br>
+	string &#039;/export&#039;,<br>
+	<Class:FastRoute\Dispatcher\GroupCountBased>,<br>
+	<Class:Symfony\Component\DependencyInjection\ContainerBuilder>,<br>
+)<br>
+</div><form method="post" action="index.php?route=/error-report" id="pma_report_errors_form"><input type="hidden" name="exception_type" value="php"><input type="hidden" name="send_error_report" value="1"><input type="hidden" name="server" value="1"><input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d"><input type="submit" value="Report" id="pma_report_errors" class="btn btn-primary float-end"><input type="checkbox" name="always_send" id="errorReportAlwaysSendCheckbox" value="true"><label for="errorReportAlwaysSendCheckbox">Automatically send report next time</label><input type="submit" value="Ignore" id="pma_ignore_errors_bottom" class="btn btn-secondary float-end"><input type="submit" value="Ignore All" id="pma_ignore_all_errors_bottom" class="btn btn-secondary float-end"></form>
+  </div>
+
+  
+<script data-cfasync="false" type="text/javascript">
+// <![CDATA[
+var debugSQLInfo = 'null';
+Functions.ajaxShowMessage(Messages.phpErrorsFound);$("#pma_ignore_errors_popup").on("click", function() {
+                            Functions.ignorePhpErrors()
+                        });$("#pma_ignore_all_errors_popup").on("click",
+                            function() {
+                                Functions.ignorePhpErrors(false)
+                            });$("#pma_ignore_errors_bottom").on("click", function(e) {
+                            e.preventDefault();
+                            Functions.ignorePhpErrors()
+                        });$("#pma_ignore_all_errors_bottom").on("click",
+                            function(e) {
+                                e.preventDefault();
+                                Functions.ignorePhpErrors(false)
+                            });$("html, body").animate({
+                            scrollTop:$(document).height()
+                        }, "slow");
+
+// ]]>
+</script>
+
+
+  
+  
+  </body>
+</html>

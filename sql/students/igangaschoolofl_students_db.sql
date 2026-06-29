@@ -3,10 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2026 at 06:35 PM
+-- Generation Time: Jun 29, 2026 at 05:19 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -20,12 +21,15 @@ SET time_zone = "+00:00";
 --
 -- Database: `igangaschoolofl_students_db`
 --
+DROP DATABASE IF EXISTS `igangaschoolofl_students_db`;
+CREATE DATABASE IF NOT EXISTS `igangaschoolofl_students_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `igangaschoolofl_students_db`;
 
 DELIMITER $$
 --
 -- Procedures
 --
-CREATE PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddColIfMissing` (IN `p_schema` VARCHAR(255), IN `p_table` VARCHAR(255), IN `p_col` VARCHAR(255), IN `p_def` TEXT)   BEGIN
     DECLARE cnt INT DEFAULT 0;
     SELECT COUNT(*) INTO cnt FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = p_schema AND TABLE_NAME = p_table AND COLUMN_NAME = p_col;
@@ -42,6 +46,8 @@ DELIMITER ;
 --
 -- Table structure for table `academic_registrar_activity_log`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `academic_registrar_activity_log` (
   `id` int NOT NULL,
@@ -54,6 +60,8 @@ CREATE TABLE IF NOT EXISTS `academic_registrar_activity_log` (
 
 --
 -- Table structure for table `announcements`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `announcements` (
@@ -71,7 +79,36 @@ CREATE TABLE IF NOT EXISTS `announcements` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `applications`
+--
+-- Creation: Jun 29, 2026 at 12:44 PM
+--
+
+CREATE TABLE IF NOT EXISTS `applications` (
+  `id` int NOT NULL,
+  `student_id` int DEFAULT NULL,
+  `applicant_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `intake` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `application_type` enum('Admission','Transfer','Readmission','Scholarship','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Admission',
+  `status` enum('Pending','Reviewed','Accepted','Rejected','Waitlisted','Enrolled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `assets`
+--
+-- Creation: Jun 21, 2026 at 09:06 AM
 --
 
 CREATE TABLE IF NOT EXISTS `assets` (
@@ -89,12 +126,14 @@ CREATE TABLE IF NOT EXISTS `assets` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `asset_categories`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `asset_categories` (
@@ -105,12 +144,14 @@ CREATE TABLE IF NOT EXISTS `asset_categories` (
   `useful_life_years` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `bank_transactions`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `bank_transactions` (
@@ -126,12 +167,14 @@ CREATE TABLE IF NOT EXISTS `bank_transactions` (
   `reconciled_at` datetime DEFAULT NULL,
   `bank_account` varchar(100) DEFAULT '',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `budgets`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `budgets` (
@@ -147,12 +190,14 @@ CREATE TABLE IF NOT EXISTS `budgets` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `budget_records`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `budget_records` (
@@ -166,12 +211,14 @@ CREATE TABLE IF NOT EXISTS `budget_records` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `bursar_general_ledger`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `bursar_general_ledger` (
@@ -187,12 +234,14 @@ CREATE TABLE IF NOT EXISTS `bursar_general_ledger` (
   `entry_date` date DEFAULT (curdate()),
   `posted_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `bursar_tax_filings`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `bursar_tax_filings` (
@@ -206,12 +255,14 @@ CREATE TABLE IF NOT EXISTS `bursar_tax_filings` (
   `filed_by` int DEFAULT '0',
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `bursar_tax_periods`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `bursar_tax_periods` (
@@ -223,12 +274,14 @@ CREATE TABLE IF NOT EXISTS `bursar_tax_periods` (
   `status` enum('Open','Closed','Filed') DEFAULT 'Open',
   `created_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `bursar_users`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `bursar_users` (
@@ -242,12 +295,14 @@ CREATE TABLE IF NOT EXISTS `bursar_users` (
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `cash_book`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `cash_book` (
@@ -263,12 +318,14 @@ CREATE TABLE IF NOT EXISTS `cash_book` (
   `transaction_date` date DEFAULT (curdate()),
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `chart_of_accounts`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `chart_of_accounts` (
@@ -281,13 +338,13 @@ CREATE TABLE IF NOT EXISTS `chart_of_accounts` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `chart_of_accounts`
 --
 
-INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_type`, `parent_account_id`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_type`, `parent_account_id`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, '1000', 'Cash and Cash Equivalents', 'Asset', NULL, 'Cash on hand and in bank', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (2, '1100', 'Accounts Receivable', 'Asset', NULL, 'Student fees receivable', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (3, '1200', 'Inventory', 'Asset', NULL, 'Supplies and inventory', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
@@ -308,6 +365,8 @@ INSERT INTO `chart_of_accounts` (`id`, `account_code`, `account_name`, `account_
 --
 -- Table structure for table `clinical_placements`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `clinical_placements` (
   `id` int NOT NULL,
@@ -321,12 +380,14 @@ CREATE TABLE IF NOT EXISTS `clinical_placements` (
   `skills_assessment` text,
   `status` enum('Active','Completed','Cancelled') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `clinical_placements_students`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `clinical_placements_students` (
@@ -349,6 +410,8 @@ CREATE TABLE IF NOT EXISTS `clinical_placements_students` (
 --
 -- Table structure for table `contact_submissions`
 --
+-- Creation: Jun 17, 2026 at 10:28 AM
+--
 
 CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `id` int NOT NULL,
@@ -363,12 +426,14 @@ CREATE TABLE IF NOT EXISTS `contact_submissions` (
   `replied_at` datetime DEFAULT NULL,
   `replied_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `cost_centers`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `cost_centers` (
@@ -380,13 +445,13 @@ CREATE TABLE IF NOT EXISTS `cost_centers` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `cost_centers`
 --
 
-INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `department`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `department`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'CC-EXEC', 'Executive Office', 'Executive Office', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (2, 'CC-NUR', 'Nursing Department', 'Nursing Department', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (3, 'CC-MID', 'Midwifery Department', 'Midwifery Department', NULL, 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
@@ -402,7 +467,30 @@ INSERT INTO `cost_centers` (`id`, `cost_center_code`, `cost_center_name`, `depar
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `courses`
+--
+-- Creation: Jun 29, 2026 at 12:44 PM
+--
+
+CREATE TABLE IF NOT EXISTS `courses` (
+  `id` int NOT NULL,
+  `course_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `course_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `credits` int DEFAULT '0',
+  `level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `semester` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `daily_sick_records`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `daily_sick_records` (
@@ -439,6 +527,8 @@ CREATE TABLE IF NOT EXISTS `daily_sick_records` (
 --
 -- Table structure for table `department_requests`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `department_requests` (
   `id` int NOT NULL,
@@ -463,6 +553,8 @@ CREATE TABLE IF NOT EXISTS `department_requests` (
 --
 -- Table structure for table `donations`
 --
+-- Creation: Jun 17, 2026 at 10:28 AM
+--
 
 CREATE TABLE IF NOT EXISTS `donations` (
   `id` int NOT NULL,
@@ -481,12 +573,14 @@ CREATE TABLE IF NOT EXISTS `donations` (
   `acknowledged_at` datetime DEFAULT NULL,
   `acknowledged_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `expenditure_records`
+--
+-- Creation: Jun 21, 2026 at 09:06 AM
 --
 
 CREATE TABLE IF NOT EXISTS `expenditure_records` (
@@ -505,12 +599,14 @@ CREATE TABLE IF NOT EXISTS `expenditure_records` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `fee_adjustments`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `fee_adjustments` (
@@ -527,12 +623,14 @@ CREATE TABLE IF NOT EXISTS `fee_adjustments` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `fee_reminders`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `fee_reminders` (
@@ -545,12 +643,14 @@ CREATE TABLE IF NOT EXISTS `fee_reminders` (
   `sent_by` int DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `fee_structures`
+--
+-- Creation: Jun 21, 2026 at 09:06 AM
 --
 
 CREATE TABLE IF NOT EXISTS `fee_structures` (
@@ -566,12 +666,14 @@ CREATE TABLE IF NOT EXISTS `fee_structures` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `financial_clearance`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `financial_clearance` (
@@ -592,6 +694,8 @@ CREATE TABLE IF NOT EXISTS `financial_clearance` (
 --
 -- Table structure for table `financial_reports`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `financial_reports` (
   `id` int NOT NULL,
@@ -605,12 +709,14 @@ CREATE TABLE IF NOT EXISTS `financial_reports` (
   `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` enum('Draft','Final','Archived') DEFAULT 'Draft',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `general_ledger`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `general_ledger` (
@@ -626,12 +732,14 @@ CREATE TABLE IF NOT EXISTS `general_ledger` (
   `transaction_date` date DEFAULT (curdate()),
   `posted_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `graduation_candidates`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `graduation_candidates` (
@@ -653,6 +761,8 @@ CREATE TABLE IF NOT EXISTS `graduation_candidates` (
 --
 -- Table structure for table `hostel_allocations`
 --
+-- Creation: Jun 21, 2026 at 08:58 AM
+--
 
 CREATE TABLE IF NOT EXISTS `hostel_allocations` (
   `id` int NOT NULL,
@@ -664,12 +774,14 @@ CREATE TABLE IF NOT EXISTS `hostel_allocations` (
   `check_out_date` date DEFAULT NULL,
   `status` enum('Active','Checked Out','Cancelled') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `hostel_rooms`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `hostel_rooms` (
@@ -681,12 +793,14 @@ CREATE TABLE IF NOT EXISTS `hostel_rooms` (
   `fee_per_semester` decimal(12,2) DEFAULT '0.00',
   `status` enum('Available','Full','Maintenance') DEFAULT 'Available',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `income_tax_rates`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `income_tax_rates` (
@@ -697,12 +811,14 @@ CREATE TABLE IF NOT EXISTS `income_tax_rates` (
   `tax_rate` decimal(5,2) NOT NULL DEFAULT '0.00',
   `fiscal_year` varchar(10) NOT NULL,
   `is_active` tinyint(1) DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_attendance`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_attendance` (
@@ -715,12 +831,14 @@ CREATE TABLE IF NOT EXISTS `lab_attendance` (
   `marked_by` int DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_consumables`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_consumables` (
@@ -736,12 +854,14 @@ CREATE TABLE IF NOT EXISTS `lab_consumables` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_equipment`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_equipment` (
@@ -765,12 +885,14 @@ CREATE TABLE IF NOT EXISTS `lab_equipment` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_equipment_checkouts`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_equipment_checkouts` (
@@ -787,12 +909,14 @@ CREATE TABLE IF NOT EXISTS `lab_equipment_checkouts` (
   `notes` text,
   `status` enum('checked_out','returned','overdue','lost_damaged') DEFAULT 'checked_out',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_incidents`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_incidents` (
@@ -809,12 +933,14 @@ CREATE TABLE IF NOT EXISTS `lab_incidents` (
   `status` enum('open','investigating','resolved','closed') DEFAULT 'open',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_practical_sessions`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_practical_sessions` (
@@ -835,12 +961,14 @@ CREATE TABLE IF NOT EXISTS `lab_practical_sessions` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `lab_skills_demonstrations`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `lab_skills_demonstrations` (
@@ -856,12 +984,14 @@ CREATE TABLE IF NOT EXISTS `lab_skills_demonstrations` (
   `next_review_date` date DEFAULT NULL,
   `verified_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `late_payment_settings`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `late_payment_settings` (
@@ -877,7 +1007,7 @@ CREATE TABLE IF NOT EXISTS `late_payment_settings` (
 -- Dumping data for table `late_payment_settings`
 --
 
-INSERT INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
 (1, 'grace_period_days', '15', 'Days after due date before late fee applies', NULL, '2026-06-21 08:58:13'),
 (2, 'late_fee_percentage', '5', 'Percentage penalty on outstanding amount', NULL, '2026-06-21 08:58:13'),
 (3, 'late_fee_fixed', '20000', 'Fixed late fee amount (UGX)', NULL, '2026-06-21 08:58:13'),
@@ -886,7 +1016,40 @@ INSERT INTO `late_payment_settings` (`id`, `setting_key`, `setting_value`, `desc
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `library_acquisitions`
+--
+-- Creation: Jun 29, 2026 at 12:44 PM
+--
+
+CREATE TABLE IF NOT EXISTS `library_acquisitions` (
+  `id` int NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `isbn` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publisher` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publication_year` year DEFAULT NULL,
+  `acquisition_type` enum('Purchase','Donation','Exchange','Subscription','Other') COLLATE utf8mb4_unicode_ci DEFAULT 'Purchase',
+  `quantity` int DEFAULT '1',
+  `unit_cost` decimal(15,2) DEFAULT NULL,
+  `total_cost` decimal(15,2) DEFAULT NULL,
+  `supplier` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `invoice_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `acquisition_date` date NOT NULL,
+  `received_date` date DEFAULT NULL,
+  `shelf_location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Ordered','Received','Processed','Rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'Ordered',
+  `acquired_by` int DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `library_books`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `library_books` (
@@ -901,12 +1064,14 @@ CREATE TABLE IF NOT EXISTS `library_books` (
   `available_copies` int DEFAULT '1',
   `shelf_location` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `library_borrowing`
+--
+-- Creation: Jun 20, 2026 at 07:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `library_borrowing` (
@@ -920,12 +1085,14 @@ CREATE TABLE IF NOT EXISTS `library_borrowing` (
   `fine_paid` tinyint(1) DEFAULT '0',
   `status` enum('Borrowed','Returned','Overdue','Lost') DEFAULT 'Borrowed',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `library_fines`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `library_fines` (
@@ -944,6 +1111,8 @@ CREATE TABLE IF NOT EXISTS `library_fines` (
 
 --
 -- Table structure for table `medicine_stock`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `medicine_stock` (
@@ -979,7 +1148,7 @@ CREATE TABLE IF NOT EXISTS `medicine_stock` (
 -- Dumping data for table `medicine_stock`
 --
 
-INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_name`, `category`, `dosage_form`, `strength`, `manufacturer`, `supplier`, `quantity_in_stock`, `unit`, `reorder_level`, `unit_cost`, `selling_price`, `currency`, `batch_number`, `expiry_date`, `storage_location`, `requires_prescription`, `instructions`, `side_effects`, `status`, `last_restocked`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'PARA001', 'Paracetamol', 'Acetaminophen', 'Painkiller', 'Tablet', '500mg', NULL, NULL, 200, 'tablets', 50, 50.00, NULL, 'UGX', NULL, '2027-12-31', 'Cabinet A1', 0, '1-2 tablets every 4-6 hours as needed for pain/fever', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
 (2, 'IBU001', 'Ibuprofen', 'Ibuprofen', 'Anti-inflammatory', 'Tablet', '400mg', NULL, NULL, 150, 'tablets', 30, 100.00, NULL, 'UGX', NULL, '2027-10-31', 'Cabinet A1', 0, '1 tablet 3 times daily after meals', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
 (3, 'AMOX001', 'Amoxicillin', 'Amoxicillin', 'Antibiotic', 'Capsule', '500mg', NULL, NULL, 100, 'capsules', 20, 200.00, NULL, 'UGX', NULL, '2027-08-31', 'Cabinet B1', 1, '1 capsule 3 times daily for 7 days', NULL, 'In Stock', NULL, NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
@@ -1011,6 +1180,8 @@ INSERT INTO `medicine_stock` (`id`, `medicine_code`, `medicine_name`, `generic_n
 --
 -- Table structure for table `medicine_stock_transactions`
 --
+-- Creation: Jun 20, 2026 at 08:42 AM
+--
 
 CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
   `id` int NOT NULL,
@@ -1035,6 +1206,8 @@ CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
 --
 -- Table structure for table `news`
 --
+-- Creation: Jun 17, 2026 at 10:28 AM
+--
 
 CREATE TABLE IF NOT EXISTS `news` (
   `id` int NOT NULL,
@@ -1050,12 +1223,14 @@ CREATE TABLE IF NOT EXISTS `news` (
   `published_at` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `notifications`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `notifications` (
@@ -1069,12 +1244,14 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `is_read` tinyint(1) DEFAULT '0',
   `sent_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payments`
+--
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payments` (
@@ -1092,12 +1269,14 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payment_receipts`
+--
+-- Creation: Jun 20, 2026 at 07:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `payment_receipts` (
@@ -1114,12 +1293,14 @@ CREATE TABLE IF NOT EXISTS `payment_receipts` (
   `voided_by` int DEFAULT NULL,
   `void_reason` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payment_subscriptions`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payment_subscriptions` (
@@ -1146,12 +1327,14 @@ CREATE TABLE IF NOT EXISTS `payment_subscriptions` (
   `created_by` varchar(50) DEFAULT NULL COMMENT 'student_id or staff_id who created',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payroll_records`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_records` (
@@ -1165,12 +1348,14 @@ CREATE TABLE IF NOT EXISTS `payroll_records` (
   `processed_by` int DEFAULT '0',
   `processing_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` enum('Draft','Processed','Approved','Paid') DEFAULT 'Draft'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `payslips`
+--
+-- Creation: Jun 25, 2026 at 06:45 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payslips` (
@@ -1187,12 +1372,14 @@ CREATE TABLE IF NOT EXISTS `payslips` (
   `status` enum('Generated','Sent','Paid') DEFAULT 'Generated',
   `generated_by` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `penalty_configurations`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `penalty_configurations` (
@@ -1204,13 +1391,13 @@ CREATE TABLE IF NOT EXISTS `penalty_configurations` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `penalty_configurations`
 --
 
-INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amount`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amount`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'Late Registration', 'Late Fee', 50000.00, 'Penalty for late course registration', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (2, 'Late Payment (1-7 days)', 'Late Fee', 10000.00, 'Penalty for fee payment 1-7 days after due date', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
 (3, 'Late Payment (8-14 days)', 'Late Fee', 25000.00, 'Penalty for fee payment 8-14 days after due date', 1, '2026-06-14 19:51:20', '2026-06-14 19:51:20'),
@@ -1224,6 +1411,8 @@ INSERT INTO `penalty_configurations` (`id`, `penalty_name`, `penalty_type`, `amo
 --
 -- Table structure for table `programs`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `programs` (
   `id` int NOT NULL,
@@ -1235,12 +1424,14 @@ CREATE TABLE IF NOT EXISTS `programs` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `proof_of_payments`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `proof_of_payments` (
@@ -1255,12 +1446,14 @@ CREATE TABLE IF NOT EXISTS `proof_of_payments` (
   `verified_at` timestamp NULL DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `registrar_certificates`
+--
+-- Creation: Jun 19, 2026 at 06:48 AM
 --
 
 CREATE TABLE IF NOT EXISTS `registrar_certificates` (
@@ -1286,12 +1479,14 @@ CREATE TABLE IF NOT EXISTS `registrar_certificates` (
   `notes` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `registrar_settings`
+--
+-- Creation: Jun 19, 2026 at 06:48 AM
 --
 
 CREATE TABLE IF NOT EXISTS `registrar_settings` (
@@ -1302,13 +1497,13 @@ CREATE TABLE IF NOT EXISTS `registrar_settings` (
   `description` varchar(500) DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `registrar_settings`
 --
 
-INSERT INTO `registrar_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `updated_by`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `registrar_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `updated_by`, `updated_at`) VALUES
 (1, 'current_academic_year', '2025', 'academic', 'Current active academic year', NULL, '2026-06-19 06:48:04'),
 (2, 'current_semester', 'Semester 1', 'academic', 'Current active semester', NULL, '2026-06-19 06:48:04'),
 (3, 'institution_name', 'ISNM', 'general', 'Institution Name', NULL, '2026-06-19 06:48:04'),
@@ -1324,6 +1519,8 @@ INSERT INTO `registrar_settings` (`id`, `setting_key`, `setting_value`, `setting
 
 --
 -- Table structure for table `registrar_transcript_requests`
+--
+-- Creation: Jun 19, 2026 at 06:48 AM
 --
 
 CREATE TABLE IF NOT EXISTS `registrar_transcript_requests` (
@@ -1350,12 +1547,14 @@ CREATE TABLE IF NOT EXISTS `registrar_transcript_requests` (
   `notes` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `salary_components`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `salary_components` (
@@ -1367,12 +1566,14 @@ CREATE TABLE IF NOT EXISTS `salary_components` (
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `sickness_directory`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `sickness_directory` (
@@ -1394,7 +1595,7 @@ CREATE TABLE IF NOT EXISTS `sickness_directory` (
 -- Dumping data for table `sickness_directory`
 --
 
-INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+INSERT DELAYED IGNORE INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'MLR', 'Malaria', 'Infectious', 'Fever, chills, headache, sweating, fatigue', 'Mosquito-borne parasitic infection common in tropical regions', 0, 'Artemisinin-based combination therapy, antimalarials', 'Active', NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
 (2, 'TYP', 'Typhoid', 'Infectious', 'Prolonged fever, abdominal pain, headache, constipation or diarrhea', 'Bacterial infection spread through contaminated food/water', 1, 'Antibiotics (ciprofloxacin, azithromycin), hydration', 'Active', NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
 (3, 'FLU', 'Influenza', 'Infectious', 'Fever, cough, sore throat, body aches, fatigue', 'Viral respiratory infection spread through droplets', 1, 'Rest, fluids, antipyretics, antivirals if severe', 'Active', NULL, '2026-06-20 08:42:19', '2026-06-20 08:42:19'),
@@ -1426,6 +1627,8 @@ INSERT INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `categ
 --
 -- Table structure for table `sponsorships`
 --
+-- Creation: Jun 20, 2026 at 07:42 PM
+--
 
 CREATE TABLE IF NOT EXISTS `sponsorships` (
   `id` int NOT NULL,
@@ -1442,12 +1645,14 @@ CREATE TABLE IF NOT EXISTS `sponsorships` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `staff_salaries`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `staff_salaries` (
@@ -1463,12 +1668,14 @@ CREATE TABLE IF NOT EXISTS `staff_salaries` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `students`
+--
+-- Creation: Jun 29, 2026 at 01:47 PM
 --
 
 CREATE TABLE IF NOT EXISTS `students` (
@@ -1512,7 +1719,7 @@ CREATE TABLE IF NOT EXISTS `students` (
   `is_first_login` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Triggers `students`
@@ -1595,6 +1802,8 @@ DELIMITER ;
 --
 -- Table structure for table `students_trash`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `students_trash` (
   `id` int NOT NULL,
@@ -1614,6 +1823,8 @@ CREATE TABLE IF NOT EXISTS `students_trash` (
 --
 -- Table structure for table `student_academic_records`
 --
+-- Creation: Jun 20, 2026 at 07:42 PM
+--
 
 CREATE TABLE IF NOT EXISTS `student_academic_records` (
   `id` int NOT NULL,
@@ -1630,12 +1841,14 @@ CREATE TABLE IF NOT EXISTS `student_academic_records` (
   `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_attendance`
+--
+-- Creation: Jun 20, 2026 at 07:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `student_attendance` (
@@ -1649,12 +1862,14 @@ CREATE TABLE IF NOT EXISTS `student_attendance` (
   `recorded_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_course_registrations`
+--
+-- Creation: Jun 21, 2026 at 09:06 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_course_registrations` (
@@ -1666,7 +1881,7 @@ CREATE TABLE IF NOT EXISTS `student_course_registrations` (
   `registration_date` date DEFAULT (curdate()),
   `status` enum('Registered','Dropped','Completed') DEFAULT 'Registered',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1674,7 +1889,7 @@ CREATE TABLE IF NOT EXISTS `student_course_registrations` (
 -- Stand-in structure for view `student_dashboard_view`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `student_dashboard_view` (
+CREATE TABLE `student_dashboard_view` (
 `id` int
 ,`student_number` varchar(50)
 ,`full_name` varchar(302)
@@ -1693,6 +1908,8 @@ CREATE TABLE IF NOT EXISTS `student_dashboard_view` (
 --
 -- Table structure for table `student_discipline`
 --
+-- Creation: Jun 20, 2026 at 07:42 PM
+--
 
 CREATE TABLE IF NOT EXISTS `student_discipline` (
   `id` int NOT NULL,
@@ -1705,12 +1922,14 @@ CREATE TABLE IF NOT EXISTS `student_discipline` (
   `reported_by` int DEFAULT NULL,
   `status` enum('Open','Resolved','Appealed') DEFAULT 'Open',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_discipline_records`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_discipline_records` (
@@ -1731,6 +1950,8 @@ CREATE TABLE IF NOT EXISTS `student_discipline_records` (
 --
 -- Table structure for table `student_downloads`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `student_downloads` (
   `id` int NOT NULL,
@@ -1743,12 +1964,14 @@ CREATE TABLE IF NOT EXISTS `student_downloads` (
   `download_count` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_fees`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_fees` (
@@ -1764,12 +1987,14 @@ CREATE TABLE IF NOT EXISTS `student_fees` (
   `remarks` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_fee_assignments`
+--
+-- Creation: Jun 20, 2026 at 07:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `student_fee_assignments` (
@@ -1784,12 +2009,14 @@ CREATE TABLE IF NOT EXISTS `student_fee_assignments` (
   `assigned_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_hostel_allocations`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_hostel_allocations` (
@@ -1808,6 +2035,8 @@ CREATE TABLE IF NOT EXISTS `student_hostel_allocations` (
 
 --
 -- Table structure for table `student_invoices`
+--
+-- Creation: Jun 21, 2026 at 08:58 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_invoices` (
@@ -1829,7 +2058,7 @@ CREATE TABLE IF NOT EXISTS `student_invoices` (
   `created_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1837,7 +2066,7 @@ CREATE TABLE IF NOT EXISTS `student_invoices` (
 -- Stand-in structure for view `student_login_view`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `student_login_view` (
+CREATE TABLE `student_login_view` (
 `id` int
 ,`student_number` varchar(50)
 ,`full_name` varchar(302)
@@ -1855,6 +2084,8 @@ CREATE TABLE IF NOT EXISTS `student_login_view` (
 --
 -- Table structure for table `student_messages`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `student_messages` (
   `id` int NOT NULL,
@@ -1867,12 +2098,14 @@ CREATE TABLE IF NOT EXISTS `student_messages` (
   `reply_message` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `replied_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_notifications`
+--
+-- Creation: Jun 22, 2026 at 06:21 PM
 --
 
 CREATE TABLE IF NOT EXISTS `student_notifications` (
@@ -1888,12 +2121,14 @@ CREATE TABLE IF NOT EXISTS `student_notifications` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `link_id` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_password_resets`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_password_resets` (
@@ -1903,12 +2138,14 @@ CREATE TABLE IF NOT EXISTS `student_password_resets` (
   `expires_at` timestamp NOT NULL,
   `is_used` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_penalties`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_penalties` (
@@ -1926,12 +2163,14 @@ CREATE TABLE IF NOT EXISTS `student_penalties` (
   `waiver_reason` text,
   `status` enum('Active','Waived','Paid') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_profiles`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_profiles` (
@@ -1944,12 +2183,14 @@ CREATE TABLE IF NOT EXISTS `student_profiles` (
   `education_background` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `student_requests`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_requests` (
@@ -1969,6 +2210,8 @@ CREATE TABLE IF NOT EXISTS `student_requests` (
 
 --
 -- Table structure for table `student_sick_leave`
+--
+-- Creation: Jun 20, 2026 at 08:42 AM
 --
 
 CREATE TABLE IF NOT EXISTS `student_sick_leave` (
@@ -2011,6 +2254,8 @@ CREATE TABLE IF NOT EXISTS `student_sick_leave` (
 --
 -- Table structure for table `student_timetables`
 --
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
 CREATE TABLE IF NOT EXISTS `student_timetables` (
   `id` int NOT NULL,
@@ -2023,12 +2268,14 @@ CREATE TABLE IF NOT EXISTS `student_timetables` (
   `classroom` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `subscription_deductions`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `subscription_deductions` (
@@ -2047,12 +2294,14 @@ CREATE TABLE IF NOT EXISTS `subscription_deductions` (
   `last_attempt_date` datetime DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `timetable`
+--
+-- Creation: Jun 17, 2026 at 10:27 AM
 --
 
 CREATE TABLE IF NOT EXISTS `timetable` (
@@ -2077,8 +2326,8 @@ CREATE TABLE IF NOT EXISTS `timetable` (
 -- Stand-in structure for view `view_document_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `view_document_grouping` (
-`document_type` enum('Transcript','Result Slip','Certificate','Receipt','Payslip','Report','Invoice','Timetable','Exam Schedule','Leave Form','Performance Review')
+CREATE TABLE `view_document_grouping` (
+`document_type` varchar(50)
 ,`student_id` int
 ,`student_name` varchar(300)
 ,`program` varchar(100)
@@ -2091,12 +2340,7 @@ CREATE TABLE IF NOT EXISTS `view_document_grouping` (
 -- Stand-in structure for view `view_program_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `view_program_grouping` (
-`department` varchar(20)
-,`course_code` varchar(20)
-,`course_name` varchar(255)
-,`credit_hours` int
-,`course_level` int
+CREATE TABLE `view_program_grouping` (
 );
 
 -- --------------------------------------------------------
@@ -2105,7 +2349,7 @@ CREATE TABLE IF NOT EXISTS `view_program_grouping` (
 -- Stand-in structure for view `view_student_grouping`
 -- (See below for the actual view)
 --
-CREATE TABLE IF NOT EXISTS `view_student_grouping` (
+CREATE TABLE `view_student_grouping` (
 `program` varchar(100)
 ,`year_of_study` int
 ,`status` enum('Active','Inactive','Graduated','Suspended','Withdrawn','deleted')
@@ -2120,8 +2364,10 @@ CREATE TABLE IF NOT EXISTS `view_student_grouping` (
 -- Structure for view `student_dashboard_view`
 --
 DROP TABLE IF EXISTS `student_dashboard_view`;
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where (`student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`)) group by `student_academic_records`.`student_id`) `sa` on((`s`.`id` = `sa`.`student_id`))) left join (select `student_attendance`.`student_id` AS `student_id`,((sum((case when (`student_attendance`.`status` = 'Present') then 1 else 0 end)) * 100.0) / count(0)) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on((`s`.`id` = `sa2`.`student_id`))) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where (`student_fees`.`status` in ('Unpaid','Partially Paid','Overdue')) group by `student_fees`.`student_id`) `sf` on((`s`.`id` = `sf`.`student_id`))) WHERE (`s`.`status` = 'Active') ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `student_dashboard_view`  AS SELECT `s`.`id` AS `id`, `s`.`student_number` AS `student_number`, coalesce(`s`.`full_name`,trim(concat(`s`.`first_name`,' ',coalesce(`s`.`other_name`,''),' ',`s`.`surname`))) AS `full_name`, coalesce(`s`.`course`,`s`.`program`) AS `course`, coalesce(`s`.`year`,`s`.`current_year`) AS `year`, `s`.`set_name` AS `set_name`, `s`.`email` AS `email`, coalesce(`s`.`profile_picture`,`s`.`passport_photo`) AS `profile_picture`, coalesce(`sa`.`gpa`,0) AS `current_gpa`, coalesce(`sf`.`balance`,0) AS `fee_balance`, coalesce(`sa2`.`attendance_rate`,0) AS `attendance_rate` FROM (((`students` `s` left join (select `student_academic_records`.`student_id` AS `student_id`,`student_academic_records`.`gpa` AS `gpa` from `student_academic_records` where (`student_academic_records`.`semester` = (select max(`student_academic_records`.`semester`) from `student_academic_records`)) group by `student_academic_records`.`student_id`) `sa` on((`s`.`id` = `sa`.`student_id`))) left join (select `student_attendance`.`student_id` AS `student_id`,((sum((case when (`student_attendance`.`status` = 'Present') then 1 else 0 end)) * 100.0) / count(0)) AS `attendance_rate` from `student_attendance` group by `student_attendance`.`student_id`) `sa2` on((`s`.`id` = `sa2`.`student_id`))) left join (select `student_fees`.`student_id` AS `student_id`,sum(`student_fees`.`amount`) AS `balance` from `student_fees` where (`student_fees`.`status` in ('Unpaid','Partially Paid','Overdue')) group by `student_fees`.`student_id`) `sf` on((`s`.`id` = `sf`.`student_id`))) WHERE (`s`.`status` = 'Active') ;
 
 -- --------------------------------------------------------
 
@@ -2129,8 +2375,10 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_dashboard_view`  A
 -- Structure for view `student_login_view`
 --
 DROP TABLE IF EXISTS `student_login_view`;
+-- Creation: Jun 17, 2026 at 10:27 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE (`students`.`status` = 'Active') ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `student_login_view`  AS SELECT `students`.`id` AS `id`, `students`.`student_number` AS `student_number`, coalesce(`students`.`full_name`,trim(concat(`students`.`first_name`,' ',coalesce(`students`.`other_name`,''),' ',`students`.`surname`))) AS `full_name`, `students`.`email` AS `email`, `students`.`password` AS `password`, coalesce(`students`.`course`,`students`.`program`) AS `course`, `students`.`status` AS `status`, `students`.`last_login` AS `last_login`, `students`.`login_attempts` AS `login_attempts`, `students`.`is_first_login` AS `is_first_login` FROM `students` WHERE (`students`.`status` = 'Active') ;
 
 -- --------------------------------------------------------
 
@@ -2138,8 +2386,10 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `student_login_view`  AS SE
 -- Structure for view `view_document_grouping`
 --
 DROP TABLE IF EXISTS `view_document_grouping`;
+-- Creation: Jun 19, 2026 at 06:48 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_document_grouping`  AS SELECT `gd`.`document_type` AS `document_type`, `gd`.`student_id` AS `student_id`, `s`.`full_name` AS `student_name`, `s`.`course` AS `program`, count(0) AS `document_count` FROM (`igangaschoolofl_staffs_db`.`generated_documents` `gd` left join `students` `s` on((`gd`.`student_id` = `s`.`id`))) WHERE (`gd`.`document_type` is not null) GROUP BY `gd`.`document_type`, `gd`.`student_id`, `s`.`full_name`, `s`.`course` ORDER BY `gd`.`document_type` ASC, `s`.`full_name` ASC ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `view_document_grouping`  AS SELECT `gd`.`document_type` AS `document_type`, `gd`.`student_id` AS `student_id`, `s`.`full_name` AS `student_name`, `s`.`course` AS `program`, count(0) AS `document_count` FROM (`igangaschoolofl_staffs_db`.`generated_documents` `gd` left join `students` `s` on((`gd`.`student_id` = `s`.`id`))) WHERE (`gd`.`document_type` is not null) GROUP BY `gd`.`document_type`, `gd`.`student_id`, `s`.`full_name`, `s`.`course` ORDER BY `gd`.`document_type` ASC, `s`.`full_name` ASC ;
 
 -- --------------------------------------------------------
 
@@ -2147,8 +2397,10 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_document_grouping`  A
 -- Structure for view `view_program_grouping`
 --
 DROP TABLE IF EXISTS `view_program_grouping`;
+-- Creation: Jun 19, 2026 at 06:48 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_program_grouping`  AS SELECT `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` AS `department`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_code` AS `course_code`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` AS `course_name`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`credits` AS `credit_hours`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`year_of_study` AS `course_level` FROM `igangaschoolofl_staffs_db`.`academic_course_catalog` WHERE ((`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` is not null) AND (`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` <> '')) ORDER BY `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` ASC, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` ASC ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `view_program_grouping`  AS SELECT `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` AS `department`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_code` AS `course_code`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` AS `course_name`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`credits` AS `credit_hours`, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`year_of_study` AS `course_level` FROM `igangaschoolofl_staffs_db`.`academic_course_catalog` WHERE ((`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` is not null) AND (`igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` <> '')) ORDER BY `igangaschoolofl_staffs_db`.`academic_course_catalog`.`program_code` ASC, `igangaschoolofl_staffs_db`.`academic_course_catalog`.`course_title` ASC ;
 
 -- --------------------------------------------------------
 
@@ -2156,8 +2408,10 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_program_grouping`  AS
 -- Structure for view `view_student_grouping`
 --
 DROP TABLE IF EXISTS `view_student_grouping`;
+-- Creation: Jun 19, 2026 at 06:48 AM
+--
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `view_student_grouping`  AS SELECT `students`.`course` AS `program`, `students`.`current_year` AS `year_of_study`, `students`.`status` AS `status`, `students`.`set_name` AS `set_name`, `students`.`current_semester` AS `semester`, count(0) AS `student_count` FROM `students` WHERE ((`students`.`full_name` is not null) AND (`students`.`full_name` <> '') AND (length(`students`.`full_name`) > 3) AND (not((`students`.`full_name` like '%MINISTRY%'))) AND (not((`students`.`full_name` like '%ACCOUNTABILITY%'))) AND (not((`students`.`full_name` like '%VERIFICATION%'))) AND (not((`students`.`full_name` like '%HEALTH EDUCATION%'))) AND (not((`students`.`full_name` like '%……………………………………………………%')))) GROUP BY `students`.`course`, `students`.`current_year`, `students`.`status`, `students`.`set_name`, `students`.`current_semester` ORDER BY `students`.`course` ASC, `students`.`current_year` ASC, `students`.`status` ASC ;
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `view_student_grouping`  AS SELECT `students`.`course` AS `program`, `students`.`current_year` AS `year_of_study`, `students`.`status` AS `status`, `students`.`set_name` AS `set_name`, `students`.`current_semester` AS `semester`, count(0) AS `student_count` FROM `students` WHERE ((`students`.`full_name` is not null) AND (`students`.`full_name` <> '') AND (length(`students`.`full_name`) > 3) AND (not((`students`.`full_name` like '%MINISTRY%'))) AND (not((`students`.`full_name` like '%ACCOUNTABILITY%'))) AND (not((`students`.`full_name` like '%VERIFICATION%'))) AND (not((`students`.`full_name` like '%HEALTH EDUCATION%'))) AND (not((`students`.`full_name` like '%……………………………………………………%')))) GROUP BY `students`.`course`, `students`.`current_year`, `students`.`status`, `students`.`set_name`, `students`.`current_semester` ORDER BY `students`.`course` ASC, `students`.`current_year` ASC, `students`.`status` ASC ;
 
 --
 -- Indexes for dumped tables
@@ -2176,6 +2430,16 @@ ALTER TABLE `announcements`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_target` (`target_audience`),
   ADD KEY `idx_active` (`is_active`);
+
+--
+-- Indexes for table `applications`
+--
+ALTER TABLE `applications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app_student` (`student_id`),
+  ADD KEY `idx_app_status` (`status`),
+  ADD KEY `idx_app_program` (`program`),
+  ADD KEY `idx_app_email` (`email`);
 
 --
 -- Indexes for table `assets`
@@ -2303,6 +2567,15 @@ ALTER TABLE `cost_centers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `cost_center_code` (`cost_center_code`),
   ADD KEY `idx_cost_center_code` (`cost_center_code`);
+
+--
+-- Indexes for table `courses`
+--
+ALTER TABLE `courses`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `course_code` (`course_code`),
+  ADD KEY `idx_courses_department` (`department`),
+  ADD KEY `idx_courses_status` (`status`);
 
 --
 -- Indexes for table `daily_sick_records`
@@ -2519,6 +2792,16 @@ ALTER TABLE `late_payment_settings`
   ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
+-- Indexes for table `library_acquisitions`
+--
+ALTER TABLE `library_acquisitions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_la_date` (`acquisition_date`),
+  ADD KEY `idx_la_type` (`acquisition_type`),
+  ADD KEY `idx_la_status` (`status`),
+  ADD KEY `idx_la_isbn` (`isbn`);
+
+--
 -- Indexes for table `library_books`
 --
 ALTER TABLE `library_books`
@@ -2591,7 +2874,8 @@ ALTER TABLE `payments`
   ADD KEY `idx_payments_received_by` (`received_by`),
   ADD KEY `idx_payments_student` (`student_id`),
   ADD KEY `idx_payments_date` (`payment_date`),
-  ADD KEY `idx_payments_ref` (`payment_reference`);
+  ADD KEY `idx_payments_ref` (`payment_reference`),
+  ADD KEY `idx_pay_student_date` (`student_id`,`payment_date`);
 
 --
 -- Indexes for table `payment_receipts`
@@ -2753,7 +3037,9 @@ ALTER TABLE `students`
   ADD KEY `idx_students_email` (`email`),
   ADD KEY `idx_students_program` (`program`),
   ADD KEY `idx_students_status` (`status`),
-  ADD KEY `idx_students_name` (`surname`,`first_name`);
+  ADD KEY `idx_students_name` (`surname`,`first_name`),
+  ADD KEY `idx_stu_email` (`email`),
+  ADD KEY `idx_stu_status` (`status`);
 
 --
 -- Indexes for table `students_trash`
@@ -2982,6 +3268,12 @@ ALTER TABLE `announcements`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `applications`
+--
+ALTER TABLE `applications`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
@@ -3064,6 +3356,12 @@ ALTER TABLE `clinical_placements_students`
 --
 ALTER TABLE `cost_centers`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `courses`
+--
+ALTER TABLE `courses`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `daily_sick_records`
@@ -3190,6 +3488,12 @@ ALTER TABLE `lab_skills_demonstrations`
 --
 ALTER TABLE `late_payment_settings`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT for table `library_acquisitions`
+--
+ALTER TABLE `library_acquisitions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `library_books`
@@ -3672,6 +3976,7 @@ ALTER TABLE `student_sick_leave`
 --
 ALTER TABLE `student_timetables`
   ADD CONSTRAINT `student_timetables_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
