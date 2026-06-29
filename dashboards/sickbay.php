@@ -686,8 +686,11 @@ $pageTitle = 'Sickbay Management System';?>
 <?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- end content-area -->
 </div><!-- end page-content -->
 <script>
-window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
-window.onerror=function(){return true;};
+window.addEventListener('unhandledrejection',function(e){
+  var url = '';
+  try { if (e.reason && typeof e.reason === 'object') url = e.reason.url || ''; else if (typeof e.reason === 'string') url = e.reason; } catch(ex) {}
+  if (url.indexOf('/writing/') > -1 || url.indexOf('/generate/') > -1 || url.indexOf('/site_integration/') > -1) e.preventDefault();
+});
 function filterTable(tblId,col,val){val=val.toLowerCase();const tbl=document.getElementById(tblId);if(!tbl||!tbl.tBodies[0])return;const rows=tbl.tBodies[0].rows;for(let i=0;i<rows.length;i++){const cells=rows[i].cells;if(!cells[col])continue;const txt=cells[col].textContent.toLowerCase();rows[i].style.display=txt.indexOf(val)>-1?'':'none';}}
 function filterTableByDate(tblId,col,val){const tbl=document.getElementById(tblId);if(!tbl||!tbl.tBodies[0])return;const rows=tbl.tBodies[0].rows;for(let i=0;i<rows.length;i++){const cells=rows[i].cells;if(!cells[col])continue;const cellDate=cells[col].textContent.trim();if(!val){rows[i].style.display='';continue;}const d=new Date(val);const parts=cellDate.split(' ');if(parts.length>=3){const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};const cd=new Date(parseInt(parts[2]),months[parts[1]],parseInt(parts[0]));rows[i].style.display=cd.toDateString()===d.toDateString()?'':'none';}else rows[i].style.display='';}}
 function searchStudents(inputName,hiddenId,hiddenNum,hiddenProg,hiddenYear){const inp=typeof inputName==='string'?document.getElementById(inputName):inputName;const val=inp.value.trim();if(val.length<2){document.getElementById(hiddenId).value='';document.getElementById(hiddenNum).value='';if(hiddenProg)document.getElementById(hiddenProg).value='';if(hiddenYear)document.getElementById(hiddenYear).value='';return;}fetch('sickbay.php?action=search_student&q='+encodeURIComponent(val)).then(r=>r.json()).then(data=>{if(data.length===1){const s=data[0];inp.value=s.full_name;document.getElementById(hiddenId).value=s.id;document.getElementById(hiddenNum).value=s.student_number||s.student_id||'';if(hiddenProg)document.getElementById(hiddenProg).value=s.program||'';if(hiddenYear)document.getElementById(hiddenYear).value=s.year_of_study||'';}else if(data.length>1){let opts=data.map(s=>s.full_name+' ('+(s.student_number||s.student_id||'')+')').join('\n');}}).catch(function(e){ console.warn('[ISNM] Student search failed:', e); });}

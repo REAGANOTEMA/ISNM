@@ -1006,7 +1006,7 @@ function secLoadMeetings(){
         h += '</tbody></table></div>'; el.innerHTML = h;
     }).catch(function(){ el.innerHTML = '<div class="text-danger small p-3">Failed.</div>'; });
 }
-function secMinutesModal(mid){ var txt = prompt('Enter meeting minutes:'); if(txt === null) return; var fd = new FormData(); fd.append('meeting_id', mid); fd.append('minutes', txt); fetch('school-secretary.php?view=meeting_save_minutes&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadMeetings(); }).catch(function(){}); }
+function secMinutesModal(mid){ var txt = prompt('Enter meeting minutes:'); if(txt === null) return; var fd = new FormData(); fd.append('meeting_id', mid); fd.append('minutes', txt); fetch('school-secretary.php?view=meeting_save_minutes&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadMeetings(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 function secViewMeeting(mid){
     fetch('school-secretary.php?view=meeting_get&ajax=1&id='+mid)
     .then(function(r){ return r.json(); }).then(function(d){
@@ -1097,7 +1097,7 @@ function secLoadAppointments(){
         h += '</tbody></table></div>'; el.innerHTML = h;
     }).catch(function(){ el.innerHTML = '<div class="text-danger small p-3">Failed.</div>'; });
 }
-function secUpdateAppt(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=appointment_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadAppointments(); }).catch(function(){}); }
+function secUpdateAppt(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=appointment_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadAppointments(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', secLoadAppointments);
 </script>
 <?php endif; ?><?php if ($view === 'visitor_mgmt'): ?>
@@ -1218,7 +1218,7 @@ function secLoadDocFiling(){
         h += '</tbody></table></div>'; el.innerHTML = h;
     }).catch(function(){ el.innerHTML = '<div class="text-danger small p-3">Failed.</div>'; });
 }
-function secUpdateDocStatus(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=doc_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadDocFiling(); }).catch(function(){}); }
+function secUpdateDocStatus(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=doc_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadDocFiling(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', secLoadDocFiling);
 </script>
 <?php endif; ?><?php if ($view === 'scanned_docs'): ?>
@@ -1356,7 +1356,7 @@ function secLoadAllRqTrack(){
         h += '</tbody></table></div>'; el.innerHTML = h;
     }).catch(function(){ el.innerHTML = '<div class="text-danger small p-3">Failed.</div>'; });
 }
-function secUpdateRequest(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=request_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadAllRqTrack(); }).catch(function(){}); }
+function secUpdateRequest(id, st){ if(!st) return; var fd = new FormData(); fd.append('id', id); fd.append('status', st); fetch('school-secretary.php?view=request_update&ajax=1', {method:'POST', body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) secLoadAllRqTrack(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', secLoadAllRqTrack);
 </script>
 <?php endif; ?><?php if ($view === 'contact_directory'): ?>

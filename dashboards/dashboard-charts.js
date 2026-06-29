@@ -441,7 +441,7 @@
             var raw = bar.getAttribute('data-ax');
             if (!raw) return;
             var d;
-            try { d = JSON.parse(raw); } catch(e) { return; }
+            try { d = JSON.parse(raw); } catch(e) { console.warn('[ISNM] Failed to parse analytics data:', e); return; }
             if (!d || !d.months) return;
 
             initDashboardCharts({

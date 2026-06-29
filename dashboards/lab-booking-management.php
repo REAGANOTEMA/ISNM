@@ -284,8 +284,11 @@ $stat = $count === 0 ? '<span class="badge bg-success">Available</span>' : ($cou
 </div>
 
 <script>
-window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
-window.onerror=function(){return true;};
+window.addEventListener('unhandledrejection',function(e){
+  var url = '';
+  try { if (e.reason && typeof e.reason === 'object') url = e.reason.url || ''; else if (typeof e.reason === 'string') url = e.reason; } catch(ex) {}
+  if (url.indexOf('/writing/') > -1 || url.indexOf('/generate/') > -1 || url.indexOf('/site_integration/') > -1) e.preventDefault();
+});
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

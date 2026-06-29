@@ -20,9 +20,8 @@ if(isset($_GET['id'])) {
 
     // Execute the statement
     if(mysqli_stmt_execute($stmt)) {
-        echo "<alert>Record updated successfully</alert>";
         header("Location: ../buses.php");
-
+        exit;
     } else {
         echo "Error updating record: " . mysqli_error($conn);
     }

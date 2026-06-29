@@ -1,11 +1,7 @@
-// ISNM Service Worker — passthrough only, no caching of PHP or navigation
-const CACHE_NAME = 'isnm-static-v4';
+/* ISNM Service Worker - Single consolidated version */
+const CACHE_NAME = 'isnm-static-v5';
 
 self.addEventListener('install', () => self.skipWaiting());
-
-self.addEventListener('unhandledrejection', (e) => {
-  if (e.preventDefault) e.preventDefault();
-});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -27,6 +23,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (
+    url.pathname.startsWith('/writing/') ||
+    url.pathname.startsWith('/generate/') ||
+    url.pathname.startsWith('/site_integration/')
+  ) {
+    return;
+  }
+
   const isImmutable = /\.(png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/i.test(url.pathname);
   if (!isImmutable) return;
 
@@ -36,7 +40,7 @@ self.addEventListener('fetch', (event) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
           if (response.ok) {
-            cache.put(event.request, response.clone()).catch(() => {});
+            cache.put(event.request, response.clone()).catch(() => { console.warn('[SW] Cache put failed (non-critical)'); });
           }
           return response;
         });
@@ -45,7 +49,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ── Push Notifications ──
 self.addEventListener('push', (event) => {
   let data = { title: 'ISNM Update', body: 'You have a new notification.', icon: '/favicon.ico', url: '/' };
   try {
@@ -56,7 +59,7 @@ self.addEventListener('push', (event) => {
       if (parsed.icon) data.icon = parsed.icon;
       if (parsed.url) data.url = parsed.url;
     }
-  } catch (e) { /* use defaults */ }
+  } catch (e) {}
 
   const options = {
     body: data.body,

@@ -60,8 +60,20 @@ if (file_exists($toolFile)) { try { include_once $toolFile; } catch (Exception $
 // Cache-busting version constant
 var ISNM_VERSION = '<?= $v ?>';
 
-// ── Suppress unhandled Promise rejections ──
-window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
+// ── Only suppress known extension-related rejections ──
+window.addEventListener('unhandledrejection',function(e){
+  var url = '';
+  try {
+    if (e.reason && typeof e.reason === 'object') {
+      url = e.reason.url || '';
+    } else if (typeof e.reason === 'string') {
+      url = e.reason;
+    }
+  } catch(ex) {}
+  if (url.indexOf('/writing/') > -1 || url.indexOf('/generate/') > -1 || url.indexOf('/site_integration/') > -1) {
+    e.preventDefault();
+  }
+});
 
 // ── Mobile sidebar toggle ─────────────────────────────────────
 (function () {
@@ -174,9 +186,9 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
           if (dropdown.style.display !== 'none' && d.notifications) {
             renderNotifications(d.notifications);
           }
-        } catch (e) {}
+        } catch (e) { console.warn('[ISNM] Notification parse error:', e); }
       };
-      xhr.onerror = function(){};
+      xhr.onerror = function(){ console.warn('[ISNM] Notification fetch failed (network error)'); };
       xhr.send();
     }
 
@@ -215,7 +227,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
       xhr.open('POST', '<?= $rootPath ?>/includes/ajax_notifications.php?action=mark_read', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = function () { fetchNotifications(); };
-      xhr.onerror = function(){};
+      xhr.onerror = function(){ console.warn('[ISNM] Mark read network error'); };
       xhr.send();
     }
 
@@ -223,7 +235,7 @@ window.addEventListener('unhandledrejection',function(e){e.preventDefault();});
       var xhr = new XMLHttpRequest();
       xhr.open('POST', '<?= $rootPath ?>/includes/ajax_notifications.php?action=mark_all_read', true);
       xhr.onload = function () { fetchNotifications(); };
-      xhr.onerror = function(){};
+      xhr.onerror = function(){ console.warn('[ISNM] Mark all read network error'); };
       xhr.send();
     }
 

@@ -649,7 +649,7 @@ function searchInvoiceStudent(){
             d.addEventListener('click',function(){ selectInvStudent(s); });
             el.appendChild(d);
         });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function selectInvStudent(s){
     document.getElementById('invStudentId').value = s.student_id;
@@ -666,7 +666,7 @@ function selectInvStudent(s){
         html += '</small></div>';
         document.getElementById('invFeePreview').innerHTML = html;
         document.getElementById('invTotal').value = total||'';
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Sponsorship student search ──
@@ -689,7 +689,7 @@ function searchSponsorshipStudent(){
             });
             el.appendChild(d);
         });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 function esc(s){ if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

@@ -2053,7 +2053,7 @@ echo $clearRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No c
             var status = (d&&d.status) ? d.status : 'Pending Review';
             badge.textContent = status;
             badge.className = 'badge bg-'+(status==='Cleared'?'success':status==='Not Cleared'?'danger':'warning text-dark');
-        }).catch(function(){});
+        }).catch(function(e){ console.warn('[ISNM]', e); });
         // Load dependency checks
         fetch('school-bursar.php?view=clearance_deps&ajax=1&sid='+encodeURIComponent(s.student_id))
         .then(function(r){ return r.json(); })
@@ -2066,7 +2066,7 @@ echo $clearRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No c
                 var ic = dp.passed?'fa-check-circle':'fa-times-circle';
                 el.innerHTML += '<div class="col-md-3"><div class="p-2 border rounded small"><i class="fas '+ic+' text-'+st+' me-1"></i><strong>'+dp.type+'</strong><br><span class="text-muted">'+dp.detail+'</span></div></div>';
             });
-        }).catch(function(){});
+        }).catch(function(e){ console.warn('[ISNM]', e); });
     }
     function setClearance(status){
         if(!clearanceStudentId) return;
@@ -2694,7 +2694,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     });
                     var s=0; items.forEach(function(el){ s+=parseFloat(el.value)||0; }); total.value=s||'';
                 }
-            }).catch(function(){});
+            }).catch(function(e){ console.warn('[ISNM]', e); });
         });
     }
 });

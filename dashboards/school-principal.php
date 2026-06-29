@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['school principal']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
@@ -42,7 +42,7 @@ function pcurrency($n) { return 'UGX ' . number_format((float)$n, 0); }
 function psuccess($m) { $_SESSION['p_success'] = $m; }
 function perror($m) { $_SESSION['p_error'] = $m; }
 
-// ── AJAX: principal_stats ──
+// -- AJAX: principal_stats --
 if ($view === 'principal_stats' && $ajax === '1') {
     header('Content-Type: application/json');
     $out = ['total_students'=>0,'total_staff'=>0,'attendance_rate'=>0,'pass_rate'=>0,'welfare_alerts'=>0,'pending_approvals'=>0,'upcoming_meetings'=>0,'recent_notices'=>0,'total_revenue'=>0,'total_expenses'=>0,'health_score'=>0];
@@ -72,7 +72,7 @@ if ($view === 'principal_stats' && $ajax === '1') {
     echo json_encode($out); exit;
 }
 
-// ── AJAX: program_performance_data ──
+// -- AJAX: program_performance_data --
 if ($view === 'program_performance_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -83,7 +83,7 @@ if ($view === 'program_performance_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: exam_monitoring_data ──
+// -- AJAX: exam_monitoring_data --
 if ($view === 'exam_monitoring_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -100,7 +100,7 @@ if ($view === 'exam_monitoring_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: clinical_training_data ──
+// -- AJAX: clinical_training_data --
 if ($view === 'clinical_training_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -111,7 +111,7 @@ if ($view === 'clinical_training_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: student_welfare_data ──
+// -- AJAX: student_welfare_data --
 if ($view === 'student_welfare_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -122,7 +122,7 @@ if ($view === 'student_welfare_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: discipline_data ──
+// -- AJAX: discipline_data --
 if ($view === 'discipline_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -133,7 +133,7 @@ if ($view === 'discipline_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: student_progress_data ──
+// -- AJAX: student_progress_data --
 if ($view === 'student_progress_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -144,7 +144,7 @@ if ($view === 'student_progress_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: staff_attendance_data ──
+// -- AJAX: staff_attendance_data --
 if ($view === 'staff_attendance_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -155,7 +155,7 @@ if ($view === 'staff_attendance_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: staff_appraisal_data ──
+// -- AJAX: staff_appraisal_data --
 if ($view === 'staff_appraisal_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -166,7 +166,7 @@ if ($view === 'staff_appraisal_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: department_performance_data ──
+// -- AJAX: department_performance_data --
 if ($view === 'department_performance_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -177,7 +177,7 @@ if ($view === 'department_performance_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: kpi_data ──
+// -- AJAX: kpi_data --
 if ($view === 'kpi_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -188,7 +188,7 @@ if ($view === 'kpi_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: strategic_plan_data ──
+// -- AJAX: strategic_plan_data --
 if ($view === 'strategic_plan_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -199,7 +199,7 @@ if ($view === 'strategic_plan_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: quality_assurance_data ──
+// -- AJAX: quality_assurance_data --
 if ($view === 'quality_assurance_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -210,7 +210,7 @@ if ($view === 'quality_assurance_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: approval_list ──
+// -- AJAX: approval_list --
 if ($view === 'approval_list' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -221,7 +221,7 @@ if ($view === 'approval_list' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: meeting_data ──
+// -- AJAX: meeting_data --
 if ($view === 'meeting_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -232,7 +232,7 @@ if ($view === 'meeting_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX: meeting_action_data ──
+// -- AJAX: meeting_action_data --
 if ($view === 'meeting_action_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
@@ -243,7 +243,7 @@ if ($view === 'meeting_action_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
-// ── AJAX WRITE: submit_approval_action ──
+// -- AJAX WRITE: submit_approval_action --
 if ($view === 'submit_approval_action' && $ajax === '1') {
     header('Content-Type: application/json');
     $id = (int)($_POST['id']??0); $src = $_POST['source']??''; $act = $_POST['action']??'';
@@ -274,7 +274,7 @@ if ($view === 'submit_approval_action' && $ajax === '1') {
     echo json_encode(['success'=>false]); exit;
 }
 
-// ── AJAX WRITE: create_meeting ──
+// -- AJAX WRITE: create_meeting --
 if ($view === 'create_meeting' && $ajax === '1') {
     header('Content-Type: application/json');
     $mt = trim($_POST['title']??'');
@@ -292,7 +292,7 @@ if ($view === 'create_meeting' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Title and date required']); exit;
 }
 
-// ── AJAX WRITE: schedule_meeting ──
+// -- AJAX WRITE: schedule_meeting --
 if ($view === 'schedule_meeting' && $ajax === '1') {
     header('Content-Type: application/json');
     $mt = trim($_POST['title']??'');
@@ -321,7 +321,7 @@ if ($view === 'schedule_meeting' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Title and date required']); exit;
 }
 
-// ── AJAX WRITE: save_meeting_minutes ──
+// -- AJAX WRITE: save_meeting_minutes --
 if ($view === 'save_meeting_minutes' && $ajax === '1') {
     header('Content-Type: application/json');
     $mid = (int)($_POST['meeting_id']??0); $agenda = trim($_POST['agenda_item']??''); $disc = trim($_POST['discussion']??''); $res = trim($_POST['resolution']??''); $act = trim($_POST['action_items']??'');
@@ -333,7 +333,7 @@ if ($view === 'save_meeting_minutes' && $ajax === '1') {
     echo json_encode(['success'=>false]); exit;
 }
 
-// ── AJAX WRITE: update_action_status ──
+// -- AJAX WRITE: update_action_status --
 if ($view === 'update_action_status' && $ajax === '1') {
     header('Content-Type: application/json');
     $aid = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
@@ -345,7 +345,7 @@ if ($view === 'update_action_status' && $ajax === '1') {
     echo json_encode(['success'=>false]); exit;
 }
 
-// ── AJAX WRITE: send_communication ──
+// -- AJAX WRITE: send_communication --
 if ($view === 'send_communication' && $ajax === '1') {
     header('Content-Type: application/json');
     $subj = trim($_POST['subject']??''); $msg = trim($_POST['message']??''); $rcp = trim($_POST['recipient_role']??'staff');
@@ -357,7 +357,7 @@ if ($view === 'send_communication' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Subject and message required']); exit;
 }
 
-// ── AJAX WRITE: publish_notice ──
+// -- AJAX WRITE: publish_notice --
 if ($view === 'publish_notice' && $ajax === '1') {
     header('Content-Type: application/json');
     $t = trim($_POST['title']??''); $c = trim($_POST['content']??''); $a = trim($_POST['audience']??'All');
@@ -369,7 +369,7 @@ if ($view === 'publish_notice' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Title and content required']); exit;
 }
 
-// ── AJAX WRITE: create_student_appeal ──
+// -- AJAX WRITE: create_student_appeal --
 if ($view === 'create_student_appeal' && $ajax === '1') {
     header('Content-Type: application/json');
     $si = (int)($_POST['student_id']??0); $at = trim($_POST['appeal_type']??''); $rs = trim($_POST['reason']??'');
@@ -381,7 +381,7 @@ if ($view === 'create_student_appeal' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Required fields missing']); exit;
 }
 
-// ── AJAX WRITE: update_welfare_status ──
+// -- AJAX WRITE: update_welfare_status --
 if ($view === 'update_welfare_status' && $ajax === '1') {
     header('Content-Type: application/json');
     $id = (int)($_POST['id']??0); $st = trim($_POST['status']??'');
@@ -393,7 +393,7 @@ if ($view === 'update_welfare_status' && $ajax === '1') {
     echo json_encode(['success'=>false]); exit;
 }
 
-// ── AJAX WRITE: create_strategic_plan ──
+// -- AJAX WRITE: create_strategic_plan --
 if ($view === 'create_strategic_plan' && $ajax === '1') {
     header('Content-Type: application/json');
     $pn = trim($_POST['plan_name']??''); $pd = trim($_POST['description']??''); $ps = trim($_POST['start_date']??''); $pe = trim($_POST['end_date']??'');
@@ -405,7 +405,7 @@ if ($view === 'create_strategic_plan' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Name and start date required']); exit;
 }
 
-// ── AJAX WRITE: update_kpi ──
+// -- AJAX WRITE: update_kpi --
 if ($view === 'update_kpi' && $ajax === '1') {
     header('Content-Type: application/json');
     $kn = trim($_POST['kpi_name']??''); $kc = trim($_POST['kpi_category']??''); $tv = (float)($_POST['target_value']??0); $cv = (float)($_POST['current_value']??0); $kp = trim($_POST['period']??date('Y-m')); $st = trim($_POST['status']??'on_track');
@@ -417,7 +417,7 @@ if ($view === 'update_kpi' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'KPI name required']); exit;
 }
 
-// ── AJAX WRITE: create_qa_review ──
+// -- AJAX WRITE: create_qa_review --
 if ($view === 'create_qa_review' && $ajax === '1') {
     header('Content-Type: application/json');
     $rt = trim($_POST['review_title']??''); $rty = trim($_POST['review_type']??''); $rd = trim($_POST['department']??''); $rv = trim($_POST['reviewer']??$uname); $sc = (float)($_POST['score']??0); $rf = trim($_POST['findings']??''); $rr = trim($_POST['recommendations']??'');
@@ -429,7 +429,7 @@ if ($view === 'create_qa_review' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Review title required']); exit;
 }
 
-// ── AJAX WRITE: record_department_review ──
+// -- AJAX WRITE: record_department_review --
 if ($view === 'record_department_review' && $ajax === '1') {
     header('Content-Type: application/json');
     $dep = trim($_POST['department']??''); $rp = trim($_POST['review_period']??''); $os = (float)($_POST['overall_score']??0); $str = trim($_POST['strengths']??''); $wk = trim($_POST['weaknesses']??''); $rec = trim($_POST['recommendations']??'');
@@ -443,7 +443,7 @@ if ($view === 'record_department_review' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Department and period required']); exit;
 }
 
-// ── AJAX WRITE: submit_staff_appraisal ──
+// -- AJAX WRITE: submit_staff_appraisal --
 if ($view === 'submit_staff_appraisal' && $ajax === '1') {
     header('Content-Type: application/json');
     $si = (int)($_POST['staff_id']??0); $rd = trim($_POST['review_date']??date('Y-m-d')); $ps = (float)($_POST['performance_score']??0); $stg = trim($_POST['strengths']??''); $ai = trim($_POST['areas_improvement']??''); $or = trim($_POST['overall_rating']??'');
@@ -456,7 +456,7 @@ if ($view === 'submit_staff_appraisal' && $ajax === '1') {
     echo json_encode(['success'=>false,'error'=>'Staff ID and score required']); exit;
 }
 
-// ── AJAX WRITE: approve_graduation ──
+// -- AJAX WRITE: approve_graduation --
 if ($view === 'approve_graduation' && $ajax === '1') {
     header('Content-Type: application/json');
     $sid = (int)($_POST['student_id']??0);
@@ -464,10 +464,10 @@ if ($view === 'approve_graduation' && $ajax === '1') {
     echo json_encode(['success'=>false]); exit;
 }
 
-// ── AJAX catch-all ──
+// -- AJAX catch-all --
 if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
 
-// ── POST handlers ──
+// -- POST handlers --
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
     if ($act === 'publish_notice' && $students && $staff) {
@@ -626,7 +626,7 @@ try {
 fetch('school-principal.php?view=principal_stats&ajax=1').then(function(r){return r.json()}).then(function(d){
 document.getElementById('acdTotal').textContent=d.total_students; document.getElementById('acdPass').textContent=d.pass_rate+'%';
 document.getElementById('acdAtt').textContent=d.attendance_rate+'%'; document.getElementById('acdRisk').textContent=d.welfare_alerts;
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 </script>
 <?php endif; ?>
 
@@ -741,7 +741,7 @@ candidates.forEach(function(s){h+='<tr><td>'+esc(s.surname)+', '+esc(s.first_nam
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function approveGrad(id){if(!confirm('Approve this student for graduation?'))return;var fd=new FormData();fd.append('student_id',id);fetch('school-principal.php?view=approve_graduation&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success){alert('Graduation approved.');loadGradReadiness();}else{alert('Failed.');}}).catch(function(){});}
+function approveGrad(id){if(!confirm('Approve this student for graduation?'))return;var fd=new FormData();fd.append('student_id',id);fetch('school-principal.php?view=approve_graduation&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success){alert('Graduation approved.');loadGradReadiness();}else{alert('Failed.');}}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadGradReadiness);
 </script>
 <?php endif; ?>
@@ -792,7 +792,7 @@ h+='<tr><td>'+esc(w.surname||'')+', '+esc(w.first_name||'')+'</td><td>'+esc(w.ca
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function updateWelfare(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadWelfareData();}).catch(function(){});}
+function updateWelfare(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadWelfareData();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadWelfareData);
 </script>
 <?php endif; ?>
@@ -930,7 +930,7 @@ var fd=new FormData();fd.append('staff_id',document.getElementById('apprStaffId'
 fetch('school-principal.php?view=submit_staff_appraisal&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('apprMsg').innerHTML=d.success?'<span class="text-success">Saved.</span>':'<span class="text-danger">'+(d.error||'Failed')+'</span>';
 if(d.success){document.getElementById('apprStaffId').value='';document.getElementById('apprScore').value='';document.getElementById('apprRating').value='';document.getElementById('apprStrengths').value='';document.getElementById('apprImprove').value='';loadAppraisals();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadAppraisals(){
 var el=document.getElementById('apprList');if(!el)return;
@@ -1004,7 +1004,7 @@ var fd=new FormData();fd.append('plan_name',document.getElementById('spName').va
 fetch('school-principal.php?view=create_strategic_plan&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('spMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Plan created.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('spName').value='';document.getElementById('spDesc').value='';document.getElementById('spStart').value='';document.getElementById('spEnd').value='';loadStratFullList();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadStratFullList(){document.getElementById('stratPlanFullList').innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
 fetch('school-principal.php?view=strategic_plan_data&ajax=1').then(function(r){return r.json()}).then(function(d){
@@ -1041,7 +1041,7 @@ var fd=new FormData();fd.append('kpi_name',document.getElementById('kpiName').va
 fetch('school-principal.php?view=update_kpi&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('kpiMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">KPI added.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('kpiName').value='';document.getElementById('kpiTarget').value='';document.getElementById('kpiCurrent').value='';loadKPIFull();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadKPIFull(){var el=document.getElementById('kpiFullList');if(!el)return;el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
 fetch('school-principal.php?view=kpi_data&ajax=1').then(function(r){return r.json()}).then(function(d){
@@ -1079,7 +1079,7 @@ var fd=new FormData();fd.append('review_title',document.getElementById('qaTitle'
 fetch('school-principal.php?view=create_qa_review&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('qaMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Review saved.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('qaTitle').value='';document.getElementById('qaScore').value='';document.getElementById('qaFindings').value='';document.getElementById('qaRecs').value='';loadQAFull();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadQAFull(){var el=document.getElementById('qaFullList');if(!el)return;el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
 fetch('school-principal.php?view=quality_assurance_data&ajax=1').then(function(r){return r.json()}).then(function(d){
@@ -1161,7 +1161,7 @@ var fd=new FormData();fd.append('title',document.getElementById('pmtTitle').valu
 fetch('school-principal.php?view=schedule_meeting&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('pmtMsg').innerHTML=d.success?'<div class="alert alert-success py-1 small">Meeting scheduled.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('pmtTitle').value='';document.getElementById('pmtDate').value='';document.getElementById('pmtStart').value='';document.getElementById('pmtEnd').value='';document.getElementById('pmtLoc').value='';document.getElementById('pmtAgenda').value='';document.getElementById('pmtAttendees').value='';loadMeetings();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadMeetings(){
 var el=document.getElementById('pmtList');if(!el)return;
@@ -1180,7 +1180,7 @@ if(!d||!d.meeting){alert('Not found');return;}var m=d.meeting;
 alert('Title: '+m.title+'\nDate: '+m.meeting_date+'\nTime: '+(m.start_time||'--')+' - '+(m.end_time||'--')+'\nLocation: '+(m.location||'--')+'\nType: '+(m.meeting_type||'')+'\nStatus: '+m.status+'\n\nAgenda:\n'+(m.agenda||'N/A'));
 }).catch(function(){alert('Failed.');});
 }
-function minutesPrompt(mid){var agenda=prompt('Agenda item:');if(agenda===null)return;var disc=prompt('Discussion:');var res=prompt('Resolution:');var act=prompt('Action items:');var fd=new FormData();fd.append('meeting_id',mid);fd.append('agenda_item',agenda||'');fd.append('discussion',disc||'');fd.append('resolution',res||'');fd.append('action_items',act||'');fetch('school-principal.php?view=save_meeting_minutes&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadMeetings();}).catch(function(){});}
+function minutesPrompt(mid){var agenda=prompt('Agenda item:');if(agenda===null)return;var disc=prompt('Discussion:');var res=prompt('Resolution:');var act=prompt('Action items:');var fd=new FormData();fd.append('meeting_id',mid);fd.append('agenda_item',agenda||'');fd.append('discussion',disc||'');fd.append('resolution',res||'');fd.append('action_items',act||'');fetch('school-principal.php?view=save_meeting_minutes&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadMeetings();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadMeetings);
 </script>
 <?php endif; ?>
@@ -1242,7 +1242,7 @@ d.forEach(function(a){h+='<tr><td class="small">'+esc(a.meeting_title||'')+'</td
 h+='</tbody></table>';el.innerHTML=h;
 }).catch(function(){el.innerHTML='<div class="text-danger small">Failed.</div>';});
 }
-function updateAction(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_action_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadActions();}).catch(function(){});}
+function updateAction(id,st){if(!st)return;var fd=new FormData();fd.append('id',id);fd.append('status',st);fetch('school-principal.php?view=update_action_status&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.success)loadActions();}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadActions);
 </script>
 <?php endif; ?>
@@ -1381,10 +1381,10 @@ var fd=new FormData();fd.append('recipient_role',document.getElementById('commRo
 fetch('school-principal.php?view=send_communication&ajax=1',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
 document.getElementById('commResult').innerHTML=d.success?'<div class="alert alert-success py-1 small">Sent.</div>':'<div class="alert alert-danger py-1 small">'+(d.error||'Failed')+'</div>';
 if(d.success){document.getElementById('commSubj').value='';document.getElementById('commMsg').value='';loadCommSent();}
-}).catch(function(){});
+}).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadCommSent(){var el=document.getElementById('commSentList');if(!el)return;el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
-fetch('school-principal.php?view=meeting_data&ajax=1').then(function(){el.innerHTML='<div class="text-muted small p-3">Communications logged.</div>';}).catch(function(){});}
+fetch('school-principal.php?view=meeting_data&ajax=1').then(function(){el.innerHTML='<div class="text-muted small p-3">Communications logged.</div>';}).catch(function(e){ console.warn('[ISNM]', e); });}
 document.addEventListener('DOMContentLoaded',loadCommSent);
 </script>
 <?php endif; ?>

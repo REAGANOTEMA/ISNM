@@ -350,7 +350,7 @@ function loadRevenueCategory(){
                 }
             });
         }
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Student Statement ──
@@ -374,7 +374,7 @@ function searchStatementStudent(){
             });
             el.appendChild(d);
         });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadStatement(sid, s){
     var out = document.getElementById('stmtOutput'), acts = document.getElementById('stmtActions');
@@ -391,7 +391,7 @@ function loadStatement(sid, s){
         d.rows.forEach(function(r){ h += '<tr>'; r.forEach(function(c){ h += '<td>'+c+'</td>'; }); h += '</tr>'; });
         if(d.total !== undefined) h += '<tr class="fw-bold table-light"><td colspan="4" class="text-end">Closing Balance</td><td>'+Number(d.total).toLocaleString()+'</td></tr>';
         h += '</tbody></table></div>'; out.innerHTML = h; acts.style.display = 'flex';
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Revenue Chart ──
@@ -438,7 +438,7 @@ function loadRevenueChart(){
                     y: { beginAtZero: true, ticks: { callback: function(v){ return 'UGX '+(v/1000).toFixed(0)+'K'; } } }
                 }
             }
-        }).catch(function(){});
+        }).catch(function(e){ console.warn('[ISNM]', e); });
     });
 }
 document.addEventListener('DOMContentLoaded', function(){ loadRevenueChart(); });

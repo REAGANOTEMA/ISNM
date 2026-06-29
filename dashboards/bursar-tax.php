@@ -344,7 +344,7 @@ function loadPeriods(){
             h += '<tr><td><strong>'+esc(p.period_name)+'</strong></td><td><small>'+esc(p.period_start)+'</small></td><td><small>'+esc(p.period_end)+'</small></td><td>'+badgeRaw(p.status||'active')+'</td><td><small>'+esc(p.notes||'-')+'</small></td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Filings ──
@@ -358,7 +358,7 @@ function loadPeriodsSelect(){
         if(d.periods) d.periods.forEach(function(p){
             sel.innerHTML += '<option value="'+p.id+'">'+esc(p.period_name)+' ('+esc(p.period_start)+' to '+esc(p.period_end)+')</option>';
         });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadFilings(){
     var out = document.getElementById('filingsOutput');
@@ -372,7 +372,7 @@ function loadFilings(){
             h += '<tr><td><small>'+esc(f.period_name||'N/A')+'</small></td><td>'+badgeRaw(f.tax_type||'vat')+'</td><td><small>'+esc(f.filing_date)+'</small></td><td>'+currencyRaw(f.total_revenue)+'</td><td>'+currencyRaw(f.tax_amount)+'</td><td>'+badgeRaw(f.filing_status||'filed')+'</td><td><small>'+esc(f.due_date||'-')+'</small></td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Withholding Tax ──
@@ -388,7 +388,7 @@ function loadWHT(){
             h += '<tr><td><small>'+esc(e.tax_date)+'</small></td><td>'+esc(e.payee_name)+'</td><td><small>'+esc(e.description)+'</small></td><td>'+currencyRaw(e.gross_amount)+'</td><td>'+parseFloat(e.wht_rate).toFixed(1)+'%</td><td>'+currencyRaw(e.wht_amount)+'</td><td>'+badgeRaw(e.status||'active')+'</td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── VAT Reports ──
@@ -405,7 +405,7 @@ function loadVAT(){
             h += '<tr><td><small>'+esc(r.period_start)+' to '+esc(r.period_end)+'</small></td><td>'+currencyRaw(r.output_vat)+'</td><td>'+currencyRaw(r.input_vat)+'</td><td class="'+(net>=0?'text-danger':'text-success')+' fw-bold">'+currencyRaw(net)+'</td><td>'+badgeRaw(r.status||'draft')+'</td></tr>';
         });
         h += '</tbody></table></div>'; out.innerHTML = h;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Revenue vs Tax Chart ──
@@ -459,7 +459,7 @@ function loadTaxChart(){
                     y: { beginAtZero: true, ticks: { callback: function(v){ return 'UGX '+(v/1000000).toFixed(1)+'M'; } } }
                 }
             }
-        }).catch(function(){});
+        }).catch(function(e){ console.warn('[ISNM]', e); });
     });
 }
 

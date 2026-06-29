@@ -388,7 +388,7 @@ function searchPayStudent(){
             d.addEventListener('click',function(){ selectPayStudent(s); });
             el.appendChild(d);
         });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function selectPayStudent(s){
     document.getElementById('paySelectedStudentId').value = s.student_id;
@@ -404,7 +404,7 @@ function selectPayStudent(s){
         document.getElementById('payStudentBalance').textContent = 'UGX '+Number(d.balance||0).toLocaleString();
         document.getElementById('paySelectedFeeAccountId').value = d.fee_account_id||0;
         document.getElementById('formFeeAccountId').value = d.fee_account_id||0;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Verification queue ──
@@ -427,18 +427,18 @@ function loadVerificationQueue(){
         });
         h += '</tbody></table></div>';
         out.innerHTML = h;
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function verifyPayment(id){
     if(!confirm('Verify this payment? Receipt will be auto-generated.')) return;
     fetch('bursar-payments.php?ajax=verify_payment&pid='+id)
     .then(function(r){ return r.json(); })
-    .then(function(d){ if(d.success){ loadVerificationQueue(); } else { alert('Verification failed.'); } }).catch(function(){});
+    .then(function(d){ if(d.success){ loadVerificationQueue(); } else { alert('Verification failed.'); } }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function rejectPayment(id){
     if(!confirm('Reject this payment?')) return;
     fetch('bursar-payments.php?ajax=reject_payment&pid='+id)
-    .then(function(){ loadVerificationQueue(); }).catch(function(){});
+    .then(function(){ loadVerificationQueue(); }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 // ── Payment method chart ──
@@ -486,7 +486,7 @@ function initPayChart(){
             });
             sm.innerHTML = hh;
         } else { sm.innerHTML = '<div class="text-center text-muted py-3">No data available.</div>'; }
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 
 function esc(s){ if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }

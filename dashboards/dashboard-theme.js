@@ -184,7 +184,7 @@
         themeChangeCallbacks.push(cb);
     }
     function notifyThemeChange(themeId) {
-        themeChangeCallbacks.forEach(function(cb) { try { cb(themeId); } catch(e) {} });
+        themeChangeCallbacks.forEach(function(cb) { try { cb(themeId); } catch(e) { console.warn('[ISNM] Theme callback error:', e); } });
     }
 
     // ── Build theme option HTML ──

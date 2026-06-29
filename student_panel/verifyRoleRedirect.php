@@ -1,5 +1,7 @@
 <?php
-    error_reporting(0);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
     include('../assets/config.php');
     if (session_status() === PHP_SESSION_NONE) {
         session_start();

@@ -19,8 +19,6 @@ include_once __DIR__ . '/../includes/functions.php';
   <meta name="msapplication-config" content="/browserconfig.xml">
   <meta name="apple-touch-fullscreen" content="yes">
   <link rel="manifest" href="manifest.json">
-  
-  <script>(function(){window.addEventListener('unhandledrejection',function(e){e.preventDefault()});window.addEventListener('error',function(e){if(e.target&&e.target instanceof HTMLScriptElement||e.target instanceof HTMLLinkElement||e.target instanceof HTMLImageElement){e.preventDefault()}});})();</script>
   <title><?php echo isset($pageTitle) ? $pageTitle : 'Iganga School of Nursing and Midwifery'; ?></title>
   <meta name="description" content="Iganga School of Nursing and Midwifery - Quality Healthcare Education in Uganda">
   <meta name="keywords" content="nursing school, midwifery, healthcare education, ISNM, Uganda">
@@ -55,14 +53,6 @@ include_once __DIR__ . '/../includes/functions.php';
   <link rel="stylesheet" href="css/header.css?v=2" />
   <link rel="stylesheet" href="css/responsive.css?v=2" />
   <link rel="stylesheet" href="css/animations.css?v=2" />
-  <!-- Service Worker Registration for PWA (app installation) -->
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(function(reg) { console.log('SW registered:', reg.scope); })
-      .catch(function(err) { console.warn('SW registration failed:', err); });
-  }
-  </script>
 </head>
 
 <body>

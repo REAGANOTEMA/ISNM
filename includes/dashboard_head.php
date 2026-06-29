@@ -73,7 +73,6 @@ if (!empty($_SESSION['user_id'])) {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 window.CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
-// Auto-include CSRF token in all jQuery AJAX POST requests
 $(document).ajaxSend(function(e, xhr, opts) {
     if (opts.type === 'POST' && window.CSRF_TOKEN) {
         if (typeof opts.data === 'string' && opts.data.indexOf('csrf_token=') === -1) {
@@ -83,9 +82,24 @@ $(document).ajaxSend(function(e, xhr, opts) {
         }
     }
 });
-(function(){
-  window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
-})();
+</script>
+<script>
+if (!window._isnmErrorHandlerInstalled) {
+    window._isnmErrorHandlerInstalled = true;
+    window.addEventListener('unhandledrejection', function(e) {
+        var url = '';
+        try {
+            if (e.reason && typeof e.reason === 'object') {
+                url = e.reason.url || '';
+            } else if (typeof e.reason === 'string') {
+                url = e.reason;
+            }
+        } catch(ex) {}
+        if (url.indexOf('/writing/') > -1 || url.indexOf('/generate/') > -1 || url.indexOf('/site_integration/') > -1) {
+            e.preventDefault();
+        }
+    });
+}
 </script>
 
 <!-- Favicon — all sizes, all devices -->
@@ -122,23 +136,22 @@ $(document).ajaxSend(function(e, xhr, opts) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Dashboard Analytics Engine (Chart.js + AI) -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-charts.js?v=<?= $v ?>" defer></script>
-<!-- Service Worker + Push Notification Registration -->
+<!-- Push Notification Subscription -->
 <script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('<?= $rootPath ?>/sw.js?v=<?= $v ?>', { scope: '<?= $swScope ?>' })
-        .then(function(reg) {
-            if ('PushManager' in window && 'Notification' in window && Notification.permission === 'granted') {
-                reg.pushManager.subscribe({ userVisibleOnly: true }).then(function(sub) {
-                    if (sub) {
-                        var data = new URLSearchParams();
-                        data.append('endpoint', sub.endpoint);
-                        data.append('auth_key', (sub.toJSON().keys && sub.toJSON().keys.auth) || '');
-                        data.append('p256dh_key', (sub.toJSON().keys && sub.toJSON().keys.p256dh) || '');
-                        data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
-                        fetch('<?= $rootPath ?>/includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(){});
-                    }
-                }).catch(function(){});
-            }
-        }).catch(function(err) { console.warn('[ISNM] SW registration failed:', err); });
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(function(reg) {
+        if ('PushManager' in window && 'Notification' in window && Notification.permission === 'granted') {
+            reg.pushManager.subscribe({ userVisibleOnly: true }).then(function(sub) {
+                if (sub) {
+                    var data = new URLSearchParams();
+                    data.append('endpoint', sub.endpoint);
+                    data.append('auth_key', (sub.toJSON().keys && sub.toJSON().keys.auth) || '');
+                    data.append('p256dh_key', (sub.toJSON().keys && sub.toJSON().keys.p256dh) || '');
+                    data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
+                    fetch('<?= $rootPath ?>/includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(err){ console.warn('[ISNM] Push subscribe failed:', err); });
+                }
+            }).catch(function(err){ console.warn('[ISNM] Push subscribe registration failed:', err); });
+        }
+    }).catch(function(err){ console.warn('[ISNM] SW ready failed:', err); });
 }
 </script>

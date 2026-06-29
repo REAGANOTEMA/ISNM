@@ -769,7 +769,7 @@ function depLoadPlacements(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdatePlacementStatus(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_placement_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadPlacements(); }).catch(function(){}); }
+function depUpdatePlacementStatus(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_placement_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadPlacements(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadPlacements);
 </script>
 
@@ -813,7 +813,7 @@ function depLoadWelfare(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateWelfare(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadWelfare(); }).catch(function(){}); }
+function depUpdateWelfare(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_welfare_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadWelfare(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadWelfare);
 </script>
 
@@ -856,7 +856,7 @@ function depLoadDiscipline(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateDiscipline(id,st){ if(!st) return; var out=prompt('Outcome notes (optional):'); var fd=new FormData(); fd.append('id',id); fd.append('status',st); if(out) fd.append('outcome',out); fetch('deputy-principal.php?view=update_discipline_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadDiscipline(); }).catch(function(){}); }
+function depUpdateDiscipline(id,st){ if(!st) return; var out=prompt('Outcome notes (optional):'); var fd=new FormData(); fd.append('id',id); fd.append('status',st); if(out) fd.append('outcome',out); fetch('deputy-principal.php?view=update_discipline_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadDiscipline(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadDiscipline);
 </script>
 
@@ -1002,7 +1002,7 @@ function depLoadTasks(){
         h+='</tbody></table></div>'; el.innerHTML=h;
     }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
 }
-function depUpdateTask(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_task_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadTasks(); }).catch(function(){}); }
+function depUpdateTask(id,st){ if(!st) return; var fd=new FormData(); fd.append('id',id); fd.append('status',st); fetch('deputy-principal.php?view=update_task_status&ajax=1',{method:'POST',body:fd}).then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadTasks(); }).catch(function(e){ console.warn('[ISNM]', e); }); }
 document.addEventListener('DOMContentLoaded', depLoadTasks);
 </script>
 
@@ -1078,7 +1078,7 @@ function depLoadCommHistory(){
             d.forEach(function(c){ h+='<tr><td>'+esc(c.subject)+'</td><td>'+esc(c.sender_name||'-')+'</td><td class="small">'+esc(c.recipient_role||'-')+'</td><td class="small">'+(c.created_at||'')+'</td><td>'+(c.is_read?'<span class="badge bg-success">Read</span>':'<span class="badge bg-warning text-dark">Pending</span>')+'</td></tr>'; });
             h+='</tbody></table></div>'; el.innerHTML=h;
         }).catch(function(){ el.innerHTML='<div class="text-danger small p-3">Failed.</div>'; });
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 document.addEventListener('DOMContentLoaded', depLoadCommHistory);
 </script>
@@ -1288,7 +1288,7 @@ function depUpdateImpProgress(id){
     var st = prompt('Status (planned/in_progress/completed):');
     var fd = new FormData(); fd.append('id',id); fd.append('progress',parseFloat(pr)||0); if(st) fd.append('status',st);
     fetch('deputy-principal.php?view=update_improvement_progress&ajax=1',{method:'POST',body:fd})
-    .then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadImprovement(); }).catch(function(){});
+    .then(function(r){ return r.json(); }).then(function(d){ if(d.success) depLoadImprovement(); }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 document.addEventListener('DOMContentLoaded', depLoadImprovement);
 </script>

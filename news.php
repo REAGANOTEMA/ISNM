@@ -293,7 +293,11 @@ $pageTitle = ($singleNews ? htmlspecialchars($singleNews['title'] ?? '') . ' | I
 include 'shared/_header.php';
 ?>
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
-
+<style>
+  /* Prevent FOUC for Summernote */
+  #summernote { display: block; min-height: 200px; }
+  .note-editor { border-radius: 8px; }
+</style>
 <?php if ($is_admin): ?>
 <div class="admin-bar">
     <div class="container d-flex justify-content-between align-items-center">
@@ -482,36 +486,56 @@ include 'shared/_header.php';
     </div>
 <?php endif; ?>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+if (typeof jQuery === 'undefined') {
+    document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>');
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
 <script>
 let newsData = <?= json_encode($newsList) ?>;
 
-$(document).ready(function() {
-    $('#summernote').summernote({
-        height: 350,
-        toolbar: [
-            ['style', ['style']],
-            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
-            ['fontsize', ['fontsize']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture', 'video']],
-            ['view', ['fullscreen', 'codeview', 'help']]
-        ],
-        callbacks: {
-            onImageUpload: function(files) {
-                for (let i = 0; i < files.length; i++) {
-                    uploadEditorImage(files[i]);
+function initSummernote() {
+    var el = $('#summernote');
+    if (el.length && typeof $.fn.summernote === 'function') {
+        el.summernote({
+            height: 350,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    for (var i = 0; i < files.length; i++) {
+                        uploadEditorImage(files[i]);
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+}
+
+$(document).ready(function() {
+    initSummernote();
 });
 
+function snCode(html) {
+    var el = $('#summernote');
+    if (el.length && typeof $.fn.summernote === 'function') {
+        el.summernote('code', html || '');
+    } else {
+        el.val(html || '');
+    }
+}
+
 function uploadEditorImage(file) {
-    let formData = new FormData();
+    var formData = new FormData();
     formData.append('file', file);
     formData.append('action', 'upload_image');
     $.ajax({
@@ -521,7 +545,7 @@ function uploadEditorImage(file) {
         contentType: false,
         processData: false,
         success: function(res) {
-            if (res.url) {
+            if (res.url && typeof $.fn.summernote === 'function') {
                 $('#summernote').summernote('insertImage', res.url);
             }
         }
@@ -535,7 +559,7 @@ function showCreateForm() {
     $('#newsTitle').val('');
     $('#newsExcerpt').val('');
     $('#currentImage').html('');
-    $('#summernote').summernote('code', '');
+    snCode('');
     $('#newsFormContainer').show();
     window.scrollTo({ top: $('#newsFormContainer').offset().top - 20, behavior: 'smooth' });
 }
@@ -545,14 +569,14 @@ function hideForm() {
 }
 
 function editNews(id) {
-    let article = newsData.find(n => n.id == id);
+    var article = newsData.find(function(n) { return n.id == id; });
     if (!article) return;
     $('#formTitle').html('<i class="fas fa-edit me-2"></i>Edit News Article');
     $('#formAction').val('update');
     $('#newsId').val(article.id);
     $('#newsTitle').val(article.title);
     $('#newsExcerpt').val(article.excerpt || '');
-    $('#summernote').summernote('code', article.content || '');
+    snCode(article.content || '');
     if (article.featured_image) {
         $('#currentImage').html('<img src="' + article.featured_image + '" style="max-height:80px;border-radius:6px"> <span class="text-muted small">Current image</span>');
     } else {
