@@ -12,7 +12,7 @@ $isSuperAdmin = $auth_service->hasFullInstitutionAccess($role);
 
 $allowed = ['School Secretary','Director ICT','Academic Registrar','Registrar','Director General','CEO','School Principal','Principal','HOD','Lecturer'];
 if (!in_array($role, $allowed) && !$isSuperAdmin) {
-    header('Location: ../staff-login.php?error=unauthorized'); exit;
+    header('Location: ../organogram.php?error=unauthorized'); exit;
 }
 
 define('PERM_VIEW', 'view');

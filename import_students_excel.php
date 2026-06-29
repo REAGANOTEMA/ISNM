@@ -11,7 +11,7 @@ require_once 'includes/SimpleXlsxReader.php';
 $conn = getStudentsConnection();
 if (!$conn) {
     $_SESSION['error'] = 'Database connection failed';
-    header('Location: staff-login.php');
+    header('Location: organogram.php');
     exit;
 }
 $conn->set_charset('utf8mb4');

@@ -18,7 +18,7 @@
         } elseif ($isStudent) {
             header("Location: ../student-login.php");
         } else {
-            header("Location: ../staff-login.php");
+            header("Location: ../organogram.php");
         }
         exit();
   }

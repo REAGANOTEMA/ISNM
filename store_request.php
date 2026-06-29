@@ -6,7 +6,7 @@ session_start();
 
 $auth = new AuthenticationService();
 if (!$auth->isAuthenticated() || ($_SESSION['type'] ?? '') !== 'staff') {
-    header('Location: staff-login.php');
+    header('Location: organogram.php');
     exit();
 }
 

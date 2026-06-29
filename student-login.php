@@ -3,6 +3,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Generate CSRF token for login form BEFORE rendering
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $student_role = isset($_GET['student_role']) ? trim($_GET['student_role']) : '';
 if ($student_role !== '') {
     $_SESSION['student_role'] = urldecode($student_role);
