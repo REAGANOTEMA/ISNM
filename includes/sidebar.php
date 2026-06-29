@@ -436,6 +436,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
                 <div class="menu-children-inner">
                     <a href="director-admissions.php#applicant_messaging" class="child-link" data-section="applicant_messaging"><span class="child-bullet"></span><span class="child-label">Messaging</span></a>
                     <a href="director-admissions.php#notifications" class="child-link" data-section="notifications"><span class="child-bullet"></span><span class="child-label">Notifications</span></a>
+                    <a href="director-admissions.php#news_publishing" class="child-link" data-section="news_publishing"><span class="child-bullet"></span><span class="child-label">News Publishing</span></a>
                 </div>
             </div>
         </div>

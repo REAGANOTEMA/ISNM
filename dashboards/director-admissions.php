@@ -124,17 +124,26 @@ $colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`admission_requirements`
 if(!$colCheck||!$colCheck->num_rows){
     $conn->query("ALTER TABLE `{$staff_db}`.`admission_requirements` ADD COLUMN is_mandatory TINYINT(1) DEFAULT 1 AFTER is_active");
 }
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`applicants` LIKE 'rejection_reason'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`applicants` ADD COLUMN rejection_reason TEXT NULL AFTER status");
+}
+$colCheck=$conn->query("SHOW COLUMNS FROM `{$staff_db}`.`applicants` LIKE 'other_names'");
+if(!$colCheck||!$colCheck->num_rows){
+    $conn->query("ALTER TABLE `{$staff_db}`.`applicants` ADD COLUMN other_names VARCHAR(200) DEFAULT '' AFTER full_name");
+}
 
-// Seed default 20 requirements if empty
+// Seed default admission requirements if empty
 $reqCheck = $conn->query("SELECT COUNT(*)c FROM `{$staff_db}`.`admission_requirements`");
 if ($reqCheck) {
     $rc = (int)$reqCheck->fetch_assoc()['c'];
     if ($rc === 0) {
         $defaultReqs = [
-            'Surgical Gloves','Examination Gloves','Photocopying Ream','Ruled Paper Reams',
-            'Omo','Toilet Papers','Compound Brooms','Soft Brooms','Rake','Cobweb Brush',
-            'Scrubbing Brush','Squeezer','Toilet Brush','JIK','Vim','Mops','Sanitizer',
-            'Liquid Soap','Face Masks','Heavy Duty Gloves'
+            'Completed Application Form','Academic Certificates','Transcript','Birth Certificate',
+            'Passport Photos','Medical Report','Recommendation Letter','National ID Copy',
+            'Proof of Payment','Interview Letter','Entry Qualification','English Proficiency',
+            'Character Reference','Guardian Consent Form','Health Declaration','Immunization Record',
+            'Previous School Report','Employment Letter (if applicable)','Community Service Certificate','Sports Certificate',
         ];
         $order = 1;
         foreach ($defaultReqs as $rname) {
@@ -850,7 +859,7 @@ if($report){
 .section-tab:hover{color:var(--adm-prim);background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.15)}
 .section-tab.active{color:var(--adm-prim)!important;background:rgba(124,58,237,.08);border-color:var(--adm-accent);font-weight:700;box-shadow:0 2px 8px rgba(124,58,237,.15)}
 .dashboard-section{display:none}.dashboard-section.active{display:block}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
 .stat-card{background:var(--adm-card);border-radius:var(--adm-radius);padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--adm-shadow);border:1px solid var(--adm-border);transition:all .25s ease}
 .stat-card:hover{box-shadow:var(--adm-shadow-md);transform:translateY(-2px);border-color:#d1d5db}
 .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;transition:transform .2s;box-shadow:0 3px 10px rgba(0,0,0,.15)}
@@ -983,6 +992,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <a href="#intake_statistics" class="section-tab" data-section="intake_statistics"><i class="fas fa-chart-line me-1"></i>Intake Stats</a>
 <a href="#applicant_messaging" class="section-tab" data-section="applicant_messaging"><i class="fas fa-envelope me-1"></i>Messaging</a>
 <a href="#notifications" class="section-tab" data-section="notifications"><i class="fas fa-bell me-1"></i>Notifications</a>
+<a href="#news_publishing" class="section-tab" data-section="news_publishing"><i class="fas fa-newspaper me-1"></i>News</a>
 <a href="#requirement_alerts" class="section-tab" data-section="requirement_alerts"><i class="fas fa-exclamation-triangle me-1"></i>Alerts</a>
 </div>
 <div class="adm-content-wrap">
@@ -1282,6 +1292,44 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <button class="btn btn-sm btn-outline-danger" id="clearAllNotifBtn"><i class="fas fa-trash me-1"></i>Clear All</button>
 </div>
 <div id="notificationList"><p class="text-muted text-center">Loading...</p></div>
+</div></div>
+</div>
+
+<!-- NEWS PUBLISHING -->
+<div id="news_publishing" class="dashboard-section" data-section="news_publishing">
+<div class="scard"><div class="sch"><i class="fas fa-newspaper me-2"></i>Publish News to Website</div><div class="scb">
+<div class="row g-3 mb-3">
+<div class="col-md-8">
+<label class="form-label fw-semibold">News Title <span class="text-danger">*</span></label>
+<input type="text" id="newsTitle" class="form-control" placeholder="Enter news title...">
+</div>
+<div class="col-md-4">
+<label class="form-label fw-semibold">Status</label>
+<select id="newsStatus" class="form-select">
+<option value="draft">Draft</option>
+<option value="published" selected>Published</option>
+</select>
+</div>
+<div class="col-12">
+<label class="form-label fw-semibold">Excerpt / Summary</label>
+<textarea id="newsExcerpt" class="form-control" rows="2" placeholder="Brief summary for news card..."></textarea>
+</div>
+<div class="col-12">
+<label class="form-label fw-semibold">Content <span class="text-danger">*</span></label>
+<textarea id="newsContent" class="form-control" rows="8" placeholder="Write the full news article here..."></textarea>
+</div>
+<div class="col-md-6">
+<label class="form-label fw-semibold">Featured Image</label>
+<input type="file" id="newsImage" class="form-control" accept="image/*">
+</div>
+<div class="col-md-6 d-flex align-items-end">
+<button type="button" class="btn btn-sm me-2" style="background:#7c3aed;color:#fff" onclick="publishNews()"><i class="fas fa-paper-plane me-1"></i>Publish</button>
+<button type="button" class="btn btn-sm btn-outline-secondary" onclick="saveDraftNews()"><i class="fas fa-save me-1"></i>Save Draft</button>
+</div>
+</div>
+<hr>
+<h6 class="mb-3"><i class="fas fa-list me-1"></i>Published News</h6>
+<div id="newsList"><p class="text-muted text-center">Loading...</p></div>
 </div></div>
 </div>
 
