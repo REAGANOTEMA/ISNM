@@ -189,20 +189,22 @@ $pageTitle = 'HR Manager';
                 <div class="form-card">
                     <div class="hd"><i class="fas fa-history me-2"></i>Staff at a Glance</div>
                     <div class="bd p-0">
-                        <table class="data-table">
-                            <thead><tr><th>Staff ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead>
-                            <tbody>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Staff ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead>
+                                <tbody>
 <?php foreach ($staff_list as $s): $bc = $s['status']==='Active'?'bg-hr-success':($s['status']==='On Leave'?'bg-hr-warning':'bg-hr-danger'); ?>
-                            <tr>
-                                <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-                                <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-                                <td class="small"><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-                                <td class="small"><?= htmlspecialchars($s['department'] ?? '-') ?></td>
-                                <td><span class="badge-hr <?= $bc ?>"><?= $s['status'] ?></span></td>
-                            </tr>
+                                <tr>
+                                    <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
+                                    <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
+                                    <td class="small"><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
+                                    <td class="small"><?= htmlspecialchars($s['department'] ?? '-') ?></td>
+                                    <td><span class="badge-hr <?= $bc ?>"><?= $s['status'] ?></span></td>
+                                </tr>
 <?php endforeach; if (empty($staff_list)): ?><tr><td colspan="5" class="text-center text-muted py-3">No staff records.</td></tr><?php endif; ?>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,22 +218,24 @@ $pageTitle = 'HR Manager';
                 <div class="form-card">
                     <div class="hd"><i class="fas fa-id-card me-2"></i>Staff Records</div>
                     <div class="bd p-0">
-                        <table class="data-table">
-                            <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Type</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Type</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody>
 <?php foreach ($staff_list as $s): ?>
-                            <tr>
-                                <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-                                <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>"><strong><?= htmlspecialchars($s['full_name']) ?></strong></a></td>
-                                <td class="small"><?= htmlspecialchars($s['position']) ?></td>
-                                <td><span class="badge-hr bg-hr-info"><?= htmlspecialchars($s['employment_type'] ?? 'N/A') ?></span></td>
-                                <td class="small"><?= htmlspecialchars($s['employment_category'] ?? '-') ?></td>
-                                <td><span class="badge-hr <?= $s['status']==='Active'?'bg-hr-success':'bg-hr-warning' ?>"><?= $s['status'] ?></span></td>
-                                <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
-                            </tr>
+                                <tr>
+                                    <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
+                                    <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>"><strong><?= htmlspecialchars($s['full_name']) ?></strong></a></td>
+                                    <td class="small"><?= htmlspecialchars($s['position']) ?></td>
+                                    <td><span class="badge-hr bg-hr-info"><?= htmlspecialchars($s['employment_type'] ?? 'N/A') ?></span></td>
+                                    <td class="small"><?= htmlspecialchars($s['employment_category'] ?? '-') ?></td>
+                                    <td><span class="badge-hr <?= $s['status']==='Active'?'bg-hr-success':'bg-hr-warning' ?>"><?= $s['status'] ?></span></td>
+                                    <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
+                                </tr>
 <?php endforeach; if (empty($staff_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No records.</td></tr><?php endif; ?>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,27 +308,29 @@ if ($staff_conn) {
                 <div class="form-card">
                     <div class="hd"><i class="fas fa-calendar-alt me-2"></i>Leave Requests</div>
                     <div class="bd p-0">
-                        <table class="data-table">
-                            <thead><tr><th>Staff</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Staff</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody>
 <?php foreach ($leave_requests as $lr): $bc = $lr['status']==='Approved'?'bg-hr-success':($lr['status']==='Rejected'?'bg-hr-danger':'bg-hr-warning'); ?>
-                            <tr>
-                                <td><?= htmlspecialchars($lr['full_name']) ?></td>
-                                <td><?= htmlspecialchars($lr['leave_type']) ?></td>
-                                <td class="small"><?= $lr['start_date'] ?></td>
-                                <td class="small"><?= $lr['end_date'] ?></td>
-                                <td><?= $lr['total_days'] ?></td>
-                                <td><span class="badge-hr <?= $bc ?>"><?= $lr['status'] ?></span></td>
-                                <td>
+                                <tr>
+                                    <td><?= htmlspecialchars($lr['full_name']) ?></td>
+                                    <td><?= htmlspecialchars($lr['leave_type']) ?></td>
+                                    <td class="small"><?= $lr['start_date'] ?></td>
+                                    <td class="small"><?= $lr['end_date'] ?></td>
+                                    <td><?= $lr['total_days'] ?></td>
+                                    <td><span class="badge-hr <?= $bc ?>"><?= $lr['status'] ?></span></td>
+                                    <td>
 <?php if ($lr['status']==='Pending'): ?>
-                                    <form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button></form>
-                                    <form method="POST" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button></form>
+                                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button></form>
+                                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button></form>
 <?php else: ?><span class="text-muted small">Processed</span><?php endif; ?>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
 <?php endforeach; if (empty($leave_requests)): ?><tr><td colspan="7" class="text-center text-muted py-3">No leave requests.</td></tr><?php endif; ?>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

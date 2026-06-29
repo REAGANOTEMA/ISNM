@@ -27,7 +27,7 @@ if ($action === 'lookup_student') {
         echo json_encode([]); exit;
     }
     $like = "%$q%";
-    $stmt = $students_conn->prepare("SELECT id, full_name, student_number, registration_number, course, gender, date_of_birth, phone, email, current_year, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? ORDER BY surname,first_name LIMIT 30");
+    $stmt = $students_conn->prepare("SELECT id, full_name, student_number, registration_number, program, gender, date_of_birth, phone, email, level, status FROM students WHERE full_name LIKE ? OR student_number LIKE ? OR registration_number LIKE ? OR phone LIKE ? ORDER BY surname,first_name LIMIT 30");
     $stmt->bind_param("ssss", $like, $like, $like, $like);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -195,7 +195,7 @@ if ($action === 'generate_transcript') {
     $stmt4->close();
     
     // Also update registrar_transcripts
-    $course_val = $student['course']??'';
+    $course_val = $student['program']??'';
     $academic_year = date('Y');
     $stmt5 = $staff_conn->prepare("INSERT INTO registrar_transcripts (transcript_number, student_id, academic_year, program, transcript_status, request_date, generated_by) VALUES (?, ?, ?, ?, 'Ready', NOW(), 1)");
     $stmt5->bind_param("siss", $tnum, $sid, $academic_year, $course_val);
@@ -266,7 +266,7 @@ if ($action === 'generate_certificate') {
     
     // Also update registrar_certificates
     $full_name_val = $student['full_name']??'';
-    $course_val = $student['course']??'';
+    $course_val = $student['program']??'';
     $stmt4 = $staff_conn->prepare("INSERT INTO registrar_certificates (certificate_number, student_id, full_name, program, certificate_type, status, generated_by, generated_date) VALUES (?, ?, ?, ?, ?, 'Generated', 1, NOW())");
     $stmt4->bind_param("siss", $cnum, $sid, $full_name_val, $course_val, $cert_type);
     $stmt4->execute();

@@ -27,7 +27,7 @@ if ($ajax === 'search_student' && $sid) {
     $data = [];
     try {
         $like = '%' . $sid . '%';
-        $q = "SELECT student_id, first_name, surname, program, current_year FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
+        $q = "SELECT student_id, first_name, surname, program, level FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
         $stmt = $students->prepare($q);
         if ($stmt) { $stmt->bind_param('sss', $like, $like, $like); $stmt->execute(); $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) $data[] = $row; $stmt->close(); }
     } catch (Exception $e) { error_log('search: '.$e->getMessage()); }
@@ -48,10 +48,10 @@ if ($ajax === 'get_fee_structure' && $sid) {
     header('Content-Type: application/json');
     $fees = []; $student = [];
     try {
-        $stmt = $students->prepare("SELECT program, current_year FROM students WHERE student_id = ? LIMIT 1");
+        $stmt = $students->prepare("SELECT program, level FROM students WHERE student_id = ? LIMIT 1");
         if ($stmt) { $stmt->bind_param('s', $sid); $stmt->execute(); $prog = $stmt->get_result(); $student = $prog ? ($prog->fetch_assoc() ?: []) : []; $stmt->close(); }
         if (!empty($student['program'])) {
-            $p = $student['program']; $y = $student['current_year'] ?? '';
+            $p = $student['program']; $y = $student['level'] ?? '';
             $stmt = $staff->prepare("SELECT * FROM fee_structures WHERE (program = '' OR program = ?) AND (year_level = '' OR year_level = ?) ORDER BY id");
             if ($stmt) { $stmt->bind_param('ss', $p, $y); $stmt->execute(); $r = $stmt->get_result(); if ($r) while ($row = $r->fetch_assoc()) $fees[] = $row; $stmt->close(); }
         }

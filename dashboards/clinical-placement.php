@@ -42,11 +42,11 @@ if ($conn) {
         $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id WHERE cp.department='Midwifery' OR s.program LIKE '%Midwifery%'"); if ($qr) $midwifery_total = (int)$qr->fetch_assoc()['c'];
     }
     $qr = $conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status IN('In Progress','Scheduled') AND $where"); if ($qr) $assessment_count = (int)$qr->fetch_assoc()['c'];
-    $r = $conn->query("SELECT cp.*, CONCAT(s.first_name,' ',s.last_name) student_name, s.program FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id WHERE $where ORDER BY cp.start_date DESC LIMIT 50");
+    $r = $conn->query("SELECT cp.*, CONCAT(s.first_name,' ',s.surname) student_name, s.program FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id WHERE $where ORDER BY cp.start_date DESC LIMIT 50");
     if ($r) while ($row = $r->fetch_assoc()) $placements[] = $row;
 
     if ($view === 'assessment') {
-        $rr = $conn->query("SELECT cp.*, CONCAT(s.first_name,' ',s.last_name) student_name, s.program, cp.supervisor_notes FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id WHERE $where ORDER BY cp.start_date DESC");
+        $rr = $conn->query("SELECT cp.*, CONCAT(s.first_name,' ',s.surname) student_name, s.program, cp.supervisor_notes FROM clinical_placements cp LEFT JOIN students s ON cp.student_id=s.id WHERE $where ORDER BY cp.start_date DESC");
         if ($rr) while ($row = $rr->fetch_assoc()) $reports[] = $row;
     }
 }

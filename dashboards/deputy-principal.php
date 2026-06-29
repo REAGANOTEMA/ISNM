@@ -388,7 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($fn && $sn && $crs) {
             $snum = 'STU'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
             $full = trim("$fn $on $sn");
-            $stmt = $students->prepare("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,course,current_year,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
+            $stmt = $students->prepare("INSERT INTO students (student_number,first_name,surname,other_name,full_name,gender,program,level,year,current_semester,phone,mobile_number,email,guardian_name,guardian_phone,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',NOW())");
             $stmt->bind_param("ssssssiiissssss", $snum, $fn, $sn, $on, $full, $gen, $crs, $yr, $yr, $sem, $ph, $ph, $em, $gn, $gp);
             $stmt->execute();
             if ($students->affected_rows > 0) { dep_success("Student $full registered."); } else { dep_error('Failed: '.$students->error); }

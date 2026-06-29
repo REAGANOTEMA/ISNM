@@ -26,7 +26,7 @@ if ($ajax === 'search_student' && $sid) {
     $data = [];
     try {
         $like = '%' . $sid . '%';
-        $q = "SELECT student_id, first_name, surname, program, current_year FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
+        $q = "SELECT student_id, first_name, surname, program, level FROM students WHERE student_id LIKE ? OR first_name LIKE ? OR surname LIKE ? ORDER BY surname LIMIT 20";
         $stmt = $students->prepare($q);
         if ($stmt) { $stmt->bind_param('sss', $like, $like, $like); $stmt->execute(); $r = $stmt->get_result(); while ($row = $r->fetch_assoc()) $data[] = $row; $stmt->close(); }
     } catch (Exception $e) { error_log('search: '.$e->getMessage()); }

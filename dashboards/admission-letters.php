@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array($newStatus, $allowed) && $id > 0) {
             $userId = intval($_SESSION['user_id']);
             $stmt = $wconn->prepare("UPDATE student_applications SET status=?, reviewed_by=?, reviewed_at=NOW() WHERE id=?");
-            $stmt->bind_param("iii", $newStatus, $userId, $id);
+            $stmt->bind_param("sii", $newStatus, $userId, $id);
             $stmt->execute();
             $stmt->close();
             if ($newStatus === 'Admitted') {
@@ -101,9 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $admNo = 'ADM-' . date('Y') . '-' . str_pad($id, 4, '0', STR_PAD_LEFT);
                     $stmt = $staffDb->prepare("INSERT IGNORE INTO students (first_name, surname, other_name, full_name, gender, index_number, phone, email, program, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
                     if ($stmt) {
-                        $fullName = trim($a['first_name'] . ' ' . ($a['other_name']??'') . ' ' . $a['surname']);
+                        $fullName = trim($a['first_name'] . ' ' . ($a['other_names']??$a['other_name']??'') . ' ' . $a['surname']);
                         $idxNo = 'IND-' . str_pad($id, 5, '0', STR_PAD_LEFT);
-                        $stmt->bind_param('sssssssss', $a['first_name'], $a['surname'], $a['other_name'], $fullName, $a['gender'], $idxNo, $a['phone'], $a['email'], $a['program_applied']);
+                        $stmt->bind_param('sssssssss', $a['first_name'], $a['surname'], $a['other_names']??$a['other_name']??'', $fullName, $a['gender'], $idxNo, $a['phone'], $a['email'], $a['program_applied']);
                         $stmt->execute();
                         $studentId = $stmt->insert_id;
                         $stmt->close();

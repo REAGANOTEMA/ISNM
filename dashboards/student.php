@@ -488,30 +488,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                             <p><strong>Program:</strong> <?php echo $student_info['program']; ?></p>
                                         </div>
                                         <div class="transcript-content">
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Year</th>
-                                                        <th>Semester</th>
-                                                        <th>Courses</th>
-                                                        <th>Credits</th>
-                                                        <th>GPA</th>
-                                                        <th>Remarks</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php foreach ($academic_records as $record): ?>
-                                                    <tr>
-                                                        <td><?php echo $record['year']; ?></td>
-                                                        <td><?php echo $record['semester']; ?></td>
-                                                        <td><?php echo $record['courses'] ?? 'N/A'; ?></td>
-                                                        <td><?php echo $record['credits'] ?? 'N/A'; ?></td>
-                                                        <td><?php echo $record['gpa'] ?? 'N/A'; ?></td>
-                                                        <td><?php echo $record['remarks'] ?? 'N/A'; ?></td>
-                                                    </tr>
-                                                    <?php endforeach; ?>
-                                                </tbody>
-                                            </table>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Year</th>
+                                                            <th>Semester</th>
+                                                            <th>Courses</th>
+                                                            <th>Credits</th>
+                                                            <th>GPA</th>
+                                                            <th>Remarks</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($academic_records as $record): ?>
+                                                        <tr>
+                                                            <td><?php echo $record['year']; ?></td>
+                                                            <td><?php echo $record['semester']; ?></td>
+                                                            <td><?php echo $record['courses'] ?? 'N/A'; ?></td>
+                                                            <td><?php echo $record['credits'] ?? 'N/A'; ?></td>
+                                                            <td><?php echo $record['gpa'] ?? 'N/A'; ?></td>
+                                                            <td><?php echo $record['remarks'] ?? 'N/A'; ?></td>
+                                                        </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="transcript-actions">

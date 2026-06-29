@@ -536,7 +536,7 @@ if ($ajax === 'get_notifications') {
         $r = $conn->query("SELECT n.*,s.full_name sender_name FROM `{$staff_db}`.`admission_notifications` n LEFT JOIN `{$staff_db}`.`staff` s ON n.sent_by=s.id ORDER BY n.created_at DESC LIMIT 50");
     }
     $out=[];if($r)while($row=$r->fetch_assoc())$out[]=$row;
-    echo json_encode($out);exit;
+    echo json_encode(['data'=>$out]);exit;
 }
 
 if ($ajax === 'registration_readiness') {
@@ -660,7 +660,7 @@ if ($ajax === 'reports_data') {
         $r=$conn->query("SELECT intake,COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!=''$dateWhere GROUP BY intake ORDER BY intake");
         if($r)while($row=$r->fetch_assoc())$data[]=$row;
     }elseif($type==='clearance'){
-        $r=$conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,a.status,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,(SELECT COUNT(*) FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1) total_req FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.full_name LIMIT 500");
+        $r=$conn->query("SELECT a.id,a.full_name,a.application_number,a.phone,a.status,a.intake,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name,(SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified') verified_count,(SELECT COUNT(*) FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1) total_req FROM `{$staff_db}`.`applicants` a WHERE 1=1$dateWhere ORDER BY a.full_name LIMIT 500");
         if($r)while($row=$r->fetch_assoc()){$data[]=$row;}
     }
     if($format==='csv'){
@@ -770,6 +770,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: director-admissions.php");exit;
     }
     if ($action === 'edit_applicant') {
+        header('Content-Type: application/json');
         $aid=intval($_POST['id']??$_POST['applicant_id']??0);
         $fn=trim($_POST['full_name']??'');
         $dob=$_POST['date_of_birth']??trim($_POST['dob']??'');
@@ -786,16 +787,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($aid&&$fn){
             $stmt=$conn->prepare("UPDATE `{$staff_db}`.`applicants` SET full_name=?,date_of_birth=?,gender=?,phone=?,email=?,address=?,guardian_name=?,guardian_phone=?,guardian_relationship=?,program_id=?,intake=?,status=? WHERE id=?");
             if($stmt){$stmt->bind_param('sssssssssisii',$fn,$dob,$gen,$ph,$em,$addr,$gn,$gp,$gr,$prog_id,$intake,$status,$aid);$stmt->execute();$stmt->close();}
-            logAdmission($conn,$user_id,'Edit Applicant','applicants',$aid,"Edited applicant: $fn");$_SESSION['success']="Applicant updated.";
+            logAdmission($conn,$user_id,'Edit Applicant','applicants',$aid,"Edited applicant: $fn");
+            echo json_encode(['success'=>true,'message'=>'Applicant updated.']);exit;
         }
-        else{$_SESSION['error']='Edit failed: missing data.';}
-        header("Location: director-admissions.php");exit;
+        else{echo json_encode(['success'=>false,'error'=>'Edit failed: missing data.']);exit;}
     }
     if ($action === 'delete_applicant') {
+        header('Content-Type: application/json');
         $aid=intval($_POST['applicant_id']??$_POST['id']??0);
-        if($aid){$conn->query("DELETE FROM `{$staff_db}`.`requirement_history` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicants` WHERE id=".intval($aid));logAdmission($conn,$user_id,'Delete Applicant','applicants',$aid,"Applicant deleted");$_SESSION['success']='Applicant deleted.';}
-        else{$_SESSION['error']='Delete failed: invalid ID.';}
-        header("Location: director-admissions.php");exit;
+        if($aid){$conn->query("DELETE FROM `{$staff_db}`.`requirement_history` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=".intval($aid));$conn->query("DELETE FROM `{$staff_db}`.`applicants` WHERE id=".intval($aid));logAdmission($conn,$user_id,'Delete Applicant','applicants',$aid,"Applicant deleted");echo json_encode(['success'=>true,'message'=>'Applicant deleted.']);exit;}
+        else{echo json_encode(['success'=>false,'error'=>'Delete failed: invalid ID.']);exit;}
     }
     if ($action === 'edit_student') {
         $sid=intval($_POST['student_id']??0);$status=trim($_POST['status']??'');
@@ -814,7 +815,7 @@ if($report){
     echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
     echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
     if($report==='applications'){echo '<h2>All Applicants Report</h2>';$r=$conn->query("SELECT application_number,full_name,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program,intake,status,created_at FROM `{$staff_db}`.`applicants` a ORDER BY created_at DESC");echo '<table><thead><tr><th>App No</th><th>Name</th><th>Program</th><th>Intake</th><th>Date</th><th>Status</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.htmlspecialchars($row['intake']??'-').'</td><td>'.$row['created_at'].'</td><td>'.$row['status'].'</td></tr>';}echo '</tbody></table>';}
-    elseif($report==='cleared'){echo '<h2>Fully Cleared Applicants</h2>';$r=$conn->query("SELECT a.*,COALESCE((SELECT COUNT(*) FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=a.id AND status='Verified'),0) vc FROM `{$staff_db}`.`applicants` a HAVING vc>=$total_req_items ORDER BY a.full_name");echo '<table><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['phone']??'-').'</td><td>'.$row['status'].'</td></tr>';}echo '</tbody></table>';}
+    elseif($report==='cleared'){echo '<h2>Fully Cleared Applicants</h2>';$r=$conn->query("SELECT a.id,a.application_number,a.full_name,a.phone,a.status,COUNT(CASE WHEN ars.status='Verified' THEN 1 END) vc FROM `{$staff_db}`.`applicants` a LEFT JOIN `{$staff_db}`.`applicant_requirement_status` ars ON ars.applicant_id=a.id GROUP BY a.id,a.application_number,a.full_name,a.phone,a.status HAVING vc>=$total_req_items ORDER BY a.full_name");echo '<table><thead><tr><th>App No</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['application_number']).'</td><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['phone']??'-').'</td><td>'.$row['status'].'</td></tr>';}echo '</tbody></table>';}
     elseif($report==='clearance'){echo '<h2>Requirements Clearance Report</h2>';$r=$conn->query("SELECT ars.*,a.full_name applicant_name,adr.requirement_name FROM `{$staff_db}`.`applicant_requirement_status` ars LEFT JOIN `{$staff_db}`.`applicants` a ON ars.applicant_id=a.id LEFT JOIN `{$staff_db}`.`admission_requirements` adr ON ars.requirement_id=adr.id ORDER BY ars.applicant_id,adr.display_order");echo '<table><thead><tr><th>Applicant</th><th>Requirement</th><th>Status</th><th>Verified By</th><th>Date</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['applicant_name']??$row['applicant_id']).'</td><td>'.htmlspecialchars($row['requirement_name']??'-').'</td><td>'.$row['status'].'</td><td>'.$row['verified_by'].'</td><td>'.$row['verified_at'].'</td></tr>';}echo '</tbody></table>';}
     elseif($report==='intake'){echo '<h2>Intake Report</h2>';$r=$conn->query("SELECT intake,COUNT(*) total FROM `{$staff_db}`.`applicants` WHERE intake IS NOT NULL AND intake!='' GROUP BY intake ORDER BY intake");echo '<table><thead><tr><th>Intake</th><th>Applicants</th></tr></thead><tbody>';if($r)while($row=$r->fetch_assoc()){echo '<tr><td>'.htmlspecialchars($row['intake']).'</td><td>'.$row['total'].'</td></tr>';}echo '</tbody></table>';}
     echo '</body></html>';exit;
@@ -826,7 +827,7 @@ if($report){
 <?php include_once __DIR__ . "/../includes/dashboard_head.php"; ?>
 <style>
 :root{--adm-prim:#7c3aed;--adm-sec:#6d28d9;--adm-bg:#f8fafc;--adm-card:#ffffff;--adm-border:#e2e8f0;}
-.da-header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:16px 24px;border-radius:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.da-header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:20px 28px;border-radius:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .da-header h1{font-size:1.35rem;font-weight:700;color:#fff;margin:0;letter-spacing:-0.3px}
 .da-header p{font-size:0.78rem;color:rgba(255,255,255,0.7);margin:2px 0 0 0}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:16px}
@@ -1172,7 +1173,7 @@ if($report){
 <div class="col-md-3"><label class="form-label">To</label><input type="date" id="rptTo" class="form-control form-control-sm"></div>
 <div class="col-md-2"><label class="form-label">&nbsp;</label><br><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="loadReport()"><i class="fas fa-sync me-1"></i>Load</button></div>
 <div class="col-md-2"><label class="form-label">&nbsp;</label><br><button class="btn btn-sm btn-success" onclick="exportCSV()"><i class="fas fa-file-csv me-1"></i>Export CSV</button></div>
-<div class="col-md-2"><label class="form-label">&nbsp;</label><br><form method="post" style="display:inline" target="_blank"><input type="hidden" name="print_report" value="1"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="fas fa-print me-1"></i>Print</button></form></div>
+<div class="col-md-2"><label class="form-label">&nbsp;</label><br><form method="get" style="display:inline" target="_blank"><input type="hidden" name="report" value="applications"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="fas fa-print me-1"></i>Print</button></form></div>
 </div>
 <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Date</th><th>Applicant</th><th>Program</th><th>Status</th><th>Intake</th></tr></thead><tbody id="reportTable">
 <tr><td colspan="5" class="text-muted text-center">Select date range and load</td></tr>
@@ -1689,10 +1690,10 @@ jQuery(function($) {
       var h = '';
       if (r.data && r.data.length) {
         r.data.forEach(function(d) {
-          var cls = d.status === 'Verified' ? 'success' : d.status === 'Rejected' ? 'danger' : 'warning';
-          h += '<tr><td>' + htmlEscape(d.full_name) + '</td><td>' + htmlEscape(d.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(d.status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(d.created_at || '') + '</small></td><td>' +
-            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
-            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
+          var cls = d.verification_status === 'Verified' ? 'success' : d.verification_status === 'Rejected' ? 'danger' : 'warning';
+          h += '<tr><td>' + htmlEscape(d.full_name) + '</td><td>' + htmlEscape(d.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(d.verification_status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(d.uploaded_at || d.created_at || '') + '</small></td><td>' +
+            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.verification_status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + d.id + '" data-appid="' + d.applicant_id + '" ' + (d.verification_status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
         });
       } else { h = '<tr><td colspan="5" class="text-muted text-center">No documents</td></tr>'; }
       $('#docList').html(h);
@@ -1705,10 +1706,10 @@ jQuery(function($) {
       var h = '';
       if (r.data && r.data.length) {
         r.data.forEach(function(v) {
-          var cls = v.status === 'Verified' ? 'success' : v.status === 'Submitted' ? 'primary' : v.status === 'Rejected' ? 'danger' : 'secondary';
-          h += '<tr><td>' + htmlEscape(v.full_name) + '</td><td>' + htmlEscape(v.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(v.status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(v.updated_at || v.created_at || '') + '</small></td><td>' +
-            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
-            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
+          var cls = v.verification_status === 'Verified' ? 'success' : v.verification_status === 'Submitted' ? 'primary' : v.verification_status === 'Rejected' ? 'danger' : 'secondary';
+          h += '<tr><td>' + htmlEscape(v.full_name) + '</td><td>' + htmlEscape(v.requirement_name) + '</td><td><span class="badge bg-' + cls + '">' + htmlEscape(v.verification_status || 'Pending') + '</span></td><td><small class="text-muted">' + htmlEscape(v.updated_at || v.created_at || '') + '</small></td><td>' +
+            '<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:10px" data-action="verifyDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.verification_status === 'Verified' ? 'disabled' : '') + '><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" data-action="rejectDoc" data-id="' + v.id + '" data-appid="' + v.applicant_id + '" ' + (v.verification_status === 'Rejected' ? 'disabled' : '') + '><i class="fas fa-times"></i></button></td></tr>';
         });
       } else { h = '<tr><td colspan="5" class="text-muted text-center">No items to verify</td></tr>'; }
       $('#verificationList').html(h);

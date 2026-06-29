@@ -59,7 +59,7 @@ if($r) while($row=$r->fetch_assoc()) $timetable[]=$row;
 $clinical = []; $r=$conn->query("SELECT ct.*,s.full_name,st.full_name student_name FROM clinical_training ct LEFT JOIN staff s ON ct.supervisor_id=s.id LEFT JOIN igangaschoolofl_students_db.students st ON ct.student_id=st.id ORDER BY ct.start_date DESC LIMIT 50");
 if($r) while($row=$r->fetch_assoc()) $clinical[]=$row;
 
-$attendance = []; if($students_conn){ $r=$students_conn->query("SELECT a.*,s.full_name,s.course FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id ORDER BY a.date DESC LIMIT 50"); if($r) while($row=$r->fetch_assoc()) $attendance[]=$row; }
+$attendance = []; if($students_conn){ $r=$students_conn->query("SELECT a.*,s.full_name,s.program FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id ORDER BY a.date DESC LIMIT 50"); if($r) while($row=$r->fetch_assoc()) $attendance[]=$row; }
 
 $quality = []; $r=$conn->query("SELECT qa.*,s.full_name reviewer_name FROM quality_assurance qa LEFT JOIN staff s ON qa.reviewed_by=s.id ORDER BY qa.review_date DESC LIMIT 20");
 if($r) while($row=$r->fetch_assoc()) $quality[]=$row;
@@ -73,14 +73,14 @@ if($r) while($row=$r->fetch_assoc()) $result_approvals[]=$row;
 $recent_activities = []; $r=$conn->query("SELECT activity_description activity, created_at FROM staff_activity_log ORDER BY created_at DESC LIMIT 10");
 if($r) while($row=$r->fetch_assoc()) $recent_activities[]=$row;
 
-$enrollment_by_prog = []; if($students_conn){ $r=$students_conn->query("SELECT course,COUNT(*)c FROM students WHERE status='Active' GROUP BY course ORDER BY c DESC"); if($r) while($row=$r->fetch_assoc()) $enrollment_by_prog[]=$row; }
+$enrollment_by_prog = []; if($students_conn){ $r=$students_conn->query("SELECT program,COUNT(*)c FROM students WHERE status='Active' GROUP BY program ORDER BY c DESC"); if($r) while($row=$r->fetch_assoc()) $enrollment_by_prog[]=$row; }
 
 $user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = ".intval($user_id)); if ($ri) { $user_role_id = (int)$ri->fetch_assoc()['role_id']; }
 
 // ── Program Enrollment Stats ──
 function enrollmentStats($conn, $students_conn, $program_name) {
   if (!$students_conn) return 0;
-  $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE course=? AND status='Active'");
+  $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE program=? AND status='Active'");
   $stmt->bind_param("s", $program_name);
   $stmt->execute();
   $r = $stmt->get_result();
@@ -97,21 +97,21 @@ if ($report) {
     echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
     if ($report === 'student_progress') {
         echo '<h2>Student Progress Report</h2>';
-        $r=$students_conn->query("SELECT s.full_name,s.student_number,s.course,s.current_year,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM students s LEFT JOIN staffs_db.academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
+        $r=$students_conn->query("SELECT s.full_name,s.student_number,s.program,s.level,COUNT(ar.id)exams,ROUND(AVG(ar.marks),1)avg_marks FROM students s LEFT JOIN staffs_db.academic_records ar ON s.id=ar.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
         echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Year</th><th>Exams</th><th>Avg Marks</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['current_year'].'</td><td>'.($row['exams']??0).'</td><td>'.round($row['avg_marks']??0,1).'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['level'].'</td><td>'.($row['exams']??0).'</td><td>'.round($row['avg_marks']??0,1).'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'attendance_report') {
         echo '<h2>Attendance Report</h2>';
-        if($students_conn){ $r=$students_conn->query("SELECT s.full_name,s.student_number,s.course,COUNT(a.id)total,SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END)present FROM students s LEFT JOIN student_attendance a ON s.id=a.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
+        if($students_conn){ $r=$students_conn->query("SELECT s.full_name,s.student_number,s.program,COUNT(a.id)total,SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END)present FROM students s LEFT JOIN student_attendance a ON s.id=a.student_id WHERE s.status='Active' GROUP BY s.id ORDER BY s.full_name LIMIT 100");
         echo '<table><thead><tr><th>Name</th><th>Reg No</th><th>Program</th><th>Total</th><th>Present</th><th>Rate</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ $rt=$row['total']>0?round(($row['present']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td><td>'.$row['present'].'</td><td>'.$rt.'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ $rt=$row['total']>0?round(($row['present']/$row['total'])*100,1).'%':'-'; echo '<tr><td>'.htmlspecialchars($row['full_name']).'</td><td>'.htmlspecialchars($row['student_number']).'</td><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td><td>'.$row['present'].'</td><td>'.$rt.'</td></tr>'; }
         echo '</tbody></table>'; }
     } elseif ($report === 'graduation') {
         echo '<h2>Graduation Report</h2>';
-        $r=$students_conn->query("SELECT course,COUNT(*)total FROM students WHERE status IN('Graduated','graduation_candidate') GROUP BY course");
+        $r=$students_conn->query("SELECT program,COUNT(*)total FROM students WHERE status IN('Graduated','graduation_candidate') GROUP BY program");
         echo '<table><thead><tr><th>Program</th><th>Graduating</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'academic_performance') {
         echo '<h2>Academic Performance</h2>';
@@ -136,14 +136,14 @@ if ($report) {
         echo '<h2>Program Enrollment Report</h2>';
         if($fp){
             echo '<p><strong>Filtered:</strong> '.htmlspecialchars($fp).'</p>';
-            $stmt = $students_conn->prepare("SELECT course,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE course=? GROUP BY course");
+            $stmt = $students_conn->prepare("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE program=? GROUP BY program");
             $stmt->bind_param("s", $fp);
             $stmt->execute();
             $r = $stmt->get_result();
         }
-        else { $r=$students_conn->query("SELECT course,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY course"); }
+        else { $r=$students_conn->query("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY program"); }
         echo '<table><thead><tr><th>Program</th><th>Total</th><th>Active</th><th>Inactive</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ $in=$row['total']-$row['active']; echo '<tr><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td><td>'.$row['active'].'</td><td>'.$in.'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ $in=$row['total']-$row['active']; echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td><td>'.$row['active'].'</td><td>'.$in.'</td></tr>'; }
         echo '</tbody></table>';
         if($fp) $stmt->close();
     } elseif ($report === 'lecturer_workload') {
@@ -160,9 +160,9 @@ if ($report) {
         echo '</tbody></table>';
     } elseif ($report === 'enrollment_summary') {
         echo '<h2>Enrollment Summary</h2>';
-        $r=$students_conn->query("SELECT course,COUNT(*)total,SUM(CASE WHEN gender='Male' THEN 1 ELSE 0 END)males,SUM(CASE WHEN gender='Female' THEN 1 ELSE 0 END)females,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY course");
+        $r=$students_conn->query("SELECT program,COUNT(*)total,SUM(CASE WHEN gender='Male' THEN 1 ELSE 0 END)males,SUM(CASE WHEN gender='Female' THEN 1 ELSE 0 END)females,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY program");
         echo '<table><thead><tr><th>Program</th><th>Total</th><th>Male</th><th>Female</th><th>Active</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['course']).'</td><td>'.$row['total'].'</td><td>'.$row['males'].'</td><td>'.$row['females'].'</td><td>'.$row['active'].'</td></tr>'; }
+        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td><td>'.$row['males'].'</td><td>'.$row['females'].'</td><td>'.$row['active'].'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'student_detail') {
         $sid = intval($_GET['student_id']??0);
@@ -519,7 +519,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                             <div style="display:flex;flex-direction:column;gap:8px">
                                 <?php foreach($enrollment_by_prog as $e): $pct = $maxC>0 ? round(($e['c']/$maxC)*100) : 0; ?>
                                 <div>
-                                    <div class="d-flex justify-content-between small mb-1"><span><?= htmlspecialchars($e['course']) ?></span><strong><?= $e['c'] ?></strong></div>
+                                    <div class="d-flex justify-content-between small mb-1"><span><?= htmlspecialchars($e['program']) ?></span><strong><?= $e['c'] ?></strong></div>
                                     <div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:<?= $pct ?>%;background:linear-gradient(90deg,#1a237e,#3949ab);border-radius:4px;transition:width .5s"></div></div>
                                 </div>
                                 <?php endforeach; ?>
@@ -606,7 +606,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                             <?php if(!empty($enrollment_by_prog)): ?>
                             <table class="table table-sm"><thead><tr><th>Program</th><th>Total</th><th>% Share</th></tr></thead><tbody>
                             <?php $gt=array_sum(array_column($enrollment_by_prog,'c')); foreach($enrollment_by_prog as $e): $sp=$gt>0?round(($e['c']/$gt)*100,1):0; ?>
-                            <tr><td><?= htmlspecialchars($e['course']) ?></td><td><strong><?= $e['c'] ?></strong></td><td><?= $sp ?>%</td></tr>
+                            <tr><td><?= htmlspecialchars($e['program']) ?></td><td><strong><?= $e['c'] ?></strong></td><td><?= $sp ?>%</td></tr>
                             <?php endforeach; ?>
                             </tbody></table>
                             <?php else: echo renderEmptyState('fas fa-users','No enrollment data'); endif; ?>
@@ -1117,8 +1117,8 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                     <div class="col-md-6"><strong>Guardian:</strong> ${info.guardian_name||info.parent_name||'-'}</div>
                 </div></div>
                 <div class="tab-pane fade" id="pAcad"><div class="row g-2 small">
-                    <div class="col-md-4"><strong>Program:</strong> ${info.course||'-'}</div>
-                    <div class="col-md-4"><strong>Year:</strong> ${info.current_year||'-'}</div>
+                    <div class="col-md-4"><strong>Program:</strong> ${info.program||'-'}</div>
+                    <div class="col-md-4"><strong>Year:</strong> ${info.level||'-'}</div>
                     <div class="col-md-4"><strong>Semester:</strong> ${info.current_semester||'-'}</div>
                     <div class="col-md-4"><strong>Set:</strong> ${info.set_name||'-'}</div>
                     <div class="col-md-4"><strong>Intake:</strong> ${info.intake_date||'-'}</div>

@@ -34,7 +34,7 @@ try {
 $nursing_students = [];
 if ($ctx['students']) {
     try {
-        $r = $ctx['students']->query("SELECT id, first_name, surname, program, current_year, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 50");
+        $r = $ctx['students']->query("SELECT id, first_name, surname, program, level, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 50");
         if ($r) $nursing_students = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
@@ -169,7 +169,7 @@ if ($conn) {
                                 <tr>
                                     <td><?= htmlspecialchars($s['first_name'] . ' ' . $s['surname']) ?></td>
                                     <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
-                                    <td>Year <?= htmlspecialchars($s['current_year'] ?? '?') ?></td>
+                                    <td>Year <?= htmlspecialchars($s['level'] ?? '?') ?></td>
                                     <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
                                     <td><button class="btn btn-sm btn-outline-primary">View</button></td>
                                 </tr>
