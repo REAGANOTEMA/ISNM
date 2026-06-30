@@ -48,8 +48,8 @@ function validateStudentLoginAccess() {
 function tryStaffAuth(string $email, string $password, AuthenticationService $auth_service) {
     $result = $auth_service->authenticateStaff($email, $password);
     if ($result['success']) return $result;
-    if (stripos($result['message'] ?? '', 'Database unavailable') !== false) return $result;
-    return null;
+    // Return the actual error message so users know what went wrong
+    return $result;
 }
 
 /** Try hr_users table auth; return result array on success, null on failure. */
@@ -215,8 +215,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // CSRF verification on all POST actions
 $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+    // Regenerate CSRF token so the refreshed page has a valid one
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['error'] = 'Invalid security token. Please refresh and try again.';
-    header('Location: organogram.php');
+    // Determine which login page to redirect back to
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    if (strpos($referrer, 'student-login.php') !== false) {
+        header('Location: student-login.php');
+    } else {
+        header('Location: staff-login.php');
+    }
     exit();
 }
 
@@ -258,16 +266,23 @@ switch ($action) {
         // ① Unified staff table
         $result = tryStaffAuth($email, $password, $auth_service);
 
-        // ② hr_users table
-        if ($result === null) {
-            $result = tryHrAuth($email, $password);
-            if ($result) { applyLegacyUserSession($result['user']); }
+        // ② hr_users table (only if staff table had no matching email)
+        if ($result !== null && !$result['success'] && strpos($result['message'] ?? '', 'Invalid email or password') !== false) {
+            // Staff auth failed — try hr_users as fallback
+            $hrResult = tryHrAuth($email, $password);
+            if ($hrResult && $hrResult['success']) {
+                $result = $hrResult;
+                applyLegacyUserSession($result['user']);
+            }
         }
 
-        // ③ bursar_users table
-        if ($result === null) {
-            $result = tryBursarAuth($email, $password);
-            if ($result) { applyLegacyUserSession($result['user']); }
+        // ③ bursar_users table (only if both above failed with invalid email)
+        if ($result !== null && !$result['success'] && strpos($result['message'] ?? '', 'Invalid email or password') !== false) {
+            $bursarResult = tryBursarAuth($email, $password);
+            if ($bursarResult && $bursarResult['success']) {
+                $result = $bursarResult;
+                applyLegacyUserSession($result['user']);
+            }
         }
 
         if ($result !== null && $result['success']) {

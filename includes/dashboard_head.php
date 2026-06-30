@@ -152,6 +152,8 @@ window.onerror = function(msg, url) {
 <link href="<?= $rootPath ?>/dashboards/dashboard-mobile.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Modern UI Enhancement Styles -->
 <link href="<?= $rootPath ?>/css/modern-ui.css?v=<?= $v ?>" rel="stylesheet">
+<!-- Enterprise ERP Layout System -->
+<link href="<?= $rootPath ?>/css/enterprise-layout.css?v=<?= $v ?>" rel="stylesheet">
 <!-- Dashboard Theme System -->
 <script src="<?= $rootPath ?>/dashboards/dashboard-theme.js?v=<?= $v ?>" defer></script>
 <!-- Chart.js 4.x for dashboard analytics -->

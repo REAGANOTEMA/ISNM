@@ -851,37 +851,60 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 }
 </style>
 </head>
-<body>
+<body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<!-- ═══ TOP BAR ═══ -->
-<div class="dg-topbar an-fade">
-  <div class="dg-topbar-left">
-    <i class="fas <?= $dgIcon ?> crown"></i>
-    <div>
-      <h1><?= $dgRole ?> – <?= htmlspecialchars($user_name) ?></h1>
-      <p class="subtitle"><?= $dgSubtitle ?></p>
+<!-- ═══ ENTERPRISE HEADER ═══ -->
+<header class="ent-header">
+  <div class="ent-header-left">
+    <button class="ent-hamburger" onclick="document.querySelector('.ent-sidebar').classList.toggle('open');document.querySelector('.ent-sidebar-overlay').classList.toggle('active')"><i class="fas fa-bars"></i></button>
+    <div class="ent-logo">
+      <?php if(file_exists(__DIR__ . '/../images/school-logo.png')): ?>
+        <img src="<?= $rootPath ?? '..' ?>/images/school-logo.png" alt="ISNM">
+      <?php else: ?>
+        <i class="fas fa-graduation-cap"></i>
+      <?php endif; ?>
+    </div>
+    <div class="ent-brand">
+      <h1>Iganga School of Nursing &amp; Midwifery</h1>
+      <p><?= $dgRole ?? 'Director General' ?> Dashboard</p>
     </div>
   </div>
-  <div class="dg-topbar-right">
-    <span class="date-badge"><i class="far fa-calendar-alt me-1"></i><?= date('D, d M Y') ?></span>
-    <button class="btn-print-top" onclick="window.print()" title="Print Dashboard"><i class="fas fa-print me-1"></i>Print</button>
-    <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+  <div class="ent-header-center">
+    <div class="ent-search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" class="ent-search" placeholder="Search students, staff, records...">
+    </div>
   </div>
-</div>
+  <div class="ent-header-right">
+    <button class="ent-header-btn" title="Notifications" onclick="document.querySelector('.ent-control').classList.toggle('open')">
+      <i class="fas fa-bell"></i>
+      <span class="badge-dot"></span>
+    </button>
+    <button class="ent-header-btn" title="Messages"><i class="fas fa-envelope"></i></button>
+    <button class="ent-header-btn" title="Settings"><i class="fas fa-cog"></i></button>
+    <div class="ent-user-chip">
+      <div class="ent-user-avatar"><?= strtoupper(substr($user_name ?? 'U', 0, 1)) ?></div>
+      <span><?= htmlspecialchars($user_name ?? 'User') ?></span>
+    </div>
+    <a href="../logout.php" class="ent-header-btn" title="Logout" style="text-decoration:none;color:rgba(255,255,255,0.7)"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+</header>
+<div class="ent-sidebar-overlay" onclick="document.querySelector('.ent-sidebar').classList.remove('open');this.classList.remove('active')"></div>
 
-<!-- ═══ CONTENT ═══ -->
-<div class="dg-content">
+<!-- ═══ MAIN CONTENT AREA ═══ -->
+<div class="ent-main">
+<div class="ent-content-area ent-animate">
 
 <?php if(!empty($_SESSION['success'])): ?>
-<div class="alert alert-success alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#ecfdf5;color:#065f46;">
+<div class="alert alert-success alert-dismissible fade show py-2" style="border:none;border-radius:10px;background:#ecfdf5;color:#065f46;margin:0 0 16px;">
   <i class="fas fa-check-circle me-1"></i> <?= htmlspecialchars($_SESSION['success']) ?>
   <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
 </div>
 <?php unset($_SESSION['success']); endif; ?>
 <?php if(!empty($_SESSION['error'])): ?>
-<div class="alert alert-danger alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;">
+<div class="alert alert-danger alert-dismissible fade show py-2" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;margin:0 0 16px;">
   <i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($_SESSION['error']) ?>
   <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
 </div>
@@ -1899,7 +1922,103 @@ endswitch; ?>
 <?php renderApprovalModalsAndScripts(); ?>
 <?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
-</div><!-- /dg-content -->
+</div><!-- /ent-content-body -->
+</div><!-- /ent-content-area -->
+</div><!-- /ent-main -->
+
+<!-- ═══ RIGHT-SIDE CONTROL PANEL ═══ -->
+<aside class="ent-control">
+  <!-- Profile Card -->
+  <div class="ent-profile-card">
+    <?php if(!empty($user['profile_photo']) && file_exists(__DIR__ . '/../' . $user['profile_photo'])): ?>
+      <img src="<?= $rootPath ?? '..' ?>/<?= htmlspecialchars($user['profile_photo']) ?>" alt="<?= htmlspecialchars($user_name) ?>">
+    <?php else: ?>
+      <div class="ent-profile-avatar"><?= strtoupper(substr($user_name ?? 'U', 0, 1)) ?></div>
+    <?php endif; ?>
+    <h4><?= htmlspecialchars($user_name ?? 'Director General') ?></h4>
+    <p><?= htmlspecialchars($user['position'] ?? $dgRole ?? 'Director General') ?></p>
+    <span class="ent-profile-role"><span class="ent-online-dot"></span> Online</span>
+  </div>
+
+  <!-- Live Clock -->
+  <div class="ent-control-section">
+    <div class="ent-clock">
+      <div class="ent-clock-time" id="entClock"><?= date('H:i:s') ?></div>
+      <div class="ent-clock-date"><?= date('l, d M Y') ?></div>
+    </div>
+  </div>
+
+  <!-- Department Stats -->
+  <div class="ent-control-section">
+    <div class="ent-control-section-title"><i class="fas fa-chart-bar"></i> Department Overview</div>
+    <div class="ent-stats-grid">
+      <div class="ent-stat-mini"><h5><?= number_format($totalStaff ?? 0) ?></h5><p>Staff</p></div>
+      <div class="ent-stat-mini"><h5><?= number_format($totalStudents ?? 0) ?></h5><p>Students</p></div>
+      <div class="ent-stat-mini"><h5><?= number_format($todayCollection ?? 0) ?></h5><p>Today (UGX)</p></div>
+      <div class="ent-stat-mini"><h5><?= number_format($totalPending ?? 0) ?></h5><p>Pending</p></div>
+    </div>
+  </div>
+
+  <!-- Pending Tasks -->
+  <div class="ent-control-section">
+    <div class="ent-control-section-title"><i class="fas fa-tasks"></i> Pending Tasks</div>
+    <?php if(!empty($pendingContacts)): ?>
+    <div class="ent-task-item"><span class="ent-task-priority high"></span> <?= $pendingContacts ?> contact messages</div>
+    <?php endif; ?>
+    <?php if(!empty($pendingApplications)): ?>
+    <div class="ent-task-item"><span class="ent-task-priority medium"></span> <?= $pendingApplications ?> applications</div>
+    <?php endif; ?>
+    <?php if(!empty($pendingVolunteers)): ?>
+    <div class="ent-task-item"><span class="ent-task-priority low"></span> <?= $pendingVolunteers ?> volunteer requests</div>
+    <?php endif; ?>
+    <?php if(($totalPending ?? 0) == 0): ?>
+    <div class="ent-empty" style="padding:16px"><i class="fas fa-check-circle" style="font-size:24px;color:var(--ent-green)"></i><p style="margin:4px 0 0;font-size:11px">All caught up!</p></div>
+    <?php endif; ?>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="ent-control-section">
+    <div class="ent-control-section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+    <div class="ent-quick-grid">
+      <a href="?page=staff" class="ent-quick-btn"><i class="fas fa-users"></i>Staff</a>
+      <a href="?page=student" class="ent-quick-btn"><i class="fas fa-user-graduate"></i>Students</a>
+      <a href="?page=financial" class="ent-quick-btn"><i class="fas fa-coins"></i>Finance</a>
+      <a href="?page=departments" class="ent-quick-btn"><i class="fas fa-building"></i>Depts</a>
+      <a href="?page=approvals" class="ent-quick-btn"><i class="fas fa-check-double"></i>Approvals</a>
+      <a href="?page=news-management" class="ent-quick-btn"><i class="fas fa-newspaper"></i>News</a>
+      <a href="?page=communications" class="ent-quick-btn"><i class="fas fa-envelope"></i>Messages</a>
+      <a href="?page=reports" class="ent-quick-btn"><i class="fas fa-file-alt"></i>Reports</a>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="ent-control-section">
+    <div class="ent-control-section-title"><i class="fas fa-clock"></i> Recent Activity</div>
+    <?php if(!empty($recentActivities)): ?>
+      <?php foreach(array_slice($recentActivities, 0, 5) as $act): ?>
+      <div class="ent-activity-item">
+        <div class="ent-activity-dot" style="background:<?= $act['type']==='login'?'var(--ent-green)':($act['type']==='logout'?'var(--ent-red)':'var(--ent-blue)') ?>"></div>
+        <div>
+          <div class="ent-activity-text"><?= htmlspecialchars($act['activity_description'] ?? $act['description'] ?? '') ?></div>
+          <div class="ent-activity-time"><?= date('d M H:i', strtotime($act['created_at'] ?? $act['activity_time'] ?? 'now')) ?></div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <div class="ent-empty" style="padding:12px"><p style="margin:0;font-size:11px">No recent activity</p></div>
+    <?php endif; ?>
+  </div>
+
+  <!-- Account Links -->
+  <div class="ent-control-section">
+    <div class="ent-control-section-title"><i class="fas fa-user-cog"></i> Account</div>
+    <a href="?page=profile" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-user"></i> My Profile</a>
+    <a href="?page=preferences" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-sliders-h"></i> Preferences</a>
+    <a href="?page=security" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-shield-alt"></i> Security</a>
+    <a href="?page=activity-logs" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-history"></i> Activity Logs</a>
+    <a href="../logout.php" class="ent-sidebar-item" style="color:var(--ent-red);margin:0"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+</aside>
 
 <!-- ═══ SEND ANNOUNCEMENT MODAL ═══ -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">

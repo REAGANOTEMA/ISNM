@@ -274,6 +274,24 @@ function getRoleOperations(string $role): array {
             ['label' => 'Feedback',             'icon'=>'fas fa-comment-dots', 'page'=>'feedback'],
             ['label' => 'Guild Reports',        'icon'=>'fas fa-file-alt',     'page'=>'reports'],
         ],
+        'bursar' => [
+            ['label' => 'Revenue Management',   'icon'=>'fas fa-coins',        'page'=>'revenue'],
+            ['label' => 'Fee Collections',      'icon'=>'fas fa-money-bill',   'page'=>'fees'],
+            ['label' => 'Payment Verification', 'icon'=>'fas fa-check-circle', 'page'=>'payments'],
+            ['label' => 'Student Billing',      'icon'=>'fas fa-file-invoice', 'page'=>'billing'],
+            ['label' => 'Budget Management',    'icon'=>'fas fa-chart-pie',    'page'=>'budget'],
+            ['label' => 'Expenditure Control',  'icon'=>'fas fa-receipt',      'page'=>'expenditure'],
+            ['label' => 'Payroll Oversight',    'icon'=>'fas fa-users-cog',    'page'=>'payroll'],
+            ['label' => 'Reports & Exports',    'icon'=>'fas fa-file-alt',     'page'=>'reports'],
+            ['label' => 'Reminders',            'icon'=>'fas fa-bell',         'page'=>'reminders'],
+        ],
+        'sickbay' => [
+            ['label' => 'Patient Records',      'icon'=>'fas fa-heartbeat',    'page'=>'patients'],
+            ['label' => 'Appointments',         'icon'=>'fas fa-calendar',     'page'=>'appointments'],
+            ['label' => 'Medicine Inventory',   'icon'=>'fas fa-pills',        'page'=>'medicine'],
+            ['label' => 'Health Reports',       'icon'=>'fas fa-file-medical', 'page'=>'reports'],
+            ['label' => 'Student Visits',       'icon'=>'fas fa-user-injured', 'page'=>'visits'],
+        ],
     ];
 
     return $definitions[$roleKey] ?? $definitions['lecturer'];
@@ -283,17 +301,26 @@ function normalizeRoleKeySidebar(string $role): string {
     $m = strtolower(trim($role));
     $map = [
         'director general' => 'director_general', 'ceo' => 'director_general',
-        'director ict' => 'director_ict', 'director-academics' => 'director_academics',
+        'director ict' => 'director_ict', 'director academics' => 'director_academics',
         'director admissions' => 'director_admissions', 'director finance' => 'director_finance',
         'school principal' => 'principal', 'deputy principal' => 'deputy_principal',
         'academic registrar' => 'academic_registrar', 'school secretary' => 'secretary',
-        'hr manager' => 'hr', 'school librarian' => 'librarian',
-        'head of nursing' => 'head_nursing', 'head of midwifery' => 'head_midwifery',
-        'senior lecturer' => 'senior_lecturer', 'lecturer' => 'lecturer',
-        'matron' => 'matron', 'warden' => 'wardens',
-        'driver' => 'drivers', 'security' => 'security',
-        'storekeeper' => 'store', 'computer lab' => 'computer_lab',
-        'skills lab' => 'skills_lab', 'guild president' => 'guild',
+        'hr manager' => 'hr', 'school librarian' => 'librarian', 'librarian' => 'librarian',
+        'head of nursing' => 'head_nursing', 'head nursing' => 'head_nursing',
+        'head of midwifery' => 'head_midwifery', 'head midwifery' => 'head_midwifery',
+        'senior lecturer' => 'senior_lecturer', 'senior lecturers' => 'senior_lecturer',
+        'lecturer' => 'lecturer', 'lecturers' => 'lecturer',
+        'matron' => 'matron', 'matrons' => 'matron',
+        'warden' => 'wardens', 'wardens' => 'wardens',
+        'driver' => 'drivers', 'drivers' => 'drivers',
+        'security' => 'security', 'security officer' => 'security',
+        'storekeeper' => 'store', 'store keeper' => 'store',
+        'computer lab' => 'computer_lab', 'computer lab manager' => 'computer_lab',
+        'skills lab' => 'skills_lab', 'skills lab manager' => 'skills_lab',
+        'guild president' => 'guild',
+        'school bursar' => 'bursar', 'bursar' => 'bursar',
+        'director finance' => 'director_finance',
+        'sickbay' => 'sickbay', 'sickbay nurse' => 'sickbay',
     ];
     return $map[$m] ?? 'lecturer';
 }

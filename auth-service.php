@@ -311,20 +311,28 @@ class AuthenticationService {
         if ($this->isStaffAccountLocked($email))
             return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
 
-        $stmt = $conn->prepare(
+        // Try with staff_roles JOIN first, fall back to staff-only query if table missing
+        $roleName = '';
+        $stmt = @$conn->prepare(
             "SELECT s.*, sr.role_name FROM staff s
              LEFT JOIN staff_roles sr ON s.role_id = sr.id
              WHERE LOWER(s.email) = ?
              LIMIT 1"
         );
         if (!$stmt) {
-            error_log('authenticateStaff prepare failed: ' . $conn->error);
-            return ['success' => false, 'message' => 'Invalid email or password'];
+            // staff_roles table likely doesn't exist — query staff table directly
+            $stmt = $conn->prepare(
+                "SELECT * FROM staff WHERE LOWER(email) = ? LIMIT 1"
+            );
+            if (!$stmt) {
+                error_log('authenticateStaff prepare failed: ' . $conn->error);
+                return ['success' => false, 'message' => 'Database error. Please contact the system administrator.'];
+            }
         }
         $stmt->bind_param('s', $email);
         if (!$stmt->execute()) {
             $stmt->close();
-            return ['success' => false, 'message' => 'Invalid email or password'];
+            return ['success' => false, 'message' => 'Database error. Please try again.'];
         }
         $result = $stmt->get_result();
         if (!$result || $result->num_rows === 0) {
@@ -335,10 +343,27 @@ class AuthenticationService {
         $staff = $result->fetch_assoc();
         $stmt->close();
 
+        // Get role name — try staff_roles if available, otherwise use role_id
+        if (!empty($staff['role_name'])) {
+            $roleName = $staff['role_name'];
+        } else {
+            $roleCheck = @$conn->prepare("SELECT role_name FROM staff_roles WHERE id = ? LIMIT 1");
+            if ($roleCheck) {
+                $roleCheck->bind_param('i', $staff['role_id']);
+                $roleCheck->execute();
+                $roleRow = $roleCheck->get_result()->fetch_assoc();
+                $roleCheck->close();
+                $roleName = $roleRow['role_name'] ?? '';
+            }
+            if (empty($roleName)) {
+                $roleName = $staff['position'] ?? 'Staff';
+            }
+        }
+
         // Check status
         if (strtolower($staff['status']) !== 'active') {
             $this->recordStaffFailedAttempt($email);
-            return ['success' => false, 'message' => 'Invalid email or password'];
+            return ['success' => false, 'message' => 'Account is not active. Please contact the administrator.'];
         }
 
         // Check password - hashed only
@@ -355,7 +380,7 @@ class AuthenticationService {
                 'email'      => $staff['email'],
                 'full_name'  => $staff['full_name'],
                 'phone'      => $staff['phone'],
-                'role'       => $staff['role_name'],
+                'role'       => $roleName,
                 'type'       => 'staff',
                 'position'   => $staff['position'],
                 'department' => $staff['department'],
@@ -375,6 +400,7 @@ class AuthenticationService {
             session_start();
         }
         session_regenerate_id(true);
+        $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
         $_SESSION['user_id']        = $user['id'];
         $_SESSION['email']          = $user['email'];
         $_SESSION['full_name']      = $user['full_name'];

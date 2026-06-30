@@ -203,6 +203,6 @@ if (!function_exists('staffRequireRole')) {
 // ── Fallback for renderEmptyState if dashboard_components.php wasn't loaded ──
 if (!function_exists('renderEmptyState')) {
     function renderEmptyState($message, $icon = 'fas fa-inbox', $extra = '') {
-        echo '<div class="empty-state text-center py-5"><i class="' . htmlspecialchars($icon) . ' fa-3x text-muted mb-3"></i><p class="text-muted">' . htmlspecialchars($message) . '</p>' . ($extra ? '<p>' . $extra . '</p>' : '') . '</div>';
+        return '<div class="empty-state text-center py-5"><i class="' . htmlspecialchars($icon) . ' fa-3x text-muted mb-3"></i><p class="text-muted">' . htmlspecialchars($message) . '</p>' . ($extra ? '<p>' . $extra . '</p>' : '') . '</div>';
     }
 }
