@@ -53,7 +53,7 @@
 
 <script data-cfasync="false" type="text/javascript">
 // <![CDATA[
-CommonParams.setAll({common_query:"",opendb_url:"index.php?route=/database/structure",lang:"en_GB",server:"1",table:"",db:"igangaschoolofl_staffs_db",token:"3c2c5a76494f674f7e63395c632a2d3d",text_dir:"ltr",LimitChars:"50",pftext:"P",confirm:true,LoginCookieValidity:"1440",session_gc_maxlifetime:"1440",logged_in:true,is_https:false,rootPath:"/phpmyadmin/",arg_separator:"&",version:"5.2.1",auth_type:"config",user:"root"});
+CommonParams.setAll({common_query:"",opendb_url:"index.php?route=/database/structure",lang:"en_GB",server:"1",table:"",db:"igangaschoolofl_staffs_db",token:"21512a506963644e5f713777503e316c",text_dir:"ltr",LimitChars:"50",pftext:"P",confirm:true,LoginCookieValidity:"1440",session_gc_maxlifetime:"1440",logged_in:true,is_https:false,rootPath:"/phpmyadmin/",arg_separator:"&",version:"5.2.1",auth_type:"config",user:"root"});
 var firstDayOfCalendar = '0';
 var themeImagePath = '.\/themes\/pmahomme\/img\/';
 var mysqlDocTemplate = '.\/url.php\u003Furl\u003Dhttps\u00253A\u00252F\u00252Fdev.mysql.com\u00252Fdoc\u00252Frefman\u00252F8.0\u00252Fen\u00252F\u002525s.html';
@@ -630,7 +630,7 @@ $(function() {
                   <div id="pma_navigation_settings"><div class="page_settings"><form method="post" action="index.php&#x3F;route&#x3D;&#x25;2Fexport&amp;db&#x3D;igangaschoolofl_staffs_db&amp;server&#x3D;1" class="config-form disableAjax">
   <input type="hidden" name="tab_hash" value="">
       <input type="hidden" name="check_page_refresh" id="check_page_refresh" value="">
-    <input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d">
+    <input type="hidden" name="token" value="21512a506963644e5f713777503e316c">
   <input type="hidden" name="submit_save" value="Navi">
 
   <ul class="nav nav-tabs" id="configFormDisplayTab" role="tablist">
@@ -1506,7 +1506,7 @@ registerFieldValidator('NavigationTreeTableLevel', 'validatePositiveNumber', tru
   
   <div id="prefs_autoload" class="alert alert-primary d-print-none hide" role="alert">
     <form action="index.php?route=/preferences/manage" method="post" class="disableAjax">
-        <input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d">
+        <input type="hidden" name="token" value="21512a506963644e5f713777503e316c">
         <input type="hidden" name="json" value="">
         <input type="hidden" name="submit_import" value="1">
         <input type="hidden" name="return_url" value="index.php?route=%2Fexport">
@@ -1859,7 +1859,7 @@ registerFieldValidator('NavigationTreeTableLevel', 'validatePositiveNumber', tru
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 29, 2026 at 05:18 PM
+-- Generation Time: Jun 30, 2026 at 09:09 PM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -1973,7 +1973,6 @@ CREATE TABLE IF NOT EXISTS `academic_audit_logs` (
 -- Table structure for table `academic_calendar`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `academic_calendar` (
@@ -2006,7 +2005,6 @@ INSERT DELAYED IGNORE INTO `academic_calendar` (`id`, `calendar_id`, `academic_y
 -- Table structure for table `academic_course_catalog`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `academic_course_catalog` (
@@ -2065,7 +2063,6 @@ CREATE TABLE IF NOT EXISTS `academic_curriculum_development` (
 -- Table structure for table `academic_programs`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `academic_programs` (
@@ -2275,7 +2272,6 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
 -- Table structure for table `admission_activity_logs`
 --
 -- Creation: Jun 29, 2026 at 12:49 PM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `admission_activity_logs` (
@@ -2322,7 +2318,6 @@ CREATE TABLE IF NOT EXISTS `admission_notifications` (
 -- Table structure for table `admission_requirements`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `admission_requirements` (
@@ -2439,7 +2434,6 @@ CREATE TABLE IF NOT EXISTS `analytics_cache` (
 -- Table structure for table `announcements`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `announcements` (
@@ -2661,7 +2655,6 @@ CREATE TABLE IF NOT EXISTS `appraisal_ratings` (
 -- Table structure for table `approval_actions`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `approval_actions` (
@@ -2690,7 +2683,6 @@ INSERT DELAYED IGNORE INTO `approval_actions` (`id`, `request_id`, `stage_id`, `
 -- Table structure for table `approval_requests`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `approval_requests` (
@@ -2734,7 +2726,7 @@ INSERT DELAYED IGNORE INTO `approval_requests` (`id`, `workflow_id`, `request_nu
 -- Table structure for table `approval_stages`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
+-- Last update: Jun 29, 2026 at 01:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `approval_stages` (
@@ -2770,7 +2762,7 @@ INSERT DELAYED IGNORE INTO `approval_stages` (`id`, `workflow_id`, `stage_name`,
 -- Table structure for table `approval_workflows`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
+-- Last update: Jun 29, 2026 at 01:42 PM
 --
 
 CREATE TABLE IF NOT EXISTS `approval_workflows` (
@@ -3594,6 +3586,35 @@ CREATE TABLE IF NOT EXISTS `cache_management` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `calendar_events`
+--
+-- Creation: Jun 30, 2026 at 03:35 PM
+--
+
+CREATE TABLE IF NOT EXISTS `calendar_events` (
+  `id` int UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text,
+  `event_date` date NOT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `event_type` enum('meeting','deadline','holiday','exam','orientation','training','ceremony','other') NOT NULL DEFAULT 'meeting',
+  `audience` enum('all','staff','students','specific') NOT NULL DEFAULT 'all',
+  `audience_role` varchar(100) DEFAULT NULL,
+  `audience_staff_ids` text,
+  `is_recurring` tinyint(1) NOT NULL DEFAULT '0',
+  `recurrence_pattern` varchar(50) DEFAULT NULL,
+  `created_by` int UNSIGNED NOT NULL,
+  `color` varchar(7) DEFAULT '#3b82f6',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cashbook`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -3901,7 +3922,6 @@ CREATE TABLE IF NOT EXISTS `compliance_records` (
 -- Table structure for table `compliance_requirements`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `compliance_requirements` (
@@ -4142,7 +4162,6 @@ CREATE TABLE IF NOT EXISTS `dashboard_updates` (
 -- Table structure for table `data_ownership_rules`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `data_ownership_rules` (
@@ -4550,6 +4569,30 @@ CREATE TABLE IF NOT EXISTS `duty_rosters` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `email_logs`
+--
+-- Creation: Jun 30, 2026 at 03:35 PM
+--
+
+CREATE TABLE IF NOT EXISTS `email_logs` (
+  `id` int UNSIGNED NOT NULL,
+  `recipient_email` varchar(255) NOT NULL,
+  `recipient_name` varchar(120) DEFAULT NULL,
+  `recipient_type` enum('staff','student','external') NOT NULL DEFAULT 'staff',
+  `recipient_id` int UNSIGNED DEFAULT NULL,
+  `subject` varchar(255) NOT NULL,
+  `body` text,
+  `template_name` varchar(100) DEFAULT NULL,
+  `status` enum('queued','sent','delivered','failed','bounced') NOT NULL DEFAULT 'queued',
+  `error_message` text,
+  `sent_by` int UNSIGNED DEFAULT NULL,
+  `sent_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `email_notifications_queue`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -4805,7 +4848,6 @@ CREATE TABLE IF NOT EXISTS `expenditures` (
 -- Table structure for table `expenses`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `expenses` (
@@ -4977,6 +5019,32 @@ CREATE TABLE `fee_payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `file_uploads`
+--
+-- Creation: Jun 30, 2026 at 03:35 PM
+--
+
+CREATE TABLE IF NOT EXISTS `file_uploads` (
+  `id` int UNSIGNED NOT NULL,
+  `original_name` varchar(255) NOT NULL,
+  `stored_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int UNSIGNED NOT NULL DEFAULT '0',
+  `mime_type` varchar(100) DEFAULT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
+  `uploaded_by` int UNSIGNED NOT NULL,
+  `uploaded_by_name` varchar(120) DEFAULT NULL,
+  `entity_type` varchar(60) DEFAULT NULL,
+  `entity_id` int UNSIGNED DEFAULT NULL,
+  `description` text,
+  `is_public` tinyint(1) NOT NULL DEFAULT '0',
+  `download_count` int UNSIGNED NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `financial_audit_log`
 --
 -- Creation: Jun 27, 2026 at 04:59 PM
@@ -5112,7 +5180,6 @@ CREATE TABLE IF NOT EXISTS `generated_documents` (
 -- Table structure for table `gpa_settings`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `gpa_settings` (
@@ -5188,7 +5255,6 @@ CREATE TABLE IF NOT EXISTS `grade_change_history` (
 -- Table structure for table `grade_scale`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `grade_scale` (
@@ -5719,7 +5785,6 @@ CREATE TABLE IF NOT EXISTS `incident_reports` (
 -- Table structure for table `institutional_alerts`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `institutional_alerts` (
@@ -5765,7 +5830,6 @@ INSERT DELAYED IGNORE INTO `institutional_alerts` (`id`, `title`, `description`,
 -- Table structure for table `institutional_risks`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `institutional_risks` (
@@ -6732,7 +6796,6 @@ CREATE TABLE IF NOT EXISTS `meal_tracking` (
 -- Table structure for table `medicine_stock`
 --
 -- Creation: Jun 29, 2026 at 12:49 PM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `medicine_stock` (
@@ -6827,7 +6890,7 @@ CREATE TABLE IF NOT EXISTS `medicine_stock_transactions` (
 -- Table structure for table `menu_groups`
 --
 -- Creation: Jun 29, 2026 at 01:16 PM
--- Last update: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 03:18 PM
 --
 
 CREATE TABLE IF NOT EXISTS `menu_groups` (
@@ -6900,7 +6963,7 @@ CREATE TABLE IF NOT EXISTS `menu_items` (
 -- Table structure for table `menu_roles`
 --
 -- Creation: Jun 29, 2026 at 01:16 PM
--- Last update: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 03:18 PM
 --
 
 CREATE TABLE IF NOT EXISTS `menu_roles` (
@@ -6950,7 +7013,7 @@ INSERT DELAYED IGNORE INTO `menu_roles` (`id`, `role_key`, `display_name`, `dash
 -- Table structure for table `menu_role_groups`
 --
 -- Creation: Jun 29, 2026 at 01:16 PM
--- Last update: Jun 29, 2026 at 01:16 PM
+-- Last update: Jun 29, 2026 at 03:18 PM
 --
 
 CREATE TABLE IF NOT EXISTS `menu_role_groups` (
@@ -7231,6 +7294,81 @@ CREATE TABLE IF NOT EXISTS `midwifery_students` (
   `cohort` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `clinical_hours` int DEFAULT '0',
   `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `module_audit_log`
+--
+-- Creation: Jun 30, 2026 at 06:57 PM
+--
+
+CREATE TABLE IF NOT EXISTS `module_audit_log` (
+  `id` int NOT NULL,
+  `module_id` int NOT NULL,
+  `staff_id` int NOT NULL,
+  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `record_id` int DEFAULT NULL,
+  `details` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `module_departments`
+--
+-- Creation: Jun 30, 2026 at 06:57 PM
+-- Last update: Jun 30, 2026 at 06:57 PM
+--
+
+CREATE TABLE IF NOT EXISTS `module_departments` (
+  `id` int NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `label` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'building',
+  `color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#3b82f6',
+  `sort_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `module_departments`
+--
+
+INSERT DELAYED IGNORE INTO `module_departments` (`id`, `name`, `label`, `icon`, `color`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'leadership', 'Leadership & Strategy', 'crown', '#1e3a8a', 1, 1, '2026-06-30 18:57:43'),
+(2, 'academic', 'Academic Affairs', 'book', '#3b82f6', 2, 1, '2026-06-30 18:57:43'),
+(3, 'finance', 'Finance & Accounts', 'money-bill', '#10b981', 3, 1, '2026-06-30 18:57:43'),
+(4, 'hr', 'HR & Administration', 'users', '#8b5cf6', 4, 1, '2026-06-30 18:57:43'),
+(5, 'student_services', 'Student Services', 'user-graduate', '#f59e0b', 5, 1, '2026-06-30 18:57:43'),
+(6, 'operations', 'Operations & Logistics', 'cogs', '#6366f1', 6, 1, '2026-06-30 18:57:43'),
+(7, 'compliance', 'Compliance & Quality', 'shield-alt', '#ef4444', 7, 1, '2026-06-30 18:57:43'),
+(8, 'clinical', 'Clinical & Health', 'heartbeat', '#ef4444', 8, 1, '2026-06-30 18:57:43'),
+(9, 'system', 'System & Settings', 'database', '#475569', 9, 1, '2026-06-30 18:57:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `module_permissions`
+--
+-- Creation: Jun 30, 2026 at 06:57 PM
+--
+
+CREATE TABLE IF NOT EXISTS `module_permissions` (
+  `id` int NOT NULL,
+  `module_id` int NOT NULL,
+  `role_id` int NOT NULL,
+  `can_view` tinyint(1) DEFAULT '1',
+  `can_create` tinyint(1) DEFAULT '0',
+  `can_edit` tinyint(1) DEFAULT '0',
+  `can_delete` tinyint(1) DEFAULT '0',
+  `can_approve` tinyint(1) DEFAULT '0',
+  `can_export` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -7546,7 +7684,6 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
 -- Table structure for table `payments`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payments` (
@@ -8136,7 +8273,6 @@ CREATE TABLE IF NOT EXISTS `payroll_periods` (
 -- Table structure for table `payroll_records`
 --
 -- Creation: Jun 29, 2026 at 12:49 PM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_records` (
@@ -8239,7 +8375,6 @@ CREATE TABLE IF NOT EXISTS `payroll_runs` (
 -- Table structure for table `payroll_settings`
 --
 -- Creation: Jun 28, 2026 at 05:57 AM
--- Last update: Jun 28, 2026 at 07:11 AM
 --
 
 CREATE TABLE IF NOT EXISTS `payroll_settings` (
@@ -8336,7 +8471,6 @@ CREATE TABLE IF NOT EXISTS `penalty_configurations` (
 -- Table structure for table `pending_students`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `pending_students` (
@@ -8897,7 +9031,6 @@ CREATE TABLE IF NOT EXISTS `result_publications` (
 -- Table structure for table `roles`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -9168,7 +9301,6 @@ CREATE TABLE IF NOT EXISTS `semesters` (
 -- Table structure for table `sickbay_settings`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `sickbay_settings` (
@@ -9195,7 +9327,6 @@ INSERT DELAYED IGNORE INTO `sickbay_settings` (`id`, `setting_key`, `setting_val
 -- Table structure for table `sickness_directory`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
 --
 
 CREATE TABLE IF NOT EXISTS `sickness_directory` (
@@ -9264,6 +9395,30 @@ CREATE TABLE IF NOT EXISTS `skills_laboratory` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sms_logs`
+--
+-- Creation: Jun 30, 2026 at 03:35 PM
+--
+
+CREATE TABLE IF NOT EXISTS `sms_logs` (
+  `id` int UNSIGNED NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
+  `recipient_name` varchar(120) DEFAULT NULL,
+  `recipient_type` enum('staff','student','external') NOT NULL DEFAULT 'staff',
+  `recipient_id` int UNSIGNED DEFAULT NULL,
+  `message` text NOT NULL,
+  `status` enum('queued','sent','delivered','failed') NOT NULL DEFAULT 'queued',
+  `error_message` text,
+  `provider` varchar(50) DEFAULT NULL,
+  `provider_message_id` varchar(100) DEFAULT NULL,
+  `sent_by` int UNSIGNED DEFAULT NULL,
+  `sent_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sports_events`
 --
 -- Creation: Jun 28, 2026 at 04:21 AM
@@ -9295,453 +9450,6 @@ CREATE TABLE IF NOT EXISTS `sports_teams` (
   `coach_id` int UNSIGNED DEFAULT NULL,
   `captain_id` int UNSIGNED DEFAULT NULL,
   `description` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff`
---
--- Creation: Jun 29, 2026 at 12:49 PM
---
-
-CREATE TABLE IF NOT EXISTS `staff` (
-  `id` int NOT NULL,
-  `staff_id` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `full_name` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `role_id` int DEFAULT NULL,
-  `position` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `department` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Active',
-  `hire_date` date DEFAULT NULL,
-  `last_login` datetime DEFAULT NULL,
-  `login_attempts` int DEFAULT '0',
-  `locked_until` datetime DEFAULT NULL,
-  `is_first_login` tinyint(1) DEFAULT '1',
-  `password_changed` tinyint(1) DEFAULT '0',
-  `profile_photo` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `address` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff`
---
-
-INSERT DELAYED IGNORE INTO `staff` (`id`, `staff_id`, `full_name`, `email`, `phone`, `password`, `role_id`, `position`, `department`, `status`, `hire_date`, `last_login`, `login_attempts`, `locked_until`, `is_first_login`, `password_changed`, `profile_photo`, `address`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Doris Joy Namugwanya', 'directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', '', '$2y$10$9OkGyLqxrkWGQ380t05Kj./Gzu7DBUNM75BIileuHsw5nFDzPyksa', 1, 'Director General', 'Executive Office', 'Active', '2026-06-09', '2026-06-27 07:26:14', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:10', '2026-06-27 07:26:14'),
-(2, NULL, 'Doris Joy', 'ceo@igangaschoolofnursingandmidwifery.ac.ug', '', '$2y$10$xXJsVElSZzu.wTNPpSKh2e9mYwUnEz3Fh6N8LKh1qrwyaXbRDqZyC', 2, 'Chief Executive Officer', 'Executive Office', 'Active', '2026-06-09', '2026-06-25 09:22:04', 0, NULL, 0, 1, NULL, '', '2026-06-09 22:56:10', '2026-06-25 09:22:04'),
-(3, NULL, 'Stephen Bywaka', 'directoracademic@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$0W2zpD9Mx9jrzFyGY0wzP.vfdAB8wu8JQU.UNPhQ73EM9ABy36r0q', 3, 'Director Academics', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-25 03:11:18', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:10', '2026-06-25 03:11:18'),
-(4, NULL, 'Finance Director', 'finance@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$1B4WKBhbkTe8zAYkJbbEe.D9NtkuxflDZN356rGzPvD16QrWCKywu', 4, 'Director Finance', 'Finance Department', 'Active', '2026-06-09', '2026-06-25 09:22:40', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:10', '2026-06-25 09:22:40'),
-(5, NULL, 'School Principal', 'principal@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$4u3./3VtmlkZAT2xuF7MLudpeJ4AbZLKjxXryhjGKvaFeulUimvGW', 6, 'School Principal', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-25 03:44:45', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:11', '2026-06-25 03:44:45'),
-(6, NULL, 'Deputy Principal', 'dep-principal@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$JszQnm6ppJ6ggmPqkZUHp.qg50dfBBcH7IHXh.2buKGazBNr3lATi', 7, 'Deputy Principal', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-25 03:33:47', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:11', '2026-06-25 03:33:47'),
-(7, NULL, 'Academic Registrar', 'academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', '0772514889', '$2y$10$GO1MFp48tQvP0o4d4DlMZukTH6epueBuCaAu0EXKD0ZglCNFno5zi', 8, 'Academic Registrar', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-26 06:36:27', 0, NULL, 0, 1, NULL, 'Lubas Road', '2026-06-09 22:56:11', '2026-06-26 06:36:27'),
-(8, NULL, 'HR Manager', 'hr-manager@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$fE/SVKQqJ4BYu2QlLdvlou5Vs1ug7OOivy8hcCdXzctlpKUZwvfP.', 9, 'HR Manager', 'Human Resources', 'Active', '2026-06-09', '2026-06-26 06:04:57', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:14', '2026-06-26 06:04:57'),
-(9, NULL, 'School Secretary', 'secretary@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$rV7s4oFYEGX.6STyluPxRO7AHKRJdI5fEBqg1XJDX9NKfCXCuSuea', 10, 'School Secretary', 'Administrative Office', 'Active', '2026-06-09', '2026-06-25 01:36:49', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:23', '2026-06-25 01:36:49'),
-(10, NULL, 'School Librarian', 'library@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$P/fxbkdmQ75Q4rv7x1HXz.34No68cJNJLHqSPki02VjdGbiKO83iS', 11, 'School Librarian', 'Library Services', 'Active', '2026-06-09', '2026-06-21 08:38:59', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:29', '2026-06-21 08:38:59'),
-(11, NULL, 'Head of Nursing', 'nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$Iw8BStEfmuQ4THpt0djno.ZNV4KzveqG1R2yZtf2awMAz5u9EOi0a', 12, 'Head Nursing', 'Nursing Department', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:31', '2026-06-13 03:14:38'),
-(12, NULL, 'Head of Midwifery', 'midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$.sB5xOu5VTfjRndsyBY71uCRuX.Bn6mEm6bqQjb/5L3EmzCcpARCu', 13, 'Head Midwifery', 'Midwifery Department', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:33', '2026-06-13 03:14:38'),
-(13, NULL, 'Senior Lecturers', 'senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$331R3j5oa4oUjpgFDqZhTOANB4N8M41gU1CHXXIHg4LuylO6JMCwu', 14, 'Senior Lecturer', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:33', '2026-06-13 03:14:38'),
-(14, NULL, 'Lecturers', 'lecturers@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$.kjo780DIjtfeTxVcarWq.mZcfcmxmCw.5c53/PaFXalTVBQMRCOG', 15, 'Lecturer', 'Academic Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:34', '2026-06-13 03:14:38'),
-(15, NULL, 'Matron', 'matron@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$ymrXcnRhazxfrVpyNyaUk.R7naE6eUus6eFUEYdO0bw.HJmXOU7Qq', 16, 'Matrons', 'Student Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:34', '2026-06-13 03:14:38'),
-(16, NULL, 'Warden', 'warden@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$5WAJaPKTb8xLi.SRfC6cD.UQ0JnCA5AqlRSS6aJdz9LD7C0gWtMty', 17, 'Wardens', 'Student Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:38', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:34', '2026-06-13 03:14:38'),
-(17, NULL, 'Sickbay Officer', 'sickbay@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$xKCeFMFeDVhXZOxpEoQFPOBR8Cx60T7De1rIAnjAxaSSTmdwCN2Ym', 18, 'Sickbay', 'Support', 'Active', '2026-06-09', '2026-06-26 04:07:21', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:34', '2026-06-26 04:07:21'),
-(18, NULL, 'Driver', 'drivers@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$xZnL4zt/B7h0/E7SHNAhfe4MPYA4HhfioLU7qRQ0ORkv9eABxfIia', 19, 'Drivers', 'Transport', 'Active', '2026-06-09', '2026-06-13 03:14:39', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:35', '2026-06-13 03:14:39'),
-(19, NULL, 'Security Officer', 'security@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$H3mJR/813QrKDzaQMK/yC.HfM4mGpYwgPFmlZL3h/WyTSD4d5zsQq', 20, 'Security', 'Security Services', 'Active', '2026-06-09', '2026-06-13 03:14:39', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:35', '2026-06-13 03:14:39'),
-(20, NULL, 'Storekeeper', 'store@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$2BJLSl5d1x.KCCV83Unqv.LrM9MDrXGO.pm3Ly99plAGdjUJuxVhi', 21, 'Store Keeper', 'Facilities Management', 'Active', '2026-06-09', '2026-06-13 03:14:39', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:36', '2026-06-13 03:14:39'),
-(21, NULL, 'Guild President', 'guildpresident@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$2Acd3VjS07HN.YJHFjyzWOk9QsxmYpBY9oXDc1xwyPtKelUSpMtgi', 22, 'Guild President', 'Student Affairs', 'Active', '2026-06-09', '2026-06-13 03:14:39', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:36', '2026-06-13 03:14:39'),
-(22, NULL, 'Computer Lab Manager', 'computer-lab@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$KlyNxRbEDLRbU4XO1uP6Ru9jjXAJP8owjUaneUmAAiK9s4eDUZnM2', 23, 'Director ICT', 'Information Communication Technology', 'Active', '2026-06-09', '2026-06-26 23:55:46', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:36', '2026-06-26 23:55:46'),
-(23, NULL, 'Danny ICT Director', 'dannybict@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$6au4jFh5fu7rXKWuAoKDauv.h9sQ6ONfUaBiGydeqh7JU2sO1BYoi', 5, 'Director ICT', 'Information Technology', 'Active', '2026-06-09', '2026-06-26 23:38:31', 0, NULL, 0, 1, NULL, NULL, '2026-06-09 22:56:36', '2026-06-26 23:38:31'),
-(24, NULL, 'Admissions Officer Derrick', 'admissions@igangaschoolofnursingandmidwifery.ac.ug', '', '$2y$10$tLG3brrbgq6IfcHkV1O95ujGlp892EyxpFezOmACyrKA2f3b17NkG', 26, 'Director Admissions & Requirements', 'Admissions', 'Active', '2026-06-09', '2026-06-25 07:25:54', 0, NULL, 1, 1, NULL, NULL, '2026-06-09 22:56:37', '2026-06-25 07:25:54'),
-(25, NULL, 'School Bursar', 'bursar@igangaschoolofnursingandmidwifery.ac.ug', NULL, '$2y$10$WgxHRWfiQH.Wv3UgHkiKIODKCs9wTXTkSxuEgBkQ6OyxTby/Tp.GG', 24, 'School Bursar', 'Finance Department', 'Active', '2026-06-10', '2026-06-26 06:04:57', 0, NULL, 0, 1, NULL, NULL, '2026-06-10 00:56:49', '2026-06-26 06:04:57'),
-(51, 'BURS002', 'Bursar', 'bursar.assistant@isnm.ac.ug', NULL, '$2y$10$U61BKsKqMuX1LajK/sSOme3yETx/qnoNw75CxEiBr7mX8pd.922v.', 27, 'Bursar', 'Finance Department', 'Active', '2026-06-13', NULL, 0, NULL, 1, 0, NULL, NULL, '2026-06-13 02:38:49', '2026-06-13 02:38:49');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_activity_log`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_activity_log` (
-  `id` int NOT NULL,
-  `staff_id` int DEFAULT NULL,
-  `activity_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `activity_description` text COLLATE utf8mb4_general_ci,
-  `module_accessed` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff_activity_log`
---
-
-INSERT DELAYED IGNORE INTO `staff_activity_log` (`id`, `staff_id`, `activity_type`, `activity_description`, `module_accessed`, `ip_address`, `user_agent`, `created_at`) VALUES
-(1, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'curl/8.19.0', '2026-06-09 23:06:48'),
-(2, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-09 23:07:33'),
-(3, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'curl/8.19.0', '2026-06-09 23:16:40'),
-(4, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-09 23:27:04'),
-(5, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 00:57:13'),
-(6, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 01:02:10'),
-(7, 9, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-06-10 06:12:56'),
-(8, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-17 03:34:12'),
-(9, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-17 22:18:02'),
-(10, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:13:54'),
-(11, 2, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:15:02'),
-(12, 2, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:20:03'),
-(13, 3, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:20:34'),
-(14, 3, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:21:34'),
-(15, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:21:40'),
-(16, 4, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:23:30'),
-(17, 5, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:23:54'),
-(18, 5, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:24:29'),
-(19, 6, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:25:03'),
-(20, 6, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:34:20'),
-(21, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:34:25'),
-(22, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:35:04'),
-(23, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 02:35:42'),
-(24, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 09:31:15'),
-(25, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:01:54'),
-(26, 2, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:01:58'),
-(27, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:03:51'),
-(28, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:50:46'),
-(29, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 10:50:50'),
-(30, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:29:09'),
-(31, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:29:16'),
-(32, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:55:42'),
-(33, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:56:46'),
-(34, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:40'),
-(35, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:44'),
-(36, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:51'),
-(37, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:17:56'),
-(38, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:18:39'),
-(39, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:19:17'),
-(40, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:20:09'),
-(41, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:20:23'),
-(42, 22, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:36:57'),
-(43, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:37:05'),
-(44, 22, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:37:13'),
-(45, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:37:22'),
-(46, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:44:48'),
-(47, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:44:53'),
-(48, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:47:22'),
-(49, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 13:47:26'),
-(50, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 20:38:19'),
-(51, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-19 22:33:02'),
-(52, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-19 23:52:59'),
-(53, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 03:31:17'),
-(54, 2, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 03:31:21'),
-(55, 2, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:07:27'),
-(56, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:07:31'),
-(57, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:08:03'),
-(58, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 04:08:13'),
-(59, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 11:16:50'),
-(60, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 12:18:28'),
-(61, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 12:18:33'),
-(62, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 15:41:44'),
-(63, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-20 15:41:52'),
-(64, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 00:45:04'),
-(65, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:19:19'),
-(66, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:19:30'),
-(67, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:27:12'),
-(68, 2, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 02:27:16'),
-(69, 2, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:02:25'),
-(70, 3, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:02:29'),
-(71, 3, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:38:27'),
-(72, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:38:32'),
-(73, 4, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:40:03'),
-(74, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:40:07'),
-(75, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:41:00'),
-(76, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 03:41:15'),
-(77, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:22:54'),
-(78, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:23:34'),
-(79, 8, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:27:56'),
-(80, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:28:06'),
-(81, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:38:24'),
-(82, 10, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:38:59'),
-(83, 10, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:41:06'),
-(84, 9, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 08:41:11'),
-(85, 9, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:42:45'),
-(86, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:42:51'),
-(87, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:46:09'),
-(88, 17, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:47:31'),
-(89, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:48:32'),
-(90, 17, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:51:42'),
-(91, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:58:10'),
-(92, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:58:10'),
-(93, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 09:58:20'),
-(94, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:30:58'),
-(95, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:31:07'),
-(96, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:32:25'),
-(97, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:32:28'),
-(98, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:32:37'),
-(99, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:33:45'),
-(100, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:36:03'),
-(101, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:36:09'),
-(102, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:37:01'),
-(103, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 10:37:24'),
-(104, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:01:48'),
-(105, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:03:10'),
-(106, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:03:15'),
-(107, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:14:03'),
-(108, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:14:39'),
-(109, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:14:44'),
-(110, 8, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:26:39'),
-(111, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 21:26:55'),
-(112, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 22:54:34'),
-(113, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-21 22:56:35'),
-(114, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 00:35:18'),
-(115, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 00:35:45'),
-(116, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:09:10'),
-(117, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:13:36'),
-(118, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:13:52'),
-(119, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:19:37'),
-(120, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:19:57'),
-(121, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:23:33'),
-(122, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 01:23:38'),
-(123, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 10:49:58'),
-(124, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 10:50:07'),
-(125, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:15:02'),
-(126, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:15:10'),
-(127, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:33:52'),
-(128, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:34:00'),
-(129, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:57:38'),
-(130, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 11:57:49'),
-(131, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:48:33'),
-(132, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:48:39'),
-(133, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:59:26'),
-(134, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 12:59:31'),
-(135, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:06:54'),
-(136, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:06:59'),
-(137, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:10:18'),
-(138, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:10:22'),
-(139, 4, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:59:43'),
-(140, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 13:59:47'),
-(141, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 14:59:12'),
-(142, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 14:59:19'),
-(143, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-22 22:02:54'),
-(144, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 01:21:00'),
-(145, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 05:12:44'),
-(146, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-23 22:40:59'),
-(147, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:32:48'),
-(148, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:42:32'),
-(149, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:55:02'),
-(150, 3, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 03:55:07'),
-(151, 3, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:18'),
-(152, 5, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:23'),
-(153, 5, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:50'),
-(154, 9, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 05:26:54'),
-(155, 9, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 06:46:40'),
-(156, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 06:46:58'),
-(157, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 07:01:10'),
-(158, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 07:01:17'),
-(159, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:01:53'),
-(160, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:02:15'),
-(161, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:04:18'),
-(162, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:04:28'),
-(163, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:10:00'),
-(164, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 08:10:06'),
-(165, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-24 23:37:39'),
-(166, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 01:36:45'),
-(167, 9, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 01:36:50'),
-(168, 9, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 02:39:48'),
-(169, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 02:39:53'),
-(170, 4, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:14'),
-(171, 3, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:18'),
-(172, 3, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:50'),
-(173, 5, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:11:55'),
-(174, 5, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:33:42'),
-(175, 6, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:33:47'),
-(176, 6, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:44:41'),
-(177, 5, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:44:45'),
-(178, 5, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:47:13'),
-(179, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 03:47:18'),
-(180, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 07:25:44'),
-(181, 24, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 07:25:54'),
-(182, 24, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 08:06:13'),
-(183, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 08:58:55'),
-(184, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:05:31'),
-(185, 2, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:22:04'),
-(186, 2, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:22:27'),
-(187, 4, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:22:40'),
-(188, 4, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-25 09:26:50'),
-(189, 17, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 04:07:21'),
-(190, 17, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 04:17:57'),
-(191, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 04:18:03'),
-(192, 8, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:39:01'),
-(193, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:39:08'),
-(194, 8, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:47:58'),
-(195, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 05:48:03'),
-(196, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:02:14'),
-(197, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:02:22'),
-(198, 25, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:03:07'),
-(199, 8, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8737', '2026-06-26 06:03:20'),
-(200, 25, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 06:36:04'),
-(201, 7, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 06:36:27'),
-(202, 7, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 07:09:32'),
-(203, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 07:09:45'),
-(204, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 12:36:33'),
-(205, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 12:36:42'),
-(206, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 14:05:05'),
-(207, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 14:05:09'),
-(208, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 21:23:09'),
-(209, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 21:23:13'),
-(210, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:04:50'),
-(211, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:04:55'),
-(212, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:09:06'),
-(213, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:09:09'),
-(214, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:12:42'),
-(215, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:12:56'),
-(216, 22, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:42:18'),
-(217, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:43:32'),
-(218, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:44:37'),
-(219, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 22:44:41'),
-(220, 22, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:26:46'),
-(221, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:26:56'),
-(222, 22, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:27'),
-(223, 23, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:31'),
-(224, 23, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:47'),
-(225, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:38:51'),
-(226, 22, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-26 23:55:47'),
-(227, 1, 'Login', 'User logged in successfully', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-27 07:26:14'),
-(228, 1, 'Logout', 'User logged out', 'authentication', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-27 08:26:31');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_appraisals`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_appraisals` (
-  `id` int NOT NULL,
-  `staff_id` int DEFAULT NULL,
-  `reviewer_id` int DEFAULT NULL,
-  `review_date` date DEFAULT NULL,
-  `performance_score` decimal(5,2) DEFAULT NULL,
-  `strengths` text COLLATE utf8mb4_general_ci,
-  `areas_improvement` text COLLATE utf8mb4_general_ci,
-  `overall_rating` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` enum('draft','submitted','reviewed','completed') COLLATE utf8mb4_general_ci DEFAULT 'draft',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_attendance`
---
--- Creation: Jun 29, 2026 at 12:49 PM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_attendance` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `date` date NOT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Present',
-  `time_in` time DEFAULT NULL,
-  `time_out` time DEFAULT NULL,
-  `remarks` text COLLATE utf8mb4_general_ci,
-  `recorded_by` int UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `staff_attendance`
---
-
-INSERT DELAYED IGNORE INTO `staff_attendance` (`id`, `staff_id`, `date`, `status`, `time_in`, `time_out`, `remarks`, `recorded_by`, `created_at`) VALUES
-(1, 1, '2026-06-20', 'Absent', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(2, 2, '2026-06-20', 'On Leave', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(3, 3, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(4, 4, '2026-06-20', 'On Leave', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(5, 23, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(6, 5, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(7, 6, '2026-06-20', 'Late', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(8, 7, '2026-06-20', 'Absent', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(9, 24, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(10, 8, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(11, 9, '2026-06-20', 'On Leave', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(12, 10, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(13, 11, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(14, 12, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(15, 13, '2026-06-20', 'Late', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(16, 14, '2026-06-20', 'On Leave', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(17, 15, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(18, 16, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(19, 17, '2026-06-20', 'Present', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56'),
-(20, 18, '2026-06-20', 'Late', NULL, NULL, NULL, NULL, '2026-06-19 23:58:56');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_communications`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_communications` (
-  `id` int NOT NULL,
-  `sender_id` int NOT NULL,
-  `sender_email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `sender_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `recipient_type` enum('department','all_staff') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'department',
-  `recipient_id` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `recipient_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `message_body` text COLLATE utf8mb4_general_ci NOT NULL,
-  `priority` enum('Low','Normal','High','Urgent') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Normal',
-  `email_status` enum('pending','sent','failed') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_contracts`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_contracts` (
-  `id` int UNSIGNED NOT NULL,
-  `staff_id` int UNSIGNED NOT NULL,
-  `contract_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `start_date` date DEFAULT NULL,
-  `end_date` date DEFAULT NULL,
-  `salary` decimal(12,2) DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'active',
-  `document_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `staff_departments`
---
--- Creation: Jun 28, 2026 at 04:21 AM
--- Last update: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `staff_departments` (
-  `id` int UNSIGNED NOT NULL,
-  `department_name` varchar(120) COLLATE utf8mb4_general_ci NOT NULL,
-  `department_code` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `department_level` int DEFAULT '0',
-  `description` text COLLATE utf8mb4_general_ci,
-  `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -10307,6 +10015,15 @@ ALTER TABLE `cache_management`
   ADD UNIQUE KEY `cache_key` (`cache_key`);
 
 --
+-- Indexes for table `calendar_events`
+--
+ALTER TABLE `calendar_events`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_event_date` (`event_date`),
+  ADD KEY `idx_event_type` (`event_type`),
+  ADD KEY `idx_created_by` (`created_by`);
+
+--
 -- Indexes for table `cashbook`
 --
 ALTER TABLE `cashbook`
@@ -10623,6 +10340,15 @@ ALTER TABLE `duty_rosters`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `email_logs`
+--
+ALTER TABLE `email_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_recipient` (`recipient_email`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_sent_at` (`sent_at`);
+
+--
 -- Indexes for table `email_notifications_queue`
 --
 ALTER TABLE `email_notifications_queue`
@@ -10746,6 +10472,15 @@ ALTER TABLE `fee_accounts`
 --
 ALTER TABLE `fee_adjustments`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `file_uploads`
+--
+ALTER TABLE `file_uploads`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_entity` (`entity_type`,`entity_id`),
+  ADD KEY `idx_uploaded_by` (`uploaded_by`),
+  ADD KEY `idx_file_type` (`file_type`);
 
 --
 -- Indexes for table `financial_audit_log`
@@ -11378,6 +11113,27 @@ ALTER TABLE `midwifery_students`
   ADD KEY `idx_student_id` (`student_id`);
 
 --
+-- Indexes for table `module_audit_log`
+--
+ALTER TABLE `module_audit_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `module_id` (`module_id`);
+
+--
+-- Indexes for table `module_departments`
+--
+ALTER TABLE `module_departments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `module_permissions`
+--
+ALTER TABLE `module_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_module_role` (`module_id`,`role_id`);
+
+--
 -- Indexes for table `national_exam_results`
 --
 ALTER TABLE `national_exam_results`
@@ -11983,6 +11739,15 @@ ALTER TABLE `skills_laboratory`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `sms_logs`
+--
+ALTER TABLE `sms_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_phone` (`phone_number`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_sent_at` (`sent_at`);
+
+--
 -- Indexes for table `sports_events`
 --
 ALTER TABLE `sports_events`
@@ -11993,64 +11758,6 @@ ALTER TABLE `sports_events`
 --
 ALTER TABLE `sports_teams`
   ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `staff`
---
-ALTER TABLE `staff`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `role_id` (`role_id`),
-  ADD KEY `idx_staff_email` (`email`),
-  ADD KEY `idx_staff_status` (`status`),
-  ADD KEY `idx_staff_role_status` (`role_id`,`status`);
-
---
--- Indexes for table `staff_activity_log`
---
-ALTER TABLE `staff_activity_log`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `staff_appraisals`
---
-ALTER TABLE `staff_appraisals`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `staff_attendance`
---
-ALTER TABLE `staff_attendance`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_attendance_staff_date` (`staff_id`,`date`),
-  ADD KEY `idx_attendance_date` (`date`),
-  ADD KEY `idx_attendance_status` (`status`),
-  ADD KEY `idx_sa_staff_date` (`staff_id`,`date`),
-  ADD KEY `idx_sa_status_date` (`status`,`date`);
-
---
--- Indexes for table `staff_communications`
---
-ALTER TABLE `staff_communications`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sender_id` (`sender_id`),
-  ADD KEY `idx_recipient_type` (`recipient_type`),
-  ADD KEY `idx_recipient_id` (`recipient_id`),
-  ADD KEY `idx_created_at` (`created_at`);
-
---
--- Indexes for table `staff_contracts`
---
-ALTER TABLE `staff_contracts`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `staff_id` (`staff_id`);
-
---
--- Indexes for table `staff_departments`
---
-ALTER TABLE `staff_departments`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_dept_name` (`department_name`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -12525,6 +12232,12 @@ ALTER TABLE `cache_management`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `calendar_events`
+--
+ALTER TABLE `calendar_events`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `cashbook`
 --
 ALTER TABLE `cashbook`
@@ -12789,6 +12502,12 @@ ALTER TABLE `duty_rosters`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `email_logs`
+--
+ALTER TABLE `email_logs`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `email_notifications_queue`
 --
 ALTER TABLE `email_notifications_queue`
@@ -12895,6 +12614,12 @@ ALTER TABLE `fee_accounts`
 --
 ALTER TABLE `fee_adjustments`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `file_uploads`
+--
+ALTER TABLE `file_uploads`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `financial_audit_log`
@@ -13443,6 +13168,24 @@ ALTER TABLE `midwifery_students`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `module_audit_log`
+--
+ALTER TABLE `module_audit_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `module_departments`
+--
+ALTER TABLE `module_departments`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `module_permissions`
+--
+ALTER TABLE `module_permissions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `national_exam_results`
 --
 ALTER TABLE `national_exam_results`
@@ -13983,6 +13726,12 @@ ALTER TABLE `skills_laboratory`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `sms_logs`
+--
+ALTER TABLE `sms_logs`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `sports_events`
 --
 ALTER TABLE `sports_events`
@@ -13992,48 +13741,6 @@ ALTER TABLE `sports_events`
 -- AUTO_INCREMENT for table `sports_teams`
 --
 ALTER TABLE `sports_teams`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff`
---
-ALTER TABLE `staff`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
-
---
--- AUTO_INCREMENT for table `staff_activity_log`
---
-ALTER TABLE `staff_activity_log`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
-
---
--- AUTO_INCREMENT for table `staff_appraisals`
---
-ALTER TABLE `staff_appraisals`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_attendance`
---
-ALTER TABLE `staff_attendance`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `staff_communications`
---
-ALTER TABLE `staff_communications`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_contracts`
---
-ALTER TABLE `staff_contracts`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `staff_departments`
---
-ALTER TABLE `staff_departments`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -14078,6 +13785,18 @@ ALTER TABLE `library_acquisitions`
 --
 ALTER TABLE `medicine_stock_transactions`
   ADD CONSTRAINT `medicine_stock_transactions_ibfk_1` FOREIGN KEY (`medicine_id`) REFERENCES `medicine_stock` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `module_audit_log`
+--
+ALTER TABLE `module_audit_log`
+  ADD CONSTRAINT `module_audit_log_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `system_modules` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `module_permissions`
+--
+ALTER TABLE `module_permissions`
+  ADD CONSTRAINT `module_permissions_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `system_modules` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `requirement_history`
@@ -14139,7 +13858,7 @@ index.php#43: PhpMyAdmin\Routing::callControllerForRoute(<br>
 	<Class:FastRoute\Dispatcher\GroupCountBased>,<br>
 	<Class:Symfony\Component\DependencyInjection\ContainerBuilder>,<br>
 )<br>
-</div><form method="post" action="index.php?route=/error-report" id="pma_report_errors_form"><input type="hidden" name="exception_type" value="php"><input type="hidden" name="send_error_report" value="1"><input type="hidden" name="server" value="1"><input type="hidden" name="token" value="3c2c5a76494f674f7e63395c632a2d3d"><input type="submit" value="Report" id="pma_report_errors" class="btn btn-primary float-end"><input type="checkbox" name="always_send" id="errorReportAlwaysSendCheckbox" value="true"><label for="errorReportAlwaysSendCheckbox">Automatically send report next time</label><input type="submit" value="Ignore" id="pma_ignore_errors_bottom" class="btn btn-secondary float-end"><input type="submit" value="Ignore All" id="pma_ignore_all_errors_bottom" class="btn btn-secondary float-end"></form>
+</div><form method="post" action="index.php?route=/error-report" id="pma_report_errors_form"><input type="hidden" name="exception_type" value="php"><input type="hidden" name="send_error_report" value="1"><input type="hidden" name="server" value="1"><input type="hidden" name="token" value="21512a506963644e5f713777503e316c"><input type="submit" value="Report" id="pma_report_errors" class="btn btn-primary float-end"><input type="checkbox" name="always_send" id="errorReportAlwaysSendCheckbox" value="true"><label for="errorReportAlwaysSendCheckbox">Automatically send report next time</label><input type="submit" value="Ignore" id="pma_ignore_errors_bottom" class="btn btn-secondary float-end"><input type="submit" value="Ignore All" id="pma_ignore_all_errors_bottom" class="btn btn-secondary float-end"></form>
   </div>
 
   
