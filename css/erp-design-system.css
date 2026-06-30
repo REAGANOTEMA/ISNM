@@ -69,9 +69,9 @@
     --erp-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     
     /* Sidebar */
-    --erp-sidebar-width: 280px;
+    --erp-sidebar-width: 270px;
     --erp-header-height: 60px;
-    --erp-control-width: 300px;
+    --erp-control-width: 0px;
     
     /* Transitions */
     --erp-transition: all 0.2s ease;
@@ -722,4 +722,39 @@ body.erp-layout {
     .isnm-topbar { padding: 10px 16px; }
     .isnm-topbar-title { font-size: 15px; }
     .isnm-topbar-date { display: none; }
+}
+
+/* ─── STANDARD CONTENT AREA ─── */
+/* All dashboards should use this class for consistent layout */
+.erp-content {
+    margin-left: var(--erp-sidebar-width);
+    padding: 24px;
+    min-height: calc(100vh - var(--erp-header-height));
+    background: var(--erp-bg);
+}
+/* Global overrides for all dashboard-specific content classes */
+.dg-content, .acad-content, .hr-content, .lec-content, .mat-content,
+.war-content, .secu-content, .drv-content, .lib-content, .gld-content,
+.nurs-content, .mid-content, .prin-content, .dep-content, .sec-content,
+.cpt-content, .ict-content, .fin-content, .admissions-content,
+.store-content, .lab-content, .ma,
+.main, .main-content, .content-section, .container, .page-wrapper,
+.receipt-container, .transcript-container {
+    margin-left: var(--erp-sidebar-width) !important;
+    padding: 24px !important;
+    min-height: calc(100vh - var(--erp-header-height)) !important;
+    background: var(--erp-bg) !important;
+}
+@media (max-width: 768px) {
+    .erp-content,
+    .dg-content, .acad-content, .hr-content, .lec-content, .mat-content,
+    .war-content, .secu-content, .drv-content, .lib-content, .gld-content,
+    .nurs-content, .mid-content, .prin-content, .dep-content, .sec-content,
+    .cpt-content, .ict-content, .fin-content, .admissions-content,
+    .store-content, .lab-content, .ma,
+    .main, .main-content, .content-section, .container, .page-wrapper,
+    .receipt-container, .transcript-container {
+        margin-left: 0 !important;
+        padding: 12px !important;
+    }
 }

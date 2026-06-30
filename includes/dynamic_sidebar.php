@@ -17,13 +17,13 @@ function renderDynamicSidebar(): void {
         'Director General' => 1, 'CEO' => 2, 'Director Academics' => 3,
         'Director Finance' => 4, 'Director ICT' => 5, 'School Principal' => 6,
         'Deputy Principal' => 7, 'Academic Registrar' => 8, 'HR Manager' => 9,
-        'School Secretary' => 10, 'School Librarian' => 11, 'Head of Nursing' => 12,
-        'Head of Midwifery' => 13, 'Senior Lecturer' => 14, 'Lecturer' => 15,
-        'Matron' => 16, 'Warden' => 17, 'Sickbay Nurse' => 18, 'Driver' => 19,
-        'Security Officer' => 20, 'Storekeeper' => 21, 'Guild President' => 22,
-        'Computer Lab Manager' => 23, 'School Bursar' => 24, 'Store Keeper' => 25,
-        'Director Admissions' => 26, 'Bursar' => 27, 'Director Admissions & Requirements' => 26,
-        'System Administrator' => 38, 'Skills Lab Technician' => 40,
+        'School Secretary' => 10, 'School Librarian' => 11, 'Storekeeper' => 21,
+        'Guild President' => 22, 'Computer Lab Manager' => 23, 'School Bursar' => 24,
+        'Director Admissions & Requirements' => 26, 'Director Admissions' => 28,
+        'Head of Nursing' => 29, 'Head of Midwifery' => 30, 'Senior Lecturer' => 31,
+        'Lecturer' => 32, 'Security Officer' => 33, 'Driver' => 34,
+        'Matron' => 35, 'Warden' => 36, 'Sickbay Nurse' => 37,
+        'Computer Lab' => 39, 'Skills Lab Technician' => 40, 'Skills Lab Manager' => 41,
     ];
 
     $roleName = $_SESSION['role'] ?? '';

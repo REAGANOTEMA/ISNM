@@ -114,8 +114,7 @@ class ModuleRegistry {
         $validActions = ['view', 'create', 'edit', 'delete', 'approve', 'export'];
         if (!in_array($action, $validActions)) return false;
         
-        // Director General (1) and CEO (2) have wildcard access
-        if (in_array($roleId, [1, 2])) return true;
+        // No wildcard — all permissions come from module_permissions table
         
         $sql = "SELECT {$actionCol} FROM module_permissions WHERE module_id = {$moduleId} AND role_id = {$roleId}";
         $result = $this->conn->query($sql);

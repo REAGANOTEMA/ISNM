@@ -25,7 +25,7 @@
   --ent-shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
   --ent-radius: 12px;
   --ent-radius-sm: 8px;
-  --ent-sidebar-w: 260px;
+  --ent-sidebar-w: 270px;
   --ent-header-h: 60px;
   --ent-control-w: 300px;
   --ent-transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
@@ -226,7 +226,6 @@ body.ent-layout {
 .ent-main {
   margin-left: var(--ent-sidebar-w);
   margin-top: var(--ent-header-h);
-  margin-right: var(--ent-control-w);
   min-height: calc(100vh - var(--ent-header-h));
   padding: 20px;
   transition: var(--ent-transition);

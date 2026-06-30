@@ -201,8 +201,13 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 </style>
 <?php endif; ?>
 <?php if ($useDynamicSidebar): ?>
-<?php renderDynamicSidebar(); ?>
+<?php ob_start(); renderDynamicSidebar(); $dynamicOutput = ob_get_clean(); ?>
+<?php if (!empty(trim($dynamicOutput))): ?>
+<?= $dynamicOutput ?>
 <?php else: ?>
+<?php $useDynamicSidebar = false; endif; ?>
+<?php endif; ?>
+<?php if (!$useDynamicSidebar): ?>
 <nav class="isnm-sidebar sidebar" id="isnmSidebar">
     <?php if ($isRight): ?>
     <button class="sidebar-mobile-close" id="sidebarMobileClose" aria-label="Close sidebar">
