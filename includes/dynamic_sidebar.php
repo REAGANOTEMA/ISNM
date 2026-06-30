@@ -1,8 +1,7 @@
 <?php
 /**
- * ISNM DYNAMIC SIDEBAR — CLEAN ERP LAYOUT
- * 9 departments, role-filtered, searchable, collapsible.
- * Single source of truth: system_modules + module_permissions (DB).
+ * ISNM DYNAMIC SIDEBAR — DB-driven, role-filtered
+ * Uses the same HTML structure as the static sidebar for CSS compatibility.
  */
 if (!function_exists('renderDynamicSidebar')) {
 
@@ -40,21 +39,29 @@ function renderDynamicSidebar(): void {
     $userRole = $roleName;
     $profileImage = $GLOBALS['profileImage'] ?? '../images/username.png';
     $profileClick = $GLOBALS['profileClickHandler'] ?? "if(typeof openProfileModal==='function')openProfileModal();";
-    $currentSection = $_GET['section'] ?? '';
+    $currentPage = basename($_SERVER['PHP_SELF']);
+    $activePage = $_GET['page'] ?? 'home';
+
+    // Group colors matching the static sidebar
+    $groupColors = [
+        'leadership' => '#3b82f6', 'academic' => '#3b82f6', 'finance' => '#10b981',
+        'hr' => '#8b5cf6', 'student_services' => '#f59e0b', 'operations' => '#6366f1',
+        'compliance' => '#ef4444', 'clinical' => '#ef4444', 'system' => '#475569',
+    ];
     ?>
-    <nav class="isnm-sidebar" id="isnmSidebar">
+    <nav class="isnm-sidebar sidebar" id="isnmSidebar">
         <div class="sidebar-brand">
-            <button class="sidebar-collapse-btn" id="sidebarCollapse"><i class="fas fa-bars"></i></button>
-            <?php if (file_exists(__DIR__ . '/../images/school-logo.png')): ?>
-                <img src="../images/school-logo.png" alt="ISNM" class="brand-logo">
-            <?php endif; ?>
+            <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img src="../images/school-logo.png" alt="ISNM" class="brand-logo">
             <div class="brand-text">
                 <span class="brand-name">ISNM</span>
                 <span class="brand-sub">ERP System</span>
             </div>
         </div>
 
-        <div class="sidebar-user" onclick="<?= $profileClick ?>" style="cursor:pointer">
+        <div class="sidebar-user" onclick="<?= $profileClick ?>" style="cursor:pointer" title="Click to update profile">
             <div class="user-avatar-wrap">
                 <img src="<?= htmlspecialchars($profileImage) ?>" alt="" class="user-avatar">
                 <span class="user-dot"></span>
@@ -65,42 +72,37 @@ function renderDynamicSidebar(): void {
             </div>
         </div>
 
-        <div class="sidebar-search">
-            <i class="fas fa-search"></i>
-            <input type="text" id="sidebarSearch" placeholder="Search modules..." oninput="filterSidebarModules(this.value)">
-        </div>
-
         <div class="sidebar-menu" id="sidebarMenu">
-            <?php foreach ($sidebar as $deptKey => $dept): ?>
-                <?php
-                    $groupId = preg_replace('/[^a-z0-9]/', '', strtolower($deptKey));
-                    $hasActive = false;
-                    foreach ($dept['modules'] as $mod) {
-                        if ($mod['name'] === $currentSection) { $hasActive = true; break; }
-                    }
-                ?>
-                <div class="menu-group <?= $hasActive ? 'expanded' : '' ?>" data-group="<?= $groupId ?>">
-                    <div class="menu-group-header" data-target="<?= $groupId ?>">
-                        <span class="menu-icon"><i class="fas fa-<?= htmlspecialchars($dept['icon']) ?>" style="color:<?= htmlspecialchars($dept['color']) ?>"></i></span>
-                        <span class="menu-label"><?= htmlspecialchars($dept['label']) ?></span>
-                        <span class="menu-count"><?= count($dept['modules']) ?></span>
-                        <span class="menu-chevron"><i class="fas fa-chevron-down"></i></span>
-                    </div>
-                    <div class="menu-children" id="childGroup-<?= $groupId ?>" style="<?= $hasActive ? '' : 'max-height:0;' ?>">
-                        <div class="menu-children-inner">
-                            <?php foreach ($dept['modules'] as $mod): ?>
-                                <a href="<?= htmlspecialchars($mod['route']) ?>"
-                                   class="child-link <?= $mod['name'] === $currentSection ? 'active' : '' ?>"
-                                   data-module="<?= htmlspecialchars($mod['name']) ?>"
-                                   onclick="return loadModuleContent('<?= htmlspecialchars($mod['name']) ?>','<?= htmlspecialchars($mod['route']) ?>',this);"
-                                   title="<?= htmlspecialchars($mod['description'] ?? $mod['label']) ?>">
-                                    <span class="child-bullet"></span>
-                                    <span class="child-label"><?= htmlspecialchars($mod['label']) ?></span>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
+            <?php foreach ($sidebar as $deptKey => $dept):
+                $groupIdSafe = preg_replace('/[^a-z0-9]/', '', strtolower($deptKey));
+                $groupColor = $groupColors[$deptKey] ?? $dept['color'] ?? '#64748b';
+                $hasActiveChild = false;
+                foreach ($dept['modules'] as $mod) {
+                    if ($mod['name'] === $activePage) { $hasActiveChild = true; break; }
+                }
+            ?>
+            <div class="menu-group <?= $hasActiveChild ? 'expanded' : '' ?>" data-group="<?= $groupIdSafe ?>">
+                <div class="menu-group-header" data-target="<?= $groupIdSafe ?>">
+                    <span class="menu-icon"><i class="fas fa-<?= htmlspecialchars($dept['icon'] ?? 'fas fa-cube') ?>" style="color:<?= $groupColor ?>"></i></span>
+                    <span class="menu-label"><?= htmlspecialchars($dept['label'] ?? $deptKey) ?></span>
+                    <span class="menu-chevron"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="menu-children" id="childGroup-<?= $groupIdSafe ?>" style="<?= $hasActiveChild ? '' : 'max-height:0' ?>">
+                    <div class="menu-children-inner">
+                        <?php foreach ($dept['modules'] as $mod):
+                            $isActive = ($mod['name'] === $activePage);
+                            $route = $mod['route'] ?? '#';
+                        ?>
+                        <a href="<?= htmlspecialchars($route) ?>" class="child-link <?= $isActive ? 'active' : '' ?>"
+                           data-module="<?= htmlspecialchars($mod['name']) ?>"
+                           title="<?= htmlspecialchars($mod['description'] ?? $mod['label']) ?>">
+                            <span class="child-bullet" style="<?= $isActive ? 'background:' . $groupColor : '' ?>"></span>
+                            <span class="child-label"><?= htmlspecialchars($mod['label']) ?></span>
+                        </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
+            </div>
             <?php endforeach; ?>
         </div>
 
@@ -110,47 +112,63 @@ function renderDynamicSidebar(): void {
         </div>
     </nav>
 
-    <style>
-    .sidebar-search{padding:8px 12px;position:relative}
-    .sidebar-search i{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:11px}
-    .sidebar-search input{width:100%;padding:7px 10px 7px 30px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;background:#f8fafc}
-    .sidebar-search input:focus{outline:none;border-color:#3b82f6;background:#fff}
-    .menu-count{font-size:10px;background:rgba(255,255,255,0.15);color:#94a3b8;padding:1px 6px;border-radius:10px;margin-left:auto}
-    .menu-group.search-hidden{display:none}
-    .child-link.search-hidden{display:none}
-    </style>
-
     <script>
-    function loadModuleContent(m,route,el){
-        document.querySelectorAll('.child-link').forEach(function(a){a.classList.remove('active')});
-        el.classList.add('active');
-        var c=document.getElementById('moduleContentArea')||document.querySelector('.ent-content-area')||document.querySelector('.page-content');
-        if(!c)return true;
-        c.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:#64748b"><div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px"></div><p>Loading '+m+'...</p></div>';
-        fetch(route,{headers:{'X-Requested-With':'XMLHttpRequest','X-Module-Name':m}})
-        .then(function(r){return r.text()})
-        .then(function(h){c.innerHTML=h;c.classList.add('erp-animate');setTimeout(function(){c.classList.remove('erp-animate')},300);c.querySelectorAll('script').forEach(function(s){var n=document.createElement('script');if(s.src)n.src=s.src;else n.textContent=s.textContent;s.parentNode.replaceChild(n,s)});history.pushState({module:m},'', '?section='+m)})
-        .catch(function(){window.location.href=route});
-        if(window.innerWidth<=768){var sb=document.querySelector('.isnm-sidebar');if(sb)sb.classList.remove('open')}
-        return false;
-    }
-    function filterSidebarModules(q){
-        q=q.toLowerCase();
-        document.querySelectorAll('.menu-group[data-group]').forEach(function(g){
-            var v=false;
-            g.querySelectorAll('.child-link').forEach(function(a){
-                var t=(a.querySelector('.child-label')||{}).textContent||'';
-                var n=a.getAttribute('data-module')||'';
-                if(t.toLowerCase().indexOf(q)!==-1||n.toLowerCase().indexOf(q)!==-1){a.classList.remove('search-hidden');v=true}else{a.classList.add('search-hidden')}
+    (function() {
+        // Collapsible groups
+        document.querySelectorAll('.menu-group-header[data-target]').forEach(function(header) {
+            header.addEventListener('click', function() {
+                var group = this.closest('.menu-group');
+                if (!group) return;
+                var targetId = this.getAttribute('data-target');
+                var children = document.getElementById('childGroup-' + targetId);
+                if (!children) return;
+                var isExpanded = group.classList.contains('expanded');
+                // Accordion: close others
+                document.querySelectorAll('.menu-group.expanded').forEach(function(g) {
+                    if (g !== group && g.closest('.sidebar-menu') === group.closest('.sidebar-menu')) {
+                        g.classList.remove('expanded');
+                        var c = g.querySelector('.menu-children');
+                        if (c) c.style.maxHeight = '0';
+                    }
+                });
+                if (isExpanded) {
+                    group.classList.remove('expanded');
+                    children.style.maxHeight = '0';
+                } else {
+                    group.classList.add('expanded');
+                    children.style.maxHeight = children.scrollHeight + 'px';
+                }
             });
-            if(q&&v){g.classList.add('expanded');var ch=g.querySelector('.menu-children');if(ch)ch.style.maxHeight='none'}
-            g.classList.toggle('search-hidden',!v&&q!=='');
         });
-    }
-    window.addEventListener('popstate',function(e){
-        if(e.state&&e.state.module){var a=document.querySelector('[data-module="'+e.state.module+'"]');if(a)loadModuleContent(e.state.module,a.getAttribute('href'),a)}
-    });
-    var s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s);
+
+        // Sidebar collapse toggle
+        var collapseBtn = document.getElementById('sidebarCollapse');
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', function() {
+                document.getElementById('isnmSidebar').classList.toggle('collapsed');
+            });
+        }
+
+        // Auto-expand active group
+        var activeLink = document.querySelector('.child-link.active');
+        if (activeLink) {
+            var group = activeLink.closest('.menu-group');
+            if (group && !group.classList.contains('expanded')) {
+                group.classList.add('expanded');
+                var children = group.querySelector('.menu-children');
+                if (children) children.style.maxHeight = children.scrollHeight + 'px';
+            }
+        }
+
+        // Mobile: close sidebar on outside click
+        document.addEventListener('click', function(e) {
+            var sidebar = document.getElementById('isnmSidebar');
+            if (!sidebar || window.innerWidth > 768) return;
+            if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    })();
     </script>
     <?php
 }
