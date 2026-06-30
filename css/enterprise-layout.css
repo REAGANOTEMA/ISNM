@@ -225,8 +225,7 @@ body.ent-layout {
 /* ═══ MAIN CONTENT ═══ */
 .ent-main {
   margin-left: var(--ent-sidebar-w);
-  margin-top: var(--ent-header-h);
-  min-height: calc(100vh - var(--ent-header-h));
+  min-height: 100vh;
   padding: 20px;
   transition: var(--ent-transition);
 }

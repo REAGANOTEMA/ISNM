@@ -20194,3 +20194,24 @@ Stack trace:
 [30-Jun-2026 21:31:04 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
 [30-Jun-2026 21:31:04 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
 [30-Jun-2026 21:31:04 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[30-Jun-2026 21:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[30-Jun-2026 21:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[30-Jun-2026 21:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[30-Jun-2026 21:46:59 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[30-Jun-2026 21:48:17 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[30-Jun-2026 21:48:17 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[30-Jun-2026 21:48:17 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[30-Jun-2026 21:48:17 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[30-Jun-2026 21:48:27 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: Unknown column 'cache_data' in 'field list'
+[30-Jun-2026 21:48:27 Africa/Kampala] Query prepare failed in igangaschoolofl_staffs_db: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DAT...' at line 1
+[30-Jun-2026 21:48:27 Africa/Kampala] PHP Warning:  Undefined variable $uid in C:\xampp\htdocs\ISNM\includes\control_panel.php on line 67
+[30-Jun-2026 21:48:27 Africa/Kampala] PHP Warning:  Undefined variable $uid in C:\xampp\htdocs\ISNM\includes\control_panel.php on line 90
+[30-Jun-2026 21:48:27 Africa/Kampala] PHP Warning:  Undefined variable $dgNewsList in C:\xampp\htdocs\ISNM\dashboards\director-general.php on line 2068
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[30-Jun-2026 21:49:25 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
