@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 
 $ctx = bootstrapStaffDashboard(['storekeeper']);
 $staffConn = $ctx['staff'];
@@ -261,11 +262,11 @@ $statsOrders = count($orders);
 @media(max-width:768px){.stk-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="stk-topbar"><div class="stk-topbar-content"><div class="stk-topbar-left"><div class="stk-topbar-title">Storekeeper</div><div class="stk-topbar-subtitle">Inventory &amp; Supplies Management</div></div><div class="stk-topbar-right"><span class="stk-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="stk-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="stk-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="stk-topbar"><div class="stk-topbar-content"><div class="stk-topbar-left"><div class="stk-topbar-title">Storekeeper</div><div class="stk-topbar-subtitle">Inventory &amp; Supplies Management</div></div><div class="stk-topbar-right"><span class="stk-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="stk-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="stk-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="stk-content">
     <div class="content-section dashboard-section active content-area" data-section="overview">
         <?php if ($msg): ?>
@@ -723,5 +724,7 @@ $('#orderForm').on('submit', function(e) {
 });
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

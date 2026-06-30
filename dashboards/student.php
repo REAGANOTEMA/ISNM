@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth-service.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 
 session_start();
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'student') {
@@ -159,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 @media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
     <!-- Include Responsive Navigation -->
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     
@@ -1380,6 +1381,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

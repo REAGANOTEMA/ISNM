@@ -1,5 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
 $ctx = bootstrapStaffDashboard(['director admissions', 'admissions']);
@@ -958,9 +959,9 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 @media(min-width:769px) and (max-width:1024px){
     .stats-grid{grid-template-columns:repeat(3,1fr)}
 }
-</style></head><body>
+</style></head><body class="ent-layout">
 <?php include_once __DIR__ . "/../includes/sidebar.php"; ?>
-<div class="adm-topbar"><div class="adm-topbar-content"><div class="adm-topbar-left"><div class="adm-topbar-title">Director Admissions</div><div class="adm-topbar-subtitle">Admissions Management &amp; Applicant Tracking</div></div><div class="adm-topbar-right"><span class="adm-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="adm-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="adm-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="adm-topbar"><div class="adm-topbar-content"><div class="adm-topbar-left"><div class="adm-topbar-title">Director Admissions</div><div class="adm-topbar-subtitle">Admissions Management &amp; Applicant Tracking</div></div><div class="adm-topbar-right"><span class="adm-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="adm-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="adm-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="dashboard-content">
 <?php if(!empty($_SESSION["success"])):?><div class="alert alert-success" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["success"]);unset($_SESSION["success"]);?></div><?php endif;?>
 <?php if(!empty($_SESSION["error"])):?><div class="alert alert-danger" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["error"]);unset($_SESSION["error"]);?></div><?php endif;?>
@@ -1927,6 +1928,78 @@ jQuery(function($) {
   loadData();
 });
 </script>
+
+<!-- ═══ AJAX MODULE LOADING ═══ -->
+<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
+    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+  </div>
+</div>
+<script>
+(function(){
+    var contentArea = document.querySelector('.dashboard-content');
+    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
+    var isAjaxLoading = false;
+
+    function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
+    function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (!href || href.indexOf('?') === -1) return;
+            if (isAjaxLoading) return;
+
+            e.preventDefault();
+            showLoading();
+            history.pushState({}, '', href);
+            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            var section = href.split('section=')[1] || href.split('page=')[1] || 'overview';
+            fetch('director-admissions.php?section=' + encodeURIComponent(section), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.querySelector('.dashboard-content');
+                if (newContent && contentArea) {
+                    contentArea.innerHTML = newContent.innerHTML;
+                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) { newScript.src = oldScript.src; }
+                        else { newScript.textContent = oldScript.textContent; }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
+                hideLoading();
+            })
+            .catch(function(err) {
+                console.error('[AJAX Load Error]', err);
+                hideLoading();
+                window.location.href = href;
+            });
+        });
+    });
+
+    window.addEventListener('popstate', function() { window.location.reload(); });
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                var sidebar = document.querySelector('.isnm-sidebar');
+                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+            }
+        });
+    });
+})();
+</script>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

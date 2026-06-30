@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['guild president']);
 $staffDb = $ctx['staff'];
 $studentsDb = $ctx['students'];
@@ -45,9 +46,9 @@ if ($studentsDb) {
 @media(max-width:768px){.gld-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="gld-topbar"><div class="gld-topbar-content"><div class="gld-topbar-left"><div class="gld-topbar-title">Guild President</div><div class="gld-topbar-subtitle">Student Governance &amp; Representation</div></div><div class="gld-topbar-right"><span class="gld-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="gld-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="gld-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="gld-topbar"><div class="gld-topbar-content"><div class="gld-topbar-left"><div class="gld-topbar-title">Guild President</div><div class="gld-topbar-subtitle">Student Governance &amp; Representation</div></div><div class="gld-topbar-right"><span class="gld-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="gld-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="gld-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="gld-content">
 <?php switch ($section):
     case 'student-body': ?>
@@ -130,5 +131,7 @@ if ($studentsDb) {
 endswitch; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 
 $ctx = bootstrapStaffDashboard(['lecturer']);
@@ -91,10 +92,10 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>.lec-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.lec-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.lec-topbar-left{display:flex;flex-direction:column}.lec-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.lec-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.lec-topbar-right{display:flex;align-items:center;gap:12px}.lec-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.lec-print-btn,.lec-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.lec-print-btn:hover,.lec-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}.lec-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.lec-content{margin-left:0!important;padding:12px!important}}</style>
 </head>
-<body>
+<body class="ent-layout">
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     
-    <div class="lec-topbar"><div class="lec-topbar-content"><div class="lec-topbar-left"><div class="lec-topbar-title">Lecturers</div><div class="lec-topbar-subtitle">Teaching &amp; Academic Delivery</div></div><div class="lec-topbar-right"><span class="lec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="lec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+    <div class="lec-topbar"><div class="lec-topbar-content"><div class="lec-topbar-left"><div class="lec-topbar-title">Lecturers</div><div class="lec-topbar-subtitle">Teaching &amp; Academic Delivery</div></div><div class="lec-topbar-right"><span class="lec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="lec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
     <div class="lec-content">
       <div class="content-area">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
@@ -899,7 +900,79 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
     </script>
     </div><!-- /content-area -->
 </div><!-- /lec-content -->
+
+<!-- ═══ AJAX MODULE LOADING ═══ -->
+<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
+    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+  </div>
+</div>
+<script>
+(function(){
+    var contentArea = document.querySelector('.lec-content');
+    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
+    var isAjaxLoading = false;
+
+    function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
+    function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (!href || href.indexOf('?') === -1) return;
+            if (isAjaxLoading) return;
+
+            e.preventDefault();
+            showLoading();
+            history.pushState({}, '', href);
+            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            var section = href.split('section=')[1] || href.split('page=')[1] || 'overview';
+            fetch('lecturers.php?section=' + encodeURIComponent(section), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.querySelector('.lec-content');
+                if (newContent && contentArea) {
+                    contentArea.innerHTML = newContent.innerHTML;
+                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) { newScript.src = oldScript.src; }
+                        else { newScript.textContent = oldScript.textContent; }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
+                hideLoading();
+            })
+            .catch(function(err) {
+                console.error('[AJAX Load Error]', err);
+                hideLoading();
+                window.location.href = href;
+            });
+        });
+    });
+
+    window.addEventListener('popstate', function() { window.location.reload(); });
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                var sidebar = document.querySelector('.isnm-sidebar');
+                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+            }
+        });
+    });
+})();
+</script>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

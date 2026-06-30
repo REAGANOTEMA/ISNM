@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 
 $ctx = bootstrapStaffDashboard(['security officer']);
 $auth_service = $ctx['auth'];
@@ -61,9 +62,9 @@ if ($conn) { try { $r = $conn->query("SELECT * FROM security_visitors WHERE visi
 @media(max-width:768px){.secu-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="secu-topbar"><div class="secu-topbar-content"><div class="secu-topbar-left"><div class="secu-topbar-title">Security</div><div class="secu-topbar-subtitle">Campus Security &amp; Access Control</div></div><div class="secu-topbar-right"><span class="secu-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="secu-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="secu-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="secu-topbar"><div class="secu-topbar-content"><div class="secu-topbar-left"><div class="secu-topbar-title">Security</div><div class="secu-topbar-subtitle">Campus Security &amp; Access Control</div></div><div class="secu-topbar-right"><span class="secu-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="secu-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="secu-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="secu-content">
 <?php switch ($section):
     case 'overview': ?>
@@ -159,5 +160,7 @@ endswitch; ?>
 <div class="modal fade" id="incidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form method="POST" action="../handlers/security_handler.php"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Report Incident</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" name="action" value="report_incident"><div class="mb-3"><label class="form-label">Incident Type</label><select class="form-select" name="incident_type" required><option value="">Select...</option><option value="Unauthorized Access">Unauthorized Access</option><option value="Theft">Theft</option><option value="Vandalism">Vandalism</option><option value="Assault">Assault</option><option value="Parking Violation">Parking Violation</option><option value="Emergency">Emergency</option><option value="Other">Other</option></select></div><div class="mb-3"><label class="form-label">Location</label><input class="form-control" name="location" required></div><div class="mb-3"><label class="form-label">Severity</label><select class="form-select" name="severity"><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option><option value="Critical">Critical</option></select></div><div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="3" required></textarea></div></div><div class="modal-footer"><button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> Submit Report</button></div></form></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

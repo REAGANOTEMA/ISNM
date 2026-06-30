@@ -319,6 +319,7 @@ switch ($action) {
                 'Sickbay Nurse'          => 'dashboards/sickbay.php',
                 'Computer Lab Manager'   => 'dashboards/computer_lab.php',
                 'Skills Lab Technician'  => 'dashboards/skills-lab.php',
+                'Skills Lab Manager'     => 'dashboards/skills-lab.php',
                 'System Administrator'   => 'dashboards/system-admin.php',
             ];
 

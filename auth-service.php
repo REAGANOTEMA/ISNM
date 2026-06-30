@@ -614,6 +614,8 @@ class AuthenticationService {
             'security officer'               => 'dashboards/security.php',
             'sickbay nurse'                  => 'dashboards/sickbay.php',
             'store keeper'                   => 'dashboards/storekeeper.php',
+            'driver'                         => 'dashboards/drivers.php',
+            'skills lab technician'          => 'dashboards/skills-lab.php',
         ];
         return $map[$key] ?? null;
     }

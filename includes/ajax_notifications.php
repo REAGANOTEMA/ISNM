@@ -29,6 +29,23 @@ switch ($action) {
         echo json_encode(['unread' => $unread, 'notifications' => $recent]);
         break;
 
+    case 'get_notifications':
+        $limit = min((int)($_GET['limit'] ?? 10), 50);
+        $recent = getRecentNotifications($user_id, $user_type, $limit);
+        $formatted = [];
+        foreach ($recent as $n) {
+            $formatted[] = [
+                'title'      => $n['title'] ?? '',
+                'message'    => $n['message'] ?? '',
+                'type'       => $n['type'] ?? 'info',
+                'read_at'    => $n['is_read'] ?? null,
+                'created_at' => $n['created_at'] ?? '',
+                'time_ago'   => function_exists('timeAgoNotif') ? timeAgoNotif($n['created_at'] ?? '') : ($n['created_at'] ?? ''),
+            ];
+        }
+        echo json_encode(['success' => true, 'notifications' => $formatted]);
+        break;
+
     case 'mark_read':
         $nid = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
         if ($nid) markNotificationRead($nid, $user_id, $user_type);
@@ -42,4 +59,17 @@ switch ($action) {
 
     default:
         echo json_encode(['error' => 'Unknown action']);
+}
+
+function timeAgoNotif($datetime) {
+    if (empty($datetime)) return '';
+    $now = new DateTime();
+    try { $ago = new DateTime($datetime); } catch (Exception $e) { return $datetime; }
+    $diff = $now->diff($ago);
+    if ($diff->y > 0) return $diff->y . 'y ago';
+    if ($diff->m > 0) return $diff->m . 'mo ago';
+    if ($diff->d > 0) return $diff->d . 'd ago';
+    if ($diff->h > 0) return $diff->h . 'h ago';
+    if ($diff->i > 0) return $diff->i . 'm ago';
+    return 'Just now';
 }

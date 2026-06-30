@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 
 $ctx = bootstrapStaffDashboard(['skills lab']);
 $auth_service = $ctx['auth'];
@@ -546,9 +547,9 @@ if ($students) {
 @media(max-width:768px){.skl-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="skl-topbar"><div class="skl-topbar-content"><div class="skl-topbar-left"><div class="skl-topbar-title">Skills Lab</div><div class="skl-topbar-subtitle">Clinical Skills &amp; Simulation Laboratory</div></div><div class="skl-topbar-right"><span class="skl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="skl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="skl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="skl-topbar"><div class="skl-topbar-content"><div class="skl-topbar-left"><div class="skl-topbar-title">Skills Lab</div><div class="skl-topbar-subtitle">Clinical Skills &amp; Simulation Laboratory</div></div><div class="skl-topbar-right"><span class="skl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="skl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="skl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="skl-content">
 
     <div id="overview" class="content-section dashboard-section active container-fluid py-4 px-4" data-section="overview">
@@ -1253,5 +1254,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (view==='incidents') loadInc();
 });
 </script>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

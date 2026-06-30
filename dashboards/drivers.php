@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 
 $ctx = bootstrapStaffDashboard(['driver']);
 $auth_service = $ctx['auth'];
@@ -80,9 +81,9 @@ $evening_routes = array_filter($routes, fn($rt) => $rt['route_type']==='Evening'
 @media(max-width:768px){.drv-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="drv-topbar"><div class="drv-topbar-content"><div class="drv-topbar-left"><div class="drv-topbar-title">Drivers</div><div class="drv-topbar-subtitle">Transport &amp; Fleet Management</div></div><div class="drv-topbar-right"><span class="drv-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="drv-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="drv-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="drv-topbar"><div class="drv-topbar-content"><div class="drv-topbar-left"><div class="drv-topbar-title">Drivers</div><div class="drv-topbar-subtitle">Transport &amp; Fleet Management</div></div><div class="drv-topbar-right"><span class="drv-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="drv-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="drv-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="drv-content">
 <?php switch ($section):
     case 'overview': ?>
@@ -179,5 +180,7 @@ endswitch; ?>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

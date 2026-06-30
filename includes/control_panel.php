@@ -18,24 +18,44 @@ $cpStats = [
 ];
 
 try {
-    if ($students = $ctx['students'] ?? null) {
-        $r = $students->query("SELECT COUNT(*)c FROM students WHERE status='Active'");
+    $cpStaffConn = $ctx['staff'] ?? null;
+    $cpStudentsConn = $ctx['students'] ?? null;
+
+    if ($cpStudentsConn) {
+        $r = $cpStudentsConn->query("SELECT COUNT(*)c FROM students WHERE status='Active'");
         if ($r) $cpStats['total_students'] = (int)$r->fetch_assoc()['c'];
-        $students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
     }
-    if ($staff = $ctx['staff'] ?? null) {
-        $r = $staff->query("SELECT COUNT(*)c FROM staff WHERE status='Active'");
+    if ($cpStaffConn) {
+        $r = $cpStaffConn->query("SELECT COUNT(*)c FROM staff WHERE status='Active'");
         if ($r) $cpStats['active_staff'] = (int)$r->fetch_assoc()['c'];
-    }
-    // Pending approvals
-    $pend = 0;
-    if ($staff) {
-        foreach (['budget_approvals','expenditure_approvals','payroll_approvals'] as $t) {
-            $r = $staff->query("SELECT COUNT(*)c FROM {$students_db}.{$t} WHERE status='pending'");
-            if ($r) $pend += (int)$r->fetch_assoc()['c'];
+
+        // Pending approvals from approval_requests
+        $r = $cpStaffConn->query("SELECT COUNT(*)c FROM approval_requests WHERE status IN ('Active','pending','in_review')");
+        if ($r) $cpStats['pending_approvals'] = (int)$r->fetch_assoc()['c'];
+
+        // Pending tasks
+        $cpUid = (int)($uid ?? $_SESSION['user_id'] ?? 0);
+        if ($cpUid) {
+            $stmt = $cpStaffConn->prepare("SELECT COUNT(*)c FROM task_assignments WHERE assigned_to = ? AND status IN ('pending','in_progress')");
+            if ($stmt) {
+                $stmt->bind_param('i', $cpUid);
+                $stmt->execute();
+                $cpStats['pending_tasks'] = (int)$stmt->get_result()->fetch_assoc()['c'];
+                $stmt->close();
+            }
         }
+
+        // Recent alerts (from notifications)
+        $cpStats['recent_alerts'] = getUnreadNotificationCount($cpStaffConn, $cpUid);
+
+        // Today's events
+        $r = $cpStaffConn->query("SELECT COUNT(*)c FROM calendar_events WHERE event_date = CURDATE() AND is_active = 1");
+        if ($r) $cpStats['today_events'] = (int)$r->fetch_assoc()['c'];
+
+        // Recent activity count
+        $r = $cpStaffConn->query("SELECT COUNT(*)c FROM staff_activity_log WHERE DATE(created_at) = CURDATE()");
+        if ($r) $cpStats['recent_alerts'] = max($cpStats['recent_alerts'], (int)$r->fetch_assoc()['c']);
     }
-    $cpStats['pending_approvals'] = $pend;
 } catch (Exception $e) {}
 
 $userPhoto = '../images/username.png';

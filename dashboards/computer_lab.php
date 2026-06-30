@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['computer lab']);
 $staff_conn = $ctx['staff'];
 $user = $ctx['user'];
@@ -120,9 +121,9 @@ $section = $_GET['section'] ?? 'dashboard';
 @media(max-width:768px){.cpt-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
-<body>
+<body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="cpt-topbar"><div class="cpt-topbar-content"><div class="cpt-topbar-left"><div class="cpt-topbar-title">Computer Laboratory</div><div class="cpt-topbar-subtitle">ICT Lab &amp; Digital Resources</div></div><div class="cpt-topbar-right"><span class="cpt-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="cpt-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="cpt-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="cpt-topbar"><div class="cpt-topbar-content"><div class="cpt-topbar-left"><div class="cpt-topbar-title">Computer Laboratory</div><div class="cpt-topbar-subtitle">ICT Lab &amp; Digital Resources</div></div><div class="cpt-topbar-right"><span class="cpt-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="cpt-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="cpt-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="cpt-content">
     <div class="content-section active content-area">
         <?php if ($msg = $_SESSION['success'] ?? null): ?><div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($msg) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['success']); ?>
@@ -1318,5 +1319,7 @@ function downloadPDF() {
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

@@ -47,7 +47,7 @@ function getSidebarGroups(string $role): array {
         ['label' => 'Preferences',     'icon' => 'fas fa-cog',         'page' => 'preferences'],
         ['label' => 'Security',        'icon' => 'fas fa-shield-alt',  'page' => 'security'],
         ['label' => 'Activity Logs',   'icon' => 'fas fa-history',     'page' => 'activity-logs'],
-        ['label' => 'Logout',          'icon' => 'fas fa-sign-out-alt','page' => 'logout', 'href' => '../logout.php'],
+        ['label' => 'Logout',          'icon' => 'fas fa-sign-out-alt','page' => 'logout', 'href' => '../auth-handler.php?action=logout'],
     ];
 
     return $g;
@@ -72,16 +72,21 @@ function getRoleOperations(string $role): array {
             ['label' => 'Backups',              'icon'=>'fas fa-database',  'page'=>'backups'],
             ['label' => 'Security',             'icon'=>'fas fa-shield-alt','page'=>'security'],
             ['label' => 'Monitoring',           'icon'=>'fas fa-chart-line','page'=>'monitoring'],
+            ['label' => 'Users & Access',       'icon'=>'fas fa-users',     'page'=>'users'],
+            ['label' => 'ERP Management',       'icon'=>'fas fa-cogs',      'page'=>'erp'],
             ['label' => 'Website',              'icon'=>'fas fa-globe',     'page'=>'website'],
-            ['label' => 'Digital Learning',     'icon'=>'fas fa-laptop',    'page'=>'digital-learning'],
+            ['label' => 'System Settings',      'icon'=>'fas fa-cog',       'page'=>'settings'],
         ],
         'director_academics' => [
             ['label' => 'Academic Programs',    'icon'=>'fas fa-book-open',    'page'=>'programs'],
-            ['label' => 'Academic Registrar',   'icon'=>'fas fa-clipboard-list','page'=>'registrar'],
-            ['label' => 'Curriculum',           'icon'=>'fas fa-layer-group',  'page'=>'curriculum'],
+            ['label' => 'Course Management',    'icon'=>'fas fa-book',         'page'=>'courses'],
+            ['label' => 'Examinations',         'icon'=>'fas fa-pen',          'page'=>'exams'],
+            ['label' => 'Timetable',            'icon'=>'fas fa-calendar-alt', 'page'=>'timetable'],
+            ['label' => 'Clinical Training',    'icon'=>'fas fa-user-nurse',   'page'=>'clinical'],
+            ['label' => 'Attendance',           'icon'=>'fas fa-calendar-check','page'=>'attendance'],
             ['label' => 'Quality Assurance',    'icon'=>'fas fa-check-circle', 'page'=>'quality'],
-            ['label' => 'Examinations',         'icon'=>'fas fa-pen',          'page'=>'examinations'],
-            ['label' => 'Research',             'icon'=>'fas fa-flask',        'page'=>'research'],
+            ['label' => 'Academic Records',     'icon'=>'fas fa-clipboard-list','page'=>'academic_records'],
+            ['label' => 'Reports Center',       'icon'=>'fas fa-chart-bar',    'page'=>'reports'],
         ],
         'director_finance' => [
             ['label' => 'Revenue Management',   'icon'=>'fas fa-arrow-up',     'page'=>'revenue'],

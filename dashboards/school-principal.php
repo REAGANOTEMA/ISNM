@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 $ctx = bootstrapStaffDashboard(['school principal', 'principal', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
@@ -530,9 +531,9 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 .approval-card .ac-actions .btn{font-size:12px;padding:4px 10px}
 @media(max-width:768px){.kpi-card{padding:12px 14px}.kpi-card .kpi-value{font-size:17px}}
 </style>
-</head><body>
+</head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="prin-topbar"><div class="prin-topbar-content"><div class="prin-topbar-left"><div class="prin-topbar-title">School Principal</div><div class="prin-topbar-subtitle">Academic Leadership &amp; Institutional Oversight</div></div><div class="prin-topbar-right"><span class="prin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="prin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="prin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="prin-topbar"><div class="prin-topbar-content"><div class="prin-topbar-left"><div class="prin-topbar-title">School Principal</div><div class="prin-topbar-subtitle">Academic Leadership &amp; Institutional Oversight</div></div><div class="prin-topbar-right"><span class="prin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="prin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="prin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="prin-content dashboard-section active" data-section="principal">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
@@ -1439,9 +1440,81 @@ try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER 
 </div></div>
 <?php endif; ?>
 </div>
+
+<!-- ═══ AJAX MODULE LOADING ═══ -->
+<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
+    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+  </div>
+</div>
+<script>
+(function(){
+    var contentArea = document.querySelector('.prin-content');
+    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
+    var isAjaxLoading = false;
+
+    function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
+    function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (!href || href.indexOf('?') === -1) return;
+            if (isAjaxLoading) return;
+
+            e.preventDefault();
+            showLoading();
+            history.pushState({}, '', href);
+            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            var section = href.split('section=')[1] || href.split('page=')[1] || 'home';
+            fetch('school-principal.php?section=' + encodeURIComponent(section), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.querySelector('.prin-content');
+                if (newContent && contentArea) {
+                    contentArea.innerHTML = newContent.innerHTML;
+                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) { newScript.src = oldScript.src; }
+                        else { newScript.textContent = oldScript.textContent; }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
+                hideLoading();
+            })
+            .catch(function(err) {
+                console.error('[AJAX Load Error]', err);
+                hideLoading();
+                window.location.href = href;
+            });
+        });
+    });
+
+    window.addEventListener('popstate', function() { window.location.reload(); });
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                var sidebar = document.querySelector('.isnm-sidebar');
+                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+            }
+        });
+    });
+})();
+</script>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
 </script>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>

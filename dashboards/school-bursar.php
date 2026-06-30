@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/financial_functions.php';
 require_once __DIR__ . '/../includes/auto_deduction_processor.php';
 
@@ -622,7 +623,7 @@ $pageTitle = 'Bursar Dashboard';
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 </head>
-<body>
+<body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
@@ -642,6 +643,7 @@ $pageTitle = 'Bursar Dashboard';
         <div class="d-flex align-items-center gap-2">
             <span class="text-muted" style="font-size:13px"><i class="far fa-clock me-1"></i><span id="currentDate"></span></span>
             <a href="school-bursar.php" class="bo btn-sm <?= $view === 'home' ? 'd-none' : '' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
+            <a href="../auth-handler.php?action=logout" class="bo btn-sm" style="background:#dc2626;color:#fff"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
         </div>
     </div>
 
@@ -2727,5 +2729,76 @@ function confirmAction(action, id){
     }).catch(function(){ alert('Request failed.'); });
 }
 </script>
+
+<!-- ═══ AJAX MODULE LOADING ═══ -->
+<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
+    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+  </div>
+</div>
+<script>
+(function(){
+    var contentArea = document.querySelector('.content-section');
+    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
+    var isAjaxLoading = false;
+
+    function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
+    function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (!href || href.indexOf('?') === -1) return;
+            if (isAjaxLoading) return;
+
+            e.preventDefault();
+            showLoading();
+            history.pushState({}, '', href);
+            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            var section = href.split('section=')[1] || href.split('page=')[1] || 'home';
+            fetch('school-bursar.php?section=' + encodeURIComponent(section), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.querySelector('.content-section');
+                if (newContent && contentArea) {
+                    contentArea.innerHTML = newContent.innerHTML;
+                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) { newScript.src = oldScript.src; }
+                        else { newScript.textContent = oldScript.textContent; }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
+                hideLoading();
+            })
+            .catch(function(err) {
+                console.error('[AJAX Load Error]', err);
+                hideLoading();
+                window.location.href = href;
+            });
+        });
+    });
+
+    window.addEventListener('popstate', function() { window.location.reload(); });
+
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                var sidebar = document.querySelector('.isnm-sidebar');
+                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+            }
+        });
+    });
+})();
+</script>
+
+<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

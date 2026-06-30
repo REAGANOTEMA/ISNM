@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/config_enhanced.php';
+require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/institution_stats.php';
 require_once __DIR__ . '/../includes/student_profile_component.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
@@ -888,7 +889,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
       <div class="ent-user-avatar"><?= strtoupper(substr($user_name ?? 'U', 0, 1)) ?></div>
       <span><?= htmlspecialchars($user_name ?? 'User') ?></span>
     </div>
-    <a href="../logout.php" class="ent-header-btn" title="Logout" style="text-decoration:none;color:rgba(255,255,255,0.7)"><i class="fas fa-sign-out-alt"></i></a>
+    <a href="../auth-handler.php?action=logout" class="ent-header-btn" title="Logout" style="text-decoration:none;color:rgba(255,255,255,0.7)"><i class="fas fa-sign-out-alt"></i></a>
   </div>
 </header>
 <div class="ent-sidebar-overlay" onclick="document.querySelector('.ent-sidebar').classList.remove('open');this.classList.remove('active')"></div>
@@ -1961,7 +1962,8 @@ endswitch; ?>
 
   <!-- Pending Tasks -->
   <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-tasks"></i> Pending Tasks</div>
+    <div class="ent-control-section-title"><i class="fas fa-tasks"></i> Pending Tasks <span class="ent-task-badge" id="cpTaskBadge"></span></div>
+    <div id="cpTaskList">
     <?php if(!empty($pendingContacts)): ?>
     <div class="ent-task-item"><span class="ent-task-priority high"></span> <?= $pendingContacts ?> contact messages</div>
     <?php endif; ?>
@@ -1974,6 +1976,29 @@ endswitch; ?>
     <?php if(($totalPending ?? 0) == 0): ?>
     <div class="ent-empty" style="padding:16px"><i class="fas fa-check-circle" style="font-size:24px;color:var(--ent-green)"></i><p style="margin:4px 0 0;font-size:11px">All caught up!</p></div>
     <?php endif; ?>
+    </div>
+    <script>
+    (function(){
+        fetch('../includes/ajax_task_handler.php?action=get_my_tasks&limit=5')
+            .then(function(r){return r.json()})
+            .then(function(d){
+                if(!d.success||!d.tasks||d.tasks.length===0)return;
+                var html='';
+                d.tasks.forEach(function(t){
+                    var pClass=t.priority==='urgent'?'high':t.priority==='high'?'high':t.priority==='medium'?'medium':'low';
+                    html+='<div class="ent-task-item" style="cursor:pointer" onclick="window.location.href=\'?page=approvals\'">';
+                    html+='<span class="ent-task-priority '+pClass+'"></span> '+t.title;
+                    if(t.due_date)html+=' <span style="font-size:10px;color:#94a3b8;margin-left:4px">'+t.due_date+'</span>';
+                    html+='</div>';
+                });
+                var el=document.getElementById('cpTaskList');
+                if(el)el.innerHTML=html;
+                var badge=document.getElementById('cpTaskBadge');
+                if(badge&&d.tasks.length>0)badge.textContent=d.tasks.length;
+            })
+            .catch(function(){});
+    })();
+    </script>
   </div>
 
   <!-- Quick Actions -->
@@ -2016,7 +2041,7 @@ endswitch; ?>
     <a href="?page=preferences" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-sliders-h"></i> Preferences</a>
     <a href="?page=security" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-shield-alt"></i> Security</a>
     <a href="?page=activity-logs" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-history"></i> Activity Logs</a>
-    <a href="../logout.php" class="ent-sidebar-item" style="color:var(--ent-red);margin:0"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <a href="../auth-handler.php?action=logout" class="ent-sidebar-item" style="color:var(--ent-red);margin:0"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
 </aside>
 
@@ -2359,6 +2384,103 @@ function sendBroadcast(e){
   return false;
 }
 </script>
+
+<!-- ═══ AJAX MODULE LOADING ═══ -->
+<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
+    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
+    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+  </div>
+</div>
+<script>
+(function(){
+    // AJAX module loading for sidebar navigation
+    var contentArea = document.querySelector('.ent-content-area');
+    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
+    var isAjaxLoading = false;
+
+    function showLoading() {
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        isAjaxLoading = true;
+    }
+    function hideLoading() {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        isAjaxLoading = false;
+    }
+
+    // Intercept sidebar link clicks for AJAX loading
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (!href || href.indexOf('?page=') === -1) return; // external links
+            if (isAjaxLoading) return;
+
+            e.preventDefault();
+            showLoading();
+
+            // Update URL without reload
+            history.pushState({}, '', href);
+
+            // Update active states
+            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            // Fetch content via AJAX
+            var page = href.split('page=')[1] || 'home';
+            fetch('director-general.php?page=' + encodeURIComponent(page), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                // Extract just the content area from response
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.querySelector('.ent-content-area');
+                if (newContent && contentArea) {
+                    contentArea.innerHTML = newContent.innerHTML;
+                    // Re-init any dynamic components
+                    if (typeof initFlatpickr === 'function') initFlatpickr();
+                    // Re-run any inline scripts
+                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) { newScript.src = oldScript.src; }
+                        else { newScript.textContent = oldScript.textContent; }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
+                hideLoading();
+            })
+            .catch(function(err) {
+                console.error('[AJAX Load Error]', err);
+                hideLoading();
+                // Fallback to normal navigation
+                window.location.href = href;
+            });
+        });
+    });
+
+    // Handle browser back/forward
+    window.addEventListener('popstate', function() {
+        var params = new URLSearchParams(window.location.search);
+        var page = params.get('page') || 'home';
+        // Full reload for back/forward (simpler and more reliable)
+        window.location.reload();
+    });
+
+    // Close sidebar on mobile after click
+    document.querySelectorAll('.child-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                var sidebar = document.querySelector('.isnm-sidebar');
+                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+                var overlay = document.querySelector('.ent-sidebar-overlay');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    });
+})();
+</script>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
