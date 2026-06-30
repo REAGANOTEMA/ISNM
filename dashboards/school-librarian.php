@@ -117,54 +117,44 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+} catch (Exception $e) {}
 }
 ?>
-
+<?php
+$pageToSection = [
+    'home'         => 'overview',
+    'overview'     => 'overview',
+    'catalogue'    => 'books',
+    'books'        => 'books',
+    'borrowing'    => 'circulation',
+    'returns'      => 'circulation',
+    'reservations' => 'circulation',
+    'members'      => 'members',
+    'barcodes'     => 'books',
+    'inventory'    => 'books',
+    'fines'        => 'circulation',
+    'acquisition'  => 'acquisition',
+    'activities'   => 'activities',
+];
+$requestedPage = $_GET['page'] ?? 'home';
+$section = $pageToSection[$requestedPage] ?? 'overview';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+.lib-content{margin-left:270px;padding:24px;min-height:100vh}
+.lib-topbar{background:linear-gradient(135deg,#1d4ed8,#1e40af,#1e3a8a);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.lib-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.lib-topbar-left{display:flex;flex-direction:column}.lib-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.lib-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.lib-topbar-right{display:flex;align-items:center;gap:12px}.lib-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.lib-print-btn,.lib-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.lib-print-btn:hover,.lib-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+@media(max-width:768px){.lib-content{margin-left:0!important;padding:12px!important}}
+</style>
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="lib-content">
         <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>School Librarian Dashboard</h1>
-                    <p>Library Management & Resources</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo htmlspecialchars($user_name); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <div class="section-tabs">
-                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
-                    <a class="section-tab" data-tab="books" onclick="switchToSection('books')">Books</a>
-                    <a class="section-tab" data-tab="circulation" onclick="switchToSection('circulation')">Circulation</a>
-                    <a class="section-tab" data-tab="members" onclick="switchToSection('members')">Members</a>
-                    <a class="section-tab" data-tab="acquisition" onclick="switchToSection('acquisition')">Acquisition</a>
-                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
-                </div>
+        <div class="lib-topbar"><div class="lib-topbar-content"><div class="lib-topbar-left"><div class="lib-topbar-title">School Librarian</div><div class="lib-topbar-subtitle">Library &amp; Resource Management</div></div><div class="lib-topbar-right"><span class="lib-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lib-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="lib-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
                 <!-- Library Overview -->
-                <section id="overview" class="content-section dashboard-section active" data-section="overview">
+                <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Library Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -210,7 +200,7 @@ if ($conn) {
                 </section>
 
                 <!-- Book Management -->
-                <section id="books" class="content-section dashboard-section" data-section="books">
+                <section id="books" class="content-section dashboard-section<?= $section==='books'?' active':'' ?>" data-section="books">
                     <h2>Book Management</h2>
                     <div class="book-actions">
                         <button class="btn btn-primary" onclick="openModal('addBook')">
@@ -253,7 +243,7 @@ if ($conn) {
                 </section>
 
                 <!-- Circulation -->
-                <section id="circulation" class="content-section dashboard-section" data-section="circulation">
+                <section id="circulation" class="content-section dashboard-section<?= $section==='circulation'?' active':'' ?>" data-section="circulation">
                     <h2>Book Circulation</h2>
                     <div class="circulation-actions">
                         <button class="btn btn-primary" onclick="openModal('checkoutBook')">
@@ -339,7 +329,7 @@ if ($conn) {
                 </section>
 
                 <!-- Library Members -->
-                <section id="members" class="content-section dashboard-section" data-section="members">
+                <section id="members" class="content-section dashboard-section<?= $section==='members'?' active':'' ?>" data-section="members">
                     <h2>Library Members</h2>
                     <div class="member-actions">
                         <button class="btn btn-primary" onclick="openModal('registerMember')">
@@ -420,7 +410,7 @@ if ($conn) {
                 </section>
 
                 <!-- Book Acquisition -->
-                <section id="acquisition" class="content-section dashboard-section" data-section="acquisition">
+                <section id="acquisition" class="content-section dashboard-section<?= $section==='acquisition'?' active':'' ?>" data-section="acquisition">
                     <h2>Book Acquisition</h2>
                     <div class="acquisition-actions">
                         <button class="btn btn-primary" onclick="openModal('newAcquisition')">
@@ -475,7 +465,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section id="activities" class="activities-section dashboard-section" data-section="activities">
+                <section id="activities" class="activities-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
                     <h2>Recent Library Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>
@@ -491,8 +481,6 @@ if ($conn) {
                         <?php endforeach; ?>
                     </div>
                 </section>
-            </div>
-        </div>
     </div>
 
     <!-- Modals -->

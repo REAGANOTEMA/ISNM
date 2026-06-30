@@ -20,6 +20,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.contact_directory (id INT AUTO_INCREMENT PRIMARY KEY, full_name VARCHAR(200), organization VARCHAR(200), position VARCHAR(200), phone VARCHAR(50), email VARCHAR(100), address TEXT, category VARCHAR(100), notes TEXT, created_by INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
+if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section']; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
@@ -375,17 +376,19 @@ unset($_SESSION['sec_success'], $_SESSION['sec_error']);?>
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
+.sec-content{margin-left:270px;padding:24px;min-height:100vh}
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
 .scard .scb{padding:20px}
+.sec-topbar{background:linear-gradient(135deg,#4338ca,#3730a3,#312e81);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.sec-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.sec-topbar-left{display:flex;flex-direction:column}.sec-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.sec-topbar-subtitle{color:#c7d2fe;font-size:12px;margin-top:-2px}.sec-topbar-right{display:flex;align-items:center;gap:12px}.sec-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.sec-print-btn,.sec-logout-btn{color:#c7d2fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.sec-print-btn:hover,.sec-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 .act-item{padding:10px 14px;border-left:3px solid #1a237e;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:8px;transition:all .15s}
 .act-item:hover{background:#eef2ff}
 .act-item .time{font-size:11px;color:#94a3b8}
 .search-card .sri{cursor:pointer;padding:8px 12px;border-radius:8px;transition:background .15s}
 .search-card .sri:hover{background:#eef2ff}
 .dep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-@media(max-width:768px){.dep-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.sec-content{margin-left:0!important;padding:12px!important}.dep-grid{grid-template-columns:1fr 1fr}}
 .kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;transition:all .25s;display:flex;align-items:center;gap:14px;height:100%}
 .kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-1px)}
 .kpi-card .kpi-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
@@ -406,11 +409,8 @@ unset($_SESSION['sec_success'], $_SESSION['sec_error']);?>
 </style>
 </head><body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="ma content-section dashboard-section active" data-section="secretary" style="margin-left:270px;padding:24px">
-<div class="ph mb-4">
-<div><h1><i class="fas fa-user-tie me-2"></i>School Secretary Dashboard</h1><p class="text-muted">Administrative Support &amp; Office Management</p></div>
-<a href="school-secretary.php" class="bo btn-sm <?= $view==='home'?'d-none':'' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
-</div>
+<div class="sec-topbar"><div class="sec-topbar-content"><div class="sec-topbar-left"><div class="sec-topbar-title">School Secretary</div><div class="sec-topbar-subtitle">Administrative &amp; Correspondence Management</div></div><div class="sec-topbar-right"><span class="sec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="sec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="sec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="sec-content dashboard-section active" data-section="secretary">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?><?php if ($view === 'home'): ?>
 <?php

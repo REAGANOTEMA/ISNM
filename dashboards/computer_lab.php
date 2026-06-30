@@ -64,6 +64,7 @@ $maintenance_logs = lab_fetch($ict, "SELECT ml.*, c.computer_name FROM maintenan
 $installations = lab_fetch($ict, "SELECT si.*, sw.software_name, c.computer_name FROM software_installations si LEFT JOIN software_inventory sw ON si.software_id=sw.id LEFT JOIN lab_computers c ON si.computer_id=c.id ORDER BY si.created_at DESC LIMIT 30");
 $assignments  = lab_fetch($ict, "SELECT a.*, c.computer_name FROM lab_computer_assignments a LEFT JOIN lab_computers c ON a.computer_id=c.id WHERE a.status='active' ORDER BY a.assigned_date DESC");
 
+if (isset($_GET['page']) && !isset($_GET['section'])) $_GET['section'] = $_GET['page'];
 $section = $_GET['section'] ?? 'dashboard';
 ?>
 <!DOCTYPE html>
@@ -114,40 +115,18 @@ $section = $_GET['section'] ?? 'dashboard';
 .id-card-preview .id-footer { background:#f9fafb; border-top:1px solid #d1d5db; padding:8px; text-align:center; font-size:9px; color:#6b7280; }
 .qr-svg { width:60px; height:60px; }
 @media print { .page-content,.content-section { margin:0!important; padding:0!important; } .top-bar,.nav-pills-ict,.sidebar { display:none!important; } }
+.cpt-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.cpt-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.cpt-topbar-left{display:flex;flex-direction:column}.cpt-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.cpt-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.cpt-topbar-right{display:flex;align-items:center;gap:12px}.cpt-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.cpt-print-btn,.cpt-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.cpt-print-btn:hover,.cpt-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.cpt-content{margin-left:270px;padding:24px;min-height:100vh}
+@media(max-width:768px){.cpt-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="page-content">
-    <div class="top-bar">
-        <div><strong><i class="fas fa-desktop me-2 text-primary"></i>Computer Laboratory Manager</strong><span class="text-muted small ms-2"><?= htmlspecialchars($user_name) ?></span></div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
-            <a href="../news.php" class="btn btn-sm btn-outline-secondary" title="News"><i class="fas fa-newspaper"></i></a>
-            <a href="../index.php" class="btn btn-sm btn-outline-secondary" title="Home"><i class="fas fa-home"></i></a>
-            <a href="../logout.php" class="btn btn-sm btn-outline-danger" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
-        </div>
-    </div>
-
+<div class="cpt-topbar"><div class="cpt-topbar-content"><div class="cpt-topbar-left"><div class="cpt-topbar-title">Computer Laboratory</div><div class="cpt-topbar-subtitle">ICT Lab &amp; Digital Resources</div></div><div class="cpt-topbar-right"><span class="cpt-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="cpt-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="cpt-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="cpt-content">
     <div class="content-section active content-area">
         <?php if ($msg = $_SESSION['success'] ?? null): ?><div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($msg) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['success']); ?>
         <?php if ($err = $_SESSION['error'] ?? null): ?><div class="alert alert-danger alert-dismissible fade show py-2"><?= htmlspecialchars($err) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['error']); ?>
-
-        <!-- Section Navigation -->
-        <ul class="nav nav-pills-ict">
-            <li class="nav-item"><a class="nav-link <?= $section==='dashboard'?'active':'' ?>" href="?section=dashboard"><i class="fas fa-chart-pie me-1"></i>Overview</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='id-cards'?'active':'' ?>" href="?section=id-cards"><i class="fas fa-id-card me-1"></i>ID Cards<?= $active_ids ? ' <span class="badge bg-primary">'.$active_ids.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='computers'?'active':'' ?>" href="?section=computers"><i class="fas fa-desktop me-1"></i>Computers</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='sessions'?'active':'' ?>" href="?section=sessions"><i class="fas fa-chalkboard me-1"></i>Sessions</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='equipment'?'active':'' ?>" href="?section=equipment"><i class="fas fa-toolbox me-1"></i>Equipment</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='printing'?'active':'' ?>" href="?section=printing"><i class="fas fa-print me-1"></i>Printing<?= $pending_print ? ' <span class="badge bg-warning">'.$pending_print.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='support'?'active':'' ?>" href="?section=support"><i class="fas fa-headset me-1"></i>Support<?= $open_repairs ? ' <span class="badge bg-danger">'.$open_repairs.'</span>' : '' ?></a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='software'?'active':'' ?>" href="?section=software"><i class="fas fa-code me-1"></i>Software</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='inventory'?'active':'' ?>" href="?section=inventory"><i class="fas fa-archive me-1"></i>Inventory</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='attendance'?'active':'' ?>" href="?section=attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='reports'?'active':'' ?>" href="?section=reports"><i class="fas fa-chart-line me-1"></i>Reports</a></li>
-            <li class="nav-item"><a class="nav-link <?= $section==='settings'?'active':'' ?>" href="?section=settings"><i class="fas fa-cog me-1"></i>Settings</a></li>
-        </ul>
 
         <!-- ======== DASHBOARD OVERVIEW ======== -->
         <?php if ($section === 'dashboard'): ?>

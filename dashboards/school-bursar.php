@@ -30,6 +30,7 @@ $bursarMigrate($staff);
 // Also try to create via students_db connection
 $bursarMigrate($students);
 
+if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view  = $_GET['section'];
 if ($view === 'overview') $view = 'home';

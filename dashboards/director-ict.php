@@ -47,8 +47,9 @@ $closed_tickets  = ict_q($ict, "SELECT COUNT(*) FROM it_support_tickets WHERE st
 $today_backups   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_backups WHERE DATE(created_at)=CURDATE()");
 $active_alerts   = ict_q($ict, "SELECT COUNT(*) FROM ict_system_alerts WHERE status='active'");
 $wifi_active     = ict_q($ict, "SELECT COUNT(*) FROM ict_wifi_devices WHERE status='online'");
+$ict_db = defined('ICT_DB_NAME') ? ICT_DB_NAME : 'igangaschoolofl_ict';
 $db_size_mb      = 0;
-$size_row = ict_fetch_one($ict, "SELECT ROUND(SUM(data_length+index_length)/1024/1024,2) as size_mb FROM information_schema.TABLES WHERE TABLE_SCHEMA='igangaschoolofl_ict'");
+$size_row = ict_fetch_one($ict, "SELECT ROUND(SUM(data_length+index_length)/1024/1024,2) as size_mb FROM information_schema.TABLES WHERE TABLE_SCHEMA='$ict_db'");
 if ($size_row) $db_size_mb = $size_row['size_mb'];
 $total_users     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff") + ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
 
@@ -90,180 +91,288 @@ if ($staff_conn) {
     } catch (Exception $e) {}
 }
 
+if (isset($_GET['page']) && !isset($_GET['tab'])) $_GET['tab'] = $_GET['page'];
 $tab = $_GET['tab'] ?? 'dashboard';
+$ictIcon = 'fa-laptop-code';
+$ictRole = 'Director ICT';
+$ictSubtitle = 'Information & Communication Technology – System Administration & Infrastructure Oversight';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-:root { --sidebar-width:260px; --accent:#2563eb; --accent-light:#eff6ff; --radius:14px; --shadow-sm:0 1px 3px rgba(0,0,0,.06); --shadow-md:0 4px 16px rgba(0,0,0,.08); --shadow-lg:0 8px 30px rgba(0,0,0,.1); }
-.page-content { padding:20px 24px 40px; background:#f0f2f5; min-height:100vh; }
-.page-content .content-area { max-width:1400px; margin:0 auto; }
-.stat-card { background:#fff; border-radius:var(--radius); padding:18px 20px; border:1px solid #e5e7eb; display:flex; align-items:center; gap:14px; transition:all .25s ease; box-shadow:var(--shadow-sm); }
-.stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:#d1d5db; }
-.stat-card .icon-circle { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; transition:transform .2s; }
-.stat-card:hover .icon-circle { transform:scale(1.08); }
-.stat-card h4 { font-size:22px; font-weight:800; margin:0; line-height:1.1; color:#111827; }
-.stat-card p { margin:0; font-size:12px; color:#6b7280; font-weight:500; letter-spacing:.02em; }
-.section-card { background:#fff; border-radius:var(--radius); padding:22px 24px; border:1px solid #e5e7eb; margin-bottom:16px; box-shadow:var(--shadow-sm); transition:box-shadow .25s; }
-.section-card:hover { box-shadow:var(--shadow-sm); }
-.section-card h2 { font-size:15px; font-weight:700; margin-bottom:14px; color:#111827; letter-spacing:-.01em; }
-.bg-blue-soft { background:#eff6ff; color:#2563eb; }
-.bg-green-soft { background:#f0fdf4; color:#16a34a; }
-.bg-red-soft { background:#fef2f2; color:#dc2626; }
-.bg-orange-soft { background:#fff7ed; color:#ea580c; }
-.bg-purple-soft { background:#faf5ff; color:#9333ea; }
-.bg-yellow-soft { background:#fefce8; color:#ca8a04; }
-.bg-teal-soft { background:#f0fdfa; color:#0d9488; }
-.bg-pink-soft { background:#fdf2f8; color:#db2777; }
-.bg-indigo-soft { background:#eef2ff; color:#4f46e5; }
-.bg-cyan-soft { background:#ecfeff; color:#0891b2; }
-.monitor-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-radius:12px; padding:18px 16px; color:#e2e8f0; text-align:center; transition:transform .2s,box-shadow .2s; }
+:root {
+  --ict-primary: #0f172a;
+  --ict-secondary: #1e293b;
+  --ict-accent: #2563eb;
+  --ict-blue: #3b82f6;
+  --ict-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e293b 100%);
+  --ict-card-bg: #ffffff;
+  --ict-text: #0f172a;
+  --ict-text-muted: #64748b;
+  --ict-border: #e2e8f0;
+  --ict-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --ict-shadow-lg: 0 10px 40px rgba(0,0,0,0.08);
+}
+body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; color: var(--ict-text); font-size: 13px; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
+.page-content { padding: 0 !important; }
+
+/* ── Top Bar ── */
+.ict-topbar {
+  background: var(--ict-gradient);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  margin-left: 270px;
+}
+@media (max-width: 768px) { .ict-topbar { margin-left: 0; } }
+.ict-topbar-left { display: flex; align-items: center; gap: 10px; }
+.ict-topbar-left .ict-icon { font-size: 22px; color: var(--ict-blue); }
+.ict-topbar-left h1 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.2px; }
+.ict-topbar-left .subtitle { font-size: 11px; color: rgba(255,255,255,0.65); margin: 0; }
+.ict-topbar-right { display: flex; align-items: center; gap: 12px; }
+.ict-topbar-right .date-badge { font-size: 12px; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
+.ict-topbar-right .logout-link { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 12px; padding: 4px 12px; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.15); }
+.ict-topbar-right .btn-print-top { background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:4px 14px; font-size:12px; cursor:pointer; transition:all 0.2s; }
+.ict-topbar-right .btn-print-top:hover { background:rgba(255,255,255,0.2); }
+
+/* ── Content ── */
+.ict-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
+@media (max-width: 768px) { .ict-content { margin-left: 0; } }
+
+/* ── KPI Cards ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card {
+  background: var(--ict-card-bg);
+  border-radius: 10px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: all 0.25s ease;
+  border-left: 4px solid transparent;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.kpi-icon { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 5px; }
+.kpi-value { font-size: 18px; font-weight: 800; color: var(--ict-text); letter-spacing: -0.3px; line-height: 1.2; }
+.kpi-label { font-size: 10px; font-weight: 700; color: var(--ict-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.kpi-card .kpi-trend { font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; padding: 2px 8px; border-radius: 10px; }
+.kpi-bl { border-left-color: #3b82f6; } .kpi-bl .kpi-icon { background: #eff6ff; color: #2563eb; }
+.kpi-gr { border-left-color: #10b981; } .kpi-gr .kpi-icon { background: #ecfdf5; color: #059669; }
+.kpi-cy { border-left-color: #06b6d4; } .kpi-cy .kpi-icon { background: #ecfeff; color: #0891b2; }
+.kpi-rd { border-left-color: #ef4444; } .kpi-rd .kpi-icon { background: #fef2f2; color: #dc2626; }
+.kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
+.kpi-pr { border-left-color: #8b5cf6; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
+
+/* ── Section Cards ── */
+.section-card {
+  background: var(--ict-card-bg);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s;
+  border: 1px solid #f1f5f9;
+}
+.section-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+.section-title { font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--ict-text); }
+.section-title i { font-size: 15px; }
+.section-subtitle { font-size: 11px; color: var(--ict-text-muted); margin: 0; }
+
+/* ── Monitor Cards ── */
+.monitor-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-radius:10px; padding:14px 12px; color:#e2e8f0; text-align:center; transition:transform .2s,box-shadow .2s; }
 .monitor-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.3); }
-.monitor-card h3 { font-size:30px; font-weight:800; margin:0; background:linear-gradient(135deg,#fff,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.monitor-card p { font-size:11px; color:#94a3b8; margin:4px 0 0; font-weight:500; }
-.monitor-card .progress { height:5px; margin-top:10px; border-radius:10px; background:#334155; }
+.monitor-card h3 { font-size:24px; font-weight:800; margin:0; background:linear-gradient(135deg,#fff,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.monitor-card p { font-size:10px; color:#94a3b8; margin:4px 0 0; font-weight:500; }
+.monitor-card .progress { height:4px; margin-top:8px; border-radius:10px; background:#334155; }
 .monitor-card .progress-bar { border-radius:10px; }
-.nav-pills-ict { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:18px; padding:8px 10px; background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:var(--shadow-sm); }
-.nav-pills-ict .nav-link { padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; color:#4b5563; text-decoration:none; white-space:nowrap; transition:all .2s; border:1px solid transparent; }
-.nav-pills-ict .nav-link:hover { background:#f3f4f6; border-color:#e5e7eb; color:#111827; }
-.nav-pills-ict .nav-link.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); border-color:transparent; }
-.filter-pill { display:inline-flex; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; color:#4b5563; background:#f3f4f6; text-decoration:none; transition:all .2s; border:1px solid transparent; }
+
+/* ── Tables ── */
+.ict-table { font-size: 12px; margin-bottom: 0; }
+.ict-table thead th { background: #f8fafc; font-weight: 600; color: var(--ict-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--ict-border); }
+.ict-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+.ict-table tbody tr:hover { background: #f8fafc; }
+.table-scroll { max-height: 260px; overflow-y: auto; }
+.table-scroll::-webkit-scrollbar { width: 4px; }
+.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.filter-pill { display:inline-flex; padding:4px 12px; border-radius:8px; font-size:11px; font-weight:600; color:#4b5563; background:#f3f4f6; text-decoration:none; transition:all .2s; border:1px solid transparent; }
 .filter-pill:hover { background:#e5e7eb; color:#111827; }
-.filter-pill.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); }
-.badge-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.filter-pill.active { background:var(--ict-accent); color:#fff; box-shadow:0 2px 8px rgba(37,99,235,.3); }
 .status-led { width:10px; height:10px; border-radius:50%; display:inline-block; box-shadow:0 0 6px rgba(0,0,0,.15); }
-.table-small td, .table-small th { padding:8px 10px!important; font-size:12px; vertical-align:middle; }
-.table-small thead th { font-weight:700; color:#374151; border-bottom-width:2px; text-transform:uppercase; font-size:10px; letter-spacing:.05em; }
-.table-small tbody tr { transition:background .15s; }
-.table-small tbody tr:hover { background:#f8fafc; }
-.table-responsive { border-radius:10px; border:1px solid #e5e7eb; }
-.table-responsive table { margin-bottom:0; }
-.btn { border-radius:8px; font-weight:600; font-size:12px; transition:all .2s; }
-.btn-sm { padding:4px 10px; font-size:11px; }
-.alert { border-radius:10px; font-size:13px; }
-.modal-content { border-radius:var(--radius); border:none; box-shadow:var(--shadow-lg); }
-.modal-header { border-radius:var(--radius) var(--radius) 0 0; }
-.form-control, .form-select { border-radius:8px; font-size:13px; border-color:#d1d5db; }
-.form-control:focus, .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
-.form-label { font-weight:600; font-size:12px; color:#374151; margin-bottom:4px; }
-code { font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569; }
-.badge { font-weight:600; font-size:10px; padding:3px 8px; border-radius:6px; letter-spacing:.02em; }
-@media(max-width:768px){ .page-content{padding:12px 12px 30px;} .stat-card{padding:14px;} .stat-card h4{font-size:18px;} .section-card{padding:16px;} .nav-pills-ict{gap:2px;padding:6px;} .nav-pills-ict .nav-link{padding:5px 8px;font-size:11px;} .table-small td,.table-small th{padding:6px 6px!important;font-size:11px;} }
-@media(max-width:576px){ .stat-card .icon-circle{width:38px;height:38px;font-size:16px;} .monitor-card h3{font-size:24px;} }
+
+/* ── Badges ── */
+.badge-soft { font-weight: 500; font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+
+/* ── Activity timeline ── */
+.activity-timeline { list-style: none; padding: 0; margin: 0; }
+.activity-timeline li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
+.activity-timeline li:last-child { border-bottom: none; }
+
+/* ── Animations ── */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+.an-fade { animation: fadeInUp 0.5s ease forwards; }
+.an-slide { animation: slideIn 0.4s ease forwards; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) {
+  .ict-topbar { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
+  .ict-content { padding: 12px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi-card { padding: 10px 10px 8px; }
+  .kpi-value { font-size: 15px; }
+  .section-card { padding: 12px 14px; }
+}
+@media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
+
+/* ── Print ── */
+@media print {
+  body { background:#fff !important; font-size:10pt; }
+  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, .ict-topbar { display:none !important; }
+  .ict-content { padding:0 !important; margin:0 !important; max-width:100% !important; background:#fff !important; }
+  .dashboard-section { display:block !important; }
+  .section-card { box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid; page-break-inside:avoid; }
+  .kpi-grid { gap:6px; }
+  .kpi-card { box-shadow:none !important; border:1px solid #e2e8f0 !important; break-inside:avoid; }
+  .kpi-card .kpi-icon { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .badge { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .an-fade { animation:none !important; opacity:1 !important; }
+  .table-scroll { max-height:none !important; overflow:visible !important; }
+  .monitor-card { break-inside:avoid; }
+}
 </style>
 </head>
 <body>
+
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="page-content">
-    <div class="top-bar">
-        <div><strong><i class="fas fa-laptop-code me-2 text-primary"></i>Director ICT Dashboard</strong><span class="text-muted small ms-2"><?= htmlspecialchars($user_name) ?></span></div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small d-none d-md-block"><?= date('D, d M Y H:i') ?></span>
-            <?php if ($active_alerts): ?><span class="badge bg-danger"><?= $active_alerts ?> alerts</span><?php endif; ?>
-            <a href="../index.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-home"></i></a>
-            <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i></a>
-        </div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="ict-topbar an-fade">
+  <div class="ict-topbar-left">
+    <i class="fas <?= $ictIcon ?> ict-icon"></i>
+    <div>
+      <h1><?= $ictRole ?> – <?= htmlspecialchars($user_name) ?></h1>
+      <p class="subtitle"><?= $ictSubtitle ?></p>
     </div>
+  </div>
+  <div class="ict-topbar-right">
+    <span class="date-badge"><i class="far fa-calendar-alt me-1"></i><?= date('D, d M Y') ?></span>
+    <button class="btn-print-top" onclick="window.print()" title="Print Dashboard"><i class="fas fa-print me-1"></i>Print</button>
+    <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+  </div>
+</div>
 
-    <div class="content-section active content-area">
-        <?php if ($msg = $_SESSION['success'] ?? null): ?><div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($msg) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['success']); ?>
-        <?php if ($err = $_SESSION['error'] ?? null): ?><div class="alert alert-danger alert-dismissible fade show py-2"><?= htmlspecialchars($err) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['error']); ?>
+<!-- ═══ CONTENT ═══ -->
+<div class="ict-content">
 
-        <!-- Navigation -->
-        <ul class="nav nav-pills-ict">
-            <li><a class="nav-link <?= $tab==='dashboard'?'active':'' ?>" href="?tab=dashboard"><i class="fas fa-chart-pie me-1"></i>Dashboard</a></li>
-            <li><a class="nav-link <?= $tab==='assets'?'active':'' ?>" href="?tab=assets"><i class="fas fa-boxes me-1"></i>Assets</a></li>
-            <li><a class="nav-link <?= $tab==='infrastructure'?'active':'' ?>" href="?tab=infrastructure"><i class="fas fa-server me-1"></i>Infrastructure</a></li>
-            <li><a class="nav-link <?= $tab==='helpdesk'?'active':'' ?>" href="?tab=helpdesk"><i class="fas fa-headset me-1"></i>Help Desk<?= $open_tickets ? ' <span class="badge bg-danger">'.$open_tickets.'</span>' : '' ?></a></li>
-            <li><a class="nav-link <?= $tab==='backups'?'active':'' ?>" href="?tab=backups"><i class="fas fa-database me-1"></i>Backups</a></li>
-            <li><a class="nav-link <?= $tab==='security'?'active':'' ?>" href="?tab=security"><i class="fas fa-shield-alt me-1"></i>Security</a></li>
-            <li><a class="nav-link <?= $tab==='monitoring'?'active':'' ?>" href="?tab=monitoring"><i class="fas fa-heartbeat me-1"></i>Monitoring</a></li>
-            <li><a class="nav-link <?= $tab==='settings'?'active':'' ?>" href="?tab=settings"><i class="fas fa-cog me-1"></i>Settings</a></li>
-            <li><a class="nav-link <?= $tab==='users'?'active':'' ?>" href="?tab=users"><i class="fas fa-users-cog me-1"></i>Users</a></li>
-            <li><a class="nav-link <?= $tab==='erp'?'active':'' ?>" href="?tab=erp"><i class="fas fa-cubes me-1"></i>ERP System</a></li>
-            <li><a class="nav-link <?= $tab==='website'?'active':'' ?>" href="?tab=website"><i class="fas fa-globe me-1"></i>Website</a></li>
-            <li><a class="nav-link <?= $tab==='approvals'?'active':'' ?>" href="?tab=approvals"><i class="fas fa-check-double me-1"></i>Approvals<?= count($pending_tickets) ? ' <span class="badge bg-danger">'.count($pending_tickets).'</span>' : '' ?></a></li>
-        </ul>
+<?php if(!empty($_SESSION['success'])): ?>
+<div class="alert alert-success alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#ecfdf5;color:#065f46;">
+  <i class="fas fa-check-circle me-1"></i> <?= htmlspecialchars($_SESSION['success']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
+</div>
+<?php unset($_SESSION['success']); endif; ?>
+<?php if(!empty($_SESSION['error'])): ?>
+<div class="alert alert-danger alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;">
+  <i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($_SESSION['error']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
+</div>
+<?php unset($_SESSION['error']); endif; ?>
 
-        <!-- ======== DASHBOARD ======== -->
-        <?php if ($tab === 'dashboard'): ?>
-        <div class="row g-2 mb-3">
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-blue-soft"><i class="fas fa-users"></i></div><div><h4><?= $total_users ?></h4><p>Total Users</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-green-soft"><i class="fas fa-user-tie"></i></div><div><h4><?= $total_staff ?></h4><p>Staff</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-purple-soft"><i class="fas fa-user-graduate"></i></div><div><h4><?= $total_students ?></h4><p>Students</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-teal-soft"><i class="fas fa-server"></i></div><div><h4><?= $active_servers ?></h4><p>Servers</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-cyan-soft"><i class="fas fa-network-wired"></i></div><div><h4><?= $network_active ?></h4><p>Network</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-yellow-soft"><i class="fas fa-wifi"></i></div><div><h4><?= $wifi_active ?></h4><p>WiFi AP</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-pink-soft"><i class="fas fa-boxes"></i></div><div><h4><?= $total_assets ?></h4><p>Assets</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-red-soft"><i class="fas fa-ticket-alt"></i></div><div><h4><?= $open_tickets ?></h4><p>Open Tickets</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-orange-soft"><i class="fas fa-database"></i></div><div><h4><?= $today_backups ?></h4><p>Backups Today</p></div></div></div>
-            <div class="col-6 col-md-4 col-lg-3 col-xl"><div class="stat-card"><div class="icon-circle bg-indigo-soft"><i class="fas fa-shield-alt"></i></div><div><h4><?= $active_alerts ?></h4><p>Alerts</p></div></div></div>
-        </div>
+<!-- ======== DASHBOARD (Control Panel) ======== -->
+<?php if ($tab === 'dashboard'): ?>
+<div class="kpi-grid">
+  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-users"></i></div><div class="kpi-value"><?= $total_users ?></div><div class="kpi-label">Total Users</div><div class="kpi-trend text-primary"><i class="fas fa-arrow-up"></i>System wide</div></div>
+  <div class="kpi-card kpi-gr"><div class="kpi-icon"><i class="fas fa-user-tie"></i></div><div class="kpi-value"><?= $total_staff ?></div><div class="kpi-label">Staff</div><div class="kpi-trend text-success"><i class="fas fa-user-check"></i>Active</div></div>
+  <div class="kpi-card kpi-pr"><div class="kpi-icon"><i class="fas fa-user-graduate"></i></div><div class="kpi-value"><?= $total_students ?></div><div class="kpi-label">Students</div><div class="kpi-trend text-primary"><i class="fas fa-graduation-cap"></i>Active</div></div>
+  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-server"></i></div><div class="kpi-value"><?= $active_servers ?></div><div class="kpi-label">Servers Online</div><div class="kpi-trend text-info"><i class="fas fa-check-circle"></i>Healthy</div></div>
+  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-network-wired"></i></div><div class="kpi-value"><?= $network_active ?></div><div class="kpi-label">Network Devices</div><div class="kpi-trend text-info"><i class="fas fa-exchange-alt"></i>Online</div></div>
+  <div class="kpi-card kpi-or"><div class="kpi-icon"><i class="fas fa-wifi"></i></div><div class="kpi-value"><?= $wifi_active ?></div><div class="kpi-label">WiFi APs</div><div class="kpi-trend text-warning"><i class="fas fa-signal"></i>Online</div></div>
+  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-boxes"></i></div><div class="kpi-value"><?= $total_assets ?></div><div class="kpi-label">ICT Assets</div><div class="kpi-trend text-primary"><i class="fas fa-tag"></i>Registered</div></div>
+  <div class="kpi-card kpi-rd"><div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div><div class="kpi-value"><?= $open_tickets ?></div><div class="kpi-label">Open Tickets</div><div class="kpi-trend text-danger"><i class="fas fa-exclamation-triangle"></i>Pending</div></div>
+  <div class="kpi-card kpi-or"><div class="kpi-icon"><i class="fas fa-database"></i></div><div class="kpi-value"><?= $today_backups ?></div><div class="kpi-label">Backups Today</div><div class="kpi-trend text-warning"><i class="fas fa-cloud-upload-alt"></i>Protected</div></div>
+  <div class="kpi-card kpi-rd"><div class="kpi-icon"><i class="fas fa-shield-alt"></i></div><div class="kpi-value"><?= $active_alerts ?></div><div class="kpi-label">Active Alerts</div><div class="kpi-trend text-danger"><i class="fas fa-bell"></i><?= $active_alerts > 0 ? 'Attention needed' : 'All clear' ?></div></div>
+</div>
 
-        <div class="row g-3">
-            <div class="col-lg-7">
-                <div class="section-card">
-                    <h2><i class="fas fa-heartbeat me-2 text-danger"></i>System Monitoring</h2>
-                    <div class="row g-2">
-                        <div class="col-4"><div class="monitor-card"><h3 id="cpuVal">67%</h3><p>CPU Usage</p><div class="progress"><div class="progress-bar bg-success" style="width:67%"></div></div></div></div>
-                        <div class="col-4"><div class="monitor-card"><h3 id="ramVal">72%</h3><p>RAM Usage</p><div class="progress"><div class="progress-bar bg-warning" style="width:72%"></div></div></div></div>
-                        <div class="col-4"><div class="monitor-card"><h3 id="diskVal">45%</h3><p>Disk Usage</p><div class="progress"><div class="progress-bar bg-info" style="width:45%"></div></div></div></div>
-                        <div class="col-4"><div class="monitor-card"><h3 id="uptimeVal">99.8%</h3><p>Uptime</p><span class="badge bg-success">Online</span></div></div>
-                        <div class="col-4"><div class="monitor-card"><h3 id="sessionsVal"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'") ?></h3><p>Active Sessions</p><span class="badge bg-info">Active</span></div></div>
-                        <div class="col-4"><div class="monitor-card"><h3 id="failuresVal"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()") ?></h3><p>Failed Logins Today</p><span class="badge bg-<?= ict_q($ict,"SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()") > 10 ? 'danger' : 'secondary' ?>">Today</span></div></div>
-                    </div>
-                </div>
-                <div class="section-card">
-                    <h2><i class="fas fa-ticket-alt me-2 text-warning"></i>Recent Support Tickets</h2>
-                    <div style="max-height:300px;overflow-y:auto">
-                    <?php if (empty($tickets)): ?><div class="text-center py-3 text-muted"><p>No tickets</p></div>
-                    <?php else: foreach (array_slice($tickets, 0, 8) as $t): ?>
-                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom small">
-                        <div><code><?= htmlspecialchars($t['ticket_number']) ?></code> <strong><?= htmlspecialchars($t['requester_name']) ?></strong><span class="text-muted ms-2"><?= htmlspecialchars(mb_substr($t['description']??'',0,50)) ?></span></div>
-                        <div><span class="badge bg-<?= $t['priority']==='critical'||$t['priority']==='high'?'danger':($t['priority']==='medium'?'warning text-dark':'success') ?> me-1"><?= $t['priority'] ?></span><span class="badge bg-<?= $t['status']==='open'?'danger':($t['status']==='in_progress'?'warning text-dark':'success') ?>"><?= $t['status'] ?></span></div>
-                    </div>
-                    <?php endforeach; endif; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="section-card">
-                    <h2><i class="fas fa-bell me-2 text-<?= $active_alerts?'danger':'secondary' ?>"></i>Active Alerts <?= $active_alerts ? '<span class="badge bg-danger">'.$active_alerts.'</span>' : '' ?></h2>
-                    <div style="max-height:250px;overflow-y:auto">
-                    <?php if (empty($alerts)): ?><div class="text-center py-3 text-muted"><p>No active alerts</p></div>
-                    <?php else: foreach ($alerts as $a): ?>
-                    <div class="d-flex justify-content-between py-1 border-bottom small">
-                        <div><span class="badge bg-<?= $a['severity']==='critical'?'danger':($a['severity']==='warning'?'warning text-dark':'info') ?> me-1"><?= $a['severity'] ?></span><strong><?= htmlspecialchars($a['title']) ?></strong></div>
-                        <div><span class="badge bg-<?= $a['status']==='active'?'danger':'secondary' ?>"><?= $a['status'] ?></span></div>
-                    </div>
-                    <?php endforeach; endif; ?>
-                    </div>
-                </div>
-                <div class="section-card">
-                    <h2><i class="fas fa-history me-2 text-info"></i>Audit Trail</h2>
-                    <div style="max-height:300px;overflow-y:auto">
-                    <?php if (empty($audit_logs)): ?><div class="text-center py-3 text-muted"><p>No audit logs</p></div>
-                    <?php else: foreach (array_slice($audit_logs, 0, 8) as $a): ?>
-                    <div class="py-1 border-bottom small">
-                        <strong><?= htmlspecialchars($a['username'] ?: 'System') ?></strong> <?= htmlspecialchars($a['action']) ?> <code><?= htmlspecialchars($a['resource_type'] ?: '') ?></code>
-                        <small class="d-block text-muted"><?= htmlspecialchars(mb_substr($a['description']??'',0,60)) ?> | <?= htmlspecialchars($a['created_at'] ?? '') ?></small>
-                    </div>
-                    <?php endforeach; endif; ?>
-                    </div>
-                </div>
-                <div class="section-card">
-                    <h2><i class="fas fa-hdd me-2 text-purple"></i>Database Info</h2>
-                    <div class="small">
-                        <div class="d-flex justify-content-between py-1"><span>Database Size</span><strong><?= number_format($db_size_mb, 2) ?> MB</strong></div>
-                        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count($ict->query("SHOW TABLES")->fetch_all()) : 0 ?></strong></div>
-                        <div class="d-flex justify-content-between py-1"><span>Backups Today</span><strong><?= $today_backups ?></strong></div>
-                        <div class="d-flex justify-content-between py-1"><span>Total Assets</span><strong><?= $total_assets ?></strong></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-heartbeat text-danger"></i>System Monitoring</h3><span class="section-subtitle">Live infrastructure status</span></div>
+      <div class="row g-2">
+        <div class="col-4"><div class="monitor-card"><h3 id="cpuVal">67%</h3><p>CPU Usage</p><div class="progress"><div class="progress-bar bg-success" style="width:67%"></div></div></div></div>
+        <div class="col-4"><div class="monitor-card"><h3 id="ramVal">72%</h3><p>RAM Usage</p><div class="progress"><div class="progress-bar bg-warning" style="width:72%"></div></div></div></div>
+        <div class="col-4"><div class="monitor-card"><h3 id="diskVal">45%</h3><p>Disk Usage</p><div class="progress"><div class="progress-bar bg-info" style="width:45%"></div></div></div></div>
+        <div class="col-4"><div class="monitor-card"><h3 id="uptimeVal">99.8%</h3><p>Uptime</p><span class="badge bg-success">Online</span></div></div>
+        <div class="col-4"><div class="monitor-card"><h3 id="sessionsVal"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'") ?></h3><p>Active Sessions</p><span class="badge bg-info">Activity</span></div></div>
+        <div class="col-4"><div class="monitor-card"><h3 id="failuresVal"><?= ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()") ?></h3><p>Failed Logins Today</p><span class="badge bg-<?= ict_q($ict,"SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()") > 10 ? 'danger' : 'secondary' ?>">Today</span></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-ticket-alt text-warning"></i>Recent Support Tickets</h3><span class="section-subtitle">Latest requests</span></div>
+      <div class="table-scroll">
+      <?php if (empty($tickets)): ?><div class="text-center py-3 text-muted"><p>No tickets</p></div>
+      <?php else: foreach (array_slice($tickets, 0, 6) as $t): ?>
+      <div class="d-flex justify-content-between align-items-center py-1 border-bottom small">
+        <div><code><?= htmlspecialchars($t['ticket_number']) ?></code> <strong><?= htmlspecialchars($t['requester_name']) ?></strong><span class="text-muted ms-2"><?= htmlspecialchars(mb_substr($t['description']??'',0,50)) ?></span></div>
+        <div><span class="badge bg-<?= $t['priority']==='critical'||$t['priority']==='high'?'danger':($t['priority']==='medium'?'warning text-dark':'success') ?> me-1"><?= $t['priority'] ?></span><span class="badge bg-<?= $t['status']==='open'?'danger':($t['status']==='in_progress'?'warning text-dark':'success') ?>"><?= $t['status'] ?></span></div>
+      </div>
+      <?php endforeach; endif; ?>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-bell text-<?= $active_alerts?'danger':'secondary' ?>"></i>Active Alerts</h3><?= $active_alerts ? '<span class="badge bg-danger">'.$active_alerts.' active</span>' : '<span class="badge bg-success">All clear</span>' ?></div>
+      <div class="table-scroll">
+      <?php if (empty($alerts)): ?><div class="text-center py-3 text-muted"><p>No active alerts</p></div>
+      <?php else: foreach (array_slice($alerts, 0, 6) as $a): ?>
+      <div class="d-flex justify-content-between py-1 border-bottom small">
+        <div><span class="badge bg-<?= $a['severity']==='critical'?'danger':($a['severity']==='warning'?'warning text-dark':'info') ?> me-1"><?= $a['severity'] ?></span><strong><?= htmlspecialchars($a['title']) ?></strong></div>
+        <div><span class="badge bg-<?= $a['status']==='active'?'danger':'secondary' ?>"><?= $a['status'] ?></span></div>
+      </div>
+      <?php endforeach; endif; ?>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-history text-info"></i>Audit Trail</h3><span class="section-subtitle">Recent activity</span></div>
+      <div class="table-scroll">
+      <?php if (empty($audit_logs)): ?><div class="text-center py-3 text-muted"><p>No audit logs</p></div>
+      <?php else: foreach (array_slice($audit_logs, 0, 6) as $a): ?>
+      <div class="py-1 border-bottom small">
+        <strong><?= htmlspecialchars($a['username'] ?: 'System') ?></strong> <?= htmlspecialchars($a['action']) ?> <code><?= htmlspecialchars($a['resource_type'] ?: '') ?></code>
+        <small class="d-block text-muted"><?= htmlspecialchars(mb_substr($a['description']??'',0,60)) ?> | <?= htmlspecialchars($a['created_at'] ?? '') ?></small>
+      </div>
+      <?php endforeach; endif; ?>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-hdd text-purple"></i>Database Information</h3></div>
+      <div class="small">
+        <div class="d-flex justify-content-between py-1"><span>Database Size</span><strong><?= number_format($db_size_mb, 2) ?> MB</strong></div>
+        <div class="d-flex justify-content-between py-1"><span>ICT Tables</span><strong><?= $ict ? count($ict->query("SHOW TABLES")->fetch_all()) : 0 ?></strong></div>
+        <div class="d-flex justify-content-between py-1"><span>Backups Today</span><strong><?= $today_backups ?></strong></div>
+        <div class="d-flex justify-content-between py-1"><span>Total Assets</span><strong><?= $total_assets ?></strong></div>
+        <div class="d-flex justify-content-between py-1"><span>Open Tickets</span><strong><?= $open_tickets ?></strong></div>
+        <div class="d-flex justify-content-between py-1"><span>Active Sessions</span><strong><?= $active_sessions ?></strong></div>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- ======== ASSETS ======== -->
         <?php elseif ($tab === 'assets'): ?>
@@ -662,7 +771,11 @@ code { font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px; c
                         <?php
                         $secSettings = ['session_timeout_minutes','max_login_attempts','lockout_duration_minutes','password_min_length'];
                         foreach ($secSettings as $sk):
-                            $sv = ict_fetch_one($ict, "SELECT setting_value FROM ict_system_settings WHERE setting_key='$sk'");
+                            $sv = null;
+                            if ($ict) {
+                                $st = $ict->prepare("SELECT setting_value FROM ict_system_settings WHERE setting_key=?");
+                                if ($st) { $st->bind_param('s', $sk); $st->execute(); $sr = $st->get_result(); $sv = $sr->fetch_assoc(); $st->close(); }
+                            }
                             $val = $sv ? $sv['setting_value'] : '';
                         ?>
                         <div class="mb-2">
@@ -1196,11 +1309,10 @@ code { font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px; c
 </form>
 </div></div>
 
-<?php if (function_exists('renderDepartmentApprovalModal')) renderDepartmentApprovalModal(); ?>
 <!-- jQuery & Bootstrap already loaded in dashboard_head.php — do NOT re-add here -->
 <script>
 const ICT_HANDLER = '../handlers/ict_handler.php';
-function showAlert(m, t) { $('.content-area').prepend(`<div class="alert alert-${t} alert-dismissible fade show py-2">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`); setTimeout(()=>$('.alert').alert('close'),5000); }
+function showAlert(m, t) { $('.ict-content').prepend(`<div class="alert alert-${t} alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`); setTimeout(()=>$('.alert').alert('close'),5000); }
 
 function doAjax(formId, cb) {
     const f = $(`#${formId}`);
@@ -1331,13 +1443,14 @@ function addHealthCheck() {
     });
 }
 function addSecurityLog() {
-    $.post(ICT_HANDLER, { action: 'add_security_log', event_type: 'other', description: 'Manual security check by ' + '<?= $user_name ?>', severity: 'info' }).done(r => { if(r.success) showAlert('Security event logged','success'); else showAlert(r.message,'danger'); });
+    $.post(ICT_HANDLER, { action: 'add_security_log', event_type: 'other', description: 'Manual security check by ' + '<?= htmlspecialchars($user_name, ENT_QUOTES) ?>', severity: 'info' }).done(r => { if(r.success) showAlert('Security event logged','success'); else showAlert(r.message,'danger'); });
 }
 function filterTickets(s) { $('#ticketTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 function filterBackup(s) { $('#backupTable tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('backup-row-'+s)); }); }
 function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter-pill[onclick*="'${s}'"]`).addClass('active'); $('.section-card tbody tr').each(function() { $(this).toggle(s==='all' || $(this).hasClass('ticket-row-'+s)); }); }
 </script>
-<?php if (function_exists('renderDepartmentApprovalScripts')) renderDepartmentApprovalScripts(); ?>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</div>
+</div>
 </body>
 </html>

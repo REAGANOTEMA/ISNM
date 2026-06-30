@@ -35,6 +35,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.department_reviews (id INT AUTO_INCREMENT PRIMARY KEY, department VARCHAR(200), reviewer_id INT, review_period VARCHAR(50), overall_score DECIMAL(5,2), strengths TEXT, weaknesses TEXT, recommendations TEXT, status ENUM('draft','submitted','reviewed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
+if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section']; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
@@ -487,6 +488,15 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
+.prin-topbar{background:linear-gradient(135deg,#1a237e,#283593,#1e3a5f);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.prin-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
+.prin-topbar-left{display:flex;flex-direction:column}
+.prin-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
+.prin-topbar-subtitle{color:#c5cae9;font-size:12px;margin-top:-2px}
+.prin-topbar-right{display:flex;align-items:center;gap:12px}
+.prin-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
+.prin-print-btn,.prin-logout-btn{color:#c5cae9;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
+.prin-print-btn:hover,.prin-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
@@ -522,11 +532,8 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 </style>
 </head><body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="ma content-section dashboard-section active" data-section="principal" style="margin-left:270px;padding:24px">
-<div class="ph mb-4">
-<div><h1><i class="fas fa-user-tie me-2"></i>Principal Dashboard</h1><p class="text-muted">Academic Leadership &amp; Institutional Oversight</p></div>
-<a href="school-principal.php" class="bo btn-sm <?= $view==='home'?'d-none':'' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
-</div>
+<div class="prin-topbar"><div class="prin-topbar-content"><div class="prin-topbar-left"><div class="prin-topbar-title">School Principal</div><div class="prin-topbar-subtitle">Academic Leadership &amp; Institutional Oversight</div></div><div class="prin-topbar-right"><span class="prin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="prin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="prin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="prin-content dashboard-section active" data-section="principal">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
 <?php if ($view === 'home'): ?>

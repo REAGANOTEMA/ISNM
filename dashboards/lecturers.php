@@ -65,32 +65,41 @@ if ($conn) {
         }
     } catch (Exception $e) {}
 }
+
+// Determine active section from ?page= parameter
+$pageToSection = [
+    'home'         => 'overview',
+    'overview'     => 'overview',
+    'my-courses'   => 'courses',
+    'timetable'    => 'timetable',
+    'attendance'   => 'attendance',
+    'cat-marks'    => 'cat-marks',
+    'exam-marks'   => 'exam-marks',
+    'materials'    => 'materials',
+    'results'      => 'results',
+    'reports'      => 'reports',
+    'lesson-plans' => 'lesson-plans',
+    'assignments'  => 'assignments',
+];
+$requestedPage = $_GET['page'] ?? 'home';
+$section = $pageToSection[$requestedPage] ?? 'overview';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>.lec-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.lec-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.lec-topbar-left{display:flex;flex-direction:column}.lec-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.lec-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.lec-topbar-right{display:flex;align-items:center;gap:12px}.lec-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.lec-print-btn,.lec-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.lec-print-btn:hover,.lec-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}.lec-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.lec-content{margin-left:0!important;padding:12px!important}}</style>
 </head>
 <body>
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
     
-    <div class="page-content">
-      <div class="top-bar">
-        <div>
-          <strong><i class="fas fa-chalkboard me-2 text-primary"></i>Lecturer Dashboard</strong>
-          <div class="text-muted small">Classroom Teaching &amp; Student Development | <?php echo htmlspecialchars($user_name); ?></div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-          <span class="text-muted small d-none d-md-block" id="currentDate"></span>
-          <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
-        </div>
-      </div>
-
+    <div class="lec-topbar"><div class="lec-topbar-content"><div class="lec-topbar-left"><div class="lec-topbar-title">Lecturers</div><div class="lec-topbar-subtitle">Teaching &amp; Academic Delivery</div></div><div class="lec-topbar-right"><span class="lec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="lec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+    <div class="lec-content">
       <div class="content-area">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
                 <!-- Teaching Overview -->
-                <section id="overview" class="content-section dashboard-section section-card active" data-section="overview">
+                <section id="overview" class="content-section dashboard-section section-card<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Teaching Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -136,7 +145,7 @@ if ($conn) {
                 </section>
 
                 <!-- My Courses -->
-                <section id="courses" class="content-section dashboard-section section-card" data-section="courses">
+                <section id="courses" class="content-section dashboard-section section-card<?= $section==='courses'?' active':'' ?>" data-section="courses">
                     <h2>My Courses</h2>
                     <div class="course-actions">
                         <button class="btn btn-primary" onclick="openModal('courseMaterials')">
@@ -218,7 +227,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Schedule -->
-                <section id="schedule" class="content-section dashboard-section section-card" data-section="schedule">
+                <section id="schedule" class="content-section dashboard-section section-card<?= $section==='schedule'?' active':'' ?>" data-section="schedule">
                     <h2>Teaching Schedule</h2>
                     <div class="schedule-actions">
                         <button class="btn btn-primary" onclick="openModal('addLecture')">
@@ -292,7 +301,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Management -->
-                <section id="students" class="content-section dashboard-section section-card" data-section="students">
+                <section id="students" class="content-section dashboard-section section-card<?= $section==='students'?' active':'' ?>" data-section="students">
                     <h2>Student Management</h2>
                     <div class="student-actions">
                         <button class="btn btn-primary" onclick="openModal('studentList')">
@@ -382,7 +391,7 @@ if ($conn) {
                 </section>
 
                 <!-- Assessments -->
-                <section id="assessments" class="content-section dashboard-section section-card" data-section="assessments">
+                <section id="assessments" class="content-section dashboard-section section-card<?= $section==='assessments'?' active':'' ?>" data-section="assessments">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
                         <button class="btn btn-primary" onclick="openModal('createAssessment')">
@@ -456,7 +465,7 @@ if ($conn) {
                 </section>
 
                 <!-- Grade Management -->
-                <section id="grades" class="content-section dashboard-section section-card" data-section="grades">
+                <section id="grades" class="content-section dashboard-section section-card<?= $section==='grades'?' active':'' ?>" data-section="grades">
                     <h2>Grade Management</h2>
                     <div class="grade-actions">
                         <button class="btn btn-primary" onclick="openModal('gradebook')">
@@ -509,7 +518,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Resources -->
-                <section id="resources" class="content-section dashboard-section section-card" data-section="resources">
+                <section id="resources" class="content-section dashboard-section section-card<?= $section==='resources'?' active':'' ?>" data-section="resources">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadResource')">
@@ -559,7 +568,7 @@ if ($conn) {
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="content-section dashboard-section section-card" data-section="communications">
+                <section id="communications" class="content-section dashboard-section section-card<?= $section==='communications'?' active':'' ?>" data-section="communications">
                     <h2>Student Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('sendMessage')">
@@ -619,7 +628,7 @@ if ($conn) {
 
     <!-- Student Records -->
     <div class="content-area" style="padding-top:0">
-        <section id="student-records" class="content-section dashboard-section section-card" data-section="student-records">
+        <section id="student-records" class="content-section dashboard-section section-card<?= $section==='student-records'?' active':'' ?>" data-section="student-records">
             <?php renderStudentSetViewer($studentsConn, [
                 'title' => 'Student Records',
                 'icon' => 'fa-user-graduate',
@@ -889,7 +898,7 @@ if ($conn) {
         });
     </script>
     </div><!-- /content-area -->
-</div><!-- /page-content -->
+</div><!-- /lec-content -->
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

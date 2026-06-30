@@ -59,7 +59,7 @@ if($r) while($row=$r->fetch_assoc()) $exams[]=$row;
 $lecturers = []; $r=$conn->query("SELECT id,full_name,position,department,email,phone FROM staff WHERE position LIKE '%Lecturer%' OR position LIKE '%lecturer%' OR position LIKE '%Head%' ORDER BY full_name");
 if($r) while($row=$r->fetch_assoc()) $lecturers[]=$row;
 
-$students = $students_conn ? [] : []; if($students_conn){ $r=$students_conn->query("SELECT * FROM students ORDER BY full_name LIMIT 200"); if($r) while($row=$r->fetch_assoc()) $students[]=$row; }
+$students_db = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 
 $course_assignments = []; $r=$conn->query("SELECT ca.*,s.full_name lecturer_name,cc.course_title FROM course_assignments ca LEFT JOIN staff s ON ca.lecturer_id=s.id LEFT JOIN academic_course_catalog cc ON ca.course_code=cc.course_code ORDER BY s.full_name");
 if($r) while($row=$r->fetch_assoc()) $course_assignments[]=$row;
@@ -67,7 +67,7 @@ if($r) while($row=$r->fetch_assoc()) $course_assignments[]=$row;
 $timetable = []; $r=$conn->query("SELECT t.*,s.full_name lecturer_name FROM timetable t LEFT JOIN staff s ON t.lecturer_id=s.id ORDER BY t.day_of_week,t.start_time");
 if($r) while($row=$r->fetch_assoc()) $timetable[]=$row;
 
-$clinical = []; $r=$conn->query("SELECT ct.*,s.full_name,st.full_name student_name FROM clinical_training ct LEFT JOIN staff s ON ct.supervisor_id=s.id LEFT JOIN igangaschoolofl_students_db.students st ON ct.student_id=st.id ORDER BY ct.start_date DESC LIMIT 50");
+$clinical = []; $r=$conn->query("SELECT ct.*,s.full_name,st.full_name student_name FROM clinical_training ct LEFT JOIN staff s ON ct.supervisor_id=s.id LEFT JOIN $students_db.students st ON ct.student_id=st.id ORDER BY ct.start_date DESC LIMIT 50");
 if($r) while($row=$r->fetch_assoc()) $clinical[]=$row;
 
 $attendance = []; if($students_conn){ $r=$students_conn->query("SELECT a.*,s.full_name,s.program FROM student_attendance a LEFT JOIN students s ON a.student_id=s.id ORDER BY a.date DESC LIMIT 50"); if($r) while($row=$r->fetch_assoc()) $attendance[]=$row; }
@@ -75,7 +75,7 @@ $attendance = []; if($students_conn){ $r=$students_conn->query("SELECT a.*,s.ful
 $quality = []; $r=$conn->query("SELECT qa.*,s.full_name reviewer_name FROM quality_assurance qa LEFT JOIN staff s ON qa.reviewed_by=s.id ORDER BY qa.review_date DESC LIMIT 20");
 if($r) while($row=$r->fetch_assoc()) $quality[]=$row;
 
-$academic_records = []; $r=$conn->query("SELECT ar.*,s.full_name student_name,cc.course_title FROM academic_records ar LEFT JOIN igangaschoolofl_students_db.students s ON ar.student_id=s.id LEFT JOIN academic_course_catalog cc ON ar.course_code=cc.course_code ORDER BY ar.id DESC LIMIT 100");
+$academic_records = []; $r=$conn->query("SELECT ar.*,s.full_name student_name,cc.course_title FROM academic_records ar LEFT JOIN $students_db.students s ON ar.student_id=s.id LEFT JOIN academic_course_catalog cc ON ar.course_code=cc.course_code ORDER BY ar.id DESC LIMIT 100");
 if($r) while($row=$r->fetch_assoc()) $academic_records[]=$row;
 
 $result_approvals = []; $r=$conn->query("SELECT ra.*,s.full_name approved_by_name FROM result_approvals ra LEFT JOIN staff s ON ra.approved_by=s.id ORDER BY ra.approval_date DESC LIMIT 30");
@@ -255,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dt=$_POST['document_type']??'Transcript';
         if($sid){
             $stmt = $conn->prepare("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES (?,?,?,?,'')");
-            $stmt->bind_param("siss", $dt, $sid, $user_id, $dn);
+            $stmt->bind_param("sisi", $dt, $sid, $user_id, $dn);
             $stmt->execute();
             $stmt->close();
             $_SESSION['success']='Document generated.';
@@ -359,165 +359,260 @@ $navSections = [
   ['id'=>'activity','icon'=>'fa-history','label'=>'Activity'],
 ];
 function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';return "<a href=\"?section=$id\" class=\"acad-nav-item $act\" data-section=\"$id\"><i class=\"fas $icon\"></i><span>$label</span></a>";}
+$acadIcon = 'fa-graduation-cap';
+$acadRole = 'Director Academics';
+$acadSubtitle = 'Academic Programs Oversight – Curriculum, Exams & Quality Assurance';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-:root{--acad-primary:#1a237e;--acad-accent:#3949ab;--card-radius:16px;--card-shadow:0 1px 2px rgba(15,23,42,0.04),0 4px 12px rgba(15,23,42,0.05),0 12px 30px rgba(15,23,42,0.03)}
-.content-section,.stat-card,.report-card,.section-card{background:#fff!important;border:1px solid rgba(148,163,184,0.16)!important;border-radius:var(--card-radius)!important;box-shadow:var(--card-shadow)!important}
-.stat-card{border-top:4px solid transparent!important;border-radius:var(--card-radius)!important;display:flex!important;align-items:center!important;gap:18px!important;padding:22px 24px!important;transition:box-shadow .3s}
-.stat-card:hover{box-shadow:0 4px 8px rgba(15,23,42,0.05),0 12px 24px rgba(15,23,42,0.06),0 24px 48px rgba(15,23,42,0.04)!important}
-.stat-card.success{border-top-color:#059669!important}.stat-card.primary{border-top-color:var(--acad-primary)!important}.stat-card.info{border-top-color:#0284c7!important}.stat-card.warning{border-top-color:#d97706!important}.stat-card.purple{border-top-color:#7c3aed!important}.stat-card.pink{border-top-color:#db2777!important}.stat-card.teal{border-top-color:#0d9488!important}
-.stat-content h3{font-size:1.7rem!important;font-weight:800!important;color:#0f172a!important}
-.stat-content p{font-size:.82rem!important;color:#64748b!important;font-weight:500!important;margin:0!important}
-.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
-.section-card{padding:20px 22px!important;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s}
-.section-card:hover{transform:translateY(-3px)!important;box-shadow:0 4px 8px rgba(15,23,42,0.05),0 12px 24px rgba(15,23,42,0.06),0 24px 48px rgba(15,23,42,0.04)!important}
-.report-card{padding:24px 20px!important;text-align:center!important}
-.report-card h3{font-size:1rem!important;font-weight:700!important;color:#0f172a!important;margin-bottom:6px!important}
-.report-card p{font-size:.82rem!important;color:#64748b!important;margin-bottom:14px!important}
-.dashboard-header h1{font-size:1.35rem!important;font-weight:700!important;color:#0f172a!important}
-.dashboard-header p{font-size:.85rem!important;color:#64748b!important;margin:0!important}
-.content-section h2{font-size:1.15rem!important;font-weight:700!important;color:#0f172a!important;margin-bottom:16px!important;padding-bottom:10px!important;border-bottom:2px solid #f1f5f9!important}
-.content-section h2 i{color:var(--acad-primary)!important}
-.content-section,#programs .stat-card,.section-card,.report-card{background:#fff!important}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.reports-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.table thead th{background:#f8fafc!important;color:#475569!important;font-weight:600!important;font-size:.78rem!important;text-transform:uppercase!important;letter-spacing:.04em!important;border-bottom:2px solid #e2e8f0!important;padding:10px 12px!important}
-.table td{padding:10px 12px!important;font-size:.85rem!important;vertical-align:middle!important}
-.table-hover tbody tr:hover{background:#f1f5f9!important}
-.badge{font-weight:600!important;font-size:.75rem!important;padding:4px 10px!important;border-radius:6px!important}
-.empty-state{text-align:center;padding:40px 20px;color:#94a3b8}
-.empty-state i{font-size:2.8rem;margin-bottom:12px;opacity:.5}
-.activities-list{display:flex;flex-direction:column;gap:8px}
-.activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:#f8fafc;border-radius:10px;border-left:3px solid var(--acad-primary);transition:background .2s}
-.activity-item:hover{background:#f1f5f9}
-.activity-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--acad-primary),var(--acad-accent));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
-#studentSearch{border-radius:8px!important;border:1px solid #e2e8f0!important;font-size:.85rem!important;padding:8px 14px!important}
-#studentSearch:focus{border-color:var(--acad-primary)!important;box-shadow:0 0 0 3px rgba(26,35,126,0.1)!important}
-.modal-content{border:none!important;border-radius:16px!important;max-height:85vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2)!important}
-.modal-header{border-radius:16px 16px 0 0!important;padding:14px 20px!important}
-.modal-title{font-weight:700!important;font-size:1rem!important}
-.modal-body{padding:20px!important}.modal-footer{border-top:1px solid #f1f5f9!important;padding:12px 20px!important}
-.form-label{font-weight:600!important;font-size:.82rem!important;color:#374151!important;margin-bottom:4px!important}
-.form-select,.form-control{border-radius:8px!important;border:1px solid #e2e8f0!important;font-size:.85rem!important;padding:8px 12px!important}
-.form-select:focus,.form-control:focus{border-color:var(--acad-primary)!important;box-shadow:0 0 0 3px rgba(26,35,126,0.1)!important}
-.btn-sm{padding:4px 10px!important;font-size:.78rem!important;border-radius:6px!important}
+:root {
+  --acad-primary: #1a237e;
+  --acad-accent: #3949ab;
+  --acad-card-bg: #ffffff;
+  --acad-text: #0f172a;
+  --acad-text-muted: #64748b;
+  --acad-border: #e2e8f0;
+  --acad-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --acad-shadow-lg: 0 10px 40px rgba(0,0,0,0.08);
+  --acad-gradient: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1a237e 100%);
+}
+body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; color: var(--acad-text); font-size: 13px; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
+.page-content { padding: 0 !important; }
 
-/* Academic Sidebar Navigation */
-.acad-sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:0;height:100vh;z-index:100}
-.acad-sidebar-header{padding:16px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,var(--acad-primary),var(--acad-accent));color:#fff}
-.acad-sidebar-header h5{margin:0;font-weight:700;font-size:.95rem}
-.acad-sidebar-header small{opacity:.8;font-size:.75rem}
-.acad-nav{display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;flex:1}
-.acad-nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:#475569;text-decoration:none;font-size:.82rem;font-weight:500;transition:all .15s;border-left:3px solid transparent}
-.acad-nav-item:hover{background:#f1f5f9;color:var(--acad-primary);text-decoration:none}
-.acad-nav-item.active{background:#eef2ff;color:var(--acad-primary);border-left-color:var(--acad-primary);font-weight:600}
-.acad-nav-item i{width:18px;text-align:center;font-size:.85rem}
-.dashboard-layout{display:flex;min-height:100vh}
-.dashboard-content-wrapper{flex:1;padding:20px;overflow-y:auto;max-width:calc(100vw - 220px)}
-@media(max-width:992px){.acad-sidebar{width:56px}.acad-nav-item span{display:none}.dashboard-content-wrapper{max-width:calc(100vw - 56px)}}
-@media(max-width:768px){.acad-sidebar{display:none}.dashboard-content-wrapper{max-width:100%;padding:12px}.stats-grid{grid-template-columns:1fr 1fr!important}}
-@media(max-width:480px){.stats-grid{grid-template-columns:1fr!important}}
+/* ── Top Bar ── */
+.acad-topbar {
+  background: var(--acad-gradient);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  margin-left: 270px;
+}
+@media (max-width: 768px) { .acad-topbar { margin-left: 0; } }
+.acad-topbar-left { display: flex; align-items: center; gap: 10px; }
+.acad-topbar-left .acad-icon { font-size: 22px; color: #e8eaf6; }
+.acad-topbar-left h1 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.2px; }
+.acad-topbar-left .subtitle { font-size: 11px; color: rgba(255,255,255,0.65); margin: 0; }
+.acad-topbar-right { display: flex; align-items: center; gap: 12px; }
+.acad-topbar-right .date-badge { font-size: 12px; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
+.acad-topbar-right .logout-link { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 12px; padding: 4px 12px; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.15); }
+.acad-topbar-right .btn-print-top { background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:4px 14px; font-size:12px; cursor:pointer; transition:all 0.2s; }
+.acad-topbar-right .btn-print-top:hover { background:rgba(255,255,255,0.2); }
 
-/* KPI grid enhancements */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:24px}
-.kpi-stat{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px 20px;transition:all .25s;cursor:default}
-.kpi-stat:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
-.kpi-stat .kpi-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.kpi-stat .kpi-value{font-size:22px;font-weight:800;line-height:1.2}
-.kpi-stat .kpi-label{font-size:12px;color:#64748b;font-weight:500;margin-top:2px}
-.kpi-stat .kpi-trend{font-size:11px;font-weight:600}
+/* ── Content ── */
+.acad-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
+@media (max-width: 768px) { .acad-content { margin-left: 0; } }
 
-/* Section visibility */
-.dashboard-section:not(.active){display:none}
-.content-section{padding:24px;margin-bottom:20px}
+/* ── KPI Cards ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card {
+  background: var(--acad-card-bg);
+  border-radius: 10px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: all 0.25s ease;
+  border-left: 4px solid transparent;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.kpi-icon { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 5px; }
+.kpi-value { font-size: 18px; font-weight: 800; color: var(--acad-text); letter-spacing: -0.3px; line-height: 1.2; }
+.kpi-label { font-size: 10px; font-weight: 700; color: var(--acad-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.kpi-card .kpi-trend { font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; padding: 2px 8px; border-radius: 10px; }
+.kpi-bl { border-left-color: #3949ab; } .kpi-bl .kpi-icon { background: #eef2ff; color: #4338ca; }
+.kpi-gr { border-left-color: #10b981; } .kpi-gr .kpi-icon { background: #ecfdf5; color: #059669; }
+.kpi-cy { border-left-color: #06b6d4; } .kpi-cy .kpi-icon { background: #ecfeff; color: #0891b2; }
+.kpi-rd { border-left-color: #ef4444; } .kpi-rd .kpi-icon { background: #fef2f2; color: #dc2626; }
+.kpi-or { border-left-color: #f59e0b; } .kpi-or .kpi-icon { background: #fffbeb; color: #d97706; }
+.kpi-pr { border-left-color: #7c3aed; } .kpi-pr .kpi-icon { background: #f5f3ff; color: #7c3aed; }
+
+/* ── Section Cards ── */
+.section-card {
+  background: var(--acad-card-bg);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s;
+  border: 1px solid #f1f5f9;
+}
+.section-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+.section-title { font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--acad-text); }
+.section-title i { font-size: 15px; }
+.section-subtitle { font-size: 11px; color: var(--acad-text-muted); margin: 0; }
+
+/* ── Tables ── */
+.acad-table { font-size: 12px; margin-bottom: 0; }
+.acad-table thead th { background: #f8fafc; font-weight: 600; color: var(--acad-text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; padding: 7px 10px; border-bottom: 2px solid var(--acad-border); }
+.acad-table td { padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+.acad-table tbody tr:hover { background: #f8fafc; }
+.table-scroll { max-height: 260px; overflow-y: auto; }
+.table-scroll::-webkit-scrollbar { width: 4px; }
+.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* ── Animations ── */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+.an-fade { animation: fadeInUp 0.5s ease forwards; }
+.an-slide { animation: slideIn 0.4s ease forwards; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) {
+  .acad-topbar { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
+  .acad-content { padding: 12px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi-card { padding: 10px 10px 8px; }
+  .kpi-value { font-size: 15px; }
+  .section-card { padding: 12px 14px; }
+}
+@media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; } }
+
+/* ── Print ── */
+@media print {
+  body { background:#fff !important; font-size:10pt; }
+  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, .acad-topbar { display:none !important; }
+  .acad-content { padding:0 !important; margin:0 !important; max-width:100% !important; background:#fff !important; }
+  .dashboard-section { display:block !important; }
+  .section-card { box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid; page-break-inside:avoid; }
+  .kpi-grid { gap:6px; }
+  .kpi-card { box-shadow:none !important; border:1px solid #e2e8f0 !important; break-inside:avoid; }
+  .kpi-card .kpi-icon { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .badge { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .an-fade { animation:none !important; opacity:1 !important; }
+  .table-scroll { max-height:none !important; overflow:visible !important; }
+}
+
+/* ── Section visibility ── */
+.dashboard-section:not(.active) { display:none; }
 </style>
 </head>
 <body>
-    <div class="dashboard-layout">
-        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-        <!-- Academic Sidebar Navigation -->
-        <nav class="acad-sidebar">
-            <div class="acad-sidebar-header">
-                <h5><i class="fas fa-graduation-cap me-1"></i>Academics</h5>
-                <small><?= htmlspecialchars($user_name) ?></small>
-            </div>
-            <div class="acad-nav">
-                <?php foreach($navSections as $ns){ echo navItem($ns['id'],$ns['icon'],$ns['label'],$section); } ?>
-            </div>
-        </nav>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-        <!-- Main Content -->
-        <div class="dashboard-content-wrapper">
-            <div class="dashboard-header d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h1>Academic Director Dashboard</h1>
-                    <p>Academic Programs Oversight, Iganga School of Nursing and Midwifery</p>
-                </div>
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="text-muted small"><i class="fas fa-calendar me-1"></i><?= date('l, F j, Y') ?></span>
-                    <a href="../store_request.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-shopping-cart"></i></a>
-                    <a href="../news.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-newspaper"></i></a>
-                    <a href="../student-directory.php" class="btn btn-sm btn-outline-info"><i class="fas fa-address-book"></i></a>
-                    <a href="../index.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-home"></i></a>
-                    <div class="user-menu d-flex align-items-center gap-2">
-                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar" style="width:32px;height:32px;border-radius:50%">
-                        <span class="small"><?= htmlspecialchars($user_name) ?></span>
-                    </div>
-                </div>
-            </div>
+<!-- ═══ TOP BAR ═══ -->
+<div class="acad-topbar an-fade">
+  <div class="acad-topbar-left">
+    <i class="fas <?= $acadIcon ?> acad-icon"></i>
+    <div>
+      <h1><?= $acadRole ?> – <?= htmlspecialchars($user_name) ?></h1>
+      <p class="subtitle"><?= $acadSubtitle ?></p>
+    </div>
+  </div>
+  <div class="acad-topbar-right">
+    <span class="date-badge"><i class="far fa-calendar-alt me-1"></i><?= date('D, d M Y') ?></span>
+    <button class="btn-print-top" onclick="window.print()" title="Print Dashboard"><i class="fas fa-print me-1"></i>Print</button>
+    <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+  </div>
+</div>
 
-            <?php if(!empty($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['success']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <?php unset($_SESSION['success']); endif; ?>
-            <?php if(!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show py-2"><?= htmlspecialchars($_SESSION['error']) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <?php unset($_SESSION['error']); endif; ?>
+<!-- ═══ CONTENT ═══ -->
+<div class="acad-content">
 
-            <!-- ═══════════ OVERVIEW ═══════════ -->
-            <section id="overview-section" class="content-section <?= $section==='overview'?'active':'' ?> dashboard-section" data-section="overview">
-                <h2><i class="fas fa-tachometer-alt me-2"></i>Executive Overview</h2>
-                <!-- KPI Row -->
-                <div class="kpi-grid">
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#eef2ff;color:#4f46e5"><i class="fas fa-user-graduate"></i></div><div><div class="kpi-value" style="color:#1e1b4b"><?= number_format($total_students) ?></div><div class="kpi-label">Total Students</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#f0fdf4;color:#16a34a"><i class="fas fa-user-check"></i></div><div><div class="kpi-value" style="color:#052e16"><?= number_format($active_students) ?></div><div class="kpi-label">Active Students</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#fffbeb;color:#d97706"><i class="fas fa-chalkboard-teacher"></i></div><div><div class="kpi-value" style="color:#451a03"><?= number_format($total_lecturers) ?></div><div class="kpi-label">Lecturers</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#ecfeff;color:#0891b2"><i class="fas fa-book"></i></div><div><div class="kpi-value" style="color:#083344"><?= number_format($active_courses) ?></div><div class="kpi-label">Active Courses</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#f5f3ff;color:#7c3aed"><i class="fas fa-sitemap"></i></div><div><div class="kpi-value" style="color:#2e1065"><?= number_format($active_programs) ?></div><div class="kpi-label">Active Programs</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#fdf2f8;color:#db2777"><i class="fas fa-chart-line"></i></div><div><div class="kpi-value" style="color:#4a051c"><?= $avg_gpa ?></div><div class="kpi-label">Avg GPA</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#f0fdfa;color:#0d9488"><i class="fas fa-percentage"></i></div><div><div class="kpi-value" style="color:#022c22"><?= $avg_attendance ?>%</div><div class="kpi-label">Avg Attendance</div></div></div></div>
-                    <div class="kpi-stat"><div class="d-flex align-items-center gap-3"><div class="kpi-icon" style="background:#fef2f2;color:#dc2626"><i class="fas fa-check-double"></i></div><div><div class="kpi-value" style="color:#450a0a"><?= $pending_approvals ?></div><div class="kpi-label">Pending Approvals</div></div></div></div>
-                </div>
+<?php if(!empty($_SESSION['success'])): ?>
+<div class="alert alert-success alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#ecfdf5;color:#065f46;">
+  <i class="fas fa-check-circle me-1"></i> <?= htmlspecialchars($_SESSION['success']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
+</div>
+<?php unset($_SESSION['success']); endif; ?>
+<?php if(!empty($_SESSION['error'])): ?>
+<div class="alert alert-danger alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;">
+  <i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($_SESSION['error']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
+</div>
+<?php unset($_SESSION['error']); endif; ?>
 
-                <div class="row g-3">
-                    <div class="col-lg-6">
-                        <div class="section-card h-100">
-                            <h6 class="fw-bold mb-3" style="font-size:.95rem"><i class="fas fa-sitemap me-2 text-info"></i>Your Position in Hierarchy</h6>
-                            <div class="d-flex align-items-center gap-2 mb-2 small">
-                                <span class="badge bg-primary">Level 3</span>
-                                <span class="text-muted">You report to:</span>
-                                <span class="fw-semibold">Director General (Level 1)</span>
-                            </div>
-                            <?= renderHierarchyChart($conn) ?>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="section-card h-100">
-                            <h6 class="fw-bold mb-3" style="font-size:.95rem"><i class="fas fa-chart-bar me-2 text-success"></i>Department Performance</h6>
-                            <?php
-                            $acadStaffId = 0;
-                            $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = 4 AND status = 'Active' LIMIT 1") : false;
-                            if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
-                            echo renderDirectorPerformanceCard($acadStaffId, 4, 'Director Academics', $conn);
-                            ?>
-                        </div>
-                    </div>
-                </div>
-            </section>
+<!-- ======== OVERVIEW (Control Panel) ======== -->
+<?php if ($section === 'overview'): ?>
+<div class="kpi-grid">
+  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-user-graduate"></i></div><div class="kpi-value"><?= number_format($total_students) ?></div><div class="kpi-label">Total Students</div><div class="kpi-trend text-primary"><i class="fas fa-users"></i>All records</div></div>
+  <div class="kpi-card kpi-gr"><div class="kpi-icon"><i class="fas fa-user-check"></i></div><div class="kpi-value"><?= number_format($active_students) ?></div><div class="kpi-label">Active Students</div><div class="kpi-trend text-success"><i class="fas fa-check-circle"></i>Enrolled</div></div>
+  <div class="kpi-card kpi-or"><div class="kpi-icon"><i class="fas fa-chalkboard-teacher"></i></div><div class="kpi-value"><?= number_format($total_lecturers) ?></div><div class="kpi-label">Lecturers</div><div class="kpi-trend text-warning"><i class="fas fa-users"></i>Teaching staff</div></div>
+  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-book"></i></div><div class="kpi-value"><?= number_format($active_courses) ?></div><div class="kpi-label">Active Courses</div><div class="kpi-trend text-info"><i class="fas fa-layer-group"></i>Curriculum</div></div>
+  <div class="kpi-card kpi-pr"><div class="kpi-icon"><i class="fas fa-sitemap"></i></div><div class="kpi-value"><?= number_format($active_programs) ?></div><div class="kpi-label">Active Programs</div><div class="kpi-trend text-purple"><i class="fas fa-book-open"></i>Offered</div></div>
+  <div class="kpi-card kpi-pr"><div class="kpi-icon"><i class="fas fa-chart-line"></i></div><div class="kpi-value"><?= $avg_gpa ?></div><div class="kpi-label">Avg GPA</div><div class="kpi-trend text-purple"><i class="fas fa-star"></i>Performance</div></div>
+  <div class="kpi-card kpi-gr"><div class="kpi-icon"><i class="fas fa-percentage"></i></div><div class="kpi-value"><?= $avg_attendance ?>%</div><div class="kpi-label">Avg Attendance</div><div class="kpi-trend text-success"><i class="fas fa-calendar-check"></i>Classroom</div></div>
+  <div class="kpi-card kpi-rd"><div class="kpi-icon"><i class="fas fa-check-double"></i></div><div class="kpi-value"><?= $pending_approvals ?></div><div class="kpi-label">Pending Approvals</div><div class="kpi-trend text-danger"><i class="fas fa-clock"></i>Awaiting action</div></div>
+  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-clipboard-list"></i></div><div class="kpi-value"><?= $total_exams ?></div><div class="kpi-label">Total Exams</div><div class="kpi-trend text-primary"><i class="fas fa-check-circle"></i>Scheduled</div></div>
+  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-star"></i></div><div class="kpi-value"><?= $published_exams ?></div><div class="kpi-label">Published Results</div><div class="kpi-trend text-info"><i class="fas fa-check-double"></i>Released</div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-sitemap text-info"></i>Your Position in Hierarchy</h3><span class="section-subtitle">Level 3 – Reports to Director General</span></div>
+      <?= renderHierarchyChart($conn) ?>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-history text-info"></i>Recent Activities</h3></div>
+      <div class="table-scroll">
+      <?php if (empty($recent_activities)): ?><div class="text-center py-3 text-muted"><p>No recent activities</p></div>
+      <?php else: foreach (array_slice($recent_activities, 0, 6) as $act): ?>
+      <div class="py-1 border-bottom small">
+        <strong><?= htmlspecialchars($act['activity'] ?? 'Activity') ?></strong>
+        <small class="d-block text-muted"><?= date('M j, Y H:i', strtotime($act['created_at'])) ?></small>
+      </div>
+      <?php endforeach; endif; ?>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-chart-bar text-success"></i>Department Performance</h3></div>
+      <?php
+      $acadStaffId = 0;
+      $sq = $conn ? $conn->prepare("SELECT id FROM staff WHERE role_id = 4 AND status = 'Active' LIMIT 1") : false;
+      if ($sq) { $sq->execute(); $sr = $sq->get_result()->fetch_assoc(); $sq->close(); if ($sr) $acadStaffId = $sr['id']; }
+      echo renderDirectorPerformanceCard($acadStaffId, 4, 'Director Academics', $conn);
+      ?>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-chart-pie text-primary"></i>Performance Metrics</h3></div>
+      <?php
+      $pass_rate = 0; $r=$conn->query("SELECT COUNT(*)total,SUM(CASE WHEN grade IN('A','B','C','D') THEN 1 ELSE 0 END)passed FROM academic_records WHERE assessment_type='Exam'");
+      if($r && $rw=$r->fetch_assoc()){ $pass_rate = $rw['total']>0 ? round(($rw['passed']/$rw['total'])*100,1) : 0; }
+      $exam_count = sc($conn,"SELECT COUNT(DISTINCT course_code)c FROM academic_records WHERE assessment_type='Exam'");
+      ?>
+      <div class="row g-2 text-center mb-2">
+        <div class="col-4"><div class="p-2 rounded-3" style="background:#f0fdf4"><div class="fw-bold text-success fs-5"><?= $pass_rate ?>%</div><small class="text-muted">Pass Rate</small></div></div>
+        <div class="col-4"><div class="p-2 rounded-3" style="background:#eef2ff"><div class="fw-bold text-primary fs-5"><?= $exam_count ?></div><small class="text-muted">Course Exams</small></div></div>
+        <div class="col-4"><div class="p-2 rounded-3" style="background:#fffbeb"><div class="fw-bold text-warning fs-5"><?= $published_exams ?>/<?= $total_exams ?></div><small class="text-muted">Published</small></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-bell text-danger"></i>Pending Approvals</h3><span class="badge bg-<?= $pending_approvals ? 'danger' : 'success' ?>"><?= $pending_approvals ?: 'All clear' ?></span></div>
+      <?php
+      $acadApprovals = getPendingApprovals($conn, 4, 5);
+      if (!empty($acadApprovals)):
+        foreach ($acadApprovals as $apr):
+          echo '<div class="py-1 border-bottom small"><strong>' . htmlspecialchars($apr['title']??'Request') . '</strong> <span class="badge bg-warning float-end">' . ($apr['priority']??'Normal') . '</span></div>';
+        endforeach;
+      else:
+        echo '<div class="text-center py-2 text-muted small"><p>No pending approvals</p></div>';
+      endif;
+      ?>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
             <!-- ═══════════ ANALYTICS ═══════════ -->
             <section id="analytics-section" class="content-section <?= $section==='analytics'?'active':'' ?> dashboard-section" data-section="analytics">
@@ -535,7 +630,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                 </div>
                                 <?php endforeach; ?>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-users','No enrollment data'); endif; ?>
+                            <?php else: echo renderEmptyState('No enrollment data','fas fa-users'); endif; ?>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -620,7 +715,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                             <tr><td><?= htmlspecialchars($e['program']) ?></td><td><strong><?= $e['c'] ?></strong></td><td><?= $sp ?>%</td></tr>
                             <?php endforeach; ?>
                             </tbody></table>
-                            <?php else: echo renderEmptyState('fas fa-users','No enrollment data'); endif; ?>
+                            <?php else: echo renderEmptyState('No enrollment data','fas fa-users'); endif; ?>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -671,7 +766,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                 </div>
                                 <?php endforeach; ?>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-sitemap','No programs'); endif; ?>
+                            <?php else: echo renderEmptyState('No programs','fas fa-sitemap'); endif; ?>
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -752,7 +847,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                             <tr><td><code><?= htmlspecialchars($ra['exam_number']) ?></code></td><td><span class="badge bg-<?= $ra['status']==='Approved'?'success':'danger' ?>"><?= htmlspecialchars($ra['status']) ?></span></td><td><?= htmlspecialchars($ra['approved_by_name']??'System') ?></td><td><?= $ra['approval_date'] ?></td><td><small><?= htmlspecialchars($ra['comments']??'-') ?></small></td></tr>
                             <?php endforeach; ?>
                             </tbody></table>
-                            <?php else: echo renderEmptyState('fas fa-check-double','No approval actions yet'); endif; ?>
+                            <?php else: echo renderEmptyState('No approval actions yet','fas fa-check-double'); endif; ?>
                         </div>
                     </div>
                     <div class="col-lg-5">
@@ -797,14 +892,14 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                         <div class="section-card">
                             <h6 class="fw-bold mb-3">Recent Documents</h6>
                             <?php
-                            $docs = []; $r=$conn->query("SELECT gd.*,s.full_name student_name FROM generated_documents gd LEFT JOIN igangaschoolofl_students_db.students s ON gd.student_id=s.id ORDER BY gd.id DESC LIMIT 15");
+                            $docs = []; $r=$conn->query("SELECT gd.*,s.full_name student_name FROM generated_documents gd LEFT JOIN $students_db.students s ON gd.student_id=s.id ORDER BY gd.id DESC LIMIT 15");
                             if($r) while($row=$r->fetch_assoc()) $docs[]=$row;
                             if(!empty($docs)): foreach($docs as $d): ?>
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom small">
                                 <span><?= htmlspecialchars($d['document_title']) ?> <small class="text-muted">- <?= htmlspecialchars($d['student_name']??"-") ?></small></span>
                                 <span class="text-muted"><?= htmlspecialchars($d['document_type']) ?></span>
                             </div>
-                            <?php endforeach; else: echo renderEmptyState('fas fa-file-alt','No documents'); endif; ?>
+                            <?php endforeach; else: echo renderEmptyState('No documents','fas fa-file-alt'); endif; ?>
                         </div>
                     </div>
                 </div>
@@ -840,7 +935,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                 <?php endforeach; ?>
                                 </tbody></table>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-calendar-check','No attendance records'); endif; ?>
+                            <?php else: echo renderEmptyState('No attendance records','fas fa-calendar-check'); endif; ?>
                         </div>
                     </div>
                 </div>
@@ -886,7 +981,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                     </tbody>
                                 </table>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-chalkboard-teacher','No lecturers found'); endif; ?>
+                            <?php else: echo renderEmptyState('No lecturers found','fas fa-chalkboard-teacher'); endif; ?>
                         </div>
                     </div>
                     <div class="col-lg-4">
@@ -955,7 +1050,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                     </tbody>
                                 </table>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-clock','No timetable entries'); endif; ?>
+                            <?php else: echo renderEmptyState('No timetable entries','fas fa-clock'); endif; ?>
                         </div>
                     </div>
                 </div>
@@ -991,7 +1086,7 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                                 <?php endforeach; ?>
                                 </tbody></table>
                             </div>
-                            <?php else: echo renderEmptyState('fas fa-shield-alt','No quality reviews'); endif; ?>
+                            <?php else: echo renderEmptyState('No quality reviews','fas fa-shield-alt'); endif; ?>
                         </div>
                     </div>
                 </div>
@@ -1045,11 +1140,8 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
                 </div>
             </section>
 
-            <!-- ═══════════ FOOTER ═══════════ -->
-        </div>
-    </div>
-
-    <!-- ═══════════ MODALS ═══════════ -->
+</div>
+<!-- ═══════════ MODALS ═══════════ -->
 
     <!-- Create Exam Modal -->
     <div class="modal fade" id="createExamModal" tabindex="-1"><div class="modal-dialog"><form method="POST" class="modal-content"><input type="hidden" name="action" value="create_exam">
@@ -1099,7 +1191,6 @@ function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';retu
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Submit</button></div>
     </form></div></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     // ── Modal Fns ──
     function openExamModal(){ new bootstrap.Modal(document.getElementById('createExamModal')).show(); }

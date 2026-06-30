@@ -1,13 +1,13 @@
 <?php
 /**
+ * ═══════════════════════════════════════════════════════════════════════════
  * SEED ALL STAFF CREDENTIALS — ISNM ERP
- * Run ONCE on production: php database/migrations/seed_all_credentials.php
- *
- * Uses the EXACT emails and passwords provided by the institution.
- * Each account maps to the correct role_id and dashboard.
+ * 
+ * This script creates/updates ALL staff accounts with the exact credentials
+ * specified by the system administrator. Run ONLY on production:
+ *   php database/migrations/seed_all_credentials.php
+ * ═══════════════════════════════════════════════════════════════════════════
  */
-$start = microtime(true);
-echo "=== ISNM Credential Seeder ===\n\n";
 
 require_once __DIR__ . '/../../config/database.php';
 
@@ -15,9 +15,10 @@ $conn = getStaffConnection();
 if (!$conn) {
     die("ERROR: Cannot connect to staff database.\n");
 }
-echo "Connected to staff database.\n";
 
-// ── Step 1: Ensure all staff roles exist ────────────────────────
+echo "Connected to staff database.\n\n";
+
+// ── Step 1: Ensure ALL staff_roles exist ──
 $roles = [
     'Director General',
     'CEO',
@@ -57,147 +58,150 @@ foreach ($roles as $roleName) {
     if ($row = $res->fetch_assoc()) {
         $roleIds[$roleName] = (int)$row['id'];
     } else {
-        $stmt2 = $conn->prepare("INSERT INTO staff_roles (role_name, description) VALUES (?, ?)");
+        $stmt2 = $conn->prepare("INSERT INTO staff_roles (role_name, role_description, dashboard_path) VALUES (?, ?, ?)");
         $desc = $roleName . ' role for ISNM ERP';
-        $stmt2->bind_param('ss', $roleName, $desc);
+        $dash = '';
+        $stmt2->bind_param('sss', $roleName, $desc, $dash);
         $stmt2->execute();
         $roleIds[$roleName] = (int)$stmt2->insert_id;
         $stmt2->close();
-        echo "  Created role: $roleName (ID: {$roleIds[$roleName]})\n";
+        echo "  ✓ Created role: $roleName (ID: {$roleIds[$roleName]})\n";
     }
     $stmt->close();
 }
 
-// ── Step 2: Define ALL credentials ──────────────────────────────
-// Format: [email, password_plaintext, full_name, position, department, role_name, staff_id]
-$staff = [
-    // ── Executive ──
-    ['directorgeneral@igangaschoolofnursingandmidwifery.ac.ug','DorisJoy2026','Director General','Director General','Executive','Director General','DIR-001'],
-    ['ceo@igangaschoolofnursingandmidwifery.ac.ug',             'Lovely2God',  'Chief Executive Officer','CEO','Executive','CEO','CEO-001'],
+echo "\nAll roles ready.\n\n";
 
-    // ── Academic ──
-    ['directoracademic@igangaschoolofnursingandmidwifery.ac.ug','Stephen123',  'Director Academics','Director Academics','Academic Affairs','Director Academics','DA-001'],
-    ['academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','Lovely2God','Academic Registrar','Academic Registrar','Academic Registrar','Academic Registrar','AR-001'],
-    ['senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug','isnm2026',   'Senior Lecturer','Senior Lecturer','Academic Affairs','Senior Lecturer','SL-001'],
-    ['lecturers@igangaschoolofnursingandmidwifery.ac.ug',       'Isnm4life',   'Lecturer','Lecturer','Academic Affairs','Lecturer','LEC-001'],
-
-    // ── Finance ──
-    ['finance@igangaschoolofnursingandmidwifery.ac.ug',         'DorisJoy2026','Director Finance','Director Finance','Finance','Director Finance','DF-001'],
-
-    // ── Administration ──
-    ['principal@igangaschoolofnursingandmidwifery.ac.ug',       'isnm2026',    'School Principal','School Principal','Administration','School Principal','PRIN-001'],
-    ['dep-principal@igangaschoolofnursingandmidwifery.ac.ug',   'Isnm2026',    'Deputy Principal','Deputy Principal','Administration','Deputy Principal','DP-001'],
-    ['secretary@igangaschoolofnursingandmidwifery.ac.ug',       'Lovely2God',  'School Secretary','School Secretary','Administration','School Secretary','SEC-001'],
-
-    // ── HR ──
-    ['hr-manager@igangaschoolofnursingandmidwifery.ac.ug',     'Alexis2026',  'HR Manager','HR Manager','Human Resources','HR Manager','HR-001'],
-
-    // ── Admissions ──
-    ['admissions@igangaschoolofnursingandmidwifery.ac.ug',      '2268926931',  'Director Admissions','Director Admissions','Admissions','Director Admissions','ADM-001'],
-
-    // ── ICT ──
-    ['dannybict@igangaschoolofnursingandmidwifery.ac.ug',      'Lovely2God',  'Director ICT','Director ICT','ICT','Director ICT','ICT-001'],
-    ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug',   'Techno123',   'Computer Lab Manager','Computer Lab Manager','ICT','Computer Lab','CL-001'],
-
-    // ── Library ──
-    ['library@igangaschoolofnursingandmidwifery.ac.ug',         'isnm2026',    'School Librarian','School Librarian','Library','School Librarian','LIB-001'],
-
-    // ── Nursing & Midwifery ──
-    ['nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',    'isnm4life',   'Head of Nursing','Head of Nursing','Nursing','Head of Nursing','NUR-001'],
-    ['midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',  'Life2save',   'Head of Midwifery','Head of Midwifery','Midwifery','Head of Midwifery','MID-001'],
-
-    // ── Student Welfare ──
-    ['matron@igangaschoolofnursingandmidwifery.ac.ug',          'Isnm2026',    'Matron','Matron','Student Welfare','Matron','MAT-001'],
-    ['warden@igangaschoolofnursingandmidwifery.ac.ug',          'Lovely2God',  'Warden','Warden','Student Welfare','Warden','WAR-001'],
-    ['sickbay@igangaschoolofnursingandmidwifery.ac.ug',         'isnm2026',    'Sickbay Nurse','Sickbay Nurse','Student Welfare','Sickbay Nurse','SKB-001'],
-
-    // ── Skills Lab ──
-    ['skills-lab@igangaschoolofnursingandmidwifery.ac.ug',     'Lovely2God',  'Skills Lab Technician','Skills Lab Technician','Skills Laboratory','Skills Lab','SKL-001'],
-
-    // ── Security & Transport ──
-    ['security@igangaschoolofnursingandmidwifery.ac.ug',        'safty1st',    'Security Officer','Security Officer','Security','Security Officer','SEC-001'],
-    ['drivers@igangaschoolofnursingandmidwifery.ac.ug',         'isnm4life',   'Driver','Driver','Transport','Driver','DRV-001'],
-
-    // ── Store ──
-    ['store@igangaschoolofnursingandmidwifery.ac.ug',           'Isnm4life',   'Storekeeper','Storekeeper','Store','Storekeeper','STO-001'],
-
-    // ── Student Government ──
-    ['guildpresident@igangaschoolofnursingandmidwifery.ac.ug', 'isnm4life',   'Guild President','Guild President','Student Government','Guild President','G-001'],
+// ── Step 2: Define all staff credentials (as specified by admin) ──
+// Format: [email, full_name, password_plain, role_name, staff_id, position, department]
+$staffList = [
+    // Computer Lab
+    ['computer-lab@igangaschoolofnursingandmidwifery.ac.ug', 'Computer Lab Manager',  'Techno123',   'Computer Lab',      'CLB-001', 'Computer Lab Manager', 'ICT'],
+    
+    // Director General
+    ['directorgeneral@igangaschoolofnursingandmidwifery.ac.ug', 'Director General',    'DorisJoy2026','Director General',   'DG-001',  'Director General',     'Executive'],
+    
+    // CEO
+    ['ceo@igangaschoolofnursingandmidwifery.ac.ug', 'Chief Executive Officer',         'Lovely2God',  'CEO',                'CEO-001', 'CEO',                  'Executive'],
+    
+    // Director Academics
+    ['directoracademic@igangaschoolofnursingandmidwifery.ac.ug', 'Director Academics', 'Stephen123',  'Director Academics', 'DA-001',  'Director Academics',   'Academic Affairs'],
+    
+    // Director Finance / Bursar
+    ['finance@igangaschoolofnursingandmidwifery.ac.ug', 'Director Finance',            'DorisJoy2026','Director Finance',   'DF-001',  'Director Finance',     'Finance'],
+    
+    // Principal
+    ['principal@igangaschoolofnursingandmidwifery.ac.ug', 'School Principal',           'isnm2026',    'School Principal',   'PRIN-001','School Principal',     'Administration'],
+    
+    // Deputy Principal
+    ['dep-principal@igangaschoolofnursingandmidwifery.ac.ug', 'Deputy Principal',       'Isnm2026',    'Deputy Principal',   'DP-001',  'Deputy Principal',     'Administration'],
+    
+    // Academic Registrar
+    ['academicregistrar@igangaschoolofnursingandmidwifery.ac.ug', 'Academic Registrar', 'Lovely2God',  'Academic Registrar', 'AR-001',  'Academic Registrar',   'Academic Registrar'],
+    
+    // HR Manager
+    ['hr-manager@igangaschoolofnursingandmidwifery.ac.ug', 'HR Manager',               'Alexis2026',  'HR Manager',         'HR-001',  'HR Manager',           'Human Resources'],
+    
+    // Secretary
+    ['secretary@igangaschoolofnursingandmidwifery.ac.ug', 'School Secretary',           'Lovely2God',  'School Secretary',   'SEC-001', 'School Secretary',     'Administration'],
+    
+    // Librarian
+    ['library@igangaschoolofnursingandmidwifery.ac.ug', 'School Librarian',             'isnm2026',    'School Librarian',   'LIB-001', 'School Librarian',     'Library'],
+    
+    // Head of Nursing
+    ['nursing-dep@igangaschoolofnursingandmidwifery.ac.ug', 'Head of Nursing',          'isnm4life',   'Head of Nursing',    'NUR-001', 'Head of Nursing',      'Nursing'],
+    
+    // Head of Midwifery
+    ['midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug', 'Head of Midwifery',      'Life2save',   'Head of Midwifery',  'MID-001', 'Head of Midwifery',    'Midwifery'],
+    
+    // Senior Lecturer
+    ['senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug', 'Senior Lecturer',     'isnm2026',    'Senior Lecturer',    'SL-001',  'Senior Lecturer',      'Academic Affairs'],
+    
+    // Lecturer
+    ['lecturers@igangaschoolofnursingandmidwifery.ac.ug', 'Lecturer',                   'Isnm4life',   'Lecturer',           'LEC-001', 'Lecturer',             'Academic Affairs'],
+    
+    // Matron
+    ['matron@igangaschoolofnursingandmidwifery.ac.ug', 'Matron',                        'Isnm2026',    'Matron',             'MAT-001', 'Matron',               'Student Welfare'],
+    
+    // Warden
+    ['warden@igangaschoolofnursingandmidwifery.ac.ug', 'Warden',                        'Lovely2God',  'Warden',             'WAR-001', 'Warden',               'Student Welfare'],
+    
+    // Sickbay
+    ['sickbay@igangaschoolofnursingandmidwifery.ac.ug', 'Sickbay Nurse',                'isnm2026',    'Sickbay Nurse',      'SKB-001', 'Sickbay Nurse',        'Student Welfare'],
+    
+    // Drivers
+    ['drivers@igangaschoolofnursingandmidwifery.ac.ug', 'Driver',                       'isnm4life',   'Driver',             'DRV-001', 'Driver',               'Transport'],
+    
+    // Security
+    ['security@igangaschoolofnursingandmidwifery.ac.ug', 'Security Officer',             'safty1st',   'Security Officer',   'SEC-001', 'Security Officer',     'Security'],
+    
+    // Storekeeper
+    ['store@igangaschoolofnursingandmidwifery.ac.ug', 'Storekeeper',                    'Isnm4life',   'Storekeeper',        'STO-001', 'Storekeeper',          'Store'],
+    
+    // Guild President
+    ['guildpresident@igangaschoolofnursingandmidwifery.ac.ug', 'Guild President',        'isnm4life',   'Guild President',    'G-001',   'Guild President',      'Student Government'],
+    
+    // Director Admissions
+    ['admissions@igangaschoolofnursingandmidwifery.ac.ug', 'Director Admissions',        '2268926931',  'Director Admissions', 'ADM-001', 'Director Admissions',  'Admissions'],
+    
+    // Director ICT
+    ['dannybict@igangaschoolofnursingandmidwifery.ac.ug', 'Director ICT',               'Lovely2God',  'Director ICT',       'ICT-001', 'Director ICT',         'ICT'],
+    
+    // Skills Lab
+    ['skills-lab@igangaschoolofnursingandmidwifery.ac.ug', 'Skills Lab Manager',         'Lovely2God',  'Skills Lab',         'SKL-001', 'Skills Lab Manager',   'Skills Laboratory'],
 ];
 
-// ── Step 3: Create/update each staff account ────────────────────
 $inserted = 0;
 $updated = 0;
-$skipped = 0;
+$errors = 0;
 
-foreach ($staff as [$email, $plainPassword, $fullName, $position, $department, $roleName, $staffId]) {
+foreach ($staffList as [$email, $fullName, $passwordPlain, $roleName, $staffId, $position, $department]) {
     $rid = $roleIds[$roleName] ?? null;
     if (!$rid) {
-        echo "  SKIP: No role ID for '$roleName' ($email)\n";
-        $skipped++;
+        echo "  ✗ ERROR: No role ID for '$roleName' — skipping $email\n";
+        $errors++;
         continue;
     }
 
-    // Hash password
-    $passwordHash = password_hash($plainPassword, PASSWORD_BCRYPT);
+    $passwordHash = password_hash($passwordPlain, PASSWORD_BCRYPT);
 
-    // Check if exists
+    // Check if staff exists by email
     $chk = $conn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
     $chk->bind_param('s', $email);
     $chk->execute();
-    $exists = $chk->get_result()->fetch_assoc();
+    $existing = $chk->get_result()->fetch_assoc();
     $chk->close();
 
-    if ($exists) {
+    if ($existing) {
         $upd = $conn->prepare("UPDATE staff SET password = ?, role_id = ?, position = ?, department = ?, full_name = ?, status = 'Active' WHERE email = ?");
         $upd->bind_param('sissss', $passwordHash, $rid, $position, $department, $fullName, $email);
-        $upd->execute();
+        if ($upd->execute()) {
+            echo "  ✓ UPDATED: $email → $roleName\n";
+            $updated++;
+        } else {
+            echo "  ✗ UPDATE FAILED: $email — " . $upd->error . "\n";
+            $errors++;
+        }
         $upd->close();
-        echo "  UPDATED: $email ($fullName) [$roleName]\n";
-        $updated++;
     } else {
         $ins = $conn->prepare("INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', CURDATE())");
         $ins->bind_param('ssssssi', $staffId, $fullName, $email, $passwordHash, $position, $department, $rid);
-        $ins->execute();
+        if ($ins->execute()) {
+            echo "  ✓ INSERTED: $email → $roleName (Password: $passwordPlain)\n";
+            $inserted++;
+        } else {
+            echo "  ✗ INSERT FAILED: $email — " . $ins->error . "\n";
+            $errors++;
+        }
         $ins->close();
-        echo "  INSERTED: $email ($fullName) [$roleName]\n";
-        $inserted++;
     }
 }
 
-// ── Step 4: Also keep legacy emails as fallback ─────────────────
-$legacyEmails = [
-    ['info@igangaschoolofnursingandmidwifery.ac.ug', 'Techno123', 'Director General', 'Director General', 'Executive', 'Director General', 'DIR-000'],
-    ['ict@igangaschoolofnursingandmidwifery.ac.ug', 'Techno123', 'Director ICT', 'Director ICT', 'ICT', 'Director ICT', 'ICT-000'],
-    ['bursar@igangaschoolofnursingandmidwifery.ac.ug', 'Techno123', 'School Bursar', 'School Bursar', 'Finance', 'School Bursar', 'BUR-001'],
-    ['admin@igangaschoolofnursingandmidwifery.ac.ug', 'Techno123', 'System Administrator', 'System Administrator', 'ICT', 'System Administrator', 'SYS-001'],
-];
-
-foreach ($legacyEmails as [$email, $plainPassword, $fullName, $position, $department, $roleName, $staffId]) {
-    $rid = $roleIds[$roleName] ?? null;
-    if (!$rid) continue;
-
-    $chk = $conn->prepare("SELECT id FROM staff WHERE email = ? LIMIT 1");
-    $chk->bind_param('s', $email);
-    $chk->execute();
-    $exists = $chk->get_result()->fetch_assoc();
-    $chk->close();
-
-    if (!$exists) {
-        $passwordHash = password_hash($plainPassword, PASSWORD_BCRYPT);
-        $ins = $conn->prepare("INSERT INTO staff (staff_id, full_name, email, password, position, department, role_id, status, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', CURDATE())");
-        $ins->bind_param('ssssssi', $staffId, $fullName, $email, $passwordHash, $position, $department, $rid);
-        $ins->execute();
-        $ins->close();
-        echo "  INSERTED (legacy): $email ($fullName) [$roleName]\n";
-        $inserted++;
-    }
-}
-
-$elapsed = round(microtime(true) - $start, 2);
-echo "\n=== COMPLETE ===\n";
+echo "\n═══════════════════════════════════════════════\n";
+echo "  SUMMARY\n";
 echo "  Inserted: $inserted\n";
-echo "  Updated: $updated\n";
-echo "  Skipped: $skipped\n";
-echo "  Time: {$elapsed}s\n";
-echo "\nAll accounts use the passwords provided by the institution.\n";
+echo "  Updated:  $updated\n";
+echo "  Errors:   $errors\n";
+echo "═══════════════════════════════════════════════\n";
+echo "\nAll credentials are now seeded!\n";
+echo "Users can log in at: staff-login.php\n";

@@ -11,6 +11,7 @@ $staff = $ctx['staff'];
 $students = $ctx['students'];
 $website = $ctx['website'];
 
+if (isset($_GET['page']) && !isset($_GET['view'])) $_GET['view'] = $_GET['page'];
 $view = $_GET['view'] ?? 'home';
 $ajax = $_GET['ajax'] ?? '';
 $id = (int)($_GET['id'] ?? 0);
@@ -540,40 +541,15 @@ if ($students) {
 .alert-low-stock { border-left: 4px solid var(--sl-warning); }
 .alert-overdue { border-left: 4px solid var(--sl-danger); }
 .alert-maintenance { border-left: 4px solid var(--sl-info); }
+.skl-topbar{background:linear-gradient(135deg,#0d9488,#0f766e,#115e59);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.skl-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.skl-topbar-left{display:flex;flex-direction:column}.skl-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.skl-topbar-subtitle{color:#ccfbf1;font-size:12px;margin-top:-2px}.skl-topbar-right{display:flex;align-items:center;gap:12px}.skl-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.skl-print-btn,.skl-logout-btn{color:#ccfbf1;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.skl-print-btn:hover,.skl-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.skl-content{margin-left:270px;padding:24px;min-height:100vh}
+@media(max-width:768px){.skl-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div style="margin-left:270px">
-    <div class="dashboard-header">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h1><i class="fas fa-flask me-2" style="color:var(--sl-primary)"></i>Skills Lab Dashboard</h1>
-                    <p class="mb-0">Skills Laboratory Management System , <?= htmlspecialchars($role) ?></p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <div class="user-info">
-                        <span class="me-3"><i class="fas fa-user-circle me-1"></i><?= htmlspecialchars($user_name) ?></span>
-                        <a href="../student-directory.php" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-address-book me-1"></i>Directory</a>
-                        <a href="../news.php" class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-newspaper me-1"></i>News</a>
-                        <a href="../logout.php" class="btn btn-light btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section-tabs">
-        <a class="section-tab active" data-section="overview" onclick="switchToSection('overview')" href="#overview"><i class="fas fa-home me-1"></i>Home</a>
-        <a class="section-tab" data-section="equipment" onclick="switchToSection('equipment')" href="#equipment"><i class="fas fa-tools me-1"></i>Equipment</a>
-        <a class="section-tab" data-section="checkouts" onclick="switchToSection('checkouts')" href="#checkouts"><i class="fas fa-hand-holding me-1"></i>Check outs</a>
-        <a class="section-tab" data-section="sessions" onclick="switchToSection('sessions')" href="#sessions"><i class="fas fa-calendar-alt me-1"></i>Sessions</a>
-        <a class="section-tab" data-section="skills" onclick="switchToSection('skills')" href="#skills"><i class="fas fa-certificate me-1"></i>Skills</a>
-        <a class="section-tab" data-section="consumables" onclick="switchToSection('consumables')" href="#consumables"><i class="fas fa-boxes me-1"></i>Consumables</a>
-        <a class="section-tab" data-section="attendance" onclick="switchToSection('attendance')" href="#attendance"><i class="fas fa-clipboard-list me-1"></i>Attendance</a>
-        <a class="section-tab" data-section="incidents" onclick="switchToSection('incidents')" href="#incidents"><i class="fas fa-exclamation-triangle me-1"></i>Incidents</a>
-    </div>
+<div class="skl-topbar"><div class="skl-topbar-content"><div class="skl-topbar-left"><div class="skl-topbar-title">Skills Lab</div><div class="skl-topbar-subtitle">Clinical Skills &amp; Simulation Laboratory</div></div><div class="skl-topbar-right"><span class="skl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="skl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="skl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="skl-content">
 
     <div id="overview" class="content-section dashboard-section active container-fluid py-4 px-4" data-section="overview">
         <!-- Stats Row -->
@@ -862,7 +838,7 @@ if ($students) {
         </div></div></div>
     </div>
 
-</div><!-- /margin-left:270px -->
+</div><!-- /skl-content -->
 
 <!-- Student datalist -->
 <datalist id="studentList">

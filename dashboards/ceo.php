@@ -6,6 +6,20 @@ $students_conn = $ctx['students'];
 $user = $ctx['user'];
 $user_name = $user['full_name'] ?? 'CEO';
 
+// ── Page routing ──
+$pageToSection = [
+    'home'          => 'overview',
+    'overview'      => 'overview',
+    'departments'   => 'departments',
+    'performance'   => 'performance',
+    'financial'     => 'financial',
+    'staff'         => 'staff',
+    'student'       => 'student',
+    'system-health' => 'system-health',
+];
+$page  = $_GET['page'] ?? 'home';
+$section = $pageToSection[$page] ?? 'overview';
+
 $stats = [
     'students' => 0, 'staff' => 0, 'programs' => 0, 'revenue' => 0
 ];
@@ -17,7 +31,6 @@ if ($conn) {
     $r = $conn->query("SELECT COUNT(*) c FROM academic_programs WHERE status='Active'"); if ($r) $stats['programs'] = (int)$r->fetch_assoc()['c'];
     $r = $conn->query("SELECT COALESCE(SUM(amount_paid),0) total FROM igangaschoolofl_students_db.payments"); if ($r) $stats['revenue'] = (float)$r->fetch_assoc()['total'];
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,6 +38,8 @@ if ($conn) {
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <div class="page-content">
+<?php switch ($section):
+    case 'overview': ?>
     <div class="content-header">
         <h1><i class="fas fa-crown"></i> CEO Dashboard</h1>
         <span class="text-muted"><?= date('l, d M Y') ?></span>
@@ -42,6 +57,11 @@ if ($conn) {
             <p class="text-muted">Use the <a href="student-management.php" class="fw-bold">Student Management</a> module to search and view student records.</p>
         </div>
     </div>
+        <?php break;
+    default: ?>
+    <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
+        <?php break;
+endswitch; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

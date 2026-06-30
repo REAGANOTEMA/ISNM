@@ -128,55 +128,42 @@ if ($conn) {
         }
     } catch (Exception $e) {}
 }
+
+// Determine active section from ?page= parameter
+$pageToSection = [
+    'home'         => 'overview',
+    'overview'     => 'overview',
+    'my-courses'   => 'courses',
+    'timetable'    => 'timetable',
+    'attendance'   => 'attendance',
+    'cat-marks'    => 'cat-marks',
+    'exam-marks'   => 'exam-marks',
+    'materials'    => 'materials',
+    'results'      => 'results',
+    'reports'      => 'reports',
+    'lesson-plans' => 'lesson-plans',
+    'assignments'  => 'assignments',
+];
+$requestedPage = $_GET['page'] ?? 'home';
+$section = $pageToSection[$requestedPage] ?? 'overview';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+.srl-topbar{background:linear-gradient(135deg,#b45309,#92400e,#78350f);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.srl-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.srl-topbar-left{display:flex;flex-direction:column}.srl-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.srl-topbar-subtitle{color:#fde68a;font-size:12px;margin-top:-2px}.srl-topbar-right{display:flex;align-items:center;gap:12px}.srl-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.srl-print-btn,.srl-logout-btn{color:#fde68a;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.srl-print-btn:hover,.srl-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.srl-content{margin-left:270px;padding:24px;min-height:100vh}
+@media(max-width:768px){.srl-content{margin-left:0!important;padding:12px!important}}
+</style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Senior Lecturer Dashboard</h1>
-                    <p>Advanced Teaching & Academic Leadership</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo $user['first_name']; ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <div class="section-tabs">
-                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
-                    <a class="section-tab" data-tab="courses" onclick="switchToSection('courses')">Courses</a>
-                    <a class="section-tab" data-tab="schedule" onclick="switchToSection('schedule')">Schedule</a>
-                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Students</a>
-                    <a class="section-tab" data-tab="assessments" onclick="switchToSection('assessments')">Assessments</a>
-                    <a class="section-tab" data-tab="grades" onclick="switchToSection('grades')">Grades</a>
-                    <a class="section-tab" data-tab="resources" onclick="switchToSection('resources')">Resources</a>
-                    <a class="section-tab" data-tab="research" onclick="switchToSection('research')">Research</a>
-                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
-                </div>
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<div class="srl-topbar"><div class="srl-topbar-content"><div class="srl-topbar-left"><div class="srl-topbar-title">Senior Lecturers</div><div class="srl-topbar-subtitle">Academic Staff &amp; Curriculum Delivery</div></div><div class="srl-topbar-right"><span class="srl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="srl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="srl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="srl-content">
                 <!-- Teaching Overview -->
-                <section id="overview" class="content-section dashboard-section active" data-section="overview">
+                <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Teaching Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -222,7 +209,7 @@ if ($conn) {
                 </section>
 
                 <!-- My Courses -->
-                <section id="courses" class="content-section dashboard-section" data-section="courses">
+                <section id="courses" class="content-section dashboard-section<?= $section==='courses'?' active':'' ?>" data-section="courses">
                     <h2>My Courses</h2>
                     <div class="course-actions">
                         <button class="btn btn-primary" onclick="openModal('courseMaterials')">
@@ -281,7 +268,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Schedule -->
-                <section id="schedule" class="content-section dashboard-section" data-section="schedule">
+                <section id="schedule" class="content-section dashboard-section<?= $section==='schedule'?' active':'' ?>" data-section="schedule">
                     <h2>Teaching Schedule</h2>
                     <div class="schedule-actions">
                         <button class="btn btn-primary" onclick="openModal('addLecture')">
@@ -336,7 +323,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Management -->
-                <section id="students" class="content-section dashboard-section" data-section="students">
+                <section id="students" class="content-section dashboard-section<?= $section==='students'?' active':'' ?>" data-section="students">
                     <h2>Student Management</h2>
                     <div class="student-actions">
                         <button class="btn btn-primary" onclick="openModal('studentList')">
@@ -393,7 +380,7 @@ if ($conn) {
                 </section>
 
                 <!-- Assessments -->
-                <section id="assessments" class="content-section dashboard-section" data-section="assessments">
+                <section id="assessments" class="content-section dashboard-section<?= $section==='assessments'?' active':'' ?>" data-section="assessments">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
                         <button class="btn btn-primary" onclick="openModal('createAssessment')">
@@ -448,7 +435,7 @@ if ($conn) {
                 </section>
 
                 <!-- Grade Management -->
-                <section id="grades" class="content-section dashboard-section" data-section="grades">
+                <section id="grades" class="content-section dashboard-section<?= $section==='grades'?' active':'' ?>" data-section="grades">
                     <h2>Grade Management</h2>
                     <div class="grade-actions">
                         <button class="btn btn-primary" onclick="openModal('gradebook')">
@@ -495,7 +482,7 @@ if ($conn) {
                 </section>
 
                 <!-- Teaching Resources -->
-                <section id="resources" class="content-section dashboard-section" data-section="resources">
+                <section id="resources" class="content-section dashboard-section<?= $section==='resources'?' active':'' ?>" data-section="resources">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadResource')">
@@ -546,7 +533,7 @@ if ($conn) {
                 </section>
 
                 <!-- Research Activities -->
-                <section id="research" class="content-section dashboard-section" data-section="research">
+                <section id="research" class="content-section dashboard-section<?= $section==='research'?' active':'' ?>" data-section="research">
                     <h2>Research Activities</h2>
                     <div class="research-actions">
                         <button class="btn btn-primary" onclick="openModal('researchProject')">
@@ -596,7 +583,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section id="activities" class="activities-section dashboard-section" data-section="activities">
+                <section id="activities" class="activities-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
                     <h2>Recent Teaching Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>
@@ -612,9 +599,7 @@ if ($conn) {
                         <?php endforeach; ?>
                     </div>
                 </section>
-            </div>
-        </div>
-    </div>
+</div>
 
     <!-- Modals -->
     <div class="modal fade" id="actionModal" tabindex="-1">

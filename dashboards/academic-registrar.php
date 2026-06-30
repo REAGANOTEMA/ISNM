@@ -7,6 +7,7 @@ $staff = $ctx['staff'];
 $students = $ctx['students'];
 $website = $ctx['website'];
 $user_role = $_SESSION['role'] ?? '';
+if (isset($_GET['page']) && !isset($_GET['section'])) $_GET['section'] = $_GET['page'];
 $section = $_GET['section'] ?? 'dashboard';
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'Academic Registrar';
@@ -725,11 +726,18 @@ $sectionTitles = [
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root { --reg-primary: #1a237e; --reg-primary-light: #3949ab; --reg-accent: #ffd700; }
-.dashboard-container { margin-left: 270px; width: calc(100vw - 270px); min-height: 100vh; padding: 20px 30px; box-sizing: border-box; background: #f4f5f9; display: block; }
+.reg-topbar{background:linear-gradient(135deg,#1a237e,#283593,#3f51b5);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.reg-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
+.reg-topbar-left{display:flex;flex-direction:column}
+.reg-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
+.reg-topbar-subtitle{color:#c5cae9;font-size:12px;margin-top:-2px}
+.reg-topbar-right{display:flex;align-items:center;gap:12px}
+.reg-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
+.reg-print-btn,.reg-logout-btn{color:#c5cae9;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
+.reg-print-btn:hover,.reg-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.reg-content{margin-left:270px;padding:20px 30px;min-height:100vh;background:#f4f5f9}
 .main { margin-left: 0 !important; min-height: auto !important; flex: none !important; }
 .content-section { background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 0 !important; }
-.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-.page-header h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: transform 0.2s; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -757,24 +765,15 @@ $sectionTitles = [
 .lookup-item:last-child { border-bottom: none; }
 .lookup-none { color: #6b7280; font-size: 13px; padding: 10px 14px; }
 .selected-student-info { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-top: 8px; }
-@media (max-width: 768px) { .dashboard-container { margin-left: 0; padding: 16px; width: 100%; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 768px) { .reg-content { margin-left: 0; padding: 16px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="dashboard-container">
-  <div class="page-header">
-    <div>
-      <button class="btn btn-sm btn-outline-secondary d-md-none me-2" onclick="document.getElementById('isnmSidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
-      <h1><i class="fas fa-graduation-cap me-2" style="color:#1a237e;"></i>Academic Registrar Dashboard</h1>
-      <small class="text-muted"><i class="fas fa-shield-alt me-1"></i><?= htmlspecialchars($user_role) ?> &middot; <?= date('l, d M Y') ?></small>
-    </div>
-    <div class="d-flex gap-2">
-      <span class="badge bg-primary fs-6 px-3 py-2"><i class="fas fa-users me-1"></i><?= $totalStudents ?> Students</span>
-    </div>
-  </div>
+<div class="reg-topbar"><div class="reg-topbar-content"><div class="reg-topbar-left"><div class="reg-topbar-title">Academic Registrar</div><div class="reg-topbar-subtitle">Student Records, Examinations &amp; Graduation</div></div><div class="reg-topbar-right"><span class="reg-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="reg-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="reg-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 
+<div class="reg-content">
   <?php if (!empty($_SESSION['success'])): ?>
   <div class="alert alert-success py-2 alert-dismissible fade show"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
   <?php endif; ?>
@@ -1769,7 +1768,7 @@ document.addEventListener('click', function(e) {
     </div>
   </div>
 
-</div>
 <?php include __DIR__ . '/../includes/dashboard_footer.php'; ?>
+</div>
 </body>
 </html>

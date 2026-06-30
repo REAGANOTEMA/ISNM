@@ -231,6 +231,7 @@ $pending_applicants = [];
 $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved') ORDER BY a.created_at DESC LIMIT 50");
 if($r) while($row=$r->fetch_assoc()) $pending_applicants[]=$row;
 
+if (isset($_GET['page']) && !isset($_GET['section'])) $_GET['section'] = $_GET['page'];
 $view = $_GET['section'] ?? 'overview';
 $ajax = $_REQUEST['ajax'] ?? $_REQUEST['action'] ?? '';
 
@@ -845,19 +846,18 @@ if($report){
 <head>
 <?php include_once __DIR__ . "/../includes/dashboard_head.php"; ?>
 <style>
+.adm-topbar{background:linear-gradient(135deg,#6d28d9,#5b21b6,#4c1d95);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.adm-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
+.adm-topbar-left{display:flex;flex-direction:column}
+.adm-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
+.adm-topbar-subtitle{color:#ddd6fe;font-size:12px;margin-top:-2px}
+.adm-topbar-right{display:flex;align-items:center;gap:12px}
+.adm-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
+.adm-print-btn,.adm-logout-btn{color:#ddd6fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
+.adm-print-btn:hover,.adm-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 :root{--adm-prim:#6d28d9;--adm-sec:#5b21b6;--adm-accent:#7c3aed;--adm-bg:#f1f5f9;--adm-card:#ffffff;--adm-border:#e2e8f0;--adm-radius:14px;--adm-shadow:0 1px 3px rgba(0,0,0,.06);--adm-shadow-md:0 4px 16px rgba(0,0,0,.08);--adm-shadow-lg:0 8px 30px rgba(0,0,0,.12)}
 .dashboard-content{padding:0!important;background:var(--adm-bg);min-height:100vh}
 .adm-content-wrap{padding:20px 24px 40px}
-.da-header{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4338ca 100%);padding:26px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;position:relative;overflow:hidden}
-.da-header::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(124,58,237,.15) 0%,transparent 70%);border-radius:50%}
-.da-header::after{content:'';position:absolute;bottom:-40%;left:20%;width:250px;height:250px;background:radial-gradient(circle,rgba(99,102,241,.1) 0%,transparent 70%);border-radius:50%}
-.da-header h1{font-size:1.4rem;font-weight:800;color:#fff;margin:0;letter-spacing:-.4px;text-shadow:0 1px 2px rgba(0,0,0,.15);position:relative;z-index:1}
-.da-header p{font-size:.8rem;color:rgba(255,255,255,.65);margin:4px 0 0;position:relative;z-index:1}
-.da-header .badge{position:relative;z-index:1}
-.section-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:10px 16px;background:#fff;border-bottom:2px solid var(--adm-border);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.section-tab{padding:8px 16px;font-size:12px;font-weight:600;color:#64748b;background:transparent;border:1.5px solid transparent;border-radius:8px;cursor:pointer;text-decoration:none;transition:all .2s ease;white-space:nowrap;position:relative}
-.section-tab:hover{color:var(--adm-prim);background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.15)}
-.section-tab.active{color:var(--adm-prim)!important;background:rgba(124,58,237,.08);border-color:var(--adm-accent);font-weight:700;box-shadow:0 2px 8px rgba(124,58,237,.15)}
 .dashboard-section{display:none}.dashboard-section.active{display:block}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
 .stat-card{background:var(--adm-card);border-radius:var(--adm-radius);padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--adm-shadow);border:1px solid var(--adm-border);transition:all .25s ease}
@@ -933,9 +933,6 @@ if($report){
 .alert{border-radius:10px;font-size:13px;padding:12px 18px}
 code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#475569;font-weight:500}
 @media(max-width:768px){
-    .section-tabs{overflow-x:auto;flex-wrap:nowrap;padding:8px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:3px}
-    .section-tabs::-webkit-scrollbar{display:none}
-    .section-tab{font-size:10px;padding:6px 10px;white-space:nowrap;flex-shrink:0}
     .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
     .stat-card{padding:12px 14px;gap:10px}
     .stat-icon{width:36px;height:36px;font-size:15px;border-radius:8px}
@@ -948,9 +945,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
     .scard{margin-bottom:12px}
     .sch{padding:12px 14px;font-size:13px}
     .scb{padding:12px 14px}
-    .da-header{padding:16px 18px}
-    .da-header h1{font-size:1.1rem}
-    .da-header p{font-size:.72rem}
+    .adm-topbar{padding:0 16px;height:56px}
     .table-responsive{font-size:12px;border-radius:10px}
     .table-sm th,.table-sm td{padding:8px 10px}
     .readiness-grid{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -962,39 +957,13 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 }
 @media(min-width:769px) and (max-width:1024px){
     .stats-grid{grid-template-columns:repeat(3,1fr)}
-    .section-tab{font-size:11px;padding:7px 13px}
 }
 </style></head><body>
 <?php include_once __DIR__ . "/../includes/sidebar.php"; ?>
+<div class="adm-topbar"><div class="adm-topbar-content"><div class="adm-topbar-left"><div class="adm-topbar-title">Director Admissions</div><div class="adm-topbar-subtitle">Admissions Management &amp; Applicant Tracking</div></div><div class="adm-topbar-right"><span class="adm-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="adm-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="adm-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 <div class="dashboard-content">
-<div class="da-header">
-<div><h1><i class="fas fa-file-signature me-2"></i>Director Admissions &amp; Requirements</h1>
-<p>Admissions management &middot; applicant tracking &middot; requirement clearance &middot; student registration</p></div>
-<div><span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;font-size:11px"><?=htmlspecialchars($user_name)?></span></div></div>
 <?php if(!empty($_SESSION["success"])):?><div class="alert alert-success" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["success"]);unset($_SESSION["success"]);?></div><?php endif;?>
 <?php if(!empty($_SESSION["error"])):?><div class="alert alert-danger" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["error"]);unset($_SESSION["error"]);?></div><?php endif;?>
-<div class="section-tabs">
-<a href="#overview" class="section-tab<?=$view==="overview"?" active":""?>" data-section="overview"><i class="fas fa-chart-pie me-1"></i>Dashboard</a>
-<a href="#new_applicant" class="section-tab" data-section="new_applicant"><i class="fas fa-user-plus me-1"></i>New Applicant</a>
-<a href="#applicant_records" class="section-tab" data-section="applicant_records"><i class="fas fa-users me-1"></i>Applicant Records</a>
-<a href="#student_search" class="section-tab" data-section="student_search"><i class="fas fa-search me-1"></i>Student Search</a>
-<a href="#intake_management" class="section-tab" data-section="intake_management"><i class="fas fa-calendar me-1"></i>Intake</a>
-<a href="#admission_approvals" class="section-tab" data-section="admission_approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
-<a href="#requirement_portal" class="section-tab" data-section="requirement_portal"><i class="fas fa-list-check me-1"></i>Requirement Portal</a>
-<a href="#requirement_clearance" class="section-tab" data-section="requirement_clearance"><i class="fas fa-clipboard-check me-1"></i>Clearance</a>
-<a href="#requirement_verification" class="section-tab" data-section="requirement_verification"><i class="fas fa-certificate me-1"></i>Verification</a>
-<a href="#requirement_tracking" class="section-tab" data-section="requirement_tracking"><i class="fas fa-tasks me-1"></i>Tracking</a>
-<a href="#registration_readiness" class="section-tab" data-section="registration_readiness"><i class="fas fa-flag-checkered me-1"></i>Readiness</a>
-<a href="#student_registration" class="section-tab" data-section="student_registration"><i class="fas fa-user-graduate me-1"></i>Registration</a>
-<a href="#student_activation" class="section-tab" data-section="student_activation"><i class="fas fa-toggle-on me-1"></i>Activation</a>
-<a href="#document_verification" class="section-tab" data-section="document_verification"><i class="fas fa-file-alt me-1"></i>Documents</a>
-<a href="#admission_reports" class="section-tab" data-section="admission_reports"><i class="fas fa-chart-bar me-1"></i>Reports</a>
-<a href="#intake_statistics" class="section-tab" data-section="intake_statistics"><i class="fas fa-chart-line me-1"></i>Intake Stats</a>
-<a href="#applicant_messaging" class="section-tab" data-section="applicant_messaging"><i class="fas fa-envelope me-1"></i>Messaging</a>
-<a href="#notifications" class="section-tab" data-section="notifications"><i class="fas fa-bell me-1"></i>Notifications</a>
-<a href="#news_publishing" class="section-tab" data-section="news_publishing"><i class="fas fa-newspaper me-1"></i>News</a>
-<a href="#requirement_alerts" class="section-tab" data-section="requirement_alerts"><i class="fas fa-exclamation-triangle me-1"></i>Alerts</a>
-</div>
 <div class="adm-content-wrap">
 
 <!-- OVERVIEW / DASHBOARD -->
@@ -1402,17 +1371,8 @@ jQuery(function($) {
   function switchSection(id) {
     $('.dashboard-section').removeClass('active');
     $('#' + id).addClass('active');
-    $('.section-tab').removeClass('active');
-    $('.section-tab[data-section="' + id + '"]').addClass('active');
     window.location.hash = '#' + id;
   }
-
-  /* ── Section tab click handlers ── */
-  $('.section-tab').on('click', function(e) {
-    e.preventDefault();
-    var section = $(this).data('section');
-    if (section) switchSection(section);
-  });
 
   /* ── Init section from hash ── */
   (function initSection() {

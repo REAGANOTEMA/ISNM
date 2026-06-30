@@ -88,53 +88,39 @@ if ($conn) {
         }
     } catch (Exception $e) {}
 }
+
+$pageToSection = [
+    'home'          => 'overview',
+    'overview'      => 'overview',
+    'students'      => 'students',
+    'counseling'    => 'counseling',
+    'discipline'    => 'discipline',
+    'accommodation' => 'accommodation',
+    'hostel'        => 'accommodation',
+    'activities'    => 'activities',
+    'security'      => 'security',
+    'welfare'       => 'students',
+    'reports'       => 'overview',
+];
+$requestedPage = $_GET['page'] ?? 'home';
+$section = $pageToSection[$requestedPage] ?? 'overview';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>.war-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e3a8a);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.war-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.war-topbar-left{display:flex;flex-direction:column}.war-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.war-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.war-topbar-right{display:flex;align-items:center;gap:12px}.war-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.war-print-btn,.war-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.war-print-btn:hover,.war-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}.war-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.war-content{margin-left:0!important;padding:12px!important}}</style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Wardens Dashboard</h1>
-                    <p>Student Welfare & Male Student Care Management</p>
-                </div>
-                <div class="header-right">
-                    <div class="date-time">
-                        <i class="fas fa-calendar"></i>
-                        <span id="currentDate"></span>
-                    </div>
-                    <div class="user-menu">
-                        <img src="<?= $profileImageUrl ?? '../images/username.png' ?>" alt="User" class="user-avatar">
-                        <div class="user-dropdown">
-                            <span><?php echo htmlspecialchars($user_name); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
+    <div class="war-topbar"><div class="war-topbar-content"><div class="war-topbar-left"><div class="war-topbar-title">Wardens</div><div class="war-topbar-subtitle">Student Residence &amp; Discipline</div></div><div class="war-topbar-right"><span class="war-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="war-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="war-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+    <div class="war-content">
             <!-- Dashboard Content -->
             <div class="dashboard-content content-section">
-                <div class="section-tabs">
-                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
-                    <a class="section-tab" data-tab="students" onclick="switchToSection('students')">Student Welfare</a>
-                    <a class="section-tab" data-tab="counseling" onclick="switchToSection('counseling')">Counseling</a>
-                    <a class="section-tab" data-tab="discipline" onclick="switchToSection('discipline')">Discipline</a>
-                    <a class="section-tab" data-tab="accommodation" onclick="switchToSection('accommodation')">Accommodation</a>
-                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
-                    <a class="section-tab" data-tab="security" onclick="switchToSection('security')">Security</a>
-                </div>
                 <!-- Welfare Overview -->
-                <section id="overview" class="content-section dashboard-section active" data-section="overview">
+                <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Student Welfare Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -180,7 +166,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Welfare -->
-                <section id="students" class="content-section dashboard-section" data-section="students">
+                <section id="students" class="content-section dashboard-section<?= $section==='students'?' active':'' ?>" data-section="students">
                     <h2>Student Welfare Management</h2>
                     <div class="welfare-actions">
                         <button class="btn btn-primary" onclick="openModal('studentProfile')">
@@ -226,7 +212,7 @@ if ($conn) {
                 </section>
 
                 <!-- Counseling Services -->
-                <section id="counseling" class="content-section dashboard-section" data-section="counseling">
+                <section id="counseling" class="content-section dashboard-section<?= $section==='counseling'?' active':'' ?>" data-section="counseling">
                     <h2>Counseling Services</h2>
                     <div class="counseling-actions">
                         <button class="btn btn-primary" onclick="openModal('scheduleSession')">
@@ -274,7 +260,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Discipline -->
-                <section id="discipline" class="content-section dashboard-section" data-section="discipline">
+                <section id="discipline" class="content-section dashboard-section<?= $section==='discipline'?' active':'' ?>" data-section="discipline">
                     <h2>Student Discipline</h2>
                     <div class="discipline-actions">
                         <button class="btn btn-primary" onclick="openModal('disciplineCase')">
@@ -320,7 +306,7 @@ if ($conn) {
                 </section>
 
                 <!-- Accommodation -->
-                <section id="accommodation" class="content-section dashboard-section" data-section="accommodation">
+                <section id="accommodation" class="content-section dashboard-section<?= $section==='accommodation'?' active':'' ?>" data-section="accommodation">
                     <h2>Accommodation Management</h2>
                     <div class="accommodation-actions">
                         <button class="btn btn-primary" onclick="openModal('roomAssignment')">
@@ -368,7 +354,7 @@ if ($conn) {
                 </section>
 
                 <!-- Student Activities -->
-                <section id="activities" class="content-section dashboard-section" data-section="activities">
+                <section id="activities" class="content-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
                     <h2>Student Activities</h2>
                     <div class="activity-actions">
                         <button class="btn btn-primary" onclick="openModal('organizeActivity')">
@@ -418,7 +404,7 @@ if ($conn) {
                 </section>
 
                 <!-- Security & Safety -->
-                <section id="security" class="content-section dashboard-section" data-section="security">
+                <section id="security" class="content-section dashboard-section<?= $section==='security'?' active':'' ?>" data-section="security">
                     <h2>Security & Safety</h2>
                     <div class="security-actions">
                         <button class="btn btn-primary" onclick="openModal('securityReport')">
@@ -480,8 +466,7 @@ if ($conn) {
                     </div>
                 </section>
             </div>
-        </div>
-    </div>
+    </div><!-- /war-content -->
 
     <!-- Modals -->
     <div class="modal fade" id="actionModal" tabindex="-1">

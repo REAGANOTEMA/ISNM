@@ -23,6 +23,7 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$staff_db}.teaching_quality_reviews (id INT AUTO_INCREMENT PRIMARY KEY, lecturer_id INT, review_date DATE, teaching_score DECIMAL(5,2), course_code VARCHAR(50), observer VARCHAR(200), feedback TEXT, status ENUM('draft','completed','reviewed') DEFAULT 'draft', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
+if (isset($_GET['page']) && !isset($_GET['section']) && !isset($_GET['view'])) $_GET['section'] = $_GET['page'];
 $_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
 $view = $_GET['section']; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $sid = $_GET['sid'] ?? ''; $q = $_GET['q'] ?? '';
@@ -484,6 +485,15 @@ unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
+.dep-topbar{background:linear-gradient(135deg,#3730a3,#4338ca,#4f46e5);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.dep-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
+.dep-topbar-left{display:flex;flex-direction:column}
+.dep-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
+.dep-topbar-subtitle{color:#c7d2fe;font-size:12px;margin-top:-2px}
+.dep-topbar-right{display:flex;align-items:center;gap:12px}
+.dep-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
+.dep-print-btn,.dep-logout-btn{color:#c7d2fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
+.dep-print-btn:hover,.dep-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
@@ -508,65 +518,14 @@ unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 .btn-outline-sec:hover{background:#1a237e;color:#fff}
 .env-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;font-size:13px;transition:border-color .2s}
 .env-field:focus{border-color:#1a237e;outline:none;box-shadow:0 0 0 2px rgba(26,35,126,.1)}
-.nav-sections{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:20px;padding:12px 0;border-bottom:2px solid #e5e7eb}
-.nav-sections .nav-sec{padding:6px 14px;border-radius:8px;font-size:13px;color:#64748b;text-decoration:none;font-weight:500;transition:all .15s}
-.nav-sections .nav-sec:hover{background:#eef2ff;color:#1a237e}
-.nav-sections .nav-sec.active{background:#1a237e;color:#fff}
-.dep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-@media(max-width:768px){.dep-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head><body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="ma content-section dashboard-section active" data-section="deputy" style="margin-left:270px;padding:24px">
-<div class="ph mb-4">
-<div><h1><i class="fas fa-user-friends me-2"></i>Deputy Principal Dashboard</h1><p class="text-muted">Academic &amp; Student Affairs Monitoring</p></div>
-<a href="deputy-principal.php" class="bo btn-sm <?= $view==='home'?'d-none':'' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
-</div>
+<div class="dep-topbar"><div class="dep-topbar-content"><div class="dep-topbar-left"><div class="dep-topbar-title">Deputy Principal</div><div class="dep-topbar-subtitle">Academic &amp; Student Affairs Monitoring</div></div><div class="dep-topbar-right"><span class="dep-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="dep-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="dep-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="dep-content dashboard-section active" data-section="deputy">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
-
-<!-- Navigation Tabs -->
-<div class="nav-sections">
-<a class="nav-sec <?= $view==='home'?'active':'' ?>" href="?section=home"><i class="fas fa-home me-1"></i>Overview</a>
-<a class="nav-sec <?= in_array($view,['academic_monitoring','class_monitoring','timetable_oversight','attendance_monitoring','clinical_placement_monitoring']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#academicSubnav" role="button"><i class="fas fa-book-open me-1"></i>Academic</a>
-<a class="nav-sec <?= in_array($view,['student_welfare','student_discipline','student_support','student_appeals_tracking']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#studentSubnav" role="button"><i class="fas fa-users me-1"></i>Student</a>
-<a class="nav-sec <?= in_array($view,['department_followups','compliance_tracking','institutional_activities','task_monitoring']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#opsSubnav" role="button"><i class="fas fa-cogs me-1"></i>Operations</a>
-<a class="nav-sec <?= $view==='approvals'?'active':'' ?>" href="?section=approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
-<a class="nav-sec <?= $view==='communications'?'active':'' ?>" href="?section=communications"><i class="fas fa-envelope me-1"></i>Communications</a>
-<a class="nav-sec <?= in_array($view,['monitoring_reports','attendance_reports','welfare_reports','department_reports']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#reportsSubnav" role="button"><i class="fas fa-chart-bar me-1"></i>Reports</a>
-<a class="nav-sec <?= in_array($view,['teaching_quality','clinical_training_reviews','compliance_reviews','improvement_tracking']) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#qaSubnav" role="button"><i class="fas fa-clipboard-check me-1"></i>Quality</a>
-</div>
-<div class="collapse" id="academicSubnav"><div class="dep-grid mb-3">
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=academic_monitoring">Academic Monitoring</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=class_monitoring">Class Monitoring</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=timetable_oversight">Timetable Oversight</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=attendance_monitoring">Attendance</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=clinical_placement_monitoring">Clinical Placement</a>
-</div></div>
-<div class="collapse" id="studentSubnav"><div class="dep-grid mb-3">
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_welfare">Student Welfare</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_discipline">Discipline</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_support">Support</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=student_appeals_tracking">Appeals</a>
-</div></div>
-<div class="collapse" id="opsSubnav"><div class="dep-grid mb-3">
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=department_followups">Dept Follow-ups</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=compliance_tracking">Compliance</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=institutional_activities">Activities</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=task_monitoring">Task Monitor</a>
-</div></div>
-<div class="collapse" id="reportsSubnav"><div class="dep-grid mb-3">
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=monitoring_reports">Monitoring</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=attendance_reports">Attendance</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=welfare_reports">Welfare</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=department_reports">Department</a>
-</div></div>
-<div class="collapse" id="qaSubnav"><div class="dep-grid mb-3">
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=teaching_quality">Teaching Quality</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=clinical_training_reviews">Clinical Reviews</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=compliance_reviews">Compliance Reviews</a>
-<a class="nav-sec btn-outline-sec btn-sm text-center" href="?section=improvement_tracking">Improvement</a>
-</div></div>
 
 <?php if ($view === 'home'): ?>
 <?php

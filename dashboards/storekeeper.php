@@ -244,6 +244,7 @@ $directors = [];
 $r = $staffConn->query("SELECT s.id, s.full_name, s.position, sr.role_name FROM staff s JOIN staff_roles sr ON s.role_id=sr.id WHERE (sr.role_name LIKE '%Director%' OR sr.role_name LIKE '%HR%' OR sr.role_name LIKE '%Principal%' OR sr.role_name LIKE '%CEO%') AND s.status='Active' ORDER BY s.full_name");
 if ($r) while ($row = $r->fetch_assoc()) $directors[] = $row;
 
+if (isset($_GET['page']) && !isset($_GET['tab'])) $_GET['tab'] = $_GET['page'];
 $tab = $_GET['tab'] ?? 'dashboard';
 $statsInv = count($inventory);
 $statsPending = count($pendingReqs);
@@ -254,27 +255,18 @@ $statsOrders = count($orders);
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+<style>
+.stk-topbar{background:linear-gradient(135deg,#ea580c,#c2410c,#9a3412);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.stk-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.stk-topbar-left{display:flex;flex-direction:column}.stk-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.stk-topbar-subtitle{color:#fed7aa;font-size:12px;margin-top:-2px}.stk-topbar-right{display:flex;align-items:center;gap:12px}.stk-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.stk-print-btn,.stk-logout-btn{color:#fed7aa;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.stk-print-btn:hover,.stk-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.stk-content{margin-left:270px;padding:24px;min-height:100vh}
+@media(max-width:768px){.stk-content{margin-left:0!important;padding:12px!important}}
+</style>
 </head>
 <body>
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="page-content">
-    <div class="top-bar">
-        <div>
-            <strong><i class="fas fa-warehouse me-2 text-primary"></i>Store Keeper</strong>
-            <span class="text-muted small ms-2"><?= htmlspecialchars($userName) ?></span>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small d-none d-md-block"><?= date('D, d M Y') ?></span>
-            <a href="../news.php" class="btn btn-sm btn-outline-light"><i class="fas fa-newspaper me-1"></i>News</a>
-            <a href="../store_request.php" class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i>New Request</a>
-            <a href="../student-directory.php" class="btn btn-sm btn-outline-light"><i class="fas fa-address-book me-1"></i>Directory</a>
-            <a href="../index.php" class="btn btn-sm btn-outline-light"><i class="fas fa-home me-1"></i></a>
-            <a href="../logout.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
-        </div>
-    </div>
-
+<div class="stk-topbar"><div class="stk-topbar-content"><div class="stk-topbar-left"><div class="stk-topbar-title">Storekeeper</div><div class="stk-topbar-subtitle">Inventory &amp; Supplies Management</div></div><div class="stk-topbar-right"><span class="stk-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="stk-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="stk-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="stk-content">
     <div class="content-section dashboard-section active content-area" data-section="overview">
         <?php if ($msg): ?>
         <div class="alert alert-<?= $msg['type'] === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show py-2"><?= $msg['text'] ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
@@ -308,15 +300,6 @@ $statsOrders = count($orders);
             </div>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="tab-nav">
-            <a href="?tab=dashboard" class="<?= $tab === 'dashboard' ? 'active' : '' ?>"><i class="fas fa-chart-pie me-1"></i>Dashboard</a>
-            <a href="?tab=requests" class="<?= $tab === 'requests' ? 'active' : '' ?>"><i class="fas fa-clipboard-list me-1"></i>Requests <?= $statsPending ? '<span class="badge bg-danger ms-1">'.$statsPending.'</span>' : '' ?></a>
-            <a href="?tab=inventory" class="<?= $tab === 'inventory' ? 'active' : '' ?>"><i class="fas fa-boxes me-1"></i>Inventory</a>
-            <a href="?tab=orders" class="<?= $tab === 'orders' ? 'active' : '' ?>"><i class="fas fa-truck me-1"></i>Orders</a>
-            <a href="?tab=transactions" class="<?= $tab === 'transactions' ? 'active' : '' ?>"><i class="fas fa-history me-1"></i>History</a>
-            <a href="../store_request.php" class="ms-auto"><i class="fas fa-plus-circle me-1"></i>New Request</a>
-        </div>
 
 <?php if ($tab === 'dashboard'): ?>
         <!-- === DASHBOARD TAB === -->
@@ -677,7 +660,8 @@ $statsOrders = count($orders);
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger"><i class="fas fa-check me-1"></i>Reject</button></div>
     </form>
-</div></div>
+</div>
+</div>
 
 <!-- Fulfill All Form -->
 <form method="POST" id="fulfillAllForm"><input type="hidden" name="action" value="fulfill_request"><input type="hidden" name="request_id" id="fulfillAllId"></form>

@@ -52,10 +52,24 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
-    } catch (Exception $e) {}
+} catch (Exception $e) {}
 }
 ?>
-
+<?php
+$pageToSection = [
+    'home'           => 'overview',
+    'overview'       => 'overview',
+    'tasks'          => 'tasks',
+    'attendance'     => 'attendance',
+    'leave'          => 'leave',
+    'documents'      => 'documents',
+    'training'       => 'training',
+    'communications' => 'communications',
+    'activities'     => 'activities',
+];
+$requestedPage = $_GET['page'] ?? 'home';
+$section = $pageToSection[$requestedPage] ?? 'overview';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,17 +105,17 @@ if ($conn) {
             <!-- Dashboard Content -->
             <div class="dashboard-content">
                 <div class="section-tabs">
-                    <a class="section-tab active" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
-                    <a class="section-tab" data-tab="tasks" onclick="switchToSection('tasks')">Tasks</a>
-                    <a class="section-tab" data-tab="attendance" onclick="switchToSection('attendance')">Attendance</a>
-                    <a class="section-tab" data-tab="leave" onclick="switchToSection('leave')">Leave</a>
-                    <a class="section-tab" data-tab="documents" onclick="switchToSection('documents')">Documents</a>
-                    <a class="section-tab" data-tab="training" onclick="switchToSection('training')">Training</a>
-                    <a class="section-tab" data-tab="communications" onclick="switchToSection('communications')">Communications</a>
-                    <a class="section-tab" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
+                    <a class="section-tab<?= $section==='overview'?' active':'' ?>" data-tab="overview" onclick="switchToSection('overview')">Overview</a>
+                    <a class="section-tab<?= $section==='tasks'?' active':'' ?>" data-tab="tasks" onclick="switchToSection('tasks')">Tasks</a>
+                    <a class="section-tab<?= $section==='attendance'?' active':'' ?>" data-tab="attendance" onclick="switchToSection('attendance')">Attendance</a>
+                    <a class="section-tab<?= $section==='leave'?' active':'' ?>" data-tab="leave" onclick="switchToSection('leave')">Leave</a>
+                    <a class="section-tab<?= $section==='documents'?' active':'' ?>" data-tab="documents" onclick="switchToSection('documents')">Documents</a>
+                    <a class="section-tab<?= $section==='training'?' active':'' ?>" data-tab="training" onclick="switchToSection('training')">Training</a>
+                    <a class="section-tab<?= $section==='communications'?' active':'' ?>" data-tab="communications" onclick="switchToSection('communications')">Communications</a>
+                    <a class="section-tab<?= $section==='activities'?' active':'' ?>" data-tab="activities" onclick="switchToSection('activities')">Activities</a>
                 </div>
                 <!-- Staff Overview -->
-                <section id="overview" class="content-section dashboard-section active" data-section="overview">
+                <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Staff Overview</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -147,7 +161,7 @@ if ($conn) {
                 </section>
 
                 <!-- Task Management -->
-                <section id="tasks" class="content-section dashboard-section" data-section="tasks">
+                <section id="tasks" class="content-section dashboard-section<?= $section==='tasks'?' active':'' ?>" data-section="tasks">
                     <h2>Task Management</h2>
                     <div class="task-actions">
                         <button class="btn btn-primary" onclick="openModal('newTask')">
@@ -221,7 +235,7 @@ if ($conn) {
                 </section>
 
                 <!-- Attendance -->
-                <section id="attendance" class="content-section dashboard-section" data-section="attendance">
+                <section id="attendance" class="content-section dashboard-section<?= $section==='attendance'?' active':'' ?>" data-section="attendance">
                     <h2>Attendance Management</h2>
                     <div class="attendance-actions">
                         <button class="btn btn-primary" onclick="openModal('checkIn')">
@@ -275,7 +289,7 @@ if ($conn) {
                 </section>
 
                 <!-- Leave Management -->
-                <section id="leave" class="content-section dashboard-section" data-section="leave">
+                <section id="leave" class="content-section dashboard-section<?= $section==='leave'?' active':'' ?>" data-section="leave">
                     <h2>Leave Management</h2>
                     <div class="leave-actions">
                         <button class="btn btn-primary" onclick="openModal('leaveRequest')">
@@ -343,7 +357,7 @@ if ($conn) {
                 </section>
 
                 <!-- Documents -->
-                <section id="documents" class="content-section dashboard-section" data-section="documents">
+                <section id="documents" class="content-section dashboard-section<?= $section==='documents'?' active':'' ?>" data-section="documents">
                     <h2>Document Management</h2>
                     <div class="document-actions">
                         <button class="btn btn-primary" onclick="openModal('uploadDocument')">
@@ -392,7 +406,7 @@ if ($conn) {
                 </section>
 
                 <!-- Training & Development -->
-                <section id="training" class="content-section dashboard-section" data-section="training">
+                <section id="training" class="content-section dashboard-section<?= $section==='training'?' active':'' ?>" data-section="training">
                     <h2>Training & Development</h2>
                     <div class="training-actions">
                         <button class="btn btn-primary" onclick="openModal('trainingRequest')">
@@ -441,7 +455,7 @@ if ($conn) {
                 </section>
 
                 <!-- Communications -->
-                <section id="communications" class="content-section dashboard-section" data-section="communications">
+                <section id="communications" class="content-section dashboard-section<?= $section==='communications'?' active':'' ?>" data-section="communications">
                     <h2>Communications</h2>
                     <div class="communication-actions">
                         <button class="btn btn-primary" onclick="openModal('sendMessage')">
@@ -479,7 +493,7 @@ if ($conn) {
                 </section>
 
                 <!-- Recent Activities -->
-                <section id="activities" class="activities-section dashboard-section" data-section="activities">
+                <section id="activities" class="activities-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
                     <h2>Recent Staff Activities</h2>
                     <div class="activities-list">
                         <?php foreach ($recent_activities as $activity): ?>

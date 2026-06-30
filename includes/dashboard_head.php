@@ -211,25 +211,8 @@ window.onerror = function(msg, url) {
     });
 })();
 </script>
-<!-- Push Notification Subscription -->
-<script>
-if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.ready.then(function(reg) {
-        if ('PushManager' in window && 'Notification' in window && Notification.permission === 'granted') {
-            reg.pushManager.subscribe({ userVisibleOnly: true }).then(function(sub) {
-                if (sub) {
-                    var data = new URLSearchParams();
-                    data.append('endpoint', sub.endpoint);
-                    data.append('auth_key', (sub.toJSON().keys && sub.toJSON().keys.auth) || '');
-                    data.append('p256dh_key', (sub.toJSON().keys && sub.toJSON().keys.p256dh) || '');
-                    data.append('device_type', /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
-                    fetch('<?= $rootPath ?>/includes/ajax_push_subscribe.php', { method: 'POST', body: data }).catch(function(err){ console.warn('[ISNM] Push subscribe failed:', err); });
-                }
-            }).catch(function(err){ console.warn('[ISNM] Push subscribe registration failed:', err); });
-        }
-    }).catch(function(err){ console.warn('[ISNM] SW ready failed:', err); });
-}
-</script>
+<!-- Push Notification Subscription (disabled: VAPID keys not configured) -->
+
 <style>
 /* Responsive dashboard fixes */
 @media (max-width: 768px) {

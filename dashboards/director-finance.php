@@ -419,6 +419,16 @@ unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
+.fin-topbar{background:linear-gradient(135deg,#0d9488,#0f766e,#115e59);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.fin-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
+.fin-topbar-left{display:flex;flex-direction:column}
+.fin-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
+.fin-topbar-subtitle{color:#ccfbf1;font-size:12px;margin-top:-2px}
+.fin-topbar-right{display:flex;align-items:center;gap:12px}
+.fin-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
+.fin-print-btn,.fin-logout-btn{color:#ccfbf1;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
+.fin-print-btn:hover,.fin-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.fin-content{margin-left:270px;padding:24px;min-height:100vh}
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1e40af;font-size:14px}
@@ -448,11 +458,8 @@ unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 </style>
 </head><body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="ma content-section dashboard-section active" data-section="finance" style="margin-left:270px;padding:24px">
-<div class="ph mb-4">
-<div><h1><i class="fas fa-chart-pie me-2"></i>Director Finance Dashboard</h1><p class="text-muted">Financial Affairs &amp; Strategic Oversight</p></div>
-<a href="director-finance.php" class="bo btn-sm <?= $view==='home'?'d-none':'' ?>"><i class="fas fa-arrow-left me-1"></i>Back</a>
-</div>
+<div class="fin-topbar"><div class="fin-topbar-content"><div class="fin-topbar-left"><div class="fin-topbar-title">Director Finance</div><div class="fin-topbar-subtitle">Financial Affairs &amp; Strategic Oversight</div></div><div class="fin-topbar-right"><span class="fin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="fin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="fin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<div class="fin-content dashboard-section active" data-section="finance">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
 
@@ -1923,7 +1930,7 @@ if ($report) {
     $from = $_GET['from'] ?? date('Y-m-01', strtotime('-1 month'));
     $to = $_GET['to'] ?? date('Y-m-d');
     echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}h2{color:#1f2937}.text-end{text-align:right}.fw-bold{font-weight:700}@media print{body{print-color-adjust:exact}.no-print{display:none}}</style></head><body>';
-    echo '<div class="no-print"><button onclick="window.print()" style="padding:6px 16px;margin-bottom:12px">Print</button> <button onclick="window.close()" style="padding:6px 16px">Close</button></div>';
+    echo '<div class="no-print text-end mb-2"><button onclick="window.close()" class="btn btn-sm btn-outline-secondary" style="padding:6px 16px">Close</button></div>';
 
     if ($report === 'income_statement') {
         echo '<h2>Income Statement</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
@@ -1938,28 +1945,31 @@ if ($report) {
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
         echo '<tr><td><strong>Revenue</strong></td><td class="text-end">'.number_format($rev,0).'</td></tr>';
         echo '<tr><td>Total Income</td><td class="text-end fw-bold">'.number_format($rev,0).'</td></tr>';
-        $r2=$staff->query("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to' GROUP BY expense_category");
+        $r2=null; $s2=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category");
+        if($s2){$s2->bind_param('ss',$from,$to);$s2->execute();$r2=$s2->get_result();$s2->close();}
         if($r2) while($row=$r2->fetch_assoc()){ echo '<tr><td>&nbsp;&nbsp;'.htmlspecialchars($row['expense_category']).'</td><td class="text-end">'.number_format($row['t'],0).'</td></tr>'; }
         echo '<tr><td>Total Expenses</td><td class="text-end fw-bold">'.number_format($exp,0).'</td></tr>';
         echo '<tr><td><strong>Net Income</strong></td><td class="text-end fw-bold" style="color:'.($rev-$exp>=0?'green':'red').'">'.number_format($rev-$exp,0).'</td></tr>';
         echo '</tbody></table>';
     } elseif ($report === 'expense_report') {
         echo '<h2>Expense Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $r=$staff->query("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE DATE(e.expense_date) BETWEEN '$from' AND '$to' ORDER BY e.expense_date DESC");
+        $sr=null; $ss=$staff->prepare("SELECT e.*,s.full_name requested_by_name FROM expenses e LEFT JOIN staff s ON e.requested_by=s.id WHERE DATE(e.expense_date) BETWEEN ? AND ? ORDER BY e.expense_date DESC");
+        if($ss){$ss->bind_param('ss',$from,$to);$ss->execute();$sr=$ss->get_result();$ss->close();}
         echo '<table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>';
-        if($r) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['expense_id']).'</td><td>'.htmlspecialchars($row['expense_category']).'</td><td>'.htmlspecialchars($row['description']).'</td><td class="text-end">'.number_format($row['amount'],0).'</td><td>'.$row['expense_date'].'</td><td>'.$row['status'].'</td></tr>'; }
+        if($sr) while($row=$sr->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['expense_id']).'</td><td>'.htmlspecialchars($row['expense_category']).'</td><td>'.htmlspecialchars($row['description']).'</td><td class="text-end">'.number_format($row['amount'],0).'</td><td>'.$row['expense_date'].'</td><td>'.$row['status'].'</td></tr>'; }
         echo '</tbody></table>';
     } elseif ($report === 'fee_collection') {
         echo '<h2>Fee Collection Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $r=$students->query("SELECT p.payment_reference,s.full_name student_name,s.student_number,s.program,p.amount_received,p.payment_method,p.payment_date,p.status FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN '$from' AND '$to' ORDER BY p.payment_date DESC");
+        $qr=null; $qs=$students->prepare("SELECT p.payment_reference,s.full_name student_name,s.student_number,s.program,p.amount_received,p.payment_method,p.payment_date,p.status FROM {$students_db}.payments p LEFT JOIN {$students_db}.students s ON p.student_id=s.id WHERE DATE(p.payment_date) BETWEEN ? AND ? ORDER BY p.payment_date DESC");
+        if($qs){$qs->bind_param('ss',$from,$to);$qs->execute();$qr=$qs->get_result();$qs->close();}
         echo '<table><thead><tr><th>Receipt</th><th>Student</th><th>Program</th><th class="text-end">Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>';
-        $tt=0; if($r) while($row=$r->fetch_assoc()){ $tt+=$row['amount_received']; echo '<tr><td>'.htmlspecialchars($row['payment_reference']).'</td><td>'.htmlspecialchars($row['student_name']??$row['student_number']).'</td><td>'.htmlspecialchars($row['program']??'-').'</td><td class="text-end">'.number_format($row['amount_received'],0).'</td><td>'.htmlspecialchars($row['payment_method']).'</td><td>'.$row['payment_date'].'</td><td>'.$row['status'].'</td></tr>'; }
+        $tt=0; if($qr) while($row=$qr->fetch_assoc()){ $tt+=$row['amount_received']; echo '<tr><td>'.htmlspecialchars($row['payment_reference']).'</td><td>'.htmlspecialchars($row['student_name']??$row['student_number']).'</td><td>'.htmlspecialchars($row['program']??'-').'</td><td class="text-end">'.number_format($row['amount_received'],0).'</td><td>'.htmlspecialchars($row['payment_method']).'</td><td>'.$row['payment_date'].'</td><td>'.$row['status'].'</td></tr>'; }
         echo '<tr><td colspan="3"><strong>Total</strong></td><td class="text-end fw-bold">'.number_format($tt,0).'</td><td colspan="3"></td></tr>';
         echo '</tbody></table>';
     } elseif ($report === 'tax_report') {
         echo '<h2>URA Tax Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).'</p>';
-        $rev = $students ? (float)(($r=$students->query("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['t']:0) : 0;
-        $exp = (float)(($r=$staff->query("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$from' AND '$to'"))&&$r?$r->fetch_assoc()['t']:0);
+        $rev=0; if($students){$rs=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?");if($rs){$rs->bind_param('ss',$from,$to);$rs->execute();$rr=$rs->get_result();$rs->close();if($rr)$rev=(float)$rr->fetch_assoc()['t'];}}
+        $exp=0; $es=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?");if($es){$es->bind_param('ss',$from,$to);$es->execute();$er=$es->get_result();$es->close();if($er)$exp=(float)$er->fetch_assoc()['t'];}
         $taxable = max(0,$rev-$exp);
         echo '<table><thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead><tbody>';
         echo '<tr><td>Gross Revenue</td><td class="text-end">'.number_format($rev,0).'</td></tr>';
@@ -1973,7 +1983,6 @@ if ($report) {
 }
 ?>
 
-</div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 <script>
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -1981,4 +1990,5 @@ function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'..
 function currency(n){ n=parseFloat(n)||0; return 'UGX '+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
 function exportTable(id){ var el=document.getElementById(id);if(!el)return; var csv=[];var rows=el.querySelectorAll('tr');rows.forEach(function(r){var cols=[];r.querySelectorAll('th,td').forEach(function(c){cols.push('"'+c.textContent.trim()+'"');});csv.push(cols.join(','));});var blob=new Blob([csv.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finance_report.csv';a.click(); }
 </script>
+</div>
 </body></html>

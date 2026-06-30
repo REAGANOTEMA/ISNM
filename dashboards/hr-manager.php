@@ -12,6 +12,25 @@ $website_conn  = $ctx['website'];
 $user_id      = (int)($_SESSION['user_id'] ?? 0);
 $user_name    = $_SESSION['full_name'] ?? 'HR Manager';
 
+// ── Page routing ──
+$pageToSection = [
+    'home'           => 'overview',
+    'overview'       => 'overview',
+    'staff-directory'=> 'staff',
+    'attendance'     => 'staff',
+    'leave'          => 'leave',
+    'performance'    => 'staff',
+    'training'       => 'staff',
+    'recruitment'    => 'staff',
+    'contracts'      => 'staff',
+    'disciplinary'   => 'staff',
+    'licenses'       => 'staff',
+    'payroll'        => 'staff',
+    'onboarding'     => 'staff',
+];
+$page  = $_GET['page'] ?? 'home';
+$section = $pageToSection[$page] ?? 'overview';
+
 $stats = getDashboardStats($staff_conn, $user_id, 'HR Manager');
 
 // ── Primary counts ──
@@ -92,10 +111,8 @@ $pageTitle = 'HR Manager';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root { --hr-primary: #dc2626; --hr-dark: #991b1b; }
-.section-nav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; padding: 8px 0; overflow-x: auto; white-space: nowrap; }
-.section-nav .sn-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 12px; font-weight: 500; cursor: pointer; transition: all .2s; text-decoration: none; flex-shrink: 0; }
-.section-nav .sn-btn:hover { border-color: var(--hr-primary); color: var(--hr-primary); background: #fef2f2; }
-.section-nav .sn-btn.active { background: var(--hr-primary); color: #fff; border-color: var(--hr-primary); }
+.hr-topbar{background:linear-gradient(135deg,#991b1b,#b91c1c,#dc2626);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.hr-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.hr-topbar-left{display:flex;flex-direction:column}.hr-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.hr-topbar-subtitle{color:#fecaca;font-size:12px;margin-top:-2px}.hr-topbar-right{display:flex;align-items:center;gap:12px}.hr-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.hr-print-btn,.hr-logout-btn{color:#fecaca;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.hr-print-btn:hover,.hr-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.hr-content{margin-left:270px;padding:24px;min-height:100vh}
 .hr-section { display: none; }
 .hr-section.active { display: block; }
 .kpi-card { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #e5e7eb; border-left: 4px solid var(--hr-primary); transition: all .2s; }
@@ -113,44 +130,20 @@ $pageTitle = 'HR Manager';
 .bg-hr-warning { background: #fef3c7; color: #92400e; }
 .bg-hr-danger { background: #fee2e2; color: #991b1b; }
 .bg-hr-info { background: #dbeafe; color: #1e40af; }
-@media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
+@media(max-width:768px){.hr-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 
-<div class="main-content" style="margin-left:270px;padding:24px">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
-            <h1 style="color:var(--hr-primary);font-weight:700;margin:0"><i class="fas fa-users-cog me-2"></i>HR Manager</h1>
-            <p class="text-muted mb-0">Human Resources & Staff Administration — ISNM</p>
-        </div>
-        <div class="text-end small text-muted"><span id="hrClock"></span></div>
-    </div>
+<div class="hr-topbar"><div class="hr-topbar-content"><div class="hr-topbar-left"><div class="hr-topbar-title">HR Manager</div><div class="hr-topbar-subtitle">Human Resources &amp; Staff Administration</div></div><div class="hr-topbar-right"><span class="hr-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="hr-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../logout.php" class="hr-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
 
+<div class="hr-content">
     <?php if ($msg = $_SESSION['success'] ?? ''): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($msg) ?></div><?php unset($_SESSION['success']); endif; ?>
     <?php if ($err = $_SESSION['error'] ?? ''): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($err) ?></div><?php unset($_SESSION['error']); endif; ?>
 
-    <!-- ═══ SECTION NAV ═══ -->
-    <div class="section-nav" id="sectionNav">
-        <a href="#overview" class="sn-btn active" data-section="overview"><i class="fas fa-home me-1"></i>Overview</a>
-        <a href="#staff" class="sn-btn" data-section="staff"><i class="fas fa-id-card me-1"></i>Staff Records</a>
-        <a href="#attendance" class="sn-btn" data-section="attendance"><i class="fas fa-calendar-check me-1"></i>Attendance</a>
-        <a href="#leave" class="sn-btn" data-section="leave"><i class="fas fa-calendar-alt me-1"></i>Leave</a>
-        <a href="#performance" class="sn-btn" data-section="performance"><i class="fas fa-chart-line me-1"></i>Performance</a>
-        <a href="#training" class="sn-btn" data-section="training"><i class="fas fa-graduation-cap me-1"></i>Training & CPD</a>
-        <a href="#recruitment" class="sn-btn" data-section="recruitment"><i class="fas fa-user-plus me-1"></i>Recruitment</a>
-        <a href="#payroll" class="sn-btn" data-section="payroll"><i class="fas fa-money-check me-1"></i>Payroll</a>
-        <a href="#disciplinary" class="sn-btn" data-section="disciplinary"><i class="fas fa-gavel me-1"></i>Disciplinary</a>
-        <a href="#licensing" class="sn-btn" data-section="licensing"><i class="fas fa-certificate me-1"></i>Licensing</a>
-        <a href="#deployment" class="sn-btn" data-section="deployment"><i class="fas fa-clinic-medical me-1"></i>Deployment</a>
-        <a href="#comms" class="sn-btn" data-section="comms"><i class="fas fa-bullhorn me-1"></i>Communication</a>
-        <a href="#reports" class="sn-btn" data-section="reports"><i class="fas fa-chart-bar me-1"></i>Reports</a>
-        <a href="#settings" class="sn-btn" data-section="settings"><i class="fas fa-cog me-1"></i>Settings</a>
-    </div>
-
     <!-- ═══════════════ SECTION: OVERVIEW ═══════════════ -->
-    <div class="hr-section active" id="section-overview">
+    <div class="hr-section<?= $section==='overview'?' active':'' ?>" id="section-overview">
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-6"><div class="kpi-card"><p class="num"><?= $active_staff ?></p><p class="lbl">Active Staff</p></div></div>
             <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#f59e0b"><p class="num" style="color:#f59e0b"><?= $on_leave ?></p><p class="lbl">On Leave</p></div></div>
@@ -764,28 +757,13 @@ if ($staff_conn) {
 
 <script>
 (function() {
-    var navBtns = document.querySelectorAll('.sn-btn');
     var sections = document.querySelectorAll('.hr-section');
 
     function showSection(id) {
         sections.forEach(function(s) { s.classList.remove('active'); });
-        navBtns.forEach(function(b) { b.classList.remove('active'); });
         var target = document.getElementById('section-' + id);
         if (target) target.classList.add('active');
-        var btn = document.querySelector('.sn-btn[data-section="' + id + '"]');
-        if (btn) btn.classList.add('active');
     }
-
-    navBtns.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var section = this.getAttribute('data-section');
-            if (section) {
-                showSection(section);
-                history.replaceState(null, '', '#section-' + section);
-            }
-        });
-    });
 
     var hash = window.location.hash.replace('#section-', '');
     if (hash && document.getElementById('section-' + hash)) showSection(hash);

@@ -551,7 +551,8 @@ class AuthenticationService {
             'director academics'      => 'dashboards/director-academics.php',
             'director finance'        => 'dashboards/director-finance.php',
             'director ict'            => 'dashboards/director-ict.php',
-            'computer lab manager'    => 'computer_lab.php',
+            'computer lab manager'    => 'dashboards/computer_lab.php',
+            'computer lab'            => 'dashboards/computer_lab.php',
             'computer department'     => 'dashboards/director-ict.php',
             'ict officer'             => 'dashboards/director-ict.php',
             'deputy principal'        => 'dashboards/deputy-principal.php',
@@ -580,6 +581,13 @@ class AuthenticationService {
             'guild president'                 => 'dashboards/guild-president.php',
             'skills lab manager'              => 'dashboards/skills-lab.php',
             'skills lab'                      => 'dashboards/skills-lab.php',
+            'senior lecturer'                => 'dashboards/senior-lecturers.php',
+            'lecturer'                       => 'dashboards/lecturers.php',
+            'matron'                         => 'dashboards/matrons.php',
+            'warden'                         => 'dashboards/wardens.php',
+            'security officer'               => 'dashboards/security.php',
+            'sickbay nurse'                  => 'dashboards/sickbay.php',
+            'store keeper'                   => 'dashboards/storekeeper.php',
         ];
         return $map[$key] ?? null;
     }

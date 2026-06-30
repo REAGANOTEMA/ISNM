@@ -174,6 +174,7 @@ try { $recent_students = array_slice($loader->loadAllStudents(), 0, 6); } catch 
 // ── DG page routing ──
 // Map ?page=xxx to internal section names
 $dgPageToSection = [
+    'home'          => 'home',
     'overview'      => 'executive',
     'departments'   => 'departments',
     'performance'   => 'performance',
@@ -196,7 +197,7 @@ $dgPageToSection = [
     'notifications' => 'notifications',
     'kpi'           => 'kpi',
 ];
-$dgPage  = $_GET['page'] ?? '';
+$dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
 
 // ── CEO vs DG branding ──
@@ -390,20 +391,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ann_title'])) {
     $body     = trim($_POST['ann_body'] ?? '');
     $target   = $_POST['ann_target'] ?? 'All';
     $priority = $_POST['ann_priority'] ?? 'Normal';
-    if ($title && $body && $studentsConn) {
-        $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
-        if ($stmt) {
-            $stmt->bind_param('ssssi', $title, $body, $target, $priority, $user_id);
-            $stmt->execute();
-            $stmt->close();
-        }
-        $_SESSION['success'] = "Announcement published to all $target.";
-        $nid = createNotification('New Announcement: ' . $title, $body, 'director-general.php', 'announcement', 'fas fa-bullhorn');
-        if ($nid) {
-            notifyAllStaff($nid);
-            if (function_exists('notifyDirectorGeneral')) {
-                notifyDirectorGeneral("New Announcement: $title", "The DG posted a new announcement targeting $target.\n\n$body\n\nPriority: $priority");
+    if ($title && $body) {
+        if ($studentsConn) {
+            $stmt = $studentsConn->prepare("INSERT INTO announcements (title,body,target_audience,priority,posted_by,is_active,created_at) VALUES (?,?,?,?,?,1,NOW())");
+            if ($stmt) {
+                $stmt->bind_param('ssssi', $title, $body, $target, $priority, $user_id);
+                $stmt->execute();
+                $stmt->close();
             }
+            $_SESSION['success'] = "Announcement published to all $target.";
+            $nid = createNotification('New Announcement: ' . $title, $body, 'director-general.php', 'announcement', 'fas fa-bullhorn');
+            if ($nid) {
+                notifyAllStaff($nid);
+                if (function_exists('notifyDirectorGeneral')) {
+                    notifyDirectorGeneral("New Announcement: $title", "The DG posted a new announcement targeting $target.\n\n$body\n\nPriority: $priority");
+                }
+            }
+        } else {
+            $_SESSION['error'] = 'Students database connection unavailable. Announcement could not be saved.';
         }
     }
     header('Location: director-general.php'); exit;
@@ -882,8 +887,16 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <?php unset($_SESSION['error']); endif; ?>
 
-<!-- ═══ SECTION: SERVICES (Pending Submissions) ═══ -->
-<div id="services" class="content-section dashboard-section<?= $dgSection === 'services' ? ' active' : '' ?>" data-section="services">
+<!-- ═══ DYNAMIC PAGE LOADING ═══ -->
+<?php
+switch ($dgSection):
+    case 'home': ?>
+        <div id="home" class="content-section dashboard-section active" data-section="home">
+            <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
+        </div>
+        <?php break;
+    case 'services': ?>
+        <div id="services" class="content-section dashboard-section active" data-section="services">
   <div class="section-card">
     <?php dgToolbar('Pending Submissions', 'fa-inbox', $totalPending . ' New', 'bg-danger'); ?>
     <div class="section-header">
@@ -928,29 +941,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-<!-- ═══ SECTION TABS ═══ -->
-<div class="section-tabs mb-3 no-print d-flex flex-wrap gap-1" style="background:#fff;border-radius:10px;padding:6px 8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-  <a data-no-loader class="section-tab<?= $dgSection === 'executive' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#executive" onclick="switchToSection('executive');return false;" data-tab="executive"><i class="fas fa-chart-simple me-1"></i>Executive</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'departments' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#departments" onclick="switchToSection('departments');return false;" data-tab="departments"><i class="fas fa-building me-1"></i>Departments</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'performance' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#performance" onclick="switchToSection('performance');return false;" data-tab="performance"><i class="fas fa-chart-bar me-1"></i>Performance</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'financial' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#financial" onclick="switchToSection('financial');return false;" data-tab="financial"><i class="fas fa-coins me-1"></i>Financial</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'staff' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#staff" onclick="switchToSection('staff');return false;" data-tab="staff"><i class="fas fa-users me-1"></i>Staff</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'student' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#student" onclick="switchToSection('student');return false;" data-tab="student"><i class="fas fa-user-graduate me-1"></i>Students</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'services' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#services" onclick="switchToSection('services');return false;" data-tab="services"><i class="fas fa-inbox me-1"></i>Submissions</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'approvals' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#approvals" onclick="switchToSection('approvals');return false;" data-tab="approvals"><i class="fas fa-check-double me-1"></i>Approvals</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'store' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#store" onclick="switchToSection('store');return false;" data-tab="store"><i class="fas fa-warehouse me-1"></i>Store</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'news-management' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#news-management" onclick="switchToSection('news-management');return false;" data-tab="news-management"><i class="fas fa-newspaper me-1"></i>News</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'communications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#communications" onclick="switchToSection('communications');return false;" data-tab="communications"><i class="fas fa-bullhorn me-1"></i>Comms</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'audit' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#audit" onclick="switchToSection('audit');return false;" data-tab="audit"><i class="fas fa-history me-1"></i>Audit</a>
-  <a data-no-loader class="section-tab<?= $dgSection === 'quick' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#quick" onclick="switchToSection('quick');return false;" data-tab="quick"><i class="fas fa-bolt me-1"></i>Quick</a>
-<a data-no-loader class="section-tab<?= $dgSection === 'reports' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#reports" onclick="switchToSection('reports');return false;" data-tab="reports"><i class="fas fa-chart-pie me-1"></i>Reports</a>
-<a data-no-loader class="section-tab<?= $dgSection === 'kpi' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#kpi" onclick="switchToSection('kpi');return false;" data-tab="kpi"><i class="fas fa-bullseye me-1"></i>KPI</a>
-<a data-no-loader class="section-tab<?= $dgSection === 'notifications' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#notifications" onclick="switchToSection('notifications');return false;" data-tab="notifications"><i class="fas fa-bell me-1"></i>Alerts</a>
-<a data-no-loader class="section-tab<?= $dgSection === 'system-health' ? ' active' : '' ?>" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#64748b;" href="#system-health" onclick="switchToSection('system-health');return false;" data-tab="system-health"><i class="fas fa-heartbeat me-1"></i>Health</a>
-</div>
-
-<!-- ═══ SECTION: EXECUTIVE ═══ -->
-<div id="executive" class="content-section dashboard-section<?= $dgSection === 'executive' ? ' active' : '' ?>" data-section="executive">
+<?php
+    case 'executive': ?>
+<div id="executive" class="content-section dashboard-section active" data-section="executive">
   <?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
   <div class="section-card">
     <?php dgToolbar('Executive Overview', 'fa-chart-simple', 'Updated live'); ?>
@@ -970,8 +963,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-<!-- ═══ SECTION: DEPARTMENTS ═══ -->
-<div id="departments" class="content-section dashboard-section<?= $dgSection === 'departments' ? ' active' : '' ?>" data-section="departments">
+<?php break; ?>
+    case 'departments': ?>
+<div id="departments" class="content-section dashboard-section active" data-section="departments">
   <div class="section-card">
     <?php dgToolbar('Department Monitoring', 'fa-building'); ?>
     <div class="section-header">
@@ -1009,8 +1003,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-<!-- ═══ SECTION: PERFORMANCE ═══ -->
-<div id="performance" class="content-section dashboard-section<?= $dgSection === 'performance' ? ' active' : '' ?>" data-section="performance">
+<?php break; ?>
+    case 'performance': ?>
+<div id="performance" class="content-section dashboard-section active" data-section="performance">
   <div class="section-card">
     <?php dgToolbar('Director Performance', 'fa-chart-bar'); ?>
     <div class="section-header">
@@ -1023,7 +1018,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
       <?php
       $dirRoles = [1,3,4,5,6,27];
       foreach($dirRoles as $rid):
-        $rq=$conn?$conn->prepare("SELECT id,role_name FROM igangaschoolofl_staffs_db.staff_roles WHERE id=?"):false;
+        $rq=$conn?$conn->prepare("SELECT id,role_name FROM staff_roles WHERE id=?"):false;
         $rn=''; $si=0;
         if($rq){$rq->bind_param('i',$rid);$rq->execute();$rr=$rq->get_result()->fetch_assoc();$rq->close();if($rr)$rn=$rr['role_name'];}
         if($rn):
@@ -1036,8 +1031,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-<!-- ═══ SECTION: FINANCIAL ═══ -->
-<div id="financial" class="content-section dashboard-section<?= $dgSection === 'financial' ? ' active' : '' ?>" data-section="financial">
+<?php break; ?>
+    case 'financial': ?>
+<div id="financial" class="content-section dashboard-section active" data-section="financial">
   <div class="section-card">
     <?php dgToolbar('Financial Overview', 'fa-coins'); ?>
     <div class="row g-3">
@@ -1098,8 +1094,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 </div>
 
-<!-- ═══ SECTION: STAFF ═══ -->
-<div id="staff" class="content-section dashboard-section<?= $dgSection === 'staff' ? ' active' : '' ?>" data-section="staff">
+<?php break; ?>
+    case 'staff': ?>
+<div id="staff" class="content-section dashboard-section active" data-section="staff">
   <div class="section-card">
     <?php dgToolbar('Staff Management', 'fa-id-badge'); ?>
     <div class="row g-3">
@@ -1210,8 +1207,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 </div>
 
-<!-- ═══ SECTION: STUDENT ═══ -->
-<div id="student" class="content-section dashboard-section<?= $dgSection === 'student' ? ' active' : '' ?>" data-section="student">
+<?php break; ?>
+    case 'student': ?>
+<div id="student" class="content-section dashboard-section active" data-section="student">
   <div class="section-card">
     <?php dgToolbar('Student Management', 'fa-user-graduate'); ?>
     <div class="section-header">
@@ -1303,17 +1301,17 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: APPROVALS — DIRECTOR GENERAL APPROVAL CENTER ═══ -->
-<div id="approvals" class="content-section dashboard-section<?= $dgSection === 'approvals' ? ' active' : '' ?>" data-section="approvals">
+<?php break; ?>
+    case 'approvals': ?>
+<div id="approvals" class="content-section dashboard-section active" data-section="approvals">
   <div class="section-card">
     <?php dgToolbar('Approval Center', 'fa-check-double'); ?>
     <?= renderApprovalCenter($conn) ?>
   </div>
 </div>
-<?php renderApprovalModalsAndScripts(); ?>
-
-<!-- ═══ SECTION: AUDIT ═══ -->
-<div id="audit" class="content-section dashboard-section<?= $dgSection === 'audit' ? ' active' : '' ?>" data-section="audit">
+<?php break; ?>
+    case 'audit': ?>
+<div id="audit" class="content-section dashboard-section active" data-section="audit">
   <div class="section-card">
     <?php dgToolbar('Audit Trail', 'fa-history'); ?>
     <div class="row g-3">
@@ -1343,8 +1341,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: STORE & ASSETS ═══ -->
-<div id="store" class="content-section dashboard-section<?= $dgSection === 'store' ? ' active' : '' ?>" data-section="store">
+<?php break; ?>
+    case 'store': ?>
+<div id="store" class="content-section dashboard-section active" data-section="store">
   <div class="section-card">
     <?php dgToolbar('Store & Assets', 'fa-warehouse'); ?>
     <div class="row g-3">
@@ -1388,8 +1387,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 </div>
 
-<!-- ═══ SECTION: NEWS MANAGEMENT ═══ -->
-<div id="news-management" class="content-section dashboard-section<?= $dgSection === 'news-management' ? ' active' : '' ?>" data-section="news-management">
+<?php break; ?>
+    case 'news-management': ?>
+<div id="news-management" class="content-section dashboard-section active" data-section="news-management">
   <?php
   // Fetch news for this section
   $dgNewsList = [];
@@ -1548,16 +1548,18 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: COMMUNICATIONS ═══ -->
-<div id="communications" class="content-section dashboard-section<?= $dgSection === 'communications' ? ' active' : '' ?>" data-section="communications">
+<?php break; ?>
+    case 'communications': ?>
+<div id="communications" class="content-section dashboard-section active" data-section="communications">
   <div class="section-card">
     <?php dgToolbar('Communications', 'fa-bullhorn'); ?>
     <?php renderNewsWidget($conn,$websiteConn,$user_id,$user_name,$user_role,5); ?>
   </div>
 </div>
 
-<!-- ═══ SECTION: SYSTEM USERS ═══ -->
-<div id="system-users" class="content-section dashboard-section<?= $dgSection === 'system-users' ? ' active' : '' ?>" data-section="system-users">
+<?php break; ?>
+    case 'system-users': ?>
+<div id="system-users" class="content-section dashboard-section active" data-section="system-users">
   <div class="section-card">
     <?php dgToolbar('User Management', 'fa-user-shield'); ?>
     <?php
@@ -1588,8 +1590,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: SYSTEM ROLES ═══ -->
-<div id="system-roles" class="content-section dashboard-section<?= $dgSection === 'system-roles' ? ' active' : '' ?>" data-section="system-roles">
+<?php break; ?>
+    case 'system-roles': ?>
+<div id="system-roles" class="content-section dashboard-section active" data-section="system-roles">
   <div class="section-card">
     <?php dgToolbar('Role Management', 'fa-user-tag'); ?>
     <?php
@@ -1619,8 +1622,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: STAFF MESSAGING ═══ -->
-<div id="messaging" class="content-section dashboard-section<?= $dgSection === 'messaging' ? ' active' : '' ?>" data-section="messaging">
+<?php break; ?>
+    case 'messaging': ?>
+<div id="messaging" class="content-section dashboard-section active" data-section="messaging">
   <div class="section-card">
     <?php dgToolbar('Staff Messaging', 'fa-comments'); ?>
     <?php
@@ -1686,8 +1690,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: BROADCAST MESSAGES ═══ -->
-<div id="broadcast" class="content-section dashboard-section<?= $dgSection === 'broadcast' ? ' active' : '' ?>" data-section="broadcast">
+<?php break; ?>
+    case 'broadcast': ?>
+<div id="broadcast" class="content-section dashboard-section active" data-section="broadcast">
   <div class="section-card">
     <?php dgToolbar('Broadcast Messages', 'fa-bullhorn'); ?>
     <div class="row g-3">
@@ -1758,8 +1763,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- ═══ SECTION: QUICK ACTIONS ═══ -->
-<div id="quick" class="content-section dashboard-section<?= $dgSection === 'quick' ? ' active' : '' ?>" data-section="quick">
+<?php break; ?>
+    case 'quick': ?>
+<div id="quick" class="content-section dashboard-section active" data-section="quick">
   <div class="section-card">
     <?php dgToolbar('Quick Actions', 'fa-bolt'); ?>
     <h3 class="section-title" style="cursor:pointer;margin-bottom:0;" data-bs-toggle="collapse" data-bs-target="#quickActionsContent" aria-expanded="false">
@@ -1853,20 +1859,22 @@ function dgExportCSV() {
     link.click();
 }
 </script>
-<?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
-<!-- ═══ SECTION: REPORTS CENTER ═══ -->
-<div id="reports" class="content-section dashboard-section<?= $dgSection === 'reports' ? ' active' : '' ?>" data-section="reports">
+<?php break; ?>
+    case 'reports': ?>
+<div id="reports" class="content-section dashboard-section active" data-section="reports">
   <?php include_once __DIR__ . '/../includes/dg_reports_center.php'; ?>
 </div>
 
-<!-- ═══ SECTION: STRATEGIC KPI ═══ -->
-<div id="kpi" class="content-section dashboard-section<?= $dgSection === 'kpi' ? ' active' : '' ?>" data-section="kpi">
+<?php break; ?>
+    case 'kpi': ?>
+<div id="kpi" class="content-section dashboard-section active" data-section="kpi">
   <?php include_once __DIR__ . '/../includes/dg_strategic_kpi.php'; ?>
 </div>
 
-<!-- ═══ SECTION: NOTIFICATIONS CENTER ═══ -->
-<div id="notifications" class="content-section dashboard-section<?= $dgSection === 'notifications' ? ' active' : '' ?>" data-section="notifications">
+<?php break; ?>
+    case 'notifications': ?>
+<div id="notifications" class="content-section dashboard-section active" data-section="notifications">
   <?php 
   include_once __DIR__ . '/../includes/dg_notifications_center.php';
   if (function_exists('renderNotificationsCenter')) {
@@ -1875,10 +1883,21 @@ function dgExportCSV() {
   ?>
 </div>
 
-<!-- ═══ SECTION: SYSTEM HEALTH ═══ -->
-<div id="system-health" class="content-section dashboard-section<?= $dgSection === 'system-health' ? ' active' : '' ?>" data-section="system-health">
+<?php break; ?>
+    case 'system-health': ?>
+<div id="system-health" class="content-section dashboard-section active" data-section="system-health">
   <?php include_once __DIR__ . '/../includes/dg_system_health.php'; ?>
 </div>
+        <?php break;
+    default: ?>
+        <div id="home" class="content-section dashboard-section active" data-section="home">
+            <?php include_once __DIR__ . '/../includes/control_panel.php'; ?>
+        </div>
+        <?php break;
+endswitch; ?>
+
+<?php renderApprovalModalsAndScripts(); ?>
+<?php if (function_exists('overrideApprovalActionHandler')) overrideApprovalActionHandler(); ?>
 
 </div><!-- /dg-content -->
 
