@@ -138,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <section class="content-section dashboard-section active" data-section="overview">
 <div class="main" style="margin-left:270px;padding:32px">
   <div class="d-flex justify-content-between align-items-center mb-4 no-print">

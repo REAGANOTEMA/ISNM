@@ -13,6 +13,7 @@ $pageTitle = 'Contact & Application Submissions';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
         <h1><i class="fas fa-file-alt"></i> Contact & Application Submissions</h1>

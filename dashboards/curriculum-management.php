@@ -23,9 +23,11 @@ if ($conn) {
 $pageTitle = 'Curriculum Management';
 ?><!DOCTYPE html>
 <html lang="en">
-<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?></head>
+<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+</head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
 <div class="page-title-card"><h2><i class="fas fa-book-open me-2"></i>Curriculum Management</h2><p>Develop and manage academic curriculum, course catalogs, and program structures</p></div>
 <div class="row g-4">

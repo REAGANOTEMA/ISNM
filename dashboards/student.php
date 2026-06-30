@@ -163,6 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <body class="ent-layout">
     <!-- Include Responsive Navigation -->
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
     
     <div class="dashboard-container">
         <!-- Main Content Area -->
@@ -1381,8 +1382,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

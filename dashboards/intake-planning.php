@@ -17,9 +17,11 @@ if ($conn) {
 $pageTitle = 'Intake Planning';
 ?><!DOCTYPE html>
 <html lang="en">
-<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?></head>
+<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+</head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
 <div class="page-title-card"><h2><i class="fas fa-calendar-plus me-2"></i>Intake Planning</h2><p>Plan and manage student intakes across programs</p></div>
 <div class="row g-4">

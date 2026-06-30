@@ -417,6 +417,7 @@ $pageTitle = 'Sickbay Management System';?>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
 <div class="top-bar"><div><strong><i class="fas fa-hospital-user me-2 text-danger"></i>Sickbay Management System</strong><div class="text-muted small">Iganga School of Nursing &amp; Midwifery</div></div><div class="d-flex align-items-center gap-3"><span class="text-muted small d-none d-md-block"><?=date('D, d M Y')?></span><a href="inventory-reports.php" class="btn btn-sm btn-outline-info no-print" title="Reports"><i class="fas fa-chart-bar me-1"></i></a><button class="btn btn-sm btn-outline-success no-print" onclick="window.print()"><i class="fas fa-print me-1"></i></button><a href="../auth-handler.php?action=logout" class="btn btn-sm btn-outline-danger no-print"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></div></div>
 <div class="content-area">
@@ -700,7 +701,6 @@ function resetSickness(){document.getElementById('ed-sk-id').value='0';document.
 function editLeave(id,name,number,program,year,start,end,bed,rec){document.getElementById('ed-lv-id').value=id;document.getElementById('lv-name').value=name;document.getElementById('lv-num').value=number;document.getElementById('lv-prog').value=program;document.getElementById('lv-year').value=year;document.querySelector('[name="start_date"]').value=start;document.querySelector('[name="end_date"]').value=end;document.querySelector('[name="bed_rest_required"]').value=bed;document.querySelector('[name="recommendations"]').value=rec;document.getElementById('sec-leave').scrollIntoView({behavior:'smooth'});}
 function resetLeave(){document.getElementById('ed-lv-id').value='0';document.querySelectorAll('#sec-leave form')[0].reset();}
 function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id='+id).then(r=>r.text()).then(html=>{const w=window.open('','_blank','width=700,height=600');w.document.write('<html><head><title>Transactions: '+name+'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body class="p-4"><h4>'+name+' - Stock Transactions</h4>'+html+'<hr><button class="btn btn-sm btn-secondary" onclick="window.close()">Close</button>
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>');}).catch(()=>alert('Could not load transactions.'));}
 document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>

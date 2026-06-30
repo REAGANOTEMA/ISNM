@@ -847,15 +847,15 @@ if($report){
 <head>
 <?php include_once __DIR__ . "/../includes/dashboard_head.php"; ?>
 <style>
-.adm-topbar{background:linear-gradient(135deg,#6d28d9,#5b21b6,#4c1d95);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.adm-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
-.adm-topbar-left{display:flex;flex-direction:column}
-.adm-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
-.adm-topbar-subtitle{color:#ddd6fe;font-size:12px;margin-top:-2px}
-.adm-topbar-right{display:flex;align-items:center;gap:12px}
-.adm-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
-.adm-print-btn,.adm-logout-btn{color:#ddd6fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
-.adm-print-btn:hover,.adm-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+
+
+
+
+
+
+
+
 :root{--adm-prim:#6d28d9;--adm-sec:#5b21b6;--adm-accent:#7c3aed;--adm-bg:#f1f5f9;--adm-card:#ffffff;--adm-border:#e2e8f0;--adm-radius:14px;--adm-shadow:0 1px 3px rgba(0,0,0,.06);--adm-shadow-md:0 4px 16px rgba(0,0,0,.08);--adm-shadow-lg:0 8px 30px rgba(0,0,0,.12)}
 .dashboard-content{padding:0!important;background:var(--adm-bg);min-height:100vh}
 .adm-content-wrap{padding:20px 24px 40px}
@@ -946,7 +946,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
     .scard{margin-bottom:12px}
     .sch{padding:12px 14px;font-size:13px}
     .scb{padding:12px 14px}
-    .adm-topbar{padding:0 16px;height:56px}
+    
     .table-responsive{font-size:12px;border-radius:10px}
     .table-sm th,.table-sm td{padding:8px 10px}
     .readiness-grid{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -961,7 +961,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 }
 </style></head><body class="ent-layout">
 <?php include_once __DIR__ . "/../includes/sidebar.php"; ?>
-<div class="adm-topbar"><div class="adm-topbar-content"><div class="adm-topbar-left"><div class="adm-topbar-title">Director Admissions</div><div class="adm-topbar-subtitle">Admissions Management &amp; Applicant Tracking</div></div><div class="adm-topbar-right"><span class="adm-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="adm-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="adm-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+
 <div class="dashboard-content">
 <?php if(!empty($_SESSION["success"])):?><div class="alert alert-success" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["success"]);unset($_SESSION["success"]);?></div><?php endif;?>
 <?php if(!empty($_SESSION["error"])):?><div class="alert alert-danger" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["error"]);unset($_SESSION["error"]);?></div><?php endif;?>
@@ -1999,7 +1999,5 @@ jQuery(function($) {
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

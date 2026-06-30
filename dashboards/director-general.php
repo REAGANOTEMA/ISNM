@@ -595,35 +595,8 @@ body { background: #eef1f5; font-family: 'Inter', -apple-system, sans-serif; col
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(5,150,105,0.02) 0%,transparent 50%); pointer-events:none; z-index:0; }
 .page-content { padding: 0 !important; }
 
-/* ── Top Bar ── */
-.dg-topbar {
-  background: var(--dg-gradient);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-  margin-left: 270px;
-}
-@media (max-width: 768px) { .dg-topbar { margin-left: 0; } }
-.dg-topbar-left { display: flex; align-items: center; gap: 10px; }
-.dg-topbar-left .crown { font-size: 22px; color: var(--dg-gold); }
-.dg-topbar-left h1 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.2px; }
-.dg-topbar-left .subtitle { font-size: 11px; color: rgba(255,255,255,0.65); margin: 0; }
-.dg-topbar-right { display: flex; align-items: center; gap: 12px; }
-.dg-topbar-right .date-badge { font-size: 12px; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
-.dg-topbar-right .logout-link { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 12px; padding: 4px 12px; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.15); }
-.dg-topbar-right .btn-print-top { background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:4px 14px; font-size:12px; cursor:pointer; transition:all 0.2s; }
-.dg-topbar-right .btn-print-top:hover { background:rgba(255,255,255,0.2); }
-
 /* ── Content ── */
-.dg-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
-@media (max-width: 768px) { .dg-content { margin-left: 0; } }
+.dg-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
 
 /* ── KPI Cards ── */
 .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
@@ -821,7 +794,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 @media (max-width: 1200px) { .analytics-strip { grid-template-columns: 1fr 1fr; } .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
-  .dg-topbar { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
+  
   .dg-content { padding: 12px; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .kpi-card { padding: 10px 10px 8px; }
@@ -834,7 +807,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 /* ── Print ── */
 @media print {
   body { background:#fff !important; font-size:10pt; }
-  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, .dg-topbar, .logout-link { display:none !important; }
+  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
   .dg-content { padding:0 !important; margin:0 !important; max-width:100% !important; background:#fff !important; }
   .dashboard-section { display:block !important; }
   .section-card { box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid; page-break-inside:avoid; }
@@ -855,44 +828,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-
-<!-- ═══ ENTERPRISE HEADER ═══ -->
-<header class="ent-header">
-  <div class="ent-header-left">
-    <button class="ent-hamburger" onclick="document.querySelector('.ent-sidebar').classList.toggle('open');document.querySelector('.ent-sidebar-overlay').classList.toggle('active')"><i class="fas fa-bars"></i></button>
-    <div class="ent-logo">
-      <?php if(file_exists(__DIR__ . '/../images/school-logo.png')): ?>
-        <img src="<?= $rootPath ?? '..' ?>/images/school-logo.png" alt="ISNM">
-      <?php else: ?>
-        <i class="fas fa-graduation-cap"></i>
-      <?php endif; ?>
-    </div>
-    <div class="ent-brand">
-      <h1>Iganga School of Nursing &amp; Midwifery</h1>
-      <p><?= $dgRole ?? 'Director General' ?> Dashboard</p>
-    </div>
-  </div>
-  <div class="ent-header-center">
-    <div class="ent-search-wrap">
-      <i class="fas fa-search"></i>
-      <input type="text" class="ent-search" placeholder="Search students, staff, records...">
-    </div>
-  </div>
-  <div class="ent-header-right">
-    <button class="ent-header-btn" title="Notifications" onclick="document.querySelector('.ent-control').classList.toggle('open')">
-      <i class="fas fa-bell"></i>
-      <span class="badge-dot"></span>
-    </button>
-    <button class="ent-header-btn" title="Messages"><i class="fas fa-envelope"></i></button>
-    <button class="ent-header-btn" title="Settings"><i class="fas fa-cog"></i></button>
-    <div class="ent-user-chip">
-      <div class="ent-user-avatar"><?= strtoupper(substr($user_name ?? 'U', 0, 1)) ?></div>
-      <span><?= htmlspecialchars($user_name ?? 'User') ?></span>
-    </div>
-    <a href="../auth-handler.php?action=logout" class="ent-header-btn" title="Logout" style="text-decoration:none;color:rgba(255,255,255,0.7)"><i class="fas fa-sign-out-alt"></i></a>
-  </div>
-</header>
-<div class="ent-sidebar-overlay" onclick="document.querySelector('.ent-sidebar').classList.remove('open');this.classList.remove('active')"></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <!-- ═══ MAIN CONTENT AREA ═══ -->
 <div class="ent-main">
@@ -1927,124 +1863,6 @@ endswitch; ?>
 </div><!-- /ent-content-area -->
 </div><!-- /ent-main -->
 
-<!-- ═══ RIGHT-SIDE CONTROL PANEL ═══ -->
-<aside class="ent-control">
-  <!-- Profile Card -->
-  <div class="ent-profile-card">
-    <?php if(!empty($user['profile_photo']) && file_exists(__DIR__ . '/../' . $user['profile_photo'])): ?>
-      <img src="<?= $rootPath ?? '..' ?>/<?= htmlspecialchars($user['profile_photo']) ?>" alt="<?= htmlspecialchars($user_name) ?>">
-    <?php else: ?>
-      <div class="ent-profile-avatar"><?= strtoupper(substr($user_name ?? 'U', 0, 1)) ?></div>
-    <?php endif; ?>
-    <h4><?= htmlspecialchars($user_name ?? 'Director General') ?></h4>
-    <p><?= htmlspecialchars($user['position'] ?? $dgRole ?? 'Director General') ?></p>
-    <span class="ent-profile-role"><span class="ent-online-dot"></span> Online</span>
-  </div>
-
-  <!-- Live Clock -->
-  <div class="ent-control-section">
-    <div class="ent-clock">
-      <div class="ent-clock-time" id="entClock"><?= date('H:i:s') ?></div>
-      <div class="ent-clock-date"><?= date('l, d M Y') ?></div>
-    </div>
-  </div>
-
-  <!-- Department Stats -->
-  <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-chart-bar"></i> Department Overview</div>
-    <div class="ent-stats-grid">
-      <div class="ent-stat-mini"><h5><?= number_format($totalStaff ?? 0) ?></h5><p>Staff</p></div>
-      <div class="ent-stat-mini"><h5><?= number_format($totalStudents ?? 0) ?></h5><p>Students</p></div>
-      <div class="ent-stat-mini"><h5><?= number_format($todayCollection ?? 0) ?></h5><p>Today (UGX)</p></div>
-      <div class="ent-stat-mini"><h5><?= number_format($totalPending ?? 0) ?></h5><p>Pending</p></div>
-    </div>
-  </div>
-
-  <!-- Pending Tasks -->
-  <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-tasks"></i> Pending Tasks <span class="ent-task-badge" id="cpTaskBadge"></span></div>
-    <div id="cpTaskList">
-    <?php if(!empty($pendingContacts)): ?>
-    <div class="ent-task-item"><span class="ent-task-priority high"></span> <?= $pendingContacts ?> contact messages</div>
-    <?php endif; ?>
-    <?php if(!empty($pendingApplications)): ?>
-    <div class="ent-task-item"><span class="ent-task-priority medium"></span> <?= $pendingApplications ?> applications</div>
-    <?php endif; ?>
-    <?php if(!empty($pendingVolunteers)): ?>
-    <div class="ent-task-item"><span class="ent-task-priority low"></span> <?= $pendingVolunteers ?> volunteer requests</div>
-    <?php endif; ?>
-    <?php if(($totalPending ?? 0) == 0): ?>
-    <div class="ent-empty" style="padding:16px"><i class="fas fa-check-circle" style="font-size:24px;color:var(--ent-green)"></i><p style="margin:4px 0 0;font-size:11px">All caught up!</p></div>
-    <?php endif; ?>
-    </div>
-    <script>
-    (function(){
-        fetch('../includes/ajax_task_handler.php?action=get_my_tasks&limit=5')
-            .then(function(r){return r.json()})
-            .then(function(d){
-                if(!d.success||!d.tasks||d.tasks.length===0)return;
-                var html='';
-                d.tasks.forEach(function(t){
-                    var pClass=t.priority==='urgent'?'high':t.priority==='high'?'high':t.priority==='medium'?'medium':'low';
-                    html+='<div class="ent-task-item" style="cursor:pointer" onclick="window.location.href=\'?page=approvals\'">';
-                    html+='<span class="ent-task-priority '+pClass+'"></span> '+t.title;
-                    if(t.due_date)html+=' <span style="font-size:10px;color:#94a3b8;margin-left:4px">'+t.due_date+'</span>';
-                    html+='</div>';
-                });
-                var el=document.getElementById('cpTaskList');
-                if(el)el.innerHTML=html;
-                var badge=document.getElementById('cpTaskBadge');
-                if(badge&&d.tasks.length>0)badge.textContent=d.tasks.length;
-            })
-            .catch(function(){});
-    })();
-    </script>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-    <div class="ent-quick-grid">
-      <a href="?page=staff" class="ent-quick-btn"><i class="fas fa-users"></i>Staff</a>
-      <a href="?page=student" class="ent-quick-btn"><i class="fas fa-user-graduate"></i>Students</a>
-      <a href="?page=financial" class="ent-quick-btn"><i class="fas fa-coins"></i>Finance</a>
-      <a href="?page=departments" class="ent-quick-btn"><i class="fas fa-building"></i>Depts</a>
-      <a href="?page=approvals" class="ent-quick-btn"><i class="fas fa-check-double"></i>Approvals</a>
-      <a href="?page=news-management" class="ent-quick-btn"><i class="fas fa-newspaper"></i>News</a>
-      <a href="?page=communications" class="ent-quick-btn"><i class="fas fa-envelope"></i>Messages</a>
-      <a href="?page=reports" class="ent-quick-btn"><i class="fas fa-file-alt"></i>Reports</a>
-    </div>
-  </div>
-
-  <!-- Recent Activity -->
-  <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-clock"></i> Recent Activity</div>
-    <?php if(!empty($recentActivities)): ?>
-      <?php foreach(array_slice($recentActivities, 0, 5) as $act): ?>
-      <div class="ent-activity-item">
-        <div class="ent-activity-dot" style="background:<?= $act['type']==='login'?'var(--ent-green)':($act['type']==='logout'?'var(--ent-red)':'var(--ent-blue)') ?>"></div>
-        <div>
-          <div class="ent-activity-text"><?= htmlspecialchars($act['activity_description'] ?? $act['description'] ?? '') ?></div>
-          <div class="ent-activity-time"><?= date('d M H:i', strtotime($act['created_at'] ?? $act['activity_time'] ?? 'now')) ?></div>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <div class="ent-empty" style="padding:12px"><p style="margin:0;font-size:11px">No recent activity</p></div>
-    <?php endif; ?>
-  </div>
-
-  <!-- Account Links -->
-  <div class="ent-control-section">
-    <div class="ent-control-section-title"><i class="fas fa-user-cog"></i> Account</div>
-    <a href="?page=profile" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-user"></i> My Profile</a>
-    <a href="?page=preferences" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-sliders-h"></i> Preferences</a>
-    <a href="?page=security" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-shield-alt"></i> Security</a>
-    <a href="?page=activity-logs" class="ent-sidebar-item" style="color:var(--ent-text);margin:0 0 2px"><i class="fas fa-history"></i> Activity Logs</a>
-    <a href="../auth-handler.php?action=logout" class="ent-sidebar-item" style="color:var(--ent-red);margin:0"><i class="fas fa-sign-out-alt"></i> Logout</a>
-  </div>
-</aside>
-
 <!-- ═══ SEND ANNOUNCEMENT MODAL ═══ -->
 <div class="modal fade modern-modal" id="annModal" tabindex="-1">
   <div class="modal-dialog">
@@ -2473,8 +2291,6 @@ function sendBroadcast(e){
             if (window.innerWidth <= 768) {
                 var sidebar = document.querySelector('.isnm-sidebar');
                 if (sidebar) sidebar.classList.remove('open', 'mobile-show');
-                var overlay = document.querySelector('.ent-sidebar-overlay');
-                if (overlay) overlay.classList.remove('active');
             }
         });
     });

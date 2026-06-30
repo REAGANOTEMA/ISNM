@@ -15,7 +15,7 @@ ErrorHandler::register();
 
 require_once __DIR__ . '/Response.php';
 require_once __DIR__ . '/Validator.php';
-require_once __DIR__ . '/EnterpriseAuth.php';
+require_once __DIR__ . '/enterprise_auth.php';
 
 // Auto-load database config
 require_once __DIR__ . '/../config/database.php';

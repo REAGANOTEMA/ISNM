@@ -30,6 +30,7 @@ $fuelCost = array_sum(array_column($fuel, 'total_cost'));
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
         <h1><i class="fas fa-truck"></i> Fuel & Trip Management</h1>

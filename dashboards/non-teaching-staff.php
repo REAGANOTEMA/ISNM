@@ -78,6 +78,7 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <body>
     <div class="dashboard-container">
         <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
         <!-- Main Content -->
         <div class="main-content">

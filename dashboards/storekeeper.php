@@ -257,7 +257,7 @@ $statsOrders = count($orders);
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.stk-topbar{background:linear-gradient(135deg,#ea580c,#c2410c,#9a3412);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.stk-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.stk-topbar-left{display:flex;flex-direction:column}.stk-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.stk-topbar-subtitle{color:#fed7aa;font-size:12px;margin-top:-2px}.stk-topbar-right{display:flex;align-items:center;gap:12px}.stk-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.stk-print-btn,.stk-logout-btn{color:#fed7aa;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.stk-print-btn:hover,.stk-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .stk-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.stk-content{margin-left:0!important;padding:12px!important}}
 </style>
@@ -265,8 +265,9 @@ $statsOrders = count($orders);
 <body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<div class="stk-topbar"><div class="stk-topbar-content"><div class="stk-topbar-left"><div class="stk-topbar-title">Storekeeper</div><div class="stk-topbar-subtitle">Inventory &amp; Supplies Management</div></div><div class="stk-topbar-right"><span class="stk-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="stk-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="stk-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+
 <div class="stk-content">
     <div class="content-section dashboard-section active content-area" data-section="overview">
         <?php if ($msg): ?>
@@ -724,7 +725,5 @@ $('#orderForm').on('submit', function(e) {
 });
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

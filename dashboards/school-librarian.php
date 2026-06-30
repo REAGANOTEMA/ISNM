@@ -146,14 +146,15 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 .lib-content{margin-left:270px;padding:24px;min-height:100vh}
-.lib-topbar{background:linear-gradient(135deg,#1d4ed8,#1e40af,#1e3a8a);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.lib-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.lib-topbar-left{display:flex;flex-direction:column}.lib-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.lib-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.lib-topbar-right{display:flex;align-items:center;gap:12px}.lib-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.lib-print-btn,.lib-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.lib-print-btn:hover,.lib-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 @media(max-width:768px){.lib-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
     <div class="lib-content">
         <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-        <div class="lib-topbar"><div class="lib-topbar-content"><div class="lib-topbar-left"><div class="lib-topbar-title">School Librarian</div><div class="lib-topbar-subtitle">Library &amp; Resource Management</div></div><div class="lib-topbar-right"><span class="lib-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lib-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="lib-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+        
                 <!-- Library Overview -->
                 <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
                     <h2>Library Overview</h2>
@@ -808,8 +809,6 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

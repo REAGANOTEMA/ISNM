@@ -29,13 +29,13 @@ ini_set('log_errors', 1);
                             // Admin access granted
                         }else{
                             include('../assets/logout.php');
-                            header("Location: ../organogram.php");
+                            header("Location: ../staff-login.php");
                             exit();
                         }
                     } else {
                         // User not found - logout and redirect
                         include('../assets/logout.php');
-                        header("Location: ../organogram.php");
+                        header("Location: ../staff-login.php");
                         exit();
                     }
                 } else {

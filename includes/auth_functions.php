@@ -115,14 +115,14 @@ function checkAuth($required_role = null) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
         $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-        header('Location: organogram.php' . ($redirect ? "?redirect=$redirect" : ''));
+        header('Location: staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
         exit();
     }
     
     // Check session security
     if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
         session_destroy();
-    header('Location: organogram.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    header('Location: staff-login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
         exit();
     }
     
@@ -175,14 +175,14 @@ function protectDashboard($required_role = null) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['type'])) {
         $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
-        header('Location: ../organogram.php' . ($redirect ? "?redirect=$redirect" : ''));
+        header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
         exit();
     }
     
     // Check session security
     if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
         session_destroy();
-        header('Location: ../organogram.php');
+        header('Location: ../staff-login.php');
         exit();
     }
     
@@ -359,7 +359,7 @@ function logout() {
     header("Pragma: no-cache");
     header("Expires: 0");
     
-    header('Location: organogram.php');
+    header('Location: staff-login.php');
     exit();
 }
 

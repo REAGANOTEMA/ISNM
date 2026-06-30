@@ -121,30 +121,17 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .page-content { padding: 0 !important; }
 
 /* ── Top Bar ── */
-.ict-topbar {
-  background: var(--ict-gradient);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-  margin-left: 270px;
-}
-@media (max-width: 768px) { .ict-topbar { margin-left: 0; } }
-.ict-topbar-left { display: flex; align-items: center; gap: 10px; }
-.ict-topbar-left .ict-icon { font-size: 22px; color: var(--ict-blue); }
-.ict-topbar-left h1 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.2px; }
-.ict-topbar-left .subtitle { font-size: 11px; color: rgba(255,255,255,0.65); margin: 0; }
-.ict-topbar-right { display: flex; align-items: center; gap: 12px; }
-.ict-topbar-right .date-badge { font-size: 12px; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
-.ict-topbar-right .logout-link { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 12px; padding: 4px 12px; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.15); }
-.ict-topbar-right .btn-print-top { background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:4px 14px; font-size:12px; cursor:pointer; transition:all 0.2s; }
-.ict-topbar-right .btn-print-top:hover { background:rgba(255,255,255,0.2); }
+
+@media (max-width: 768px) {  }
+
+
+
+
+
+
+
+
+
 
 /* ── Content ── */
 .ict-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0 0 0 270px; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
@@ -233,7 +220,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 992px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
-  .ict-topbar { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
+  
   .ict-content { padding: 12px; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .kpi-card { padding: 10px 10px 8px; }
@@ -245,7 +232,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 /* ── Print ── */
 @media print {
   body { background:#fff !important; font-size:10pt; }
-  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, .ict-topbar { display:none !important; }
+  .sidebar, .dashboard-sidebar, .no-print, .btn-print-top, 
   .ict-content { padding:0 !important; margin:0 !important; max-width:100% !important; background:#fff !important; }
   .dashboard-section { display:block !important; }
   .section-card { box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid; page-break-inside:avoid; }
@@ -262,54 +249,11 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <!-- ═══ TOP BAR ═══ -->
-<div class="ict-topbar an-fade">
-  <div class="ict-topbar-left">
-    <i class="fas <?= $ictIcon ?> ict-icon"></i>
-    <div>
-      <h1><?= $ictRole ?> – <?= htmlspecialchars($user_name) ?></h1>
-      <p class="subtitle"><?= $ictSubtitle ?></p>
-    </div>
-  </div>
-  <div class="ict-topbar-right">
-    <span class="date-badge"><i class="far fa-calendar-alt me-1"></i><?= date('D, d M Y') ?></span>
-    <button class="btn-print-top" onclick="window.print()" title="Print Dashboard"><i class="fas fa-print me-1"></i>Print</button>
-    <a href="../auth-handler.php?action=logout" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
-  </div>
-</div>
 
-<!-- ═══ CONTENT ═══ -->
-<div class="ict-content">
-
-<?php if(!empty($_SESSION['success'])): ?>
-<div class="alert alert-success alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#ecfdf5;color:#065f46;">
-  <i class="fas fa-check-circle me-1"></i> <?= htmlspecialchars($_SESSION['success']) ?>
-  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
-</div>
-<?php unset($_SESSION['success']); endif; ?>
-<?php if(!empty($_SESSION['error'])): ?>
-<div class="alert alert-danger alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;background:#fef2f2;color:#991b1b;">
-  <i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($_SESSION['error']) ?>
-  <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size:12px"></button>
-</div>
-<?php unset($_SESSION['error']); endif; ?>
-
-<!-- ======== DASHBOARD (Control Panel) ======== -->
-<?php if ($tab === 'dashboard'): ?>
-<div class="kpi-grid">
-  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-users"></i></div><div class="kpi-value"><?= $total_users ?></div><div class="kpi-label">Total Users</div><div class="kpi-trend text-primary"><i class="fas fa-arrow-up"></i>System wide</div></div>
-  <div class="kpi-card kpi-gr"><div class="kpi-icon"><i class="fas fa-user-tie"></i></div><div class="kpi-value"><?= $total_staff ?></div><div class="kpi-label">Staff</div><div class="kpi-trend text-success"><i class="fas fa-user-check"></i>Active</div></div>
-  <div class="kpi-card kpi-pr"><div class="kpi-icon"><i class="fas fa-user-graduate"></i></div><div class="kpi-value"><?= $total_students ?></div><div class="kpi-label">Students</div><div class="kpi-trend text-primary"><i class="fas fa-graduation-cap"></i>Active</div></div>
-  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-server"></i></div><div class="kpi-value"><?= $active_servers ?></div><div class="kpi-label">Servers Online</div><div class="kpi-trend text-info"><i class="fas fa-check-circle"></i>Healthy</div></div>
-  <div class="kpi-card kpi-cy"><div class="kpi-icon"><i class="fas fa-network-wired"></i></div><div class="kpi-value"><?= $network_active ?></div><div class="kpi-label">Network Devices</div><div class="kpi-trend text-info"><i class="fas fa-exchange-alt"></i>Online</div></div>
-  <div class="kpi-card kpi-or"><div class="kpi-icon"><i class="fas fa-wifi"></i></div><div class="kpi-value"><?= $wifi_active ?></div><div class="kpi-label">WiFi APs</div><div class="kpi-trend text-warning"><i class="fas fa-signal"></i>Online</div></div>
-  <div class="kpi-card kpi-bl"><div class="kpi-icon"><i class="fas fa-boxes"></i></div><div class="kpi-value"><?= $total_assets ?></div><div class="kpi-label">ICT Assets</div><div class="kpi-trend text-primary"><i class="fas fa-tag"></i>Registered</div></div>
-  <div class="kpi-card kpi-rd"><div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div><div class="kpi-value"><?= $open_tickets ?></div><div class="kpi-label">Open Tickets</div><div class="kpi-trend text-danger"><i class="fas fa-exclamation-triangle"></i>Pending</div></div>
-  <div class="kpi-card kpi-or"><div class="kpi-icon"><i class="fas fa-database"></i></div><div class="kpi-value"><?= $today_backups ?></div><div class="kpi-label">Backups Today</div><div class="kpi-trend text-warning"><i class="fas fa-cloud-upload-alt"></i>Protected</div></div>
-  <div class="kpi-card kpi-rd"><div class="kpi-icon"><i class="fas fa-shield-alt"></i></div><div class="kpi-value"><?= $active_alerts ?></div><div class="kpi-label">Active Alerts</div><div class="kpi-trend text-danger"><i class="fas fa-bell"></i><?= $active_alerts > 0 ? 'Attention needed' : 'All clear' ?></div></div>
-</div>
-
+<?php if ($tab === 'overview'): ?>
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="section-card">
@@ -1530,7 +1474,5 @@ function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </div>
 </div>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

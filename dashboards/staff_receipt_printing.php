@@ -22,7 +22,7 @@ if (stripos($staff_role, 'Director') !== false ||
 
 if (!$can_generate_receipts) {
     $_SESSION['error'] = "You don't have permission to generate receipts.";
-    header("Location: ../organogram.php");
+    header("Location: ../staff-login.php");
     exit();
 }
 
@@ -107,6 +107,7 @@ $receipts = ($receipts_result) ? $receipts_result->fetch_all(MYSQLI_ASSOC) : [];
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
     <div class="receipt-container" style="margin-left:270px">
         <div class="receipt-header">
             <h2><i class="fas fa-receipt me-2"></i>Receipt Printing System</h2>

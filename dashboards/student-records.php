@@ -23,6 +23,7 @@ $isSuperAdmin = $auth_service->hasFullInstitutionAccess($user_role);
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-wrapper" style="margin-left:270px">
     <div class="top-bar no-print">
         <div>

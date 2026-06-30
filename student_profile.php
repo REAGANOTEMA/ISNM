@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/financial_functions.php';
 // Start session and check authentication
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header("Location: organogram.php");
+    header("Location: student-login.php");
     exit();
 }
 

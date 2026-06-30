@@ -25,6 +25,7 @@ if ($conn) {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <main class="main" style="margin-left:270px;padding:32px;">
 <div class="container-fluid">
 <div class="d-flex justify-content-between align-items-center mb-4">

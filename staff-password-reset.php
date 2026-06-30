@@ -109,7 +109,7 @@ function handlePasswordReset() {
     
     if ($result['success']) {
         $_SESSION['success'] = 'Password has been reset successfully. You can now login with your new password.';
-        header('Location: organogram.php');
+        header('Location: staff-login.php');
         exit();
     } else {
         $_SESSION['error'] = $result['message'];

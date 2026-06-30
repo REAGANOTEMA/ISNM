@@ -81,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'expor
     header('Content-Type: text/html; charset=utf-8');
     $from = $_POST['from'] ?? date('Y-m-01'); $to = $_POST['to'] ?? date('Y-m-d');
     $type = $_POST['report_type'] ?? 'monthly';
-    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#1a237e;color:#fff}h2{color:#1a237e}.text-end{text-align:right}</style></head><body>';
+    echo '<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#1a237e;color:#fff}h2{color:#1a237e}.text-end{text-align:right}</style>
+</head><body>';
     echo '<h2>ISNM Financial Report</h2><p>Period: '.htmlspecialchars($from).' to '.htmlspecialchars($to).' | Type: '.htmlspecialchars(ucfirst($type)).'</p>';
     echo '<p>Generated: '.date('d M Y H:i').'</p><table><thead><tr><th>#</th><th>Description</th><th>Amount</th></tr></thead><tbody>';
     $q = $type === 'monthly' ? "SELECT DATE_FORMAT(payment_date,'%Y-%m') AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label" : "SELECT DATE(payment_date) AS label, COUNT(*) AS cnt, COALESCE(SUM(amount_paid),0) AS tot FROM fee_payments WHERE DATE(payment_date) BETWEEN '$from' AND '$to' AND status='verified' GROUP BY label ORDER BY label";
@@ -119,6 +120,7 @@ $pageTitle = 'Bursar - Financial Reports';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="ma" style="margin-left:270px;padding:24px">
 
     <div class="ph">

@@ -179,6 +179,7 @@ if ($conn) $conn->close();
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="container" style="margin-left:270px">
     <div class="header d-flex justify-content-between align-items-center">
         <div>

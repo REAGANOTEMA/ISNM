@@ -137,8 +137,8 @@ if (!function_exists('bootstrapStaffDashboard')) {
         if (!empty($_SESSION['logged_in_via_organogram']) && !empty($_SESSION['logged_in_via_position'])) {
             $requestedPos = $_SESSION['logged_in_via_position'];
             if (!$auth_service->positionMatchesRole($requestedPos, $role) && !$auth_service->hasFullInstitutionAccess($role)) {
-                // Mismatch: force user back to organogram to pick correct position
-                header('Location: ../organogram.php');
+                // Mismatch: force user back to login
+                header('Location: ../staff-login.php');
                 exit();
             }
             // Clear the one-time flags so normal navigation does not require organogram each page

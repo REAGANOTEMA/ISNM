@@ -112,6 +112,7 @@ $pageTitle = 'Department Requests';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
 <div class="top-bar">
 <div><strong><i class="fas fa-exchange-alt me-2 text-primary"></i>Department Requests</strong><span class="text-muted small ms-2">Inter-department requisitions</span></div>

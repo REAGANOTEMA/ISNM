@@ -727,15 +727,15 @@ $sectionTitles = [
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root { --reg-primary: #1a237e; --reg-primary-light: #3949ab; --reg-accent: #ffd700; }
-.reg-topbar{background:linear-gradient(135deg,#1a237e,#283593,#3f51b5);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.reg-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
-.reg-topbar-left{display:flex;flex-direction:column}
-.reg-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
-.reg-topbar-subtitle{color:#c5cae9;font-size:12px;margin-top:-2px}
-.reg-topbar-right{display:flex;align-items:center;gap:12px}
-.reg-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
-.reg-print-btn,.reg-logout-btn{color:#c5cae9;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
-.reg-print-btn:hover,.reg-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+
+
+
+
+
+
+
+
 .reg-content{margin-left:270px;padding:20px 30px;min-height:100vh;background:#f4f5f9}
 .main { margin-left: 0 !important; min-height: auto !important; flex: none !important; }
 .content-section { background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 0 !important; }
@@ -771,8 +771,9 @@ $sectionTitles = [
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<div class="reg-topbar"><div class="reg-topbar-content"><div class="reg-topbar-left"><div class="reg-topbar-title">Academic Registrar</div><div class="reg-topbar-subtitle">Student Records, Examinations &amp; Graduation</div></div><div class="reg-topbar-right"><span class="reg-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="reg-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="reg-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+
 
 <div class="reg-content">
   <?php if (!empty($_SESSION['success'])): ?>
@@ -1841,7 +1842,5 @@ document.addEventListener('click', function(e) {
 </script>
 
 </div>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

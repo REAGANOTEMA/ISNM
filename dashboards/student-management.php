@@ -12,7 +12,7 @@ $isSuperAdmin = $auth_service->hasFullInstitutionAccess($role);
 
 $allowed = ['School Secretary','Director ICT','Academic Registrar','Registrar','Director General','CEO','School Principal','Principal','HOD','Lecturer'];
 if (!in_array($role, $allowed) && !$isSuperAdmin) {
-    header('Location: ../organogram.php?error=unauthorized'); exit;
+    header('Location: ../student-login.php?error=unauthorized'); exit;
 }
 
 define('PERM_VIEW', 'view');
@@ -218,6 +218,7 @@ if ($conn && $canEditAcademic) {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="main" style="margin-left:270px;padding:20px;background:#f4f5f9;min-height:100vh;">
   <div class="page-header d-flex justify-content-between align-items-center">

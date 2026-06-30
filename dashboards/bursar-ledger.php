@@ -179,6 +179,7 @@ $pageTitle = 'Bursar - Ledger & Accounts';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="ma" style="margin-left:270px;padding:24px">
 
     <div class="ph">

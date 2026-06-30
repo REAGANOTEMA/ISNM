@@ -68,12 +68,13 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
-<style>.mat-topbar{background:linear-gradient(135deg,#059669,#047857,#065f46);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.mat-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.mat-topbar-left{display:flex;flex-direction:column}.mat-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.mat-topbar-subtitle{color:#a7f3d0;font-size:12px;margin-top:-2px}.mat-topbar-right{display:flex;align-items:center;gap:12px}.mat-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.mat-print-btn,.mat-logout-btn{color:#a7f3d0;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.mat-print-btn:hover,.mat-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}.mat-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.mat-content{margin-left:0!important;padding:12px!important}}</style>
+<style>.mat-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.mat-content{margin-left:0!important;padding:12px!important}}</style>
 </head>
 <body class="ent-layout">
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-    <div class="mat-topbar"><div class="mat-topbar-content"><div class="mat-topbar-left"><div class="mat-topbar-title">Matron</div><div class="mat-topbar-subtitle">Student Welfare &amp; Hostel Management</div></div><div class="mat-topbar-right"><span class="mat-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="mat-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="mat-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+    
     <div class="mat-content">
             <!-- Dashboard Content -->
             <div class="dashboard-content content-section">
@@ -672,8 +673,6 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         });
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

@@ -53,11 +53,6 @@ if ($redirect_url) {
     }
 }
 
-if (!$requested_position && !$redirect_url) {
-    header('Location: organogram.php');
-    exit();
-}
-
 $_SESSION['staff_login_allowed']  = true;
 if ($requested_position) {
     $_SESSION['staff_login_position'] = $requested_position;

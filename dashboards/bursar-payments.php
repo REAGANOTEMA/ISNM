@@ -188,6 +188,7 @@ $pageTitle = 'Bursar - Payment Processing';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="ma content-section" style="margin-left:270px;padding:24px">
 
     <div class="ph">

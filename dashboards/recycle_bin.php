@@ -119,6 +119,7 @@ $pageTitle = 'Recycle Bin';
 <body>
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="page-content">
   <div class="top-bar">

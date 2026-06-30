@@ -24,7 +24,7 @@ if (stripos($staff_role, 'Academic Registrar') !== false ||
 
 if (!$can_generate_transcripts) {
     $_SESSION['error'] = "You don't have permission to generate transcripts.";
-    header("Location: ../organogram.php");
+    header("Location: ../staff-login.php");
     exit();
 }
 
@@ -338,6 +338,7 @@ function getSemesters() {
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <?php require_once __DIR__ . '/../includes/dashboard_back_button.php'; renderDashboardBackButton('Academic Registrar', '../dashboards/academic-registrar.php'); ?>
     <div class="transcript-container" style="margin-left:270px;padding:20px">
         <div class="page-title-card d-flex flex-wrap align-items-center justify-content-between gap-3">

@@ -92,14 +92,15 @@ if ($conn) {
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.mid-topbar{background:linear-gradient(135deg,#be185d,#9d174d,#831843);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.mid-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.mid-topbar-left{display:flex;flex-direction:column}.mid-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.mid-topbar-subtitle{color:#fbcfe8;font-size:12px;margin-top:-2px}.mid-topbar-right{display:flex;align-items:center;gap:12px}.mid-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.mid-print-btn,.mid-logout-btn{color:#fbcfe8;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.mid-print-btn:hover,.mid-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .mid-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.mid-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="mid-topbar"><div class="mid-topbar-content"><div class="mid-topbar-left"><div class="mid-topbar-title">Head of Midwifery</div><div class="mid-topbar-subtitle">Midwifery Department &amp; Maternal Health</div></div><div class="mid-topbar-right"><span class="mid-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="mid-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="mid-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="mid-content">
 
 <?php switch ($section):
@@ -323,7 +324,5 @@ endswitch; ?>
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

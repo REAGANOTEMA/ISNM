@@ -626,6 +626,7 @@ $pageTitle = 'Bursar Dashboard';
 <body class="ent-layout">
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="ma content-section dashboard-section active" data-section="overview" style="margin-left:270px;padding:24px">
 
@@ -2798,7 +2799,5 @@ function confirmAction(action, id){
     });
 })();
 </script>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

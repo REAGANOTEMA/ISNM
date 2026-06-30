@@ -222,6 +222,7 @@ if ($staff_conn) {
 </head>
 <body class="bursar-payroll">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="ma" style="margin-left:270px;padding:24px">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>

@@ -154,14 +154,15 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.srl-topbar{background:linear-gradient(135deg,#b45309,#92400e,#78350f);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.srl-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.srl-topbar-left{display:flex;flex-direction:column}.srl-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.srl-topbar-subtitle{color:#fde68a;font-size:12px;margin-top:-2px}.srl-topbar-right{display:flex;align-items:center;gap:12px}.srl-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.srl-print-btn,.srl-logout-btn{color:#fde68a;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.srl-print-btn:hover,.srl-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .srl-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.srl-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="srl-topbar"><div class="srl-topbar-content"><div class="srl-topbar-left"><div class="srl-topbar-title">Senior Lecturers</div><div class="srl-topbar-subtitle">Academic Staff &amp; Curriculum Delivery</div></div><div class="srl-topbar-right"><span class="srl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="srl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="srl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="srl-content">
                 <!-- Teaching Overview -->
                 <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
@@ -854,8 +855,6 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

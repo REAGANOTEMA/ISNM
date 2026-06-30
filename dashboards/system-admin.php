@@ -46,6 +46,7 @@ if ($r6) $cacheCount = (int)$r6->fetch_assoc()['c'];
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
         <h1><i class="fas fa-cogs"></i> System Administration</h1>

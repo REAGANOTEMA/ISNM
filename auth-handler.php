@@ -208,7 +208,7 @@ if ($action === 'logout') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: organogram.php');
+    header('Location: staff-login.php');
     exit();
 }
 
@@ -257,7 +257,7 @@ switch ($action) {
 
         if ($email === '' || $password === '') {
             $_SESSION['error'] = 'Email and password are required.';
-            header('Location: organogram.php');
+            header('Location: staff-login.php');
             exit();
         }
 
@@ -510,7 +510,7 @@ function handleCreateStudent() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
-        header('Location: organogram.php'); exit();
+        header('Location: staff-login.php'); exit();
     }
     $data = [
         'index_number' => $_POST['index_number'] ?? '',
@@ -527,7 +527,7 @@ function handleCreateStudent() {
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
-    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'organogram.php';
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
     header('Location: ' . $safeRef);
     exit();
 }
@@ -536,7 +536,7 @@ function handleCreateStaff() {
     global $auth_service;
     if (!$auth_service->isAuthenticated()) {
         $_SESSION['error'] = 'Authentication required.';
-        header('Location: organogram.php'); exit();
+        header('Location: staff-login.php'); exit();
     }
     $data = [
         'full_name'  => $_POST['full_name']  ?? '',
@@ -551,7 +551,7 @@ function handleCreateStaff() {
     $_SESSION[$res['success'] ? 'success' : 'error'] = $res['message'];
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $parsedRef = parse_url($referer);
-    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'organogram.php';
+    $safeRef = ($referer && (!$parsedRef || !isset($parsedRef['host']) || $parsedRef['host'] === ($_SERVER['HTTP_HOST'] ?? '')) && strpos($referer, '://') === false) ? $referer : 'staff-login.php';
     header('Location: ' . $safeRef);
     exit();
 }

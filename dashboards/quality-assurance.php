@@ -17,9 +17,11 @@ if ($conn) {
 $pageTitle = 'Quality Assurance';
 ?><!DOCTYPE html>
 <html lang="en">
-<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?></head>
+<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+</head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main" style="margin-left:270px;padding:32px">
 <div class="page-title-card"><h2><i class="fas fa-check-circle me-2"></i>Quality Assurance</h2><p>Monitor quality standards, accreditation, compliance, and performance indicators</p></div>
 <div class="card mb-4"><div class="card-header">Quality Assessments</div><div class="card-body">

@@ -138,6 +138,7 @@ $pageTitle = 'Lab Booking Management';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
 <div class="top-bar"><div><strong><i class="fas fa-calendar-alt me-2 text-primary"></i>Lab Booking Management</strong><div class="text-muted small">Iganga School of Nursing &amp; Midwifery</div></div><div class="d-flex align-items-center gap-3"><span class="text-muted small d-none d-md-block"><?=date('D, d M Y')?></span><button class="btn btn-sm btn-outline-success no-print" onclick="window.print()"><i class="fas fa-print me-1"></i></button><a href="../logout.php" class="btn btn-sm btn-outline-danger no-print"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></div></div>
 <div class="content-area">

@@ -90,12 +90,13 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
-<style>.lec-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.lec-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.lec-topbar-left{display:flex;flex-direction:column}.lec-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.lec-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.lec-topbar-right{display:flex;align-items:center;gap:12px}.lec-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.lec-print-btn,.lec-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.lec-print-btn:hover,.lec-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}.lec-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.lec-content{margin-left:0!important;padding:12px!important}}</style>
+<style>.lec-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.lec-content{margin-left:0!important;padding:12px!important}}</style>
 </head>
 <body class="ent-layout">
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
     
-    <div class="lec-topbar"><div class="lec-topbar-content"><div class="lec-topbar-left"><div class="lec-topbar-title">Lecturers</div><div class="lec-topbar-subtitle">Teaching &amp; Academic Delivery</div></div><div class="lec-topbar-right"><span class="lec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="lec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="lec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+    
     <div class="lec-content">
       <div class="content-area">
                 <?php include_once __DIR__ . '/../views/student_search_component.php'; ?>
@@ -971,8 +972,6 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
 

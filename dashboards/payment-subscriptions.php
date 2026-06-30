@@ -44,6 +44,7 @@ if ($action === 'run_auto' && in_array(strtolower($userRole), ['director general
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="main-content" style="margin-left:270px;padding:20px;background:#f0f2f5;min-height:100vh;">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center page-header">

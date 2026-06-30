@@ -116,14 +116,15 @@ $section = $_GET['section'] ?? 'dashboard';
 .id-card-preview .id-footer { background:#f9fafb; border-top:1px solid #d1d5db; padding:8px; text-align:center; font-size:9px; color:#6b7280; }
 .qr-svg { width:60px; height:60px; }
 @media print { .page-content,.content-section { margin:0!important; padding:0!important; } .top-bar,.nav-pills-ict,.sidebar { display:none!important; } }
-.cpt-topbar{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.cpt-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.cpt-topbar-left{display:flex;flex-direction:column}.cpt-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.cpt-topbar-subtitle{color:#bfdbfe;font-size:12px;margin-top:-2px}.cpt-topbar-right{display:flex;align-items:center;gap:12px}.cpt-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.cpt-print-btn,.cpt-logout-btn{color:#bfdbfe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.cpt-print-btn:hover,.cpt-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .cpt-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.cpt-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="cpt-topbar"><div class="cpt-topbar-content"><div class="cpt-topbar-left"><div class="cpt-topbar-title">Computer Laboratory</div><div class="cpt-topbar-subtitle">ICT Lab &amp; Digital Resources</div></div><div class="cpt-topbar-right"><span class="cpt-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="cpt-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="cpt-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="cpt-content">
     <div class="content-section active content-area">
         <?php if ($msg = $_SESSION['success'] ?? null): ?><div class="alert alert-success alert-dismissible fade show py-2"><?= htmlspecialchars($msg) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; unset($_SESSION['success']); ?>
@@ -1319,7 +1320,5 @@ function downloadPDF() {
 }
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

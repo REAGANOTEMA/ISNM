@@ -382,7 +382,7 @@ unset($_SESSION['sec_success'], $_SESSION['sec_error']);?>
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
 .scard .scb{padding:20px}
-.sec-topbar{background:linear-gradient(135deg,#4338ca,#3730a3,#312e81);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.sec-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.sec-topbar-left{display:flex;flex-direction:column}.sec-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.sec-topbar-subtitle{color:#c7d2fe;font-size:12px;margin-top:-2px}.sec-topbar-right{display:flex;align-items:center;gap:12px}.sec-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.sec-print-btn,.sec-logout-btn{color:#c7d2fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.sec-print-btn:hover,.sec-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .act-item{padding:10px 14px;border-left:3px solid #1a237e;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:8px;transition:all .15s}
 .act-item:hover{background:#eef2ff}
 .act-item .time{font-size:11px;color:#94a3b8}
@@ -410,7 +410,8 @@ unset($_SESSION['sec_success'], $_SESSION['sec_error']);?>
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="sec-topbar"><div class="sec-topbar-content"><div class="sec-topbar-left"><div class="sec-topbar-title">School Secretary</div><div class="sec-topbar-subtitle">Administrative &amp; Correspondence Management</div></div><div class="sec-topbar-right"><span class="sec-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="sec-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="sec-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="sec-content dashboard-section active" data-section="secretary">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?><?php if ($view === 'home'): ?>
@@ -1509,6 +1510,4 @@ document.addEventListener('DOMContentLoaded', secLoadReports);
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
 </script>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>

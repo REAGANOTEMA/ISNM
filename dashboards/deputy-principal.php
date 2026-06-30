@@ -486,15 +486,15 @@ unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.dep-topbar{background:linear-gradient(135deg,#3730a3,#4338ca,#4f46e5);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.dep-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
-.dep-topbar-left{display:flex;flex-direction:column}
-.dep-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
-.dep-topbar-subtitle{color:#c7d2fe;font-size:12px;margin-top:-2px}
-.dep-topbar-right{display:flex;align-items:center;gap:12px}
-.dep-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
-.dep-print-btn,.dep-logout-btn{color:#c7d2fe;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
-.dep-print-btn:hover,.dep-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+
+
+
+
+
+
+
+
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
@@ -523,7 +523,8 @@ unset($_SESSION['dep_success'], $_SESSION['dep_error']);?>
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="dep-topbar"><div class="dep-topbar-content"><div class="dep-topbar-left"><div class="dep-topbar-title">Deputy Principal</div><div class="dep-topbar-subtitle">Academic &amp; Student Affairs Monitoring</div></div><div class="dep-topbar-right"><span class="dep-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="dep-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="dep-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="dep-content dashboard-section active" data-section="deputy">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
@@ -1330,6 +1331,4 @@ document.addEventListener('DOMContentLoaded', depLoadImprovement);
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
 </script>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>

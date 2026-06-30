@@ -21,6 +21,6 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 // Redirect to appropriate login page
-header('Location: organogram.php');
+header('Location: staff-login.php');
 exit();
 ?>

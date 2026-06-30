@@ -41,14 +41,15 @@ if ($studentsDb) {
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.gld-topbar{background:linear-gradient(135deg,#b45309,#92400e,#78350f);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.gld-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.gld-topbar-left{display:flex;flex-direction:column}.gld-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.gld-topbar-subtitle{color:#fde68a;font-size:12px;margin-top:-2px}.gld-topbar-right{display:flex;align-items:center;gap:12px}.gld-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.gld-print-btn,.gld-logout-btn{color:#fde68a;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.gld-print-btn:hover,.gld-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .gld-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.gld-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="gld-topbar"><div class="gld-topbar-content"><div class="gld-topbar-left"><div class="gld-topbar-title">Guild President</div><div class="gld-topbar-subtitle">Student Governance &amp; Representation</div></div><div class="gld-topbar-right"><span class="gld-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="gld-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="gld-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="gld-content">
 <?php switch ($section):
     case 'student-body': ?>
@@ -131,7 +132,5 @@ if ($studentsDb) {
 endswitch; ?>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

@@ -177,6 +177,7 @@ $staff_id_disp  = htmlspecialchars($staff['staff_id'] ?? '');
 <?php endif; ?>
 
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <main class="profile-page">
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">

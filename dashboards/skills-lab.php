@@ -542,14 +542,15 @@ if ($students) {
 .alert-low-stock { border-left: 4px solid var(--sl-warning); }
 .alert-overdue { border-left: 4px solid var(--sl-danger); }
 .alert-maintenance { border-left: 4px solid var(--sl-info); }
-.skl-topbar{background:linear-gradient(135deg,#0d9488,#0f766e,#115e59);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.skl-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.skl-topbar-left{display:flex;flex-direction:column}.skl-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.skl-topbar-subtitle{color:#ccfbf1;font-size:12px;margin-top:-2px}.skl-topbar-right{display:flex;align-items:center;gap:12px}.skl-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.skl-print-btn,.skl-logout-btn{color:#ccfbf1;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.skl-print-btn:hover,.skl-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .skl-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.skl-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="skl-topbar"><div class="skl-topbar-content"><div class="skl-topbar-left"><div class="skl-topbar-title">Skills Lab</div><div class="skl-topbar-subtitle">Clinical Skills &amp; Simulation Laboratory</div></div><div class="skl-topbar-right"><span class="skl-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="skl-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="skl-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="skl-content">
 
     <div id="overview" class="content-section dashboard-section active container-fluid py-4 px-4" data-section="overview">
@@ -1254,7 +1255,5 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (view==='incidents') loadInc();
 });
 </script>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

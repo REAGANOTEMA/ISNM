@@ -29,6 +29,7 @@ $pageTitle = 'Partnerships & Linkages';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
     <div class="content-header">
         <h1><i class="fas fa-handshake"></i> Partnerships & Linkages</h1>

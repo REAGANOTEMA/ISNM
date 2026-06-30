@@ -18,7 +18,7 @@ ini_set('log_errors', 1);
 
         }else{
             include('../../logout.php');
-            header("Location: ../../organogram.php");
+            header("Location: ../../staff-login.php");
             exit();
         }
 

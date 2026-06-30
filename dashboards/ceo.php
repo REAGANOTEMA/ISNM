@@ -34,9 +34,11 @@ if ($conn) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?></head>
+<head><?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
+</head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <div class="page-content">
 <?php switch ($section):
     case 'overview': ?>

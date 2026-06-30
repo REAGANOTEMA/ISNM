@@ -489,15 +489,15 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.prin-topbar{background:linear-gradient(135deg,#1a237e,#283593,#1e3a5f);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.prin-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
-.prin-topbar-left{display:flex;flex-direction:column}
-.prin-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
-.prin-topbar-subtitle{color:#c5cae9;font-size:12px;margin-top:-2px}
-.prin-topbar-right{display:flex;align-items:center;gap:12px}
-.prin-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
-.prin-print-btn,.prin-logout-btn{color:#c5cae9;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
-.prin-print-btn:hover,.prin-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+
+
+
+
+
+
+
+
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
 .scard .sch{background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e5e7eb;border-radius:12px 12px 0 0;font-weight:600;color:#1a237e;font-size:14px}
@@ -533,7 +533,8 @@ unset($_SESSION['p_success'], $_SESSION['p_error']);?>
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="prin-topbar"><div class="prin-topbar-content"><div class="prin-topbar-left"><div class="prin-topbar-title">School Principal</div><div class="prin-topbar-subtitle">Academic Leadership &amp; Institutional Oversight</div></div><div class="prin-topbar-right"><span class="prin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="prin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="prin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="prin-content dashboard-section active" data-section="principal">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
@@ -1515,6 +1516,4 @@ try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER 
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
 </script>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>

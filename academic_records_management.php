@@ -11,7 +11,7 @@ $studentsDb = getStudentsConnection();
 // Check if user is logged in and has appropriate access level
 if (!$auth_service->isAuthenticated() || !$auth_service->canSearchStudentProfiles($_SESSION['role'])) {
     $_SESSION['error'] = "Access denied. Insufficient permissions.";
-    header("Location: organogram.php");
+    header("Location: staff-login.php");
     exit();
 }
 

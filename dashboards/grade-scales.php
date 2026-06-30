@@ -57,6 +57,7 @@ $pageTitle = 'Grade Scales & Grading System';
 </head>
 <body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 <section class="content-section dashboard-section active" data-section="overview">
 <div class="page-content">
     <div class="content-header no-print">

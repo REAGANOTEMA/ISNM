@@ -420,15 +420,15 @@ unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 <html lang="en"><head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.fin-topbar{background:linear-gradient(135deg,#0d9488,#0f766e,#115e59);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.fin-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}
-.fin-topbar-left{display:flex;flex-direction:column}
-.fin-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}
-.fin-topbar-subtitle{color:#ccfbf1;font-size:12px;margin-top:-2px}
-.fin-topbar-right{display:flex;align-items:center;gap:12px}
-.fin-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}
-.fin-print-btn,.fin-logout-btn{color:#ccfbf1;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}
-.fin-print-btn:hover,.fin-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+
+
+
+
+
+
+
+
 .fin-content{margin-left:270px;padding:24px;min-height:100vh}
 .scard{background:#fff;border-radius:12px;border:1px solid #e5e7eb;transition:all .2s;height:100%}
 .scard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
@@ -459,7 +459,8 @@ unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="fin-topbar"><div class="fin-topbar-content"><div class="fin-topbar-left"><div class="fin-topbar-title">Director Finance</div><div class="fin-topbar-subtitle">Financial Affairs &amp; Strategic Oversight</div></div><div class="fin-topbar-right"><span class="fin-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="fin-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="fin-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="fin-content dashboard-section active" data-section="finance">
 <?php if ($sv): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($sv) ?></div><?php endif; ?>
 <?php if ($ev): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($ev) ?></div><?php endif; ?>
@@ -2062,6 +2063,4 @@ function currency(n){ n=parseFloat(n)||0; return 'UGX '+n.toLocaleString('en-US'
 function exportTable(id){ var el=document.getElementById(id);if(!el)return; var csv=[];var rows=el.querySelectorAll('tr');rows.forEach(function(r){var cols=[];r.querySelectorAll('th,td').forEach(function(c){cols.push('"'+c.textContent.trim()+'"');});csv.push(cols.join(','));});var blob=new Blob([csv.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finance_report.csv';a.click(); }
 </script>
 </div>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body></html>

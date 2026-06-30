@@ -57,14 +57,15 @@ if ($conn) { try { $r = $conn->query("SELECT * FROM security_visitors WHERE visi
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.secu-topbar{background:linear-gradient(135deg,#991b1b,#7f1d1d,#450a0a);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.secu-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.secu-topbar-left{display:flex;flex-direction:column}.secu-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.secu-topbar-subtitle{color:#fca5a5;font-size:12px;margin-top:-2px}.secu-topbar-right{display:flex;align-items:center;gap:12px}.secu-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.secu-print-btn,.secu-logout-btn{color:#fca5a5;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.secu-print-btn:hover,.secu-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .secu-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.secu-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="secu-topbar"><div class="secu-topbar-content"><div class="secu-topbar-left"><div class="secu-topbar-title">Security</div><div class="secu-topbar-subtitle">Campus Security &amp; Access Control</div></div><div class="secu-topbar-right"><span class="secu-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="secu-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="secu-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="secu-content">
 <?php switch ($section):
     case 'overview': ?>
@@ -160,7 +161,5 @@ endswitch; ?>
 <div class="modal fade" id="incidentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form method="POST" action="../handlers/security_handler.php"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Report Incident</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" name="action" value="report_incident"><div class="mb-3"><label class="form-label">Incident Type</label><select class="form-select" name="incident_type" required><option value="">Select...</option><option value="Unauthorized Access">Unauthorized Access</option><option value="Theft">Theft</option><option value="Vandalism">Vandalism</option><option value="Assault">Assault</option><option value="Parking Violation">Parking Violation</option><option value="Emergency">Emergency</option><option value="Other">Other</option></select></div><div class="mb-3"><label class="form-label">Location</label><input class="form-control" name="location" required></div><div class="mb-3"><label class="form-label">Severity</label><select class="form-select" name="severity"><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option><option value="Critical">Critical</option></select></div><div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="3" required></textarea></div></div><div class="modal-footer"><button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> Submit Report</button></div></form></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

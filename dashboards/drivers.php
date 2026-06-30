@@ -76,14 +76,15 @@ $evening_routes = array_filter($routes, fn($rt) => $rt['route_type']==='Evening'
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-.drv-topbar{background:linear-gradient(135deg,#d97706,#b45309,#92400e);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.drv-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.drv-topbar-left{display:flex;flex-direction:column}.drv-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.drv-topbar-subtitle{color:#fde68a;font-size:12px;margin-top:-2px}.drv-topbar-right{display:flex;align-items:center;gap:12px}.drv-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.drv-print-btn,.drv-logout-btn{color:#fde68a;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.drv-print-btn:hover,.drv-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .drv-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.drv-content{margin-left:0!important;padding:12px!important}}
 </style>
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<div class="drv-topbar"><div class="drv-topbar-content"><div class="drv-topbar-left"><div class="drv-topbar-title">Drivers</div><div class="drv-topbar-subtitle">Transport &amp; Fleet Management</div></div><div class="drv-topbar-right"><span class="drv-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="drv-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="drv-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <div class="drv-content">
 <?php switch ($section):
     case 'overview': ?>
@@ -180,7 +181,5 @@ endswitch; ?>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>

@@ -112,7 +112,7 @@ $pageTitle = 'HR Manager';
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
 :root { --hr-primary: #dc2626; --hr-dark: #991b1b; }
-.hr-topbar{background:linear-gradient(135deg,#991b1b,#b91c1c,#dc2626);padding:0 32px;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}.hr-topbar-content{width:100%;display:flex;align-items:center;justify-content:space-between}.hr-topbar-left{display:flex;flex-direction:column}.hr-topbar-title{color:#fff;font-size:18px;font-weight:700;letter-spacing:.3px}.hr-topbar-subtitle{color:#fecaca;font-size:12px;margin-top:-2px}.hr-topbar-right{display:flex;align-items:center;gap:12px}.hr-date-badge{background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;backdrop-filter:blur(4px)}.hr-print-btn,.hr-logout-btn{color:#fecaca;font-size:16px;padding:6px 10px;border-radius:8px;transition:all .2s;text-decoration:none}.hr-print-btn:hover,.hr-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
 .hr-content{margin-left:270px;padding:24px;min-height:100vh}
 .hr-section { display: none; }
 .hr-section.active { display: block; }
@@ -136,8 +136,9 @@ $pageTitle = 'HR Manager';
 </head>
 <body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-<div class="hr-topbar"><div class="hr-topbar-content"><div class="hr-topbar-left"><div class="hr-topbar-title">HR Manager</div><div class="hr-topbar-subtitle">Human Resources &amp; Staff Administration</div></div><div class="hr-topbar-right"><span class="hr-date-badge"><i class="fas fa-calendar-alt me-1"></i><?= date('l, F j, Y') ?></span><a href="#" class="hr-print-btn" onclick="window.print()"><i class="fas fa-print"></i></a><a href="../auth-handler.php?action=logout" class="hr-logout-btn"><i class="fas fa-sign-out-alt"></i></a></div></div></div>
+
 
 <div class="hr-content">
     <?php if ($msg = $_SESSION['success'] ?? ''): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($msg) ?></div><?php unset($_SESSION['success']); endif; ?>
@@ -850,7 +851,5 @@ if ($staff_conn) {
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php include_once __DIR__ . '/../includes/enterprise_control_panel.php'; ?>
 </body>
 </html>
