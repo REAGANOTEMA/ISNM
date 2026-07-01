@@ -1,60 +1,18 @@
 -- ============================================================
--- ISNM ERP - FINAL CLEAN SQL
--- Execute in phpMyAdmin:
---   1. Click igangaschoolofl_staffs_db in left sidebar
---   2. Click SQL tab
---   3. Paste this entire file
---   4. Click Go
+-- PART 2: Fix data and create tables
+-- Run this SECOND on HOSTING phpMyAdmin
+-- Make sure you already ran Part 1 (or column already exists)
 -- ============================================================
 
-USE igangaschoolofl_staffs_db;
+-- Update priority_order values
+UPDATE approval_requests SET priority_order = CASE priority WHEN 'Urgent' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 WHEN 'Normal' THEN 4 WHEN 'Low' THEN 5 ELSE 4 END;
 
--- ============================================================
--- 1. FIX APPROVAL REQUESTS (if needed)
--- ============================================================
-
+-- Fix approval requests workflow mapping
 UPDATE approval_requests SET workflow_id=122, current_stage_id=160, current_stage_order=1 WHERE id IN (1,2,3);
 UPDATE approval_requests SET workflow_id=123, current_stage_id=161, current_stage_order=1 WHERE id IN (4,5);
 UPDATE approval_requests SET workflow_id=122, current_stage_id=160, current_stage_order=1 WHERE id=6;
 
-UPDATE approval_requests SET priority_order = CASE priority WHEN 'Urgent' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 WHEN 'Normal' THEN 4 WHEN 'Low' THEN 5 ELSE 4 END;
-
--- ============================================================
--- 2. INSERT MISSING CREATE ACTIONS
--- ============================================================
-
-INSERT IGNORE INTO approval_actions (request_id, stage_id, action_by, action_type, comments, created_at)
-SELECT ar.id, ar.current_stage_id, ar.requester_id, 'create', CONCAT('Request created: ', ar.title), ar.created_at
-FROM approval_requests ar
-WHERE NOT EXISTS (SELECT 1 FROM approval_actions aa WHERE aa.request_id = ar.id AND aa.action_type = 'create');
-
--- ============================================================
--- 3. CREATE TABLES (IF NOT EXISTS)
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS staff_inbox (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    sender_id INT UNSIGNED NOT NULL,
-    sender_name VARCHAR(120) NOT NULL DEFAULT '',
-    sender_role VARCHAR(80) NOT NULL DEFAULT '',
-    recipient_id INT UNSIGNED NOT NULL,
-    recipient_name VARCHAR(120) NOT NULL DEFAULT '',
-    subject VARCHAR(255) NOT NULL DEFAULT '',
-    message TEXT NOT NULL,
-    is_read TINYINT(1) NOT NULL DEFAULT 0,
-    read_at DATETIME DEFAULT NULL,
-    priority ENUM('low','normal','high','urgent') NOT NULL DEFAULT 'normal',
-    parent_id INT UNSIGNED DEFAULT NULL,
-    is_deleted_sender TINYINT(1) NOT NULL DEFAULT 0,
-    is_deleted_recipient TINYINT(1) NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_sender (sender_id),
-    INDEX idx_recipient (recipient_id),
-    INDEX idx_thread (parent_id),
-    INDEX idx_created (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+-- Create tables
 CREATE TABLE IF NOT EXISTS staff_notifications (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -82,6 +40,29 @@ CREATE TABLE IF NOT EXISTS staff_notification_reads (
     INDEX idx_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS staff_inbox (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT UNSIGNED NOT NULL,
+    sender_name VARCHAR(120) NOT NULL DEFAULT '',
+    sender_role VARCHAR(80) NOT NULL DEFAULT '',
+    recipient_id INT UNSIGNED NOT NULL,
+    recipient_name VARCHAR(120) NOT NULL DEFAULT '',
+    subject VARCHAR(255) NOT NULL DEFAULT '',
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    read_at DATETIME DEFAULT NULL,
+    priority ENUM('low','normal','high','urgent') NOT NULL DEFAULT 'normal',
+    parent_id INT UNSIGNED DEFAULT NULL,
+    is_deleted_sender TINYINT(1) NOT NULL DEFAULT 0,
+    is_deleted_recipient TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_sender (sender_id),
+    INDEX idx_recipient (recipient_id),
+    INDEX idx_thread (parent_id),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS website_submission_logs (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     submission_type ENUM('contact','donation','volunteer','application') NOT NULL,
@@ -95,10 +76,13 @@ CREATE TABLE IF NOT EXISTS website_submission_logs (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- 4. SEED WORKFLOWS (IF MISSING)
--- ============================================================
+-- Insert create actions
+INSERT IGNORE INTO approval_actions (request_id, stage_id, action_by, action_type, comments, created_at)
+SELECT ar.id, ar.current_stage_id, ar.requester_id, 'create', CONCAT('Request created: ', ar.title), ar.created_at
+FROM approval_requests ar
+WHERE NOT EXISTS (SELECT 1 FROM approval_actions aa WHERE aa.request_id = ar.id AND aa.action_type = 'create');
 
+-- Seed workflows
 INSERT IGNORE INTO approval_workflows (id, workflow_name, category, description, is_active) VALUES
 (122, 'General Department Request', 'General Administration', 'General departmental requests', 1),
 (123, 'HR Request', 'Human Resources', 'Human resources requests', 1),
@@ -110,10 +94,7 @@ INSERT IGNORE INTO approval_workflows (id, workflow_name, category, description,
 (129, 'Store Requisition', 'Store & Assets', 'Store and asset requisitions', 1),
 (130, 'Student Registration', 'Academic', 'Student registration requests', 1);
 
--- ============================================================
--- 5. SEED STAGES (IF MISSING)
--- ============================================================
-
+-- Seed stages
 INSERT IGNORE INTO approval_stages (id, workflow_id, stage_name, stage_order, assigned_role_name, assigned_role_id) VALUES
 (158, 125, 'Director ICT Review', 1, 'Director ICT', NULL),
 (159, 125, 'Director General Final Approval', 2, 'Director General', NULL),
@@ -126,23 +107,17 @@ INSERT IGNORE INTO approval_stages (id, workflow_id, stage_name, stage_order, as
 (166, 129, 'Director General Approval', 1, 'Director General', NULL),
 (167, 130, 'Director General Approval', 1, 'Director General', NULL);
 
--- ============================================================
--- 6. SEED NOTIFICATIONS (IF MISSING)
--- ============================================================
-
+-- Seed notifications
 INSERT IGNORE INTO staff_notifications (title, message, type, icon, priority, target_role, created_at)
 SELECT 'Website Submissions Active', 'All website contact forms, donations, volunteer applications, and student applications are now routed to director dashboards.', 'info', 'fa-globe', 'normal', role_name, NOW()
 FROM staff_roles WHERE (role_name LIKE '%Director%' OR role_name IN ('CEO', 'Principal'))
 AND NOT EXISTS (SELECT 1 FROM staff_notifications WHERE title = 'Website Submissions Active' AND target_role = staff_roles.role_name);
 
--- ============================================================
--- VERIFICATION
--- ============================================================
-
-SELECT 'approval_requests' as tbl, COUNT(*) as cnt FROM approval_requests
-UNION ALL SELECT 'approval_actions', COUNT(*) FROM approval_actions
-UNION ALL SELECT 'approval_workflows', COUNT(*) FROM approval_workflows
-UNION ALL SELECT 'approval_stages', COUNT(*) FROM approval_stages
-UNION ALL SELECT 'staff_inbox', COUNT(*) FROM staff_inbox
-UNION ALL SELECT 'staff_notifications', COUNT(*) FROM staff_notifications
-UNION ALL SELECT 'website_submission_logs', COUNT(*) FROM website_submission_logs;
+-- Verify
+SELECT 'SUCCESS' as result;
+SELECT COUNT(*) as approval_requests FROM approval_requests;
+SELECT COUNT(*) as approval_actions FROM approval_actions;
+SELECT COUNT(*) as approval_workflows FROM approval_workflows;
+SELECT COUNT(*) as approval_stages FROM approval_stages;
+SELECT COUNT(*) as staff_notifications FROM staff_notifications;
+SELECT COUNT(*) as staff_inbox FROM staff_inbox;
