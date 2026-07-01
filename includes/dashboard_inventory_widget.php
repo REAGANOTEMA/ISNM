@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
 }
 
-$stmt = $staff_conn->prepare("SELECT * FROM inventory WHERE department = ? ORDER BY status DESC, quantity_on_hand ASC, item_name ASC");
+$stmt = $staff_conn->prepare("SELECT *, quantity AS quantity_on_hand, unit_price AS unit_cost, unit AS unit_of_measure FROM inventory WHERE department = ? ORDER BY status DESC, quantity ASC, item_name ASC");
 if (!$stmt) {
     http_response_code(500);
     echo '<div class="alert alert-danger">Inventory query failed.</div>';
@@ -130,7 +130,7 @@ $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $stmt->close();
 
 if (count($items) === 0) {
-    $stmt = $staff_conn->prepare("SELECT * FROM inventory WHERE department = 'General' OR department = ? ORDER BY status DESC, quantity_on_hand ASC, item_name ASC");
+    $stmt = $staff_conn->prepare("SELECT *, quantity AS quantity_on_hand, unit_price AS unit_cost, unit AS unit_of_measure FROM inventory WHERE department = 'General' OR department = ? ORDER BY status DESC, quantity ASC, item_name ASC");
     if ($stmt) {
         $stmt->bind_param('s', $effective_department);
         $stmt->execute();

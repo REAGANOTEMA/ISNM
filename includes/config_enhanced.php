@@ -184,19 +184,37 @@ if (!function_exists('logSystemActivity')) {
     }
 }
 
+if (!function_exists('ensureCacheTable')) {
+    function ensureCacheTable($conn) {
+        if (!$conn) return false;
+        $conn->query("CREATE TABLE IF NOT EXISTS cache_management (
+            cache_key VARCHAR(255) PRIMARY KEY,
+            cache_data LONGTEXT,
+            expiry_time DATETIME,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        return true;
+    }
+}
+
 if (!function_exists('getCacheData')) {
-    // Cache management function
     function getCacheData($key, $database = 'staffs') {
         try {
-            $sql = "SELECT cache_data FROM cache_management WHERE cache_key = ? AND expiry_time > NOW()";
-            $result = DatabaseConnection::executeQuery($database, $sql, [$key]);
-            
-            if ($result && count($result) > 0) {
-                return json_decode($result[0]['cache_data'], true);
+            $conn = getDatabaseConnection($database);
+            if (!$conn) return null;
+            ensureCacheTable($conn);
+            $stmt = $conn->prepare("SELECT cache_data FROM cache_management WHERE cache_key = ? AND expiry_time > NOW()");
+            if (!$stmt) return null;
+            $stmt->bind_param('s', $key);
+            $stmt->execute();
+            $r = $stmt->get_result();
+            $row = $r ? $r->fetch_assoc() : null;
+            $stmt->close();
+            if ($row && !empty($row['cache_data'])) {
+                return json_decode($row['cache_data'], true);
             }
-            
             return null;
-            
         } catch (Exception $e) {
             error_log("Cache retrieval error: " . $e->getMessage());
             return null;
@@ -204,14 +222,28 @@ if (!function_exists('getCacheData')) {
     }
 }
 
+if (!function_exists('parseExpirySeconds')) {
+    function parseExpirySeconds($expiry) {
+        if (is_numeric($expiry)) return (int)$expiry;
+        $now = time();
+        $future = strtotime($expiry, $now);
+        return $future > $now ? ($future - $now) : 3600;
+    }
+}
+
 if (!function_exists('setCacheData')) {
     function setCacheData($key, $data, $expiry = '+1 hour', $database = 'staffs') {
         try {
-            $sql = "INSERT INTO cache_management (cache_key, cache_data, expiry_time) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ?)) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DATE_ADD(NOW(), INTERVAL ?)";
-            $params = [$key, json_encode($data), $expiry, $expiry];
-            
-            DatabaseConnection::executeQuery($database, $sql, $params);
-            
+            $conn = getDatabaseConnection($database);
+            if (!$conn) return;
+            ensureCacheTable($conn);
+            $seconds = parseExpirySeconds($expiry);
+            $json = json_encode($data);
+            $stmt = $conn->prepare("INSERT INTO cache_management (cache_key, cache_data, expiry_time) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND)) ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), expiry_time = DATE_ADD(NOW(), INTERVAL ? SECOND)");
+            if (!$stmt) return;
+            $stmt->bind_param('ssii', $key, $json, $seconds, $seconds);
+            $stmt->execute();
+            $stmt->close();
         } catch (Exception $e) {
             error_log("Cache storage error: " . $e->getMessage());
         }

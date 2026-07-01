@@ -901,6 +901,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- ═══ DYNAMIC PAGE LOADING ═══ -->
 <?php
+$dgNewsList = [];
+$allStaffList = [];
 switch ($dgSection):
     case 'home': ?>
         <div id="home" class="content-section dashboard-section active" data-section="home">

@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $records = [];
-$r = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number, py.payment_receipt FROM proof_of_payments p LEFT JOIN students s ON p.student_id=s.id LEFT JOIN payments py ON p.payment_id=py.id ORDER BY p.created_at DESC");
+$r = $conn->query("SELECT p.*, s.first_name, s.surname, s.student_number, py.payment_reference AS payment_receipt FROM proof_of_payments p LEFT JOIN students s ON p.student_id=s.id LEFT JOIN payments py ON p.payment_id=py.id ORDER BY p.created_at DESC");
 if ($r) while ($row = $r->fetch_assoc()) $records[] = $row;
 
 $total = count($records);

@@ -170,10 +170,10 @@ function getStaffById($conn, int $staffId): ?array {
 }
 
 /**
- * Get a system setting by key.
+ * Get a system setting by key (direct connection version).
  */
-if (!function_exists('getSystemSetting')) {
-function getSystemSetting($conn, string $key, $default = null) {
+if (!function_exists('getSystemSettingDirect')) {
+function getSystemSettingDirect($conn, string $key, $default = null) {
     if (!$conn) return $default;
     try {
         $stmt = $conn->prepare("SELECT setting_value, setting_type FROM system_settings WHERE setting_key = ?");
@@ -199,8 +199,8 @@ function getSystemSetting($conn, string $key, $default = null) {
 /**
  * Set a system setting.
  */
-if (!function_exists('setSystemSetting')) {
-function setSystemSetting($conn, string $key, $value, string $type = 'string', string $group = 'general'): bool {
+if (!function_exists('setSystemSettingDirect')) {
+function setSystemSettingDirect($conn, string $key, $value, string $type = 'string', string $group = 'general'): bool {
     if (!$conn) return false;
     try {
         $val = is_array($value) ? json_encode($value) : (string)$value;

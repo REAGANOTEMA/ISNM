@@ -2,9 +2,10 @@
 /**
  * Professional Control Panel for ISNM Staff Dashboards
  * Include this in any dashboard to render the home page.
- * Expects $ctx, $staff, $students, $user, $user_role, $user_name, $uid to be set.
+ * Expects $ctx, $staff, $students, $user, $user_role, $user_name, $uid/$user_id to be set.
  */
 if (!isset($ctx)) return;
+$uid = (int)($uid ?? $user_id ?? ($_SESSION['user_id'] ?? 0));
 
 // ── Gather dashboard stats ──
 $cpStats = [

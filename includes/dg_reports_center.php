@@ -7,6 +7,16 @@
  */
 if (session_status() === PHP_SESSION_NONE && php_sapi_name() !== 'cli') session_start();
 
+if (!isset($conn) || !$conn) {
+    $conn = function_exists('DatabaseConnection') ? DatabaseConnection::getStaffConnection() : (function_exists('getStaffConnection') ? getStaffConnection() : null);
+}
+if (!isset($studentsConn) || !$studentsConn) {
+    $studentsConn = function_exists('DatabaseConnection') ? DatabaseConnection::getStudentsConnection() : (function_exists('getStudentsConnection') ? getStudentsConnection() : null);
+}
+if (!isset($websiteConn) || !$websiteConn) {
+    $websiteConn = function_exists('DatabaseConnection') ? DatabaseConnection::getWebsiteConnection() : (function_exists('getWebsiteConnection') ? getWebsiteConnection() : null);
+}
+
 $rcAcademicData = [];
 $rcFinancialData = [];
 $rcHRData = [];
@@ -30,22 +40,24 @@ try {
         if ($r) $rcAcademicData['graduation_pipeline'] = $r->fetch_assoc();
 
         $rcExams = [];
-        $r = $studentsConn->query("
-            SELECT
-                er.course_id,
-                ac.course_name,
-                ac.program,
-                COUNT(er.id) as total_exams,
-                ROUND(AVG(er.score), 1) as avg_score,
-                SUM(CASE WHEN er.score >= 50 THEN 1 ELSE 0 END) as passed,
-                ROUND((SUM(CASE WHEN er.score >= 50 THEN 1 ELSE 0 END) / COUNT(er.id)) * 100, 1) as pass_rate
-            FROM examination_records er
-            LEFT JOIN academic_course_catalog ac ON er.course_id = ac.id
-            WHERE er.score IS NOT NULL AND ac.program IS NOT NULL
-            GROUP BY er.course_id, ac.program
-            ORDER BY pass_rate DESC
-        ");
-        if ($r) while ($row = $r->fetch_assoc()) $rcExams[] = $row;
+        if ($conn) {
+            $r = $conn->query("
+                SELECT
+                    er.course_id,
+                    ac.course_name,
+                    COALESCE(ac.department, 'General') as program,
+                    COUNT(er.id) as total_exams,
+                    ROUND(AVG(er.score), 1) as avg_score,
+                    SUM(CASE WHEN er.score >= 50 THEN 1 ELSE 0 END) as passed,
+                    ROUND((SUM(CASE WHEN er.score >= 50 THEN 1 ELSE 0 END) / COUNT(er.id)) * 100, 1) as pass_rate
+                FROM examination_records er
+                LEFT JOIN academic_course_catalog ac ON er.course_id = ac.id
+                WHERE er.score IS NOT NULL
+                GROUP BY er.course_id
+                ORDER BY pass_rate DESC
+            ");
+            if ($r) while ($row = $r->fetch_assoc()) $rcExams[] = $row;
+        }
         $rcAcademicData['pass_rates'] = $rcExams;
     }
 } catch (Exception $e) { error_log('reports_center academic: ' . $e->getMessage()); }

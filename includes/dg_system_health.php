@@ -8,6 +8,13 @@
  * Other DB connections are created locally via get*Connection() helpers.
  */
 
+if (!isset($conn) || !$conn) {
+    $conn = function_exists('DatabaseConnection') ? DatabaseConnection::getStaffConnection() : (function_exists('getStaffConnection') ? getStaffConnection() : null);
+}
+if (!isset($studentsConn) || !$studentsConn) {
+    $studentsConn = function_exists('DatabaseConnection') ? DatabaseConnection::getStudentsConnection() : (function_exists('getStudentsConnection') ? getStudentsConnection() : null);
+}
+
 if (!function_exists('formatBytes')) {
     function formatBytes($bytes, $precision = 2) {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];

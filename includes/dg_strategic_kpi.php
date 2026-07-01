@@ -34,6 +34,15 @@ if (session_status() === PHP_SESSION_NONE && php_sapi_name() !== 'cli') session_
 </style>
 
 <?php
+if (!isset($conn) || !$conn) {
+    $conn = function_exists('DatabaseConnection') ? DatabaseConnection::getStaffConnection() : (function_exists('getStaffConnection') ? getStaffConnection() : null);
+}
+if (!isset($studentsConn) || !$studentsConn) {
+    $studentsConn = function_exists('DatabaseConnection') ? DatabaseConnection::getStudentsConnection() : (function_exists('getStudentsConnection') ? getStudentsConnection() : null);
+}
+if (!isset($websiteConn) || !$websiteConn) {
+    $websiteConn = function_exists('DatabaseConnection') ? DatabaseConnection::getWebsiteConnection() : (function_exists('getWebsiteConnection') ? getWebsiteConnection() : null);
+}
 // ── Gather KPI Data ──
 $kpi = [
     'total_students'       => 0,
