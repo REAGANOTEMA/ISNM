@@ -18,6 +18,100 @@ $user_name = $_SESSION['full_name'] ?? '';
 
 // User data already available from bootstrapStaffDashboard session
 
+// ── POST handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    $action = $_POST['action'] ?? '';
+
+    // ── Add assessment ──
+    if ($action === 'add_assessment' && $conn) {
+        $stmt = $conn->prepare("INSERT INTO teaching_assessments (lecturer_id, student_id, course_name, assessment_type, title, total_marks, marks_obtained, assessment_date, comments) VALUES (?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("iisssiiis",
+            $user_id,
+            $_POST['student_id'],
+            $_POST['course_name'],
+            $_POST['assessment_type'],
+            $_POST['title'],
+            $_POST['total_marks'],
+            $_POST['marks_obtained'],
+            $_POST['assessment_date'],
+            $_POST['comments']
+        );
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Assessment added']);
+        $stmt->close();
+        exit;
+    }
+
+    // ── Update assessment ──
+    if ($action === 'update_assessment' && $conn) {
+        $stmt = $conn->prepare("UPDATE teaching_assessments SET course_name=?, assessment_type=?, title=?, total_marks=?, marks_obtained=?, assessment_date=?, comments=? WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("sssiiisii",
+            $_POST['course_name'],
+            $_POST['assessment_type'],
+            $_POST['title'],
+            $_POST['total_marks'],
+            $_POST['marks_obtained'],
+            $_POST['assessment_date'],
+            $_POST['comments'],
+            $_POST['assessment_id'],
+            $user_id
+        );
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Assessment updated']);
+        $stmt->close();
+        exit;
+    }
+
+    // ── Delete assessment ──
+    if ($action === 'delete_assessment' && $conn) {
+        $stmt = $conn->prepare("DELETE FROM teaching_assessments WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("ii", $_POST['assessment_id'], $user_id);
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Assessment deleted']);
+        $stmt->close();
+        exit;
+    }
+
+    // ── Add resource ──
+    if ($action === 'add_resource' && $conn) {
+        $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id, title, resource_type, file_path, url, description, course_name) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("issssss",
+            $user_id,
+            $_POST['title'],
+            $_POST['resource_type'],
+            $_POST['file_path'],
+            $_POST['url'],
+            $_POST['description'],
+            $_POST['course_name']
+        );
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Resource added']);
+        $stmt->close();
+        exit;
+    }
+
+    // ── Delete resource ──
+    if ($action === 'delete_resource' && $conn) {
+        $stmt = $conn->prepare("DELETE FROM teaching_resources WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("ii", $_POST['resource_id'], $user_id);
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Resource deleted']);
+        $stmt->close();
+        exit;
+    }
+
+    // ── Add announcement ──
+    if ($action === 'add_announcement' && $conn) {
+        $stmt = $conn->prepare("INSERT INTO teaching_announcements (lecturer_id, title, content, target_audience, is_published) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("isssi",
+            $user_id,
+            $_POST['title'],
+            $_POST['content'],
+            $_POST['target_audience'],
+            $_POST['is_published']
+        );
+        echo json_encode(['success' => $stmt->execute(), 'message' => $stmt->error ?: 'Announcement added']);
+        $stmt->close();
+        exit;
+    }
+}
+
 // Set statistics from database
 $total_students = 0;
 $total_staff = 0;
@@ -396,72 +490,54 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 <section id="assessments" class="content-section dashboard-section section-card<?= $section==='assessments'?' active':'' ?>" data-section="assessments">
                     <h2>Assessment Management</h2>
                     <div class="assessment-actions">
-                        <button class="btn btn-primary" onclick="openModal('createAssessment')">
-                            <i class="fas fa-plus"></i> Create Assessment
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('gradeAssessment')">
-                            <i class="fas fa-clipboard-check"></i> Grade Assessments
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('assessmentReport')">
-                            <i class="fas fa-chart-bar"></i> Assessment Report
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('feedback')">
-                            <i class="fas fa-comment"></i> Student Feedback
+                        <button class="btn btn-primary" onclick="openModal('addAssessment')">
+                            <i class="fas fa-plus"></i> Add Assessment
                         </button>
                     </div>
-                    
+
                     <div class="assessment-overview">
-                        <h3>Recent Assessments</h3>
-                        <div class="assessment-list">
-                            <div class="assessment-item">
-                                <div class="assessment-header">
-                                    <h4>Basic Nursing Skills , Practical Test</h4>
-                                    <span class="assessment-date">Apr 18, 2026</span>
-                                </div>
-                                <div class="assessment-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Practical Examination</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>25 submitted</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-warning">Grading in Progress</strong>
-                                    </div>
-                                </div>
-                                <div class="assessment-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Submissions</button>
-                                    <button class="btn btn-sm btn-outline-success">Continue Grading</button>
-                                </div>
-                            </div>
-                            
-                            <div class="assessment-item">
-                                <div class="assessment-header">
-                                    <h4>Anatomy & Physiology , Quiz</h4>
-                                    <span class="assessment-date">Apr 12, 2026</span>
-                                </div>
-                                <div class="assessment-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong>Quiz</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Students:</span>
-                                        <strong>30 submitted</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-success">Graded</strong>
-                                    </div>
-                                </div>
-                                <div class="assessment-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Results</button>
-                                    <button class="btn btn-sm btn-outline-info">Publish Grades</button>
-                                </div>
-                            </div>
+                        <h3>Teaching Assessments</h3>
+                        <?php
+                        $assessments = [];
+                        if ($conn) {
+                            $ar2 = $conn->query("SELECT * FROM teaching_assessments WHERE lecturer_id=" . (int)$user_id . " ORDER BY assessment_date DESC");
+                            if ($ar2) { while ($r = $ar2->fetch_assoc()) $assessments[] = $r; }
+                        }
+                        ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="assessmentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Course</th>
+                                        <th>Type</th>
+                                        <th>Marks</th>
+                                        <th>Obtained</th>
+                                        <th>Date</th>
+                                        <th>Comments</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($assessments)): ?>
+                                    <tr><td colspan="8" class="text-center text-muted">No assessments found.</td></tr>
+                                    <?php else: foreach ($assessments as $a): ?>
+                                    <tr data-id="<?= (int)$a['id'] ?>">
+                                        <td><?= htmlspecialchars($a['title']) ?></td>
+                                        <td><?= htmlspecialchars($a['course_name']) ?></td>
+                                        <td><?= htmlspecialchars($a['assessment_type']) ?></td>
+                                        <td><?= (int)$a['total_marks'] ?></td>
+                                        <td><?= (int)$a['marks_obtained'] ?></td>
+                                        <td><?= htmlspecialchars($a['assessment_date']) ?></td>
+                                        <td><?= htmlspecialchars($a['comments'] ?? '') ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editAssessment(this)">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteAssessment(<?= (int)$a['id'] ?>)">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; endif; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -523,86 +599,96 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 <section id="resources" class="content-section dashboard-section section-card<?= $section==='resources'?' active':'' ?>" data-section="resources">
                     <h2>Teaching Resources</h2>
                     <div class="resource-actions">
-                        <button class="btn btn-primary" onclick="openModal('uploadResource')">
-                            <i class="fas fa-upload"></i> Upload Resource
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('resourceLibrary')">
-                            <i class="fas fa-folder"></i> Resource Library
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('shareResource')">
-                            <i class="fas fa-share"></i> Share Resources
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('resourceArchive')">
-                            <i class="fas fa-archive"></i> Resource Archive
+                        <button class="btn btn-primary" onclick="openModal('addResource')">
+                            <i class="fas fa-upload"></i> Add Resource
                         </button>
                     </div>
-                    
+
                     <div class="resources-overview">
                         <h3>My Teaching Resources</h3>
-                        <div class="resources-list">
-                            <div class="resource-item">
-                                <div class="resource-header">
-                                    <h4>Basic Nursing Skills Lecture Notes</h4>
-                                    <span class="resource-type">PDF</span>
-                                </div>
-                                <div class="resource-details">
-                                    <div class="detail">
-                                        <span>Size:</span>
-                                        <strong>3.8 MB</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Uploaded:</span>
-                                        <strong>Apr 5, 2026</strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Downloads:</span>
-                                        <strong>25 times</strong>
-                                    </div>
-                                </div>
-                                <div class="resource-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
-                                    <button class="btn btn-sm btn-outline-success">Download</button>
-                                    <button class="btn btn-sm btn-outline-info">Share</button>
-                                </div>
-                            </div>
+                        <?php
+                        $resources = [];
+                        if ($conn) {
+                            $rr = $conn->query("SELECT * FROM teaching_resources WHERE lecturer_id=" . (int)$user_id . " ORDER BY id DESC");
+                            if ($rr) { while ($r = $rr->fetch_assoc()) $resources[] = $r; }
+                        }
+                        ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="resourcesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Course</th>
+                                        <th>URL</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($resources)): ?>
+                                    <tr><td colspan="6" class="text-center text-muted">No resources found.</td></tr>
+                                    <?php else: foreach ($resources as $res): ?>
+                                    <tr data-id="<?= (int)$res['id'] ?>">
+                                        <td><?= htmlspecialchars($res['title']) ?></td>
+                                        <td><?= htmlspecialchars($res['resource_type']) ?></td>
+                                        <td><?= htmlspecialchars($res['course_name']) ?></td>
+                                        <td><?= $res['url'] ? '<a href="'.htmlspecialchars($res['url']).'" target="_blank">Link</a>' : '-' ?></td>
+                                        <td><?= htmlspecialchars($res['description'] ?? '') ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteResource(<?= (int)$res['id'] ?>)">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; endif; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
 
-                <!-- Communications -->
+                <!-- Announcements -->
                 <section id="communications" class="content-section dashboard-section section-card<?= $section==='communications'?' active':'' ?>" data-section="communications">
-                    <h2>Student Communications</h2>
+                    <h2>Teaching Announcements</h2>
                     <div class="communication-actions">
-                        <button class="btn btn-primary" onclick="openModal('sendMessage')">
-                            <i class="fas fa-envelope"></i> Send Message
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('classAnnouncement')">
-                            <i class="fas fa-bullhorn"></i> Class Announcement
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('messageHistory')">
-                            <i class="fas fa-history"></i> Message History
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('officeHours')">
-                            <i class="fas fa-clock"></i> Office Hours
+                        <button class="btn btn-primary" onclick="openModal('addAnnouncement')">
+                            <i class="fas fa-bullhorn"></i> Add Announcement
                         </button>
                     </div>
-                    
+
                     <div class="communications-overview">
-                        <h3>Recent Messages</h3>
-                        <div class="message-list">
-                            <div class="message-item">
-                                <div class="message-header">
-                                    <h4>To: Basic Nursing Skills Class</h4>
-                                    <span class="message-date">Apr 20, 2026</span>
-                                </div>
-                                <div class="message-content">
-                                    <p>Reminder: Practical test on vital signs tomorrow at 10 AM. Please bring your stethoscopes and practice materials.</p>
-                                </div>
-                                <div class="message-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
-                                    <button class="btn btn-sm btn-outline-info">Send Reminder</button>
-                                </div>
-                            </div>
+                        <h3>My Announcements</h3>
+                        <?php
+                        $announcements = [];
+                        if ($conn) {
+                            $anr = $conn->query("SELECT * FROM teaching_announcements WHERE lecturer_id=" . (int)$user_id . " ORDER BY id DESC");
+                            if ($anr) { while ($r = $anr->fetch_assoc()) $announcements[] = $r; }
+                        }
+                        ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="announcementsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Content</th>
+                                        <th>Target Audience</th>
+                                        <th>Published</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($announcements)): ?>
+                                    <tr><td colspan="5" class="text-center text-muted">No announcements found.</td></tr>
+                                    <?php else: foreach ($announcements as $an): ?>
+                                    <tr data-id="<?= (int)$an['id'] ?>">
+                                        <td><?= htmlspecialchars($an['title']) ?></td>
+                                        <td><?= htmlspecialchars($an['content']) ?></td>
+                                        <td><?= htmlspecialchars($an['target_audience']) ?></td>
+                                        <td><?= $an['is_published'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <?php endforeach; endif; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -704,198 +790,189 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
         });
 
         // Modal functions
+        var currentModalAction = '';
+        var editRow = null;
+
         function openModal(action) {
+            currentModalAction = action;
+            editRow = null;
             const modal = new bootstrap.Modal(document.getElementById('actionModal'));
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
-            
+            const modalActionBtn = document.getElementById('modalAction');
+            modalActionBtn.style.display = 'inline-block';
+
             switch(action) {
-                case 'createAssessment':
-                    modalTitle.textContent = 'Create New Assessment';
+                case 'addAssessment':
+                    modalTitle.textContent = 'Add Assessment';
                     modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Assessment Title</label>
-                                <input type="text" class="form-control" required>
+                        <form id="assessmentForm">
+                            <input type="hidden" name="action" value="add_assessment">
+                            <div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Course Name</label><input name="course_name" type="text" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Assessment Type</label>
+                                <select name="assessment_type" class="form-control" required>
+                                    <option value="">Select</option>
+                                    <option value="Quiz">Quiz</option>
+                                    <option value="Assignment">Assignment</option>
+                                    <option value="Practical Test">Practical Test</option>
+                                    <option value="Examination">Examination</option>
+                                </select>
                             </div>
+                            <div class="mb-3"><label class="form-label">Title</label><input name="title" type="text" class="form-control" required></div>
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Course</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Course</option>
-                                            <option value="basic-nursing">Basic Nursing Skills</option>
-                                            <option value="anatomy">Anatomy & Physiology</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Assessment Type</label>
-                                        <select class="form-control" required>
-                                            <option value="">Select Type</option>
-                                            <option value="quiz">Quiz</option>
-                                            <option value="assignment">Assignment</option>
-                                            <option value="practical">Practical Test</option>
-                                            <option value="exam">Examination</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Total Marks</label><input name="total_marks" type="number" class="form-control" required></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Marks Obtained</label><input name="marks_obtained" type="number" class="form-control" value="0" required></div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Total Marks</label>
-                                        <input type="number" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Duration (minutes)</label>
-                                        <input type="number" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Start Date</label>
-                                        <input type="date" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Due Date</label>
-                                        <input type="date" class="form-control" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Instructions</label>
-                                <textarea class="form-control" rows="4" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Assessment Criteria</label>
-                                <textarea class="form-control" rows="3" required></textarea>
-                            </div>
-                        </form>
-                    `;
+                            <div class="mb-3"><label class="form-label">Assessment Date</label><input name="assessment_date" type="date" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Comments</label><textarea name="comments" class="form-control" rows="3"></textarea></div>
+                        </form>`;
                     break;
-                case 'sendMessage':
-                    modalTitle.textContent = 'Send Message to Students';
+
+                case 'editAssessment':
+                    modalTitle.textContent = 'Edit Assessment';
                     modalBody.innerHTML = `
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Recipient</label>
-                                <select class="form-control" required>
-                                    <option value="">Select Recipients</option>
-                                    <option value="all-students">All My Students</option>
-                                    <option value="basic-nursing">Basic Nursing Skills Class</option>
-                                    <option value="anatomy">Anatomy & Physiology Class</option>
+                        <form id="assessmentForm">
+                            <input type="hidden" name="action" value="update_assessment">
+                            <input type="hidden" name="assessment_id" id="editAssessmentId">
+                            <div class="mb-3"><label class="form-label">Student ID</label><input name="student_id" type="number" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Course Name</label><input name="course_name" type="text" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Assessment Type</label>
+                                <select name="assessment_type" class="form-control" required>
+                                    <option value="">Select</option>
+                                    <option value="Quiz">Quiz</option>
+                                    <option value="Assignment">Assignment</option>
+                                    <option value="Practical Test">Practical Test</option>
+                                    <option value="Examination">Examination</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Subject</label>
-                                <input type="text" class="form-control" required>
+                            <div class="mb-3"><label class="form-label">Title</label><input name="title" type="text" class="form-control" required></div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3"><label class="form-label">Total Marks</label><input name="total_marks" type="number" class="form-control" required></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Marks Obtained</label><input name="marks_obtained" type="number" class="form-control" required></div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea class="form-control" rows="5" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Priority</label>
-                                <select class="form-control" required>
-                                    <option value="normal">Normal</option>
-                                    <option value="important">Important</option>
-                                    <option value="urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Delivery Options</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="email-notification" checked>
-                                    <label class="form-check-label" for="email-notification">Send email notification</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="sms-notification">
-                                    <label class="form-check-label" for="sms-notification">Send SMS notification</label>
-                                </div>
-                            </div>
-                        </form>
-                    `;
+                            <div class="mb-3"><label class="form-label">Assessment Date</label><input name="assessment_date" type="date" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Comments</label><textarea name="comments" class="form-control" rows="3"></textarea></div>
+                        </form>`;
                     break;
-                case 'classAnnouncement':
-                    modalTitle.textContent = 'Class Announcement';
+
+                case 'addResource':
+                    modalTitle.textContent = 'Add Teaching Resource';
                     modalBody.innerHTML = `
-                        <form id="sendAnnouncementForm">
-                            <div class="mb-3">
-                                <label class="form-label">Title</label>
-                                <input id="annTitle" type="text" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Class / Recipient</label>
-                                <select id="annTarget" class="form-control">
-                                    <option value="all">All My Students</option>
-                                    <option value="class-basic">Basic Nursing</option>
-                                    <option value="class-anatomy">Anatomy</option>
+                        <form id="resourceForm">
+                            <input type="hidden" name="action" value="add_resource">
+                            <div class="mb-3"><label class="form-label">Title</label><input name="title" type="text" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Resource Type</label>
+                                <select name="resource_type" class="form-control" required>
+                                    <option value="">Select</option>
+                                    <option value="PDF">PDF</option>
+                                    <option value="Video">Video</option>
+                                    <option value="Document">Document</option>
+                                    <option value="Link">Link</option>
+                                    <option value="Presentation">Presentation</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Priority</label>
-                                <select id="annPriority" class="form-control">
-                                    <option value="normal">Normal</option>
-                                    <option value="important">Important</option>
-                                    <option value="urgent">Urgent</option>
+                            <div class="mb-3"><label class="form-label">Course Name</label><input name="course_name" type="text" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">File Path</label><input name="file_path" type="text" class="form-control" placeholder="/uploads/file.pdf"></div>
+                            <div class="mb-3"><label class="form-label">URL</label><input name="url" type="url" class="form-control" placeholder="https://..."></div>
+                            <div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3"></textarea></div>
+                        </form>`;
+                    break;
+
+                case 'addAnnouncement':
+                    modalTitle.textContent = 'Add Announcement';
+                    modalBody.innerHTML = `
+                        <form id="announcementForm">
+                            <input type="hidden" name="action" value="add_announcement">
+                            <div class="mb-3"><label class="form-label">Title</label><input name="title" type="text" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Content</label><textarea name="content" class="form-control" rows="5" required></textarea></div>
+                            <div class="mb-3"><label class="form-label">Target Audience</label>
+                                <select name="target_audience" class="form-control" required>
+                                    <option value="all">All Students</option>
+                                    <option value="class-basic">Basic Nursing Skills</option>
+                                    <option value="class-anatomy">Anatomy & Physiology</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea id="annContent" class="form-control" rows="5" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Expiry Date</label>
-                                <input id="annExpiry" type="date" class="form-control">
+                            <div class="mb-3"><label class="form-label">Published</label>
+                                <select name="is_published" class="form-control" required>
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
                             </div>
                         </form>`;
                     break;
-                // Add more cases as needed
             }
-            
+
             modal.show();
         }
 
-        // Attach modalAction handler for class announcements
+        function editAssessment(btn) {
+            var row = btn.closest('tr');
+            var cells = row.querySelectorAll('td');
+            openModal('editAssessment');
+            var form = document.getElementById('assessmentForm');
+            document.getElementById('editAssessmentId').value = row.dataset.id;
+            form.student_id && (form.student_id.value = '');
+            form.course_name.value = cells[1].textContent.trim();
+            form.assessment_type.value = cells[2].textContent.trim();
+            form.title.value = cells[0].textContent.trim();
+            form.total_marks.value = cells[3].textContent.trim();
+            form.marks_obtained.value = cells[4].textContent.trim();
+            form.assessment_date.value = cells[5].textContent.trim();
+            form.comments.value = cells[6].textContent.trim();
+        }
+
+        function deleteAssessment(id) {
+            if (!confirm('Delete this assessment?')) return;
+            var fd = new FormData();
+            fd.append('action', 'delete_assessment');
+            fd.append('assessment_id', id);
+            fetch('lecturers.php', { method: 'POST', body: fd })
+                .then(function(r){ return r.json(); })
+                .then(function(resp){
+                    if (resp.success) location.reload();
+                    else alert(resp.message || 'Failed');
+                });
+        }
+
+        function deleteResource(id) {
+            if (!confirm('Delete this resource?')) return;
+            var fd = new FormData();
+            fd.append('action', 'delete_resource');
+            fd.append('resource_id', id);
+            fetch('lecturers.php', { method: 'POST', body: fd })
+                .then(function(r){ return r.json(); })
+                .then(function(resp){
+                    if (resp.success) location.reload();
+                    else alert(resp.message || 'Failed');
+                });
+        }
+
+        // Attach modalAction handler for all forms
         document.addEventListener('DOMContentLoaded', function() {
-            const modalActionBtn = document.getElementById('modalAction');
+            var modalActionBtn = document.getElementById('modalAction');
             if (!modalActionBtn) return;
             modalActionBtn.addEventListener('click', function() {
-                const modalTitle = document.getElementById('modalTitle').textContent || '';
-                if (modalTitle.includes('Class Announcement')) {
-                    const title = document.getElementById('annTitle').value.trim();
-                    const content = document.getElementById('annContent').value.trim();
-                    const target = document.getElementById('annTarget').value;
-                    const priority = document.getElementById('annPriority').value;
-                    const expiry = document.getElementById('annExpiry').value || '';
-                    if (!title || !content) { alert('Title and message required.'); return; }
+                var formId = '';
+                if (currentModalAction === 'addAssessment' || currentModalAction === 'editAssessment') formId = 'assessmentForm';
+                else if (currentModalAction === 'addResource') formId = 'resourceForm';
+                else if (currentModalAction === 'addAnnouncement') formId = 'announcementForm';
+                if (!formId) return;
 
-                    const fd = new FormData();
-                    fd.append('title', title);
-                    fd.append('content', content);
-                    fd.append('announcement_type', 'class');
-                    fd.append('target_audience', target);
-                    fd.append('priority', priority);
-                    fd.append('expiry_date', expiry);
-                    fd.append('status', 'published');
+                var form = document.getElementById(formId);
+                if (!form || !form.checkValidity()) { form.reportValidity(); return; }
 
-                    const modalBody = document.getElementById('modalBody');
-                    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Publishing announcement...</p></div>';
+                var fd = new FormData(form);
+                var modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-3">Saving...</p></div>';
 
-                    fetch('../includes/ajax_publish_announcement.php', { method: 'POST', body: fd })
-                        .then(r => r.json()).then(resp => {
-                            if (resp.success) { modalBody.innerHTML = '<div class="alert alert-success">Published.</div>'; setTimeout(()=>location.reload(),900); }
-                            else { modalBody.innerHTML = '<div class="alert alert-danger">Failed: ' + (resp.message||'Unknown') + '</div>'; }
-                        }).catch(()=>{ modalBody.innerHTML = '<div class="alert alert-danger">Network error.</div>'; });
-                }
+                fetch('lecturers.php', { method: 'POST', body: fd })
+                    .then(function(r){ return r.json(); })
+                    .then(function(resp){
+                        if (resp.success) { modalBody.innerHTML = '<div class="alert alert-success">' + resp.message + '</div>'; setTimeout(function(){ location.reload(); }, 800); }
+                        else { modalBody.innerHTML = '<div class="alert alert-danger">' + (resp.message || 'Failed') + '</div>'; }
+                    })
+                    .catch(function(){ modalBody.innerHTML = '<div class="alert alert-danger">Network error.</div>'; });
             });
         });
     </script>

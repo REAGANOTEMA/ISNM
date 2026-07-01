@@ -188,6 +188,8 @@ $dgPageToSection = [
     'submissions'   => 'services',
     'approvals'     => 'approvals',
     'assets'        => 'store',
+    'store'         => 'store',
+    'transport'     => 'transport',
     'communications'=> 'communications',
     'audit'         => 'audit',
     'actions'       => 'quick',
@@ -555,6 +557,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $ref = $_POST['sub_ref'] ?? '';
         if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='approved',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Store request approved.'; }
     }
+    if ($action === 'approve_submission' && $conn && ($_POST['sub_type'] ?? '') === 'transport_trip') {
+        $subId = (int)($_POST['sub_id'] ?? 0);
+        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='approved', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Transport trip approved.'; }
+    }
 
     if ($action === 'reject_submission' && $websiteConn) {
         $type = trim($_POST['sub_type'] ?? '');
@@ -564,6 +570,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         elseif ($type === 'donation') $websiteConn->query("UPDATE donations SET status='cancelled' WHERE id=" . intval($subid));
         elseif ($type === 'application') $websiteConn->query("UPDATE student_applications SET status='Rejected' WHERE id=" . intval($subid));
         $ok = true; $msg = 'Submission rejected.';
+    }
+    if ($action === 'reject_submission' && $conn && ($_POST['sub_type'] ?? '') === 'transport_trip') {
+        $subId = (int)($_POST['sub_id'] ?? 0);
+        if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='rejected', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Transport trip rejected.'; }
     }
 
     if ($action === 'resolve_alert') {
@@ -1387,6 +1397,164 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 </div>
+</div>
+
+<?php break; ?>
+    case 'transport': ?>
+<div id="transport" class="content-section dashboard-section active" data-section="transport">
+  <div class="section-card">
+    <?php dgToolbar('Transport & Routes', 'fa-bus'); ?>
+    <div class="row g-3">
+    <div class="col-lg-5">
+      <div class="section-card h-100">
+        <h3 class="section-title" style="margin-bottom:14px;"><i class="fas fa-route" style="color:#3b82f6;"></i>Transport Routes</h3>
+        <?php
+        $transportRoutes=[];
+        if($conn){$rr=$conn->query("SELECT * FROM transport_routes WHERE status='active' ORDER BY route_name");if($rr)while($row=$rr->fetch_assoc())$transportRoutes[]=$row;}
+        if(empty($transportRoutes)): ?><p class="text-muted small" style="padding:20px;text-align:center;">No active routes.</p>
+        <?php else: foreach($transportRoutes as $rt): ?>
+        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f1f5f9;">
+          <div>
+            <code class="fw-bold" style="font-size:12px;"><?= htmlspecialchars($rt['route_name']) ?></code>
+            <div style="color:#94a3b8;font-size:11px;margin-top:2px;"><?= htmlspecialchars($rt['start_location']) ?> &rarr; <?= htmlspecialchars($rt['end_location']) ?></div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-soft bg-info"><?= number_format((float)$rt['distance_km'],1) ?> km</span>
+            <span class="badge badge-soft bg-success">UGX <?= number_format((float)$rt['fare_amount']) ?></span>
+            <small style="color:#94a3b8;"><?= $rt['estimated_duration_minutes'] ?> min</small>
+          </div>
+        </div>
+        <?php endforeach; ?>
+        <div class="text-center mt-2"><a href="../dashboards/drivers.php?page=transport-routes" class="btn btn-sm" style="background:#3b82f6;color:#fff;border:none;border-radius:8px;"><i class="fas fa-route me-1"></i>Manage Routes</a></div>
+        <?php endif; ?>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="section-card h-100">
+        <h3 class="section-title" style="margin-bottom:14px;"><i class="fas fa-bus" style="color:#d97706;"></i>Pending Trip Approvals</h3>
+        <?php
+        $pendingTrips=[];
+        if($conn){
+          $tp=$conn->query("SELECT t.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') as driver_name, COALESCE(req.full_name,'Requested') as requested_by_name FROM transport_trips t LEFT JOIN transport_vehicles tv ON t.vehicle_id=tv.id LEFT JOIN staff s ON t.driver_id=s.id LEFT JOIN staff req ON t.requested_by=req.id WHERE t.dg_approval_status='pending' ORDER BY t.departure_time ASC");
+          if($tp)while($row=$tp->fetch_assoc())$pendingTrips[]=$row;
+        }
+        if(empty($pendingTrips)): ?>
+          <p class="text-muted small" style="padding:20px;text-align:center;">No pending trip approvals. All trips are approved or no new trips submitted.</p>
+          <div class="row g-2 mt-2">
+            <div class="col-4"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#059669;">
+              <?php $tc=$conn->query("SELECT COUNT(*) c FROM transport_vehicles"); echo $tc?$tc->fetch_assoc()['c']:0; ?>
+            </div><div style="font-size:11px;color:#065f46;">Vehicles</div></div></div>
+            <div class="col-4"><div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#2563eb;">
+              <?php $rc=$conn->query("SELECT COUNT(*) c FROM transport_routes WHERE status='active'"); echo $rc?$rc->fetch_assoc()['c']:0; ?>
+            </div><div style="font-size:11px;color:#1e40af;">Active Routes</div></div></div>
+            <div class="col-4"><div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#ca8a04;">
+              <?php $ac=$conn->query("SELECT COUNT(*) c FROM transport_trips WHERE dg_approval_status='approved'"); echo $ac?$ac->fetch_assoc()['c']:0; ?>
+            </div><div style="font-size:11px;color:#a16207;">Approved Trips</div></div></div>
+          </div>
+        <?php else: foreach($pendingTrips as $tp_):
+          $depTime = $tp_['departure_time'] ? date('d M Y, g:i A', strtotime($tp_['departure_time'])) : 'Not set';
+        ?>
+        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div style="font-weight:600;color:#1a1d29;font-size:13px;"><?= htmlspecialchars($tp_['route_name']) ?></div>
+              <div style="color:#92400e;font-size:11px;margin-top:2px;">
+                Vehicle: <?= htmlspecialchars($tp_['vehicle_number'] ?? 'N/A') ?> | Driver: <?= htmlspecialchars($tp_['driver_name']) ?>
+              </div>
+              <div style="color:#92400e;font-size:11px;margin-top:2px;">
+                Departure: <?= $depTime ?> | Passengers: <?= (int)($tp_['passengers_count'] ?? 0) ?> | Cost: UGX <?= number_format((float)($tp_['fuel_cost'] ?? 0)) ?>
+              </div>
+              <?php if ($tp_['notes']): ?><div style="color:#78716c;font-size:11px;margin-top:4px;"><i class="fas fa-comment me-1"></i><?= htmlspecialchars($tp_['notes']) ?></div><?php endif; ?>
+              <div style="color:#a8a29e;font-size:10px;margin-top:4px;">Requested by: <?= htmlspecialchars($tp_['requested_by_name']) ?></div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <form method="POST" style="display:inline;" onsubmit="return confirm('Approve this trip?')">
+                <input type="hidden" name="dg_action" value="approve_submission">
+                <input type="hidden" name="sub_type" value="transport_trip">
+                <input type="hidden" name="sub_id" value="<?= (int)$tp_['id'] ?>">
+                <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 6px;" title="Approve"><i class="fas fa-check-circle"></i></button>
+              </form>
+              <form method="POST" style="display:inline;" onsubmit="return confirm('Reject this trip?')">
+                <input type="hidden" name="dg_action" value="reject_submission">
+                <input type="hidden" name="sub_type" value="transport_trip">
+                <input type="hidden" name="sub_id" value="<?= (int)$tp_['id'] ?>">
+                <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:0 6px;" title="Reject"><i class="fas fa-times-circle"></i></button>
+              </form>
+              <span class="badge badge-soft bg-warning text-dark" style="font-size:9px;">Pending</span>
+            </div>
+          </div>
+        </div>
+        <?php endforeach; ?>
+        <div class="text-center mt-2"><a href="../dashboards/drivers.php?page=transport-trips" class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:8px;"><i class="fas fa-bus me-1"></i>Go to Transport</a></div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-lg-6">
+      <div class="section-card h-100">
+        <h3 class="section-title" style="margin-bottom:14px;"><i class="fas fa-car" style="color:#8b5cf6;"></i>Vehicle Fleet</h3>
+        <?php
+        $fleetVehicles=[];
+        if($conn){$fv=$conn->query("SELECT * FROM transport_vehicles ORDER BY vehicle_number");if($fv)while($row=$fv->fetch_assoc())$fleetVehicles[]=$row;}
+        if(empty($fleetVehicles)): ?><p class="text-muted small" style="padding:20px;text-align:center;">No vehicles registered.</p>
+        <?php else: ?>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover" style="font-size:12px;">
+            <thead><tr><th>Vehicle</th><th>Type</th><th>Capacity</th><th>Fuel</th><th>Status</th></tr></thead>
+            <tbody>
+            <?php foreach($fleetVehicles as $fv_): ?>
+            <tr>
+              <td><strong><?= htmlspecialchars($fv_['vehicle_number']) ?></strong></td>
+              <td><?= htmlspecialchars($fv_['vehicle_type']) ?></td>
+              <td><?= (int)$fv_['capacity'] ?> seats</td>
+              <td><?= htmlspecialchars($fv_['fuel_type'] ?? '-') ?></td>
+              <td><span class="badge badge-soft bg-<?= ($fv_['status'] ?? '')==='Available'?'success':(($fv_['status'] ?? '')==='On Trip'?'info':'warning') ?>"><?= htmlspecialchars($fv_['status']) ?></span></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="section-card h-100">
+        <h3 class="section-title" style="margin-bottom:14px;"><i class="fas fa-road" style="color:#10b981;"></i>Recent Trips</h3>
+        <?php
+        $recentTrips=[];
+        if($conn){
+          $rt2=$conn->query("SELECT t.*, tv.vehicle_number, COALESCE(s.full_name,'Unassigned') as driver_name FROM transport_trips t LEFT JOIN transport_vehicles tv ON t.vehicle_id=tv.id LEFT JOIN staff s ON t.driver_id=s.id ORDER BY t.created_at DESC LIMIT 8");
+          if($rt2)while($row=$rt2->fetch_assoc())$recentTrips[]=$row;
+        }
+        if(empty($recentTrips)): ?><p class="text-muted small" style="padding:20px;text-align:center;">No trips recorded yet.</p>
+        <?php else: ?>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover" style="font-size:12px;">
+            <thead><tr><th>Route</th><th>Vehicle</th><th>Date</th><th>Pax</th><th>Status</th><th>DG</th></tr></thead>
+            <tbody>
+            <?php foreach($recentTrips as $rt_):
+              $dgBadge = ($rt_['dg_approval_status'] ?? '') === 'approved' ? 'bg-success' : (($rt_['dg_approval_status'] ?? '') === 'rejected' ? 'bg-danger' : 'bg-warning text-dark');
+              $dgLabel = ucfirst($rt_['dg_approval_status'] ?? 'pending');
+            ?>
+            <tr>
+              <td><strong style="font-size:11px;"><?= htmlspecialchars($rt_['route_name']) ?></strong></td>
+              <td><?= htmlspecialchars($rt_['vehicle_number'] ?? '-') ?></td>
+              <td><?= $rt_['departure_time'] ? date('d M', strtotime($rt_['departure_time'])) : '-' ?></td>
+              <td><?= (int)($rt_['passengers_count'] ?? 0) ?></td>
+              <td><span class="badge badge-soft bg-<?= ($rt_['status'] ?? '')==='completed'?'success':(($rt_['status'] ?? '')==='in_progress'?'info':'warning text-dark') ?>"><?= ucfirst($rt_['status']) ?></span></td>
+              <td><span class="badge badge-soft <?= $dgBadge ?>" style="font-size:9px;"><?= $dgLabel ?></span></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+  </div>
 </div>
 
 <?php break; ?>

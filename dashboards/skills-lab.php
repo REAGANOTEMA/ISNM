@@ -30,14 +30,14 @@ if ($view === 'equipment' && $ajax === 'get') {
         try {
             if ($q) {
                 $like = '%' . $q . '%';
-                $stmt = $db->prepare("SELECT * FROM lab_equipment WHERE name LIKE ? OR equipment_code LIKE ? ORDER BY name ASC");
+                $stmt = $db->prepare("SELECT * FROM lab_equipment WHERE equipment_name LIKE ? OR equipment_code LIKE ? ORDER BY equipment_name ASC");
                 $stmt->bind_param("ss", $like, $like);
                 $stmt->execute();
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             } else {
-                $r = $db->query("SELECT * FROM lab_equipment ORDER BY name ASC");
+                $r = $db->query("SELECT * FROM lab_equipment ORDER BY equipment_name ASC");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
         } catch (Exception $e) {}
@@ -49,30 +49,22 @@ if ($view === 'equipment' && $ajax === 'save') {
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
     $code = $data['equipment_code'] ?? '';
-    $name = $data['name'] ?? '';
-    $desc = $data['description'] ?? '';
+    $name = $data['equipment_name'] ?? '';
     $cat = $data['category'] ?? 'other';
-    $qty = (int)($data['quantity'] ?? 1);
-    $avail = (int)($data['available_quantity'] ?? $qty);
     $cond = $data['condition_status'] ?? 'good';
+    $qty = (int)($data['quantity'] ?? 1);
     $loc = $data['location'] ?? '';
-    $serial = $data['serial_number'] ?? '';
-    $pdate = $data['purchase_date'] ?: null;
-    $pcost = $data['purchase_cost'] !== '' ? (float)$data['purchase_cost'] : null;
-    $supplier = $data['supplier'] ?? '';
-    $lmaint = $data['last_maintenance_date'] ?: null;
-    $nmaint = $data['next_maintenance_date'] ?: null;
+    $lmaint = $data['last_maintenance'] ?: null;
     $stat = $data['status'] ?? 'active';
-    $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $stmt = $db->prepare("UPDATE lab_equipment SET equipment_code=?, name=?, description=?, category=?, quantity=?, available_quantity=?, condition_status=?, location=?, serial_number=?, purchase_date=?, purchase_cost=?, supplier=?, last_maintenance_date=?, next_maintenance_date=?, status=?, notes=? WHERE id=?");
-            $stmt->bind_param("ssssiiissssdsssi", $code, $name, $desc, $cat, $qty, $avail, $cond, $loc, $serial, $pdate, $pcost, $supplier, $lmaint, $nmaint, $stat, $notes, $id);
+            $stmt = $db->prepare("UPDATE lab_equipment SET equipment_code=?, equipment_name=?, category=?, condition_status=?, quantity=?, location=?, last_maintenance=?, status=? WHERE id=?");
+            $stmt->bind_param("ssssisssi", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat, $id);
             $stmt->execute();
             $stmt->close();
         } else {
-            $stmt = $db->prepare("INSERT INTO lab_equipment (equipment_code, name, description, category, quantity, available_quantity, condition_status, location, serial_number, purchase_date, purchase_cost, supplier, last_maintenance_date, next_maintenance_date, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssssiiissssdssss", $code, $name, $desc, $cat, $qty, $avail, $cond, $loc, $serial, $pdate, $pcost, $supplier, $lmaint, $nmaint, $stat, $notes);
+            $stmt = $db->prepare("INSERT INTO lab_equipment (equipment_code, equipment_name, category, condition_status, quantity, location, last_maintenance, status) VALUES (?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssisss", $code, $name, $cat, $cond, $qty, $loc, $lmaint, $stat);
             $stmt->execute();
             $stmt->close();
         }
@@ -95,14 +87,14 @@ if ($view === 'checkouts' && $ajax === 'get') {
         try {
             if ($q) {
                 $like = '%' . $q . '%';
-                $stmt = $db->prepare("SELECT c.*, e.name AS equipment_name, e.equipment_code FROM lab_equipment_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id WHERE c.student_id LIKE ? OR e.name LIKE ? ORDER BY c.checkout_date DESC LIMIT 200");
-                $stmt->bind_param("ss", $like, $like);
+                $stmt = $db->prepare("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id WHERE c.borrower_id LIKE ? OR c.borrower_name LIKE ? OR e.equipment_name LIKE ? ORDER BY c.checkout_date DESC LIMIT 200");
+                $stmt->bind_param("sss", $like, $like, $like);
                 $stmt->execute();
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             } else {
-                $r = $db->query("SELECT c.*, e.name AS equipment_name, e.equipment_code FROM lab_equipment_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
+                $r = $db->query("SELECT c.*, e.equipment_name, e.equipment_code FROM lab_checkouts c JOIN lab_equipment e ON c.equipment_id=e.id ORDER BY c.checkout_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
         } catch (Exception $e) {}
@@ -114,28 +106,21 @@ if ($view === 'checkouts' && $ajax === 'save') {
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
     $eid = (int)($data['equipment_id'] ?? 0);
-    $sid = $data['student_id'] ?? '';
-    $cb = (int)($user['id'] ?? 0);
-    $erd = $data['expected_return_date'] ?? '';
-    $qty = (int)($data['quantity_checked_out'] ?? 1);
-    $purp = $data['purpose'] ?? '';
+    $bid = $data['borrower_id'] ?? '';
+    $bname = $data['borrower_name'] ?? '';
+    $erd = $data['expected_return'] ?? '';
     $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $ard = $data['actual_return_date'] ?: null;
-            $qr = (int)($data['quantity_returned'] ?? 0);
+            $ard = $data['actual_return'] ?: null;
             $stat = $data['status'] ?? 'checked_out';
-            $stmt = $db->prepare("UPDATE lab_equipment_checkouts SET expected_return_date=?, actual_return_date=?, quantity_returned=?, status=?, notes=? WHERE id=?");
-            $stmt->bind_param("ssisii", $erd, $ard, $qr, $stat, $notes, $id);
+            $stmt = $db->prepare("UPDATE lab_checkouts SET expected_return=?, actual_return=?, status=?, notes=? WHERE id=?");
+            $stmt->bind_param("ssssi", $erd, $ard, $stat, $notes, $id);
             $stmt->execute();
             $stmt->close();
         } else {
-            $stmt = $db->prepare("INSERT INTO lab_equipment_checkouts (equipment_id, student_id, checked_out_by, expected_return_date, quantity_checked_out, purpose, notes) VALUES (?,?,?,?,?,?,?)");
-            $stmt->bind_param("iisisss", $eid, $sid, $cb, $erd, $qty, $purp, $notes);
-            $stmt->execute();
-            $stmt->close();
-            $stmt = $db->prepare("UPDATE lab_equipment SET available_quantity = GREATEST(available_quantity - ?, 0) WHERE id=?");
-            $stmt->bind_param("ii", $qty, $eid);
+            $stmt = $db->prepare("INSERT INTO lab_checkouts (equipment_id, borrower_id, borrower_name, expected_return, notes) VALUES (?,?,?,?,?)");
+            $stmt->bind_param("issss", $eid, $bid, $bname, $erd, $notes);
             $stmt->execute();
             $stmt->close();
         }
@@ -146,18 +131,14 @@ if ($view === 'checkouts' && $ajax === 'save') {
 if ($view === 'checkouts' && $ajax === 'return' && $id) {
     header('Content-Type: application/json');
     try {
-        $stmt = $db->prepare("SELECT equipment_id, quantity_checked_out FROM lab_equipment_checkouts WHERE id=?");
+        $stmt = $db->prepare("SELECT equipment_id FROM lab_checkouts WHERE id=?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $r = $stmt->get_result();
         if ($c = $r->fetch_assoc()) {
             $stmt->close();
-            $stmt = $db->prepare("UPDATE lab_equipment_checkouts SET actual_return_date=NOW(), quantity_returned=quantity_checked_out, status='returned' WHERE id=?");
+            $stmt = $db->prepare("UPDATE lab_checkouts SET actual_return=CURDATE(), status='returned' WHERE id=?");
             $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $stmt->close();
-            $stmt = $db->prepare("UPDATE lab_equipment SET available_quantity = available_quantity + ? WHERE id=?");
-            $stmt->bind_param("ii", $c['quantity_checked_out'], $c['equipment_id']);
             $stmt->execute();
             $stmt->close();
             echo json_encode(['success' => true]);
@@ -170,7 +151,7 @@ if ($view === 'checkouts' && $ajax === 'return' && $id) {
 }
 if ($view === 'checkouts' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_equipment_checkouts WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_checkouts WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -183,14 +164,14 @@ if ($view === 'sessions' && $ajax === 'get') {
         try {
             if ($q) {
                 $like = '%' . $q . '%';
-                $stmt = $db->prepare("SELECT * FROM lab_practical_sessions WHERE title LIKE ? OR session_code LIKE ? ORDER BY session_date DESC LIMIT 200");
+                $stmt = $db->prepare("SELECT * FROM lab_sessions WHERE session_name LIKE ? OR instructor_name LIKE ? ORDER BY scheduled_date DESC LIMIT 200");
                 $stmt->bind_param("ss", $like, $like);
                 $stmt->execute();
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             } else {
-                $r = $db->query("SELECT * FROM lab_practical_sessions ORDER BY session_date DESC LIMIT 200");
+                $r = $db->query("SELECT * FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
         } catch (Exception $e) {}
@@ -201,29 +182,25 @@ if ($view === 'sessions' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $sc = $data['session_code'] ?? '';
-    $title = $data['title'] ?? '';
-    $desc = $data['description'] ?? '';
-    $inst = $data['instructor'] ?? '';
-    $prog = $data['program'] ?? '';
-    $yl = $data['year_level'] ?? '';
-    $sem = $data['semester'] ?? '';
-    $sdate = $data['session_date'] ?? '';
-    $stime = $data['start_time'] ?: null;
-    $etime = $data['end_time'] ?: null;
-    $loc = $data['location'] ?? '';
+    $sname = $data['session_name'] ?? '';
+    $iid = (int)($data['instructor_id'] ?? 0);
+    $iname = $data['instructor_name'] ?? '';
+    $sdate = $data['scheduled_date'] ?? '';
+    $stime = $data['scheduled_time'] ?: null;
+    $dur = (int)($data['duration_minutes'] ?? 60);
     $max = (int)($data['max_students'] ?? 30);
+    $room = $data['room'] ?? '';
     $stat = $data['status'] ?? 'scheduled';
     $notes = $data['notes'] ?? '';
     try {
         if ($id) {
-            $stmt = $db->prepare("UPDATE lab_practical_sessions SET session_code=?, title=?, description=?, instructor=?, program=?, year_level=?, semester=?, session_date=?, start_time=?, end_time=?, location=?, max_students=?, status=?, notes=? WHERE id=?");
-            $stmt->bind_param("sssssssssssisii", $sc, $title, $desc, $inst, $prog, $yl, $sem, $sdate, $stime, $etime, $loc, $max, $stat, $notes, $id);
+            $stmt = $db->prepare("UPDATE lab_sessions SET session_name=?, instructor_id=?, instructor_name=?, scheduled_date=?, scheduled_time=?, duration_minutes=?, max_students=?, room=?, status=?, notes=? WHERE id=?");
+            $stmt->bind_param("sisssiisssi", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes, $id);
             $stmt->execute();
             $stmt->close();
         } else {
-            $stmt = $db->prepare("INSERT INTO lab_practical_sessions (session_code, title, description, instructor, program, year_level, semester, session_date, start_time, end_time, location, max_students, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssssssssssssss", $sc, $title, $desc, $inst, $prog, $yl, $sem, $sdate, $stime, $etime, $loc, $max, $stat, $notes);
+            $stmt = $db->prepare("INSERT INTO lab_sessions (session_name, instructor_id, instructor_name, scheduled_date, scheduled_time, duration_minutes, max_students, room, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("sisssiisss", $sname, $iid, $iname, $sdate, $stime, $dur, $max, $room, $stat, $notes);
             $stmt->execute();
             $stmt->close();
         }
@@ -233,7 +210,7 @@ if ($view === 'sessions' && $ajax === 'save') {
 }
 if ($view === 'sessions' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_practical_sessions WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_sessions WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -246,14 +223,14 @@ if ($view === 'skills' && $ajax === 'get') {
         try {
             if ($q) {
                 $like = '%' . $q . '%';
-                $stmt = $db->prepare("SELECT s.* FROM lab_skills_demonstrations s WHERE s.skill_name LIKE ? OR s.student_id LIKE ? ORDER BY s.date_demonstrated DESC LIMIT 200");
+                $stmt = $db->prepare("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id WHERE d.skill_name LIKE ? OR d.description LIKE ? ORDER BY d.demo_date DESC LIMIT 200");
                 $stmt->bind_param("ss", $like, $like);
                 $stmt->execute();
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             } else {
-                $r = $db->query("SELECT s.* FROM lab_skills_demonstrations s ORDER BY s.date_demonstrated DESC LIMIT 200");
+                $r = $db->query("SELECT d.*, s.session_name FROM lab_demonstrations d LEFT JOIN lab_sessions s ON d.session_id=s.id ORDER BY d.demo_date DESC LIMIT 200");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
         } catch (Exception $e) {}
@@ -264,25 +241,21 @@ if ($view === 'skills' && $ajax === 'save') {
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $id = (int)($data['id'] ?? 0);
-    $sid = $data['student_id'] ?? '';
+    $sesid = (int)($data['session_id'] ?? 0);
     $skn = $data['skill_name'] ?? '';
-    $skc = $data['skill_category'] ?? '';
-    $inst = $data['instructor'] ?? '';
-    $dd = $data['date_demonstrated'] ?? date('Y-m-d');
-    $comp = $data['competency'] ?? 'meets_expectations';
-    $att = (int)($data['attempt_number'] ?? 1);
-    $notes = $data['notes'] ?? '';
-    $nrd = $data['next_review_date'] ?: null;
-    $uid = (int)($user['id'] ?? 0);
+    $desc = $data['description'] ?? '';
+    $iid = (int)($data['instructor_id'] ?? 0);
+    $ddate = $data['demo_date'] ?? date('Y-m-d');
+    $scount = (int)($data['students_count'] ?? 0);
     try {
         if ($id) {
-            $stmt = $db->prepare("UPDATE lab_skills_demonstrations SET student_id=?, skill_name=?, skill_category=?, instructor=?, date_demonstrated=?, competency=?, attempt_number=?, notes=?, next_review_date=? WHERE id=?");
-            $stmt->bind_param("ssssssisis", $sid, $skn, $skc, $inst, $dd, $comp, $att, $notes, $nrd, $id);
+            $stmt = $db->prepare("UPDATE lab_demonstrations SET session_id=?, skill_name=?, description=?, instructor_id=?, demo_date=?, students_count=? WHERE id=?");
+            $stmt->bind_param("isssiii", $sesid, $skn, $desc, $iid, $ddate, $scount, $id);
             $stmt->execute();
             $stmt->close();
         } else {
-            $stmt = $db->prepare("INSERT INTO lab_skills_demonstrations (student_id, skill_name, skill_category, instructor, date_demonstrated, competency, attempt_number, notes, next_review_date, verified_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssssssisis", $sid, $skn, $skc, $inst, $dd, $comp, $att, $notes, $nrd, $uid);
+            $stmt = $db->prepare("INSERT INTO lab_demonstrations (session_id, skill_name, description, instructor_id, demo_date, students_count) VALUES (?,?,?,?,?,?)");
+            $stmt->bind_param("isssii", $sesid, $skn, $desc, $iid, $ddate, $scount);
             $stmt->execute();
             $stmt->close();
         }
@@ -292,7 +265,7 @@ if ($view === 'skills' && $ajax === 'save') {
 }
 if ($view === 'skills' && $ajax === 'delete' && $id) {
     header('Content-Type: application/json');
-    try { $db->query("DELETE FROM lab_skills_demonstrations WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
+    try { $db->query("DELETE FROM lab_demonstrations WHERE id=" . intval($id)); echo json_encode(['success' => true]); }
     catch (Exception $e) { echo json_encode(['success' => false]); }
     exit;
 }
@@ -363,14 +336,14 @@ if ($view === 'attendance' && $ajax === 'get') {
         try {
             $sessionId = isset($_GET['session_id']) ? (int)$_GET['session_id'] : 0;
             if ($sessionId) {
-                $stmt = $db->prepare("SELECT a.*, s.title AS session_title, s.session_date FROM lab_attendance a JOIN lab_practical_sessions s ON a.session_id=s.id WHERE a.session_id=? ORDER BY a.created_at DESC LIMIT 300");
+                $stmt = $db->prepare("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id WHERE a.session_id=? ORDER BY a.created_at DESC LIMIT 300");
                 $stmt->bind_param("i", $sessionId);
                 $stmt->execute();
                 $r = $stmt->get_result();
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
                 $stmt->close();
             } else {
-                $r = $db->query("SELECT a.*, s.title AS session_title, s.session_date FROM lab_attendance a JOIN lab_practical_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
+                $r = $db->query("SELECT a.*, s.session_name AS session_title, s.scheduled_date AS session_date FROM lab_attendance a JOIN lab_sessions s ON a.session_id=s.id ORDER BY a.created_at DESC LIMIT 300");
                 if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
             }
         } catch (Exception $e) {}
@@ -412,7 +385,7 @@ if ($view === 'attendance' && $ajax === 'sessions') {
     $rows = [];
     if ($db) {
         try {
-            $r = $db->query("SELECT id, session_code, title, session_date FROM lab_practical_sessions ORDER BY session_date DESC LIMIT 50");
+            $r = $db->query("SELECT id, session_name, scheduled_date FROM lab_sessions ORDER BY scheduled_date DESC LIMIT 50");
             if ($r) $rows = $r->fetch_all(MYSQLI_ASSOC);
         } catch (Exception $e) {}
     }
@@ -485,9 +458,9 @@ if ($view === 'home' && $ajax === 'stats') {
     if ($db) {
         try {
             $r = $db->query("SELECT COUNT(*) FROM lab_equipment"); if ($r) $stats['equipment'] = (int)$r->fetch_row()[0];
-            $r = $db->query("SELECT COUNT(*) FROM lab_equipment_checkouts WHERE status='checked_out'"); if ($r) $stats['active_checkouts'] = (int)$r->fetch_row()[0];
-            $r = $db->query("SELECT COUNT(*) FROM lab_equipment_checkouts WHERE status='checked_out' AND expected_return_date < CURDATE()"); if ($r) $stats['overdue'] = (int)$r->fetch_row()[0];
-            $r = $db->query("SELECT COUNT(*) FROM lab_practical_sessions WHERE status='scheduled'"); if ($r) $stats['sessions'] = (int)$r->fetch_row()[0];
+            $r = $db->query("SELECT COUNT(*) FROM lab_checkouts WHERE status='checked_out'"); if ($r) $stats['active_checkouts'] = (int)$r->fetch_row()[0];
+            $r = $db->query("SELECT COUNT(*) FROM lab_checkouts WHERE status='checked_out' AND expected_return < CURDATE()"); if ($r) $stats['overdue'] = (int)$r->fetch_row()[0];
+            $r = $db->query("SELECT COUNT(*) FROM lab_sessions WHERE status='scheduled'"); if ($r) $stats['sessions'] = (int)$r->fetch_row()[0];
             $r = $db->query("SELECT COUNT(*) FROM lab_equipment WHERE status='maintenance'"); if ($r) $stats['pending_maintenance'] = (int)$r->fetch_row()[0];
             $r = $db->query("SELECT COUNT(*) FROM lab_consumables WHERE quantity <= min_stock_level"); if ($r) $stats['low_stock'] = (int)$r->fetch_row()[0];
             $r = $db->query("SELECT COUNT(*) FROM lab_incidents WHERE status IN ('open','investigating')"); if ($r) $stats['incidents'] = (int)$r->fetch_row()[0];
@@ -502,9 +475,9 @@ $maintenance_count = 0; $low_stock_count = 0; $incident_count = 0; $total_studen
 if ($db) {
     try {
         $r = $db->query("SELECT COUNT(*) FROM lab_equipment"); if ($r) $equipment_count = (int)$r->fetch_row()[0];
-        $r = $db->query("SELECT COUNT(*) FROM lab_equipment_checkouts WHERE status='checked_out'"); if ($r) $checkout_count = (int)$r->fetch_row()[0];
-        $r = $db->query("SELECT COUNT(*) FROM lab_equipment_checkouts WHERE status='checked_out' AND expected_return_date < CURDATE()"); if ($r) $overdue_count = (int)$r->fetch_row()[0];
-        $r = $db->query("SELECT COUNT(*) FROM lab_practical_sessions WHERE status IN ('scheduled','ongoing')"); if ($r) $scheduled_sessions = (int)$r->fetch_row()[0];
+        $r = $db->query("SELECT COUNT(*) FROM lab_checkouts WHERE status='checked_out'"); if ($r) $checkout_count = (int)$r->fetch_row()[0];
+        $r = $db->query("SELECT COUNT(*) FROM lab_checkouts WHERE status='checked_out' AND expected_return < CURDATE()"); if ($r) $overdue_count = (int)$r->fetch_row()[0];
+        $r = $db->query("SELECT COUNT(*) FROM lab_sessions WHERE status IN ('scheduled','ongoing')"); if ($r) $scheduled_sessions = (int)$r->fetch_row()[0];
         $r = $db->query("SELECT COUNT(*) FROM lab_equipment WHERE status='maintenance'"); if ($r) $maintenance_count = (int)$r->fetch_row()[0];
         $r = $db->query("SELECT COUNT(*) FROM lab_consumables WHERE quantity <= min_stock_level"); if ($r) $low_stock_count = (int)$r->fetch_row()[0];
         $r = $db->query("SELECT COUNT(*) FROM lab_incidents WHERE status IN ('open','investigating')"); if ($r) $incident_count = (int)$r->fetch_row()[0];
@@ -615,7 +588,7 @@ if ($students) {
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="eq-table"><thead class="table-light"><tr>
-                <th>Code</th><th>Name</th><th>Category</th><th>Qty</th><th>Avail</th><th>Condition</th><th>Location</th><th>Status</th><th style="width:120px">Actions</th>
+                <th>Code</th><th>Name</th><th>Category</th><th>Qty</th><th>Condition</th><th>Location</th><th>Status</th><th style="width:120px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <div class="modal fade" id="eqModal"><div class="modal-dialog modal-lg"><div class="modal-content">
@@ -624,21 +597,13 @@ if ($students) {
                 <input type="hidden" name="id" id="eq-id">
                 <div class="row g-3">
                     <div class="col-md-4"><label class="form-label">Equipment Code *</label><input type="text" name="equipment_code" id="eq-code" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label">Name *</label><input type="text" name="name" id="eq-name" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label">Equipment Name *</label><input type="text" name="equipment_name" id="eq-name" class="form-control" required></div>
                     <div class="col-md-4"><label class="form-label">Category *</label><select name="category" id="eq-cat" class="form-select"><option value="mannequin">Mannequin</option><option value="model">Model</option><option value="instrument">Instrument</option><option value="furniture">Furniture</option><option value="consumable">Consumable</option><option value="other">Other</option></select></div>
                     <div class="col-md-3"><label class="form-label">Quantity *</label><input type="number" name="quantity" id="eq-qty" class="form-control" value="1" min="1"></div>
-                    <div class="col-md-3"><label class="form-label">Available</label><input type="number" name="available_quantity" id="eq-avail" class="form-control" min="0"></div>
                     <div class="col-md-3"><label class="form-label">Condition</label><select name="condition_status" id="eq-cond" class="form-select"><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
                     <div class="col-md-3"><label class="form-label">Status</label><select name="status" id="eq-stat" class="form-select"><option value="active">Active</option><option value="maintenance">Maintenance</option><option value="retired">Retired</option></select></div>
                     <div class="col-md-6"><label class="form-label">Location</label><input type="text" name="location" id="eq-loc" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">Serial Number</label><input type="text" name="serial_number" id="eq-serial" class="form-control"></div>
-                    <div class="col-md-4"><label class="form-label">Purchase Date</label><input type="date" name="purchase_date" id="eq-pdate" class="form-control"></div>
-                    <div class="col-md-4"><label class="form-label">Purchase Cost</label><input type="number" step="0.01" name="purchase_cost" id="eq-pcost" class="form-control"></div>
-                    <div class="col-md-4"><label class="form-label">Supplier</label><input type="text" name="supplier" id="eq-supp" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">Last Maintenance</label><input type="date" name="last_maintenance_date" id="eq-lmaint" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">Next Maintenance</label><input type="date" name="next_maintenance_date" id="eq-nmaint" class="form-control"></div>
-                    <div class="col-12"><label class="form-label">Description</label><textarea name="description" id="eq-desc" class="form-control" rows="2"></textarea></div>
-                    <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="eq-notes" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-6"><label class="form-label">Last Maintenance</label><input type="date" name="last_maintenance" id="eq-lmaint" class="form-control"></div>
                 </div>
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveEq()"><i class="fas fa-save me-1"></i>Save</button></div>
@@ -655,7 +620,7 @@ if ($students) {
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="co-table"><thead class="table-light"><tr>
-                <th>ID</th><th>Equipment</th><th>Student ID</th><th>Check out</th><th>Expected Return</th><th>Qty</th><th>Status</th><th style="width:140px">Actions</th>
+                <th>ID</th><th>Equipment</th><th>Borrower</th><th>Check out</th><th>Expected Return</th><th>Status</th><th style="width:140px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <div class="modal fade" id="coModal"><div class="modal-dialog"><div class="modal-content">
@@ -663,15 +628,13 @@ if ($students) {
             <div class="modal-body"><form id="coForm">
                 <input type="hidden" name="id" id="co-id">
                 <div class="mb-3"><label class="form-label">Equipment *</label><select name="equipment_id" id="co-eid" class="form-select" required><option value="">-- Select Equipment --</option></select></div>
-                <div class="mb-3"><label class="form-label">Student ID *</label><input type="text" name="student_id" id="co-sid" class="form-control" list="studentList" required></div>
-                <div class="mb-3"><label class="form-label">Expected Return Date *</label><input type="date" name="expected_return_date" id="co-erd" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">Quantity *</label><input type="number" name="quantity_checked_out" id="co-qty" class="form-control" value="1" min="1"></div>
-                <div class="mb-3"><label class="form-label">Purpose</label><textarea name="purpose" id="co-purpose" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label">Borrower ID *</label><input type="text" name="borrower_id" id="co-bid" class="form-control" list="studentList" required></div>
+                <div class="mb-3"><label class="form-label">Borrower Name</label><input type="text" name="borrower_name" id="co-bname" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Expected Return *</label><input type="date" name="expected_return" id="co-erd" class="form-control" required></div>
                 <div class="mb-3"><label class="form-label">Notes</label><textarea name="notes" id="co-notes" class="form-control" rows="2"></textarea></div>
                 <div id="co-return-fields" style="display:none">
                     <hr><h6>Return</h6>
-                    <div class="mb-3"><label class="form-label">Actual Return Date</label><input type="date" name="actual_return_date" id="co-ard" class="form-control"></div>
-                    <div class="mb-3"><label class="form-label">Quantity Returned</label><input type="number" name="quantity_returned" id="co-qr" class="form-control" value="0" min="0"></div>
+                    <div class="mb-3"><label class="form-label">Actual Return</label><input type="date" name="actual_return" id="co-ard" class="form-control"></div>
                     <div class="mb-3"><label class="form-label">Status</label><select name="status" id="co-stat" class="form-select"><option value="checked_out">Checked Out</option><option value="returned">Returned</option><option value="lost_damaged">Lost / Damaged</option></select></div>
                 </div>
             </form></div>
@@ -689,7 +652,7 @@ if ($students) {
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="ses-table"><thead class="table-light"><tr>
-                <th>Code</th><th>Title</th><th>Date</th><th>Time</th><th>Instructor</th><th>Program</th><th>Location</th><th>Status</th><th style="width:120px">Actions</th>
+                <th>Session Name</th><th>Date</th><th>Time</th><th>Instructor</th><th>Room</th><th>Status</th><th style="width:120px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <div class="modal fade" id="sesModal"><div class="modal-dialog modal-lg"><div class="modal-content">
@@ -697,19 +660,15 @@ if ($students) {
             <div class="modal-body"><form id="sesForm">
                 <input type="hidden" name="id" id="ses-id">
                 <div class="row g-3">
-                    <div class="col-md-4"><label class="form-label">Session Code *</label><input type="text" name="session_code" id="ses-code" class="form-control" required></div>
-                    <div class="col-md-8"><label class="form-label">Title *</label><input type="text" name="title" id="ses-title" class="form-control" required></div>
-                    <div class="col-md-6"><label class="form-label">Instructor</label><input type="text" name="instructor" id="ses-instr" class="form-control"></div>
-                    <div class="col-md-3"><label class="form-label">Program</label><input type="text" name="program" id="ses-prog" class="form-control"></div>
-                    <div class="col-md-3"><label class="form-label">Year Level</label><input type="text" name="year_level" id="ses-yl" class="form-control"></div>
-                    <div class="col-md-4"><label class="form-label">Date *</label><input type="date" name="session_date" id="ses-date" class="form-control" required></div>
-                    <div class="col-md-3"><label class="form-label">Start Time</label><input type="time" name="start_time" id="ses-st" class="form-control"></div>
-                    <div class="col-md-3"><label class="form-label">End Time</label><input type="time" name="end_time" id="ses-et" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label">Session Name *</label><input type="text" name="session_name" id="ses-name" class="form-control" required></div>
+                    <div class="col-md-3"><label class="form-label">Instructor ID</label><input type="number" name="instructor_id" id="ses-iid" class="form-control"></div>
+                    <div class="col-md-3"><label class="form-label">Instructor Name</label><input type="text" name="instructor_name" id="ses-iname" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Date *</label><input type="date" name="scheduled_date" id="ses-date" class="form-control" required></div>
+                    <div class="col-md-3"><label class="form-label">Time</label><input type="time" name="scheduled_time" id="ses-st" class="form-control"></div>
+                    <div class="col-md-3"><label class="form-label">Duration (min)</label><input type="number" name="duration_minutes" id="ses-dur" class="form-control" value="60"></div>
                     <div class="col-md-2"><label class="form-label">Max Students</label><input type="number" name="max_students" id="ses-max" class="form-control" value="30"></div>
-                    <div class="col-md-6"><label class="form-label">Location</label><input type="text" name="location" id="ses-loc" class="form-control"></div>
-                    <div class="col-md-3"><label class="form-label">Semester</label><input type="text" name="semester" id="ses-sem" class="form-control"></div>
-                    <div class="col-md-3"><label class="form-label">Status</label><select name="status" id="ses-stat" class="form-select"><option value="scheduled">Scheduled</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
-                    <div class="col-12"><label class="form-label">Description</label><textarea name="description" id="ses-desc" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-4"><label class="form-label">Room</label><input type="text" name="room" id="ses-room" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Status</label><select name="status" id="ses-stat" class="form-select"><option value="scheduled">Scheduled</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
                     <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="ses-notes" class="form-control" rows="2"></textarea></div>
                 </div>
             </form></div>
@@ -727,23 +686,21 @@ if ($students) {
         </div>
         <div class="card"><div class="card-body p-0"><div class="table-responsive">
             <table class="table table-hover mb-0" id="sk-table"><thead class="table-light"><tr>
-                <th>Student ID</th><th>Skill</th><th>Category</th><th>Date</th><th>Competency</th><th>Attempt</th><th>Instructor</th><th style="width:100px">Actions</th>
+                <th>Skill</th><th>Description</th><th>Session</th><th>Demo Date</th><th>Instructor ID</th><th>Students</th><th style="width:100px">Actions</th>
             </tr></thead><tbody></tbody></table>
         </div></div></div>
         <div class="modal fade" id="skModal"><div class="modal-dialog"><div class="modal-content">
             <div class="modal-header"><h5 id="skModalTitle">Record Skill Demonstration</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body"><form id="skForm">
                 <input type="hidden" name="id" id="sk-id">
-                <div class="mb-3"><label class="form-label">Student ID *</label><input type="text" name="student_id" id="sk-sid" class="form-control" list="studentList" required></div>
+                <div class="mb-3"><label class="form-label">Session *</label><select name="session_id" id="sk-sesid" class="form-select" required><option value="">-- Select Session --</option></select></div>
                 <div class="mb-3"><label class="form-label">Skill Name *</label><input type="text" name="skill_name" id="sk-name" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">Category</label><input type="text" name="skill_category" id="sk-cat" class="form-control" placeholder="e.g., Assessment, Injection, Wound Care"></div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea name="description" id="sk-desc" class="form-control" rows="2"></textarea></div>
                 <div class="row g-3 mb-3">
-                    <div class="col-md-4"><label class="form-label">Date</label><input type="date" name="date_demonstrated" id="sk-date" class="form-control"></div>
-                    <div class="col-md-4"><label class="form-label">Competency</label><select name="competency" id="sk-comp" class="form-select"><option value="exceeds_expectations">Exceeds Expectations</option><option value="meets_expectations" selected>Meets Expectations</option><option value="needs_improvement">Needs Improvement</option><option value="unsatisfactory">Unsatisfactory</option></select></div>
-                    <div class="col-md-4"><label class="form-label">Attempt #</label><input type="number" name="attempt_number" id="sk-att" class="form-control" value="1" min="1"></div>
+                    <div class="col-md-4"><label class="form-label">Instructor ID</label><input type="number" name="instructor_id" id="sk-iid" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Demo Date</label><input type="date" name="demo_date" id="sk-date" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">Students Count</label><input type="number" name="students_count" id="sk-scount" class="form-control" value="0" min="0"></div>
                 </div>
-                <div class="mb-3"><label class="form-label">Notes</label><textarea name="notes" id="sk-notes" class="form-control" rows="2"></textarea></div>
-                <div class="mb-3"><label class="form-label">Next Review Date</label><input type="date" name="next_review_date" id="sk-nrd" class="form-control"></div>
             </form></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="saveSk()"><i class="fas fa-save me-1"></i>Save</button></div>
         </div></div></div>
@@ -880,8 +837,8 @@ function loadTable(endpoint, tableId, renderFn) {
 
 // ── Equipment ──────────────────────────────────────────────────
 function loadEq() { loadTable('?view=equipment&ajax=get', 'eq-table', r => `<tr>
-    <td>${esc(r.equipment_code)}</td><td>${esc(r.name)}</td><td><span class="badge bg-secondary">${esc(r.category)}</span></td>
-    <td>${r.quantity}</td><td>${r.available_quantity}</td>
+    <td>${esc(r.equipment_code)}</td><td>${esc(r.equipment_name)}</td><td><span class="badge bg-secondary">${esc(r.category)}</span></td>
+    <td>${r.quantity}</td>
     <td><span class="badge-status bg-${r.condition_status==='excellent'?'success':r.condition_status==='good'?'primary':r.condition_status==='fair'?'warning':'danger'}">${esc(r.condition_status)}</span></td>
     <td>${esc(r.location)}</td>
     <td><span class="badge-status bg-${r.status==='active'?'success':r.status==='maintenance'?'info':'secondary'}">${esc(r.status)}</span></td>
@@ -893,21 +850,13 @@ function loadEq() { loadTable('?view=equipment&ajax=get', 'eq-table', r => `<tr>
 function openEqModal(data) {
     setVal('eq-id', data?.id||'');
     setVal('eq-code', data?.equipment_code||'');
-    setVal('eq-name', data?.name||'');
+    setVal('eq-name', data?.equipment_name||'');
     setVal('eq-cat', data?.category||'other');
     setVal('eq-qty', data?.quantity||1);
-    setVal('eq-avail', data?.available_quantity||'');
     setVal('eq-cond', data?.condition_status||'good');
     setVal('eq-stat', data?.status||'active');
     setVal('eq-loc', data?.location||'');
-    setVal('eq-serial', data?.serial_number||'');
-    setVal('eq-pdate', data?.purchase_date||'');
-    setVal('eq-pcost', data?.purchase_cost||'');
-    setVal('eq-supp', data?.supplier||'');
-    setVal('eq-lmaint', data?.last_maintenance_date||'');
-    setVal('eq-nmaint', data?.next_maintenance_date||'');
-    setVal('eq-desc', data?.description||'');
-    setVal('eq-notes', data?.notes||'');
+    setVal('eq-lmaint', data?.last_maintenance||'');
     document.getElementById('eqModalTitle').textContent = data?.id ? 'Edit Equipment' : 'Add Equipment';
     new bootstrap.Modal(document.getElementById('eqModal')).show();
 }
@@ -934,10 +883,10 @@ function deleteEq(id) {
 }
 
 // ── Checkouts ──────────────────────────────────────────────────
-function loadCo() { loadTable('?view=checkouts&ajax=get', 'co-table', r => `<tr class="${r.expected_return_date < todayStr() && r.status==='checked_out'?'table-danger':''}">
-    <td>${r.id}</td><td>${esc(r.equipment_name||'')} (${esc(r.equipment_code||'')})</td><td>${esc(r.student_id)}</td>
+function loadCo() { loadTable('?view=checkouts&ajax=get', 'co-table', r => `<tr class="${r.expected_return < todayStr() && r.status==='checked_out'?'table-danger':''}">
+    <td>${r.id}</td><td>${esc(r.equipment_name||'')} (${esc(r.equipment_code||'')})</td><td>${esc(r.borrower_id)}</td>
     <td>${r.checkout_date ? r.checkout_date.substring(0,10) : ''}</td>
-    <td>${esc(r.expected_return_date)}</td><td>${r.quantity_checked_out}</td>
+    <td>${esc(r.expected_return)}</td>
     <td><span class="badge-status bg-${r.status==='checked_out'?'warning':r.status==='returned'?'success':'danger'}">${esc(r.status)}</span></td>
     <td>
         ${r.status==='checked_out'?`<button class="btn btn-sm btn-outline-success py-0 px-1" onclick="returnCo(${r.id})"><i class="fas fa-undo"></i></button>`:''}
@@ -958,14 +907,12 @@ function loadCoEquipmentList() {
 function openCoModal(data) {
     setVal('co-id', data?.id||'');
     setVal('co-eid', data?.equipment_id||'');
-    setVal('co-sid', data?.student_id||'');
-    setVal('co-erd', data?.expected_return_date||'');
-    setVal('co-qty', data?.quantity_checked_out||1);
-    setVal('co-purpose', data?.purpose||'');
+    setVal('co-bid', data?.borrower_id||'');
+    setVal('co-bname', data?.borrower_name||'');
+    setVal('co-erd', data?.expected_return||'');
     setVal('co-notes', data?.notes||'');
     if (data?.id) {
-        setVal('co-ard', data?.actual_return_date ? data.actual_return_date.substring(0,10) : '');
-        setVal('co-qr', data?.quantity_returned||0);
+        setVal('co-ard', data?.actual_return ? data.actual_return.substring(0,10) : '');
         setVal('co-stat', data?.status||'checked_out');
         document.getElementById('co-return-fields').style.display = 'block';
         document.getElementById('coModalTitle').textContent = 'Edit Check out';
@@ -1007,10 +954,10 @@ function deleteCo(id) {
 
 // ── Sessions ───────────────────────────────────────────────────
 function loadSes() { loadTable('?view=sessions&ajax=get', 'ses-table', r => `<tr>
-    <td>${esc(r.session_code)}</td><td><strong>${esc(r.title)}</strong></td>
-    <td>${esc(r.session_date)}</td>
-    <td>${r.start_time ? r.start_time.substring(0,5) : ''}${r.end_time ? ' to '+r.end_time.substring(0,5) : ''}</td>
-    <td>${esc(r.instructor)}</td><td>${esc(r.program)}</td><td>${esc(r.location)}</td>
+    <td><strong>${esc(r.session_name)}</strong></td>
+    <td>${esc(r.scheduled_date)}</td>
+    <td>${r.scheduled_time ? r.scheduled_time.substring(0,5) : ''}</td>
+    <td>${esc(r.instructor_name)}</td><td>${esc(r.room)}</td>
     <td><span class="badge-status bg-${r.status==='scheduled'?'primary':r.status==='ongoing'?'success':r.status==='completed'?'secondary':'danger'}">${esc(r.status)}</span></td>
     <td>
         <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editSes(${r.id})"><i class="fas fa-edit"></i></button>
@@ -1018,14 +965,13 @@ function loadSes() { loadTable('?view=sessions&ajax=get', 'ses-table', r => `<tr
     </td>
 </tr>`); }
 function openSesModal(data) {
-    setVal('ses-id', data?.id||''); setVal('ses-code', data?.session_code||'');
-    setVal('ses-title', data?.title||''); setVal('ses-instr', data?.instructor||'');
-    setVal('ses-prog', data?.program||''); setVal('ses-yl', data?.year_level||'');
-    setVal('ses-date', data?.session_date||''); setVal('ses-st', data?.start_time||'');
-    setVal('ses-et', data?.end_time||''); setVal('ses-max', data?.max_students||30);
-    setVal('ses-loc', data?.location||''); setVal('ses-sem', data?.semester||'');
+    setVal('ses-id', data?.id||''); setVal('ses-name', data?.session_name||'');
+    setVal('ses-iid', data?.instructor_id||''); setVal('ses-iname', data?.instructor_name||'');
+    setVal('ses-date', data?.scheduled_date||''); setVal('ses-st', data?.scheduled_time||'');
+    setVal('ses-dur', data?.duration_minutes||60); setVal('ses-max', data?.max_students||30);
+    setVal('ses-room', data?.room||'');
     setVal('ses-stat', data?.status||'scheduled');
-    setVal('ses-desc', data?.description||''); setVal('ses-notes', data?.notes||'');
+    setVal('ses-notes', data?.notes||'');
     document.getElementById('sesModalTitle').textContent = data?.id ? 'Edit Session' : 'New Session';
     new bootstrap.Modal(document.getElementById('sesModal')).show();
 }
@@ -1053,24 +999,31 @@ function deleteSes(id) {
 
 // ── Skills ─────────────────────────────────────────────────────
 function loadSk() { loadTable('?view=skills&ajax=get', 'sk-table', r => `<tr>
-    <td>${esc(r.student_id)}</td><td><strong>${esc(r.skill_name)}</strong></td><td>${esc(r.skill_category||'')}</td>
-    <td>${esc(r.date_demonstrated)}</td>
-    <td><span class="badge-status bg-${r.competency==='exceeds_expectations'?'success':r.competency==='meets_expectations'?'primary':r.competency==='needs_improvement'?'warning':'danger'}">${esc(r.competency.replace(/_/g,' '))}</span></td>
-    <td>${r.attempt_number}</td><td>${esc(r.instructor||'')}</td>
+    <td><strong>${esc(r.skill_name)}</strong></td><td>${esc(r.description||'').substring(0,40)}</td>
+    <td>${esc(r.session_name||'')}</td>
+    <td>${esc(r.demo_date)}</td>
+    <td>${esc(r.instructor_id||'')}</td><td>${r.students_count}</td>
     <td>
         <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editSk(${r.id})"><i class="fas fa-edit"></i></button>
         <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteSk(${r.id})"><i class="fas fa-trash"></i></button>
     </td>
 </tr>`); }
 function openSkModal(data) {
-    setVal('sk-id', data?.id||''); setVal('sk-sid', data?.student_id||'');
-    setVal('sk-name', data?.skill_name||''); setVal('sk-cat', data?.skill_category||'');
-    setVal('sk-date', data?.date_demonstrated||new Date().toISOString().substring(0,10));
-    setVal('sk-comp', data?.competency||'meets_expectations');
-    setVal('sk-att', data?.attempt_number||1);
-    setVal('sk-notes', data?.notes||''); setVal('sk-nrd', data?.next_review_date||'');
-    document.getElementById('skModalTitle').textContent = data?.id ? 'Edit Skill Record' : 'Record Skill Demonstration';
+    setVal('sk-id', data?.id||'');
+    setVal('sk-name', data?.skill_name||'');
+    setVal('sk-desc', data?.description||'');
+    setVal('sk-iid', data?.instructor_id||'');
+    setVal('sk-date', data?.demo_date||new Date().toISOString().substring(0,10));
+    setVal('sk-scount', data?.students_count||0);
+    loadSkSessionList(data?.session_id);
+    document.getElementById('skModalTitle').textContent = data?.id ? 'Edit Demonstration' : 'Record Demonstration';
     new bootstrap.Modal(document.getElementById('skModal')).show();
+}
+function loadSkSessionList(selectedId) {
+    fetch('?view=attendance&ajax=sessions').then(r=>r.json()).then(d => {
+        const sel = document.getElementById('sk-sesid');
+        if (sel) sel.innerHTML = '<option value="">-- Select Session --</option>' + d.map(x => `<option value="${x.id}" ${x.id==selectedId?'selected':''}>${esc(x.session_name)} (${x.scheduled_date})</option>`).join('');
+    });
 }
 function editSk(id) {
     fetch('?view=skills&ajax=get').then(r=>r.json()).then(d => {
@@ -1157,9 +1110,9 @@ function loadAtt() {
 function loadAttSessions() {
     fetch('?view=attendance&ajax=sessions').then(r=>r.json()).then(d => {
         const sel = document.getElementById('att-session-filter');
-        if (sel) sel.innerHTML = '<option value="">-- All Sessions --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} , ${esc(x.title)} (${x.session_date})</option>`).join('');
+        if (sel) sel.innerHTML = '<option value="">-- All Sessions --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_name)} (${x.scheduled_date})</option>`).join('');
         const sel2 = document.getElementById('att-session-id');
-        if (sel2) sel2.innerHTML = '<option value="">-- Select Session --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_code)} , ${esc(x.title)} (${x.session_date})</option>`).join('');
+        if (sel2) sel2.innerHTML = '<option value="">-- Select Session --</option>' + d.map(x => `<option value="${x.id}">${esc(x.session_name)} (${x.scheduled_date})</option>`).join('');
     });
 }
 function openAttBatchModal() {

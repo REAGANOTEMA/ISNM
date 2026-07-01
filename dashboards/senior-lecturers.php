@@ -23,6 +23,87 @@ if (file_exists($profileSettingsFile)) {
 
 $studentsConn = $ctx['students'];
 
+// ─── POST Handlers ───
+$flash_msg = '';
+$flash_type = 'success';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $act = $_POST['action'];
+
+    if ($act === 'add_assessment' && $conn) {
+        $sid  = (int)($_POST['student_id'] ?? 0);
+        $coursename = trim($_POST['course_name'] ?? '');
+        $type = trim($_POST['assessment_type'] ?? '');
+        $title = trim($_POST['title'] ?? '');
+        $total = (int)($_POST['total_marks'] ?? 0);
+        $obtained = (int)($_POST['marks_obtained'] ?? 0);
+        $date = trim($_POST['assessment_date'] ?? date('Y-m-d'));
+        $comments = trim($_POST['comments'] ?? '');
+        $stmt = $conn->prepare("INSERT INTO teaching_assessments (lecturer_id,student_id,course_name,assessment_type,title,total_marks,marks_obtained,assessment_date,comments) VALUES (?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("iisssiiis", $user_id, $sid, $coursename, $type, $title, $total, $obtained, $date, $comments);
+        if ($stmt->execute()) { $flash_msg = 'Assessment added.'; } else { $flash_msg = 'Failed to add assessment.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    if ($act === 'update_assessment' && $conn) {
+        $id   = (int)($_POST['assessment_id'] ?? 0);
+        $sid  = (int)($_POST['student_id'] ?? 0);
+        $coursename = trim($_POST['course_name'] ?? '');
+        $type = trim($_POST['assessment_type'] ?? '');
+        $title = trim($_POST['title'] ?? '');
+        $total = (int)($_POST['total_marks'] ?? 0);
+        $obtained = (int)($_POST['marks_obtained'] ?? 0);
+        $date = trim($_POST['assessment_date'] ?? date('Y-m-d'));
+        $comments = trim($_POST['comments'] ?? '');
+        $stmt = $conn->prepare("UPDATE teaching_assessments SET student_id=?,course_name=?,assessment_type=?,title=?,total_marks=?,marks_obtained=?,assessment_date=?,comments=? WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("isssiiisii", $sid, $coursename, $type, $title, $total, $obtained, $date, $comments, $id, $user_id);
+        if ($stmt->execute()) { $flash_msg = 'Assessment updated.'; } else { $flash_msg = 'Failed to update assessment.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    if ($act === 'delete_assessment' && $conn) {
+        $id = (int)($_POST['assessment_id'] ?? 0);
+        $stmt = $conn->prepare("DELETE FROM teaching_assessments WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("ii", $id, $user_id);
+        if ($stmt->execute()) { $flash_msg = 'Assessment deleted.'; } else { $flash_msg = 'Failed to delete assessment.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    if ($act === 'add_resource' && $conn) {
+        $title = trim($_POST['title'] ?? '');
+        $rtype = trim($_POST['resource_type'] ?? '');
+        $fpath = trim($_POST['file_path'] ?? '');
+        $url   = trim($_POST['url'] ?? '');
+        $desc  = trim($_POST['description'] ?? '');
+        $coursename = trim($_POST['course_name'] ?? '');
+        $stmt = $conn->prepare("INSERT INTO teaching_resources (lecturer_id,title,resource_type,file_path,url,description,course_name) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("issssss", $user_id, $title, $rtype, $fpath, $url, $desc, $coursename);
+        if ($stmt->execute()) { $flash_msg = 'Resource added.'; } else { $flash_msg = 'Failed to add resource.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    if ($act === 'delete_resource' && $conn) {
+        $id = (int)($_POST['resource_id'] ?? 0);
+        $stmt = $conn->prepare("DELETE FROM teaching_resources WHERE id=? AND lecturer_id=?");
+        $stmt->bind_param("ii", $id, $user_id);
+        if ($stmt->execute()) { $flash_msg = 'Resource deleted.'; } else { $flash_msg = 'Failed to delete resource.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    if ($act === 'add_announcement' && $conn) {
+        $title = trim($_POST['title'] ?? '');
+        $content = trim($_POST['content'] ?? '');
+        $audience = trim($_POST['target_audience'] ?? 'All');
+        $published = isset($_POST['is_published']) ? 1 : 0;
+        $stmt = $conn->prepare("INSERT INTO teaching_announcements (lecturer_id,title,content,target_audience,is_published) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("isssi", $user_id, $title, $content, $audience, $published);
+        if ($stmt->execute()) { $flash_msg = 'Announcement added.'; } else { $flash_msg = 'Failed to add announcement.'; $flash_type = 'danger'; }
+        $stmt->close();
+    }
+
+    header("Location: " . $_SERVER['PHP_SELF'] . "?page=" . urlencode($_GET['page'] ?? 'home'));
+    exit;
+}
+
 // Get lecturer statistics from database
 $total_students = 0;
 $total_staff = 0;
@@ -103,8 +184,26 @@ if ($conn) {
 $teaching_resources = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT * FROM teaching_resources WHERE uploaded_by=$user_id ORDER BY created_at DESC LIMIT 5");
+        $r = $conn->query("SELECT * FROM teaching_resources WHERE lecturer_id=$user_id ORDER BY created_at DESC");
         if ($r) $teaching_resources = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get all teaching assessments for this lecturer
+$all_assessments = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT ta.*, st.full_name as student_name FROM teaching_assessments ta LEFT JOIN students st ON ta.student_id=st.id WHERE ta.lecturer_id=$user_id ORDER BY ta.assessment_date DESC");
+        if ($r) $all_assessments = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get teaching announcements
+$all_announcements = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM teaching_announcements WHERE lecturer_id=$user_id ORDER BY created_at DESC");
+        if ($r) $all_announcements = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 
@@ -144,6 +243,7 @@ $pageToSection = [
     'reports'      => 'reports',
     'lesson-plans' => 'lesson-plans',
     'assignments'  => 'assignments',
+    'announcements'=> 'announcements',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';
@@ -384,55 +484,59 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 <!-- Assessments -->
                 <section id="assessments" class="content-section dashboard-section<?= $section==='assessments'?' active':'' ?>" data-section="assessments">
                     <h2>Assessment Management</h2>
-                    <div class="assessment-actions">
-                        <button class="btn btn-primary" onclick="openModal('createAssessment')">
-                            <i class="fas fa-plus"></i> Create Assessment
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('gradeAssessment')">
-                            <i class="fas fa-clipboard-check"></i> Grade Assessments
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('assessmentReport')">
-                            <i class="fas fa-chart-bar"></i> Assessment Report
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('feedback')">
-                            <i class="fas fa-comment"></i> Student Feedback
+                    <?php if ($flash_msg && ($_GET['page'] ?? '') === 'cat-marks'): ?><div class="alert alert-<?= $flash_type ?>"><?= htmlspecialchars($flash_msg) ?></div><?php endif; ?>
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="document.getElementById('addAssessmentForm').style.display=document.getElementById('addAssessmentForm').style.display==='none'?'block':'none'">
+                            <i class="fas fa-plus"></i> Add Assessment
                         </button>
                     </div>
-                    
-                    <div class="assessment-overview">
-                        <h3>Recent Assessments</h3>
-                        <div class="assessment-list">
-                            <?php if (empty($recent_assessments)): ?>
-                            <div class="text-center text-muted py-4">No assessments created yet</div>
-                            <?php else: ?>
-                            <?php foreach ($recent_assessments as $asm): ?>
-                            <div class="assessment-item">
-                                <div class="assessment-header">
-                                    <h4><?= htmlspecialchars($asm['title'] ?? ($asm['course_name'] ?? 'Assessment')) ?></h4>
-                                    <span class="assessment-date"><?= !empty($asm['created_at']) ? date('M j, Y', strtotime($asm['created_at'])) : '-' ?></span>
-                                </div>
-                                <div class="assessment-details">
-                                    <div class="detail">
-                                        <span>Type:</span>
-                                        <strong><?= htmlspecialchars($asm['assessment_type'] ?? 'Exam') ?></strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Course:</span>
-                                        <strong><?= htmlspecialchars($asm['course_name'] ?? '-') ?></strong>
-                                    </div>
-                                    <div class="detail">
-                                        <span>Status:</span>
-                                        <strong class="text-<?= ($asm['status']??'draft')==='published'?'success':'warning' ?>"><?= ucfirst(htmlspecialchars($asm['status'] ?? 'Draft')) ?></strong>
-                                    </div>
-                                </div>
-                                <div class="assessment-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Submissions</button>
-                                    <button class="btn btn-sm btn-outline-success">Continue Grading</button>
-                                </div>
+                    <div id="addAssessmentForm" style="display:none" class="card card-body mb-4">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="add_assessment">
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><label>Student ID</label><input type="number" name="student_id" class="form-control" required></div>
+                                <div class="col-md-4 mb-2"><label>Course Name</label><input type="text" name="course_name" class="form-control" required></div>
+                                <div class="col-md-4 mb-2"><label>Assessment Type</label><select name="assessment_type" class="form-control" required><option value="CAT">CAT</option><option value="Assignment">Assignment</option><option value="Exam">Exam</option><option value="Project">Project</option></select></div>
                             </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><label>Title</label><input type="text" name="title" class="form-control" required></div>
+                                <div class="col-md-2 mb-2"><label>Total Marks</label><input type="number" name="total_marks" class="form-control" required></div>
+                                <div class="col-md-2 mb-2"><label>Marks Obtained</label><input type="number" name="marks_obtained" class="form-control" required></div>
+                                <div class="col-md-2 mb-2"><label>Date</label><input type="date" name="assessment_date" class="form-control" value="<?= date('Y-m-d') ?>" required></div>
+                                <div class="col-md-2 mb-2"><label>&nbsp;</label><button type="submit" class="btn btn-success w-100">Save</button></div>
+                            </div>
+                            <div class="mb-2"><label>Comments</label><textarea name="comments" class="form-control" rows="2"></textarea></div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>#</th><th>Student</th><th>Course</th><th>Type</th><th>Title</th><th>Total</th><th>Obtained</th><th>Date</th><th>Comments</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <?php if (empty($all_assessments)): ?>
+                            <tr><td colspan="10" class="text-center text-muted">No assessments found</td></tr>
+                            <?php else: foreach ($all_assessments as $i => $asm): ?>
+                            <tr>
+                                <td><?= $i+1 ?></td>
+                                <td><?= htmlspecialchars($asm['student_name'] ?? 'ID: '.$asm['student_id']) ?></td>
+                                <td><?= htmlspecialchars($asm['course_name']) ?></td>
+                                <td><?= htmlspecialchars($asm['assessment_type']) ?></td>
+                                <td><?= htmlspecialchars($asm['title']) ?></td>
+                                <td><?= (int)$asm['total_marks'] ?></td>
+                                <td><?= (int)$asm['marks_obtained'] ?></td>
+                                <td><?= htmlspecialchars($asm['assessment_date']) ?></td>
+                                <td><?= htmlspecialchars($asm['comments']) ?></td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick='editAssessment(<?= json_encode($asm) ?>)'><i class="fas fa-edit"></i></button>
+                                    <form method="POST" style="display:inline" onsubmit="return confirm('Delete this assessment?')">
+                                        <input type="hidden" name="action" value="delete_assessment">
+                                        <input type="hidden" name="assessment_id" value="<?= (int)$asm['id'] ?>">
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -486,51 +590,53 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                 <!-- Teaching Resources -->
                 <section id="resources" class="content-section dashboard-section<?= $section==='resources'?' active':'' ?>" data-section="resources">
                     <h2>Teaching Resources</h2>
-                    <div class="resource-actions">
-                        <button class="btn btn-primary" onclick="openModal('uploadResource')">
-                            <i class="fas fa-upload"></i> Upload Resource
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('resourceLibrary')">
-                            <i class="fas fa-folder"></i> Resource Library
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('shareResource')">
-                            <i class="fas fa-share"></i> Share Resources
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('resourceArchive')">
-                            <i class="fas fa-archive"></i> Resource Archive
+                    <?php if ($flash_msg && ($_GET['page'] ?? '') === 'materials'): ?><div class="alert alert-<?= $flash_type ?>"><?= htmlspecialchars($flash_msg) ?></div><?php endif; ?>
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="document.getElementById('addResourceForm').style.display=document.getElementById('addResourceForm').style.display==='none'?'block':'none'">
+                            <i class="fas fa-plus"></i> Add Resource
                         </button>
                     </div>
-                    
-                    <div class="resources-overview">
-                        <h3>My Teaching Resources</h3>
-                        <div class="resources-list">
-                            <?php if (empty($teaching_resources)): ?>
-                            <div class="text-center text-muted py-4">No resources uploaded yet</div>
-                            <?php else: ?>
-                            <?php foreach ($teaching_resources as $res): ?>
-                            <div class="resource-item">
-                                <div class="resource-header">
-                                    <h4><?= htmlspecialchars($res['title'] ?? $res['file_name'] ?? 'Resource') ?></h4>
-                                    <span class="resource-type"><?= htmlspecialchars(strtoupper(pathinfo($res['file_name']??'', PATHINFO_EXTENSION) ?: 'FILE')) ?></span>
-                                </div>
-                                <div class="resource-details">
-                                    <?php if (!empty($res['file_size'])): ?>
-                                    <div class="detail"><span>Size:</span><strong><?= number_format((float)$res['file_size']/1048576, 1) ?> MB</strong></div>
-                                    <?php endif; ?>
-                                    <div class="detail"><span>Uploaded:</span><strong><?= !empty($res['created_at']) ? date('M j, Y', strtotime($res['created_at'])) : '-' ?></strong></div>
-                                    <?php if (!empty($res['download_count'])): ?>
-                                    <div class="detail"><span>Downloads:</span><strong><?= (int)$res['download_count'] ?> times</strong></div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="resource-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
-                                    <button class="btn btn-sm btn-outline-success">Download</button>
-                                    <button class="btn btn-sm btn-outline-info">Share</button>
-                                </div>
+                    <div id="addResourceForm" style="display:none" class="card card-body mb-4">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="add_resource">
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><label>Title</label><input type="text" name="title" class="form-control" required></div>
+                                <div class="col-md-4 mb-2"><label>Resource Type</label><select name="resource_type" class="form-control" required><option value="PDF">PDF</option><option value="Video">Video</option><option value="Document">Document</option><option value="Link">Link</option><option value="Slide">Slide</option></select></div>
+                                <div class="col-md-4 mb-2"><label>Course Name</label><input type="text" name="course_name" class="form-control" required></div>
                             </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2"><label>File Path</label><input type="text" name="file_path" class="form-control" placeholder="/uploads/file.pdf"></div>
+                                <div class="col-md-6 mb-2"><label>URL</label><input type="url" name="url" class="form-control" placeholder="https://..."></div>
+                            </div>
+                            <div class="mb-2"><label>Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                            <button type="submit" class="btn btn-success">Save Resource</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>#</th><th>Title</th><th>Type</th><th>Course</th><th>File/URL</th><th>Description</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <?php if (empty($teaching_resources)): ?>
+                            <tr><td colspan="7" class="text-center text-muted">No resources found</td></tr>
+                            <?php else: foreach ($teaching_resources as $i => $res): ?>
+                            <tr>
+                                <td><?= $i+1 ?></td>
+                                <td><?= htmlspecialchars($res['title']) ?></td>
+                                <td><?= htmlspecialchars($res['resource_type']) ?></td>
+                                <td><?= htmlspecialchars($res['course_name']) ?></td>
+                                <td><?= htmlspecialchars($res['file_path'] ?: $res['url'] ?: '-') ?></td>
+                                <td><?= htmlspecialchars($res['description']) ?></td>
+                                <td>
+                                    <form method="POST" style="display:inline" onsubmit="return confirm('Delete this resource?')">
+                                        <input type="hidden" name="action" value="delete_resource">
+                                        <input type="hidden" name="resource_id" value="<?= (int)$res['id'] ?>">
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -581,6 +687,48 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                             <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Announcements -->
+                <section id="announcements" class="content-section dashboard-section<?= $section==='announcements'?' active':'' ?>" data-section="announcements">
+                    <h2>Teaching Announcements</h2>
+                    <?php if ($flash_msg && ($_GET['page'] ?? '') === 'announcements'): ?><div class="alert alert-<?= $flash_type ?>"><?= htmlspecialchars($flash_msg) ?></div><?php endif; ?>
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="document.getElementById('addAnnouncementForm').style.display=document.getElementById('addAnnouncementForm').style.display==='none'?'block':'none'">
+                            <i class="fas fa-plus"></i> Add Announcement
+                        </button>
+                    </div>
+                    <div id="addAnnouncementForm" style="display:none" class="card card-body mb-4">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="add_announcement">
+                            <div class="row">
+                                <div class="col-md-6 mb-2"><label>Title</label><input type="text" name="title" class="form-control" required></div>
+                                <div class="col-md-4 mb-2"><label>Target Audience</label><select name="target_audience" class="form-control"><option value="All">All</option><option value="Students">Students</option><option value="Staff">Staff</option><option value="Department">Department</option></select></div>
+                                <div class="col-md-2 mb-2"><label>&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="is_published" value="1" checked><label class="form-check-label">Published</label></div></div>
+                            </div>
+                            <div class="mb-2"><label>Content</label><textarea name="content" class="form-control" rows="3" required></textarea></div>
+                            <button type="submit" class="btn btn-success">Post Announcement</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead><tr><th>#</th><th>Title</th><th>Content</th><th>Audience</th><th>Published</th><th>Date</th></tr></thead>
+                            <tbody>
+                            <?php if (empty($all_announcements)): ?>
+                            <tr><td colspan="6" class="text-center text-muted">No announcements found</td></tr>
+                            <?php else: foreach ($all_announcements as $i => $ann): ?>
+                            <tr>
+                                <td><?= $i+1 ?></td>
+                                <td><?= htmlspecialchars($ann['title']) ?></td>
+                                <td><?= htmlspecialchars($ann['content']) ?></td>
+                                <td><?= htmlspecialchars($ann['target_audience']) ?></td>
+                                <td><span class="badge bg-<?= $ann['is_published'] ? 'success' : 'secondary' ?>"><?= $ann['is_published'] ? 'Yes' : 'No' ?></span></td>
+                                <td><?= !empty($ann['created_at']) ? date('M j, Y', strtotime($ann['created_at'])) : '-' ?></td>
+                            </tr>
+                            <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -782,6 +930,38 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             }
             
             modal.show();
+        }
+
+        function editAssessment(a) {
+            var m = new bootstrap.Modal(document.getElementById('actionModal'));
+            document.getElementById('modalTitle').textContent = 'Edit Assessment';
+            document.getElementById('modalBody').innerHTML = `
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_assessment">
+                    <input type="hidden" name="assessment_id" value="${a.id}">
+                    <div class="row">
+                        <div class="col-md-4 mb-2"><label>Student ID</label><input type="number" name="student_id" class="form-control" value="${a.student_id}" required></div>
+                        <div class="col-md-4 mb-2"><label>Course Name</label><input type="text" name="course_name" class="form-control" value="${a.course_name||''}" required></div>
+                        <div class="col-md-4 mb-2"><label>Assessment Type</label><select name="assessment_type" class="form-control" required>
+                            <option value="CAT" ${a.assessment_type==='CAT'?'selected':''}>CAT</option>
+                            <option value="Assignment" ${a.assessment_type==='Assignment'?'selected':''}>Assignment</option>
+                            <option value="Exam" ${a.assessment_type==='Exam'?'selected':''}>Exam</option>
+                            <option value="Project" ${a.assessment_type==='Project'?'selected':''}>Project</option>
+                        </select></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-2"><label>Title</label><input type="text" name="title" class="form-control" value="${a.title||''}" required></div>
+                        <div class="col-md-2 mb-2"><label>Total Marks</label><input type="number" name="total_marks" class="form-control" value="${a.total_marks}" required></div>
+                        <div class="col-md-2 mb-2"><label>Marks Obtained</label><input type="number" name="marks_obtained" class="form-control" value="${a.marks_obtained}" required></div>
+                        <div class="col-md-2 mb-2"><label>Date</label><input type="date" name="assessment_date" class="form-control" value="${a.assessment_date||''}" required></div>
+                    </div>
+                    <div class="mb-2"><label>Comments</label><textarea name="comments" class="form-control" rows="2">${a.comments||''}</textarea></div>
+                </form>`;
+            document.getElementById('modalAction').textContent = 'Update';
+            document.getElementById('modalAction').onclick = function() {
+                document.getElementById('modalBody').querySelector('form').submit();
+            };
+            m.show();
         }
     </script>
 

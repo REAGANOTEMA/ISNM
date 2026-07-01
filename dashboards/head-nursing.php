@@ -11,6 +11,140 @@ $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Nursing';
 $user_id = (int)($user['id'] ?? 0);
 
+// ── POST Handlers ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'add_student') {
+        $student_id = trim($_POST['student_id'] ?? '');
+        $student_name = trim($_POST['student_name'] ?? '');
+        $program = trim($_POST['program'] ?? '');
+        $year_of_study = intval($_POST['year_of_study'] ?? 1);
+        if ($student_id && $student_name && $program) {
+            $stmt = $conn->prepare("INSERT INTO nursing_students (student_id, student_name, program, year_of_study, clinical_hours, status) VALUES (?, ?, ?, ?, 0, 'Active') ON DUPLICATE KEY UPDATE student_name=VALUES(student_name), program=VALUES(program), year_of_study=VALUES(year_of_study)");
+            $stmt->bind_param("sssi", $student_id, $student_name, $program, $year_of_study);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Nursing student added successfully.';
+        } else {
+            $_SESSION['error'] = 'All student fields are required.';
+        }
+        header('Location: head-nursing.php?page=students');
+        exit;
+    }
+
+    if ($action === 'update_student') {
+        $id = intval($_POST['id'] ?? 0);
+        $student_name = trim($_POST['student_name'] ?? '');
+        $program = trim($_POST['program'] ?? '');
+        $year_of_study = intval($_POST['year_of_study'] ?? 1);
+        $status = trim($_POST['status'] ?? 'Active');
+        if ($id && $student_name && $program) {
+            $stmt = $conn->prepare("UPDATE nursing_students SET student_name=?, program=?, year_of_study=?, status=? WHERE id=?");
+            $stmt->bind_param("ssisi", $student_name, $program, $year_of_study, $status, $id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Student updated successfully.';
+        }
+        header('Location: head-nursing.php?page=students');
+        exit;
+    }
+
+    if ($action === 'delete_student') {
+        $id = intval($_POST['id'] ?? 0);
+        if ($id) {
+            $conn->query("DELETE FROM nursing_students WHERE id=" . $id);
+            $_SESSION['success'] = 'Student deleted.';
+        }
+        header('Location: head-nursing.php?page=students');
+        exit;
+    }
+
+    if ($action === 'add_placement') {
+        $student_id = trim($_POST['student_id'] ?? '');
+        $facility_name = trim($_POST['facility_name'] ?? '');
+        $department = trim($_POST['department'] ?? '');
+        $start_date = $_POST['start_date'] ?? '';
+        $end_date = $_POST['end_date'] ?? '';
+        $supervisor = trim($_POST['supervisor'] ?? '');
+        if ($student_id && $facility_name && $start_date) {
+            $stmt = $conn->prepare("INSERT INTO nursing_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, hours_completed, status, notes) VALUES (?, ?, ?, ?, ?, ?, 0, 'Active', '')");
+            $stmt->bind_param("ssssss", $student_id, $facility_name, $department, $start_date, $end_date, $supervisor);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Clinical placement added.';
+        } else {
+            $_SESSION['error'] = 'Student ID, facility, and start date are required.';
+        }
+        header('Location: head-nursing.php?page=clinical');
+        exit;
+    }
+
+    if ($action === 'update_placement') {
+        $id = intval($_POST['id'] ?? 0);
+        $status = trim($_POST['status'] ?? 'Active');
+        $notes = trim($_POST['notes'] ?? '');
+        $hours_completed = intval($_POST['hours_completed'] ?? 0);
+        if ($id) {
+            $stmt = $conn->prepare("UPDATE nursing_clinical_placements SET status=?, notes=?, hours_completed=? WHERE id=?");
+            $stmt->bind_param("ssii", $status, $notes, $hours_completed, $id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Placement updated.';
+        }
+        header('Location: head-nursing.php?page=clinical');
+        exit;
+    }
+
+    if ($action === 'delete_placement') {
+        $id = intval($_POST['id'] ?? 0);
+        if ($id) {
+            $conn->query("DELETE FROM nursing_clinical_placements WHERE id=" . $id);
+            $_SESSION['success'] = 'Placement deleted.';
+        }
+        header('Location: head-nursing.php?page=clinical');
+        exit;
+    }
+
+    if ($action === 'add_assessment') {
+        $student_id = trim($_POST['student_id'] ?? '');
+        $skill_id = intval($_POST['skill_id'] ?? 0);
+        $assessment_date = $_POST['assessment_date'] ?? date('Y-m-d');
+        $score = floatval($_POST['score'] ?? 0);
+        $grade = trim($_POST['grade'] ?? '');
+        $assessor = trim($_POST['assessor'] ?? '');
+        $comments = trim($_POST['comments'] ?? '');
+        if ($student_id && $skill_id) {
+            $stmt = $conn->prepare("INSERT INTO nursing_practical_assessment (student_id, skill_id, assessment_date, score, grade, assessor, comments, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Completed')");
+            $stmt->bind_param("sisdsss", $student_id, $skill_id, $assessment_date, $score, $grade, $assessor, $comments);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Assessment recorded.';
+        } else {
+            $_SESSION['error'] = 'Student ID and skill are required.';
+        }
+        header('Location: head-nursing.php?page=students');
+        exit;
+    }
+
+    if ($action === 'update_assessment') {
+        $id = intval($_POST['id'] ?? 0);
+        $score = floatval($_POST['score'] ?? 0);
+        $grade = trim($_POST['grade'] ?? '');
+        $comments = trim($_POST['comments'] ?? '');
+        $assessor = trim($_POST['assessor'] ?? '');
+        if ($id) {
+            $stmt = $conn->prepare("UPDATE nursing_practical_assessment SET score=?, grade=?, comments=?, assessor=? WHERE id=?");
+            $stmt->bind_param("dsssi", $score, $grade, $comments, $assessor, $id);
+            $stmt->execute();
+            $stmt->close();
+            $_SESSION['success'] = 'Assessment updated.';
+        }
+        header('Location: head-nursing.php?page=students');
+        exit;
+    }
+}
+
 // ── Page routing ──
 $pageToSection = [
     'home'       => 'overview',
@@ -55,12 +189,54 @@ try {
     error_log('head-nursing stats: ' . $e->getMessage());
 }
 
-// Get nursing students
+// Get nursing students (from nursing_students table)
 $nursing_students = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM nursing_students ORDER BY student_name LIMIT 100");
+        if ($r) $nursing_students = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {
+        error_log('head-nursing students: ' . $e->getMessage());
+    }
+}
+
+// Get nursing students from students DB as fallback
+$enrolled_students = [];
 if ($ctx['students']) {
     try {
-        $r = $ctx['students']->query("SELECT id, first_name, surname, program, level, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 50");
-        if ($r) $nursing_students = $r->fetch_all(MYSQLI_ASSOC);
+        $r = $ctx['students']->query("SELECT id, first_name, surname, student_number, program, level, status FROM students WHERE program LIKE '%Nursing%' ORDER BY first_name LIMIT 100");
+        if ($r) $enrolled_students = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {}
+}
+
+// Get clinical placements
+$clinical_placements = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM nursing_clinical_placements ORDER BY start_date DESC LIMIT 100");
+        if ($r) $clinical_placements = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {
+        error_log('head-nursing placements: ' . $e->getMessage());
+    }
+}
+
+// Get practical assessments
+$practical_assessments = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT pa.*, ns.skill_name FROM nursing_practical_assessment pa LEFT JOIN nursing_skills_training ns ON pa.skill_id = ns.id ORDER BY pa.assessment_date DESC LIMIT 100");
+        if ($r) $practical_assessments = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {
+        error_log('head-nursing assessments: ' . $e->getMessage());
+    }
+}
+
+// Get skills list for assessment form
+$skills_list = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT id, skill_name, category FROM nursing_skills_training ORDER BY skill_name");
+        if ($r) $skills_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 
@@ -85,6 +261,10 @@ if ($conn) {
         }
     } catch (Exception $e) {}
 }
+
+$flash_success = $_SESSION['success'] ?? '';
+$flash_error = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 
 <!DOCTYPE html>
@@ -92,7 +272,6 @@ if ($conn) {
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-
 .nurs-content{margin-left:270px;padding:24px;min-height:100vh}
 @media(max-width:768px){.nurs-content{margin-left:0!important;padding:12px!important}}
 </style>
@@ -102,6 +281,19 @@ if ($conn) {
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <div class="nurs-content">
+
+<?php if ($flash_success): ?>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <?= htmlspecialchars($flash_success) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+<?php if ($flash_error): ?>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <?= htmlspecialchars($flash_error) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
 
 <?php switch ($section):
     case 'overview': ?>
@@ -141,27 +333,75 @@ if ($conn) {
         <?php break;
     case 'students': ?>
         <section id="students" class="content-section dashboard-section active" data-section="students">
-            <h2><i class="fas fa-user-graduate me-2"></i>Nursing Students</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2><i class="fas fa-user-graduate me-2"></i>Nursing Students</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="fas fa-plus me-1"></i> Add Student
+                </button>
+            </div>
+
+            <?php if (!empty($nursing_students)): ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead><tr><th>Student Name</th><th>Program</th><th>Year</th><th>Status</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Student ID</th><th>Student Name</th><th>Program</th><th>Year</th><th>Clinical Hours</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
-                        <?php if (empty($nursing_students)): ?>
-                        <tr><td colspan="5" class="text-center text-muted">No nursing students found</td></tr>
-                        <?php else: ?>
                         <?php foreach ($nursing_students as $s): ?>
                         <tr>
-                            <td><?= htmlspecialchars($s['first_name'] . ' ' . $s['surname']) ?></td>
+                            <td><?= htmlspecialchars($s['student_id']) ?></td>
+                            <td><?= htmlspecialchars($s['student_name']) ?></td>
                             <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
-                            <td>Year <?= htmlspecialchars($s['level'] ?? '?') ?></td>
-                            <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
-                            <td><button class="btn btn-sm btn-outline-primary">View</button></td>
+                            <td>Year <?= htmlspecialchars($s['year_of_study'] ?? '?') ?></td>
+                            <td><?= intval($s['clinical_hours'] ?? 0) ?></td>
+                            <td><span class="badge bg-<?= ($s['status'] ?? '') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick='editStudent(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this student?')">
+                                    <input type="hidden" name="action" value="delete_student">
+                                    <input type="hidden" name="id" value="<?= $s['id'] ?>">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
+            <?php else: ?>
+            <p class="text-muted text-center">No nursing students registered. Add one to get started.</p>
+            <?php endif; ?>
+
+            <!-- Practical Assessments -->
+            <h4 class="mt-5"><i class="fas fa-clipboard-check me-2"></i>Practical Assessments</h4>
+            <div class="d-flex justify-content-end mb-2">
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssessmentModal">
+                    <i class="fas fa-plus me-1"></i> Add Assessment
+                </button>
+            </div>
+            <?php if (!empty($practical_assessments)): ?>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Student ID</th><th>Skill</th><th>Date</th><th>Score</th><th>Grade</th><th>Assessor</th><th>Comments</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($practical_assessments as $a): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($a['student_id']) ?></td>
+                            <td><?= htmlspecialchars($a['skill_name'] ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars($a['assessment_date'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($a['score']) ?></td>
+                            <td><span class="badge bg-info"><?= htmlspecialchars($a['grade'] ?? '-') ?></span></td>
+                            <td><?= htmlspecialchars($a['assessor'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars(mb_strimwidth($a['comments'] ?? '', 0, 50, '...')) ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick='editAssessment(<?= json_encode($a) ?>)'><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="text-muted text-center">No assessments recorded yet.</p>
+            <?php endif; ?>
         </section>
         <?php break;
     case 'courses': ?>
@@ -172,11 +412,44 @@ if ($conn) {
         <?php break;
     case 'clinical': ?>
         <section id="clinical" class="content-section dashboard-section active" data-section="clinical">
-            <h2><i class="fas fa-clinic-medical me-2"></i>Clinical Placements</h2>
-            <?php if (file_exists(__DIR__ . '/clinical-placement.php')): ?>
-                <?php include __DIR__ . '/clinical-placement.php'; ?>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2><i class="fas fa-clinic-medical me-2"></i>Clinical Placements</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPlacementModal">
+                    <i class="fas fa-plus me-1"></i> Add Placement
+                </button>
+            </div>
+
+            <?php if (!empty($clinical_placements)): ?>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Student ID</th><th>Facility</th><th>Department</th><th>Start Date</th><th>End Date</th><th>Supervisor</th><th>Hours</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($clinical_placements as $p): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($p['student_id']) ?></td>
+                            <td><?= htmlspecialchars($p['facility_name']) ?></td>
+                            <td><?= htmlspecialchars($p['department'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($p['start_date'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($p['end_date'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($p['supervisor'] ?? '-') ?></td>
+                            <td><?= intval($p['hours_completed'] ?? 0) ?></td>
+                            <td><span class="badge bg-<?= ($p['status'] ?? '') === 'Active' ? 'success' : (($p['status'] ?? '') === 'Completed' ? 'primary' : 'secondary') ?>"><?= htmlspecialchars($p['status'] ?? 'Active') ?></span></td>
+                            <td><?= htmlspecialchars(mb_strimwidth($p['notes'] ?? '', 0, 40, '...')) ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick='editPlacement(<?= json_encode($p) ?>)'><i class="fas fa-edit"></i></button>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Delete this placement?')">
+                                    <input type="hidden" name="action" value="delete_placement">
+                                    <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
             <?php else: ?>
-                <p class="text-muted">Clinical placement management module.</p>
+            <p class="text-muted text-center">No clinical placements found. Add one to get started.</p>
             <?php endif; ?>
         </section>
         <?php break;
@@ -254,6 +527,308 @@ endswitch; ?>
 
 </div>
 
+<!-- ═══ ADD STUDENT MODAL ═══ -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="add_student">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Nursing Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Student ID <span class="text-danger">*</span></label>
+                        <input type="text" name="student_id" class="form-control" required placeholder="e.g. NUR-2024-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="student_name" class="form-control" required placeholder="e.g. Jane Doe">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Program <span class="text-danger">*</span></label>
+                        <select name="program" class="form-select" required>
+                            <option value="">Select Program</option>
+                            <option value="Bachelor of Science in Nursing">Bachelor of Science in Nursing</option>
+                            <option value="Diploma in Nursing">Diploma in Nursing</option>
+                            <option value="Registered Nursing">Registered Nursing</option>
+                            <option value="Midwifery">Midwifery</option>
+                            <option value="Clinical Nursing">Clinical Nursing</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Year of Study <span class="text-danger">*</span></label>
+                        <select name="year_of_study" class="form-select" required>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4</option>
+                            <option value="5">Year 5</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ EDIT STUDENT MODAL ═══ -->
+<div class="modal fade" id="editStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_student">
+                <input type="hidden" name="id" id="edit_student_id">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Nursing Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="student_name" id="edit_student_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Program <span class="text-danger">*</span></label>
+                        <select name="program" id="edit_student_program" class="form-select" required>
+                            <option value="">Select Program</option>
+                            <option value="Bachelor of Science in Nursing">Bachelor of Science in Nursing</option>
+                            <option value="Diploma in Nursing">Diploma in Nursing</option>
+                            <option value="Registered Nursing">Registered Nursing</option>
+                            <option value="Midwifery">Midwifery</option>
+                            <option value="Clinical Nursing">Clinical Nursing</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Year of Study</label>
+                        <select name="year_of_study" id="edit_student_year" class="form-select">
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4</option>
+                            <option value="5">Year 5</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" id="edit_student_status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ADD PLACEMENT MODAL ═══ -->
+<div class="modal fade" id="addPlacementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="add_placement">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-hospital me-2"></i>Add Clinical Placement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Student ID <span class="text-danger">*</span></label>
+                        <input type="text" name="student_id" class="form-control" required placeholder="e.g. NUR-2024-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Facility Name <span class="text-danger">*</span></label>
+                        <input type="text" name="facility_name" class="form-control" required placeholder="e.g. National Hospital">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <input type="text" name="department" class="form-control" placeholder="e.g. Maternity Ward">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supervisor</label>
+                        <input type="text" name="supervisor" class="form-control" placeholder="e.g. Dr. Smith">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Placement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ EDIT PLACEMENT MODAL ═══ -->
+<div class="modal fade" id="editPlacementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_placement">
+                <input type="hidden" name="id" id="edit_placement_id">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-hospital me-2"></i>Edit Clinical Placement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Hours Completed</label>
+                        <input type="number" name="hours_completed" id="edit_placement_hours" class="form-control" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" id="edit_placement_status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Deferred">Deferred</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" id="edit_placement_notes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Placement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ADD ASSESSMENT MODAL ═══ -->
+<div class="modal fade" id="addAssessmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="add_assessment">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Add Practical Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Student ID <span class="text-danger">*</span></label>
+                        <input type="text" name="student_id" class="form-control" required placeholder="e.g. NUR-2024-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Skill <span class="text-danger">*</span></label>
+                        <select name="skill_id" class="form-select" required>
+                            <option value="">Select Skill</option>
+                            <?php foreach ($skills_list as $sk): ?>
+                            <option value="<?= $sk['id'] ?>"><?= htmlspecialchars($sk['skill_name']) ?> (<?= htmlspecialchars($sk['category'] ?? '') ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assessment Date</label>
+                        <input type="date" name="assessment_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Score</label>
+                            <input type="number" name="score" class="form-control" step="0.1" min="0" max="100" placeholder="e.g. 85">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade</label>
+                            <select name="grade" class="form-select">
+                                <option value="">Select Grade</option>
+                                <option value="A">A - Excellent</option>
+                                <option value="B">B - Good</option>
+                                <option value="C">C - Average</option>
+                                <option value="D">D - Below Average</option>
+                                <option value="F">F - Fail</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assessor</label>
+                        <input type="text" name="assessor" class="form-control" placeholder="e.g. Dr. Johnson">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comments</label>
+                        <textarea name="comments" class="form-control" rows="3" placeholder="Assessment comments..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Assessment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ EDIT ASSESSMENT MODAL ═══ -->
+<div class="modal fade" id="editAssessmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_assessment">
+                <input type="hidden" name="id" id="edit_assessment_id">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Edit Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Score</label>
+                            <input type="number" name="score" id="edit_assessment_score" class="form-control" step="0.1" min="0" max="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade</label>
+                            <select name="grade" id="edit_assessment_grade" class="form-select">
+                                <option value="">Select Grade</option>
+                                <option value="A">A - Excellent</option>
+                                <option value="B">B - Good</option>
+                                <option value="C">C - Average</option>
+                                <option value="D">D - Below Average</option>
+                                <option value="F">F - Fail</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assessor</label>
+                        <input type="text" name="assessor" id="edit_assessment_assessor" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comments</label>
+                        <textarea name="comments" id="edit_assessment_comments" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Update Assessment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ AJAX MODULE LOADING ═══ -->
 <div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
@@ -262,6 +837,29 @@ endswitch; ?>
   </div>
 </div>
 <script>
+function editStudent(s) {
+    document.getElementById('edit_student_id').value = s.id;
+    document.getElementById('edit_student_name').value = s.student_name;
+    document.getElementById('edit_student_program').value = s.program || '';
+    document.getElementById('edit_student_year').value = s.year_of_study || 1;
+    document.getElementById('edit_student_status').value = s.status || 'Active';
+    new bootstrap.Modal(document.getElementById('editStudentModal')).show();
+}
+function editPlacement(p) {
+    document.getElementById('edit_placement_id').value = p.id;
+    document.getElementById('edit_placement_hours').value = p.hours_completed || 0;
+    document.getElementById('edit_placement_status').value = p.status || 'Active';
+    document.getElementById('edit_placement_notes').value = p.notes || '';
+    new bootstrap.Modal(document.getElementById('editPlacementModal')).show();
+}
+function editAssessment(a) {
+    document.getElementById('edit_assessment_id').value = a.id;
+    document.getElementById('edit_assessment_score').value = a.score || '';
+    document.getElementById('edit_assessment_grade').value = a.grade || '';
+    document.getElementById('edit_assessment_assessor').value = a.assessor || '';
+    document.getElementById('edit_assessment_comments').value = a.comments || '';
+    new bootstrap.Modal(document.getElementById('editAssessmentModal')).show();
+}
 (function(){
     var contentArea = document.querySelector('.nurs-content');
     var loadingOverlay = document.getElementById('ajaxLoadingOverlay');

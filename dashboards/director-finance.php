@@ -124,6 +124,41 @@ if ($ajax === 'procurement_list' && $staff) {
     $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.procurement_requests ORDER BY created_at DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
     echo json_encode($rows); exit;
 }
+if ($ajax === 'budget_list' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT * FROM {$students_db}.budget_records ORDER BY created_at DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'payroll_data' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT ss.*,st.full_name staff_name,st.position,st.department FROM salary_structures ss LEFT JOIN staff st ON ss.staff_id=st.id WHERE ss.status='active' ORDER BY st.full_name"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'payroll_history_data' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT ph.*,st.full_name staff_name FROM payroll_history ph LEFT JOIN staff st ON ph.staff_id=st.id ORDER BY ph.created_at DESC LIMIT 100"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'staff_cost_data' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT st.department,COUNT(*)staff_count,COALESCE(SUM(ss.net_salary),0) total_salary FROM staff st LEFT JOIN salary_structures ss ON st.id=ss.staff_id AND ss.status='active' WHERE st.status='Active' GROUP BY st.department ORDER BY total_salary DESC"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'supplier_payment_list' && $staff) {
+    header('Content-Type: application/json');
+    $rows=[]; $r=$staff->query("SELECT sp.*,s.supplier_name FROM {$students_db}.supplier_payments sp LEFT JOIN {$students_db}.suppliers s ON sp.supplier_id=s.id ORDER BY sp.created_at DESC LIMIT 100"); if($r) while($rw=$r->fetch_assoc()) $rows[]=$rw;
+    echo json_encode($rows); exit;
+}
+if ($ajax === 'update_audit_status' && $staff) {
+    header('Content-Type: application/json');
+    $id=(int)($_POST['id']??0); $st=$_POST['status']??'';
+    $validSt=['open','in_progress','resolved','closed'];
+    if($id&&in_array($st,$validSt)){
+        $stmt=$staff->prepare("UPDATE {$students_db}.audit_findings SET status=? WHERE id=?");
+        if($stmt){$stmt->bind_param('si',$st,$id);if($stmt->execute()&&$stmt->affected_rows>=0){echo json_encode(['success'=>true]);$stmt->close();exit;}}
+    }
+    echo json_encode(['success'=>false,'error'=>'Update failed']); exit;
+}
 if ($ajax === 'approval_list' && $staff) {
     header('Content-Type: application/json');
     $rows=[]; $type=$_GET['type']??'';
@@ -414,6 +449,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $pid=(int)($_POST['payment_id']??0);
         if($students&&$pid){ if($students->query("UPDATE {$students_db}.payments SET status='rejected' WHERE id=$pid") && $students->affected_rows>0){ fin_success('Payment rejected.'); }else{ fin_error('Reject failed.'); } }
         header('Location: director-finance.php?section=payment_verification'); exit;
+    }
+    if ($act === 'edit_expense' && $staff) {
+        $id=(int)($_POST['expense_id']??0);
+        $cat=$_POST['category']??'';
+        $desc=$_POST['description']??'';
+        $amt=(float)($_POST['amount']??0);
+        $dt=$_POST['expense_date']??date('Y-m-d');
+        if($id&&$cat&&$desc&&$amt){
+            $stmt=$staff->prepare("UPDATE expenses SET expense_category=?,description=?,amount=?,expense_date=?,updated_at=NOW() WHERE id=?");
+            if($stmt){$stmt->bind_param('ssdsi',$cat,$desc,$amt,$dt,$id);if($stmt->execute()){fin_success("Expense updated.");}else{fin_error('Update failed.');}$stmt->close();}
+        }else{ fin_error('Required fields missing.'); }
+        header('Location: director-finance.php?section=expenditure_monitoring'); exit;
+    }
+    if ($act === 'delete_expense' && $staff) {
+        $id=(int)($_POST['expense_id']??0);
+        if($id){ if($staff->query("DELETE FROM expenses WHERE id=$id") && $staff->affected_rows>0){ fin_success('Expense deleted.'); }else{ fin_error('Delete failed.'); } }
+        header('Location: director-finance.php?section=expenditure_monitoring'); exit;
+    }
+    if ($act === 'edit_budget' && $staff) {
+        $id=(int)($_POST['budget_id']??0);
+        $name=$_POST['budget_name']??'';
+        $cat=$_POST['budget_category']??'Operations';
+        $amt=(float)($_POST['allocated_amount']??0);
+        if($id&&$name&&$amt){
+            $stmt=$staff->prepare("UPDATE {$students_db}.budget_records SET budget_name=?,budget_category=?,allocated_amount=? WHERE id=?");
+            if($stmt){$stmt->bind_param('ssdi',$name,$cat,$amt,$id);if($stmt->execute()){fin_success("Budget updated.");}else{fin_error('Update failed.');}$stmt->close();}
+        }else{ fin_error('Required fields missing.'); }
+        header('Location: director-finance.php?section=budget_planning'); exit;
+    }
+    if ($act === 'delete_budget' && $staff) {
+        $id=(int)($_POST['budget_id']??0);
+        if($id){ if($staff->query("DELETE FROM {$students_db}.budget_records WHERE id=$id") && $staff->affected_rows>0){ fin_success('Budget deleted.'); }else{ fin_error('Delete failed.'); } }
+        header('Location: director-finance.php?section=budget_planning'); exit;
     }
     header('Location: director-finance.php'); exit;
 }
@@ -1166,9 +1234,10 @@ $pendingLedger = []; $r=$staff->query("SELECT * FROM {$students_db}.general_ledg
 <div class="scard"><div class="sch"><i class="fas fa-file-invoice-dollar me-2"></i>Income Statement</div><div class="scb">
 <?php
 $isFrom = $_GET['from']??date('Y-m-01'); $isTo = $_GET['to']??date('Y-m-d');
-$isRev = $students ? (float)(($r=$students->query("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN '$isFrom' AND '$isTo'"))&&$r?$r->fetch_assoc()['t']:0) : 0;
-$isExp = (float)(($r=$staff->query("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$isFrom' AND '$isTo'"))&&$r?$r->fetch_assoc()['t']:0);
-$expCats = []; $r=$staff->query("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN '$isFrom' AND '$isTo' GROUP BY expense_category ORDER BY t DESC"); if($r) while($rw=$r->fetch_assoc()) $expCats[]=$rw;
+$isRev = 0; $isExp = 0; $expCats = [];
+if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status IN('verified','approved','completed') AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)$isRev=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)$isExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT expense_category,COALESCE(SUM(amount),0) t FROM expenses WHERE status IN('approved','paid') AND DATE(expense_date) BETWEEN ? AND ? GROUP BY expense_category ORDER BY t DESC"); if($stmt){$stmt->bind_param('ss',$isFrom,$isTo);$stmt->execute();$r=$stmt->get_result();if($r)while($rw=$r->fetch_assoc())$expCats[]=$rw;$stmt->close();} }
 ?>
 <form class="row g-2 mb-3" method="GET"><input type="hidden" name="section" value="income_statement">
 <div class="col-md-3"><input type="date" name="from" class="form-control env-field" value="<?= $isFrom ?>"></div>
@@ -1252,8 +1321,9 @@ $difference = $bankBalance - $bookBalance;
 <p class="text-muted small">Generate reconciliation summary reports.</p>
 <?php
 $recFrom = $_GET['from']??date('Y-m-01'); $recTo = $_GET['to']??date('Y-m-d');
-$recPay = $students ? (float)(($r=$students->query("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status='approved' AND DATE(payment_date) BETWEEN '$recFrom' AND '$recTo'"))&&$r?$r->fetch_assoc()['t']:0) : 0;
-$recExp = (float)(($r=$staff->query("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN '$recFrom' AND '$recTo'"))&&$r?$r->fetch_assoc()['t']:0);
+$recPay = 0; $recExp = 0;
+if($students){ $stmt=$students->prepare("SELECT COALESCE(SUM(amount_received),0) t FROM {$students_db}.payments WHERE status='approved' AND DATE(payment_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);$stmt->execute();$r=$stmt->get_result();if($r)$recPay=(float)$r->fetch_assoc()['t'];$stmt->close();} }
+if($staff){ $stmt=$staff->prepare("SELECT COALESCE(SUM(amount),0) t FROM expenses WHERE status='paid' AND DATE(expense_date) BETWEEN ? AND ?"); if($stmt){$stmt->bind_param('ss',$recFrom,$recTo);$stmt->execute();$r=$stmt->get_result();if($r)$recExp=(float)$r->fetch_assoc()['t'];$stmt->close();} }
 ?>
 <form class="row g-2 mb-3" method="GET"><input type="hidden" name="section" value="reconciliation_reports">
 <div class="col-md-3"><input type="date" name="from" class="form-control env-field" value="<?= $recFrom ?>"></div>

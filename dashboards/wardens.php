@@ -21,27 +21,188 @@ if (file_exists($profileSettingsFile)) {
     }
 }
 
-// Get warden statistics from database
+$flash = '';
+$flashType = 'success';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'add_welfare_case') {
+        $student_id = (int)($_POST['student_id'] ?? 0);
+        $case_type = trim($_POST['case_type'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $priority = trim($_POST['priority'] ?? 'Medium');
+        $assigned_to = (int)($_POST['assigned_to'] ?? 0);
+        $assigned_to_name = trim($_POST['assigned_to_name'] ?? '');
+
+        $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $student = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$student) {
+            $flash = 'Student not found.';
+            $flashType = 'danger';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO welfare_cases (student_id, student_name, case_type, description, reported_by, reported_by_name, assigned_to, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open')");
+            $sname = $student['full_name'];
+            $stmt->bind_param("isssissi", $student_id, $sname, $case_type, $description, $user_id, $user_name, $assigned_to, $priority);
+            if ($stmt->execute()) {
+                $flash = 'Welfare case created.';
+                $flashType = 'success';
+            } else {
+                $flash = 'Failed to create case.';
+                $flashType = 'danger';
+            }
+            $stmt->close();
+        }
+    }
+
+    if ($action === 'update_welfare_case') {
+        $case_id = (int)($_POST['case_id'] ?? 0);
+        $status = trim($_POST['status'] ?? 'Open');
+        $resolution_notes = trim($_POST['resolution_notes'] ?? '');
+
+        $sql = "UPDATE welfare_cases SET status = ?";
+        $types = "s";
+        $params = [$status];
+
+        if ($status === 'Resolved' || $status === 'Closed') {
+            $sql .= ", resolution_notes = ?, resolved_at = NOW()";
+            $types .= "s";
+            $params[] = $resolution_notes;
+        }
+
+        $sql .= " WHERE id = ?";
+        $types .= "i";
+        $params[] = $case_id;
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        if ($stmt->execute()) {
+            $flash = 'Case updated.';
+            $flashType = 'success';
+        } else {
+            $flash = 'Failed to update case.';
+            $flashType = 'danger';
+        }
+        $stmt->close();
+    }
+
+    if ($action === 'delete_welfare_case') {
+        $case_id = (int)($_POST['case_id'] ?? 0);
+        $conn->query("DELETE FROM welfare_actions WHERE case_id = $case_id");
+        $stmt = $conn->prepare("DELETE FROM welfare_cases WHERE id = ?");
+        $stmt->bind_param("i", $case_id);
+        if ($stmt->execute()) {
+            $flash = 'Case deleted.';
+            $flashType = 'success';
+        } else {
+            $flash = 'Failed to delete case.';
+            $flashType = 'danger';
+        }
+        $stmt->close();
+    }
+
+    if ($action === 'add_welfare_action') {
+        $case_id = (int)($_POST['case_id'] ?? 0);
+        $action_type = trim($_POST['action_type'] ?? 'Comment');
+        $notes = trim($_POST['notes'] ?? '');
+
+        $stmt = $conn->prepare("INSERT INTO welfare_actions (case_id, action_by, action_by_name, action_type, notes) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iisss", $case_id, $user_id, $user_name, $action_type, $notes);
+        if ($stmt->execute()) {
+            $flash = 'Action added.';
+            $flashType = 'success';
+        } else {
+            $flash = 'Failed to add action.';
+            $flashType = 'danger';
+        }
+        $stmt->close();
+    }
+
+    if ($action === 'add_discipline_case') {
+        $student_id = (int)($_POST['student_id'] ?? 0);
+        $incident_type = trim($_POST['incident_type'] ?? '');
+        $incident_date = trim($_POST['incident_date'] ?? '');
+        $action_taken = trim($_POST['action_taken'] ?? 'Warning');
+        $description = trim($_POST['description'] ?? '');
+
+        $stmt = $conn->prepare("SELECT id, CONCAT(first_name,' ',surname) as full_name FROM students WHERE id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $student = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$student) {
+            $flash = 'Student not found.';
+            $flashType = 'danger';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO student_discipline (student_id, student_name, incident_type, incident_date, action_taken, description, reported_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')");
+            $sname = $student['full_name'];
+            $stmt->bind_param("isssssi", $student_id, $sname, $incident_type, $incident_date, $action_taken, $description, $user_id);
+            if ($stmt->execute()) {
+                $flash = 'Discipline case created.';
+                $flashType = 'success';
+            } else {
+                $flash = 'Failed to create discipline case.';
+                $flashType = 'danger';
+            }
+            $stmt->close();
+        }
+    }
+
+    if ($action === 'delete_discipline_case') {
+        $case_id = (int)($_POST['case_id'] ?? 0);
+        $stmt = $conn->prepare("DELETE FROM student_discipline WHERE id = ?");
+        $stmt->bind_param("i", $case_id);
+        if ($stmt->execute()) {
+            $flash = 'Discipline case deleted.';
+            $flashType = 'success';
+        } else {
+            $flash = 'Failed to delete discipline case.';
+            $flashType = 'danger';
+        }
+        $stmt->close();
+    }
+}
+
 $students_db = $ctx['students'];
 $total_students = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM students")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $active_programs = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM academic_programs")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $total_staff = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM staff")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $recent_applications = ($students_db && ($q = $students_db->query("SELECT COUNT(*) FROM student_admissions")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $assigned_students = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM hostel_allocations WHERE status = 'Active'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$welfare_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_welfare_cases WHERE status NOT IN ('Resolved','Closed')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$welfare_cases_count = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM welfare_cases WHERE status NOT IN ('Resolved','Closed')")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 $counseling_sessions = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_counseling_sessions WHERE session_date = CURDATE()")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
-$discipline_cases = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
+$discipline_cases_count = ($conn && ($q = $conn->query("SELECT COUNT(*) FROM student_discipline WHERE status = 'Pending'")) && ($r = $q->fetch_row())) ? (int) $r[0] : 0;
 
-// Get welfare cases
-$welfare_cases_list = [];
+$all_welfare_cases = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC LIMIT 5");
-        if ($r) $welfare_cases_list = $r->fetch_all(MYSQLI_ASSOC);
+        $r = $conn->query("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id ORDER BY wc.created_at DESC");
+        if ($r) $all_welfare_cases = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 
-// Get today's counseling sessions
+$welfare_actions_map = [];
+if ($conn && !empty($all_welfare_cases)) {
+    $case_ids = array_column($all_welfare_cases, 'id');
+    $placeholders = implode(',', array_fill(0, count($case_ids), '?'));
+    $types = str_repeat('i', count($case_ids));
+    $stmt = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id IN ($placeholders) ORDER BY created_at ASC");
+    $stmt->bind_param($types, ...$case_ids);
+    $stmt->execute();
+    $r = $stmt->get_result();
+    if ($r) {
+        while ($row = $r->fetch_assoc()) {
+            $welfare_actions_map[$row['case_id']][] = $row;
+        }
+    }
+    $stmt->close();
+}
+
 $today_counseling = [];
 if ($conn) {
     try {
@@ -50,16 +211,14 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
-// Get discipline cases
-$discipline_cases_list = [];
+$all_discipline_cases = [];
 if ($conn) {
     try {
-        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC LIMIT 5");
-        if ($r) $discipline_cases_list = $r->fetch_all(MYSQLI_ASSOC);
+        $r = $conn->query("SELECT sd.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM student_discipline sd LEFT JOIN igangaschoolofl_students_db.students s ON sd.student_id=s.id ORDER BY sd.created_at DESC");
+        if ($r) $all_discipline_cases = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 
-// Get hostel stats
 $hostel_stats = [];
 if ($conn) {
     try {
@@ -68,7 +227,6 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
-// Get upcoming activities
 $upcoming_activities = [];
 if ($conn) {
     try {
@@ -77,7 +235,6 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
-// Get recent activities
 $recent_activities = [];
 if ($conn) {
     try {
@@ -87,6 +244,14 @@ if ($conn) {
                 $recent_activities[] = $row;
             }
         }
+    } catch (Exception $e) {}
+}
+
+$staff_list = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT id, CONCAT(first_name,' ',last_name) as full_name FROM staff ORDER BY first_name");
+        if ($r) $staff_list = $r->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {}
 }
 
@@ -105,565 +270,590 @@ $pageToSection = [
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';
+$edit_case_id = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
+$view_case_id = isset($_GET['view']) ? (int)$_GET['view'] : 0;
+$edit_case = null;
+if ($edit_case_id && $conn) {
+    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id WHERE wc.id = ?");
+    $stmt->bind_param("i", $edit_case_id);
+    $stmt->execute();
+    $edit_case = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+}
+$view_case = null;
+if ($view_case_id && $conn) {
+    $stmt = $conn->prepare("SELECT wc.*, CONCAT(s.first_name,' ',s.surname) as student_name FROM welfare_cases wc LEFT JOIN igangaschoolofl_students_db.students s ON wc.student_id=s.id WHERE wc.id = ?");
+    $stmt->bind_param("i", $view_case_id);
+    $stmt->execute();
+    $view_case = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($view_case) {
+        $stmt2 = $conn->prepare("SELECT * FROM welfare_actions WHERE case_id = ? ORDER BY created_at ASC");
+        $stmt2->bind_param("i", $view_case_id);
+        $stmt2->execute();
+        $view_case_actions = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2->close();
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
-<style>.war-content{margin-left:270px;padding:24px;min-height:100vh}@media(max-width:768px){.war-content{margin-left:0!important;padding:12px!important}}</style>
+<style>
+.war-content{margin-left:270px;padding:24px;min-height:100vh}
+@media(max-width:768px){.war-content{margin-left:0!important;padding:12px!important}}
+.table-actions .btn{margin-right:4px}
+.case-detail-card{background:#fff;border-radius:8px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.case-detail-card h4{margin-bottom:12px;color:#333}
+.action-log{max-height:300px;overflow-y:auto}
+.action-log .log-entry{padding:10px;border-left:3px solid #007bff;margin-bottom:8px;background:#f8f9fa;border-radius:4px}
+.action-log .log-entry .log-meta{font-size:.8em;color:#666;margin-bottom:4px}
+.alert-flash{margin-bottom:20px}
+</style>
 </head>
 <body class="ent-layout">
     <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
-    
-    <div class="war-content">
-            <!-- Dashboard Content -->
-            <div class="dashboard-content content-section">
-                <!-- Welfare Overview -->
-                <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
-                    <h2>Student Welfare Overview</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $assigned_students; ?></h3>
-                                <p>Assigned Students</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-injured"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $welfare_cases; ?></h3>
-                                <p>Open Welfare Cases</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-comments"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $counseling_sessions; ?></h3>
-                                <p>Today's Sessions</p>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-gavel"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3><?php echo $discipline_cases; ?></h3>
-                                <p>Pending Discipline Cases</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+<div class="war-content">
+    <?php if ($flash): ?>
+    <div class="alert alert-<?= $flashType ?> alert-flash alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($flash) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
 
-                <!-- Student Welfare -->
-                <section id="students" class="content-section dashboard-section<?= $section==='students'?' active':'' ?>" data-section="students">
-                    <h2>Student Welfare Management</h2>
-                    <div class="welfare-actions">
-                        <button class="btn btn-primary" onclick="openModal('studentProfile')">
-                            <i class="fas fa-user"></i> Student Profile
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('welfareCase')">
-                            <i class="fas fa-user-injured"></i> Welfare Case
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('homeVisit')">
-                            <i class="fas fa-home"></i> Home Visit
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('emergencyContact')">
-                            <i class="fas fa-phone-alt"></i> Emergency Contact
-                        </button>
-                    </div>
-                    
-                    <div class="welfare-overview">
-                        <h3>Recent Welfare Cases</h3>
-                        <div class="welfare-cases">
-                            <?php if (empty($welfare_cases_list)): ?>
-                            <div class="text-center text-muted py-4">No welfare cases recorded</div>
-                            <?php else: ?>
-                            <?php foreach ($welfare_cases_list as $wc): ?>
-                            <div class="case-card">
-                                <div class="case-header">
-                                    <h4><?= htmlspecialchars($wc['student_name'] ?? 'Student') ?> , <?= htmlspecialchars($wc['case_type'] ?? 'General') ?></h4>
-                                    <span class="case-date"><?= !empty($wc['created_at']) ? date('M j, Y', strtotime($wc['created_at'])) : '-' ?></span>
-                                </div>
-                                <div class="case-details">
-                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($wc['case_type'] ?? 'General') ?></strong></div>
-                                    <div class="detail"><span>Status:</span><strong class="text-<?= ($wc['status']??'Open')==='Resolved'?'success':'warning' ?>"><?= htmlspecialchars($wc['status'] ?? 'Open') ?></strong></div>
-                                    <div class="detail"><span>Actions Taken:</span><strong><?= htmlspecialchars(substr($wc['immediate_actions'] ?? $wc['case_description'] ?? '-', 0, 60)) ?></strong></div>
-                                </div>
-                                <div class="case-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Details</button>
-                                    <button class="btn btn-sm btn-outline-success">Update Case</button>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </section>
+    <?php if ($view_case): ?>
+    <div class="case-detail-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Case #<?= $view_case['id'] ?> - <?= htmlspecialchars($view_case['student_name'] ?? 'Student') ?></h4>
+            <a href="wardens.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3"><strong>Case Type:</strong> <?= htmlspecialchars($view_case['case_type'] ?? '-') ?></div>
+            <div class="col-md-3"><strong>Status:</strong> <span class="badge bg-<?= ($view_case['status']==='Resolved'?'success':($view_case['status']==='Closed'?'secondary':'warning')) ?>"><?= htmlspecialchars($view_case['status']) ?></span></div>
+            <div class="col-md-3"><strong>Priority:</strong> <?= htmlspecialchars($view_case['priority'] ?? '-') ?></div>
+            <div class="col-md-3"><strong>Reported:</strong> <?= !empty($view_case['created_at']) ? date('M j, Y', strtotime($view_case['created_at'])) : '-' ?></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6"><strong>Description:</strong><br><?= nl2br(htmlspecialchars($view_case['description'] ?? '-')) ?></div>
+            <div class="col-md-6"><strong>Resolution Notes:</strong><br><?= nl2br(htmlspecialchars($view_case['resolution_notes'] ?? '-')) ?></div>
+        </div>
 
-                <!-- Counseling Services -->
-                <section id="counseling" class="content-section dashboard-section<?= $section==='counseling'?' active':'' ?>" data-section="counseling">
-                    <h2>Counseling Services</h2>
-                    <div class="counseling-actions">
-                        <button class="btn btn-primary" onclick="openModal('scheduleSession')">
-                            <i class="fas fa-calendar-plus"></i> Schedule Session
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('counselingRecord')">
-                            <i class="fas fa-file-medical"></i> Counseling Record
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('groupCounseling')">
-                            <i class="fas fa-users"></i> Group Counseling
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('referral')">
-                            <i class="fas fa-share"></i> Referral Services
-                        </button>
-                    </div>
-                    
-                    <div class="counseling-overview">
-                        <h3>Today's Counseling Schedule</h3>
-                        <div class="counseling-schedule">
-                            <?php if (empty($today_counseling)): ?>
-                            <div class="text-center text-muted py-4">No counseling sessions scheduled for today</div>
-                            <?php else: ?>
-                            <?php foreach ($today_counseling as $cs): ?>
-                            <div class="session-item">
-                                <div class="session-header">
-                                    <h4><?= htmlspecialchars($cs['session_type'] ?? 'Counseling') ?> , <?= htmlspecialchars($cs['student_name'] ?? 'Student') ?></h4>
-                                    <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '-') ?></span>
-                                </div>
-                                <div class="session-details">
-                                    <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['issues_discussed'] ?? $cs['session_type'] ?? 'General') ?></strong></div>
-                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($cs['session_type'] ?? 'Individual') ?></strong></div>
-                                    <?php if (!empty($cs['location'])): ?>
-                                    <div class="detail"><span>Location:</span><strong><?= htmlspecialchars($cs['location']) ?></strong></div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="session-actions">
-                                    <button class="btn btn-sm btn-outline-primary">Start Session</button>
-                                    <button class="btn btn-sm btn-outline-info">Reschedule</button>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Student Discipline -->
-                <section id="discipline" class="content-section dashboard-section<?= $section==='discipline'?' active':'' ?>" data-section="discipline">
-                    <h2>Student Discipline</h2>
-                    <div class="discipline-actions">
-                        <button class="btn btn-primary" onclick="openModal('disciplineCase')">
-                            <i class="fas fa-gavel"></i> Discipline Case
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('disciplinaryAction')">
-                            <i class="fas fa-exclamation-triangle"></i> Disciplinary Action
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('behaviorReport')">
-                            <i class="fas fa-chart-line"></i> Behavior Report
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('parentMeeting')">
-                            <i class="fas fa-users"></i> Parent Meeting
-                        </button>
-                    </div>
-                    
-                    <div class="discipline-overview">
-                        <h3>Recent Discipline Cases</h3>
-                        <div class="discipline-cases">
-                            <?php if (empty($discipline_cases_list)): ?>
-                            <div class="text-center text-muted py-4">No discipline cases recorded</div>
-                            <?php else: ?>
-                            <?php foreach ($discipline_cases_list as $dc): ?>
-                            <div class="discipline-item">
-                                <div class="discipline-header">
-                                    <h4><?= htmlspecialchars($dc['student_name'] ?? 'Student') ?> , <?= htmlspecialchars($dc['incident_type'] ?? $dc['offense'] ?? 'Case') ?></h4>
-                                    <span class="discipline-date"><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '-' ?></span>
-                                </div>
-                                <div class="discipline-details">
-                                    <div class="detail"><span>Incident:</span><strong><?= htmlspecialchars($dc['incident_type'] ?? '-') ?></strong></div>
-                                    <div class="detail"><span>Action:</span><strong><?= htmlspecialchars($dc['action_taken'] ?? 'Pending') ?></strong></div>
-                                    <div class="detail"><span>Status:</span><strong class="text-<?= ($dc['status']??'Pending')==='Resolved'?'success':'danger' ?>"><?= htmlspecialchars($dc['status'] ?? 'Pending') ?></strong></div>
-                                </div>
-                                <div class="discipline-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Details</button>
-                                    <button class="btn btn-sm btn-outline-info">Follow Up</button>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Accommodation -->
-                <section id="accommodation" class="content-section dashboard-section<?= $section==='accommodation'?' active':'' ?>" data-section="accommodation">
-                    <h2>Accommodation Management</h2>
-                    <div class="accommodation-actions">
-                        <button class="btn btn-primary" onclick="openModal('roomAssignment')">
-                            <i class="fas fa-bed"></i> Room Assignment
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('roomInspection')">
-                            <i class="fas fa-clipboard-check"></i> Room Inspection
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('maintenanceRequest')">
-                            <i class="fas fa-tools"></i> Maintenance Request
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('accommodationReport')">
-                            <i class="fas fa-chart-bar"></i> Accommodation Report
-                        </button>
-                    </div>
-                    
-                    <div class="accommodation-overview">
-                        <h3>Hostel Overview</h3>
-                        <div class="hostel-stats">
-                            <?php if (empty($hostel_stats)): ?>
-                            <div class="text-center text-muted py-4 col-12">No hostel data available</div>
-                            <?php else: ?>
-                            <?php foreach ($hostel_stats as $hs): $occ = (int)($hs['occupied']??0); $total = (int)($hs['total_beds']??1); $pct = $total > 0 ? round($occ/$total*100,1) : 0; ?>
-                            <div class="hostel-stat">
-                                <h4><?= htmlspecialchars($hs['hostel_name'] ?? 'Hostel') ?></h4>
-                                <div class="occupancy"><?= $occ ?>/<?= $total ?> beds occupied</div>
-                                <small><?= $pct ?>% occupancy</small>
-                            </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                            <?php $maintenance_count = 0; if ($conn) { try { $r = $conn->query("SELECT COUNT(*) as c FROM hostel_maintenance_requests WHERE status NOT IN ('Completed','Closed')"); if ($r) $maintenance_count = (int)$r->fetch_assoc()['c']; } catch(Exception $e){} } ?>
-                            <div class="hostel-stat">
-                                <h4>Maintenance Issues</h4>
-                                <div class="issues-count"><?= $maintenance_count ?> pending</div>
-                                <small>Requires attention</small>
-                            </div>
-                            <?php $inspection_rate = 0; if ($conn) { try { $r = $conn->query("SELECT ROUND(COUNT(CASE WHEN status='Completed' THEN 1 END)/COUNT(*)*100,1) as rate FROM hostel_inspections WHERE MONTH(inspection_date)=MONTH(CURDATE()) AND YEAR(inspection_date)=YEAR(CURDATE())"); if ($r) $inspection_rate = (float)($r->fetch_assoc()['rate']??0); } catch(Exception $e){} } ?>
-                            <div class="hostel-stat">
-                                <h4>Room Inspections</h4>
-                                <div class="inspection-rate"><?= $inspection_rate ?>%</div>
-                                <small>Completed this month</small>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Student Activities -->
-                <section id="activities" class="content-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
-                    <h2>Student Activities</h2>
-                    <div class="activity-actions">
-                        <button class="btn btn-primary" onclick="openModal('organizeActivity')">
-                            <i class="fas fa-calendar-plus"></i> Organize Activity
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('activitySchedule')">
-                            <i class="fas fa-calendar"></i> Activity Schedule
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('participation')">
-                            <i class="fas fa-users"></i> Student Participation
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('activityReport')">
-                            <i class="fas fa-chart-bar"></i> Activity Report
-                        </button>
-                    </div>
-                    
-                    <div class="activities-overview">
-                        <h3>Upcoming Activities</h3>
-                        <div class="activity-list">
-                            <?php if (empty($upcoming_activities)): ?>
-                            <div class="text-center text-muted py-4">No upcoming activities</div>
-                            <?php else: ?>
-                            <?php foreach ($upcoming_activities as $act): ?>
-                            <div class="activity-item">
-                                <div class="activity-header">
-                                    <h4><?= htmlspecialchars($act['title'] ?? $act['activity_name'] ?? 'Activity') ?></h4>
-                                    <span class="activity-date"><?= !empty($act['activity_date']) ? date('M j, Y', strtotime($act['activity_date'])) : '-' ?></span>
-                                </div>
-                                <div class="activity-details">
-                                    <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($act['activity_type'] ?? 'General') ?></strong></div>
-                                    <?php if (!empty($act['expected_participants'])): ?>
-                                    <div class="detail"><span>Participants:</span><strong><?= (int)$act['expected_participants'] ?> registered</strong></div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($act['location'])): ?>
-                                    <div class="detail"><span>Location:</span><strong><?= htmlspecialchars($act['location']) ?></strong></div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="activity-actions">
-                                    <button class="btn btn-sm btn-outline-primary">View Details</button>
-                                    <button class="btn btn-sm btn-outline-info">Manage Registration</button>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Security & Safety -->
-                <section id="security" class="content-section dashboard-section<?= $section==='security'?' active':'' ?>" data-section="security">
-                    <h2>Security & Safety</h2>
-                    <div class="security-actions">
-                        <button class="btn btn-primary" onclick="openModal('securityReport')">
-                            <i class="fas fa-shield-alt"></i> Security Report
-                        </button>
-                        <button class="btn btn-success" onclick="openModal('safetyInspection')">
-                            <i class="fas fa-clipboard-check"></i> Safety Inspection
-                        </button>
-                        <button class="btn btn-info" onclick="openModal('incidentReport')">
-                            <i class="fas fa-exclamation-triangle"></i> Incident Report
-                        </button>
-                        <button class="btn btn-warning" onclick="openModal('emergencyDrill')">
-                            <i class="fas fa-running"></i> Emergency Drill
-                        </button>
-                    </div>
-                    
-                    <div class="security-overview">
-                        <h3>Security Status</h3>
-                        <div class="security-stats">
-                            <div class="security-stat">
-                                <h4>Security Personnel</h4>
-                                <div class="personnel-count">5 on duty</div>
-                                <small>All positions covered</small>
-                            </div>
-                            <div class="security-stat">
-                                <h4>Incidents Today</h4>
-                                <div class="incident-count">0</div>
-                                <small>No incidents reported</small>
-                            </div>
-                            <div class="security-stat">
-                                <h4>Safety Inspections</h4>
-                                <div class="inspection-rate">95%</div>
-                                <small>Completed this week</small>
-                            </div>
-                            <div class="security-stat">
-                                <h4>Emergency Drills</h4>
-                                <div class="drill-status">Scheduled</div>
-                                <small>Next: Fire drill , May 5</small>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Recent Activities -->
-                <section class="activities-section">
-                    <h2>Recent Welfare Activities</h2>
-                    <div class="activities-list">
-                        <?php foreach ($recent_activities as $activity): ?>
-                        <div class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-<?php echo $activity['icon'] ?? 'check-circle'; ?>"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p><strong><?php echo $activity['action'] ?? $activity['activity'] ?? 'Activity'; ?></strong></p>
-                                <small><?php echo date('M j, Y H:i', strtotime($activity['created_at'])); ?></small>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
+        <h5 class="mt-4">Action Log</h5>
+        <div class="action-log">
+            <?php if (!empty($view_case_actions)): ?>
+            <?php foreach ($view_case_actions as $la): ?>
+            <div class="log-entry">
+                <div class="log-meta">
+                    <strong><?= htmlspecialchars($la['action_by_name'] ?? 'Staff') ?></strong> &mdash;
+                    <em><?= htmlspecialchars($la['action_type'] ?? 'Comment') ?></em> &mdash;
+                    <?= date('M j, Y H:i', strtotime($la['created_at'])) ?>
+                </div>
+                <div><?= nl2br(htmlspecialchars($la['notes'] ?? '')) ?></div>
             </div>
-    </div><!-- /war-content -->
+            <?php endforeach; ?>
+            <?php else: ?>
+            <div class="text-muted">No actions recorded yet.</div>
+            <?php endif; ?>
+        </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="actionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <hr>
+        <h5>Add Action / Comment</h5>
+        <form action="wardens.php" method="POST" class="row g-2">
+            <input type="hidden" name="action" value="add_welfare_action">
+            <input type="hidden" name="case_id" value="<?= $view_case['id'] ?>">
+            <div class="col-md-3">
+                <select name="action_type" class="form-select" required>
+                    <option value="Comment">Comment</option>
+                    <option value="Follow-up">Follow-up</option>
+                    <option value="Note">Note</option>
+                    <option value="Escalation">Escalation</option>
+                    <option value="Referral">Referral</option>
+                </select>
+            </div>
+            <div class="col-md-7">
+                <input type="text" name="notes" class="form-control" placeholder="Enter notes..." required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Add</button>
+            </div>
+        </form>
+    </div>
+
+    <?php elseif ($edit_case): ?>
+    <div class="case-detail-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Edit Case #<?= $edit_case['id'] ?></h4>
+            <a href="wardens.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+        <form action="wardens.php" method="POST">
+            <input type="hidden" name="action" value="update_welfare_case">
+            <input type="hidden" name="case_id" value="<?= $edit_case['id'] ?>">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Student</label>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($edit_case['student_name'] ?? '') ?>" disabled>
                 </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- Dynamic content -->
+                <div class="col-md-3">
+                    <label class="form-label">Case Type</label>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($edit_case['case_type'] ?? '') ?>" disabled>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="modalAction">Save</button>
+                <div class="col-md-3">
+                    <label class="form-label">Priority</label>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($edit_case['priority'] ?? '') ?>" disabled>
                 </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Open" <?= $edit_case['status']==='Open'?'selected':'' ?>>Open</option>
+                        <option value="In Progress" <?= $edit_case['status']==='In Progress'?'selected':'' ?>>In Progress</option>
+                        <option value="Resolved" <?= $edit_case['status']==='Resolved'?'selected':'' ?>>Resolved</option>
+                        <option value="Closed" <?= $edit_case['status']==='Closed'?'selected':'' ?>>Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Resolution Notes</label>
+                    <textarea name="resolution_notes" class="form-control" rows="2" placeholder="Notes for resolution..."><?= htmlspecialchars($edit_case['resolution_notes'] ?? '') ?></textarea>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="2" disabled><?= htmlspecialchars($edit_case['description'] ?? '') ?></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Case</button>
+        </form>
+    </div>
+
+    <?php else: ?>
+    <div class="dashboard-content content-section">
+        <section id="overview" class="content-section dashboard-section<?= $section==='overview'?' active':'' ?>" data-section="overview">
+            <h2>Student Welfare Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content"><h3><?= $assigned_students ?></h3><p>Assigned Students</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+                    <div class="stat-content"><h3><?= $welfare_cases_count ?></h3><p>Open Welfare Cases</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                    <div class="stat-content"><h3><?= $counseling_sessions ?></h3><p>Today's Sessions</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                    <div class="stat-content"><h3><?= $discipline_cases_count ?></h3><p>Pending Discipline Cases</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="students" class="content-section dashboard-section<?= $section==='students'?' active':'' ?>" data-section="students">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Student Welfare Cases</h2>
+                <button class="btn btn-success" onclick="document.getElementById('addWelfareForm').style.display='block'"><i class="fas fa-plus"></i> New Welfare Case</button>
+            </div>
+
+            <div id="addWelfareForm" style="display:none" class="case-detail-card mb-4">
+                <h5>Create Welfare Case</h5>
+                <form action="wardens.php" method="POST">
+                    <input type="hidden" name="action" value="add_welfare_case">
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Student ID</label>
+                            <input type="number" name="student_id" class="form-control" placeholder="Student ID" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Case Type</label>
+                            <select name="case_type" class="form-select" required>
+                                <option value="">Select</option>
+                                <option value="Academic Support">Academic Support</option>
+                                <option value="Personal Counseling">Personal Counseling</option>
+                                <option value="Financial Support">Financial Support</option>
+                                <option value="Health Issues">Health Issues</option>
+                                <option value="Homesickness">Homesickness</option>
+                                <option value="Family Problems">Family Problems</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Priority</label>
+                            <select name="priority" class="form-select" required>
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Assigned To</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="0">Unassigned</option>
+                                <?php foreach ($staff_list as $sl): ?>
+                                <option value="<?= $sl['id'] ?>"><?= htmlspecialchars($sl['full_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="1" required placeholder="Brief description..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Case</button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('addWelfareForm').style.display='none'">Cancel</button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Reported</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($all_welfare_cases)): ?>
+                        <tr><td colspan="7" class="text-center text-muted">No welfare cases found</td></tr>
+                        <?php else: ?>
+                        <?php foreach ($all_welfare_cases as $wc): ?>
+                        <tr>
+                            <td><?= $wc['id'] ?></td>
+                            <td><?= htmlspecialchars($wc['student_name'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($wc['case_type'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= ($wc['priority']==='Urgent'?'danger':($wc['priority']==='High'?'warning':'info')) ?>"><?= htmlspecialchars($wc['priority'] ?? '-') ?></span></td>
+                            <td><span class="badge bg-<?= ($wc['status']==='Resolved'?'success':($wc['status']==='Closed'?'secondary':($wc['status']==='In Progress'?'primary':'warning'))) ?>"><?= htmlspecialchars($wc['status']) ?></span></td>
+                            <td><?= !empty($wc['created_at']) ? date('M j, Y', strtotime($wc['created_at'])) : '-' ?></td>
+                            <td class="table-actions">
+                                <a href="wardens.php?view=<?= $wc['id'] ?>" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="wardens.php?edit=<?= $wc['id'] ?>" class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form action="wardens.php" method="POST" style="display:inline" onsubmit="return confirm('Delete this case?')">
+                                    <input type="hidden" name="action" value="delete_welfare_case">
+                                    <input type="hidden" name="case_id" value="<?= $wc['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <?php if (!empty($all_welfare_cases)): ?>
+            <h5 class="mt-4">Case Action Logs</h5>
+            <?php foreach ($all_welfare_cases as $wc): ?>
+            <?php if (!empty($welfare_actions_map[$wc['id']])): ?>
+            <div class="case-detail-card mb-3">
+                <h6>Case #<?= $wc['id'] ?> - <?= htmlspecialchars($wc['student_name'] ?? '') ?></h6>
+                <div class="action-log">
+                    <?php foreach ($welfare_actions_map[$wc['id']] as $la): ?>
+                    <div class="log-entry">
+                        <div class="log-meta">
+                            <strong><?= htmlspecialchars($la['action_by_name'] ?? 'Staff') ?></strong> &mdash;
+                            <em><?= htmlspecialchars($la['action_type'] ?? 'Comment') ?></em> &mdash;
+                            <?= date('M j, Y H:i', strtotime($la['created_at'])) ?>
+                        </div>
+                        <div><?= nl2br(htmlspecialchars($la['notes'] ?? '')) ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+
+        <section id="counseling" class="content-section dashboard-section<?= $section==='counseling'?' active':'' ?>" data-section="counseling">
+            <h2>Counseling Services</h2>
+            <div class="counseling-actions">
+                <button class="btn btn-primary" onclick="openModal('scheduleSession')"><i class="fas fa-calendar-plus"></i> Schedule Session</button>
+                <button class="btn btn-success" onclick="openModal('counselingRecord')"><i class="fas fa-file-medical"></i> Counseling Record</button>
+            </div>
+            <div class="counseling-overview">
+                <h3>Today's Counseling Schedule</h3>
+                <div class="counseling-schedule">
+                    <?php if (empty($today_counseling)): ?>
+                    <div class="text-center text-muted py-4">No counseling sessions scheduled for today</div>
+                    <?php else: ?>
+                    <?php foreach ($today_counseling as $cs): ?>
+                    <div class="session-item">
+                        <div class="session-header">
+                            <h4><?= htmlspecialchars($cs['session_type'] ?? 'Counseling') ?> - <?= htmlspecialchars($cs['student_name'] ?? 'Student') ?></h4>
+                            <span class="session-time"><?= htmlspecialchars($cs['session_time'] ?? '-') ?></span>
+                        </div>
+                        <div class="session-details">
+                            <div class="detail"><span>Topic:</span><strong><?= htmlspecialchars($cs['issues_discussed'] ?? $cs['session_type'] ?? 'General') ?></strong></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </section>
+
+        <section id="discipline" class="content-section dashboard-section<?= $section==='discipline'?' active':'' ?>" data-section="discipline">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Student Discipline</h2>
+                <button class="btn btn-success" onclick="document.getElementById('addDisciplineForm').style.display='block'"><i class="fas fa-plus"></i> New Discipline Case</button>
+            </div>
+
+            <div id="addDisciplineForm" style="display:none" class="case-detail-card mb-4">
+                <h5>Create Discipline Case</h5>
+                <form action="wardens.php" method="POST">
+                    <input type="hidden" name="action" value="add_discipline_case">
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Student ID</label>
+                            <input type="number" name="student_id" class="form-control" placeholder="Student ID" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Incident Type</label>
+                            <select name="incident_type" class="form-select" required>
+                                <option value="">Select</option>
+                                <option value="Unauthorized Absence">Unauthorized Absence</option>
+                                <option value="Misconduct">Misconduct</option>
+                                <option value="Academic Dishonesty">Academic Dishonesty</option>
+                                <option value="Property Damage">Property Damage</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Incident Date</label>
+                            <input type="date" name="incident_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Action Taken</label>
+                            <select name="action_taken" class="form-select" required>
+                                <option value="Warning">Verbal Warning</option>
+                                <option value="Written Warning">Written Warning</option>
+                                <option value="Probation">Probation</option>
+                                <option value="Suspension">Suspension</option>
+                                <option value="Expulsion">Expulsion</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="1" required placeholder="Incident description..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Case</button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('addDisciplineForm').style.display='none'">Cancel</button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student</th>
+                            <th>Incident</th>
+                            <th>Date</th>
+                            <th>Action Taken</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($all_discipline_cases)): ?>
+                        <tr><td colspan="7" class="text-center text-muted">No discipline cases found</td></tr>
+                        <?php else: ?>
+                        <?php foreach ($all_discipline_cases as $dc): ?>
+                        <tr>
+                            <td><?= $dc['id'] ?></td>
+                            <td><?= htmlspecialchars($dc['student_name'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($dc['incident_type'] ?? '-') ?></td>
+                            <td><?= !empty($dc['incident_date']) ? date('M j, Y', strtotime($dc['incident_date'])) : '-' ?></td>
+                            <td><?= htmlspecialchars($dc['action_taken'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= ($dc['status']==='Resolved'?'success':($dc['status']==='Closed'?'secondary':'danger')) ?>"><?= htmlspecialchars($dc['status'] ?? 'Pending') ?></span></td>
+                            <td class="table-actions">
+                                <form action="wardens.php" method="POST" style="display:inline" onsubmit="return confirm('Delete this case?')">
+                                    <input type="hidden" name="action" value="delete_discipline_case">
+                                    <input type="hidden" name="case_id" value="<?= $dc['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="accommodation" class="content-section dashboard-section<?= $section==='accommodation'?' active':'' ?>" data-section="accommodation">
+            <h2>Accommodation Management</h2>
+            <div class="accommodation-overview">
+                <h3>Hostel Overview</h3>
+                <div class="hostel-stats">
+                    <?php if (empty($hostel_stats)): ?>
+                    <div class="text-center text-muted py-4 col-12">No hostel data available</div>
+                    <?php else: ?>
+                    <?php foreach ($hostel_stats as $hs): $occ = (int)($hs['occupied']??0); $total = (int)($hs['total_beds']??1); $pct = $total > 0 ? round($occ/$total*100,1) : 0; ?>
+                    <div class="hostel-stat">
+                        <h4><?= htmlspecialchars($hs['hostel_name'] ?? 'Hostel') ?></h4>
+                        <div class="occupancy"><?= $occ ?>/<?= $total ?> beds occupied</div>
+                        <small><?= $pct ?>% occupancy</small>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </section>
+
+        <section id="activities" class="content-section dashboard-section<?= $section==='activities'?' active':'' ?>" data-section="activities">
+            <h2>Student Activities</h2>
+            <div class="activities-overview">
+                <h3>Upcoming Activities</h3>
+                <div class="activity-list">
+                    <?php if (empty($upcoming_activities)): ?>
+                    <div class="text-center text-muted py-4">No upcoming activities</div>
+                    <?php else: ?>
+                    <?php foreach ($upcoming_activities as $act): ?>
+                    <div class="activity-item">
+                        <div class="activity-header">
+                            <h4><?= htmlspecialchars($act['title'] ?? $act['activity_name'] ?? 'Activity') ?></h4>
+                            <span class="activity-date"><?= !empty($act['activity_date']) ? date('M j, Y', strtotime($act['activity_date'])) : '-' ?></span>
+                        </div>
+                        <div class="activity-details">
+                            <div class="detail"><span>Type:</span><strong><?= htmlspecialchars($act['activity_type'] ?? 'General') ?></strong></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </section>
+
+        <section id="security" class="content-section dashboard-section<?= $section==='security'?' active':'' ?>" data-section="security">
+            <h2>Security & Safety</h2>
+            <div class="security-overview">
+                <div class="security-stats">
+                    <div class="security-stat"><h4>Security Personnel</h4><div>5 on duty</div><small>All positions covered</small></div>
+                    <div class="security-stat"><h4>Incidents Today</h4><div>0</div><small>No incidents reported</small></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="activities-section">
+            <h2>Recent Welfare Activities</h2>
+            <div class="activities-list">
+                <?php if (empty($recent_activities)): ?>
+                <div class="text-muted">No recent activities</div>
+                <?php else: ?>
+                <?php foreach ($recent_activities as $activity): ?>
+                <div class="activity-item">
+                    <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="activity-content">
+                        <p><strong><?= htmlspecialchars($activity['activity'] ?? 'Activity') ?></strong></p>
+                        <small><?= date('M j, Y H:i', strtotime($activity['created_at'])) ?></small>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </section>
+    </div>
+    <?php endif; ?>
+</div>
+
+<div class="modal fade" id="actionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="modalAction">Save</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-    document.getElementById('modalAction')?.addEventListener('click', function() {
-        const form = document.querySelector('#modalBody form');
-        if (form) form.submit();
-    });
-    </script>
+<script>
+document.getElementById('modalAction')?.addEventListener('click', function() {
+    const form = document.querySelector('#modalBody form');
+    if (form) form.submit();
+});
+</script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Update current date/time
-        function updateDateTime() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
-        }
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function updateDateTime() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const el = document.getElementById('currentDate');
+    if (el) el.textContent = now.toLocaleDateString('en-US', options);
+}
+updateDateTime();
+setInterval(updateDateTime, 60000);
 
-        // Navigation
-        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const targetId = this.getAttribute('href').substring(1);
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                const targetSection = document.getElementById(targetId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
-                }
-            });
+document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        const targetId = this.getAttribute('href').substring(1);
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.style.display = 'none';
         });
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) targetSection.style.display = 'block';
+    });
+});
 
-        // Modal functions
-        function openModal(action) {
-            const modal = new bootstrap.Modal(document.getElementById('actionModal'));
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
-            switch(action) {
-                case 'welfareCase':
-                    modalTitle.textContent = 'Create Welfare Case';
-                    modalBody.innerHTML = `
-                        <form action="../handlers/welfare_handler.php" method="POST">
-                            <input type="hidden" name="action" value="create_welfare_case">
-                            <div class="mb-3">
-                                <label class="form-label">Student ID</label>
-                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Case Type</label>
-                                <select class="form-control" name="case_type" required>
-                                    <option value="">Select Case Type</option>
-                                    <option value="Academic Support">Academic Support</option>
-                                    <option value="Personal Counseling">Personal Counseling</option>
-                                    <option value="Financial Support">Financial Support</option>
-                                    <option value="Health Issues">Health Issues</option>
-                                    <option value="Disciplinary Issues">Disciplinary Issues</option>
-                                    <option value="Homesickness">Homesickness</option>
-                                    <option value="Family Problems">Family Problems</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Priority Level</label>
-                                <select class="form-control" name="priority" required>
-                                    <option value="Low">Low</option>
-                                    <option value="Medium" selected>Medium</option>
-                                    <option value="High">High</option>
-                                    <option value="Urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Case Description</label>
-                                <textarea class="form-control" name="case_description" rows="4" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Immediate Actions Taken</label>
-                                <textarea class="form-control" name="immediate_actions" rows="3"></textarea>
-                            </div>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" name="follow_up_required" id="fu" checked>
-                                <label class="form-check-label" for="fu">Follow up Required</label>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Create Welfare Case</button>
-                        </form>
-                    `;
-                    break;
-                case 'scheduleSession':
-                    modalTitle.textContent = 'Schedule Counseling Session';
-                    modalBody.innerHTML = `
-                        <form action="../handlers/welfare_handler.php" method="POST">
-                            <input type="hidden" name="action" value="schedule_session">
-                            <div class="mb-3">
-                                <label class="form-label">Session Type</label>
-                                <select class="form-control" name="session_type" required>
-                                    <option value="">Select Type</option>
-                                    <option value="Individual">Individual Counseling</option>
-                                    <option value="Group">Group Counseling</option>
-                                    <option value="Family">Family Counseling</option>
-                                    <option value="Crisis">Crisis Intervention</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Student ID</label>
-                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Date</label>
-                                        <input type="date" class="form-control" name="session_date" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Time</label>
-                                        <input type="time" class="form-control" name="session_time" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Issues Discussed</label>
-                                <textarea class="form-control" name="issues_discussed" rows="3" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Schedule Session</button>
-                        </form>
-                    `;
-                    break;
-                case 'disciplineCase':
-                    modalTitle.textContent = 'Create Discipline Case';
-                    modalBody.innerHTML = `
-                        <form action="../handlers/welfare_handler.php" method="POST">
-                            <input type="hidden" name="action" value="create_discipline_case">
-                            <div class="mb-3">
-                                <label class="form-label">Student ID</label>
-                                <input type="number" class="form-control" name="student_id" placeholder="Enter student ID number" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Incident Type</label>
-                                <select class="form-control" name="incident_type" required>
-                                    <option value="">Select Incident Type</option>
-                                    <option value="Absence">Unauthorized Absence</option>
-                                    <option value="Misconduct">Misconduct</option>
-                                    <option value="Academic Dishonesty">Academic Dishonesty</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Date of Incident</label>
-                                <input type="date" class="form-control" name="incident_date" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Action Taken</label>
-                                <select class="form-control" name="action_taken" required>
-                                    <option value="Warning">Verbal Warning</option>
-                                    <option value="Probation">Probation</option>
-                                    <option value="Suspension">Suspension</option>
-                                    <option value="Expulsion">Expulsion</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Create Discipline Case</button>
-                        </form>
-                    `;
-                    break;
-                // Add more cases as needed
-            }
-            
-            modal.show();
-        }
-    </script>
+function openModal(action) {
+    const modal = new bootstrap.Modal(document.getElementById('actionModal'));
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    switch(action) {
+        case 'scheduleSession':
+            modalTitle.textContent = 'Schedule Counseling Session';
+            modalBody.innerHTML = `
+                <form action="../handlers/welfare_handler.php" method="POST">
+                    <input type="hidden" name="action" value="schedule_session">
+                    <div class="mb-3"><label class="form-label">Session Type</label>
+                        <select class="form-control" name="session_type" required>
+                            <option value="">Select Type</option>
+                            <option value="Individual">Individual Counseling</option>
+                            <option value="Group">Group Counseling</option>
+                            <option value="Family">Family Counseling</option>
+                            <option value="Crisis">Crisis Intervention</option>
+                        </select></div>
+                    <div class="mb-3"><label class="form-label">Student ID</label>
+                        <input type="number" class="form-control" name="student_id" placeholder="Enter student ID" required></div>
+                    <div class="row">
+                        <div class="col-md-6"><div class="mb-3"><label class="form-label">Date</label><input type="date" class="form-control" name="session_date" required></div></div>
+                        <div class="col-md-6"><div class="mb-3"><label class="form-label">Time</label><input type="time" class="form-control" name="session_time" required></div></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Issues Discussed</label><textarea class="form-control" name="issues_discussed" rows="3" required></textarea></div>
+                    <button type="submit" class="btn btn-primary w-100">Schedule Session</button>
+                </form>`;
+            break;
+        case 'counselingRecord':
+            modalTitle.textContent = 'Counseling Record';
+            modalBody.innerHTML = '<p class="text-muted">Counseling record form coming soon.</p>';
+            break;
+    }
+    modal.show();
+}
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
-

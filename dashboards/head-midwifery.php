@@ -11,12 +11,197 @@ $user_role = $_SESSION['role'] ?? '';
 $user_name = $user['full_name'] ?? 'Head of Midwifery';
 $user_id = (int)($user['id'] ?? 0);
 
+// ── CRUD POST Handlers ──
+$flash = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'add_student') {
+        $sid   = trim($_POST['student_id'] ?? '');
+        $sname = trim($_POST['student_name'] ?? '');
+        $prog  = trim($_POST['program'] ?? '');
+        $year  = (int)($_POST['year_of_study'] ?? 1);
+        if ($sid && $sname && $prog) {
+            try {
+                $stmt = $conn->prepare("INSERT INTO midwifery_students (student_id, student_name, program, year_of_study, clinical_hours, status) VALUES (?, ?, ?, ?, 0, 'Active')");
+                $stmt->bind_param('sssi', $sid, $sname, $prog, $year);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Student added successfully.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to add student.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        } else {
+            $flash = '<div class="alert alert-warning">Please fill all required fields.</div>';
+        }
+    }
+
+    if ($action === 'update_student') {
+        $id   = (int)($_POST['id'] ?? 0);
+        $sid  = trim($_POST['student_id'] ?? '');
+        $sname = trim($_POST['student_name'] ?? '');
+        $prog = trim($_POST['program'] ?? '');
+        $year = (int)($_POST['year_of_study'] ?? 1);
+        $status = trim($_POST['status'] ?? 'Active');
+        if ($id && $sid && $sname) {
+            try {
+                $stmt = $conn->prepare("UPDATE midwifery_students SET student_id=?, student_name=?, program=?, year_of_study=?, status=? WHERE id=?");
+                $stmt->bind_param('sssisi', $sid, $sname, $prog, $year, $status, $id);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Student updated successfully.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to update student.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    if ($action === 'delete_student') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) {
+            try {
+                $stmt = $conn->prepare("DELETE FROM midwifery_students WHERE id=?");
+                $stmt->bind_param('i', $id);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Student deleted.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to delete student.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    if ($action === 'add_placement') {
+        $sid      = trim($_POST['student_id'] ?? '');
+        $facility = trim($_POST['facility_name'] ?? '');
+        $dept     = trim($_POST['department'] ?? '');
+        $start    = trim($_POST['start_date'] ?? '');
+        $end      = trim($_POST['end_date'] ?? '');
+        $sup      = trim($_POST['supervisor'] ?? '');
+        $dObs     = (int)($_POST['deliveries_observed'] ?? 0);
+        $dAss     = (int)($_POST['deliveries_assisted'] ?? 0);
+        if ($sid && $facility && $start) {
+            try {
+                $stmt = $conn->prepare("INSERT INTO midwifery_clinical_placements (student_id, facility_name, department, start_date, end_date, supervisor, deliveries_observed, deliveries_assisted, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', '')");
+                $stmt->bind_param('ssssssii', $sid, $facility, $dept, $start, $end, $sup, $dObs, $dAss);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Placement added successfully.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to add placement.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        } else {
+            $flash = '<div class="alert alert-warning">Please fill all required fields.</div>';
+        }
+    }
+
+    if ($action === 'update_placement') {
+        $id      = (int)($_POST['id'] ?? 0);
+        $sid     = trim($_POST['student_id'] ?? '');
+        $facility = trim($_POST['facility_name'] ?? '');
+        $dept    = trim($_POST['department'] ?? '');
+        $start   = trim($_POST['start_date'] ?? '');
+        $end     = trim($_POST['end_date'] ?? '');
+        $sup     = trim($_POST['supervisor'] ?? '');
+        $dObs    = (int)($_POST['deliveries_observed'] ?? 0);
+        $dAss    = (int)($_POST['deliveries_assisted'] ?? 0);
+        $status  = trim($_POST['status'] ?? 'Active');
+        $notes   = trim($_POST['notes'] ?? '');
+        if ($id && $sid && $facility) {
+            try {
+                $stmt = $conn->prepare("UPDATE midwifery_clinical_placements SET student_id=?, facility_name=?, department=?, start_date=?, end_date=?, supervisor=?, deliveries_observed=?, deliveries_assisted=?, status=?, notes=? WHERE id=?");
+                $stmt->bind_param('ssssssiiissi', $sid, $facility, $dept, $start, $end, $sup, $dObs, $dAss, $status, $notes, $id);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Placement updated.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to update placement.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    if ($action === 'delete_placement') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) {
+            try {
+                $stmt = $conn->prepare("DELETE FROM midwifery_clinical_placements WHERE id=?");
+                $stmt->bind_param('i', $id);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Placement deleted.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to delete placement.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    if ($action === 'add_skill') {
+        $skname = trim($_POST['skill_name'] ?? '');
+        $desc   = trim($_POST['description'] ?? '');
+        $cat    = trim($_POST['category'] ?? '');
+        $mand   = isset($_POST['is_mandatory']) ? 1 : 0;
+        if ($skname) {
+            try {
+                $stmt = $conn->prepare("INSERT INTO midwifery_skills_training (skill_name, description, category, is_mandatory) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param('sssi', $skname, $desc, $cat, $mand);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Skill added successfully.</div>';
+                } else {
+                    $flash = '<div class="alert alert-danger">Failed to add skill.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    if ($action === 'delete_skill') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) {
+            try {
+                $stmt = $conn->prepare("DELETE FROM midwifery_skills_training WHERE id=?");
+                $stmt->bind_param('i', $id);
+                if ($stmt->execute()) {
+                    $flash = '<div class="alert alert-success">Skill deleted.</div>';
+                }
+                $stmt->close();
+            } catch (Exception $e) {
+                $flash = '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        }
+    }
+
+    // Redirect after POST to prevent resubmission
+    header('Location: head-midwifery.php?page=' . ($_GET['page'] ?? 'home'));
+    exit;
+}
+
 // ── Page routing ──
 $pageToSection = [
     'home'       => 'overview',
     'overview'   => 'overview',
     'students'   => 'students',
     'clinical'   => 'clinical',
+    'skills'     => 'skills',
     'timetable'  => 'timetable',
     'courses'    => 'courses',
     'staff'      => 'staff',
@@ -55,7 +240,34 @@ try {
     error_log('head-midwifery stats: ' . $e->getMessage());
 }
 
-// Get midwifery students
+// Get midwifery students from dedicated table
+$mw_students = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT id, student_id, student_name, program, year_of_study, clinical_hours, status FROM midwifery_students ORDER BY student_name");
+        if ($r) $mw_students = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) { error_log('mw_students: ' . $e->getMessage()); }
+}
+
+// Get clinical placements
+$mw_placements = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM midwifery_clinical_placements ORDER BY start_date DESC");
+        if ($r) $mw_placements = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) { error_log('mw_placements: ' . $e->getMessage()); }
+}
+
+// Get skills training
+$mw_skills = [];
+if ($conn) {
+    try {
+        $r = $conn->query("SELECT * FROM midwifery_skills_training ORDER BY category, skill_name");
+        if ($r) $mw_skills = $r->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) { error_log('mw_skills: ' . $e->getMessage()); }
+}
+
+// Legacy student query (for fallback stats)
 $midwifery_students = [];
 if ($ctx['students']) {
     try {
@@ -142,25 +354,92 @@ if ($conn) {
     case 'students': ?>
         <section id="students" class="content-section dashboard-section active" data-section="students">
             <h2><i class="fas fa-user-graduate me-2"></i>Midwifery Students</h2>
+            <?= $flash ?>
+            <div class="mb-3">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addStudentForm">
+                    <i class="fas fa-plus me-1"></i> Add Student
+                </button>
+            </div>
+            <div class="collapse mb-4" id="addStudentForm">
+                <div class="card card-body">
+                    <form method="POST" class="row g-3">
+                        <input type="hidden" name="action" value="add_student">
+                        <div class="col-md-3">
+                            <label class="form-label">Student ID</label>
+                            <input type="text" name="student_id" class="form-control" required placeholder="e.g. MW-2026-001">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="student_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Program</label>
+                            <input type="text" name="program" class="form-control" required placeholder="e.g. BSc Midwifery">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Year</label>
+                            <select name="year_of_study" class="form-select">
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-save"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead><tr><th>Student Name</th><th>Program</th><th>Year</th><th>Status</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Student ID</th><th>Name</th><th>Program</th><th>Year</th><th>Clinical Hours</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
-                        <?php if (empty($midwifery_students)): ?>
-                        <tr><td colspan="5" class="text-center text-muted">No midwifery students found</td></tr>
+                        <?php if (empty($mw_students)): ?>
+                        <tr><td colspan="7" class="text-center text-muted">No midwifery students found</td></tr>
                         <?php else: ?>
-                        <?php foreach ($midwifery_students as $s): ?>
+                        <?php foreach ($mw_students as $s): ?>
                         <tr>
-                            <td><?= htmlspecialchars($s['first_name'] . ' ' . $s['surname']) ?></td>
+                            <td><?= htmlspecialchars($s['student_id']) ?></td>
+                            <td><?= htmlspecialchars($s['student_name']) ?></td>
                             <td><?= htmlspecialchars($s['program'] ?? '-') ?></td>
-                            <td>Year <?= htmlspecialchars($s['level'] ?? '?') ?></td>
-                            <td><span class="badge bg-<?= $s['status']==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
-                            <td><button class="btn btn-sm btn-outline-primary">View</button></td>
+                            <td>Year <?= htmlspecialchars($s['year_of_study'] ?? '?') ?></td>
+                            <td><?= (int)($s['clinical_hours'] ?? 0) ?></td>
+                            <td><span class="badge bg-<?= ($s['status'] ?? '')==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editStudent(<?= htmlspecialchars(json_encode($s), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this student?')">
+                                    <input type="hidden" name="action" value="delete_student">
+                                    <input type="hidden" name="id" value="<?= $s['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Edit Student Modal -->
+            <div class="modal fade" id="editStudentModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="update_student">
+                            <input type="hidden" name="id" id="editStudentId">
+                            <div class="modal-header"><h5 class="modal-title">Edit Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label class="form-label">Student ID</label><input type="text" name="student_id" id="editStudentSid" class="form-control" required></div>
+                                <div class="mb-3"><label class="form-label">Full Name</label><input type="text" name="student_name" id="editStudentName" class="form-control" required></div>
+                                <div class="mb-3"><label class="form-label">Program</label><input type="text" name="program" id="editStudentProg" class="form-control"></div>
+                                <div class="mb-3"><label class="form-label">Year</label><select name="year_of_study" id="editStudentYear" class="form-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                                <div class="mb-3"><label class="form-label">Status</label><select name="status" id="editStudentStatus" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option></select></div>
+                            </div>
+                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </section>
         <?php break;
@@ -173,11 +452,119 @@ if ($conn) {
     case 'clinical': ?>
         <section id="clinical" class="content-section dashboard-section active" data-section="clinical">
             <h2><i class="fas fa-clinic-medical me-2"></i>Clinical Placements</h2>
-            <?php if (file_exists(__DIR__ . '/clinical-placement.php')): ?>
-                <?php include __DIR__ . '/clinical-placement.php'; ?>
-            <?php else: ?>
-                <p class="text-muted">Clinical placement management module.</p>
-            <?php endif; ?>
+            <?= $flash ?>
+            <div class="mb-3">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addPlacementForm">
+                    <i class="fas fa-plus me-1"></i> Add Placement
+                </button>
+            </div>
+            <div class="collapse mb-4" id="addPlacementForm">
+                <div class="card card-body">
+                    <form method="POST" class="row g-3">
+                        <input type="hidden" name="action" value="add_placement">
+                        <div class="col-md-3">
+                            <label class="form-label">Student ID</label>
+                            <select name="student_id" class="form-select" required>
+                                <option value="">Select student...</option>
+                                <?php foreach ($mw_students as $st): ?>
+                                <option value="<?= htmlspecialchars($st['student_id']) ?>"><?= htmlspecialchars($st['student_id'] . ' - ' . $st['student_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Facility</label>
+                            <input type="text" name="facility_name" class="form-control" required placeholder="Hospital name">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Department</label>
+                            <input type="text" name="department" class="form-control" placeholder="e.g. Maternity Ward">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Supervisor</label>
+                            <input type="text" name="supervisor" class="form-control" placeholder="Supervisor name">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Deliveries Observed</label>
+                            <input type="number" name="deliveries_observed" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Deliveries Assisted</label>
+                            <input type="number" name="deliveries_assisted" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Save Placement</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Student ID</th><th>Facility</th><th>Dept</th><th>Supervisor</th><th>Start</th><th>End</th><th>Obs</th><th>Assist</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php if (empty($mw_placements)): ?>
+                        <tr><td colspan="10" class="text-center text-muted">No placements found</td></tr>
+                        <?php else: ?>
+                        <?php foreach ($mw_placements as $p): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($p['student_id']) ?></td>
+                            <td><?= htmlspecialchars($p['facility_name']) ?></td>
+                            <td><?= htmlspecialchars($p['department'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($p['supervisor'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($p['start_date']) ?></td>
+                            <td><?= htmlspecialchars($p['end_date'] ?? '-') ?></td>
+                            <td><?= (int)$p['deliveries_observed'] ?></td>
+                            <td><?= (int)$p['deliveries_assisted'] ?></td>
+                            <td><span class="badge bg-<?= ($p['status'] ?? '')==='Active'?'success':'secondary' ?>"><?= htmlspecialchars($p['status'] ?? 'Active') ?></span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editPlacement(<?= htmlspecialchars(json_encode($p), ENT_QUOTES) ?>)"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this placement?')">
+                                    <input type="hidden" name="action" value="delete_placement">
+                                    <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Edit Placement Modal -->
+            <div class="modal fade" id="editPlacementModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="update_placement">
+                            <input type="hidden" name="id" id="editPlId">
+                            <div class="modal-header"><h5 class="modal-title">Edit Placement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4"><label class="form-label">Student ID</label><input type="text" name="student_id" id="editPlSid" class="form-control" required></div>
+                                    <div class="col-md-4"><label class="form-label">Facility</label><input type="text" name="facility_name" id="editPlFacility" class="form-control" required></div>
+                                    <div class="col-md-4"><label class="form-label">Department</label><input type="text" name="department" id="editPlDept" class="form-control"></div>
+                                    <div class="col-md-4"><label class="form-label">Supervisor</label><input type="text" name="supervisor" id="editPlSup" class="form-control"></div>
+                                    <div class="col-md-4"><label class="form-label">Start Date</label><input type="date" name="start_date" id="editPlStart" class="form-control" required></div>
+                                    <div class="col-md-4"><label class="form-label">End Date</label><input type="date" name="end_date" id="editPlEnd" class="form-control"></div>
+                                    <div class="col-md-4"><label class="form-label">Deliveries Observed</label><input type="number" name="deliveries_observed" id="editPlObs" class="form-control" min="0"></div>
+                                    <div class="col-md-4"><label class="form-label">Deliveries Assisted</label><input type="number" name="deliveries_assisted" id="editPlAss" class="form-control" min="0"></div>
+                                    <div class="col-md-4"><label class="form-label">Status</label><select name="status" id="editPlStatus" class="form-select"><option value="Active">Active</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div>
+                                    <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" id="editPlNotes" class="form-control" rows="2"></textarea></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </section>
         <?php break;
     case 'timetable': ?>
@@ -188,6 +575,69 @@ if ($conn) {
             <?php else: ?>
             <p class="text-muted">Midwifery department timetable will appear here.</p>
             <?php endif; ?>
+        </section>
+        <?php break;
+    case 'skills': ?>
+        <section id="skills" class="content-section dashboard-section active" data-section="skills">
+            <h2><i class="fas fa-star me-2"></i>Skills Training</h2>
+            <?= $flash ?>
+            <div class="mb-3">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addSkillForm">
+                    <i class="fas fa-plus me-1"></i> Add Skill
+                </button>
+            </div>
+            <div class="collapse mb-4" id="addSkillForm">
+                <div class="card card-body">
+                    <form method="POST" class="row g-3">
+                        <input type="hidden" name="action" value="add_skill">
+                        <div class="col-md-3">
+                            <label class="form-label">Skill Name</label>
+                            <input type="text" name="skill_name" class="form-control" required placeholder="e.g. Normal Delivery">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Description</label>
+                            <input type="text" name="description" class="form-control" placeholder="Brief description">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Category</label>
+                            <input type="text" name="category" class="form-control" placeholder="e.g. Core Skills">
+                        </div>
+                        <div class="col-md-1 form-check d-flex align-items-center pt-4">
+                            <input type="checkbox" name="is_mandatory" class="form-check-input" id="addSkillMand" value="1">
+                            <label class="form-check-label ms-2" for="addSkillMand">Mandatory</label>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-save"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Skill Name</th><th>Description</th><th>Category</th><th>Mandatory</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php if (empty($mw_skills)): ?>
+                        <tr><td colspan="5" class="text-center text-muted">No skills found</td></tr>
+                        <?php else: ?>
+                        <?php foreach ($mw_skills as $sk): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($sk['skill_name']) ?></td>
+                            <td><?= htmlspecialchars($sk['description'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($sk['category'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= $sk['is_mandatory'] ? 'warning' : 'info' ?>"><?= $sk['is_mandatory'] ? 'Yes' : 'No' ?></span></td>
+                            <td>
+                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this skill?')">
+                                    <input type="hidden" name="action" value="delete_skill">
+                                    <input type="hidden" name="id" value="<?= $sk['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </section>
         <?php break;
     case 'staff': ?>
@@ -311,16 +761,31 @@ endswitch; ?>
     });
 
     window.addEventListener('popstate', function() { window.location.reload(); });
-
-    document.querySelectorAll('.child-link').forEach(function(link) {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                var sidebar = document.querySelector('.isnm-sidebar');
-                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
-            }
-        });
-    });
 })();
+
+function editStudent(s) {
+    document.getElementById('editStudentId').value = s.id;
+    document.getElementById('editStudentSid').value = s.student_id;
+    document.getElementById('editStudentName').value = s.student_name;
+    document.getElementById('editStudentProg').value = s.program || '';
+    document.getElementById('editStudentYear').value = s.year_of_study || 1;
+    document.getElementById('editStudentStatus').value = s.status || 'Active';
+    new bootstrap.Modal(document.getElementById('editStudentModal')).show();
+}
+function editPlacement(p) {
+    document.getElementById('editPlId').value = p.id;
+    document.getElementById('editPlSid').value = p.student_id;
+    document.getElementById('editPlFacility').value = p.facility_name;
+    document.getElementById('editPlDept').value = p.department || '';
+    document.getElementById('editPlSup').value = p.supervisor || '';
+    document.getElementById('editPlStart').value = p.start_date || '';
+    document.getElementById('editPlEnd').value = p.end_date || '';
+    document.getElementById('editPlObs').value = p.deliveries_observed || 0;
+    document.getElementById('editPlAss').value = p.deliveries_assisted || 0;
+    document.getElementById('editPlStatus').value = p.status || 'Active';
+    document.getElementById('editPlNotes').value = p.notes || '';
+    new bootstrap.Modal(document.getElementById('editPlacementModal')).show();
+}
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

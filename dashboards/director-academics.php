@@ -339,6 +339,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: director-academics.php?section=$section"); exit;
     }
 
+    if ($action === 'edit_exam') {
+        $en=$_POST['exam_number']??'';
+        $et=$_POST['exam_type']??'';
+        $cc=$_POST['course_code']??'';
+        $sd=$_POST['exam_date']??'';
+        $rm=$_POST['exam_room']??'';
+        if($en){
+            $stmt = $conn->prepare("UPDATE examination_records SET exam_type=?,course_code=?,exam_date=?,exam_room=? WHERE exam_number=?");
+            $stmt->bind_param("sssss", $et, $cc, $sd, $rm, $en);
+            $stmt->execute();
+            if($conn->affected_rows>=0) $_SESSION['success']="Exam $en updated."; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=exams"); exit;
+    }
+
+    if ($action === 'delete_exam') {
+        $en=$_POST['exam_number']??'';
+        if($en){
+            $stmt = $conn->prepare("DELETE FROM examination_records WHERE exam_number=?");
+            $stmt->bind_param("s", $en);
+            $stmt->execute();
+            if($conn->affected_rows>0) $_SESSION['success']="Exam $en deleted."; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=exams"); exit;
+    }
+
+    if ($action === 'edit_marks') {
+        $rid=intval($_POST['record_id']??0);
+        $mk=floatval($_POST['marks']??0);
+        $gr=$_POST['grade']??'';
+        $gp=floatval($_POST['gpa']??0);
+        if($rid){
+            $stmt = $conn->prepare("UPDATE academic_records SET marks=?,grade=?,gpa=? WHERE id=?");
+            $stmt->bind_param("dsdi", $mk, $gr, $gp, $rid);
+            $stmt->execute();
+            if($conn->affected_rows>=0) $_SESSION['success']='Marks updated.'; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=results"); exit;
+    }
+
+    if ($action === 'delete_marks') {
+        $rid=intval($_POST['record_id']??0);
+        if($rid){
+            $stmt = $conn->prepare("DELETE FROM academic_records WHERE id=?");
+            $stmt->bind_param("i", $rid);
+            $stmt->execute();
+            if($conn->affected_rows>0) $_SESSION['success']='Record deleted.'; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=results"); exit;
+    }
+
+    if ($action === 'delete_course_assignment') {
+        $aid=intval($_POST['assignment_id']??0);
+        if($aid){
+            $stmt = $conn->prepare("DELETE FROM course_assignments WHERE id=?");
+            $stmt->bind_param("i", $aid);
+            $stmt->execute();
+            if($conn->affected_rows>0) $_SESSION['success']='Assignment removed.'; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=lecturers"); exit;
+    }
+
+    if ($action === 'delete_timetable') {
+        $tid=intval($_POST['timetable_id']??0);
+        if($tid){
+            $stmt = $conn->prepare("DELETE FROM timetable WHERE id=?");
+            $stmt->bind_param("i", $tid);
+            $stmt->execute();
+            if($conn->affected_rows>0) $_SESSION['success']='Timetable entry removed.'; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=timetable"); exit;
+    }
+
+    if ($action === 'delete_quality_review') {
+        $qrid=intval($_POST['review_id']??0);
+        if($qrid){
+            $stmt = $conn->prepare("DELETE FROM quality_assurance WHERE id=?");
+            $stmt->bind_param("i", $qrid);
+            $stmt->execute();
+            if($conn->affected_rows>0) $_SESSION['success']='Review deleted.'; else $_SESSION['error']=$conn->error;
+            $stmt->close();
+        }
+        header("Location: director-academics.php?section=quality"); exit;
+    }
+
     header("Location: director-academics.php?section=$section"); exit;
 }
 
@@ -773,7 +864,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                         <tr><td><code><?= htmlspecialchars($e['exam_number']) ?></code></td><td><?= htmlspecialchars($e['exam_type']) ?></td><td><?= htmlspecialchars($e['course_code']) ?></td><td><?= htmlspecialchars($e['program_code']??'All') ?></td><td><?= $e['exam_date'] ?></td><td><?= htmlspecialchars($e['exam_room']??'-') ?></td>
                         <td><span class="badge bg-<?= $e['status']==='Published'?'success':($e['status']==='Scheduled'?'warning':'info') ?>"><?= $e['status'] ?></span></td>
                         <td><div class="d-flex gap-1"><?php if($e['status']!=='Published'): ?><form method="POST" class="d-inline"><input type="hidden" name="action" value="publish_results"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><button class="btn btn-sm btn-outline-success" onclick="return confirm('Publish results?')"><i class="fas fa-check"></i></button></form><?php endif; ?>
-                        <button class="btn btn-sm btn-outline-warning" onclick="approveResult('<?= htmlspecialchars($e['exam_number']) ?>')"><i class="fas fa-check-double"></i></button></div></td></tr>
+                        <button class="btn btn-sm btn-outline-warning" onclick="approveResult('<?= htmlspecialchars($e['exam_number']) ?>')"><i class="fas fa-check-double"></i></button>
+                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_exam"><input type="hidden" name="exam_number" value="<?= htmlspecialchars($e['exam_number']) ?>"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this exam?')"><i class="fas fa-trash"></i></button></form></div></td></tr>
                         <?php endforeach; endif; ?>
                         </tbody>
                     </table>
@@ -791,10 +883,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <div class="mb-2"><input type="text" id="resultSearch" class="form-control form-control-sm" placeholder="Search results..." onkeyup="filterTable('resultSearch','resultTable')"></div>
                 <div class="table-responsive" style="max-height:400px;overflow-y:auto">
                     <table class="table table-sm table-hover" id="resultTable">
-                        <thead><tr><th>Student</th><th>Course</th><th>Type</th><th>Marks</th><th>Grade</th><th>GPA</th></tr></thead>
+                        <thead><tr><th>Student</th><th>Course</th><th>Type</th><th>Marks</th><th>Grade</th><th>GPA</th><th>Action</th></tr></thead>
                         <tbody>
                         <?php foreach($academic_records as $ar): ?>
-                        <tr><td><?= htmlspecialchars($ar['student_name']??"ID:{$ar['student_id']}") ?></td><td><?= htmlspecialchars($ar['course_code']) ?> <?= htmlspecialchars($ar['course_title']??'') ?></td><td><?= htmlspecialchars($ar['assessment_type']) ?></td><td><strong><?= $ar['marks'] ?></strong></td><td><span class="badge bg-<?= in_array($ar['grade'],['A','B']) ? 'success' : ($ar['grade']==='F' ? 'danger' : 'warning') ?>"><?= htmlspecialchars($ar['grade']) ?></span></td><td><?= $ar['gpa'] ?? '-' ?></td></tr>
+                        <tr><td><?= htmlspecialchars($ar['student_name']??"ID:{$ar['student_id']}") ?></td><td><?= htmlspecialchars($ar['course_code']) ?> <?= htmlspecialchars($ar['course_title']??'') ?></td><td><?= htmlspecialchars($ar['assessment_type']) ?></td><td><strong><?= $ar['marks'] ?></strong></td><td><span class="badge bg-<?= in_array($ar['grade'],['A','B']) ? 'success' : ($ar['grade']==='F' ? 'danger' : 'warning') ?>"><?= htmlspecialchars($ar['grade']) ?></span></td><td><?= $ar['gpa'] ?? '-' ?></td>
+                        <td><div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-warning" onclick="editMarks(<?= $ar['id'] ?>,'<?= $ar['marks'] ?>','<?= $ar['grade'] ?>','<?= $ar['gpa']??0 ?>')"><i class="fas fa-edit"></i></button>
+                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="delete_marks"><input type="hidden" name="record_id" value="<?= $ar['id'] ?>"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this record?')"><i class="fas fa-trash"></i></button></form>
+                        </div></td></tr>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -1186,11 +1282,29 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Submit</button></div>
     </form></div></div>
 
+    <!-- Edit Marks Modal -->
+    <div class="modal fade" id="editMarksModal" tabindex="-1"><div class="modal-dialog"><form method="POST" class="modal-content"><input type="hidden" name="action" value="edit_marks"><input type="hidden" name="record_id" id="editMarksRecordId">
+        <div class="modal-header bg-warning text-white"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Marks</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><div class="row g-3">
+            <div class="col-4"><label class="form-label">Marks</label><input type="number" step="0.1" name="marks" id="editMarksMarks" class="form-control" required></div>
+            <div class="col-4"><label class="form-label">Grade</label><select name="grade" id="editMarksGrade" class="form-select"><option>A</option><option>B</option><option>C</option><option>D</option><option>F</option></select></div>
+            <div class="col-4"><label class="form-label">GPA</label><input type="number" step="0.01" name="gpa" id="editMarksGpa" class="form-control"></div>
+        </div></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-warning">Update</button></div>
+    </form></div></div>
+
     <script>
     // ── Modal Fns ──
     function openExamModal(){ new bootstrap.Modal(document.getElementById('createExamModal')).show(); }
     function openEnterMarksModal(){ new bootstrap.Modal(document.getElementById('enterMarksModal')).show(); }
     function approveResult(en){ document.getElementById('approveExamNumber').value=en; new bootstrap.Modal(document.getElementById('approveResultModal')).show(); }
+    function editMarks(id,marks,grade,gpa){
+        document.getElementById('editMarksRecordId').value=id;
+        document.getElementById('editMarksMarks').value=marks;
+        document.getElementById('editMarksGrade').value=grade;
+        document.getElementById('editMarksGpa').value=gpa;
+        new bootstrap.Modal(document.getElementById('editMarksModal')).show();
+    }
 
     // ── Student Profile ──
     function viewStudentProfile(id) {

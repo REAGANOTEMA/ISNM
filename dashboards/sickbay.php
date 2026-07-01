@@ -42,7 +42,7 @@ if ($action_get === 'search_student' && $students_conn) {
 if ($action_get === 'get_transactions' && $staff_conn) {
     $mid = (int)($_GET['id'] ?? 0);
     if ($mid > 0) {
-        $stmt = $staff_conn->prepare("SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id WHERE mst.medicine_id = ? ORDER BY mst.created_at DESC LIMIT 50");
+        $stmt = $staff_conn->prepare("SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id WHERE smt.medicine_id = ? ORDER BY smt.created_at DESC LIMIT 50");
         if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         $txns = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
         if (!empty($txns)) {
@@ -51,6 +51,28 @@ if ($action_get === 'get_transactions' && $staff_conn) {
             echo '</tbody></table>';
         } else { echo '<p class="text-muted">No transactions.</p>'; }
     } else { echo '<p class="text-danger">Invalid medicine ID.</p>'; }
+    exit;
+}
+if ($action_get === 'get_visit' && $staff_conn) {
+    $vid = (int)($_GET['id'] ?? 0);
+    if ($vid > 0) {
+        $stmt = $staff_conn->prepare("SELECT * FROM sickbay_visits WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $vid); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+        $visit = $r ? $r->fetch_assoc() : null;
+        header('Content-Type: application/json');
+        echo json_encode($visit ?: new stdClass());
+    } else { header('Content-Type: application/json'); echo '{}'; }
+    exit;
+}
+if ($action_get === 'get_sb_medicine' && $staff_conn) {
+    $mid = (int)($_GET['id'] ?? 0);
+    if ($mid > 0) {
+        $stmt = $staff_conn->prepare("SELECT * FROM sickbay_medicine_stock WHERE id=?");
+        if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
+        $med = $r ? $r->fetch_assoc() : null;
+        header('Content-Type: application/json');
+        echo json_encode($med ?: new stdClass());
+    } else { header('Content-Type: application/json'); echo '{}'; }
     exit;
 }
 
@@ -184,12 +206,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $restocked = !empty($_POST['last_restocked']) ? trim($_POST['last_restocked']) : null;
         $status_calc = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
         if ($id > 0) {
-            $stmt = $staff_conn->prepare("UPDATE medicine_stock SET medicine_code=?, medicine_name=?, generic_name=?, category=?, dosage_form=?, strength=?, manufacturer=?, supplier=?, quantity_in_stock=?, unit=?, reorder_level=?, unit_cost=?, selling_price=?, currency=?, batch_number=?, expiry_date=?, storage_location=?, requires_prescription=?, instructions=?, side_effects=?, status=?, last_restocked=? WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sssssssssiddsssssissi', $code, $mname, $generic, $cat, $form, $strength, $mfr, $sup, $qty, $unit, $rol, $uc, $sp, $cur, $batch, $exp, $loc, $rx, $inst, $se, $status_calc, $restocked, $id); $stmt->execute(); $stmt->close(); }
+            $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Medicine updated.';
         } else {
-            $stmt = $staff_conn->prepare("INSERT INTO medicine_stock (medicine_code, medicine_name, generic_name, category, dosage_form, strength, manufacturer, supplier, quantity_in_stock, unit, reorder_level, unit_cost, selling_price, currency, batch_number, expiry_date, storage_location, requires_prescription, instructions, side_effects, status, last_restocked, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            if ($stmt) { $stmt->bind_param('sssssssssiddsssssissii', $code, $mname, $generic, $cat, $form, $strength, $mfr, $sup, $qty, $unit, $rol, $uc, $sp, $cur, $batch, $exp, $loc, $rx, $inst, $se, $status_calc, $restocked, $user_id); $stmt->execute(); $stmt->close(); }
+            $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Medicine added.';
         }
         header('Location: sickbay.php?section=medicine'); exit;
@@ -198,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     if ($action === 'delete_medicine') {
         $mid = (int)($_POST['medicine_id'] ?? 0);
         if ($mid > 0) {
-            $stmt = $staff_conn->prepare("DELETE FROM medicine_stock WHERE id=?");
+            $stmt = $staff_conn->prepare("DELETE FROM sickbay_medicine_stock WHERE id=?");
             if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Medicine deleted.';
         }
@@ -213,19 +235,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $notes = trim($_POST['notes']);
         $trans_num = 'MST-'.date('Ymd').'-'.strtoupper(substr(uniqid(),-6));
         if ($mid > 0 && $qty > 0) {
-            $stmt = $staff_conn->prepare("SELECT quantity_in_stock FROM medicine_stock WHERE id=?");
+            $stmt = $staff_conn->prepare("SELECT quantity FROM sickbay_medicine_stock WHERE id=?");
             if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $qrMed = $stmt->get_result(); $stmt->close(); } else $qrMed = null;
             $med = $qrMed ? $qrMed->fetch_assoc() : null;
             if ($med) {
-                $cq = (int)$med['quantity_in_stock'];
+                $cq = (int)$med['quantity'];
                 $nq = ($ttype === 'Purchase' || $ttype === 'Return') ? $cq + $qty : max(0, $cq - $qty);
-                $stmt = $staff_conn->prepare("SELECT reorder_level FROM medicine_stock WHERE id=?");
+                $stmt = $staff_conn->prepare("SELECT reorder_level FROM sickbay_medicine_stock WHERE id=?");
                 if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $qrRl = $stmt->get_result(); $stmt->close(); } else $qrRl = null;
                 $rl = $qrRl ? (int)$qrRl->fetch_row()[0] : 0;
                 $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
-                $stmt = $staff_conn->prepare("UPDATE medicine_stock SET quantity_in_stock=?, status=? WHERE id=?");
+                $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET quantity=?, status=? WHERE id=?");
                 if ($stmt) { $stmt->bind_param('sii', $ns, $nq, $mid); $stmt->execute(); $stmt->close(); }
-                $stmt = $staff_conn->prepare("INSERT INTO medicine_stock_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES (?,?,?,?,?,?,?)");
+                $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (transaction_number, medicine_id, transaction_type, quantity, performed_by, transaction_date, notes) VALUES (?,?,?,?,?,?,?)");
                 if ($stmt) { $stmt->bind_param('sisiiis', $trans_num, $mid, $ttype, $qty, $user_id, $tdate, $notes); $stmt->execute(); $stmt->close(); }
                 $_SESSION['success'] = "Stock $ttype of $qty recorded. New qty: $nq";
             }
@@ -329,6 +351,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         $_SESSION['success'] = 'Settings saved.';
         header('Location: sickbay.php?section=settings'); exit;
     }
+
+    if ($action === 'add_visit') {
+        $sid = (int)($_POST['student_id'] ?? 0);
+        $sname = trim($_POST['student_name']);
+        $vdate = trim($_POST['visit_date'] ?: date('Y-m-d'));
+        $symptoms = trim($_POST['symptoms']);
+        $diagnosis = trim($_POST['diagnosis']);
+        $treatment = trim($_POST['treatment']);
+        $medication = trim($_POST['medication_given']);
+        $status = trim($_POST['status'] ?? 'Pending');
+        $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
+        $notes = trim($_POST['notes']);
+        $stmt = $staff_conn->prepare("INSERT INTO sickbay_visits (student_id, student_name, visit_date, symptoms, diagnosis, treatment, medication_given, nurse_id, nurse_name, status, follow_up_date, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        if ($stmt) { $stmt->bind_param('isssssssssss', $sid, $sname, $vdate, $symptoms, $diagnosis, $treatment, $medication, $user_id, $user_name, $status, $fud, $notes); $stmt->execute(); $stmt->close(); }
+        $_SESSION['success'] = 'Sickbay visit recorded.';
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'update_visit') {
+        $id = (int)($_POST['id'] ?? 0);
+        $status = trim($_POST['status']);
+        $treatment = trim($_POST['treatment']);
+        $medication = trim($_POST['medication_given']);
+        $diagnosis = trim($_POST['diagnosis']);
+        $notes = trim($_POST['notes']);
+        $fud = !empty($_POST['follow_up_date']) ? trim($_POST['follow_up_date']) : null;
+        if ($id > 0) {
+            $stmt = $staff_conn->prepare("UPDATE sickbay_visits SET status=?, treatment=?, medication_given=?, diagnosis=?, notes=?, follow_up_date=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssssssi', $status, $treatment, $medication, $diagnosis, $notes, $fud, $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Visit updated.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'delete_visit') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id > 0) {
+            $stmt = $staff_conn->prepare("DELETE FROM sickbay_visits WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Visit deleted.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'add_medicine') {
+        $id = (int)($_POST['id'] ?? 0);
+        $mname = trim($_POST['medicine_name']);
+        $cat = trim($_POST['category']);
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $unit = trim($_POST['unit']);
+        $exp = !empty($_POST['expiry_date']) ? trim($_POST['expiry_date']) : null;
+        $rol = (int)($_POST['reorder_level'] ?? 10);
+        $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
+        if ($id > 0) {
+            $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Medicine updated.';
+        } else {
+            $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_stock (medicine_name, category, quantity, unit, expiry_date, reorder_level, status) VALUES (?,?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('ssisssi', $mname, $cat, $qty, $unit, $exp, $rol, $ns); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Medicine added.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'update_medicine') {
+        $id = (int)($_POST['id'] ?? 0);
+        $mname = trim($_POST['medicine_name']);
+        $cat = trim($_POST['category']);
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $unit = trim($_POST['unit']);
+        $exp = !empty($_POST['expiry_date']) ? trim($_POST['expiry_date']) : null;
+        $rol = (int)($_POST['reorder_level'] ?? 10);
+        $ns = $qty <= 0 ? 'Out of Stock' : ($qty <= $rol ? 'Low Stock' : 'In Stock');
+        if ($id > 0) {
+            $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET medicine_name=?, category=?, quantity=?, unit=?, expiry_date=?, reorder_level=?, status=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('ssisssii', $mname, $cat, $qty, $unit, $exp, $rol, $ns, $id); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Medicine updated.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'delete_sb_medicine') {
+        $mid = (int)($_POST['id'] ?? 0);
+        if ($mid > 0) {
+            $stmt = $staff_conn->prepare("DELETE FROM sickbay_medicine_stock WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Medicine deleted.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'dispense_medicine') {
+        $mid = (int)($_POST['medicine_id'] ?? 0);
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $vid = !empty($_POST['visit_id']) ? (int)$_POST['visit_id'] : 0;
+        $notes = trim($_POST['notes']);
+        if ($mid > 0 && $qty > 0) {
+            $stmt = $staff_conn->prepare("SELECT quantity, reorder_level FROM sickbay_medicine_stock WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $mid); $stmt->execute(); $qr = $stmt->get_result(); $stmt->close(); } else $qr = null;
+            $med = $qr ? $qr->fetch_assoc() : null;
+            if ($med) {
+                $cq = (int)$med['quantity'];
+                $nq = max(0, $cq - $qty);
+                $rl = (int)$med['reorder_level'];
+                $ns = $nq <= 0 ? 'Out of Stock' : ($nq <= $rl ? 'Low Stock' : 'In Stock');
+                $stmt = $staff_conn->prepare("UPDATE sickbay_medicine_stock SET quantity=?, status=? WHERE id=?");
+                if ($stmt) { $stmt->bind_param('isi', $nq, $ns, $mid); $stmt->execute(); $stmt->close(); }
+                $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (medicine_id, transaction_type, quantity, visit_id, performed_by, notes) VALUES (?, 'Dispense', ?, ?, ?, ?)");
+                if ($stmt) { $stmt->bind_param('iiiis', $mid, $qty, $vid, $user_id, $notes); $stmt->execute(); $stmt->close(); }
+                $_SESSION['success'] = "Dispensed $qty. New stock: $nq";
+            }
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
+
+    if ($action === 'add_medicine_transaction') {
+        $mid = (int)($_POST['medicine_id'] ?? 0);
+        $ttype = trim($_POST['transaction_type']);
+        $qty = (int)($_POST['quantity'] ?? 0);
+        $vid = !empty($_POST['visit_id']) ? (int)$_POST['visit_id'] : 0;
+        $notes = trim($_POST['notes']);
+        if ($mid > 0 && $qty > 0) {
+            $stmt = $staff_conn->prepare("INSERT INTO sickbay_medicine_transactions (medicine_id, transaction_type, quantity, visit_id, performed_by, notes) VALUES (?,?,?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('isiiis', $mid, $ttype, $qty, $vid, $user_id, $notes); $stmt->execute(); $stmt->close(); }
+            $_SESSION['success'] = 'Transaction recorded.';
+        }
+        header('Location: sickbay.php?section=visits'); exit;
+    }
 }
 
 $total_students_db = sb_q($students_conn, "SELECT COUNT(*) FROM students WHERE status = 'Active'");
@@ -338,16 +489,19 @@ $pending_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHER
 $active_leave = sb_q($staff_conn, "SELECT COUNT(*) FROM student_sick_leave WHERE status IN ('Approved','Extended') AND leave_to >= CURDATE() AND (is_deleted = 0 OR is_deleted IS NULL)");
 $critical_cases = sb_q($staff_conn, "SELECT COUNT(*) FROM daily_sick_records WHERE severity = 'Critical' AND visit_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND (is_deleted = 0 OR is_deleted IS NULL)");
 $recent_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschoolofl_students_db.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.created_at DESC LIMIT 10");
-$low_stock_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM medicine_stock WHERE status IN ('Low Stock','Out of Stock')");
+$low_stock_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE status IN ('Low Stock','Out of Stock')");
 $low_stock_count = !empty($low_stock_meds) ? (int)$low_stock_meds[0]['cnt'] : 0;
-$expiring_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM medicine_stock WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND expiry_date >= CURDATE()");
+$expiring_meds = sb_fetch($staff_conn, "SELECT COUNT(*) as cnt FROM sickbay_medicine_stock WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND expiry_date >= CURDATE()");
 $expiring_count = !empty($expiring_meds) ? (int)$expiring_meds[0]['cnt'] : 0;
 $sicknesses = sb_fetch($staff_conn, "SELECT * FROM sickness_directory ORDER BY sickness_name ASC");
 $sickness_list = sb_fetch($staff_conn, "SELECT * FROM sickness_directory WHERE status='Active' ORDER BY sickness_name ASC");
 $daily_records = sb_fetch($staff_conn, "SELECT dsr.*, s.full_name as student_full_name FROM daily_sick_records dsr LEFT JOIN igangaschoolofl_students_db.students s ON dsr.student_id = s.id WHERE (dsr.is_deleted = 0 OR dsr.is_deleted IS NULL) ORDER BY dsr.visit_date DESC, dsr.visit_time DESC LIMIT 200");
 $leave_records = sb_fetch($staff_conn, "SELECT sl.*, s.full_name as student_full_name FROM student_sick_leave sl LEFT JOIN igangaschoolofl_students_db.students s ON sl.student_id = s.id WHERE (sl.is_deleted = 0 OR sl.is_deleted IS NULL) ORDER BY sl.created_at DESC LIMIT 200");
-$medicines = sb_fetch($staff_conn, "SELECT * FROM medicine_stock ORDER BY medicine_name ASC");
-$medicine_transactions = sb_fetch($staff_conn, "SELECT mst.*, ms.medicine_name FROM medicine_stock_transactions mst LEFT JOIN medicine_stock ms ON mst.medicine_id = ms.id ORDER BY mst.created_at DESC LIMIT 50");
+$medicines = sb_fetch($staff_conn, "SELECT * FROM sickbay_medicine_stock ORDER BY medicine_name ASC");
+$medicine_transactions = sb_fetch($staff_conn, "SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id ORDER BY smt.created_at DESC LIMIT 50");
+$sickbay_visits = sb_fetch($staff_conn, "SELECT * FROM sickbay_visits ORDER BY visit_date DESC, id DESC LIMIT 200");
+$sickbay_medicine_stock = sb_fetch($staff_conn, "SELECT * FROM sickbay_medicine_stock ORDER BY medicine_name ASC");
+$sickbay_medicine_transactions = sb_fetch($staff_conn, "SELECT smt.*, sms.medicine_name FROM sickbay_medicine_transactions smt LEFT JOIN sickbay_medicine_stock sms ON smt.medicine_id = sms.id ORDER BY smt.id DESC LIMIT 100");
 $sb_settings_rows = sb_fetch($staff_conn, "SELECT setting_key, setting_value FROM sickbay_settings");
 $sb_settings = [];
 foreach ($sb_settings_rows as $row) { $sb_settings[$row['setting_key']] = $row['setting_value']; }
@@ -434,6 +588,7 @@ $pageTitle = 'Sickbay Management System';?>
 <a class="section-tab <?=$active_section==='settings'?'active':''?>" href="sickbay.php?section=settings"><i class="fas fa-cog me-1"></i>Settings</a>
 <a class="section-tab <?=$active_section==='health-records'?'active':''?>" href="sickbay.php?section=health-records"><i class="fas fa-notes-medical me-1"></i>Health Records</a>
 <a class="section-tab <?=$active_section==='health-incidents'?'active':''?>" href="sickbay.php?section=health-incidents"><i class="fas fa-exclamation-triangle me-1"></i>Health Incidents</a>
+<a class="section-tab <?=$active_section==='visits'?'active':''?>" href="sickbay.php?section=visits"><i class="fas fa-clipboard-list me-1"></i>Sickbay Visits</a>
 </div><!-- DASHBOARD -->
 <div class="sickbay-section <?=$active_section==='dashboard'?'active':''?>" id="sec-dashboard">
 <div class="row g-3 mb-4">
@@ -463,11 +618,11 @@ $pageTitle = 'Sickbay Management System';?>
 <div class="col-lg-4">
 <div class="health-card"><h2><i class="fas fa-bolt me-2"></i>Quick Actions</h2><div class="d-flex flex-wrap gap-2"><a href="sickbay.php?section=daily-records" class="btn btn-primary btn-sm"><i class="fas fa-plus-circle me-1"></i>New Sick Record</a><a href="sickbay.php?section=leave" class="btn btn-warning btn-sm"><i class="fas fa-file-medical me-1"></i>Issue Sick Leave</a><a href="sickbay.php?section=sickness" class="btn btn-info btn-sm"><i class="fas fa-disease me-1"></i>Sicknesses</a><a href="sickbay.php?section=medicine" class="btn btn-success btn-sm"><i class="fas fa-capsules me-1"></i>Medicine Stock</a><button class="btn btn-outline-success btn-sm no-print" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div></div>
 <div class="health-card"><h2><i class="fas fa-capsules me-2 text-warning"></i>Stock Alerts</h2>
-<?php $alert_meds=sb_fetch($staff_conn,"SELECT medicine_name,quantity_in_stock,status,expiry_date FROM medicine_stock WHERE status IN('Low Stock','Out of Stock') OR (expiry_date<=DATE_ADD(CURDATE(),INTERVAL 3 MONTH) AND expiry_date>=CURDATE()) ORDER BY expiry_date ASC LIMIT 8");?>
+<?php $alert_meds=sb_fetch($staff_conn,"SELECT medicine_name,quantity,status,expiry_date FROM sickbay_medicine_stock WHERE status IN('Low Stock','Out of Stock') OR (expiry_date<=DATE_ADD(CURDATE(),INTERVAL 3 MONTH) AND expiry_date>=CURDATE()) ORDER BY expiry_date ASC LIMIT 8");?>
 <?php if(empty($alert_meds)):?><p class="text-muted small py-2"><i class="fas fa-check-circle text-success me-1"></i>All adequately stocked.</p>
 <?php else:?><div class="table-responsive"><table class="table table-sm table-borderless mb-0"><thead><tr><th>Medicine</th><th>Qty</th><th>Alert</th></tr></thead><tbody>
 <?php foreach($alert_meds as $m):$at=$m['status']==='Out of Stock'?'danger':($m['status']==='Low Stock'?'warning':'info');$txt=$m['status']==='Out of Stock'?'Out':($m['status']==='Low Stock'?'Low':'Expiring');?>
-<tr class="<?=$at==='danger'?'stock-critical':($at==='warning'?'stock-warning':'')?>"><td><small><?=htmlspecialchars($m['medicine_name'])?></small></td><td><small><?=(int)$m['quantity_in_stock']?></small></td><td><span class="badge bg-<?=$at?>"><?=$txt?></span></td></tr>
+<tr class="<?=$at==='danger'?'stock-critical':($at==='warning'?'stock-warning':'')?>"><td><small><?=htmlspecialchars($m['medicine_name'])?></small></td><td><small><?=(int)$m['quantity']?></small></td><td><span class="badge bg-<?=$at?>"><?=$txt?></span></td></tr>
 <?php endforeach;?></tbody></table></div><div class="text-center mt-2"><a href="sickbay.php?section=medicine" class="btn btn-sm btn-outline-warning"><i class="fas fa-warehouse me-1"></i>Manage Stock</a></div><?php endif;?>
 </div>
 <div class="health-card"><h2><i class="fas fa-history me-2"></i>Recent Activity</h2><?php if(empty($recent_activities)):?><p class="text-muted small">No recent activities.</p><?php else:?><ul class="list-unstyled mb-0"><?php foreach($recent_activities as $act):?><li class="border-bottom py-2 d-flex gap-3 align-items-start"><span class="badge bg-primary mt-1">Activity</span><div><div class="small"><?=htmlspecialchars($act['activity']??$act['activity_description']??'')?></div><small class="text-muted"><?=isset($act['created_at'])?date('d M H:i',strtotime($act['created_at'])):''?></small></div></li><?php endforeach;?></ul><?php endif;?></div>
@@ -685,7 +840,70 @@ $pageTitle = 'Sickbay Management System';?>
     switch($hi['status']){case'Reported':$hist='bg-warning text-dark';break;case'Under Observation':$hist='bg-info text-dark';break;case'Resolved':$hist='bg-success';break;case'Referred':$hist='bg-primary';break;case'Closed':$hist='bg-secondary';break;default:$hist='bg-secondary';}
 ?>
 <tr><td><strong><small><?=htmlspecialchars($hi['full_name']??'Unknown')?></small></strong><small class="d-block text-muted"><?=htmlspecialchars($hi['student_number']??'')?></small></td><td><small><?=htmlspecialchars($hi['incident_type'])?></small></td><td><span class="badge <?=$hisc?>"><?=htmlspecialchars($hi['severity'])?></span></td><td><small><?=htmlspecialchars($hi['location']??'-')?></small></td><td><small><?=date('d M Y',strtotime($hi['incident_date']))?></small></td><td><span class="badge <?=$hist?>"><?=htmlspecialchars($hi['status'])?></span></td><td><?php if($hi['status']!=='Resolved'&&$hi['status']!=='Closed'):?><form method="POST" class="d-inline" onsubmit="return confirm('Resolve this incident?')"><input type="hidden" name="action" value="resolve_incident"><input type="hidden" name="id" value="<?=$hi['id']?>"><button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button></form><?php endif;?></td></tr>
-<?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- end content-area -->
+<?php endforeach;endif;?></tbody></table></div></div></div></div></div><!-- SICKBAY VISITS -->
+<div class="sickbay-section <?=$active_section==='visits'?'active':''?>" id="sec-visits">
+<div class="row g-4">
+<div class="col-lg-5">
+<div class="health-card"><h2><i class="fas fa-plus-circle me-2 text-primary"></i>Add / Edit Sickbay Visit</h2>
+<form method="POST" action="sickbay.php" id="visit-form"><input type="hidden" name="action" value="add_visit" id="visit-action"><input type="hidden" name="id" id="ed-v-id" value="0">
+<div class="mb-2"><label class="form-label fw-semibold">Student <span class="text-danger">*</span></label><input type="text" name="student_name" class="form-control" required placeholder="Full name" id="vb-name"><input type="hidden" name="student_id" id="vb-sid" value="0"><input type="hidden" name="student_number" id="vb-num"></div>
+<div class="mb-2"><label class="form-label fw-semibold">Visit Date <span class="text-danger">*</span></label><input type="date" name="visit_date" class="form-control" required value="<?=date('Y-m-d')?>"></div>
+<div class="mb-2"><label class="form-label fw-semibold">Symptoms</label><textarea name="symptoms" class="form-control" rows="2" id="ed-v-symp"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Diagnosis</label><textarea name="diagnosis" class="form-control" rows="2" id="ed-v-diag"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Treatment</label><textarea name="treatment" class="form-control" rows="2" id="ed-v-treat"></textarea></div>
+<div class="mb-2"><label class="form-label fw-semibold">Medication Given</label><textarea name="medication_given" class="form-control" rows="1" id="ed-v-med"></textarea></div>
+<div class="row g-2 mb-2"><div class="col-6"><label class="form-label fw-semibold">Status</label><select name="status" class="form-select" id="ed-v-stat"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Treated">Treated</option><option value="Referred">Referred</option><option value="Discharged">Discharged</option><option value="Follow-up">Follow-up</option></select></div><div class="col-6"><label class="form-label fw-semibold">Follow-up Date</label><input type="date" name="follow_up_date" class="form-control" id="ed-v-fud"></div></div>
+<div class="mb-3"><label class="form-label fw-semibold">Notes</label><textarea name="notes" class="form-control" rows="1" id="ed-v-notes"></textarea></div>
+<div class="d-flex gap-2"><button type="submit" class="btn btn-primary" id="visit-submit-btn"><i class="fas fa-save me-1"></i>Add Visit</button><button type="button" class="btn btn-secondary" onclick="resetVisitForm()"><i class="fas fa-undo me-1"></i>Reset</button></div>
+</form></div>
+<div class="health-card"><h2><i class="fas fa-capsules me-2 text-info"></i>Sickbay Medicine Stock</h2>
+<form method="POST" action="sickbay.php" id="sb-med-form"><input type="hidden" name="action" value="add_medicine" id="sb-med-action"><input type="hidden" name="id" id="ed-sm-id" value="0">
+<div class="row g-2 mb-2"><div class="col-7"><label class="form-label fw-semibold">Medicine Name <span class="text-danger">*</span></label><input type="text" name="medicine_name" class="form-control" required placeholder="e.g., Paracetamol" id="ed-sm-name"></div><div class="col-5"><label class="form-label fw-semibold">Category</label><select name="category" class="form-select" id="ed-sm-cat"><option>General</option><option>Antimalarial</option><option>Antibiotic</option><option>Antipyretic</option><option>Analgesic</option><option>Antifungal</option><option>Antiseptic</option><option>Vitamin</option><option>First Aid</option><option>Other</option></select></div></div>
+<div class="row g-2 mb-2"><div class="col-4"><label class="form-label fw-semibold">Quantity</label><input type="number" name="quantity" class="form-control" value="0" min="0" id="ed-sm-qty"></div><div class="col-4"><label class="form-label fw-semibold">Unit</label><select name="unit" class="form-select" id="ed-sm-unit"><option>Tablets</option><option>Bottles</option><option>Packs</option><option>Vials</option><option>Ampules</option><option>Sachets</option><option>Tubes</option></select></div><div class="col-4"><label class="form-label fw-semibold">Reorder Level</label><input type="number" name="reorder_level" class="form-control" value="10" min="0" id="ed-sm-rol"></div></div>
+<div class="mb-3"><label class="form-label fw-semibold">Expiry Date</label><input type="date" name="expiry_date" class="form-control" id="ed-sm-exp"></div>
+<div class="d-flex gap-2"><button type="submit" class="btn btn-info" id="sb-med-submit-btn"><i class="fas fa-save me-1"></i>Add Medicine</button><button type="button" class="btn btn-secondary" onclick="resetSbMedForm()"><i class="fas fa-undo me-1"></i>Reset</button></div>
+</form></div>
+<div class="health-card"><h2><i class="fas fa-exchange-alt me-2 text-warning"></i>Dispense Medicine</h2>
+<form method="POST" action="sickbay.php"><input type="hidden" name="action" value="dispense_medicine">
+<div class="mb-2"><label class="form-label fw-semibold">Medicine <span class="text-danger">*</span></label><select name="medicine_id" class="form-select" required><option value="">-- Select --</option><?php foreach($sickbay_medicine_stock as $sm):?><option value="<?=$sm['id']?>"><?=htmlspecialchars($sm['medicine_name'])?> (<?=(int)$sm['quantity']?> <?=htmlspecialchars($sm['unit']??'units')?>)</option><?php endforeach;?></select></div>
+<div class="row g-2 mb-2"><div class="col-6"><label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label><input type="number" name="quantity" class="form-control" required min="1"></div><div class="col-6"><label class="form-label fw-semibold">Visit ID (optional)</label><input type="number" name="visit_id" class="form-control" min="0" placeholder="0"></div></div>
+<div class="mb-2"><label class="form-label fw-semibold">Notes</label><input type="text" name="notes" class="form-control" placeholder="Reason for dispensing"></div>
+<button type="submit" class="btn btn-warning w-100"><i class="fas fa-hand-holding-medical me-1"></i>Dispense</button>
+</form></div>
+<div class="health-card"><h2><i class="fas fa-file-alt me-2 text-secondary"></i>Add Transaction</h2>
+<form method="POST" action="sickbay.php"><input type="hidden" name="action" value="add_medicine_transaction">
+<div class="mb-2"><label class="form-label fw-semibold">Medicine <span class="text-danger">*</span></label><select name="medicine_id" class="form-select" required><option value="">-- Select --</option><?php foreach($sickbay_medicine_stock as $sm):?><option value="<?=$sm['id']?>"><?=htmlspecialchars($sm['medicine_name'])?></option><?php endforeach;?></select></div>
+<div class="row g-2 mb-2"><div class="col-4"><label class="form-label fw-semibold">Type</label><select name="transaction_type" class="form-select"><option>Purchase</option><option>Dispense</option><option>Return</option><option>Damage</option><option>Expired</option></select></div><div class="col-4"><label class="form-label fw-semibold">Quantity</label><input type="number" name="quantity" class="form-control" required min="1"></div><div class="col-4"><label class="form-label fw-semibold">Visit ID</label><input type="number" name="visit_id" class="form-control" min="0" placeholder="0"></div></div>
+<div class="mb-2"><label class="form-label fw-semibold">Notes</label><input type="text" name="notes" class="form-control"></div>
+<button type="submit" class="btn btn-secondary w-100"><i class="fas fa-plus me-1"></i>Record Transaction</button>
+</form></div></div>
+<div class="col-lg-7">
+<div class="health-card"><h2><i class="fas fa-clipboard-list me-2 text-primary"></i>Sickbay Visits</h2>
+<div class="mb-2 d-flex gap-2 flex-wrap"><input type="text" class="form-control form-control-sm" style="width:200px" placeholder="Filter name..." onkeyup="filterTable('vb-tbl',1,this.value)"><select class="form-select form-select-sm" style="width:140px" onchange="filterTable('vb-tbl',4,this.value)"><option value="">All Status</option><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Treated">Treated</option><option value="Referred">Referred</option><option value="Discharged">Discharged</option><option value="Follow-up">Follow-up</option></select></div>
+<div class="table-responsive" style="max-height:500px;overflow-y:auto"><table class="table table-sm table-hover align-middle" id="vb-tbl"><thead class="table-light sticky-top"><tr><th>Student</th><th>Date</th><th>Symptoms</th><th>Diagnosis</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<?php if(empty($sickbay_visits)):?><tr><td colspan="6" class="text-center text-muted py-4">No visits recorded.</td></tr>
+<?php else:foreach($sickbay_visits as $sv):
+    switch($sv['status']??''){case'Pending':$svc='bg-warning text-dark';break;case'In Progress':$svc='bg-info text-dark';break;case'Treated':$svc='bg-success';break;case'Referred':$svc='bg-primary';break;case'Discharged':$svc='bg-secondary';break;case'Follow-up':$svc='bg-danger';break;default:$svc='bg-secondary';}
+?>
+<tr><td><strong><small><?=htmlspecialchars($sv['student_name']??'Unknown')?></small></strong></td><td><small><?=date('d M Y',strtotime($sv['visit_date']))?></small></td><td><small><?=htmlspecialchars(substr($sv['symptoms']??'-',0,40))?></small></td><td><small><?=htmlspecialchars(substr($sv['diagnosis']??'-',0,40))?></small></td><td><span class="badge <?=$svc?>"><?=htmlspecialchars($sv['status']??'Pending')?></span></td><td><button class="btn btn-sm btn-outline-primary" onclick="editVisit(<?=$sv['id']?>,'<?=htmlspecialchars($sv['student_name']??'',ENT_QUOTES)?>','<?=$sv['visit_date']?>','<?=htmlspecialchars($sv['symptoms']??'',ENT_QUOTES)?>','<?=htmlspecialchars($sv['diagnosis']??'',ENT_QUOTES)?>','<?=htmlspecialchars($sv['treatment']??'',ENT_QUOTES)?>','<?=htmlspecialchars($sv['medication_given']??'',ENT_QUOTES)?>','<?=htmlspecialchars($sv['status']??'Pending',ENT_QUOTES)?>','<?=$sv['follow_up_date']??''?>','<?=htmlspecialchars($sv['notes']??'',ENT_QUOTES)?>')"><i class="fas fa-edit"></i></button><form method="POST" class="d-inline" onsubmit="return confirm('Delete this visit?')"><input type="hidden" name="action" value="delete_visit"><input type="hidden" name="id" value="<?=$sv['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form></td></tr>
+<?php endforeach;endif;?></tbody></table></div></div>
+<div class="health-card"><h2><i class="fas fa-pills me-2 text-info"></i>Sickbay Medicine Stock</h2>
+<div class="mb-2"><input type="text" class="form-control form-control-sm" style="width:250px" placeholder="Filter medicine..." onkeyup="filterTable('sbmd-tbl',0,this.value)"></div>
+<div class="table-responsive" style="max-height:400px;overflow-y:auto"><table class="table table-sm table-hover align-middle" id="sbmd-tbl"><thead class="table-light sticky-top"><tr><th>Medicine</th><th>Category</th><th>Qty</th><th>Unit</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<?php if(empty($sickbay_medicine_stock)):?><tr><td colspan="7" class="text-center text-muted py-4">No medicines.</td></tr>
+<?php else:foreach($sickbay_medicine_stock as $sm):
+    switch($sm['status']??''){case'In Stock':$smsc='bg-success';break;case'Low Stock':$smsc='bg-warning text-dark';break;case'Out of Stock':$smsc='bg-danger';break;default:$smsc='bg-secondary';}
+?>
+<tr><td><strong><small><?=htmlspecialchars($sm['medicine_name'])?></small></strong></td><td><small><?=htmlspecialchars($sm['category']??'-')?></small></td><td><strong><?=(int)$sm['quantity']?></strong></td><td><small><?=htmlspecialchars($sm['unit']??'')?></small></td><td><small><?=$sm['expiry_date']?date('d M Y',strtotime($sm['expiry_date'])):'-'?></small></td><td><span class="badge <?=$smsc?>"><?=htmlspecialchars($sm['status']??'In Stock')?></span></td><td><button class="btn btn-sm btn-outline-primary" onclick="editSbMed(<?=$sm['id']?>,'<?=htmlspecialchars($sm['medicine_name'],ENT_QUOTES)?>','<?=htmlspecialchars($sm['category']??'General',ENT_QUOTES)?>',<?=(int)$sm['quantity']?>,'<?=htmlspecialchars($sm['unit']??'Tablets',ENT_QUOTES)?>','<?=$sm['expiry_date']??''?>',<?=(int)$sm['reorder_level']??10?>)"><i class="fas fa-edit"></i></button><form method="POST" class="d-inline" onsubmit="return confirm('Delete?')"><input type="hidden" name="action" value="delete_sb_medicine"><input type="hidden" name="id" value="<?=$sm['id']?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></form></td></tr>
+<?php endforeach;endif;?></tbody></table></div></div>
+<div class="health-card"><h2><i class="fas fa-exchange-alt me-2 text-secondary"></i>Sickbay Medicine Transactions</h2>
+<div class="mb-2"><input type="text" class="form-control form-control-sm" style="width:250px" placeholder="Filter..." onkeyup="filterTable('smtx-tbl',1,this.value)"></div>
+<div class="table-responsive" style="max-height:400px;overflow-y:auto"><table class="table table-sm table-hover align-middle" id="smtx-tbl"><thead class="table-light sticky-top"><tr><th>#</th><th>Medicine</th><th>Type</th><th>Qty</th><th>Visit</th><th>By</th><th>Notes</th></tr></thead><tbody>
+<?php if(empty($sickbay_medicine_transactions)):?><tr><td colspan="7" class="text-center text-muted py-4">No transactions.</td></tr>
+<?php else:foreach($sickbay_medicine_transactions as $smt):?>
+<tr><td><small><?=(int)$smt['id']?></small></td><td><small><?=htmlspecialchars($smt['medicine_name']??'N/A')?></small></td><td><span class="badge bg-info"><?=htmlspecialchars($smt['transaction_type']??'N/A')?></span></td><td><strong><?=(int)$smt['quantity']?></strong></td><td><small><?=(int)($smt['visit_id']??0)?:'-'?></small></td><td><small><?=(int)($smt['performed_by']??0)?></small></td><td><small><?=htmlspecialchars($smt['notes']??'-')?></small></td></tr>
+<?php endforeach;endif;?></tbody></table></div></div>
+</div></div></div><!-- end content-area -->
 </div><!-- end page-content -->
 <script>
 window.addEventListener('unhandledrejection',function(e){
@@ -700,8 +918,12 @@ function editSickness(id,code,name,category,symp,desc,treat,cont,status){documen
 function resetSickness(){document.getElementById('ed-sk-id').value='0';document.querySelectorAll('#sec-sickness form')[0].reset();}
 function editLeave(id,name,number,program,year,start,end,bed,rec){document.getElementById('ed-lv-id').value=id;document.getElementById('lv-name').value=name;document.getElementById('lv-num').value=number;document.getElementById('lv-prog').value=program;document.getElementById('lv-year').value=year;document.querySelector('[name="start_date"]').value=start;document.querySelector('[name="end_date"]').value=end;document.querySelector('[name="bed_rest_required"]').value=bed;document.querySelector('[name="recommendations"]').value=rec;document.getElementById('sec-leave').scrollIntoView({behavior:'smooth'});}
 function resetLeave(){document.getElementById('ed-lv-id').value='0';document.querySelectorAll('#sec-leave form')[0].reset();}
+function editVisit(id,name,date,symptoms,diagnosis,treatment,medication,status,fud,notes){document.getElementById('ed-v-id').value=id;document.getElementById('vb-name').value=name;document.querySelector('[name="visit_date"]').value=date;document.getElementById('ed-v-symp').value=symptoms;document.getElementById('ed-v-diag').value=diagnosis;document.getElementById('ed-v-treat').value=treatment;document.getElementById('ed-v-med').value=medication;document.getElementById('ed-v-stat').value=status;document.getElementById('ed-v-fud').value=fud||'';document.getElementById('ed-v-notes').value=notes;document.getElementById('visit-action').value='update_visit';document.getElementById('visit-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Update Visit';document.getElementById('sec-visits').scrollIntoView({behavior:'smooth'});}
+function resetVisitForm(){document.getElementById('ed-v-id').value='0';document.getElementById('visit-action').value='add_visit';document.getElementById('visit-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Add Visit';document.getElementById('visit-form').reset();}
+function editSbMed(id,name,category,qty,unit,exp,rol){document.getElementById('ed-sm-id').value=id;document.getElementById('ed-sm-name').value=name;document.getElementById('ed-sm-cat').value=category;document.getElementById('ed-sm-qty').value=qty;document.getElementById('ed-sm-unit').value=unit;document.getElementById('ed-sm-exp').value=exp||'';document.getElementById('ed-sm-rol').value=rol;document.getElementById('sb-med-action').value='update_medicine';document.getElementById('sb-med-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Update Medicine';document.getElementById('sec-visits').scrollIntoView({behavior:'smooth'});}
+function resetSbMedForm(){document.getElementById('ed-sm-id').value='0';document.getElementById('sb-med-action').value='add_medicine';document.getElementById('sb-med-submit-btn').innerHTML='<i class="fas fa-save me-1"></i>Add Medicine';document.getElementById('sb-med-form').reset();}
 function viewTransactions(id,name){fetch('sickbay.php?action=get_transactions&id='+id).then(r=>r.text()).then(html=>{const w=window.open('','_blank','width=700,height=600');w.document.write('<html><head><title>Transactions: '+name+'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head><body class="p-4"><h4>'+name+' - Stock Transactions</h4>'+html+'<hr><button class="btn btn-sm btn-secondary" onclick="window.close()">Close</button>
 </body></html>');}).catch(()=>alert('Could not load transactions.'));}
-document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
+document.addEventListener('DOMContentLoaded',function(){['sr-name','lv-name','hr-name','hi-name','vb-name'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var map={sr:{sid:'sr-sid',num:'sr-num',prog:'sr-prog',year:'sr-year'},lv:{sid:'lv-sid',num:'lv-num',prog:'lv-prog',year:'lv-year'},hr:{sid:'hr-sid',num:'hr-num'},hi:{sid:'hi-sid',num:'hi-num'},vb:{sid:'vb-sid',num:'vb-num'}};var pfx=id.split('-')[0];var m=map[pfx];if(!m)return;el.addEventListener('blur',function(){searchStudents(el,m.sid,m.num,m.prog,m.year);});});});
 </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
