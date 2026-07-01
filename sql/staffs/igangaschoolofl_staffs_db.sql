@@ -1859,7 +1859,7 @@ registerFieldValidator('NavigationTreeTableLevel', 'validatePositiveNumber', tru
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 30, 2026 at 09:09 PM
+-- Generation Time: Jul 01, 2026 at 11:15 AM
 -- Server version: 8.0.45
 -- PHP Version: 8.2.12
 
@@ -2675,14 +2675,20 @@ CREATE TABLE IF NOT EXISTS `approval_actions` (
 --
 
 INSERT DELAYED IGNORE INTO `approval_actions` (`id`, `request_id`, `stage_id`, `action_by`, `action_type`, `comments`, `notes`, `decision`, `previous_stage_order`, `created_at`) VALUES
-(1, 3, 2, 1, 'reject', 'yes', NULL, 'Rejected', 2, '2026-06-24 01:32:00');
+(1, 3, 2, 1, 'reject', 'yes', NULL, 'Rejected', 2, '2026-06-24 01:32:00'),
+(2, 1, 160, 2, 'create', 'Request created: Laboratory Equipment Restock', NULL, NULL, NULL, '2026-06-19 22:47:50'),
+(3, 2, 160, 3, 'create', 'Request created: Office Stationery Order', NULL, NULL, NULL, '2026-06-19 19:47:50'),
+(4, 3, 160, 4, 'create', 'Request created: Medical Consumables', NULL, NULL, NULL, '2026-06-19 00:47:50'),
+(5, 4, 161, 5, 'create', 'Request created: New Student: Akello Grace', NULL, NULL, NULL, '2026-06-19 21:47:50'),
+(6, 5, 161, 5, 'create', 'Request created: New Student: Bwire John', NULL, NULL, NULL, '2026-06-19 00:47:50'),
+(7, 6, 160, 2, 'create', 'Request created: End of Year Examination Schedule', NULL, NULL, NULL, '2026-06-19 18:47:50');
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `approval_requests`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jul 01, 2026 at 07:07 AM
 --
 
 CREATE TABLE IF NOT EXISTS `approval_requests` (
@@ -2692,6 +2698,7 @@ CREATE TABLE IF NOT EXISTS `approval_requests` (
   `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `description` text COLLATE utf8mb4_general_ci,
   `priority` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Medium',
+  `priority_order` smallint UNSIGNED NOT NULL DEFAULT '2',
   `requester_id` int UNSIGNED DEFAULT NULL,
   `requester_name` varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `requester_role` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
@@ -2712,13 +2719,13 @@ CREATE TABLE IF NOT EXISTS `approval_requests` (
 -- Dumping data for table `approval_requests`
 --
 
-INSERT DELAYED IGNORE INTO `approval_requests` (`id`, `workflow_id`, `request_number`, `title`, `description`, `priority`, `requester_id`, `requester_name`, `requester_role`, `current_stage_id`, `current_stage_order`, `status`, `reference_type`, `reference_id`, `reference_url`, `rejection_reason`, `final_approval_by`, `final_approval_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 'REQ-20260620-A73F2B', 'Laboratory Equipment Restock', 'Request to restock essential laboratory equipment including microscopes and slides for Nursing dept.', 'High', 2, 'Mary Nalwoga', 'Head of Nursing', 2, 2, 'Active', 'store_requests', 1, NULL, NULL, NULL, NULL, '2026-06-19 22:47:50', '2026-06-20 00:47:50'),
-(2, 1, 'REQ-20260620-B84C3D', 'Office Stationery Order', 'Monthly stationery supplies for administrative offices - paper, pens, folders, ink cartridges.', 'Medium', 3, 'James Okello', 'School Secretary', 2, 2, 'Active', 'store_requests', 2, NULL, NULL, NULL, NULL, '2026-06-19 19:47:50', '2026-06-20 00:47:50'),
-(3, 1, 'REQ-20260619-C95D4E', 'Medical Consumables', 'Urgent restock of gloves, masks, sanitizers and first aid supplies for the sickbay.', 'Urgent', 4, 'Sarah Kyomugisha', 'Matron', 2, 2, 'Rejected', 'store_requests', 3, NULL, 'yes', NULL, NULL, '2026-06-19 00:47:50', '2026-06-24 01:32:00'),
-(4, 2, 'REQ-20260620-D06E5F', 'New Student: Akello Grace', 'Registration application for Diploma Nursing program. Submitted by Registrar.', 'Normal', 5, 'Peter Okoth', 'Academic Registrar', 4, 2, 'Active', 'pending_students', 1, NULL, NULL, NULL, NULL, '2026-06-19 21:47:50', '2026-06-20 00:47:50'),
-(5, 2, 'REQ-20260619-E17F6G', 'New Student: Bwire John', 'Registration application for Certificate Midwifery program. All documents verified.', 'Normal', 5, 'Peter Okoth', 'Academic Registrar', 4, 2, 'Active', 'pending_students', 2, NULL, NULL, NULL, NULL, '2026-06-19 00:47:50', '2026-06-20 00:47:50'),
-(6, 3, 'REQ-20260620-F28G7H', 'End of Year Examination Schedule', 'Proposed examination timetable for the June 2026 semester. Requires DG sign-off.', 'Medium', 2, 'Mary Nalwoga', 'Head of Nursing', 5, 1, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-19 18:47:50', '2026-06-20 00:47:50');
+INSERT DELAYED IGNORE INTO `approval_requests` (`id`, `workflow_id`, `request_number`, `title`, `description`, `priority`, `priority_order`, `requester_id`, `requester_name`, `requester_role`, `current_stage_id`, `current_stage_order`, `status`, `reference_type`, `reference_id`, `reference_url`, `rejection_reason`, `final_approval_by`, `final_approval_at`, `created_at`, `updated_at`) VALUES
+(1, 122, 'REQ-20260620-A73F2B', 'Laboratory Equipment Restock', 'Request to restock essential laboratory equipment including microscopes and slides for Nursing dept.', 'High', 2, 2, 'Mary Nalwoga', 'Head of Nursing', 160, 1, 'Active', 'store_requests', 1, NULL, NULL, NULL, NULL, '2026-06-19 22:47:50', '2026-07-01 04:52:33'),
+(2, 122, 'REQ-20260620-B84C3D', 'Office Stationery Order', 'Monthly stationery supplies for administrative offices - paper, pens, folders, ink cartridges.', 'Medium', 3, 3, 'James Okello', 'School Secretary', 160, 1, 'Active', 'store_requests', 2, NULL, NULL, NULL, NULL, '2026-06-19 19:47:50', '2026-07-01 07:08:23'),
+(3, 122, 'REQ-20260619-C95D4E', 'Medical Consumables', 'Urgent restock of gloves, masks, sanitizers and first aid supplies for the sickbay.', 'Urgent', 1, 4, 'Sarah Kyomugisha', 'Matron', 160, 1, 'Rejected', 'store_requests', 3, NULL, 'yes', NULL, NULL, '2026-06-19 00:47:50', '2026-07-01 07:08:23'),
+(4, 123, 'REQ-20260620-D06E5F', 'New Student: Akello Grace', 'Registration application for Diploma Nursing program. Submitted by Registrar.', 'Normal', 4, 5, 'Peter Okoth', 'Academic Registrar', 161, 1, 'Active', 'pending_students', 1, NULL, NULL, NULL, NULL, '2026-06-19 21:47:50', '2026-07-01 07:08:23'),
+(5, 123, 'REQ-20260619-E17F6G', 'New Student: Bwire John', 'Registration application for Certificate Midwifery program. All documents verified.', 'Normal', 4, 5, 'Peter Okoth', 'Academic Registrar', 161, 1, 'Active', 'pending_students', 2, NULL, NULL, NULL, NULL, '2026-06-19 00:47:50', '2026-07-01 07:08:23'),
+(6, 122, 'REQ-20260620-F28G7H', 'End of Year Examination Schedule', 'Proposed examination timetable for the June 2026 semester. Requires DG sign-off.', 'Medium', 3, 2, 'Mary Nalwoga', 'Head of Nursing', 160, 1, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-19 18:47:50', '2026-07-01 07:08:23');
 
 -- --------------------------------------------------------
 
@@ -2787,7 +2794,10 @@ INSERT DELAYED IGNORE INTO `approval_workflows` (`id`, `workflow_name`, `categor
 (127, 'Admissions Request', 'Admissions', 'Admissions-related requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
 (128, 'Library Request', 'Library', 'Library resource and service requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
 (129, 'Store Requisition', 'Store & Assets', 'Store and asset requisitions requiring Director General approval', 1, '2026-06-27 00:17:17'),
-(130, 'Student Registration', 'Academic', 'Student registration requests requiring Director General approval', 1, '2026-06-27 00:17:17');
+(130, 'Student Registration', 'Academic', 'Student registration requests requiring Director General approval', 1, '2026-06-27 00:17:17'),
+(168, 'Transport Trip Approval', 'transport', 'DG approval for new transport trips', 1, '2026-07-01 06:23:06'),
+(169, 'Vehicle Purchase Approval', 'transport', 'DG approval for new vehicle acquisitions', 1, '2026-07-01 06:23:06'),
+(170, 'Route Change Approval', 'transport', 'DG approval for route modifications', 1, '2026-07-01 06:23:06');
 
 -- --------------------------------------------------------
 
@@ -5002,17 +5012,17 @@ CREATE TABLE IF NOT EXISTS `fee_adjustments` (
 -- (See below for the actual view)
 --
 CREATE TABLE `fee_payments` (
-`id` int
-,`student_id` int
+`amount_paid` decimal(12,2)
+,`created_at` timestamp
 ,`fee_account_id` int
-,`amount_paid` decimal(12,2)
+,`id` int
+,`notes` text
+,`payment_date` date
 ,`payment_method` enum('Cash','Bank Transfer','Mobile Money','Cheque','Card','Other')
+,`processed_by` int
 ,`receipt_number` varchar(50)
 ,`status` enum('Pending','Completed','Failed','Reversed')
-,`payment_date` date
-,`notes` text
-,`processed_by` int
-,`created_at` timestamp
+,`student_id` int
 ,`updated_at` timestamp
 );
 
@@ -6114,6 +6124,27 @@ CREATE TABLE IF NOT EXISTS `lab_attendance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lab_checkouts`
+--
+-- Creation: Jul 01, 2026 at 05:02 AM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_checkouts` (
+  `id` int UNSIGNED NOT NULL,
+  `equipment_id` int UNSIGNED NOT NULL,
+  `borrower_id` int UNSIGNED NOT NULL,
+  `borrower_name` varchar(120) NOT NULL,
+  `checkout_date` datetime NOT NULL,
+  `expected_return` datetime DEFAULT NULL,
+  `actual_return` datetime DEFAULT NULL,
+  `status` enum('checked_out','returned','overdue') NOT NULL DEFAULT 'checked_out',
+  `notes` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_chemical_inventory`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -6154,6 +6185,25 @@ CREATE TABLE IF NOT EXISTS `lab_consumables` (
   `notes` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_demonstrations`
+--
+-- Creation: Jul 01, 2026 at 05:02 AM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_demonstrations` (
+  `id` int UNSIGNED NOT NULL,
+  `session_id` int UNSIGNED DEFAULT NULL,
+  `skill_name` varchar(200) NOT NULL,
+  `description` text,
+  `instructor_id` int UNSIGNED DEFAULT NULL,
+  `demo_date` date NOT NULL,
+  `students_count` int UNSIGNED DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -6405,6 +6455,29 @@ CREATE TABLE IF NOT EXISTS `lab_safety_records` (
   `inspection_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_sessions`
+--
+-- Creation: Jul 01, 2026 at 05:02 AM
+--
+
+CREATE TABLE IF NOT EXISTS `lab_sessions` (
+  `id` int UNSIGNED NOT NULL,
+  `session_name` varchar(200) NOT NULL,
+  `instructor_id` int UNSIGNED DEFAULT NULL,
+  `instructor_name` varchar(120) DEFAULT NULL,
+  `scheduled_date` date NOT NULL,
+  `scheduled_time` time DEFAULT NULL,
+  `duration_minutes` int UNSIGNED DEFAULT '60',
+  `max_students` int UNSIGNED DEFAULT '30',
+  `room` varchar(50) DEFAULT NULL,
+  `status` enum('scheduled','in_progress','completed','cancelled') NOT NULL DEFAULT 'scheduled',
+  `notes` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -7218,6 +7291,29 @@ CREATE TABLE IF NOT EXISTS `midwifery_antenatal_care` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `midwifery_clinical_placements`
+--
+-- Creation: Jul 01, 2026 at 05:02 AM
+--
+
+CREATE TABLE IF NOT EXISTS `midwifery_clinical_placements` (
+  `id` int UNSIGNED NOT NULL,
+  `student_id` int UNSIGNED NOT NULL,
+  `facility_name` varchar(200) NOT NULL,
+  `department` varchar(100) DEFAULT 'Maternity',
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `supervisor` varchar(120) DEFAULT NULL,
+  `deliveries_observed` int UNSIGNED DEFAULT '0',
+  `deliveries_assisted` int UNSIGNED DEFAULT '0',
+  `status` enum('scheduled','in_progress','completed','cancelled') NOT NULL DEFAULT 'scheduled',
+  `notes` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `midwifery_family_planning`
 --
 -- Creation: Jun 27, 2026 at 05:00 PM
@@ -7278,6 +7374,23 @@ CREATE TABLE IF NOT EXISTS `midwifery_postnatal_care` (
   `assessor_id` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `midwifery_skills_training`
+--
+-- Creation: Jul 01, 2026 at 05:02 AM
+--
+
+CREATE TABLE IF NOT EXISTS `midwifery_skills_training` (
+  `id` int UNSIGNED NOT NULL,
+  `skill_name` varchar(200) NOT NULL,
+  `description` text,
+  `category` varchar(100) DEFAULT NULL,
+  `is_mandatory` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -7371,6 +7484,301 @@ CREATE TABLE IF NOT EXISTS `module_permissions` (
   `can_export` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `module_permissions`
+--
+
+INSERT DELAYED IGNORE INTO `module_permissions` (`id`, `module_id`, `role_id`, `can_view`, `can_create`, `can_edit`, `can_delete`, `can_approve`, `can_export`, `created_at`) VALUES
+(1, 87, 34, 1, 0, 0, 0, 0, 0, '2026-07-01 05:58:54'),
+(2, 88, 34, 1, 1, 1, 1, 0, 0, '2026-07-01 05:58:54'),
+(3, 89, 34, 1, 1, 1, 1, 0, 0, '2026-07-01 05:58:54'),
+(4, 90, 34, 1, 1, 1, 1, 0, 0, '2026-07-01 05:58:54'),
+(5, 91, 34, 1, 1, 1, 1, 0, 0, '2026-07-01 05:58:54'),
+(6, 92, 34, 1, 1, 1, 1, 0, 0, '2026-07-01 05:58:54'),
+(7, 93, 34, 1, 0, 0, 0, 0, 0, '2026-07-01 05:58:54'),
+(9, 101, 1, 1, 0, 1, 0, 0, 0, '2026-07-01 06:23:06'),
+(10, 18, 1, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(11, 26, 1, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(12, 37, 1, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(13, 2, 1, 1, 1, 1, 0, 1, 0, '2026-07-01 06:53:08'),
+(14, 1, 1, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(15, 61, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(16, 63, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(17, 64, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(18, 65, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(19, 66, 1, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(20, 67, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(21, 4, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(22, 5, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(23, 3, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(24, 75, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(25, 76, 1, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(26, 77, 1, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(27, 78, 1, 1, 1, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(28, 79, 1, 1, 0, 0, 1, 0, 0, '2026-07-01 06:53:08'),
+(29, 18, 2, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(30, 26, 2, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(31, 37, 2, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(32, 2, 2, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(33, 1, 2, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(34, 61, 2, 1, 1, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(35, 63, 2, 1, 1, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(36, 64, 2, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(37, 65, 2, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(38, 67, 2, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(39, 3, 2, 1, 1, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(40, 11, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(41, 12, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(42, 13, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(43, 14, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(44, 15, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(45, 16, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(46, 17, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(47, 18, 3, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(48, 1, 3, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(49, 61, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(50, 63, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(51, 64, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(52, 65, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(53, 66, 3, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(54, 3, 3, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(55, 19, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(56, 20, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(57, 21, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(58, 22, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(59, 23, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(60, 24, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(61, 25, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(62, 26, 4, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(63, 10, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(64, 27, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(65, 28, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(66, 61, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(67, 64, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(68, 3, 4, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(69, 82, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(70, 83, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(71, 84, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(72, 85, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(73, 86, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(74, 69, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(75, 61, 5, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(76, 3, 5, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(77, 75, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(78, 76, 5, 1, 1, 1, 1, 0, 0, '2026-07-01 06:53:08'),
+(79, 77, 5, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(80, 78, 5, 1, 1, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(81, 79, 5, 1, 0, 0, 1, 0, 0, '2026-07-01 06:53:08'),
+(82, 11, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(83, 12, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(84, 13, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(85, 14, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(86, 15, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(87, 17, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(88, 18, 6, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(89, 1, 6, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(90, 29, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(91, 37, 6, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(92, 40, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(93, 43, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(94, 70, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(95, 71, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(96, 72, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(97, 2, 6, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(98, 61, 6, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(99, 63, 6, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(100, 64, 6, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(101, 65, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(102, 66, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(103, 67, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(104, 68, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(105, 6, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(106, 3, 6, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(107, 53, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(108, 54, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(109, 52, 6, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(110, 11, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(111, 12, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(112, 13, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(113, 14, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(114, 15, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(115, 16, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(116, 17, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(117, 18, 7, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(118, 1, 7, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(119, 40, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(120, 43, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(121, 70, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(122, 71, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(123, 72, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(124, 73, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(125, 2, 7, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(126, 61, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(127, 63, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(128, 64, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(129, 65, 7, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(130, 66, 7, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(131, 67, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(132, 68, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(133, 6, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(134, 7, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(135, 3, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(136, 53, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(137, 54, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(138, 52, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(139, 55, 7, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(140, 11, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(141, 12, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(142, 13, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(143, 14, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(144, 15, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(145, 16, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(146, 17, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(147, 18, 8, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:08'),
+(148, 1, 8, 1, 0, 0, 0, 1, 0, '2026-07-01 06:53:08'),
+(149, 40, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(150, 41, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(151, 42, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(152, 43, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(153, 6, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(154, 7, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(155, 61, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(156, 64, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(157, 65, 8, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(158, 66, 8, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:08'),
+(159, 3, 8, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:08'),
+(160, 29, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(161, 30, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(162, 31, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(163, 32, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(164, 33, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(165, 34, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(166, 35, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(167, 36, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(168, 37, 9, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:09'),
+(169, 38, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(170, 39, 9, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(171, 61, 9, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(172, 3, 9, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(173, 61, 10, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(174, 62, 10, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(175, 63, 10, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(176, 3, 10, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(177, 44, 11, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(178, 45, 11, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(179, 46, 11, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(180, 47, 11, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(181, 48, 11, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(182, 61, 11, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(183, 3, 11, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(184, 8, 21, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(185, 28, 21, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(186, 61, 21, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(187, 3, 21, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(188, 53, 22, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(189, 54, 22, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(190, 52, 22, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(191, 55, 22, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(192, 61, 22, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(193, 63, 22, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(194, 3, 22, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(195, 84, 23, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(196, 85, 23, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(197, 69, 23, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(198, 61, 23, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(199, 3, 23, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(200, 19, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(201, 20, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(202, 21, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(203, 22, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(204, 23, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(205, 24, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(206, 25, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(207, 26, 24, 1, 0, 0, 0, 0, 1, '2026-07-01 06:53:09'),
+(208, 10, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(209, 27, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(210, 28, 24, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(211, 61, 24, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(212, 3, 24, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(213, 40, 26, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(214, 41, 26, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(215, 42, 26, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(216, 43, 26, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(217, 61, 26, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(218, 64, 26, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(219, 65, 26, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(220, 3, 26, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(221, 40, 28, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(222, 41, 28, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(223, 42, 28, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(224, 43, 28, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(225, 61, 28, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(226, 64, 28, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(227, 65, 28, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(228, 3, 28, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(229, 71, 29, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(230, 70, 29, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(231, 73, 29, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(232, 51, 29, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(233, 74, 29, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(234, 61, 29, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(235, 3, 29, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(236, 72, 30, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(237, 70, 30, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(238, 73, 30, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(239, 74, 30, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(240, 61, 30, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(241, 3, 30, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(242, 11, 31, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(243, 12, 31, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(244, 13, 31, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(245, 14, 31, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(246, 15, 31, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(247, 16, 31, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(248, 61, 31, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(249, 3, 31, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(250, 11, 32, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(251, 12, 32, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(252, 13, 32, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(253, 14, 32, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(254, 16, 32, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(255, 61, 32, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(256, 3, 32, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(257, 57, 33, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(258, 58, 33, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(259, 59, 33, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(260, 60, 33, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(261, 61, 33, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(262, 3, 33, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(263, 56, 34, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(264, 61, 34, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(265, 3, 34, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(266, 49, 35, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(267, 50, 35, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(268, 61, 35, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(269, 3, 35, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(270, 49, 36, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(271, 50, 36, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:09'),
+(272, 61, 36, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(273, 3, 36, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:09'),
+(274, 51, 37, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(275, 73, 37, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(276, 74, 37, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(277, 61, 37, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(278, 3, 37, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(279, 84, 39, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(280, 69, 39, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(281, 61, 39, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(282, 3, 39, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(283, 84, 40, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(284, 69, 40, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(285, 61, 40, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(286, 3, 40, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(287, 84, 41, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(288, 69, 41, 1, 1, 1, 0, 0, 0, '2026-07-01 06:53:10'),
+(289, 61, 41, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10'),
+(290, 3, 41, 1, 0, 0, 0, 0, 0, '2026-07-01 06:53:10');
 
 -- --------------------------------------------------------
 
@@ -9298,160 +9706,23 @@ CREATE TABLE IF NOT EXISTS `semesters` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sickbay_settings`
+-- Table structure for table `sickbay_medicine_stock`
 --
--- Creation: Jun 28, 2026 at 04:21 AM
+-- Creation: Jul 01, 2026 at 05:02 AM
 --
 
-CREATE TABLE IF NOT EXISTS `sickbay_settings` (
-  `id` int NOT NULL,
-  `setting_key` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `setting_value` text COLLATE utf8mb4_general_ci,
+CREATE TABLE IF NOT EXISTS `sickbay_medicine_stock` (
+  `id` int UNSIGNED NOT NULL,
+  `medicine_name` varchar(200) NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `quantity` int UNSIGNED NOT NULL DEFAULT '0',
+  `unit` varchar(30) DEFAULT 'tablets',
+  `expiry_date` date DEFAULT NULL,
+  `reorder_level` int UNSIGNED DEFAULT '10',
+  `status` enum('available','low_stock','out_of_stock','expired') NOT NULL DEFAULT 'available',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `sickbay_settings`
---
-
-INSERT DELAYED IGNORE INTO `sickbay_settings` (`id`, `setting_key`, `setting_value`, `updated_at`) VALUES
-(1, 'reorder_level', '10', '2026-06-19 22:59:38'),
-(2, 'low_stock_threshold', '10', '2026-06-19 22:59:38'),
-(3, 'auto_status', '1', '2026-06-19 22:59:38'),
-(4, 'notify_low_stock', '1', '2026-06-19 22:59:38'),
-(5, 'default_theme', 'default-blue', '2026-06-19 22:59:38');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sickness_directory`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `sickness_directory` (
-  `id` int NOT NULL,
-  `sickness_code` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
-  `sickness_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `category` enum('Infectious','Non-Infectious','Chronic','Injury','Mental Health','Nutritional','Other') COLLATE utf8mb4_general_ci DEFAULT 'Other',
-  `common_symptoms` text COLLATE utf8mb4_general_ci,
-  `description` text COLLATE utf8mb4_general_ci,
-  `is_contagious` tinyint(1) DEFAULT '0',
-  `typical_treatment` text COLLATE utf8mb4_general_ci,
-  `status` enum('Active','Inactive') COLLATE utf8mb4_general_ci DEFAULT 'Active',
-  `created_by` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `sickness_directory`
---
-
-INSERT DELAYED IGNORE INTO `sickness_directory` (`id`, `sickness_code`, `sickness_name`, `category`, `common_symptoms`, `description`, `is_contagious`, `typical_treatment`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'MLR', 'Malaria', 'Infectious', 'Fever, chills, headache, sweating, fatigue', 'Mosquito-borne parasitic infection common in tropical regions', 0, 'Artemisinin-based combination therapy, antimalarials', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(2, 'TYP', 'Typhoid', 'Infectious', 'Prolonged fever, abdominal pain, headache, constipation or diarrhea', 'Bacterial infection spread through contaminated food/water', 1, 'Antibiotics (ciprofloxacin, azithromycin), hydration', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(3, 'FLU', 'Influenza', 'Infectious', 'Fever, cough, sore throat, body aches, fatigue', 'Viral respiratory infection spread through droplets', 1, 'Rest, fluids, antipyretics, antivirals if severe', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(4, 'COLD', 'Common Cold', 'Infectious', 'Runny nose, sneezing, sore throat, cough, mild fever', 'Viral upper respiratory tract infection', 1, 'Rest, antihistamines, decongestants, vitamin C', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(5, 'URTI', 'Upper Respiratory Tract Infection', 'Infectious', 'Cough, sore throat, nasal congestion, fever', 'Bacterial or viral infection of upper airways', 1, 'Antibiotics if bacterial, rest, fluids', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(6, 'HDCH', 'Headache/Tension Headache', 'Non-Infectious', 'Head pain, pressure around forehead, neck tension', 'Common tension-type headache from stress or fatigue', 0, 'Rest, analgesics (paracetamol, ibuprofen)', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(7, 'GSTR', 'Gastritis', 'Non-Infectious', 'Abdominal pain, nausea, bloating, indigestion', 'Inflammation of stomach lining from diet, stress, or infection', 0, 'Antacids, dietary changes, proton pump inhibitors', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(8, 'DIAR', 'Diarrhea', 'Infectious', 'Loose watery stools, abdominal cramps, dehydration', 'Common infection from contaminated food/water or viruses', 1, 'ORS, hydration, antidiarrheals, antibiotics if bacterial', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(9, 'ALLG', 'Allergic Reaction', 'Non-Infectious', 'Rash, itching, sneezing, watery eyes, swelling', 'Immune response to allergens (food, dust, pollen, drugs)', 0, 'Antihistamines, corticosteroids, avoid triggers', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(10, 'INJR', 'Injury/Accident', 'Injury', 'Pain, swelling, bruising, bleeding, limited mobility', 'Physical trauma from falls, sports, or accidents', 0, 'First aid, rest, ice, compression, elevation, analgesics', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(11, 'ANEM', 'Anemia', 'Nutritional', 'Fatigue, weakness, pale skin, shortness of breath, dizziness', 'Low red blood cell count from iron deficiency or other causes', 0, 'Iron supplements, dietary changes, B12 if needed', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(12, 'MALN', 'Malnutrition', 'Nutritional', 'Weight loss, fatigue, poor growth, weakened immunity', 'Inadequate nutrient intake affecting overall health', 0, 'Nutritional supplementation, diet counseling', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(13, 'CONS', 'Constipation', 'Non-Infectious', 'Infrequent bowel movements, straining, hard stools', 'Common digestive issue from diet or lifestyle factors', 0, 'Increased fiber intake, hydration, laxatives if needed', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(14, 'SORE', 'Sore Throat', 'Infectious', 'Pain or scratchiness in throat, difficulty swallowing', 'Viral or bacterial throat infection', 1, 'Warm salt water gargle, lozenges, antibiotics if strep', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(15, 'EYEI', 'Eye Infection', 'Infectious', 'Redness, itching, discharge, swollen eyelids', 'Bacterial or viral conjunctivitis', 1, 'Antibiotic or antiviral eye drops, hygiene', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(16, 'SKIN', 'Skin Infection/Rash', 'Infectious', 'Redness, itching, bumps, blisters, peeling', 'Fungal, bacterial, or viral skin infection', 1, 'Topical or oral antibiotics/antifungals, hygiene', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(17, 'FATG', 'Fatigue/General Malaise', 'Non-Infectious', 'Tiredness, low energy, reduced motivation', 'General feeling of being unwell without specific diagnosis', 0, 'Rest, nutrition, hydration, stress management', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(18, 'MSTR', 'Menstrual Cramps', 'Non-Infectious', 'Lower abdominal pain, back pain, nausea during menstruation', 'Painful menstrual periods common in young women', 0, 'Analgesics, heat therapy, rest, NSAIDs', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(19, 'ANXT', 'Anxiety/Stress', 'Mental Health', 'Worry, restlessness, rapid heartbeat, difficulty concentrating', 'Mental health condition common among students under academic pressure', 0, 'Counseling, stress management, relaxation techniques', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(20, 'BACK', 'Back Pain', 'Non-Infectious', 'Lower or upper back pain, stiffness, muscle tension', 'Musculoskeletal pain from poor posture, heavy lifting, or strain', 0, 'Rest, analgesics, physiotherapy, posture correction', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(21, 'THRP', 'Throat Infection/Pharyngitis', 'Infectious', 'Sore throat, red tonsils, swollen lymph nodes, fever', 'Inflammation of the pharynx from viral or bacterial infection', 1, 'Antibiotics if bacterial, rest, warm fluids', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(22, 'TOOT', 'Toothache', 'Non-Infectious', 'Tooth pain, sensitivity, swelling around tooth', 'Dental pain from cavities, infection, or impaction', 0, 'Analgesics, dental referral, antibiotics if infected', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(23, 'URIN', 'Urinary Tract Infection', 'Infectious', 'Painful urination, frequent urination, lower abdominal pain', 'Bacterial infection of the urinary tract', 0, 'Antibiotics, increased fluid intake, cranberry', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(24, 'ACNE', 'Acne/Skin Breakout', 'Non-Infectious', 'Pimples, blackheads, whiteheads, inflamed skin', 'Common skin condition from hormonal changes and stress', 0, 'Topical treatments, hygiene, dietary changes', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44'),
-(25, 'FUNG', 'Fungal Infection', 'Infectious', 'Itching, redness, peeling skin, rash with defined edges', 'Fungal skin infection common in tropical climates', 1, 'Antifungal creams or oral medication, keep area dry', 'Active', NULL, '2026-06-19 22:53:44', '2026-06-19 22:53:44');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `skills_laboratory`
---
--- Creation: Jun 29, 2026 at 01:38 PM
---
-
-CREATE TABLE IF NOT EXISTS `skills_laboratory` (
-  `id` int NOT NULL,
-  `lab_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `capacity` int DEFAULT '30',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sms_logs`
---
--- Creation: Jun 30, 2026 at 03:35 PM
---
-
-CREATE TABLE IF NOT EXISTS `sms_logs` (
-  `id` int UNSIGNED NOT NULL,
-  `phone_number` varchar(20) NOT NULL,
-  `recipient_name` varchar(120) DEFAULT NULL,
-  `recipient_type` enum('staff','student','external') NOT NULL DEFAULT 'staff',
-  `recipient_id` int UNSIGNED DEFAULT NULL,
-  `message` text NOT NULL,
-  `status` enum('queued','sent','delivered','failed') NOT NULL DEFAULT 'queued',
-  `error_message` text,
-  `provider` varchar(50) DEFAULT NULL,
-  `provider_message_id` varchar(100) DEFAULT NULL,
-  `sent_by` int UNSIGNED DEFAULT NULL,
-  `sent_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sports_events`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `sports_events` (
-  `id` int UNSIGNED NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `sport_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `location` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `event_date` datetime DEFAULT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `status` varchar(30) COLLATE utf8mb4_general_ci DEFAULT 'upcoming',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sports_teams`
---
--- Creation: Jun 28, 2026 at 04:21 AM
---
-
-CREATE TABLE IF NOT EXISTS `sports_teams` (
-  `id` int UNSIGNED NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
-  `sport_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `coach_id` int UNSIGNED DEFAULT NULL,
-  `captain_id` int UNSIGNED DEFAULT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -10821,6 +11092,12 @@ ALTER TABLE `lab_attendance`
   ADD UNIQUE KEY `uk_lab_attendance` (`session_id`,`student_id`);
 
 --
+-- Indexes for table `lab_checkouts`
+--
+ALTER TABLE `lab_checkouts`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `lab_chemical_inventory`
 --
 ALTER TABLE `lab_chemical_inventory`
@@ -10830,6 +11107,12 @@ ALTER TABLE `lab_chemical_inventory`
 -- Indexes for table `lab_consumables`
 --
 ALTER TABLE `lab_consumables`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_demonstrations`
+--
+ALTER TABLE `lab_demonstrations`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -10900,6 +11183,12 @@ ALTER TABLE `lab_printing_jobs`
 -- Indexes for table `lab_safety_records`
 --
 ALTER TABLE `lab_safety_records`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `lab_sessions`
+--
+ALTER TABLE `lab_sessions`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -11088,6 +11377,12 @@ ALTER TABLE `midwifery_antenatal_care`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `midwifery_clinical_placements`
+--
+ALTER TABLE `midwifery_clinical_placements`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `midwifery_family_planning`
 --
 ALTER TABLE `midwifery_family_planning`
@@ -11103,6 +11398,12 @@ ALTER TABLE `midwifery_labor_delivery`
 -- Indexes for table `midwifery_postnatal_care`
 --
 ALTER TABLE `midwifery_postnatal_care`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `midwifery_skills_training`
+--
+ALTER TABLE `midwifery_skills_training`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -11716,47 +12017,9 @@ ALTER TABLE `semesters`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `sickbay_settings`
+-- Indexes for table `sickbay_medicine_stock`
 --
-ALTER TABLE `sickbay_settings`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `setting_key` (`setting_key`);
-
---
--- Indexes for table `sickness_directory`
---
-ALTER TABLE `sickness_directory`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `sickness_code` (`sickness_code`),
-  ADD KEY `sickness_name` (`sickness_name`),
-  ADD KEY `category` (`category`),
-  ADD KEY `status` (`status`);
-
---
--- Indexes for table `skills_laboratory`
---
-ALTER TABLE `skills_laboratory`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `sms_logs`
---
-ALTER TABLE `sms_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_phone` (`phone_number`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_sent_at` (`sent_at`);
-
---
--- Indexes for table `sports_events`
---
-ALTER TABLE `sports_events`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `sports_teams`
---
-ALTER TABLE `sports_teams`
+ALTER TABLE `sickbay_medicine_stock`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -11959,7 +12222,7 @@ ALTER TABLE `appraisal_ratings`
 -- AUTO_INCREMENT for table `approval_actions`
 --
 ALTER TABLE `approval_actions`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `approval_requests`
@@ -11977,7 +12240,7 @@ ALTER TABLE `approval_stages`
 -- AUTO_INCREMENT for table `approval_workflows`
 --
 ALTER TABLE `approval_workflows`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=171;
 
 --
 -- AUTO_INCREMENT for table `assessments`
@@ -12916,6 +13179,12 @@ ALTER TABLE `lab_attendance`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `lab_checkouts`
+--
+ALTER TABLE `lab_checkouts`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lab_chemical_inventory`
 --
 ALTER TABLE `lab_chemical_inventory`
@@ -12926,6 +13195,12 @@ ALTER TABLE `lab_chemical_inventory`
 --
 ALTER TABLE `lab_consumables`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_demonstrations`
+--
+ALTER TABLE `lab_demonstrations`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `lab_equipment`
@@ -12992,6 +13267,12 @@ ALTER TABLE `lab_printing_jobs`
 --
 ALTER TABLE `lab_safety_records`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lab_sessions`
+--
+ALTER TABLE `lab_sessions`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `lab_skills_demonstrations`
@@ -13144,6 +13425,12 @@ ALTER TABLE `midwifery_antenatal_care`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `midwifery_clinical_placements`
+--
+ALTER TABLE `midwifery_clinical_placements`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `midwifery_family_planning`
 --
 ALTER TABLE `midwifery_family_planning`
@@ -13160,6 +13447,12 @@ ALTER TABLE `midwifery_labor_delivery`
 --
 ALTER TABLE `midwifery_postnatal_care`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `midwifery_skills_training`
+--
+ALTER TABLE `midwifery_skills_training`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `midwifery_students`
@@ -13183,7 +13476,7 @@ ALTER TABLE `module_departments`
 -- AUTO_INCREMENT for table `module_permissions`
 --
 ALTER TABLE `module_permissions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=291;
 
 --
 -- AUTO_INCREMENT for table `national_exam_results`
@@ -13708,39 +14001,9 @@ ALTER TABLE `semesters`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `sickbay_settings`
+-- AUTO_INCREMENT for table `sickbay_medicine_stock`
 --
-ALTER TABLE `sickbay_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT for table `sickness_directory`
---
-ALTER TABLE `sickness_directory`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
-
---
--- AUTO_INCREMENT for table `skills_laboratory`
---
-ALTER TABLE `skills_laboratory`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sms_logs`
---
-ALTER TABLE `sms_logs`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sports_events`
---
-ALTER TABLE `sports_events`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `sports_teams`
---
-ALTER TABLE `sports_teams`
+ALTER TABLE `sickbay_medicine_stock`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
