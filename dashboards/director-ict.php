@@ -55,6 +55,11 @@ $size_row = ict_fetch_one($ict, "SELECT ROUND(SUM(data_length+index_length)/1024
 if ($size_row) $db_size_mb = $size_row['size_mb'];
 $total_users     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff") + ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
 
+// Generate CSRF token for forms
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // ── DATA ──
 $assets       = ict_fetch($ict, "SELECT a.*, c.category_name FROM ict_assets a LEFT JOIN ict_asset_categories c ON a.category_id=c.id ORDER BY a.created_at DESC LIMIT 30");
 $asset_cats   = ict_fetch($ict, "SELECT * FROM ict_asset_categories ORDER BY category_name");
@@ -82,6 +87,7 @@ $student_count   = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE st
 $active_sessions   = ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'");
 
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()");
 // ── Module Permissions ──
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");
@@ -127,7 +133,28 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 /* ── Top Bar ── */
 
-@media (max-width: 768px) {  }
+@media (max-width: 768px) {
+    .ict-content { margin-left: 0; padding: 12px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-card { padding: 10px 10px 8px; }
+    .kpi-value { font-size: 15px; }
+    .section-card { padding: 12px 14px; }
+    .section-title { font-size: 13px; }
+    .ict-table { font-size: 11px; }
+    .ict-table thead th { font-size: 9px; padding: 6px 8px; }
+    .ict-table td { padding: 6px 8px; }
+    .monitor-card h3 { font-size: 18px; }
+    .d-flex.justify-content-between { flex-wrap: wrap; gap: 6px; }
+    .modal-dialog { margin: 8px !important; }
+}
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .kpi-card { padding: 8px; }
+    .kpi-value { font-size: 13px; }
+    .kpi-label { font-size: 9px; }
+    .section-card { padding: 10px 12px; }
+    .monitor-card h3 { font-size: 15px; }
+}
 
 
 
@@ -584,6 +611,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <div class="section-card">
                     <h2><i class="fas fa-database me-2 text-success"></i>Create Backup</h2>
                     <form id="backupForm">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                         <input type="hidden" name="action" value="create_backup">
                         <div class="mb-2"><label class="form-label">Backup Name</label><input type="text" name="backup_name" class="form-control" value="Backup-<?= date('Ymd-His') ?>"></div>
                         <div class="mb-2"><label class="form-label">Type</label>
@@ -609,6 +637,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <div class="section-card">
                     <h2><i class="fas fa-wrench me-2 text-warning"></i>Backup Settings</h2>
                     <form id="backupSettingsForm">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                         <input type="hidden" name="action" value="save_setting">
                         <div class="mb-1"><label class="form-label small">Auto Backup</label>
                             <select name="setting_value" class="form-select form-select-sm" onchange="saveBackupSetting('auto_backup_enabled',this.value)">
@@ -810,6 +839,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 <div class="section-card">
                     <h2><i class="fas fa-exclamation-triangle me-2 text-danger"></i>System Alerts</h2>
                     <form id="alertForm">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                         <input type="hidden" name="action" value="add_alert">
                         <div class="row g-1 mb-1">
                             <div class="col-4"><select name="alert_type" class="form-select form-select-sm"><option value="system">System</option><option value="security">Security</option><option value="backup">Backup</option><option value="performance">Performance</option><option value="network">Network</option><option value="storage">Storage</option></select></div>
@@ -1072,6 +1102,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </div>
         </div>
+        <!-- Website Submissions -->
+        <div class="row g-3 mt-2">
+            <div class="col-12">
+                <?php renderDirectorWebsitePanel($website_conn, null, 'All Website Submissions'); ?>
+            </div>
+        </div>
 
         <!-- ======== APPROVALS ======== -->
         <?php elseif ($tab === 'approvals'): ?>
@@ -1198,6 +1234,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 <div class="modal fade" id="addAssetModal" tabindex="-1"><div class="modal-dialog">
 <form class="modal-content" id="addAssetForm">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 <input type="hidden" name="action" value="add_asset">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-box me-2"></i>Add Asset</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1229,6 +1266,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <div class="modal fade" id="addServerModal" tabindex="-1"><div class="modal-dialog modal-sm">
 <form class="modal-content" id="addServerForm">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 <input type="hidden" name="action" value="add_server">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-server me-2"></i>Add Server</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1244,6 +1282,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <div class="modal fade" id="addWifiModal" tabindex="-1"><div class="modal-dialog modal-sm">
 <form class="modal-content" id="addWifiForm">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 <input type="hidden" name="action" value="add_wifi">
 <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-wifi me-2"></i>Add WiFi AP</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1258,6 +1297,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <div class="modal fade" id="addNotifModal" tabindex="-1"><div class="modal-dialog modal-sm">
 <form class="modal-content" id="addNotifForm">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 <input type="hidden" name="action" value="add_notification">
 <div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-bell me-2"></i>Add Notification</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
 <div class="modal-body">
@@ -1272,6 +1312,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <!-- jQuery & Bootstrap already loaded in dashboard_head.php — do NOT re-add here -->
 <script>
 const ICT_HANDLER = '../handlers/ict_handler.php';
+const CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
 function showAlert(m, t) { $('.ict-content').prepend(`<div class="alert alert-${t} alert-dismissible fade show py-2 an-slide" style="border:none;border-radius:10px;">${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`); setTimeout(()=>$('.alert').alert('close'),5000); }
 
 function doAjax(formId, cb) {
@@ -1279,6 +1320,7 @@ function doAjax(formId, cb) {
     if (f.length && f[0].checkValidity && !f[0].checkValidity()) { f[0].reportValidity(); return; }
     const data = f.serializeArray().reduce((o, x) => (o[x.name] = x.value, o), {});
     data.action = f.find('[name=action]').val();
+    data.csrf_token = CSRF_TOKEN;
     $.post(ICT_HANDLER, data).done(r => { if(r.success){ showAlert(r.message,'success'); if(cb) cb(r.data); else setTimeout(()=>location.reload(),600); } else showAlert(r.message,'danger'); }).fail(()=>showAlert('AJAX error','danger'));
 }
 
@@ -1324,7 +1366,7 @@ function editAsset(id) {
     $.get(ICT_HANDLER, {action:'get_asset', id:id}).done(function(r){
         if(!r.success){showAlert(r.message,'danger');return;}
         var d=r.data;
-        var html='<form id="editAssetForm"><input type="hidden" name="action" value="edit_asset"><input type="hidden" name="id" value="'+d.id+'">';
+        var html='<form id="editAssetForm"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="edit_asset"><input type="hidden" name="id" value="'+d.id+'">';
         html+='<div class="mb-2"><label class="form-label">Name</label><input type="text" name="asset_name" class="form-control" value="'+(d.asset_name||'')+'" required></div>';
         html+='<div class="row mb-2"><div class="col-6"><label class="form-label">Type</label><select name="asset_type" class="form-select"><option value="hardware"'+(d.asset_type==='hardware'?' selected':'')+'>Hardware</option><option value="software"'+(d.asset_type==='software'?' selected':'')+'>Software</option><option value="network"'+(d.asset_type==='network'?' selected':'')+'>Network</option></select></div><div class="col-6"><label class="form-label">Status</label><select name="current_status" class="form-select"><option value="active"'+(d.current_status==='active'?' selected':'')+'>Active</option><option value="in_maintenance"'+(d.current_status==='in_maintenance'?' selected':'')+'>Maintenance</option><option value="retired"'+(d.current_status==='retired'?' selected':'')+'>Retired</option></select></div></div>';
         html+='<div class="mb-2"><label class="form-label">Location</label><input type="text" name="current_location" class="form-control" value="'+(d.current_location||'')+'"></div>';
@@ -1334,7 +1376,7 @@ function editAsset(id) {
     });
 }
 function assignAsset(id) {
-    var staffHtml='<form id="assignAssetForm"><input type="hidden" name="action" value="assign_asset"><input type="hidden" name="asset_id" value="'+id+'">';
+    var staffHtml='<form id="assignAssetForm"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="assign_asset"><input type="hidden" name="asset_id" value="'+id+'">';
     staffHtml+='<div class="mb-2"><label class="form-label">Staff ID</label><input type="number" name="assigned_to_staff_id" class="form-control" required></div>';
     staffHtml+='<div class="mb-2"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>';
     staffHtml+='<button type="submit" class="btn btn-info text-white w-100"><i class="fas fa-user-tag me-1"></i>Assign Asset</button></form>';
@@ -1342,7 +1384,7 @@ function assignAsset(id) {
     $('#assignAssetForm').submit(function(e){e.preventDefault();doAjax('assignAssetForm');});
 }
 function logMaint(id) {
-    var mHtml='<form id="maintForm"><input type="hidden" name="action" value="add_asset_maintenance"><input type="hidden" name="asset_id" value="'+id+'">';
+    var mHtml='<form id="maintForm"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="add_asset_maintenance"><input type="hidden" name="asset_id" value="'+id+'">';
     mHtml+='<div class="mb-2"><label class="form-label">Type</label><select name="maintenance_type" class="form-select"><option value="preventive">Preventive</option><option value="corrective">Corrective</option><option value="emergency">Emergency</option></select></div>';
     mHtml+='<div class="mb-2"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2" required></textarea></div>';
     mHtml+='<div class="mb-2"><label class="form-label">Cost</label><input type="number" step="0.01" name="cost" class="form-control" value="0"></div>';
@@ -1354,7 +1396,7 @@ function editServer(id) {
     $.get(ICT_HANDLER, {action:'get_server', id:id}).done(function(r){
         if(!r.success){showAlert(r.message,'danger');return;}
         var d=r.data;
-        var html='<form id="editServerForm"><input type="hidden" name="action" value="edit_server"><input type="hidden" name="id" value="'+d.id+'">';
+        var html='<form id="editServerForm"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="edit_server"><input type="hidden" name="id" value="'+d.id+'">';
         html+='<div class="mb-2"><label class="form-label">Name</label><input type="text" name="server_name" class="form-control" value="'+(d.server_name||'')+'" required></div>';
         html+='<div class="row mb-2"><div class="col-6"><label class="form-label">IP</label><input type="text" name="ip_address" class="form-control" value="'+(d.ip_address||'')+'"></div><div class="col-6"><label class="form-label">Type</label><input type="text" name="server_type" class="form-control" value="'+(d.server_type||'')+'"></div></div>';
         html+='<div class="row mb-2"><div class="col-6"><label class="form-label">OS</label><input type="text" name="os" class="form-control" value="'+(d.os||'')+'"></div><div class="col-6"><label class="form-label">Status</label><select name="status" class="form-select"><option value="online"'+(d.status==='online'?' selected':'')+'>Online</option><option value="offline"'+(d.status==='offline'?' selected':'')+'>Offline</option><option value="maintenance"'+(d.status==='maintenance'?' selected':'')+'>Maintenance</option></select></div></div>';
@@ -1367,7 +1409,7 @@ function updateTicket(id) {
     $.get(ICT_HANDLER, {action:'get_ticket', id:id}).done(function(r){
         if(!r.success){showAlert(r.message,'danger');return;}
         var d=r.data;
-        var html='<form id="updateTicketForm"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="id" value="'+d.id+'">';
+        var html='<form id="updateTicketForm"><input type="hidden" name="csrf_token" value="'+CSRF_TOKEN+'"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="id" value="'+d.id+'">';
         html+='<div class="mb-2"><label class="form-label">Status</label><select name="status" class="form-select"><option value="open"'+(d.status==='open'?' selected':'')+'>Open</option><option value="in_progress"'+(d.status==='in_progress'?' selected':'')+'>In Progress</option><option value="resolved"'+(d.status==='resolved'?' selected':'')+'>Resolved</option><option value="closed"'+(d.status==='closed'?' selected':'')+'>Closed</option></select></div>';
         html+='<div class="mb-2"><label class="form-label">Assigned To (Staff ID)</label><input type="number" name="assigned_to" class="form-control" value="'+(d.assigned_to||'')+'"></div>';
         html+='<div class="mb-2"><label class="form-label">Resolution Notes</label><textarea name="resolution_notes" class="form-control" rows="3"></textarea></div>';

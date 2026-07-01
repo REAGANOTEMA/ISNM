@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $ctx = bootstrapStaffDashboard(['director admissions', 'admissions']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'] ?? null;
@@ -578,7 +579,7 @@ if ($ajax === 'registration_readiness') {
         $row['progress_pct']=$total_req_items>0?round(($row['verified_count']/$total_req_items)*100):0;
         $out[]=$row;
     }
-    echo json_encode($out);exit;
+    echo json_encode(['data'=>$out]);exit;
 }
 
 if ($ajax === 'convert_to_student') {
@@ -861,6 +862,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else{echo json_encode(['success'=>false,'error'=>'Delete failed: invalid ID.']);exit;}
     }
     if ($action === 'edit_student') {
+        header('Content-Type: application/json');
         $sid=intval($_POST['student_id']??0);$status=trim($_POST['status']??'');
         if($sid&&$students_conn){$stmt=$students_conn->prepare("UPDATE `{$students_db}`.`students` SET status=? WHERE id=?");if($stmt){$stmt->bind_param('si',$status,$sid);$stmt->execute();$stmt->close();}}
         echo json_encode(['success'=>true]);exit;
@@ -1018,6 +1020,10 @@ if($report){
 .btn-primary:hover{background:var(--adm-prim);border-color:var(--adm-prim);box-shadow:0 2px 8px rgba(124,58,237,.3)}
 .alert{border-radius:10px;font-size:13px;padding:12px 18px}
 code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#475569;font-weight:500}
+@media(max-width:991.98px){
+    .dashboard-content{margin-left:0!important}
+    .adm-content-wrap,.admissions-content{margin-left:0!important;padding:16px!important}
+}
 @media(max-width:768px){
     .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
     .stat-card{padding:12px 14px;gap:10px}
@@ -1031,7 +1037,6 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
     .scard{margin-bottom:12px}
     .sch{padding:12px 14px;font-size:13px}
     .scb{padding:12px 14px}
-    
     .table-responsive{font-size:12px;border-radius:10px}
     .table-sm th,.table-sm td{padding:8px 10px}
     .readiness-grid{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -1040,6 +1045,14 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
     .form-label{font-size:11px}
     .student-result-card{padding:10px 12px}
     .adm-content-wrap{padding:12px 12px 30px}
+    .modal-dialog{margin:8px!important}
+}
+@media(max-width:480px){
+    .stats-grid{grid-template-columns:1fr 1fr;gap:6px}
+    .stat-card{padding:10px;gap:8px}
+    .stat-content h3{font-size:.95rem}
+    .req-grid{grid-template-columns:1fr}
+    .readiness-grid{grid-template-columns:1fr 1fr}
 }
 @media(min-width:769px) and (max-width:1024px){
     .stats-grid{grid-template-columns:repeat(3,1fr)}
@@ -1367,6 +1380,19 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <div id="news_publishing" class="dashboard-section" data-section="news_publishing">
 <div class="scard"><div class="sch"><i class="fas fa-newspaper me-2"></i>Publish News to Website</div><div class="scb">
 <?php renderNewsWidget($conn,$website_conn,$user_id,$user_name,$user_role,5); ?>
+</div></div>
+</div>
+
+<!-- WEBSITE APPLICATIONS -->
+<div id="website_applications" class="dashboard-section" data-section="website_applications">
+<div class="scard"><div class="sch"><i class="fas fa-globe me-2"></i>Website Student Applications</div><div class="scb">
+<?php
+if ($website_conn) {
+    renderWebsiteSubmissionsWidget($website_conn, ['applications'], 20);
+} else {
+    echo '<div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p>Website database unavailable.</p></div>';
+}
+?>
 </div></div>
 </div>
 

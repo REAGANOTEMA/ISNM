@@ -32,7 +32,7 @@ if (!function_exists('ensureNewsTable')) {
         $r = $conn->query("SHOW TABLES LIKE 'news'");
         if ($r && $r->num_rows > 0) return true;
         $conn->query("CREATE TABLE IF NOT EXISTS news (
-            id INT PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             slug VARCHAR(255) NOT NULL,
             content LONGTEXT,
@@ -60,6 +60,11 @@ if (!empty($_SESSION['news_error'])) { $errors[] = $_SESSION['news_error']; unse
 
 // --- Handle Admin Actions ---
 if ($is_admin && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+        $_SESSION['news_error'] = 'Invalid security token. Please try again.';
+        header('Location: news.php');
+        exit;
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create' || $action === 'update') {
@@ -367,6 +372,9 @@ include 'shared/_header.php';
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="newsForm">
+                    <?php if (function_exists('generateCSRFToken')): ?>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>">
+                    <?php endif; ?>
                     <input type="hidden" name="action" id="formAction" value="create">
                     <input type="hidden" name="news_id" id="newsId" value="0">
                     <div class="row g-3">
@@ -456,6 +464,7 @@ include 'shared/_header.php';
                             <button class="btn btn-sm btn-outline-primary" onclick="editNews(<?= $article['id'] ?>)"><i class="fas fa-edit"></i></button>
                             <?php if ($article['status'] !== 'published'): ?>
                             <form method="POST" class="d-inline">
+                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
                                 <input type="hidden" name="action" value="toggle_status">
                                 <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                 <input type="hidden" name="new_status" value="published">
@@ -464,6 +473,7 @@ include 'shared/_header.php';
                             <?php endif; ?>
                             <?php if ($article['status'] !== 'archived'): ?>
                             <form method="POST" class="d-inline">
+                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
                                 <input type="hidden" name="action" value="toggle_status">
                                 <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                 <input type="hidden" name="new_status" value="archived">
@@ -471,6 +481,7 @@ include 'shared/_header.php';
                             </form>
                             <?php endif; ?>
                             <form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')">
+                                <?php if (function_exists('generateCSRFToken')): ?><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>"><?php endif; ?>
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="news_id" value="<?= $article['id'] ?>">
                                 <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>

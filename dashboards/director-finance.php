@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $ctx = bootstrapStaffDashboard(['director finance', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
@@ -458,7 +459,23 @@ unset($_SESSION['fin_success'], $_SESSION['fin_error']);
 .env-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;font-size:13px;transition:border-color .2s}
 .env-field:focus{border-color:#1e40af;outline:none;box-shadow:0 0 0 2px rgba(30,64,175,.1)}
 .modal-content{max-height:85vh;overflow-y:auto}
-@media(max-width:768px){.table-responsive{font-size:12px}}
+@media(max-width:768px){
+    .fin-content{margin-left:0!important;padding:12px!important}
+    .kpi-card{padding:12px 10px}
+    .kpi-card .kpi-value{font-size:16px}
+    .kpi-card .kpi-label{font-size:10px}
+    .scard .sch{padding:10px 14px;font-size:13px}
+    .scard .scb{padding:12px 14px}
+    .table-responsive{font-size:11px}
+    .btn-sec,.btn-outline-sec{font-size:11px;padding:6px 10px}
+    .d-flex.justify-content-between{flex-wrap:wrap;gap:6px}
+}
+@media(max-width:480px){
+    .kpi-card .kpi-value{font-size:14px}
+    .scard .sch{font-size:12px;padding:8px 10px}
+    .scard .scb{padding:10px}
+    .d-grid.gap-2 .btn{font-size:11px;padding:6px 8px}
+}
 </style>
 </head><body class="ent-layout">
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
@@ -537,6 +554,18 @@ $recentActs = array_slice($recentActs,0,8);
     </div></div>
   </div>
 </div>
+<?php endif; ?>
+
+<?php if ($view === 'donations'): ?>
+<div class="scard"><div class="sch"><i class="fas fa-hand-holding-heart me-2"></i>Website Donations</div><div class="scb">
+<?php
+if ($website) {
+    renderDirectorWebsitePanel($website, ['donations'], 'Donation Submissions');
+} else {
+    echo '<div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p>Website database unavailable.</p></div>';
+}
+?>
+</div></div>
 <?php endif; ?>
 
 <?php if ($view === 'revenue_summary'): ?>

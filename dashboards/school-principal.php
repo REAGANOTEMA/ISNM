@@ -102,6 +102,18 @@ if ($view === 'exam_monitoring_data' && $ajax === '1') {
     echo json_encode($rows); exit;
 }
 
+// -- AJAX: communication_data --
+if ($view === 'communication_data' && $ajax === '1') {
+    header('Content-Type: application/json');
+    $rows = [];
+    if ($students) {
+        $r = $students->query("SELECT * FROM {$students_db}.communication_log WHERE sender_name='" . $students->real_escape_string($uname) . "' ORDER BY created_at DESC LIMIT 50");
+        if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw;
+    }
+    echo json_encode($rows); exit;
+}
+
+
 // -- AJAX: clinical_training_data --
 if ($view === 'clinical_training_data' && $ajax === '1') {
     header('Content-Type: application/json');
@@ -850,7 +862,7 @@ document.addEventListener('DOMContentLoaded',loadAppeals);
 <?php endif; ?>
 
 <?php if ($view === 'student_progress'): ?>
-<div class="scard"><div class="sch"><i class="fas fa-chart-bar me-2"></i>Student Progress Tracker</div><div class="scb p-0"><div id="studentProgressList"></div></div></div>
+<div class="scard"><div class="sch"><i class="fas fa-chart-bar me-2"></i>Student Progress Tracker</div><div class="scb p-0"><div id="studentOverviewList"></div></div></div>
 <script>document.addEventListener('DOMContentLoaded',function(){loadStudentOverview();});</script>
 <?php endif; ?>
 
@@ -917,7 +929,7 @@ document.addEventListener('DOMContentLoaded',loadDeptPerf);
 <?php endif; ?>
 
 <?php if ($view === 'staff_attendance'): ?>
-<div class="scard"><div class="sch"><i class="fas fa-clipboard-check me-2"></i>Staff Attendance Log</div><div class="scb p-0"><div id="staffAttLog"></div></div></div>
+<div class="scard"><div class="sch"><i class="fas fa-clipboard-check me-2"></i>Staff Attendance Log</div><div class="scb p-0"><div id="staffOverviewList"></div></div></div>
 <script>document.addEventListener('DOMContentLoaded',function(){loadStaffOverview();});</script>
 <?php endif; ?>
 
@@ -1393,7 +1405,11 @@ if(d.success){document.getElementById('commSubj').value='';document.getElementBy
 }).catch(function(e){ console.warn('[ISNM]', e); });
 }
 function loadCommSent(){var el=document.getElementById('commSentList');if(!el)return;el.innerHTML='<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
-fetch('school-principal.php?view=meeting_data&ajax=1').then(function(){el.innerHTML='<div class="text-muted small p-3">Communications logged.</div>';}).catch(function(e){ console.warn('[ISNM]', e); });}
+fetch('school-principal.php?view=communication_data&ajax=1').then(function(r){return r.json()}).then(function(d){
+if(!d||!d.length){el.innerHTML='<div class="text-muted small p-3">No communications sent.</div>';return;}
+var h='';d.forEach(function(c){h+='<div class="act-item"><div class="fw-bold small">'+esc(c.subject)+'</div><div class="text-muted small">'+esc(c.recipient_role)+' &middot; '+esc(c.created_at)+'</div><div class="small mt-1">'+esc(c.message)+'</div></div>';});
+el.innerHTML=h;
+}).catch(function(){el.innerHTML='<div class="text-danger small p-3">Failed to load.</div>';});}
 document.addEventListener('DOMContentLoaded',loadCommSent);
 </script>
 <?php endif; ?>

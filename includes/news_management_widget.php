@@ -11,7 +11,7 @@ if (!function_exists('ensureNewsTable')) {
         $r = $website_conn->query("SHOW TABLES LIKE 'news'");
         if ($r && $r->num_rows > 0) return true;
         $website_conn->query("CREATE TABLE IF NOT EXISTS news (
-            id INT PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             slug VARCHAR(255) NOT NULL,
             content LONGTEXT,
@@ -40,6 +40,12 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
 
     // ---- POST: create or update news ----
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nw_action'])) {
+        if (function_exists('verifyCSRFToken') && !verifyCSRFToken()) {
+            $_SESSION['nw_error'] = 'Invalid security token. Please try again.';
+            echo '<meta http-equiv="refresh" content="0">';
+            return;
+        }
+
         $action   = $_POST['nw_action'];
         $title    = trim($_POST['nw_title'] ?? '');
         $content  = trim($_POST['nw_content'] ?? '');
@@ -86,6 +92,10 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                                 $ws->close();
                             }
                         }
+                        if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
+                            $nid = createNotification('New News: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
+                            if ($nid) notifyAllStaff($nid);
+                        }
                         $_SESSION['nw_success'] = 'News article published.';
                     }
                 } else {
@@ -106,6 +116,10 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                                 $ws->execute();
                                 $ws->close();
                             }
+                        }
+                        if ($status === 'published' && function_exists('createNotification') && function_exists('notifyAllStaff')) {
+                            $nid = createNotification('News Updated: ' . $title, mb_substr(strip_tags($content), 0, 200), 'news.php', 'news', 'fas fa-newspaper');
+                            if ($nid) notifyAllStaff($nid);
                         }
                         $_SESSION['nw_success'] = 'News article updated.';
                     }
@@ -194,6 +208,9 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
+                    <?php if (function_exists('generateCSRFToken')): ?>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()) ?>">
+                    <?php endif; ?>
                     <input type="hidden" name="nw_action" id="nwAction" value="create">
                     <input type="hidden" name="nw_id" id="nwId" value="0">
                     <div class="row g-2">
@@ -255,17 +272,17 @@ function renderNewsWidget($staff_conn, $website_conn, $user_id, $user_name, $use
                             <button class="btn btn-xs btn-outline-secondary dropdown-toggle py-0 px-1" style="font-size:11px" data-bs-toggle="dropdown"></button>
                             <ul class="dropdown-menu dropdown-menu-end" style="min-width:120px">
                                 <?php if ($a['status'] !== 'published'): ?>
-                                <li><form method="POST" class="d-inline"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="published"><button class="dropdown-item small"><i class="fas fa-check text-success me-2"></i>Publish</button></form></li>
+                                <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="published"><button class="dropdown-item small"><i class="fas fa-check text-success me-2"></i>Publish</button></form></li>
                                 <?php endif; ?>
                                 <?php if ($a['status'] !== 'draft'): ?>
-                                <li><form method="POST" class="d-inline"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="draft"><button class="dropdown-item small"><i class="fas fa-pen text-warning me-2"></i>Draft</button></form></li>
+                                <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="draft"><button class="dropdown-item small"><i class="fas fa-pen text-warning me-2"></i>Draft</button></form></li>
                                 <?php endif; ?>
                                 <?php if ($a['status'] !== 'archived'): ?>
-                                <li><form method="POST" class="d-inline"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="archived"><button class="dropdown-item small"><i class="fas fa-archive text-secondary me-2"></i>Archive</button></form></li>
+                                <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="nw_action" value="toggle_status"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><input type="hidden" name="nw_new_status" value="archived"><button class="dropdown-item small"><i class="fas fa-archive text-secondary me-2"></i>Archive</button></form></li>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li><button class="dropdown-item small" onclick="editNewsWidget(<?= $a['id'] ?>, '<?= addslashes($a['title']) ?>', '<?= addslashes($a['content']) ?>', '<?= addslashes($a['excerpt'] ?? '') ?>', '<?= $a['status'] ?>')"><i class="fas fa-edit text-primary me-2"></i>Edit</button></li>
-                                <li><form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')"><input type="hidden" name="nw_action" value="delete"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><button class="dropdown-item small"><i class="fas fa-trash text-danger me-2"></i>Delete</button></form></li>
+                                <li><form method="POST" class="d-inline" onsubmit="return confirm('Delete this article?')"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="nw_action" value="delete"><input type="hidden" name="nw_id" value="<?= $a['id'] ?>"><button class="dropdown-item small"><i class="fas fa-trash text-danger me-2"></i>Delete</button></form></li>
                             </ul>
                         </div>
                     </div>

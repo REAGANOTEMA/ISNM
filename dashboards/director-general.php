@@ -15,6 +15,7 @@ require_once __DIR__ . '/../includes/approval_integration.php';
 require_once __DIR__ . '/../includes/approval_center.php';
 require_once __DIR__ . '/../includes/executive_overview.php';
 require_once __DIR__ . '/../includes/dashboard_analytics.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 
 $ctx          = bootstrapStaffDashboard(['director general', 'ceo', 'system admin']);
 $auth_service = $ctx['auth'];
@@ -124,7 +125,7 @@ if ($dg_cached) {
     $pendingContacts = 0; $pendingVolunteers = 0; $pendingDonations = 0; $pendingApplications = 0;
     $recentSubmissions = [];
     if ($websiteConn) {
-        $r = $websiteConn->query("SELECT COUNT(*) c FROM contact_submissions WHERE status='unread'");
+        $r = $websiteConn->query("SELECT COUNT(*) c FROM contact_submissions WHERE status='New'");
         if ($r) $pendingContacts = (int)$r->fetch_assoc()['c'];
         $r = $websiteConn->query("SELECT COUNT(*) c FROM volunteer_applications WHERE status='pending'");
         if ($r) $pendingVolunteers = (int)$r->fetch_assoc()['c'];
@@ -133,7 +134,7 @@ if ($dg_cached) {
         $r = $websiteConn->query("SELECT COUNT(*) c FROM student_applications WHERE status='Pending'");
         if ($r) $pendingApplications = (int)$r->fetch_assoc()['c'];
         $union = $websiteConn->query("
-            (SELECT 'contact' as type, id, CONCAT(first_name,' ',last_name) as name, subject as title, created_at FROM contact_submissions WHERE status='unread')
+            (SELECT 'contact' as type, id, full_name as name, subject as title, created_at FROM contact_submissions WHERE status='New')
             UNION ALL
             (SELECT 'volunteer', id, CONCAT(first_name,' ',last_name), CONCAT(profession,' - ',opportunity), created_at FROM volunteer_applications WHERE status='pending')
             UNION ALL
@@ -1527,16 +1528,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Change Status"></button>
                 <ul class="dropdown-menu" style="min-width:100px;">
                   <?php if ($a['status'] !== 'published'): ?>
-                  <li><form method="POST" class="d-inline"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="published"><button class="dropdown-item small"><i class="fas fa-check text-success me-2"></i>Publish</button></form></li>
+                  <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="published"><button class="dropdown-item small"><i class="fas fa-check text-success me-2"></i>Publish</button></form></li>
                   <?php endif; ?>
                   <?php if ($a['status'] !== 'draft'): ?>
-                  <li><form method="POST" class="d-inline"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="draft"><button class="dropdown-item small"><i class="fas fa-pen text-warning me-2"></i>Draft</button></form></li>
+                  <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="draft"><button class="dropdown-item small"><i class="fas fa-pen text-warning me-2"></i>Draft</button></form></li>
                   <?php endif; ?>
                   <?php if ($a['status'] !== 'archived'): ?>
-                  <li><form method="POST" class="d-inline"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="archived"><button class="dropdown-item small"><i class="fas fa-archive text-secondary me-2"></i>Archive</button></form></li>
+                  <li><form method="POST" class="d-inline"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="dg_news_action" value="toggle_status"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><input type="hidden" name="dg_news_status" value="archived"><button class="dropdown-item small"><i class="fas fa-archive text-secondary me-2"></i>Archive</button></form></li>
                   <?php endif; ?>
                   <li><hr class="dropdown-divider my-1"></li>
-                  <li><form method="POST" class="d-inline" onsubmit="return confirm('Delete this news article?')"><input type="hidden" name="dg_news_action" value="delete"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><button class="dropdown-item small text-danger"><i class="fas fa-trash me-2"></i>Delete</button></form></li>
+                  <li><form method="POST" class="d-inline" onsubmit="return confirm('Delete this news article?')"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>"><input type="hidden" name="dg_news_action" value="delete"><input type="hidden" name="dg_news_id" value="<?= $a['id'] ?>"><button class="dropdown-item small text-danger"><i class="fas fa-trash me-2"></i>Delete</button></form></li>
                 </ul>
               </div>
             </td>
@@ -1572,7 +1573,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ?>
     <div class="table-responsive">
       <table class="table table-sm table-hover">
-        <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Department</th><th>Role</th><th>Status</th><th>Last Login</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Department</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
         <tbody>
           <?php foreach ($allStaff as $s): ?>
           <tr>
@@ -1583,6 +1584,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><?= htmlspecialchars($s['role_name'] ?? '') ?></td>
             <td><span class="badge bg-<?= ($s['status'] ?? '') === 'Active' ? 'success' : 'secondary' ?>"><?= $s['status'] ?? '' ?></span></td>
             <td><small><?= htmlspecialchars($s['last_login'] ?? 'Never') ?></small></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick='openEditStaffModal(<?= json_encode($s) ?>)'><i class="fas fa-edit"></i></button>
+            </td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -1605,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ?>
     <div class="table-responsive">
       <table class="table table-sm table-hover">
-        <thead><tr><th>Role</th><th>Level</th><th>Staff Count</th><th>Dashboard</th><th>Hierarchy</th><th>Executive</th></tr></thead>
+        <thead><tr><th>Role</th><th>Level</th><th>Staff Count</th><th>Dashboard</th><th>Hierarchy</th><th>Executive</th><th>Actions</th></tr></thead>
         <tbody>
           <?php foreach ($allRoles as $r): ?>
           <tr>
@@ -1615,6 +1619,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><small><?= htmlspecialchars($r['dashboard_path'] ?? '-') ?></small></td>
             <td><?= (int)($r['role_level'] ?? 99) ?></td>
             <td><?= ($r['is_executive'] ?? 0) ? '✅' : '' ?></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="alert('Role editing coming soon')"><i class="fas fa-edit"></i></button>
+            </td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -1634,56 +1641,109 @@ document.addEventListener('DOMContentLoaded', function() {
       $r = $conn->query("SELECT id,full_name,email,position,department FROM staff WHERE status='Active' ORDER BY full_name");
       if ($r) while ($row = $r->fetch_assoc()) $staffForMsg[] = $row;
     }
+    $myInbox = [];
+    $mySent = [];
+    if ($conn) {
+      $ri = $conn->prepare("SELECT * FROM staff_inbox WHERE recipient_id = ? AND is_deleted_recipient = 0 ORDER BY created_at DESC LIMIT 30");
+      if ($ri) { $ri->bind_param("i", $user_id); $ri->execute(); $res = $ri->get_result(); while ($row = $res->fetch_assoc()) $myInbox[] = $row; $ri->close(); }
+      $rs = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT 30");
+      if ($rs) { $rs->bind_param("i", $user_id); $rs->execute(); $res = $rs->get_result(); while ($row = $res->fetch_assoc()) $mySent[] = $row; $rs->close(); }
+    }
+    $myUnread = 0;
+    if ($conn) {
+      $ru = $conn->prepare("SELECT COUNT(*) as c FROM staff_inbox WHERE recipient_id = ? AND is_read = 0 AND is_deleted_recipient = 0");
+      if ($ru) { $ru->bind_param("i", $user_id); $ru->execute(); $myUnread = (int)$ru->get_result()->fetch_assoc()['c']; $ru->close(); }
+    }
     ?>
+    <style>
+    .msg-tab-bar{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:14px;}
+    .msg-tab-btn{flex:1;padding:8px 14px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;background:#f8fafc;color:#64748b;border:none;transition:all .2s;}
+    .msg-tab-btn.active{background:#1e3a8a;color:#fff;}
+    .msg-tab-btn:hover:not(.active){background:#e2e8f0;}
+    .msg-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .15s;border-radius:6px;margin-bottom:2px;}
+    .msg-row:hover{background:#f1f5f9;}
+    .msg-row.unread{background:#eff6ff;border-left:3px solid #3b82f6;}
+    .msg-row .msg-subj{font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .msg-row .msg-prev{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .msg-row .msg-time{font-size:10px;color:#94a3b8;flex-shrink:0;text-align:right;}
+    .msg-empty{text-align:center;padding:30px;color:#94a3b8;}
+    .msg-empty i{font-size:32px;margin-bottom:8px;display:block;}
+    </style>
     <div class="row g-3">
-      <div class="col-md-5">
-        <div class="card">
-          <div class="card-header bg-dark text-white py-2"><i class="fas fa-search me-1"></i>Staff Directory</div>
-          <div class="card-body p-2" style="max-height:400px;overflow-y:auto">
-            <input type="text" class="form-control form-control-sm mb-2" id="staffMsgSearch" placeholder="Search staff..." onkeyup="filterStaffMsg(this.value)">
-            <div id="staffMsgList">
-              <?php foreach ($staffForMsg as $sf): ?>
-              <div class="staff-msg-item d-flex align-items-center gap-2 p-2 border-bottom" style="cursor:pointer" onclick="openStaffMsg(<?= $sf['id'] ?>,'<?= htmlspecialchars($sf['full_name'],ENT_QUOTES) ?>','<?= htmlspecialchars($sf['email'],ENT_QUOTES) ?>')" data-name="<?= htmlspecialchars(strtolower($sf['full_name'])) ?>">
-                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:32px;height:32px;font-size:12px;font-weight:600;flex-shrink:0"><?= strtoupper(substr($sf['full_name'],0,1)) ?></div>
-                <div class="small" style="line-height:1.2">
-                  <strong style="font-size:12px"><?= htmlspecialchars($sf['full_name']) ?></strong><br>
-                  <span class="text-muted" style="font-size:10px"><?= htmlspecialchars($sf['position'] ?? '') ?></span>
-                </div>
-              </div>
-              <?php endforeach; ?>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-7">
-        <div class="card">
-          <div class="card-header bg-primary text-white py-2" id="msgHeader"><i class="fas fa-envelope me-1"></i>New Message</div>
-          <div class="card-body">
+      <div class="col-md-4">
+        <div class="card" style="border-radius:10px;border:1px solid #e2e8f0;">
+          <div class="card-header bg-dark text-white py-2" style="border-radius:10px 10px 0 0;"><i class="fas fa-pen me-1"></i>Compose</div>
+          <div class="card-body" style="padding:12px;">
             <form id="individualMsgForm" onsubmit="return sendIndividualMsg(event)">
               <input type="hidden" name="recipient_id" id="msgRecipientId" value="">
               <div class="mb-2">
-                <label class="form-label small">To:</label>
-                <input type="text" class="form-control form-control-sm" id="msgRecipientName" readonly placeholder="Select a staff member from the directory">
+                <label class="form-label small fw-semibold">To:</label>
+                <select class="form-select form-select-sm" id="msgRecipientSelect" onchange="document.getElementById('msgRecipientId').value=this.value;" required>
+                  <option value="">Select staff...</option>
+                  <?php foreach ($staffForMsg as $sf): ?>
+                  <option value="<?= $sf['id'] ?>"><?= htmlspecialchars($sf['full_name']) ?> (<?= htmlspecialchars($sf['position'] ?? '') ?>)</option>
+                  <?php endforeach; ?>
+                </select>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Subject:</label>
+                <label class="form-label small fw-semibold">Subject:</label>
                 <input type="text" class="form-control form-control-sm" name="subject" id="msgSubject" required>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Message:</label>
-                <textarea class="form-control" name="message" id="msgBody" rows="4" required></textarea>
+                <label class="form-label small fw-semibold">Message:</label>
+                <textarea class="form-control form-control-sm" name="message" id="msgBody" rows="3" required></textarea>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Priority:</label>
+                <label class="form-label small fw-semibold">Priority:</label>
                 <select name="priority" class="form-select form-select-sm">
                   <option value="Normal">Normal</option>
                   <option value="High">High</option>
                   <option value="Urgent">Urgent</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-paper-plane me-1"></i>Send Message</button>
+              <button type="submit" class="btn btn-sm w-100" style="background:#2563eb;color:#fff;border:none;border-radius:8px;"><i class="fas fa-paper-plane me-1"></i>Send Message</button>
               <div id="msgResult" class="mt-2 small"></div>
             </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card" style="border-radius:10px;border:1px solid #e2e8f0;">
+          <div class="card-body" style="padding:0;">
+            <div class="msg-tab-bar" style="margin:0;border:none;border-radius:0;">
+              <button class="msg-tab-btn active" onclick="showMessagingTab('inbox',this)">Inbox <?php if($myUnread>0):?><span class="badge bg-danger rounded-pill" style="font-size:10px;"><?= $myUnread ?></span><?php endif;?></button>
+              <button class="msg-tab-btn" onclick="showMessagingTab('sent',this)">Sent</button>
+            </div>
+            <div id="messagingTabContent" style="max-height:400px;overflow-y:auto;padding:4px 8px;">
+              <div id="msgTabInbox">
+                <?php if (empty($myInbox)): ?>
+                <div class="msg-empty"><i class="fas fa-inbox"></i><p>No messages yet.</p></div>
+                <?php else: foreach ($myInbox as $m): ?>
+                <div class="msg-row <?= !$m['is_read'] ? 'unread' : '' ?>" onclick="markMsgRead(<?= $m['id'] ?>)">
+                  <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;"><?= strtoupper(substr($m['sender_name'],0,1)) ?></div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="msg-subj"><?= htmlspecialchars($m['subject']) ?></div>
+                    <div class="msg-prev">From: <?= htmlspecialchars($m['sender_name']) ?> &mdash; <?= htmlspecialchars(mb_substr($m['message'],0,50)) ?></div>
+                  </div>
+                  <div class="msg-time"><?= date('d M', strtotime($m['created_at'])) ?><br><?= date('H:i', strtotime($m['created_at'])) ?></div>
+                </div>
+                <?php endforeach; endif; ?>
+              </div>
+              <div id="msgTabSent" style="display:none;">
+                <?php if (empty($mySent)): ?>
+                <div class="msg-empty"><i class="fas fa-paper-plane"></i><p>No sent messages.</p></div>
+                <?php else: foreach ($mySent as $m): ?>
+                <div class="msg-row">
+                  <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;"><?= strtoupper(substr($m['recipient_name'],0,1)) ?></div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="msg-subj"><?= htmlspecialchars($m['subject']) ?></div>
+                    <div class="msg-prev">To: <?= htmlspecialchars($m['recipient_name']) ?> &mdash; <?= htmlspecialchars(mb_substr($m['message'],0,50)) ?></div>
+                  </div>
+                  <div class="msg-time"><?= date('d M', strtotime($m['created_at'])) ?><br><?= date('H:i', strtotime($m['created_at'])) ?></div>
+                </div>
+                <?php endforeach; endif; ?>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1696,21 +1756,28 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="broadcast" class="content-section dashboard-section active" data-section="broadcast">
   <div class="section-card">
     <?php dgToolbar('Broadcast Messages', 'fa-bullhorn'); ?>
+    <?php
+    $allStaffList = [];
+    if ($conn) {
+      $ra = $conn->query("SELECT id, full_name, position, department FROM staff WHERE status='Active' ORDER BY full_name");
+      if ($ra) while ($row = $ra->fetch_assoc()) $allStaffList[] = $row;
+    }
+    ?>
     <div class="row g-3">
       <div class="col-md-7">
-        <div class="card">
-          <div class="card-header bg-warning text-dark py-2"><i class="fas fa-bullhorn me-1"></i>Send Broadcast</div>
+        <div class="card" style="border-radius:10px;border:1px solid #e2e8f0;">
+          <div class="card-header text-white py-2" style="background:linear-gradient(135deg,#d97706,#b45309);border-radius:10px 10px 0 0;"><i class="fas fa-bullhorn me-1"></i>Send Broadcast</div>
           <div class="card-body">
             <form id="broadcastForm" onsubmit="return sendBroadcast(event)">
               <div class="mb-2">
-                <label class="form-label small">Audience:</label>
+                <label class="form-label small fw-semibold">Audience:</label>
                 <select name="broadcast_audience" id="broadcastAudience" class="form-select form-select-sm" onchange="toggleBroadcastDept(this.value)">
                   <option value="all_staff">All Staff</option>
                   <option value="department">Specific Department</option>
                 </select>
               </div>
               <div class="mb-2" id="broadcastDeptGroup" style="display:none">
-                <label class="form-label small">Department:</label>
+                <label class="form-label small fw-semibold">Department:</label>
                 <select name="broadcast_department" class="form-select form-select-sm">
                   <?php foreach ($dept_list as $d): ?>
                   <option value="<?= htmlspecialchars($d['department_code']) ?>"><?= htmlspecialchars($d['department_name']) ?></option>
@@ -1718,43 +1785,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Subject:</label>
+                <label class="form-label small fw-semibold">Subject:</label>
                 <input type="text" class="form-control form-control-sm" name="subject" id="bcSubject" required>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Message:</label>
-                <textarea class="form-control" name="message" id="bcBody" rows="5" required></textarea>
+                <label class="form-label small fw-semibold">Message:</label>
+                <textarea class="form-control form-control-sm" name="message" id="bcBody" rows="5" required></textarea>
               </div>
               <div class="mb-2">
-                <label class="form-label small">Priority:</label>
+                <label class="form-label small fw-semibold">Priority:</label>
                 <select name="priority" class="form-select form-select-sm">
                   <option value="Normal">Normal</option>
                   <option value="High">High</option>
                   <option value="Urgent">Urgent</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-bullhorn me-1"></i>Broadcast</button>
+              <button type="submit" class="btn btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:8px;"><i class="fas fa-bullhorn me-1"></i>Broadcast</button>
               <div id="bcResult" class="mt-2 small"></div>
             </form>
           </div>
         </div>
       </div>
       <div class="col-md-5">
-        <div class="card">
-          <div class="card-header bg-dark text-white py-2"><i class="fas fa-history me-1"></i>Recent Broadcasts</div>
+        <div class="card" style="border-radius:10px;border:1px solid #e2e8f0;">
+          <div class="card-header bg-dark text-white py-2" style="border-radius:10px 10px 0 0;"><i class="fas fa-history me-1"></i>Recent Broadcasts</div>
           <div class="card-body p-2" style="max-height:300px;overflow-y:auto">
             <?php
             $broadcasts = [];
             if ($conn) {
-              $r = $conn->query("SELECT * FROM staff_communications WHERE recipient_type IN ('department','all_staff') ORDER BY created_at DESC LIMIT 10");
-              if ($r) while ($row = $r->fetch_assoc()) $broadcasts[] = $row;
+              $rb = $conn->prepare("SELECT * FROM staff_inbox WHERE sender_id = ? AND recipient_id = 0 AND is_deleted_sender = 0 ORDER BY created_at DESC LIMIT 10");
+              if ($rb) { $rb->bind_param("i", $user_id); $rb->execute(); $res = $rb->get_result(); while ($row = $res->fetch_assoc()) $broadcasts[] = $row; $rb->close(); }
             }
             if (empty($broadcasts)): ?>
             <p class="text-muted small text-center py-3">No broadcasts sent yet.</p>
             <?php else: foreach ($broadcasts as $b): ?>
             <div class="border-bottom p-2 small">
               <strong><?= htmlspecialchars($b['subject'] ?? '') ?></strong><br>
-              <span class="text-muted" style="font-size:10px">To: <?= htmlspecialchars($b['recipient_name'] ?? $b['recipient_type']) ?> &middot; <?= $b['created_at'] ?? '' ?></span>
+              <span class="text-muted" style="font-size:10px">Priority: <?= htmlspecialchars($b['priority'] ?? 'Normal') ?> &middot; <?= date('d M Y H:i', strtotime($b['created_at'])) ?></span>
             </div>
             <?php endforeach; endif; ?>
           </div>
@@ -2046,6 +2113,7 @@ endswitch; ?>
 <div class="modal fade modern-modal" id="newsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <form method="POST" enctype="multipart/form-data" class="modal-content">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken() ?? '') ?>">
       <input type="hidden" name="dg_news_action" id="dgNewsAction" value="create">
       <input type="hidden" name="dg_news_id" id="dgNewsId" value="0">
       <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;">
@@ -2166,44 +2234,44 @@ function viewFullProfile(id){ showStudentProfileModal(id); }
 function editStudent(id){ window.location.href='../student_accounts_management.php?action=edit&student_id='+id; }
 function viewAcademic(id){ window.location.href='../academic_records_management.php?student_id='+id; }
 function viewFees(id){ window.location.href='../dashboards/school-bursar.php?section=record_payment&student_id='+id; }
-function sendMessage(id){ alert('Messaging module for student ID: '+id); }
+function sendMessage(id){
+  var name = '';
+  try { var s = (window.allStudents||[]).find(function(x){return x.id==id;}); if(s) name = s.first_name+' '+s.last_name; } catch(e){}
+  // Open messaging section with pre-filled recipient info
+  switchToSection('messaging');
+}
 function printProfile(){ window.print(); }
 
 // ═══ STAFF MESSAGING ═══
-function filterStaffMsg(q){
-  q = q.toLowerCase().trim();
-  document.querySelectorAll('.staff-msg-item').forEach(function(el){
-    var name = (el.dataset.name || '').toLowerCase();
-    el.style.display = !q || name.indexOf(q) !== -1 ? '' : 'none';
-  });
+function showMessagingTab(tab, btn) {
+  document.querySelectorAll('.msg-tab-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('msgTabInbox').style.display = tab === 'inbox' ? '' : 'none';
+  document.getElementById('msgTabSent').style.display = tab === 'sent' ? '' : 'none';
 }
-function openStaffMsg(id, name, email){
-  document.getElementById('msgRecipientId').value = id;
-  document.getElementById('msgRecipientName').value = name + ' (' + email + ')';
-  document.getElementById('msgHeader').innerHTML = '<i class="fas fa-envelope me-1"></i>Message to: ' + name;
-  document.getElementById('msgResult').innerHTML = '';
+function markMsgRead(id) {
+  var fd = new FormData();
+  fd.append('action', 'read');
+  fd.append('message_id', id);
+  fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd });
+  var el = document.querySelector('.msg-row[onclick*="' + id + '"]');
+  if (el) el.classList.remove('unread');
 }
 function sendIndividualMsg(e){
   e.preventDefault();
-  var rid = document.getElementById('msgRecipientId').value;
+  var rid = document.getElementById('msgRecipientSelect').value;
   if (!rid){ document.getElementById('msgResult').innerHTML = '<span class="text-danger">Please select a recipient</span>'; return false; }
   var data = new FormData(document.getElementById('individualMsgForm'));
-  data.append('action', 'send_communication');
+  data.append('action', 'send');
   data.append('sender_id', <?= $user_id ?>);
-  data.append('sender_email', '<?= htmlspecialchars($user['email'] ?? '', ENT_QUOTES) ?>');
-  data.append('sender_name', '<?= htmlspecialchars($user_name, ENT_QUOTES) ?>');
-  data.append('recipient_type', 'department');
   data.append('recipient_id', rid);
   var result = document.getElementById('msgResult');
   if (!result) return false;
   result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Sending...</span>';
-  fetch('../includes/ajax_staff_communication.php', { method:'POST', body:data })
-    .then(function(r){
-      if (!r.ok) { return r.json().then(function(e){ throw e; }).catch(function(){ throw new Error('HTTP ' + r.status); }); }
-      return r.json();
-    })
+  fetch('../includes/ajax_messaging.php', { method:'POST', body:data })
+    .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.success){ result.innerHTML = '<span class="text-success">Message sent successfully.</span>'; document.getElementById('msgSubject').value=''; document.getElementById('msgBody').value=''; }
+      if(d.success){ result.innerHTML = '<span class="text-success">Message sent successfully.</span>'; document.getElementById('msgSubject').value=''; document.getElementById('msgBody').value=''; setTimeout(function(){location.reload();},1200); }
       else { result.innerHTML = '<span class="text-danger">Error: ' + (d.error||'Unknown') + '</span>'; }
     })
     .catch(function(e){
@@ -2215,31 +2283,54 @@ function sendIndividualMsg(e){
 function toggleBroadcastDept(val){ document.getElementById('broadcastDeptGroup').style.display = val === 'department' ? 'block' : 'none'; }
 function sendBroadcast(e){
   e.preventDefault();
-  var fd = new FormData(document.getElementById('broadcastForm'));
-  fd.append('action', 'send_communication');
-  fd.append('sender_id', <?= $user_id ?>);
-  fd.append('sender_email', '<?= htmlspecialchars($user['email'] ?? '', ENT_QUOTES) ?>');
-  fd.append('sender_name', '<?= htmlspecialchars($user_name, ENT_QUOTES) ?>');
+  var subject = document.getElementById('bcSubject').value.trim();
+  var body = document.getElementById('bcBody').value.trim();
   var audience = document.getElementById('broadcastAudience').value;
-  fd.append('recipient_type', audience === 'all_staff' ? 'all_staff' : 'department');
-  if (audience !== 'all_staff') fd.append('recipient_id', fd.get('broadcast_department'));
-  else fd.append('recipient_id', '');
+  var priority = document.querySelector('#broadcastForm select[name="priority"]').value;
+  var dept = document.querySelector('#broadcastForm select[name="broadcast_department"]').value;
   var result = document.getElementById('bcResult');
   if (!result) return false;
-  result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Sending broadcast...</span>';
-  fetch('../includes/ajax_staff_communication.php', { method:'POST', body:fd })
-    .then(function(r){
-      if (!r.ok) { return r.json().then(function(e){ throw e; }).catch(function(){ throw new Error('HTTP ' + r.status); }); }
-      return r.json();
-    })
-    .then(function(d){
-      if(d.success){ result.innerHTML = '<span class="text-success">Broadcast sent to ' + (d.recipients_count||'all') + ' recipient(s).</span>'; document.getElementById('bcSubject').value=''; document.getElementById('bcBody').value=''; }
-      else { result.innerHTML = '<span class="text-danger">Error: ' + (d.error||'Unknown') + '</span>'; }
-    })
-    .catch(function(e){
-      console.warn('[sendBroadcast]', e);
-      if (result) result.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
-    });
+
+  if (!subject || !body) { result.innerHTML = '<span class="text-danger">Subject and message required.</span>'; return false; }
+
+  result.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Broadcasting...</span>';
+
+  var allStaffIds = <?= json_encode(array_column($allStaffList, 'id')) ?>;
+  var deptStaffMap = {};
+  <?php
+  $deptStaffMap = [];
+  foreach ($allStaffList as $s) { $deptStaffMap[$s['department']][] = $s['id']; }
+  ?>
+  deptStaffMap = <?= json_encode($deptStaffMap) ?>;
+
+  var targetIds = audience === 'all_staff' ? allStaffIds : (deptStaffMap[dept] || []);
+  var sent = 0;
+  var promises = [];
+
+  targetIds.forEach(function(sid) {
+    var fd = new FormData();
+    fd.append('action', 'send');
+    fd.append('sender_id', <?= $user_id ?>);
+    fd.append('recipient_id', sid);
+    fd.append('subject', subject);
+    fd.append('message', body);
+    fd.append('priority', priority);
+    promises.push(
+      fetch('../includes/ajax_messaging.php', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.success) sent++; })
+        .catch(function() {})
+    );
+  });
+
+  Promise.all(promises).then(function() {
+    result.innerHTML = '<span class="text-success">Broadcast sent to ' + sent + ' recipient(s).</span>';
+    document.getElementById('bcSubject').value = '';
+    document.getElementById('bcBody').value = '';
+  }).catch(function() {
+    result.innerHTML = '<span class="text-danger">Some messages failed to send.</span>';
+  });
+
   return false;
 }
 </script>

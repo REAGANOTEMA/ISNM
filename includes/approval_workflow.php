@@ -56,8 +56,19 @@ function createApprovalRequest($workflowId, $title, $description, $requesterId, 
         $stmt->bind_param('issssisssisis', $workflowId, $requestNumber, $title, $description, $priority, $requesterId, $requesterName, $requesterRole, $firstStage['id'], $order, $referenceType, $referenceId, $referenceUrl);
         $r = $stmt->execute();
         $stmt->close();
-        if ($r && function_exists('recordAuditTrail')) {
-            recordAuditTrail($requesterId, 'CREATE', 'Approval', 'Approval request created: ' . $title, 'approval_requests', null, $requestNumber, null, ['workflow_id' => $workflowId, 'title' => $title, 'priority' => $priority], $conn);
+        if ($r) {
+            $newId = $conn->insert_id;
+            if ($newId) {
+                $actStmt = $conn->prepare("INSERT INTO igangaschoolofl_staffs_db.approval_actions (request_id, stage_id, action_by, action_type, comments, decision, previous_stage_order, created_at) VALUES (?, ?, ?, 'created', 'Request created', 'Pending', 0, NOW())");
+                if ($actStmt) {
+                    $actStmt->bind_param('iii', $newId, $firstStage['id'], $requesterId);
+                    $actStmt->execute();
+                    $actStmt->close();
+                }
+            }
+            if (function_exists('recordAuditTrail')) {
+                recordAuditTrail($requesterId, 'CREATE', 'Approval', 'Approval request created: ' . $title, 'approval_requests', null, $requestNumber, null, ['workflow_id' => $workflowId, 'title' => $title, 'priority' => $priority], $conn);
+            }
         }
         return $r;
     } catch (Exception $e) {
@@ -106,6 +117,7 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
             $stage = $stageStmt->get_result()->fetch_assoc();
             $stageStmt->close();
             if ($stage && !empty($stage['assigned_role_name'])) {
+                // Stage has a specific role assigned — only that role can act
                 $roleStmt = $conn->prepare("SELECT sr.role_name, sr.role_level FROM staff s JOIN staff_roles sr ON s.role_id = sr.id WHERE s.id = ?");
                 if ($roleStmt) {
                     $roleStmt->bind_param('i', $staffId);
@@ -116,6 +128,12 @@ function processApprovalAction($requestId, $staffId, $actionType, $comments = nu
                         error_log("processApprovalAction: User $staffId role '{$userRole['role_name']}' cannot act on stage requiring '{$stage['assigned_role_name']}'");
                         return false;
                     }
+                }
+            } elseif ($stage && empty($stage['assigned_role_name']) && $actionType === 'approve') {
+                // No role assigned on stage — only Director General (role_level=1) may approve
+                if ($userLevel > 1) {
+                    error_log("processApprovalAction: No assigned role on stage, only Director General (level=1) can approve. User $staffId has level $userLevel");
+                    return false;
                 }
             }
             // Only Director General (role_level=1) can approve final stage

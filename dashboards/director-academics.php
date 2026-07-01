@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 require_once __DIR__ . '/../includes/institutional_framework.php';
 require_once __DIR__ . '/../includes/approval_workflow.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 
 $ctx = bootstrapStaffDashboard(['director academics', 'director general', 'ceo', 'principal']);
 $conn = $ctx['staff'];
@@ -361,6 +362,7 @@ $navSections = [
   ['id'=>'reports','icon'=>'fa-chart-bar','label'=>'Reports'],
   ['id'=>'duties','icon'=>'fa-tasks','label'=>'Duties'],
   ['id'=>'activity','icon'=>'fa-history','label'=>'Activity'],
+  ['id'=>'submissions','icon'=>'fa-globe','label'=>'Website Apps'],
 ];
 function navItem($id,$icon,$label,$section){$act=$section===$id?'active':'';return "<a href=\"?section=$id\" class=\"acad-nav-item $act\" data-section=\"$id\"><i class=\"fas $icon\"></i><span>$label</span></a>";}
 $acadIcon = 'fa-graduation-cap';
@@ -389,7 +391,26 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 /* ── Top Bar ── */
 
-@media (max-width: 768px) {  }
+@media (max-width: 768px) {
+    .acad-content { margin-left: 0; padding: 12px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-card { padding: 10px 10px 8px; }
+    .kpi-value { font-size: 15px; }
+    .section-card { padding: 12px 14px; }
+    .section-title { font-size: 13px; }
+    .acad-table { font-size: 11px; }
+    .acad-table thead th { font-size: 9px; padding: 6px 8px; }
+    .acad-table td { padding: 6px 8px; }
+    .d-flex.justify-content-between { flex-wrap: wrap; gap: 6px; }
+    .modal-dialog { margin: 8px !important; }
+}
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .kpi-card { padding: 8px; }
+    .kpi-value { font-size: 13px; }
+    .kpi-label { font-size: 9px; }
+    .section-card { padding: 10px 12px; }
+}
 
 
 
@@ -1084,6 +1105,25 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                     <?php endforeach; if(empty($recent_activities)): ?>
                     <div class="empty-state"><i class="fas fa-history"></i><p>No recent activities.</p></div>
                     <?php endif; ?>
+                </div>
+            </section>
+
+            <!-- ═══════════ WEBSITE SUBMISSIONS ═══════════ -->
+            <section id="submissions-section" class="content-section <?= $section==='submissions'?'active':'' ?> dashboard-section" data-section="submissions">
+                <div class="section-card">
+                    <div class="section-header">
+                        <div>
+                            <h3 class="section-title"><i class="fas fa-globe" style="color:#2563eb;"></i>Website Student Applications</h3>
+                            <p class="section-subtitle">Student applications submitted through the website</p>
+                        </div>
+                    </div>
+                    <?php
+                    if ($website_conn) {
+                        renderWebsiteSubmissionsWidget($website_conn, ['applications'], 20);
+                    } else {
+                        echo '<div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2" style="color:#94a3b8;"></i><p>Website database unavailable.</p></div>';
+                    }
+                    ?>
                 </div>
             </section>
 
