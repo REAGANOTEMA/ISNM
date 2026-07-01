@@ -2,6 +2,7 @@
 /**
  * ISNM DYNAMIC SIDEBAR — DB-driven, role-filtered
  * Uses the same HTML structure as the static sidebar for CSS compatibility.
+ * Routes come from system_modules.route (set by fix_module_routes.sql)
  */
 if (!function_exists('renderDynamicSidebar')) {
 
@@ -40,96 +41,8 @@ function renderDynamicSidebar(): void {
     $profileImage = $GLOBALS['profileImage'] ?? '../images/username.png';
     $profileClick = $GLOBALS['profileClickHandler'] ?? "if(typeof openProfileModal==='function')openProfileModal();";
     $currentPage = basename($_SERVER['PHP_SELF']);
-    $currentDir  = dirname($_SERVER['PHP_SELF']);
     $activePage = $_GET['page'] ?? 'home';
 
-    // Map module names to standalone dashboard files (hyphenated names)
-    $moduleToDashboard = [
-        'academic_records' => 'academic-registrar.php',
-        'academic_calendar' => 'academic-calendar.php',
-        'academic_reports' => 'director-general.php',
-        'academic_approvals' => 'director-general.php',
-        'exams_results' => 'exams-results.php',
-        'course_management' => 'curriculum-management.php',
-        'timetable' => 'timetable.php',
-        'grading_system' => 'grade-scales.php',
-        'assessment_scores' => 'exams-results.php',
-        'fee_management' => 'bursar-billing.php',
-        'payments' => 'bursar-payments.php',
-        'budget_management' => 'budget-management.php',
-        'payroll' => 'bursar-payroll.php',
-        'general_ledger' => 'general-ledger.php',
-        'tax_management' => 'bursar-tax.php',
-        'bank_reconciliation' => 'bank-reconciliation.php',
-        'financial_reports' => 'financial-reports.php',
-        'scholarships_mgmt' => 'scholarships-sponsorships.php',
-        'bursar_allowances' => 'bursar-payroll.php',
-        'bursar_assets' => 'storekeeper.php',
-        'staff_management' => 'staff-directory.php',
-        'leave_management' => 'leave-management.php',
-        'attendance' => 'staff-attendance.php',
-        'recruitment' => 'recruitment.php',
-        'training_cpd' => 'training-cpd.php',
-        'appraisals' => 'performance-appraisal.php',
-        'disciplinary' => 'staff-disciplinary.php',
-        'resignations' => 'resignations.php',
-        'hr_reports' => 'hr-manager.php',
-        'hr_settings' => 'hr-manager.php',
-        'professional_licenses' => 'professional-licenses.php',
-        'applicant_management' => 'director-admissions.php',
-        'intake_planning' => 'intake-planning.php',
-        'admission_letters' => 'admission-letters.php',
-        'enrollment' => 'director-admissions.php',
-        'it_infrastructure' => 'director-ict.php',
-        'cybersecurity' => 'cybersecurity.php',
-        'ict_support' => 'it-support-tickets.php',
-        'ict_policy' => 'ict-policy.php',
-        'system_logs' => 'system-admin.php',
-        'digital_learning' => 'digital-learning.php',
-        'library_catalog' => 'school-librarian.php',
-        'library_borrowing' => 'school-librarian.php',
-        'library_resources' => 'school-librarian.php',
-        'library_fines' => 'school-librarian.php',
-        'library_management' => 'school-librarian.php',
-        'hostel_management' => 'hostel-management.php',
-        'meal_tracking' => 'meal-accommodation.php',
-        'clinical_placements' => 'clinical-placement.php',
-        'nursing_training' => 'head-nursing.php',
-        'midwifery' => 'head-midwifery.php',
-        'sickbay' => 'sickbay.php',
-        'clinical_assessments' => 'clinical-placement.php',
-        'incidents' => 'head-nursing.php',
-        'vehicle_management' => 'drivers.php',
-        'access_control' => 'security.php',
-        'visitor_management' => 'visitor-access.php',
-        'security_patrols' => 'security.php',
-        'emergency' => 'security.php',
-        'notifications' => 'notifications.php',
-        'messaging' => 'messaging.php',
-        'announcements' => 'student-announcements.php',
-        'document_center' => 'document_management.php',
-        'certificates' => 'print_certificate.php',
-        'transcripts' => 'print_transcript.php',
-        'quality_assurance' => 'quality-assurance.php',
-        'penalty_config' => 'penalty-configurations.php',
-        'research_projects' => 'research-projects.php',
-        'partnerships' => 'partnerships.php',
-        'graduation_mgmt' => 'graduation-management.php',
-        'transcript_requests' => 'print_transcript.php',
-        'procurement' => 'procurement-oversight.php',
-        'calendar_events' => 'academic-calendar.php',
-        'system_settings' => 'system-admin.php',
-        'user_management' => 'system-admin.php',
-        'audit_trail' => 'audit-management.php',
-        'backup_management' => 'system-admin.php',
-        'recycle_bin' => 'recycle_bin.php',
-        'guild_management' => 'guild-president.php',
-        'sports_events' => 'guild-president.php',
-        'counseling' => 'counseling-welfare.php',
-        'volunteer-applications' => 'volunteer-applications.php',
-    ];
-
-    // Group colors matching the static sidebar
     $groupColors = [
         'leadership' => '#3b82f6', 'academic' => '#3b82f6', 'finance' => '#10b981',
         'hr' => '#8b5cf6', 'student_services' => '#f59e0b', 'operations' => '#6366f1',
@@ -178,10 +91,8 @@ function renderDynamicSidebar(): void {
                     <div class="menu-children-inner">
                         <?php foreach ($dept['modules'] as $mod):
                             $isActive = ($mod['name'] === $activePage);
-                            $dashFile = $moduleToDashboard[$mod['name']] ?? '';
-                            if ($dashFile && $dashFile !== $currentPage) {
-                                $route = '../dashboards/' . $dashFile;
-                            } else {
+                            $route = $mod['route'] ?? '';
+                            if (empty($route)) {
                                 $route = $currentPage . '?page=' . urlencode($mod['name']);
                             }
                         ?>
@@ -206,16 +117,18 @@ function renderDynamicSidebar(): void {
 
     <script>
     (function() {
-        // Collapsible groups
+        // ── Collapsible Groups (accordion) ──
         document.querySelectorAll('.menu-group-header[data-target]').forEach(function(header) {
-            header.addEventListener('click', function() {
+            header.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 var group = this.closest('.menu-group');
                 if (!group) return;
                 var targetId = this.getAttribute('data-target');
                 var children = document.getElementById('childGroup-' + targetId);
                 if (!children) return;
                 var isExpanded = group.classList.contains('expanded');
-                // Accordion: close others
+                // Accordion: collapse all other groups
                 document.querySelectorAll('.menu-group.expanded').forEach(function(g) {
                     if (g !== group && g.closest('.sidebar-menu') === group.closest('.sidebar-menu')) {
                         g.classList.remove('expanded');
@@ -233,7 +146,7 @@ function renderDynamicSidebar(): void {
             });
         });
 
-        // Sidebar collapse toggle
+        // ── Sidebar collapse toggle (desktop) ──
         var collapseBtn = document.getElementById('sidebarCollapse');
         if (collapseBtn) {
             collapseBtn.addEventListener('click', function() {
@@ -241,7 +154,7 @@ function renderDynamicSidebar(): void {
             });
         }
 
-        // Auto-expand active group
+        // ── Auto-expand active group on page load ──
         var activeLink = document.querySelector('.child-link.active');
         if (activeLink) {
             var group = activeLink.closest('.menu-group');
@@ -252,13 +165,50 @@ function renderDynamicSidebar(): void {
             }
         }
 
-        // Mobile: close sidebar on outside click
+        // ── Mark active section from URL params on page load ──
+        (function initPage() {
+            var params = new URLSearchParams(window.location.search);
+            var page = params.get('page') || 'home';
+            document.querySelectorAll('.child-link').forEach(function(link) {
+                link.classList.remove('active');
+                var href = link.getAttribute('href') || '';
+                if (href.indexOf('page=' + page) !== -1) {
+                    link.classList.add('active');
+                    // Expand parent group if not already
+                    var group = link.closest('.menu-group');
+                    if (group && !group.classList.contains('expanded')) {
+                        group.classList.add('expanded');
+                        var children = group.querySelector('.menu-children');
+                        if (children) children.style.maxHeight = children.scrollHeight + 'px';
+                    }
+                }
+            });
+        })();
+
+        // ── Close sidebar on link click (mobile) ──
+        document.querySelectorAll('.child-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    var sidebar = document.getElementById('isnmSidebar');
+                    if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+                }
+            });
+        });
+
+        // ── Close sidebar on outside click (mobile) ──
         document.addEventListener('click', function(e) {
             var sidebar = document.getElementById('isnmSidebar');
             if (!sidebar || window.innerWidth > 768) return;
             if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
             }
+        });
+
+        // ── Recalculate max-height after images/fonts load ──
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.menu-group.expanded .menu-children').forEach(function(c) {
+                c.style.maxHeight = c.scrollHeight + 'px';
+            });
         });
     })();
     </script>

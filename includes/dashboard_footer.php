@@ -2,7 +2,7 @@
 $rootPath = '..';
 
 // Cache-busting version — bump on every deploy
-$v = '2.1.0';
+$v = '2.2.1';
 
 // Profile Settings — universal staff profile image upload
 $profileSettingsFile = __DIR__ . '/profile_settings.php';
@@ -499,6 +499,55 @@ function openCommunicationModal() {
 .main-content {
   padding: 0 !important;
 }
+/* Director-specific content wrappers */
+.adm-content-wrap, .dg-content-wrap,
+.acad-content-wrap, .ict-content-wrap,
+.fin-content-wrap, .dash-content-wrap,
+.content-wrapper, .page-content {
+  padding: 20px !important;
+}
+/* Standardize all Bootstrap container padding */
+.container-fluid, .container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+/* Row gap normalization */
+.row.g-3, .row.g-2, .row.g-1 {
+  --bs-gutter-x: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+.row.g-3 > [class*="col-"],
+.row.g-2 > [class*="col-"],
+.row.g-1 > [class*="col-"] {
+  padding-left: calc(var(--bs-gutter-x) * 0.5);
+  padding-right: calc(var(--bs-gutter-x) * 0.5);
+}
+/* Scard (styled card) spacing normalization */
+.scard {
+  margin-bottom: 16px;
+}
+.scb {
+  padding: 16px !important;
+}
+.sch {
+  padding: 12px 16px !important;
+}
+/* Page header spacing */
+.page-header {
+  padding-bottom: 12px !important;
+  margin-bottom: 20px !important;
+}
+/* Filter group spacing */
+.filter-group {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+/* Remove duplicate margins/negative margins from rows */
+.row {
+  margin-left: 0;
+  margin-right: 0;
+}
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .content-section, .dashboard-section.content-section {
@@ -506,6 +555,15 @@ function openCommunicationModal() {
   }
   .card-body {
     padding: 14px !important;
+  }
+  .adm-content-wrap, .dg-content-wrap,
+  .acad-content-wrap, .ict-content-wrap,
+  .fin-content-wrap, .dash-content-wrap,
+  .content-wrapper, .page-content {
+    padding: 12px !important;
+  }
+  .scb {
+    padding: 12px !important;
   }
 }
 @media print {

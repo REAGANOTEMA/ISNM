@@ -17,6 +17,7 @@ $website_conn = $ctx['website'];
 $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $user_name = $user['full_name'] ?? 'ICT Director';
+$user_role = $_SESSION['role'] ?? '';
 $ict = null;
 try { $ict = getICTConnection(); } catch (Exception $e) {}
 $staff_db = defined('STAFF_DB_NAME') ? STAFF_DB_NAME : 'igangaschoolofl_staffs_db';
@@ -78,7 +79,9 @@ $maintenance  = ict_fetch($ict, "SELECT m.*, a.asset_number, a.asset_name FROM i
 $staff_accounts  = ict_fetch($staff_conn, "SELECT s.id, s.full_name, s.email, sr.role_name AS role, s.status, s.last_login FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 20");
 $staff_count     = ict_q($staff_conn, "SELECT COUNT(*) FROM staff");
 $student_count   = ict_q($students_conn, "SELECT COUNT(*) FROM students WHERE status='Active'");
-$active_sessions = ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'");
+$active_sessions   = ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE status='active'");
+
+require_once __DIR__ . '/../includes/news_management_widget.php';
 $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()");
 // ── Module Permissions ──
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");
@@ -92,7 +95,9 @@ if ($staff_conn) {
     } catch (Exception $e) {}
 }
 
-if (isset($_GET['page']) && !isset($_GET['tab'])) $_GET['tab'] = $_GET['page'];
+$ictPageMap = ['home'=>'dashboard','overview'=>'overview','analytics'=>'dashboard','approvals'=>'approvals','tasks'=>'dashboard','schedules'=>'dashboard','reports-daily'=>'dashboard','reports-monthly'=>'dashboard','reports-annual'=>'dashboard','exports'=>'dashboard','print'=>'dashboard','notifications'=>'dashboard','messages'=>'dashboard','announcements'=>'dashboard','profile'=>'dashboard','preferences'=>'dashboard','security'=>'security','activity-logs'=>'security'];
+$p = $_GET['page'] ?? '';
+if ($p && !isset($_GET['tab'])) $_GET['tab'] = $ictPageMap[$p] ?? $p;
 $tab = $_GET['tab'] ?? 'dashboard';
 $ictIcon = 'fa-laptop-code';
 $ictRole = 'Director ICT';
@@ -253,6 +258,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- ═══ TOP BAR ═══ -->
 
+<div class="ict-content">
 <?php if ($tab === 'overview'): ?>
 <div class="row g-3">
   <div class="col-lg-7">
@@ -314,6 +320,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
         <div class="d-flex justify-content-between py-1"><span>Total Assets</span><strong><?= $total_assets ?></strong></div>
         <div class="d-flex justify-content-between py-1"><span>Open Tickets</span><strong><?= $open_tickets ?></strong></div>
         <div class="d-flex justify-content-between py-1"><span>Active Sessions</span><strong><?= $active_sessions ?></strong></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 mt-3">
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-newspaper text-primary"></i>News &amp; Announcements</h3></div>
+      <div class="p-2">
+        <?php renderNewsWidget($staff_conn,$website_conn,$user_id,$user_name,$user_role,5); ?>
       </div>
     </div>
   </div>
@@ -1181,6 +1195,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
             </div>
         </div>
         <?php endif; ?>
+</div>
 <div class="modal fade" id="addAssetModal" tabindex="-1"><div class="modal-dialog">
 <form class="modal-content" id="addAssetForm">
 <input type="hidden" name="action" value="add_asset">
@@ -1472,7 +1487,5 @@ function filterApproval(s) { $('.filter-pill').removeClass('active'); $(`.filter
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-</div>
-</div>
 </body>
 </html>

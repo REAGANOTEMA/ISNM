@@ -107,6 +107,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Clearance',            'icon'=>'fas fa-clipboard-check','page'=>'clearance'],
             ['label' => 'Registration',         'icon'=>'fas fa-user-graduate','page'=>'registration'],
             ['label' => 'Admission Letters',    'icon'=>'fas fa-file-signature','page'=>'letters'],
+            ['label' => 'Direct Registration',  'icon'=>'fas fa-user-plus',     'page'=>'direct_registration'],
         ],
         'principal' => [
             ['label' => 'Academic Oversight',   'icon'=>'fas fa-book-open',    'page'=>'academic'],

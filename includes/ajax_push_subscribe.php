@@ -35,6 +35,21 @@ if (!$conn) {
     exit;
 }
 
+$conn->query("CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL DEFAULT 0,
+    user_type VARCHAR(20) DEFAULT 'staff',
+    endpoint TEXT NOT NULL,
+    auth_key VARCHAR(255) DEFAULT '',
+    p256dh_key VARCHAR(255) DEFAULT '',
+    device_type VARCHAR(50) DEFAULT 'browser',
+    user_agent TEXT,
+    is_active TINYINT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_user (user_id, user_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // Upsert: if same endpoint exists for this user, update; else insert
 $check = $conn->prepare("SELECT id FROM push_subscriptions WHERE endpoint = ?");
 if ($check) {

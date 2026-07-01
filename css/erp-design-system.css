@@ -732,30 +732,42 @@ body.erp-layout {
     min-height: calc(100vh - var(--erp-header-height));
     background: var(--erp-bg);
 }
-/* Global overrides for all dashboard-specific content classes */
-.dg-content, .acad-content, .hr-content, .lec-content, .mat-content,
+/* Global overrides for dashboard content classes */
+.dg-content {
+    /* handled by dashboard-specific CSS */
+}
+.acad-content, .hr-content, .lec-content, .mat-content,
 .war-content, .secu-content, .drv-content, .lib-content, .gld-content,
 .nurs-content, .mid-content, .prin-content, .dep-content, .sec-content,
 .cpt-content, .ict-content, .fin-content, .admissions-content,
 .store-content, .lab-content, .ma,
-.main, .main-content, .content-section, .container, .page-wrapper,
+.main, .main-content, .container, .page-wrapper,
 .receipt-container, .transcript-container {
     margin-left: var(--erp-sidebar-width) !important;
     padding: 24px !important;
     min-height: calc(100vh - var(--erp-header-height)) !important;
     background: var(--erp-bg) !important;
 }
+/* .content-section and .dg-content handled by their own dashboard CSS */
+.content-section {
+    margin-left: 0 !important;
+    padding: 0 !important;
+}
 @media (max-width: 768px) {
     .erp-content,
-    .dg-content, .acad-content, .hr-content, .lec-content, .mat-content,
+    .acad-content, .hr-content, .lec-content, .mat-content,
     .war-content, .secu-content, .drv-content, .lib-content, .gld-content,
     .nurs-content, .mid-content, .prin-content, .dep-content, .sec-content,
     .cpt-content, .ict-content, .fin-content, .admissions-content,
     .store-content, .lab-content, .ma,
-    .main, .main-content, .content-section, .container, .page-wrapper,
+    .main, .main-content, .container, .page-wrapper,
     .receipt-container, .transcript-container {
         margin-left: 0 !important;
         padding: 12px !important;
+    }
+    .content-section {
+        margin-left: 0 !important;
+        padding: 0 !important;
     }
 }
 

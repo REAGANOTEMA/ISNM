@@ -176,6 +176,7 @@ $total_students      = $students_conn ? safeCount($students_conn, "SELECT COUNT(
 $total_reqs          = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`admission_requirements` WHERE is_active=1");
 $total_req_items     = max($total_reqs, 1);
 
+require_once __DIR__ . '/../includes/news_management_widget.php';
 // ── Intake counts for charts ──
 $jan_count = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake='January'");
 $may_count = safeCount($conn, "SELECT COUNT(*)c FROM `{$staff_db}`.`applicants` WHERE intake='May'");
@@ -232,7 +233,9 @@ $pending_applicants = [];
 $r=$conn->query("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.status IN('New Applicant','Under Review','Approved') ORDER BY a.created_at DESC LIMIT 50");
 if($r) while($row=$r->fetch_assoc()) $pending_applicants[]=$row;
 
-if (isset($_GET['page']) && !isset($_GET['section'])) $_GET['section'] = $_GET['page'];
+$pageMap = ['applicants'=>'admission_approvals','new-applicant'=>'new_applicant','applicant-records'=>'applicant_records','intake'=>'intake_management','requirements'=>'requirement_portal','clearance'=>'requirement_clearance','registration'=>'student_registration','letters'=>'admission_reports','direct_registration'=>'direct_registration','home'=>'overview','analytics'=>'overview','approvals'=>'admission_approvals','tasks'=>'overview','schedules'=>'intake_management','reports-daily'=>'admission_reports','reports-monthly'=>'admission_reports','reports-annual'=>'admission_reports','exports'=>'admission_reports','print'=>'admission_reports','notifications'=>'notifications','messages'=>'applicant_messaging','announcements'=>'news_publishing','profile'=>'overview','preferences'=>'overview','security'=>'overview','activity-logs'=>'admission_reports'];
+$p = $_GET['page'] ?? '';
+if ($p && !isset($_GET['section'])) $_GET['section'] = $pageMap[$p] ?? $p;
 $view = $_GET['section'] ?? 'overview';
 $ajax = $_REQUEST['ajax'] ?? $_REQUEST['action'] ?? '';
 
@@ -761,6 +764,44 @@ if ($ajax === 'verify_document') {
     if ($stmt) { $stmt->bind_param('sisi', $newStatus, $user_id, $remarks, $docId); $stmt->execute(); $stmt->close(); }
     echo json_encode(['success'=>true]);exit;
 }
+if ($ajax === 'list_direct_students') {
+    header('Content-Type: application/json');
+    $q=trim($_POST['q']??''); $intake=trim($_POST['intake']??''); $status=trim($_POST['status']??'');
+    $where=["a.status='Registered' AND a.application_number LIKE 'DIR-%'"];
+    $params=[]; $types='';
+    if($q!==''){$where[]="(a.full_name LIKE ? OR a.application_number LIKE ? OR a.phone LIKE ? OR a.email LIKE ?)";$l="%$q%";$params=array_merge($params,[$l,$l,$l,$l]);$types.='ssss';}
+    if($intake!==''){$where[]="a.intake=?";$params[]=$intake;$types.='s';}
+    if($status!==''){$where[]="a.status=?";$params[]=$status;$types.='s';}
+    $sql="SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE ".implode(' AND ',$where)." ORDER BY a.created_at DESC LIMIT 200";
+    $stmt=$conn->prepare($sql); if($stmt){if($params){$stmt->bind_param($types,...$params);}$stmt->execute();$r=$stmt->get_result();$stmt->close();}else{$r=false;}
+    $data=[];if($r)while($row=$r->fetch_assoc()){$data[]=$row;}
+    echo json_encode(['data'=>$data]);exit;
+}
+if ($ajax === 'get_direct_student') {
+    header('Content-Type: application/json');
+    $id=intval($_POST['id']??0);
+    $stmt=$conn->prepare("SELECT a.*,COALESCE((SELECT program_name FROM `{$staff_db}`.`academic_programs` WHERE id=a.program_id),'N/A') program_name FROM `{$staff_db}`.`applicants` a WHERE a.id=?");
+    $stmt->bind_param('i',$id); $stmt->execute(); $r=$stmt->get_result(); $student=$r->fetch_assoc(); $stmt->close();
+    echo json_encode(['success'=>!!$student,'data'=>$student]);exit;
+}
+if ($ajax === 'delete_direct_student') {
+    header('Content-Type: application/json');
+    $id=intval($_POST['id']??0);
+    if(!$id){echo json_encode(['success'=>false,'error'=>'Invalid ID']);exit;}
+    $stmt=$conn->prepare("SELECT full_name,application_number FROM `{$staff_db}`.`applicants` WHERE id=? AND application_number LIKE 'DIR-%'");
+    $stmt->bind_param('i',$id); $stmt->execute(); $r=$stmt->get_result(); $app=$r->fetch_assoc(); $stmt->close();
+    if(!$app){echo json_encode(['success'=>false,'error'=>'Not found or not a direct registration.']);exit;}
+    $conn->begin_transaction();
+    try {
+        $conn->query("DELETE FROM `{$staff_db}`.`requirement_history` WHERE applicant_id=$id");
+        $conn->query("DELETE FROM `{$staff_db}`.`applicant_requirement_status` WHERE applicant_id=$id");
+        $conn->query("DELETE FROM `{$staff_db}`.`applicants` WHERE id=$id");
+        if($students_conn){$stu_num='STU-'.substr($app['application_number'],4);$students_conn->query("DELETE FROM `{$students_db}`.`students` WHERE student_number='".$students_conn->real_escape_string($stu_num)."'");}
+        logAdmission($conn,$user_id,'Delete Direct Student','applicants',$id,"Deleted direct student: {$app['full_name']}");
+        $conn->commit();
+        echo json_encode(['success'=>true,'message'=>'Student deleted.']);exit;
+    } catch(Exception $e){ $conn->rollback(); echo json_encode(['success'=>false,'error'=>'Delete failed: '.$e->getMessage()]); exit; }
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // POST HANDLERS
@@ -823,6 +864,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sid=intval($_POST['student_id']??0);$status=trim($_POST['status']??'');
         if($sid&&$students_conn){$stmt=$students_conn->prepare("UPDATE `{$students_db}`.`students` SET status=? WHERE id=?");if($stmt){$stmt->bind_param('si',$status,$sid);$stmt->execute();$stmt->close();}}
         echo json_encode(['success'=>true]);exit;
+    }
+    if ($action === 'register_student') {
+        header('Content-Type: application/json');
+        $fn=trim($_POST['full_name']??''); $dob=$_POST['date_of_birth']??null; $gen=trim($_POST['gender']??'Other');
+        $ph=trim($_POST['phone']??''); $em=trim($_POST['email']??''); $addr=trim($_POST['address']??'');
+        $gn=trim($_POST['guardian_name']??''); $gp=trim($_POST['guardian_phone']??''); $gr=trim($_POST['guardian_relationship']??'');
+        $prog_id=intval($_POST['program_id']??0); $intake=trim($_POST['intake']??'January');
+        $rand_suffix=date('Y').str_pad(mt_rand(1,99999),5,'0',STR_PAD_LEFT);
+        $app_num='DIR-'.$rand_suffix;
+        $student_num='STU-'.$rand_suffix;
+        if(!$fn){ echo json_encode(['success'=>false,'error'=>'Full name required.']); exit; }
+        if(!$students_conn){ echo json_encode(['success'=>false,'error'=>'Students database unavailable.']); exit; }
+        $conn->begin_transaction();
+        try {
+            $stmt=$conn->prepare("INSERT INTO `{$staff_db}`.`applicants` (full_name,date_of_birth,gender,phone,email,address,guardian_name,guardian_phone,guardian_relationship,application_number,program_id,intake,admission_date,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURDATE(),'Registered')");
+            $stmt->bind_param('ssssssssssis',$fn,$dob,$gen,$ph,$em,$addr,$gn,$gp,$gr,$app_num,$prog_id,$intake); $stmt->execute(); $aid=$conn->insert_id; $stmt->close();
+            $prog_name=''; foreach($programs_list as $p){if($p['id']==$prog_id){$prog_name=$p['program_name'];break;}}
+            $stmt=$students_conn->prepare("INSERT INTO `{$students_db}`.`students` (student_number,full_name,phone,email,gender,date_of_birth,intake_period,program,status,address,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,'Active',?,NOW(),NOW())");
+            $stmt->bind_param('sssssssss',$student_num,$fn,$ph,$em,$gen,$dob,$intake,$prog_name,$addr); $stmt->execute(); $sid=$students_conn->insert_id; $stmt->close();
+            foreach($req_items as $ri){ $s='Not Submitted'; $st=$conn->prepare("INSERT INTO `{$staff_db}`.`applicant_requirement_status` (applicant_id,requirement_id,status) VALUES (?,?,?)"); if($st){ $st->bind_param('iis',$aid,$ri['id'],$s); $st->execute(); $st->close(); } }
+            logAdmission($conn,$user_id,'Register Student Direct','applicants',$aid,"Directly registered student: $fn ($student_num)");
+            $conn->commit();
+            echo json_encode(['success'=>true,'message'=>"Student $fn registered. App: $app_num, Student: $student_num"]); exit;
+        } catch(Exception $e){ $conn->rollback(); echo json_encode(['success'=>false,'error'=>'Registration failed: '.$e->getMessage()]); exit; }
+    }
+    if ($action === 'edit_direct_student') {
+        header('Content-Type: application/json');
+        $id=intval($_POST['id']??0); $fn=trim($_POST['full_name']??''); $dob=$_POST['date_of_birth']??null;
+        $gen=trim($_POST['gender']??'Other'); $ph=trim($_POST['phone']??''); $em=trim($_POST['email']??'');
+        $addr=trim($_POST['address']??''); $gn=trim($_POST['guardian_name']??''); $gp=trim($_POST['guardian_phone']??'');
+        $gr=trim($_POST['guardian_relationship']??''); $prog_id=intval($_POST['program_id']??0); $intake=trim($_POST['intake']??'');
+        if(!$id||!$fn){ echo json_encode(['success'=>false,'error'=>'Missing data.']); exit; }
+        $stmt=$conn->prepare("SELECT application_number FROM `{$staff_db}`.`applicants` WHERE id=? AND application_number LIKE 'DIR-%'");
+        $stmt->bind_param('i',$id); $stmt->execute(); $r=$stmt->get_result(); $app=$r->fetch_assoc(); $stmt->close();
+        $stmt=$conn->prepare("UPDATE `{$staff_db}`.`applicants` SET full_name=?,date_of_birth=?,gender=?,phone=?,email=?,address=?,guardian_name=?,guardian_phone=?,guardian_relationship=?,program_id=?,intake=? WHERE id=?");
+        if($stmt){$stmt->bind_param('sssssssssisi',$fn,$dob,$gen,$ph,$em,$addr,$gn,$gp,$gr,$prog_id,$intake,$id);$stmt->execute();$stmt->close();}
+        if($students_conn && $app){
+            $student_num='STU-'.substr($app['application_number'],4);
+            $prog_name=''; foreach($programs_list as $p){if($p['id']==$prog_id){$prog_name=$p['program_name'];break;}}
+            $stmt=$students_conn->prepare("UPDATE `{$students_db}`.`students` SET full_name=?,phone=?,email=?,gender=?,date_of_birth=?,intake_period=?,program=?,address=? WHERE student_number=?");
+            $stmt->bind_param('sssssssss',$fn,$ph,$em,$gen,$dob,$intake,$prog_name,$addr,$student_num); $stmt->execute(); $stmt->close();
+        }
+        logAdmission($conn,$user_id,'Edit Direct Student','applicants',$id,"Edited direct student: $fn");
+        echo json_encode(['success'=>true,'message'=>'Student updated.']); exit;
     }
     header("Location: director-admissions.php");exit;
 }
@@ -965,7 +1050,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <div class="dashboard-content">
 <?php if(!empty($_SESSION["success"])):?><div class="alert alert-success" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["success"]);unset($_SESSION["success"]);?></div><?php endif;?>
 <?php if(!empty($_SESSION["error"])):?><div class="alert alert-danger" style="margin:0 0 14px;border-radius:10px"><?=htmlspecialchars($_SESSION["error"]);unset($_SESSION["error"]);?></div><?php endif;?>
-<div class="adm-content-wrap">
+<div class="adm-content-wrap admissions-content">
 
 <!-- OVERVIEW / DASHBOARD -->
 <div id="overview" class="dashboard-section<?=$view==='overview'?' active':''?>" data-section="overview">
@@ -1183,6 +1268,19 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 </div></div>
 </div>
 
+<!-- DIRECT REGISTRATION -->
+<div id="direct_registration" class="dashboard-section" data-section="direct_registration">
+<div class="scard"><div class="sch"><i class="fas fa-user-plus me-2"></i>Direct Student Registration <button class="btn btn-sm ms-3" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" data-bs-toggle="modal" data-bs-target="#registerStudentModal"><i class="fas fa-plus me-1"></i>Register New Student</button></div><div class="scb">
+<div class="filter-group">
+<input type="text" id="drSearch" placeholder="Search..." style="max-width:200px" onkeyup="loadDirectStudents()">
+<select id="drIntake" style="width:auto" onchange="loadDirectStudents()"><option value="">All Intake</option><option>January</option><option>May</option><option>August</option></select>
+</div>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>App No</th><th>Student No</th><th>Name</th><th>Program</th><th>Intake</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="drList">
+<tr><td colspan="7" class="text-muted text-center">Loading...</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+
 <!-- STUDENT ACTIVATION -->
 <div id="student_activation" class="dashboard-section" data-section="student_activation">
 <div class="scard"><div class="sch"><i class="fas fa-toggle-on me-2"></i>Student Activation</div><div class="scb">
@@ -1268,38 +1366,7 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <!-- NEWS PUBLISHING -->
 <div id="news_publishing" class="dashboard-section" data-section="news_publishing">
 <div class="scard"><div class="sch"><i class="fas fa-newspaper me-2"></i>Publish News to Website</div><div class="scb">
-<div class="row g-3 mb-3">
-<div class="col-md-8">
-<label class="form-label fw-semibold">News Title <span class="text-danger">*</span></label>
-<input type="text" id="newsTitle" class="form-control" placeholder="Enter news title...">
-</div>
-<div class="col-md-4">
-<label class="form-label fw-semibold">Status</label>
-<select id="newsStatus" class="form-select">
-<option value="draft">Draft</option>
-<option value="published" selected>Published</option>
-</select>
-</div>
-<div class="col-12">
-<label class="form-label fw-semibold">Excerpt / Summary</label>
-<textarea id="newsExcerpt" class="form-control" rows="2" placeholder="Brief summary for news card..."></textarea>
-</div>
-<div class="col-12">
-<label class="form-label fw-semibold">Content <span class="text-danger">*</span></label>
-<textarea id="newsContent" class="form-control" rows="8" placeholder="Write the full news article here..."></textarea>
-</div>
-<div class="col-md-6">
-<label class="form-label fw-semibold">Featured Image</label>
-<input type="file" id="newsImage" class="form-control" accept="image/*">
-</div>
-<div class="col-md-6 d-flex align-items-end">
-<button type="button" class="btn btn-sm me-2" style="background:#7c3aed;color:#fff" onclick="publishNews()"><i class="fas fa-paper-plane me-1"></i>Publish</button>
-<button type="button" class="btn btn-sm btn-outline-secondary" onclick="saveDraftNews()"><i class="fas fa-save me-1"></i>Save Draft</button>
-</div>
-</div>
-<hr>
-<h6 class="mb-3"><i class="fas fa-list me-1"></i>Published News</h6>
-<div id="newsList"><p class="text-muted text-center">Loading...</p></div>
+<?php renderNewsWidget($conn,$website_conn,$user_id,$user_name,$user_role,5); ?>
 </div></div>
 </div>
 
@@ -1340,6 +1407,40 @@ code{font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:5px;color:#
 <div class="mb-2"><label class="form-label">Document File</label><input type="file" id="uploadDocFile" class="form-control form-control-sm"></div>
 <div class="mb-2"><label class="form-label">Notes</label><textarea id="uploadDocNotes" class="form-control form-control-sm" rows="2"></textarea></div>
 </div><div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="submitDocument()"><i class="fas fa-upload me-1"></i>Upload</button></div></div></div></div>
+
+<div class="modal fade" id="registerStudentModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="registerStudentForm">
+<div class="row g-2">
+<div class="col-md-6"><div class="mb-2"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" id="rsName" class="form-control form-control-sm" required></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Date of Birth</label><input type="date" name="date_of_birth" id="rsDob" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Gender</label><select name="gender" id="rsGender" class="form-select form-select-sm"><option>Male</option><option>Female</option></select></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Phone</label><input type="text" name="phone" id="rsPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Email</label><input type="email" name="email" id="rsEmail" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Program <span class="text-danger">*</span></label><select name="program_id" id="rsProgram" class="form-select form-select-sm" required><option value="">Select Program</option><?php foreach($programs_list as $p):?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Intake</label><select name="intake" id="rsIntake" class="form-select form-select-sm"><option>January</option><option>May</option><option>August</option></select></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Name</label><input type="text" name="guardian_name" id="rsGuardian" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" id="rsGuardianPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Relationship</label><input type="text" name="guardian_relationship" id="rsGuardianRel" class="form-control form-control-sm"></div></div>
+<div class="col-md-12"><div class="mb-2"><label class="form-label">Address</label><textarea name="address" id="rsAddress" class="form-control form-control-sm" rows="2"></textarea></div></div>
+</div>
+</form></div><div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="submitRegisterStudent()"><i class="fas fa-save me-1"></i>Register Student</button></div></div></div></div>
+
+<div class="modal fade" id="editDirectStudentModal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Direct Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="editDirectStudentForm">
+<input type="hidden" id="esId">
+<div class="row g-2">
+<div class="col-md-6"><div class="mb-2"><label class="form-label">Full Name</label><input type="text" id="esName" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Date of Birth</label><input type="date" id="esDob" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Gender</label><select id="esGender" class="form-select form-select-sm"><option>Male</option><option>Female</option></select></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Phone</label><input type="text" id="esPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Email</label><input type="email" id="esEmail" class="form-control form-control-sm"></div></div>
+<div class="col-md-4"><div class="mb-2"><label class="form-label">Program</label><select id="esProgram" class="form-select form-select-sm"><option value="">Select Program</option><?php foreach($programs_list as $p):?><option value="<?=$p['id']?>"><?=htmlspecialchars($p['program_name'])?></option><?php endforeach;?></select></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Intake</label><select id="esIntake" class="form-select form-select-sm"><option>January</option><option>May</option><option>August</option></select></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Name</label><input type="text" id="esGuardian" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Phone</label><input type="text" id="esGuardianPhone" class="form-control form-control-sm"></div></div>
+<div class="col-md-3"><div class="mb-2"><label class="form-label">Guardian Relationship</label><input type="text" id="esGuardianRel" class="form-control form-control-sm"></div></div>
+<div class="col-md-12"><div class="mb-2"><label class="form-label">Address</label><textarea id="esAddress" class="form-control form-control-sm" rows="2"></textarea></div></div>
+</div>
+</form></div><div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px" onclick="saveEditDirectStudent()"><i class="fas fa-save me-1"></i>Save Changes</button></div></div></div></div>
+
 <script>
 jQuery(function($) {
   'use strict';
@@ -1375,11 +1476,14 @@ jQuery(function($) {
     window.location.hash = '#' + id;
   }
 
-  /* ── Init section from hash ── */
+  /* ── Init section from hash or ?section= param ── */
   (function initSection() {
     var h = window.location.hash.replace('#', '');
-    if (h && $('#' + h).length) { switchSection(h); }
-    else { switchSection('overview'); }
+    if (h && $('#' + h).length) { switchSection(h); return; }
+    var params = new URLSearchParams(window.location.search);
+    var s = params.get('section') || params.get('page');
+    if (s && $('#' + s).length) { switchSection(s); return; }
+    switchSection('overview');
   })();
 
   /* ── Applicant Records ── */
@@ -1780,6 +1884,104 @@ jQuery(function($) {
     }, 'json');
   };
 
+  /* ── Direct Registration ── */
+  window.loadDirectStudents = function() {
+    $.post('', { action: 'list_direct_students', q: $('#drSearch').val(), intake: $('#drIntake').val() }, function(r) {
+      var h = '';
+      if (r.data && r.data.length) {
+        r.data.forEach(function(x) {
+          h += '<tr><td>' + htmlEscape(x.application_number || '') + '</td><td>' + htmlEscape('STU-' + (x.application_number ? x.application_number.replace('DIR-','') : '')) + '</td><td>' + htmlEscape(x.full_name) + '</td><td>' + htmlEscape(x.program_name || '') + '</td><td>' + htmlEscape(x.intake || '') + '</td><td>' + htmlEscape(x.phone || '') + '</td><td>' +
+            '<button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px" onclick="editDirectStudent(' + x.id + ')"><i class="fas fa-edit"></i></button>' +
+            '<button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:10px" onclick="deleteDirectStudent(' + x.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        });
+      } else { h = '<tr><td colspan="7" class="text-muted text-center">No direct registrations found</td></tr>'; }
+      $('#drList').html(h);
+    }, 'json');
+  };
+
+  window.submitRegisterStudent = function() {
+    var data = {
+      action: 'register_student',
+      full_name: $('#rsName').val(),
+      date_of_birth: $('#rsDob').val(),
+      gender: $('#rsGender').val(),
+      phone: $('#rsPhone').val(),
+      email: $('#rsEmail').val(),
+      program_id: $('#rsProgram').val(),
+      intake: $('#rsIntake').val(),
+      guardian_name: $('#rsGuardian').val(),
+      guardian_phone: $('#rsGuardianPhone').val(),
+      guardian_relationship: $('#rsGuardianRel').val(),
+      address: $('#rsAddress').val()
+    };
+    if (!data.full_name || !data.program_id) { showToast('danger', 'Full name and program are required.'); return; }
+    $.post('', data, function(r) {
+      if (r.success) {
+        showToast('success', r.message);
+        $('#registerStudentModal').modal('hide');
+        $('#registerStudentForm')[0].reset();
+        window.loadDirectStudents();
+      } else {
+        showToast('danger', r.error || 'Registration failed');
+      }
+    }, 'json');
+  };
+
+  window.deleteDirectStudent = function(id) {
+    if (!confirm('Delete this student record permanently?')) return;
+    $.post('', { action: 'delete_direct_student', id: id }, function(r) {
+      if (r.success) { showToast('success', r.message); window.loadDirectStudents(); }
+      else { showToast('danger', r.error || 'Delete failed'); }
+    }, 'json');
+  };
+
+  window.editDirectStudent = function(id) {
+    $.post('', { action: 'get_direct_student', id: id }, function(r) {
+      if (r.success && r.data) {
+        var d = r.data;
+        $('#esId').val(d.id);
+        $('#esName').val(d.full_name);
+        $('#esDob').val(d.date_of_birth);
+        $('#esGender').val(d.gender);
+        $('#esPhone').val(d.phone);
+        $('#esEmail').val(d.email);
+        $('#esProgram').val(d.program_id);
+        $('#esIntake').val(d.intake);
+        $('#esGuardian').val(d.guardian_name);
+        $('#esGuardianPhone').val(d.guardian_phone);
+        $('#esGuardianRel').val(d.guardian_relationship);
+        $('#esAddress').val(d.address);
+        $('#editDirectStudentModal').modal('show');
+      } else { showToast('danger', 'Failed to load student data.'); }
+    }, 'json');
+  };
+
+  window.saveEditDirectStudent = function() {
+    var data = {
+      action: 'edit_direct_student',
+      id: $('#esId').val(),
+      full_name: $('#esName').val(),
+      date_of_birth: $('#esDob').val(),
+      gender: $('#esGender').val(),
+      phone: $('#esPhone').val(),
+      email: $('#esEmail').val(),
+      program_id: $('#esProgram').val(),
+      intake: $('#esIntake').val(),
+      guardian_name: $('#esGuardian').val(),
+      guardian_phone: $('#esGuardianPhone').val(),
+      guardian_relationship: $('#esGuardianRel').val(),
+      address: $('#esAddress').val()
+    };
+    if (!data.full_name) { showToast('danger', 'Full name is required.'); return; }
+    $.post('', data, function(r) {
+      if (r.success) {
+        showToast('success', r.message || 'Student updated.');
+        $('#editDirectStudentModal').modal('hide');
+        window.loadDirectStudents();
+      } else { showToast('danger', r.error || 'Update failed'); }
+    }, 'json');
+  };
+
   /* ── Handle "viewReqs" clicks (clearance/readiness tables) ── */
   $(document).on('click', '[data-action="viewReqs"]', function() {
     window.viewApplicantReqs($(this).data('id'));
@@ -1918,6 +2120,7 @@ jQuery(function($) {
     window.loadReadiness();
     window.loadRegList();
     window.loadActivationList();
+    window.loadDirectStudents();
     window.loadDocList();
     window.loadVerificationList();
     window.loadNotifications();

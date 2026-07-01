@@ -180,7 +180,9 @@ $dgPageToSection = [
     'departments'   => 'departments',
     'performance'   => 'performance',
     'finance'       => 'financial',
+    'financial'     => 'financial',
     'staff'         => 'staff',
+    'student'       => 'student',
     'students'      => 'student',
     'submissions'   => 'services',
     'approvals'     => 'approvals',
@@ -197,6 +199,20 @@ $dgPageToSection = [
     'system-health' => 'system-health',
     'notifications' => 'notifications',
     'kpi'           => 'kpi',
+    'analytics'     => 'home',
+    'tasks'         => 'home',
+    'schedules'     => 'home',
+    'reports-daily'  => 'reports',
+    'reports-monthly'=> 'reports',
+    'reports-annual' => 'reports',
+    'exports'       => 'reports',
+    'print'         => 'reports',
+    'messages'      => 'messaging',
+    'announcements' => 'broadcast',
+    'profile'       => 'staff',
+    'preferences'   => 'home',
+    'activity-logs' => 'audit',
+    'security'      => 'system-health',
 ];
 $dgPage  = $_GET['page'] ?? 'home';
 $dgSection = $dgPageToSection[$dgPage] ?? 'executive';
@@ -596,7 +612,32 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .page-content { padding: 0 !important; }
 
 /* ── Content ── */
-.dg-content { padding: 18px 22px 30px; max-width: 1600px; margin: 0; background: #fafbfc; min-height: calc(100vh - 60px); overflow-x: hidden; word-break: break-word; }
+.dg-content {
+  padding: 20px 24px 32px;
+  margin-left: var(--erp-sidebar-width);
+  width: calc(100% - var(--erp-sidebar-width));
+  background: #f0f2f5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+.dg-content .ent-content-area {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: auto;
+  width: 100%;
+}
+.dg-content .content-section,
+.dg-content .dashboard-section {
+  padding: 0;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .dg-content { padding: 12px 14px 20px; margin-left: 0; width: 100%; }
+}
 
 /* ── KPI Cards ── */
 .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
@@ -831,7 +872,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
 
 <!-- ═══ MAIN CONTENT AREA ═══ -->
-<div class="ent-main">
+<div class="dg-content">
 <div class="ent-content-area ent-animate">
 
 <?php if(!empty($_SESSION['success'])): ?>
@@ -901,7 +942,7 @@ switch ($dgSection):
   </div>
 </div>
 
-<?php
+<?php break; ?>
     case 'executive': ?>
 <div id="executive" class="content-section dashboard-section active" data-section="executive">
   <?= renderAdminAnalytics($conn, $studentsConn, $websiteConn) ?>
@@ -2211,90 +2252,10 @@ function sendBroadcast(e){
   </div>
 </div>
 <script>
-(function(){
-    // AJAX module loading for sidebar navigation
-    var contentArea = document.querySelector('.ent-content-area');
-    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
-    var isAjaxLoading = false;
-
-    function showLoading() {
-        if (loadingOverlay) loadingOverlay.style.display = 'flex';
-        isAjaxLoading = true;
-    }
-    function hideLoading() {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        isAjaxLoading = false;
-    }
-
-    // Intercept sidebar link clicks for AJAX loading
-    document.querySelectorAll('.child-link').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            var href = this.getAttribute('href');
-            if (!href || href.indexOf('?page=') === -1) return; // external links
-            if (isAjaxLoading) return;
-
-            e.preventDefault();
-            showLoading();
-
-            // Update URL without reload
-            history.pushState({}, '', href);
-
-            // Update active states
-            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
-            this.classList.add('active');
-
-            // Fetch content via AJAX
-            var page = href.split('page=')[1] || 'home';
-            fetch('director-general.php?page=' + encodeURIComponent(page), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(r) { return r.text(); })
-            .then(function(html) {
-                // Extract just the content area from response
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(html, 'text/html');
-                var newContent = doc.querySelector('.ent-content-area');
-                if (newContent && contentArea) {
-                    contentArea.innerHTML = newContent.innerHTML;
-                    // Re-init any dynamic components
-                    if (typeof initFlatpickr === 'function') initFlatpickr();
-                    // Re-run any inline scripts
-                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
-                        var newScript = document.createElement('script');
-                        if (oldScript.src) { newScript.src = oldScript.src; }
-                        else { newScript.textContent = oldScript.textContent; }
-                        oldScript.parentNode.replaceChild(newScript, oldScript);
-                    });
-                }
-                hideLoading();
-            })
-            .catch(function(err) {
-                console.error('[AJAX Load Error]', err);
-                hideLoading();
-                // Fallback to normal navigation
-                window.location.href = href;
-            });
-        });
-    });
-
-    // Handle browser back/forward
-    window.addEventListener('popstate', function() {
-        var params = new URLSearchParams(window.location.search);
-        var page = params.get('page') || 'home';
-        // Full reload for back/forward (simpler and more reliable)
-        window.location.reload();
-    });
-
-    // Close sidebar on mobile after click
-    document.querySelectorAll('.child-link').forEach(function(link) {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                var sidebar = document.querySelector('.isnm-sidebar');
-                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
-            }
-        });
-    });
-})();
+// ═══ SWITCH SECTION ═══
+function switchToSection(section) {
+    window.location.href = 'director-general.php?page=' + encodeURIComponent(section);
+}
 </script>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>

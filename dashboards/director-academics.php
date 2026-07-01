@@ -28,6 +28,9 @@ if (file_exists($profileSettingsFile)) {
 
 function sc($c, $s) { $r=$c->query($s); if(!$r)return 0; $w=$r->fetch_assoc(); return intval($w['c']??0); }
 
+$acadPageMap = ['home'=>'overview','overview'=>'overview','analytics'=>'overview','programs'=>'overview','courses'=>'overview','exams'=>'overview','timetable'=>'overview','clinical'=>'overview','attendance'=>'overview','quality'=>'overview','academic_records'=>'overview','reports'=>'overview','approvals'=>'overview','tasks'=>'overview','schedules'=>'overview','reports-daily'=>'overview','reports-monthly'=>'overview','reports-annual'=>'overview','exports'=>'overview','print'=>'overview','notifications'=>'overview','messages'=>'overview','announcements'=>'overview','profile'=>'overview','preferences'=>'overview','security'=>'overview','activity-logs'=>'overview'];
+$p = $_GET['page'] ?? '';
+if ($p && !isset($_GET['section'])) $_GET['section'] = $acadPageMap[$p] ?? $p;
 $section = $_GET['section'] ?? 'overview';
 
 // ── Executive Stats ──
@@ -499,7 +502,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- ═══ TOP BAR ═══ -->
 
-
+<div class="acad-content">
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="section-card">
@@ -1084,6 +1087,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                 </div>
             </section>
 
+    <div class="section-card">
+      <div class="section-header"><h3 class="section-title"><i class="fas fa-newspaper text-primary"></i>News &amp; Announcements</h3></div>
+      <div class="p-2">
+        <?php renderNewsWidget($conn,$website_conn,$user_id,$user_name,$user_role,5); ?>
+      </div>
+    </div>
+
+</div>
 </div>
 <!-- ═══════════ MODALS ═══════════ -->
 

@@ -13,7 +13,7 @@ array_pop($scopeParts); // remove 'dashboards'
 $swScope    = empty($scopeParts) ? '/' : '/' . implode('/', $scopeParts) . '/';
 
 // Cache-busting version — bump on every deploy
-$v = '2.1.0';
+$v = '2.2.1';
 
 // Profile image URL for dashboard header avatars (falls back to username.png)
 $profileImageUrl = $rootPath . '/images/username.png';
@@ -215,7 +215,60 @@ window.onerror = function(msg, url) {
     });
 })();
 </script>
-<!-- Push Notification Subscription (disabled: VAPID keys not configured) -->
+<!-- Push Notification Service Worker Registration -->
+<script>
+(function() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (document.querySelector('meta[name="push-sw-registered"]')) return;
+  var meta = document.createElement('meta'); meta.name = 'push-sw-registered'; meta.content = '1'; document.head.appendChild(meta);
+
+  navigator.serviceWorker.register('../js/service-worker.js', { scope: './' }).then(function(reg) {
+    console.log('[SW] Registered:', reg.scope);
+
+    function subscribeUser() {
+      reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array('BMr-6T5vZJ5hY2X8fG3kL9pQ0rS1uV4wX7yZ6aB3cD4eF5gH6iJ7kL8mN9oP0qR1sT2uV3wX4yZ5')
+      }).then(function(sub) {
+        var data = new URLSearchParams();
+        data.append('endpoint', sub.endpoint);
+        data.append('auth_key', arrayBufferToBase64(sub.getKey('auth')));
+        data.append('p256dh_key', arrayBufferToBase64(sub.getKey('p256dh')));
+        data.append('device_type', /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
+        fetch('../includes/ajax_push_subscribe.php', { method: 'POST', body: data, credentials: 'same-origin' }).catch(function(){});
+      }).catch(function(err) { console.warn('[SW] Subscribe failed:', err); });
+    }
+
+    if (Notification.permission === 'granted') { subscribeUser(); }
+    else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(function(p) { if (p === 'granted') subscribeUser(); });
+    }
+
+    reg.onupdatefound = function() {
+      var installing = reg.installing;
+      installing.onstatechange = function() {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          console.log('[SW] Updated');
+        }
+      };
+    };
+  }).catch(function(err) { console.warn('[SW] Registration failed:', err); });
+
+  function urlBase64ToUint8Array(base64) {
+    var padding = '='.repeat((4 - base64.length % 4) % 4);
+    var raw = atob((base64 + padding).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  function arrayBufferToBase64(buf) {
+    var bytes = new Uint8Array(buf);
+    var chars = [];
+    for (var i = 0; i < bytes.length; i++) chars.push(String.fromCharCode(bytes[i]));
+    return btoa(chars.join('')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+})();
+</script>
 
 <style>
 /* Responsive dashboard fixes */

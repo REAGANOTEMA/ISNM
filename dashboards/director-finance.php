@@ -1,6 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/news_management_widget.php';
 $ctx = bootstrapStaffDashboard(['director finance', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
@@ -24,7 +25,9 @@ $migrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.payroll_approvals (id INT AUTO_INCREMENT PRIMARY KEY, budget_id INT DEFAULT 0, request_type VARCHAR(50), requested_by INT DEFAULT 0, amount DECIMAL(14,2) DEFAULT 0, description TEXT, status ENUM('pending','approved','rejected','changes_requested','escalated') DEFAULT 'pending', approver_id INT DEFAULT 0, approver_name VARCHAR(200), approver_comments TEXT, escalated_to INT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $migrate($staff); $migrate($students);
-$_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? 'overview';
+$page = $_GET['page'] ?? '';
+$pageMap = ['revenue'=>'revenue_summary','budget'=>'budget_planning','expenditure'=>'expenditure_monitoring','payroll'=>'payroll_review','ledger'=>'general_ledger','audit'=>'audit_logs','procurement'=>'purchase_requests','assets'=>'asset_register'];
+$_GET['section'] = $_GET['section'] ?? $_GET['view'] ?? ($pageMap[$page] ?? 'overview');
 $view = $_GET['section']; if ($view === 'overview') $view = 'home';
 $ajax = $_GET['ajax'] ?? ''; $q = $_GET['q'] ?? '';
 function currency($n) { return 'UGX ' . number_format((float)$n, 0); }
@@ -526,6 +529,13 @@ $recentActs = array_slice($recentActs,0,8);
 <p class="small text-muted"><?= $netPos>=0?'Revenue exceeds expenses':'Expenses exceed revenue' ?> for all time</p>
 </div></div>
 </div>
+</div>
+<div class="row mt-3">
+  <div class="col-12">
+    <div class="scard"><div class="sch"><i class="fas fa-newspaper me-2"></i>News &amp; Announcements</div><div class="scb">
+      <?php renderNewsWidget($staff,$website,$uid,$uname,$role,5); ?>
+    </div></div>
+  </div>
 </div>
 <?php endif; ?>
 

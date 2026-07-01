@@ -226,7 +226,7 @@ $instLogo = '../images/school-logo.png';
 </div>
 
 <style>
-.cp-container{max-width:1400px;margin:0 auto;padding:20px;font-family:'Inter',system-ui,-apple-system,sans-serif}
+.cp-container{width:100%;margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif}
 .cp-brand-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;padding:20px 24px;background:linear-gradient(135deg,#1e3a5f,#1a237e);border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .cp-brand{display:flex;align-items:center;gap:16px}
 .cp-logo{width:56px;height:56px;border-radius:12px;border:2px solid rgba(255,255,255,.2);object-fit:cover}
@@ -244,7 +244,9 @@ $instLogo = '../images/school-logo.png';
 .cp-summary-badge{display:flex;align-items:center;gap:8px;background:#fff;padding:10px 18px;border-radius:10px;border:1px solid #e2e8f0;font-size:13px}
 .cp-summary-badge strong{font-size:16px}
 .cp-divider{color:#cbd5e1}
-.cp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.cp-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:1200px){.cp-kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.cp-kpi-grid{grid-template-columns:repeat(2,1fr)}}
 .cp-kpi{background:#fff;border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;border:1px solid #e2e8f0;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .cp-kpi:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
 .cp-kpi-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0}
@@ -273,7 +275,7 @@ $instLogo = '../images/school-logo.png';
 .cp-status-online{background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.4)}
 .cp-status-offline{background:#ef4444}
 .cp-status-text{margin-left:auto;font-weight:500}
-@media(max-width:768px){.cp-widget-row,.cp-chart-row{grid-template-columns:1fr}.cp-brand-row{flex-direction:column;align-items:flex-start}.cp-kpi-grid{grid-template-columns:repeat(2,1fr)}.cp-quick-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.cp-widget-row,.cp-chart-row{grid-template-columns:1fr}.cp-brand-row{flex-direction:column;align-items:flex-start}.cp-quick-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
 <script>

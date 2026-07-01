@@ -277,6 +277,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 <?php endif; ?>
 <?php endif; ?>
 
+<?php if (!$useDynamicSidebar): ?>
 <script>
 (function() {
     // ── Collapsible Groups ──
@@ -364,6 +365,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     })();
 })();
 </script>
+<?php endif; ?>
 <?php
 $sidebarRendered = true;
 require_once __DIR__ . '/settings_modal.php';
