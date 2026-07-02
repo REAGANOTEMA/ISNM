@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $ctx = bootstrapStaffDashboard(['academic registrar', 'registrar', 'director academics', 'director general']);
 $auth_service = $ctx['auth'];
 $user = $ctx['user'];
 $staff = $ctx['staff'];
 $students = $ctx['students'];
 $website = $ctx['website'];
+$website_conn = $website;
 $user_role = $_SESSION['role'] ?? '';
 if (isset($_GET['page']) && !isset($_GET['section'])) $_GET['section'] = $_GET['page'];
 $section = $_GET['section'] ?? 'dashboard';
@@ -150,6 +152,10 @@ function redirectBack($hash = '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff) {
+    // Handle website submission actions
+    if (function_exists('handleWebsiteSubmissionsAction')) {
+        handleWebsiteSubmissionsAction($website_conn);
+    }
     $action = $_POST['action'] ?? '';
     if ($action === 'add_academic_year') {
         $year = trim($_POST['academic_year'] ?? '');
@@ -828,6 +834,23 @@ $sectionTitles = [
       </div>
 
       <div class="col-md-5">
+        <div class="section-card">
+          <!-- Website Submissions -->
+          <h6 class="fw-bold mb-3"><i class="fas fa-globe me-2" style="color:#2563eb;"></i>Website Submissions</h6>
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-0">
+              <?php if (function_exists('renderWebsiteSubmissionsWidget') && $website_conn): ?>
+                  <?php renderWebsiteSubmissionsWidget($website_conn, ['contacts', 'donations', 'volunteers', 'applications'], 10); ?>
+              <?php else: ?>
+                  <div class="text-center py-4 text-muted">
+                      <i class="fas fa-globe fa-2x mb-2" style="color:#94a3b8;"></i>
+                      <p>Website submissions will appear here.</p>
+                  </div>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+
         <div class="section-card">
           <h6 class="fw-bold mb-3"><i class="fas fa-calendar-alt me-2" style="color:#1a237e;"></i>Academic Calendar</h6>
           <?php

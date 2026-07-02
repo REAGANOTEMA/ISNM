@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
+require_once __DIR__ . '/../includes/website_submissions_widget.php';
 $ctx = bootstrapStaffDashboard(['school principal', 'principal', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
+$website_conn = $website;
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);
 $role = $_SESSION['role'] ?? ''; $uname = $_SESSION['full_name'] ?? 'Principal';
 // Strict role check: only exact 'school principal' or 'principal' allowed (no substring match for 'deputy principal')
@@ -482,6 +484,11 @@ if ($view === 'approve_graduation' && $ajax === '1') {
 if (isset($_GET['ajax'])) { header('Content-Type: application/json'); echo json_encode([]); exit; }
 
 // -- POST handlers --
+// Handle website submission actions
+if (function_exists('handleWebsiteSubmissionsAction')) {
+    handleWebsiteSubmissionsAction($website_conn);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
     if ($act === 'publish_notice' && $students && $staff) {
@@ -629,6 +636,21 @@ try {
 <div class="act-item"><div class="small"><i class="fas fa-envelope text-primary me-2"></i><?= htmlspecialchars(mb_substr($c['subject'],0,60)) ?></div><div class="time"><?= htmlspecialchars($c['created_at']) ?></div></div>
 <?php endforeach; else: ?>
 <div class="text-muted small p-3">No communications.</div>
+<?php endif; ?>
+</div></div>
+</div>
+</div>
+<!-- Website Submissions -->
+<div class="row g-3 mb-4">
+<div class="col-12">
+<div class="scard"><div class="sch"><i class="fas fa-globe me-2"></i>Website Submissions</div><div class="scb p-0">
+<?php if (function_exists('renderWebsiteSubmissionsWidget') && $website_conn): ?>
+    <?php renderWebsiteSubmissionsWidget($website_conn, ['contacts', 'donations', 'volunteers', 'applications'], 10); ?>
+<?php else: ?>
+    <div class="text-center py-4 text-muted">
+        <i class="fas fa-globe fa-2x mb-2" style="color:#94a3b8;"></i>
+        <p>Website submissions will appear here.</p>
+    </div>
 <?php endif; ?>
 </div></div>
 </div>
