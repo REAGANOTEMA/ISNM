@@ -808,8 +808,8 @@ elseif ($page === 'competency'):
 // 10. DISCIPLINE
 // ════════════════════════════════════════════════
 elseif ($page === 'discipline'):
-    $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline WHERE student_id=? ORDER BY incident_date DESC", "i", [$student_id]);
-    if (empty($cases)) $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline_records WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
+    $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline WHERE student_id=? ORDER BY incident_date DESC", "s", [$student_number]);
+    if (empty($cases)) $cases = safeQueryPrepared($studentsDb, "SELECT * FROM student_discipline WHERE CAST(student_id AS UNSIGNED)=? ORDER BY incident_date DESC", "i", [$student_id]);
     $warnings = safeQueryPrepared($studentsDb, "SELECT * FROM student_warnings WHERE student_id=? ORDER BY warning_date DESC", "i", [$student_id]);
 ?>
 <div class="sp-grid-2">
@@ -922,7 +922,7 @@ elseif ($page === 'finances'):
 // 12. HOSTEL
 // ════════════════════════════════════════════════
 elseif ($page === 'hostel'):
-    $allocations = safeQueryPrepared($studentsDb, "SELECT ha.*, hr.room_number, hr.hostel_name FROM student_hostel_allocations ha LEFT JOIN hostel_rooms hr ON ha.room_id=hr.id WHERE ha.student_id=? ORDER BY ha.allocation_date DESC", "i", [$student_id]);
+    $allocations = safeQueryPrepared($studentsDb, "SELECT ha.*, hr.room_number, hr.hostel_name FROM hostel_allocations ha LEFT JOIN hostel_rooms hr ON ha.room_id=hr.id WHERE ha.student_id=? ORDER BY ha.check_in_date DESC", "s", [$student_number]);
     if (empty($allocations)) $allocations = safeQueryPrepared($studentsDb, "SELECT ha.*, hr.room_number, hr.hostel_name FROM hostel_allocations ha LEFT JOIN hostel_rooms hr ON ha.room_id=hr.id WHERE ha.student_id=? ORDER BY ha.check_in_date DESC", "i", [$student_id]);
 ?>
 <div class="sp-card">
@@ -955,11 +955,11 @@ elseif ($page === 'hostel'):
 // 13. LIBRARY
 // ════════════════════════════════════════════════
 elseif ($page === 'library'):
-    $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC", "i", [$student_id]);
+    $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC", "s", [$student_number]);
     if (empty($borrowing)) {
-        $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE lb.student_id=? ORDER BY lb.borrow_date DESC", "s", [$student_number]);
+        $borrowing = safeQueryPrepared($studentsDb, "SELECT lb.*, lbb.book_title, lbb.author FROM library_borrowing lb LEFT JOIN library_books lbb ON lb.book_id=lbb.id WHERE CAST(lb.student_id AS UNSIGNED)=? ORDER BY lb.borrow_date DESC", "i", [$student_id]);
     }
-    $fines = safeQueryPrepared($studentsDb, "SELECT * FROM library_fines WHERE student_id=? ORDER BY created_at DESC", "i", [$student_id]);
+    $fines = safeQuery($studentsDb, "SELECT * FROM library_fines LIMIT 0");
     $total_fines = array_sum(array_map(fn($f) => (float)($f['amount'] ?? 0), $fines));
     $unpaid_fines = array_sum(array_filter(array_map(fn($f) => (float)($f['amount'] ?? 0), $fines), fn($f) => $f > 0));
 ?>
@@ -1016,8 +1016,7 @@ elseif ($page === 'library'):
 // 14. ANNOUNCEMENTS
 // ════════════════════════════════════════════════
 elseif ($page === 'notices'):
-    $notices = safeQueryPrepared($studentsDb, "SELECT * FROM announcements WHERE (audience='All' OR audience='Students' OR audience IS NULL) AND (end_date IS NULL OR end_date >= CURDATE()) ORDER BY priority DESC, created_at DESC LIMIT 20", "", []);
-    if (empty($notices)) $notices = safeQuery($studentsDb, "SELECT * FROM announcements ORDER BY created_at DESC LIMIT 20");
+    $notices = safeQuery($studentsDb, "SELECT * FROM announcements WHERE (end_date IS NULL OR end_date >= CURDATE()) ORDER BY FIELD(priority,'Urgent','High','Normal','Low'), created_at DESC LIMIT 20");
     if (empty($notices)) $notices = safeQueryPrepared($studentsDb, "SELECT * FROM student_notifications WHERE student_id=? ORDER BY created_at DESC LIMIT 20", "i", [$student_id]);
 ?>
 <div class="sp-card">
@@ -1050,7 +1049,7 @@ elseif ($page === 'notices'):
 // 15. MESSAGES
 // ════════════════════════════════════════════════
 elseif ($page === 'messages'):
-    $messages = safeQueryPrepared($studentsDb, "SELECT * FROM messages WHERE student_id=? ORDER BY created_at DESC LIMIT 30", "i", [$student_id]);
+    $messages = safeQueryPrepared($studentsDb, "SELECT * FROM messages WHERE student_id=? ORDER BY created_at DESC LIMIT 30", "s", [$student_number]);
     if (empty($messages)) $messages = safeQueryPrepared($studentsDb, "SELECT * FROM student_messages WHERE student_id=? ORDER BY created_at DESC LIMIT 30", "i", [$student_id]);
 ?>
 <div class="sp-card">

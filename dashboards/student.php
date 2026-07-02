@@ -10,6 +10,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESS
     header('Location: ../student-login.php?error=student_access_required');
     exit;
 }
+// Redirect to the unified student portal
+header('Location: student-portal.php');
+exit;
 
 $staffDb = getStaffConnection();
 $studentsDb = getStudentsConnection();
