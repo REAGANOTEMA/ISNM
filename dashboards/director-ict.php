@@ -88,6 +88,7 @@ $active_sessions   = ict_q($ict, "SELECT COUNT(*) FROM ict_login_sessions WHERE 
 
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
+require_once __DIR__ . '/../includes/director_website_panel.php';
 $failed_today    = ict_q($ict, "SELECT COUNT(*) FROM ict_failed_logins WHERE DATE(attempted_at)=CURDATE()");
 // ── Module Permissions ──
 $module_perms    = ict_fetch($ict, "SELECT * FROM ict_module_permissions ORDER BY module_name, role_name");

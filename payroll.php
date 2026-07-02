@@ -86,6 +86,7 @@ $pageTitle = 'Payroll Management';
         <a href="#payments" class="sn-btn" data-section="payments"><i class="fas fa-money-bill me-1"></i>Payments</a>
         <a href="#reports" class="sn-btn" data-section="reports"><i class="fas fa-chart-bar me-1"></i>Reports</a>
         <a href="#settings" class="sn-btn" data-section="settings"><i class="fas fa-cog me-1"></i>Settings</a>
+        <a href="#leave" class="sn-btn" data-section="leave"><i class="fas fa-calendar-minus me-1"></i>Leave</a>
     </div>
 
     <!-- ══════════════════ SECTION: DASHBOARD ══════════════════ -->
@@ -822,6 +823,91 @@ if ($settings) while ($s = $settings->fetch_assoc()):
     </div>
 
 </div>
+
+<!-- LEAVE MANAGEMENT -->
+<div class="payroll-section" id="section-leave">
+<div class="row g-3 mb-3">
+<div class="col-md-8">
+<div class="form-card">
+<div class="card-hd d-flex justify-content-between align-items-center">
+<span><i class="fas fa-calendar-minus me-2"></i>Leave Management</span>
+<button class="btn btn-sm btn-primary" onclick="document.getElementById('leaveModal').style.display='flex'"><i class="fas fa-plus me-1"></i>New Leave Request</button>
+</div>
+<div class="card-bd">
+<?php
+$leaveTypes = $payrollConn ? $payrollConn->query("SELECT * FROM leave_types WHERE is_active=1 ORDER BY type_name") : null;
+$leaveRequests = $payrollConn ? $payrollConn->query("SELECT lr.*, s.full_name, lt.type_name FROM leave_requests lr JOIN staff s ON lr.staff_id=s.id LEFT JOIN leave_types lt ON lr.leave_type_id=lt.id ORDER BY lr.created_at DESC LIMIT 30") : null;
+if (!$leaveRequests) $leaveRequests = $payrollConn ? $payrollConn->query("SELECT sl.*, s.full_name FROM staff_leave sl JOIN staff s ON sl.staff_id=s.id ORDER BY sl.created_at DESC LIMIT 30") : null;
+?>
+<table class="data-table">
+<thead><tr><th>Employee</th><th>Leave Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Action</th></tr></thead>
+<tbody>
+<?php if ($leaveRequests) while ($lr = $leaveRequests->fetch_assoc()):
+$days = 0;
+if (!empty($lr['start_date']) && !empty($lr['end_date'])) { $d1 = new DateTime($lr['start_date']); $d2 = new DateTime($lr['end_date']); $days = $d2->diff($d1)->days + 1; }
+if ($days === 0 && !empty($lr['days_taken'])) $days = $lr['days_taken'];
+$leaveName = $lr['type_name'] ?? $lr['leave_type'] ?? '-';
+$status = $lr['status'] ?? 'Pending';
+?>
+<tr>
+<td><strong><?= htmlspecialchars($lr['full_name'] ?? '') ?></strong></td>
+<td><?= htmlspecialchars($leaveName) ?></td>
+<td><?= date('M j, Y', strtotime($lr['start_date'])) ?></td>
+<td><?= date('M j, Y', strtotime($lr['end_date'])) ?></td>
+<td><?= $days ?></td>
+<td><span class="badge-payroll badge-<?= $status==='Approved'?'active':($status==='Rejected'?'closed':'pending') ?>"><?= htmlspecialchars($status) ?></span></td>
+<td>
+<?php if ($status === 'Pending'): ?>
+<form method="POST" action="handlers/payroll_handler.php" style="display:inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-success" title="Approve"><i class="fas fa-check"></i></button></form>
+<form method="POST" action="handlers/payroll_handler.php" style="display:inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-danger" title="Reject"><i class="fas fa-times"></i></button></form>
+<?php else: ?><small class="text-muted">—</small><?php endif; ?>
+</td></tr>
+<?php endwhile; if (!$leaveRequests || $leaveRequests->num_rows === 0): ?>
+<tr><td colspan="7" class="text-center text-muted py-3">No leave requests found.</td></tr>
+<?php endif; ?>
+</tbody></table>
+</div></div></div>
+<div class="col-md-4">
+<div class="form-card mb-3">
+<div class="card-hd"><i class="fas fa-balance-scale me-2"></i>Leave Balances</div>
+<div class="card-bd">
+<?php $balances = $payrollConn ? $payrollConn->query("SELECT lb.*, s.full_name, lt.type_name FROM leave_balances lb JOIN staff s ON lb.staff_id=s.id LEFT JOIN leave_types lt ON lb.leave_type_id=lt.id WHERE lb.year=YEAR(CURDATE()) ORDER BY s.full_name") : null; ?>
+<table class="data-table">
+<thead><tr><th>Employee</th><th>Type</th><th>Total</th><th>Used</th><th>Left</th></tr></thead>
+<tbody>
+<?php if ($balances) while ($bal = $balances->fetch_assoc()): ?>
+<tr><td style="font-size:12px"><?= htmlspecialchars($bal['full_name'] ?? '') ?></td><td style="font-size:12px"><?= htmlspecialchars($bal['type_name'] ?? '') ?></td><td><?= $bal['total_days'] ?? 0 ?></td><td><?= $bal['used_days'] ?? 0 ?></td><td><strong><?= ($bal['remaining_days'] ?? 0) - ($bal['used_days'] ?? 0) ?></strong></td></tr>
+<?php endwhile; if (!$balances || $balances->num_rows === 0): ?>
+<tr><td colspan="5" class="text-center text-muted py-3">No balances.</td></tr>
+<?php endif; ?>
+</tbody></table>
+</div></div>
+<div class="form-card">
+<div class="card-hd"><i class="fas fa-plus me-2"></i>Add Leave Type</div>
+<div class="card-bd">
+<form method="POST" action="handlers/payroll_handler.php">
+<input type="hidden" name="action" value="add_leave_type">
+<div class="mb-2"><label>Type Name *</label><input type="text" name="type_name" class="form-control" required placeholder="e.g. Annual Leave"></div>
+<div class="mb-2"><label>Days Per Year</label><input type="number" name="days_per_year" class="form-control" value="30" min="1"></div>
+<div class="mb-2"><label>Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+<button type="submit" class="btn btn-sm btn-primary w-100"><i class="fas fa-save me-1"></i>Add Type</button>
+</form>
+</div></div>
+</div></div></div>
+
+<!-- LEAVE REQUEST MODAL -->
+<div id="leaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;width:90%;max-width:500px;padding:24px">
+<div class="d-flex justify-content-between align-items-center mb-3"><h5 style="margin:0">New Leave Request</h5><button onclick="document.getElementById('leaveModal').style.display='none'" style="background:none;border:none;font-size:1.2rem">&times;</button></div>
+<form method="POST" action="handlers/payroll_handler.php">
+<input type="hidden" name="action" value="create_leave_request">
+<div class="mb-3"><label>Employee *</label><select name="staff_id" class="form-control" required><option value="">-- Select --</option><?php if ($employees) foreach ($employees as $emp): ?><option value="<?= $emp['staff_id'] ?? $emp['id'] ?>"><?= htmlspecialchars($emp['full_name'] ?? '') ?></option><?php endforeach; ?></select></div>
+<div class="mb-3"><label>Leave Type *</label><select name="leave_type_id" class="form-control" required><option value="">-- Select --</option><?php if ($leaveTypes) while ($lt = $leaveTypes->fetch_assoc()): ?><option value="<?= $lt['id'] ?>"><?= htmlspecialchars($lt['type_name'] ?? $lt['leave_type_name'] ?? '') ?> (<?= $lt['days_per_year'] ?? 0 ?> days)</option><?php endwhile; ?></select></div>
+<div class="row mb-3"><div class="col"><label>Start Date *</label><input type="date" name="start_date" class="form-control" required></div><div class="col"><label>End Date *</label><input type="date" name="end_date" class="form-control" required></div></div>
+<div class="mb-3"><label>Reason</label><textarea name="reason" class="form-control" rows="3"></textarea></div>
+<div class="text-end"><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Submit</button></div>
+</form>
+</div></div>
 
 <!-- Employee Modal -->
 <div class="modal fade" id="employeeModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">

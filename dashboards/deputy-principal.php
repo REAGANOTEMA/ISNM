@@ -1330,5 +1330,13 @@ document.addEventListener('DOMContentLoaded', depLoadImprovement);
 <script>
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function mbSubstr(s,n){ if(!s) return ''; return s.length>n?s.substring(0,n)+'...':s; }
+function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
 </script>
+
+<?php
+require_once __DIR__ . '/../includes/profile_settings.php';
+if (function_exists('renderProfileModal')) renderProfileModal();
+if (function_exists('renderProfileStyles')) renderProfileStyles();
+if (function_exists('renderProfileScripts')) renderProfileScripts();
+?>
 </body></html>

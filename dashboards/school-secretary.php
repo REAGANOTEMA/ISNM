@@ -133,47 +133,58 @@ if (isset($_REQUEST['ajax'])) {
             $full_name = trim($_POST['full_name'] ?? '');
             $other_names = trim($_POST['other_names'] ?? '');
             $dob = $_POST['date_of_birth'] ?? '';
-            $gender = $_POST['gender'] ?? '';
+            $gender = $_POST['gender'] ?? 'Female';
             $phone = trim($_POST['phone'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $address = trim($_POST['address'] ?? '');
             $guardian_name = trim($_POST['guardian_name'] ?? '');
             $guardian_phone = trim($_POST['guardian_phone'] ?? '');
-            $program = $_POST['program'] ?? '';
-            $intake = $_POST['intake'] ?? '';
+            $program_name = $_POST['program'] ?? '';
+            $intake = $_POST['intake'] ?? 'January';
             $admission_date = $_POST['admission_date'] ?? date('Y-m-d');
-            if (!$full_name || !$gender || !$program || !$intake) {
+            if (!$full_name || !$gender || !$program_name || !$intake) {
                 $response['message'] = 'Required fields are missing.';
                 break;
             }
-            $student_number = 'ISM-' . strtoupper(substr($program, 0, 3)) . '-' . date('ym') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            $parts = explode(' ', $full_name);
-            $surname = $parts[0] ?? $full_name;
-            $last_name = end($parts);
-            $ins = $conn->prepare("INSERT INTO `$staff_db`.`applicants` (student_number, first_name, surname, last_name, other_name, full_name, email, phone, mobile_number, program, course, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())");
-            $status = 'new';
-            $intake_year = (int)date('Y');
-            $intake_period = $intake;
-            $ins->bind_param('ssssssssssssssssssss', $student_number, $full_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $phone, $program, $program, $intake_year, $intake_period, $dob, $gender, $address, $guardian_name, $guardian_phone, $status);
+            $app_number = 'APP-' . date('Y') . '-' . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $status = 'New Applicant';
+            $prog_id = 0;
+            $pr = $conn->query("SELECT id FROM `$staff_db`.`academic_programs` WHERE program_name='" . $conn->real_escape_string($program_name) . "' LIMIT 1");
+            if ($pr && $pr->num_rows > 0) { $prog_id = (int)$pr->fetch_assoc()['id']; }
+            $ins = $conn->prepare("INSERT INTO `$staff_db`.`applicants` (full_name, other_names, date_of_birth, gender, phone, email, address, guardian_name, guardian_phone, application_number, program_id, intake, admission_date, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $ins->bind_param('ssssssssssssss', $full_name, $other_names, $dob, $gender, $phone, $email, $address, $guardian_name, $guardian_phone, $app_number, $prog_id, $intake, $admission_date, $status);
             if ($ins->execute()) {
                 $applicant_id = $conn->insert_id;
-                $track = $conn->prepare("INSERT INTO `$staff_db`.`student_admission_tracking` (applicant_id, student_number, full_name, program, intake_year, intake_period, admission_status, created_at) VALUES (?,?,?,?,?,?,?,NOW())");
-                $track->bind_param('isssisss', $applicant_id, $student_number, $full_name, $program, $intake_year, $intake_period, $status);
+                $rc = 0;
+                $ck = $conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
+                if ($ck) { $rc = (int)$ck->fetch_assoc()['cnt']; }
+                $track = $conn->prepare("INSERT INTO `$staff_db`.`student_admission_tracking` (student_number, full_name, program, intake, admission_date, admission_status, requirements_completed, requirements_total) VALUES (?,?,?,?,?,?,?,?)");
+                $track->bind_param('ssssssii', $app_number, $full_name, $program_name, $intake, $admission_date, $status, $rc, $rc);
                 $track->execute();
+                $reqs = $conn->query("SELECT id FROM `$staff_db`.`admission_requirements` WHERE is_active=1");
+                if ($reqs) {
+                    $ins2 = $conn->prepare("INSERT IGNORE INTO `$staff_db`.`applicant_requirement_status` (applicant_id, requirement_id, status) VALUES (?,?,'Not Submitted')");
+                    while ($rq = $reqs->fetch_assoc()) { $ins2->bind_param('ii', $applicant_id, $rq['id']); $ins2->execute(); }
+                    $ins2->close();
+                }
                 if ($students_conn) {
-                    $s_ins = $students_conn->prepare("INSERT INTO `$students_db`.`students` (student_number, first_name, surname, last_name, other_name, full_name, email, phone, mobile_number, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())");
+                    $parts = explode(' ', $full_name);
+                    $surname = $parts[0] ?? $full_name;
+                    $last_name = end($parts);
                     $year = 1; $level = 'Year 1';
-                    $s_ins->bind_param('sssssssssssssissssssss', $student_number, $full_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $phone, $program, $program, $year, $level, $intake_year, $intake_period, $dob, $gender, $address, $guardian_name, $guardian_phone, $status);
+                    $s_ins = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`students` (student_number, first_name, surname, last_name, other_name, full_name, email, phone, program, course, year, level, intake_year, intake_period, date_of_birth, gender, address, guardian_name, guardian_phone, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    $s_ins->bind_param('sssssssssssissssssss', $app_number, $full_name, $surname, $last_name, $other_names, $full_name, $email, $phone, $program_name, $program_name, $year, $level, (string)date('Y'), $intake, $dob, $gender, $address, $guardian_name, $guardian_phone, 'Active');
                     $s_ins->execute();
                     $s_id = $students_conn->insert_id;
-                    $fee_status = 'unpaid';
-                    $prof = $students_conn->prepare("INSERT INTO `$students_db`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?) ON DUPLICATE KEY UPDATE admission_status=VALUES(admission_status)");
-                    $prof->bind_param('iss', $s_id, $status, $fee_status);
-                    $prof->execute();
+                    if ($s_id > 0) {
+                        $prof = $students_conn->prepare("INSERT IGNORE INTO `$students_db`.`student_profiles` (student_id, admission_status, fee_status) VALUES (?,?,?)");
+                        $prof->bind_param('iss', $s_id, $status, 'unpaid');
+                        $prof->execute();
+                    }
                 }
                 $response['success'] = true;
-                $response['message'] = 'Student registered successfully! Student Number: ' . $student_number;
-                $response['student_number'] = $student_number;
+                $response['message'] = 'Student registered successfully! Number: ' . $app_number;
+                $response['student_number'] = $app_number;
             } else {
                 $response['message'] = 'Registration failed: ' . $conn->error;
             }
@@ -191,25 +202,26 @@ if (isset($_REQUEST['ajax'])) {
             $params = [];
             $types = '';
             if ($search) {
-                $where .= " AND (a.full_name LIKE ? OR a.student_number LIKE ? OR a.email LIKE ? OR a.phone LIKE ?)";
+                $where .= " AND (a.full_name LIKE ? OR a.application_number LIKE ? OR a.email LIKE ? OR a.phone LIKE ?)";
                 $s = "%$search%";
                 $params = array_merge($params, [$s, $s, $s, $s]);
                 $types .= 'ssss';
             }
             if ($status_filter) { $where .= " AND a.status = ?"; $params[] = $status_filter; $types .= 's'; }
-            if ($program_filter) { $where .= " AND a.program = ?"; $params[] = $program_filter; $types .= 's'; }
-            if ($intake_filter) { $where .= " AND a.intake_period = ?"; $params[] = $intake_filter; $types .= 's'; }
+            if ($program_filter) { $where .= " AND a.program_id = ?"; $params[] = (int)$program_filter; $types .= 'i'; }
+            if ($intake_filter) { $where .= " AND a.intake = ?"; $params[] = $intake_filter; $types .= 's'; }
             $count_sql = "SELECT COUNT(*) FROM `$staff_db`.`applicants` a $where";
             $count_stmt = $conn->prepare($count_sql);
             if ($params) $count_stmt->bind_param($types, ...$params);
             $count_stmt->execute();
             $total = $count_stmt->get_result()->fetch_row()[0];
-            $sql = "SELECT a.*, 
-                    (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar 
-                     JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id 
-                     WHERE ars.applicant_id = a.id AND ars.status = 'completed') as req_complete,
-                    (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements`) as req_total
-                    FROM `$staff_db`.`applicants` a $where 
+            $sql = "SELECT a.*, ap.program_name, ap.program_code,
+                    (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar
+                     JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id
+                     WHERE ars.applicant_id = a.id AND ars.status IN ('Submitted','Verified')) as req_complete,
+                    (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` WHERE is_active=1) as req_total
+                    FROM `$staff_db`.`applicants` a
+                    LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id $where
                     ORDER BY a.created_at DESC LIMIT $per_page OFFSET $offset";
             $stmt = $conn->prepare($sql);
             if ($params) $stmt->bind_param($types, ...$params);
@@ -227,19 +239,19 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_student':
             $id = (int)($_REQUEST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid student ID'; break; }
-            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`applicants` WHERE id = ?");
+            $stmt = $conn->prepare("SELECT a.*, ap.program_name, ap.program_code FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id WHERE a.id = ?");
             $stmt->bind_param('i', $id);
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'pending') as req_status, ars.completed_at, ars.notes FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? ORDER BY ar.sort_order");
+                $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
                 $req_stmt->bind_param('i', $id);
                 $req_stmt->execute();
                 $req_result = $req_stmt->get_result();
                 $requirements = [];
                 while ($r = $req_result->fetch_assoc()) { $requirements[] = $r; }
                 $row['requirements'] = $requirements;
-                $row['req_complete'] = count(array_filter($requirements, fn($r) => $r['req_status'] === 'completed'));
+                $row['req_complete'] = count(array_filter($requirements, fn($r) => in_array($r['req_status'], ['Submitted', 'Verified'])));
                 $row['req_total'] = count($requirements);
                 $response['success'] = true;
                 $response['student'] = $row;
@@ -251,14 +263,13 @@ if (isset($_REQUEST['ajax'])) {
         case 'update_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $fields = ['full_name','other_names','date_of_birth','gender','phone','email','address','guardian_name','guardian_phone','program','intake','status'];
+            $fields = ['full_name','other_names','date_of_birth','gender','phone','email','address','guardian_name','guardian_phone','program_id','intake','status'];
             $sets = [];
             $params = [];
             $types = '';
             foreach ($fields as $f) {
-                $db_col = $f === 'other_names' ? 'other_name' : ($f === 'intake' ? 'intake_period' : $f);
                 if (isset($_POST[$f])) {
-                    $sets[] = "`$db_col` = ?";
+                    $sets[] = "`$f` = ?";
                     $params[] = $_POST[$f];
                     $types .= 's';
                 }
@@ -270,19 +281,22 @@ if (isset($_REQUEST['ajax'])) {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             if ($stmt->execute()) {
-                $track_sets = [];
-                $track_params = [];
-                $track_types = '';
-                if (isset($_POST['full_name'])) { $track_sets[] = "`full_name` = ?"; $track_params[] = $_POST['full_name']; $track_types .= 's'; }
-                if (isset($_POST['program'])) { $track_sets[] = "`program` = ?"; $track_params[] = $_POST['program']; $track_types .= 's'; }
-                if (isset($_POST['intake'])) { $track_sets[] = "`intake_period` = ?"; $track_params[] = $_POST['intake']; $track_types .= 's'; }
-                if (isset($_POST['status'])) { $track_sets[] = "`admission_status` = ?"; $track_params[] = $_POST['status']; $track_types .= 's'; }
-                if (!empty($track_sets)) {
-                    $track_params[] = $id;
-                    $track_types .= 'i';
-                    $t_stmt = $conn->prepare("UPDATE `$staff_db`.`student_admission_tracking` SET " . implode(', ', $track_sets) . " WHERE applicant_id = ?");
-                    $t_stmt->bind_param($track_types, ...$track_params);
-                    $t_stmt->execute();
+                $an = '';
+                $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+                if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
+                if ($an) {
+                    $track_sets = [];
+                    $track_params = [];
+                    $track_types = '';
+                    if (isset($_POST['full_name'])) { $track_sets[] = "`full_name` = ?"; $track_params[] = $_POST['full_name']; $track_types .= 's'; }
+                    if (isset($_POST['status'])) { $track_sets[] = "`admission_status` = ?"; $track_params[] = $_POST['status']; $track_types .= 's'; }
+                    if (!empty($track_sets)) {
+                        $track_params[] = $an;
+                        $track_types .= 's';
+                        $t_stmt = $conn->prepare("UPDATE `$staff_db`.`student_admission_tracking` SET " . implode(', ', $track_sets) . " WHERE student_number = ?");
+                        $t_stmt->bind_param($track_types, ...$track_params);
+                        $t_stmt->execute();
+                    }
                 }
                 $response['success'] = true;
                 $response['message'] = 'Student updated successfully';
@@ -294,10 +308,15 @@ if (isset($_REQUEST['ajax'])) {
         case 'delete_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
+            $an = '';
+            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
             $stmt = $conn->prepare("DELETE FROM `$staff_db`.`applicants` WHERE id = ?");
             $stmt->bind_param('i', $id);
             if ($stmt->execute()) {
-                $conn->query("DELETE FROM `$staff_db`.`student_admission_tracking` WHERE applicant_id = $id");
+                $conn->query("DELETE FROM `$staff_db`.`applicant_requirement_status` WHERE applicant_id = $id");
+                $conn->query("DELETE FROM `$staff_db`.`student_documents` WHERE applicant_id = $id");
+                if ($an) $conn->query("DELETE FROM `$staff_db`.`student_admission_tracking` WHERE student_number = '" . $conn->real_escape_string($an) . "'");
                 $response['success'] = true;
                 $response['message'] = 'Student deleted';
             } else {
@@ -308,45 +327,38 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_student_profile':
             $id = (int)($_REQUEST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $stmt = $conn->prepare("SELECT * FROM `$staff_db`.`applicants` WHERE id = ?");
+            $stmt = $conn->prepare("SELECT a.*, ap.program_name, ap.program_code FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id WHERE a.id = ?");
             $stmt->bind_param('i', $id);
             $stmt->execute();
             $student = $stmt->get_result()->fetch_assoc();
             if (!$student) { $response['message'] = 'Not found'; break; }
-            $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'pending') as req_status, ars.completed_at, ars.notes FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? ORDER BY ar.sort_order");
+            $req_stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
             $req_stmt->bind_param('i', $id);
             $req_stmt->execute();
             $req_res = $req_stmt->get_result();
             $requirements = [];
             while ($r = $req_res->fetch_assoc()) { $requirements[] = $r; }
-            $doc_stmt = $conn->prepare("SELECT * FROM `$staff_db`.`student_documents` WHERE applicant_id = ? ORDER BY created_at DESC");
+            $doc_stmt = $conn->prepare("SELECT * FROM `$staff_db`.`student_documents` WHERE applicant_id = ? AND document_status='Active' ORDER BY uploaded_at DESC");
             $doc_stmt->bind_param('i', $id);
             $doc_stmt->execute();
             $doc_res = $doc_stmt->get_result();
             $documents = [];
             while ($d = $doc_res->fetch_assoc()) { $documents[] = $d; }
-            $profile = null;
-            if ($students_conn) {
-                $p_stmt = $students_conn->prepare("SELECT * FROM `$students_db`.`student_profiles` WHERE student_id = ?");
-                $p_stmt->bind_param('i', $id);
-                $p_stmt->execute();
-                $profile = $p_stmt->get_result()->fetch_assoc();
-            }
             $response['success'] = true;
             $response['student'] = $student;
             $response['requirements'] = $requirements;
             $response['documents'] = $documents;
-            $response['profile'] = $profile;
-            $response['req_complete'] = count(array_filter($requirements, fn($r) => $r['req_status'] === 'completed'));
+            $response['req_complete'] = count(array_filter($requirements, fn($r) => in_array($r['req_status'], ['Submitted', 'Verified'])));
             $response['req_total'] = count($requirements);
             break;
 
         case 'get_status_overview':
-            $stmt = $conn->query("SELECT a.id, a.student_number, a.full_name, a.program, a.status as admission_status, a.intake_period, a.created_at,
-                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id WHERE ars.applicant_id = a.id AND ars.status = 'completed') as req_complete,
-                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements`) as req_total,
-                (SELECT COUNT(*) FROM `$staff_db`.`student_documents` WHERE applicant_id = a.id) as doc_count
-                FROM `$staff_db`.`applicants` a ORDER BY a.created_at DESC");
+            $stmt = $conn->query("SELECT a.id, a.application_number, a.full_name, a.status as admission_status, a.intake, a.created_at,
+                ap.program_name,
+                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id WHERE ars.applicant_id = a.id AND ars.status IN ('Submitted','Verified')) as req_complete,
+                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` WHERE is_active=1) as req_total,
+                (SELECT COUNT(*) FROM `$staff_db`.`student_documents` WHERE applicant_id = a.id AND document_status='Active') as doc_count
+                FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id ORDER BY a.created_at DESC");
             $students = [];
             while ($row = $stmt->fetch_assoc()) { $students[] = $row; }
             $response['success'] = true;
@@ -355,12 +367,11 @@ if (isset($_REQUEST['ajax'])) {
         case 'approve_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'approved' WHERE id = $id");
-            $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'approved' WHERE applicant_id = $id");
-            if ($students_conn) {
-                $students_conn->query("UPDATE `$students_db`.`student_profiles` SET admission_status = 'approved' WHERE student_id = $id");
-                $students_conn->query("INSERT INTO `$students_db`.`student_status_history` (student_id, status_type, new_value, changed_by) VALUES ($id, 'admission_status', 'approved', $user_id)");
-            }
+            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'Approved' WHERE id = $id");
+            $an = '';
+            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
+            if ($an) $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Approved' WHERE student_number = '" . $conn->real_escape_string($an) . "'");
             $response['success'] = true;
             $response['message'] = 'Student approved';
             break;
@@ -368,12 +379,11 @@ if (isset($_REQUEST['ajax'])) {
         case 'reject_student':
             $id = (int)($_POST['id'] ?? 0);
             if (!$id) { $response['message'] = 'Invalid ID'; break; }
-            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'rejected' WHERE id = $id");
-            $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'rejected' WHERE applicant_id = $id");
-            if ($students_conn) {
-                $students_conn->query("UPDATE `$students_db`.`student_profiles` SET admission_status = 'rejected' WHERE student_id = $id");
-                $students_conn->query("INSERT INTO `$students_db`.`student_status_history` (student_id, status_type, new_value, changed_by) VALUES ($id, 'admission_status', 'rejected', $user_id)");
-            }
+            $conn->query("UPDATE `$staff_db`.`applicants` SET status = 'Rejected' WHERE id = $id");
+            $an = '';
+            $r = $conn->query("SELECT application_number FROM `$staff_db`.`applicants` WHERE id=$id");
+            if ($r && $r->num_rows > 0) $an = $r->fetch_assoc()['application_number'];
+            if ($an) $conn->query("UPDATE `$staff_db`.`student_admission_tracking` SET admission_status = 'Rejected' WHERE student_number = '" . $conn->real_escape_string($an) . "'");
             $response['success'] = true;
             $response['message'] = 'Student rejected';
             break;
@@ -381,7 +391,7 @@ if (isset($_REQUEST['ajax'])) {
         case 'get_requirements':
             $applicant_id = (int)($_REQUEST['applicant_id'] ?? 0);
             if (!$applicant_id) { $response['message'] = 'Invalid ID'; break; }
-            $stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'pending') as req_status, ars.completed_at, ars.notes FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? ORDER BY ar.sort_order");
+            $stmt = $conn->prepare("SELECT ar.*, COALESCE(ars.status, 'Not Submitted') as req_status, ars.remarks, ars.submitted_at, ars.verified_at FROM `$staff_db`.`admission_requirements` ar LEFT JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id AND ars.applicant_id = ? WHERE ar.is_active=1 ORDER BY ar.display_order");
             $stmt->bind_param('i', $applicant_id);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -394,12 +404,17 @@ if (isset($_REQUEST['ajax'])) {
         case 'set_requirement_status':
             $applicant_id = (int)($_POST['applicant_id'] ?? 0);
             $requirement_id = (int)($_POST['requirement_id'] ?? 0);
-            $status = $_POST['status'] ?? 'pending';
-            $notes = trim($_POST['notes'] ?? '');
+            $status = $_POST['status'] ?? 'Not Submitted';
+            $remarks = trim($_POST['remarks'] ?? trim($_POST['notes'] ?? ''));
             if (!$applicant_id || !$requirement_id) { $response['message'] = 'Invalid IDs'; break; }
-            $completed_at = ($status === 'completed') ? date('Y-m-d H:i:s') : null;
-            $stmt = $conn->prepare("INSERT INTO `$staff_db`.`applicant_requirement_status` (applicant_id, requirement_id, status, notes, completed_at) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes), completed_at=VALUES(completed_at)");
-            $stmt->bind_param('iisss', $applicant_id, $requirement_id, $status, $notes, $completed_at);
+            $valid = ['Not Submitted', 'Submitted', 'Verified', 'Rejected', 'Missing'];
+            if (!in_array($status, $valid)) { $status = 'Not Submitted'; }
+            $extra = '';
+            if ($status === 'Submitted') { $extra = ", submitted_by=$user_id, submitted_at=NOW()"; }
+            elseif ($status === 'Verified') { $extra = ", verified_by=$user_id, verified_at=NOW()"; }
+            elseif ($status === 'Rejected') { $extra = ", rejected_by=$user_id"; }
+            $stmt = $conn->prepare("INSERT INTO `$staff_db`.`applicant_requirement_status` (applicant_id, requirement_id, status, remarks) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status), remarks=VALUES(remarks)$extra");
+            $stmt->bind_param('iiis', $applicant_id, $requirement_id, $status, $remarks);
             if ($stmt->execute()) {
                 $response['success'] = true;
                 $response['message'] = 'Requirement updated';
@@ -410,25 +425,29 @@ if (isset($_REQUEST['ajax'])) {
 
         case 'upload_document':
             $applicant_id = (int)($_POST['applicant_id'] ?? 0);
-            $title = trim($_POST['title'] ?? '');
+            $title = trim($_POST['title'] ?? trim($_POST['document_title'] ?? ''));
             $category = trim($_POST['category'] ?? 'general');
-            $description = trim($_POST['description'] ?? '');
+            $doc_type = trim($_POST['document_type'] ?? $category);
+            $req_id = (int)($_POST['requirement_id'] ?? 0);
             if (!$applicant_id || !$title) { $response['message'] = 'Missing required fields'; break; }
+            $file_name = '';
             $file_path = '';
-            $file_type = '';
+            $file_size = 0;
+            $mime_type = '';
             if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
-                $upload_dir = __DIR__ . '/../uploads/student_docs/';
+                $upload_dir = __DIR__ . '/../uploads/admissions/applicant_' . $applicant_id . '/';
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
                 $ext = pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION);
-                $filename = 'doc_' . $applicant_id . '_' . time() . '.' . $ext;
-                $target = $upload_dir . $filename;
+                $file_name = 'doc_' . $req_id . '_' . time() . '.' . $ext;
+                $target = $upload_dir . $file_name;
                 if (move_uploaded_file($_FILES['document']['tmp_name'], $target)) {
-                    $file_path = 'uploads/student_docs/' . $filename;
-                    $file_type = $ext;
+                    $file_path = '../uploads/admissions/applicant_' . $applicant_id . '/' . $file_name;
+                    $file_size = $_FILES['document']['size'];
+                    $mime_type = $_FILES['document']['type'];
                 }
             }
-            $stmt = $conn->prepare("INSERT INTO `$staff_db`.`student_documents` (applicant_id, title, description, file_path, file_type, category, uploaded_by, created_at) VALUES (?,?,?,?,?,?,?,NOW())");
-            $stmt->bind_param('isssssi', $applicant_id, $title, $description, $file_path, $file_type, $category, $user_id);
+            $stmt = $conn->prepare("INSERT INTO `$staff_db`.`student_documents` (applicant_id, requirement_id, document_type, document_title, file_name, file_path, file_size, mime_type, uploaded_by) VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param('iisssssii', $applicant_id, $req_id, $doc_type, $title, $file_name, $file_path, $file_size, $mime_type, $user_id);
             if ($stmt->execute()) {
                 $response['success'] = true;
                 $response['message'] = 'Document uploaded';
@@ -440,11 +459,13 @@ if (isset($_REQUEST['ajax'])) {
 
         case 'verify_document':
             $doc_id = (int)($_POST['doc_id'] ?? 0);
-            $status = $_POST['status'] ?? 'verified';
+            $status = $_POST['status'] ?? 'Verified';
             if (!$doc_id) { $response['message'] = 'Invalid ID'; break; }
-            $stmt = $conn->prepare("UPDATE `$staff_db`.`student_documents` SET verification_status = ? WHERE id = ?");
-            $stmt->bind_param('si', $status, $doc_id);
-            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Document ' . $status; }
+            $valid = ['Pending', 'Verified', 'Rejected'];
+            if (!in_array($status, $valid)) { $status = 'Verified'; }
+            $stmt = $conn->prepare("UPDATE `$staff_db`.`student_documents` SET verification_status = ?, verified_by = ?, verified_at = NOW() WHERE id = ?");
+            $stmt->bind_param('sii', $status, $user_id, $doc_id);
+            if ($stmt->execute()) { $response['success'] = true; $response['message'] = 'Document ' . strtolower($status); }
             else { $response['message'] = 'Failed'; }
             break;
 
@@ -454,10 +475,10 @@ if (isset($_REQUEST['ajax'])) {
             $stats['by_status'] = [];
             while ($row = $r->fetch_assoc()) { $stats['by_status'][$row['status']] = (int)$row['cnt']; }
             $stats['total'] = array_sum($stats['by_status']);
-            $r2 = $conn->query("SELECT program, COUNT(*) as cnt FROM `$staff_db`.`applicants` GROUP BY program ORDER BY cnt DESC");
+            $r2 = $conn->query("SELECT ap.program_name as program, COUNT(a.id) as cnt FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id GROUP BY a.program_id, ap.program_name ORDER BY cnt DESC");
             $stats['by_program'] = [];
             while ($row = $r2->fetch_assoc()) { $stats['by_program'][] = $row; }
-            $r3 = $conn->query("SELECT intake_period, COUNT(*) as cnt FROM `$staff_db`.`applicants` GROUP BY intake_period ORDER BY cnt DESC");
+            $r3 = $conn->query("SELECT intake, COUNT(*) as cnt FROM `$staff_db`.`applicants` GROUP BY intake ORDER BY cnt DESC");
             $stats['by_intake'] = [];
             while ($row = $r3->fetch_assoc()) { $stats['by_intake'][] = $row; }
             $response['success'] = true;
@@ -465,14 +486,15 @@ if (isset($_REQUEST['ajax'])) {
             break;
 
         case 'get_students_incomplete':
-            $stmt = $conn->query("SELECT a.id, a.student_number, a.full_name, a.program, a.status,
-                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id WHERE ars.applicant_id = a.id AND ars.status = 'completed') as req_complete,
-                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements`) as req_total
+            $stmt = $conn->query("SELECT a.id, a.application_number, a.full_name, a.status,
+                ap.program_name, a.intake,
+                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id = ar.id WHERE ars.applicant_id = a.id AND ars.status IN ('Submitted','Verified')) as req_complete,
+                (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` WHERE is_active=1) as req_total
                 FROM `$staff_db`.`applicants` a
-                HAVING req_complete < req_total
+                LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id
                 ORDER BY req_complete ASC");
             $students = [];
-            while ($row = $stmt->fetch_assoc()) { $students[] = $row; }
+            while ($row = $stmt->fetch_assoc()) { if ((int)$row['req_complete'] < (int)$row['req_total']) $students[] = $row; }
             $response['success'] = true;
             $response['students'] = $students;
             break;
@@ -484,17 +506,17 @@ if (isset($_REQUEST['ajax'])) {
             $where = "WHERE 1=1";
             $params = [];
             $types = '';
-            if ($search) { $where .= " AND (full_name LIKE ? OR student_number LIKE ?)"; $s = "%$search%"; $params = [$s, $s]; $types = 'ss'; }
-            if ($status_filter) { $where .= " AND status = ?"; $params[] = $status_filter; $types .= 's'; }
-            if ($program_filter) { $where .= " AND program = ?"; $params[] = $program_filter; $types .= 's'; }
-            $stmt = $conn->prepare("SELECT student_number, full_name, email, phone, program, intake_period, status, date_of_birth, gender, address, guardian_name, guardian_phone, created_at FROM `$staff_db`.`applicants` $where ORDER BY created_at DESC");
+            if ($search) { $where .= " AND (a.full_name LIKE ? OR a.application_number LIKE ?)"; $s = "%$search%"; $params = [$s, $s]; $types = 'ss'; }
+            if ($status_filter) { $where .= " AND a.status = ?"; $params[] = $status_filter; $types .= 's'; }
+            if ($program_filter) { $where .= " AND a.program_id = ?"; $params[] = (int)$program_filter; $types .= 'i'; }
+            $stmt = $conn->prepare("SELECT a.application_number, a.full_name, a.email, a.phone, ap.program_name, a.intake, a.status, a.date_of_birth, a.gender, a.address, a.guardian_name, a.guardian_phone, a.created_at FROM `$staff_db`.`applicants` a LEFT JOIN `$staff_db`.`academic_programs` ap ON a.program_id = ap.id $where ORDER BY a.created_at DESC");
             if ($params) $stmt->bind_param($types, ...$params);
             $stmt->execute();
             $result = $stmt->get_result();
             header('Content-Type: text/csv');
             header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d') . '.csv"');
             $output = fopen('php://output', 'w');
-            fputcsv($output, ['Student Number', 'Full Name', 'Email', 'Phone', 'Program', 'Intake', 'Status', 'DOB', 'Gender', 'Address', 'Guardian', 'Guardian Phone', 'Created']);
+            fputcsv($output, ['Application Number', 'Full Name', 'Email', 'Phone', 'Program', 'Intake', 'Status', 'DOB', 'Gender', 'Address', 'Guardian', 'Guardian Phone', 'Created']);
             while ($row = $result->fetch_assoc()) { fputcsv($output, $row); }
             fclose($output);
             exit;
@@ -692,9 +714,9 @@ if (isset($_REQUEST['ajax'])) {
             $stats = [];
             $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants`");
             $stats['total_students'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'approved'");
+            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'Approved'");
             $stats['active_students'] = (int)$r->fetch_assoc()['cnt'];
-            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'new'");
+            $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status = 'New Applicant'");
             $stats['pending_admissions'] = (int)$r->fetch_assoc()['cnt'];
             $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id = $user_id AND appointment_date = CURDATE()");
             $stats['today_appointments'] = (int)$r->fetch_assoc()['cnt'];
@@ -717,46 +739,29 @@ if (isset($_REQUEST['ajax'])) {
 $stats = ['total_students'=>0,'active_students'=>0,'pending_admissions'=>0,'incomplete_reqs'=>0,'today_appointments'=>0,'unread_messages'=>0];
 $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants`");
 if ($r) $stats['total_students'] = (int)$r->fetch_assoc()['cnt'];
-$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status='approved'");
+$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status='Approved'");
 if ($r) $stats['active_students'] = (int)$r->fetch_assoc()['cnt'];
-$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status='new'");
+$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` WHERE status='New Applicant'");
 if ($r) $stats['pending_admissions'] = (int)$r->fetch_assoc()['cnt'];
-$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` a WHERE (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id=ar.id WHERE ars.applicant_id=a.id AND ars.status='completed') < (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements`)");
+$r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`applicants` a WHERE (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` ar JOIN `$staff_db`.`applicant_requirement_status` ars ON ars.requirement_id=ar.id WHERE ars.applicant_id=a.id AND ars.status IN ('Submitted','Verified')) < (SELECT COUNT(*) FROM `$staff_db`.`admission_requirements` WHERE is_active=1)");
 if ($r) $stats['incomplete_reqs'] = (int)$r->fetch_assoc()['cnt'];
 $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_appointments` WHERE user_id=$user_id AND appointment_date=CURDATE()");
 if ($r) $stats['today_appointments'] = (int)$r->fetch_assoc()['cnt'];
 $r = @$conn->query("SELECT COUNT(*) as cnt FROM `$staff_db`.`secretary_messages` WHERE recipient_id=$user_id AND is_read=0");
 if ($r) $stats['unread_messages'] = (int)$r->fetch_assoc()['cnt'];
 
-$programs = ['Nursing','Midwifery','Clinical Medicine','Pharmacy','Laboratory','Radiology'];
+$programs = [];
+$prog_res = @$conn->query("SELECT program_name FROM `$staff_db`.`academic_programs` WHERE status='Active' ORDER BY program_name");
+if ($prog_res) while ($p = $prog_res->fetch_assoc()) $programs[] = $p['program_name'];
+if (empty($programs)) $programs = ['Nursing','Midwifery'];
 $intakes = ['January','May','September'];
 $page = $_REQUEST['page'] ?? 'home';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Secretary Dashboard - Iganga School of Nursing and Midwifery</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<?php $pageTitle = 'School Secretary'; include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-:root{--isnm-navy:#1a237e;--isnm-blue:#283593;--isnm-light:#3949ab;--isnm-accent:#5c6bc0;--isnm-bg:#f0f2f5;--isnm-card:#fff;--isnm-text:#212529;--sidebar-w:260px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--isnm-bg);color:var(--isnm-text);overflow-x:hidden}
-.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,var(--isnm-navy),var(--isnm-blue));color:#fff;z-index:1000;overflow-y:auto;transition:transform .3s}
-.sidebar .brand{padding:20px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar .brand h5{font-size:14px;margin:0;font-weight:600;letter-spacing:.5px}
-.sidebar .brand small{font-size:11px;opacity:.7}
-.sidebar .nav-menu{list-style:none;padding:10px 0;margin:0}
-.sidebar .nav-menu li a{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,.75);text-decoration:none;font-size:13.5px;transition:all .2s;border-left:3px solid transparent}
-.sidebar .nav-menu li a:hover,.sidebar .nav-menu li a.active{background:rgba(255,255,255,.1);color:#fff;border-left-color:#ffc107}
-.sidebar .nav-menu li a i{width:20px;text-align:center;font-size:14px}
-.sidebar .nav-section{padding:8px 20px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.4);margin-top:8px}
-.main-content{margin-left:var(--sidebar-w);min-height:100vh}
-.topbar{background:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);position:sticky;top:0;z-index:100}
-.topbar .page-title{font-size:16px;font-weight:600;color:var(--isnm-navy)}
-.topbar .user-info{display:flex;align-items:center;gap:10px}
 .content-area{padding:20px 24px}
 .stat-card{background:var(--isnm-card);border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid var(--isnm-navy);transition:transform .2s}
 .stat-card:hover{transform:translateY(-2px)}
@@ -785,60 +790,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .btn-isnm-outline:hover{background:var(--isnm-navy);color:#fff}
 .modal-header{background:var(--isnm-navy);color:#fff}
 .modal-header .btn-close{filter:brightness(0) invert(1)}
-.section-card{background:var(--isnm-card);border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px}
-.sidebar .nav-menu li a .badge{margin-left:auto;background:rgba(255,255,255,.2);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px}
-@media(max-width:991px){.sidebar{transform:translateX(-100%)}.sidebar.show{transform:translateX(0)}.main-content{margin-left:0}.sidebar-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999}.sidebar-overlay.show{display:block}}
-.menu-toggle{display:none;background:var(--isnm-navy);color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:16px}
-@media(max-width:991px){.menu-toggle{display:inline-block}}
-@media print{.sidebar,.topbar,.menu-toggle{display:none!important}.main-content{margin-left:0!important}.content-area{padding:10px!important}}
 </style>
 </head>
 <body>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar">
-    <div class="brand">
-        <div style="font-size:32px;margin-bottom:6px"><i class="fas fa-graduation-cap"></i></div>
-        <h5>ISNM</h5>
-        <small>School Secretary Dashboard</small>
-    </div>
-    <div class="nav-section">Student Management</div>
-    <ul class="nav-menu">
-        <li><a href="?page=home" class="<?= $page==='home'?'active':'' ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-        <li><a href="?page=student_registration" class="<?= $page==='student_registration'?'active':'' ?>"><i class="fas fa-user-plus"></i> Register Student</a></li>
-        <li><a href="?page=student_records" class="<?= $page==='student_records'?'active':'' ?>"><i class="fas fa-users"></i> Student Records <span class="badge"><?= $stats['total_students'] ?></span></a></li>
-        <li><a href="?page=admissions" class="<?= $page==='admissions'?'active':'' ?>"><i class="fas fa-clipboard-check"></i> Admissions <span class="badge"><?= $stats['pending_admissions'] ?></span></a></li>
-        <li><a href="?page=status_dashboard" class="<?= $page==='status_dashboard'?'active':'' ?>"><i class="fas fa-chart-bar"></i> Status Dashboard</a></li>
-    </ul>
-    <div class="nav-section">Secretary Duties</div>
-    <ul class="nav-menu">
-        <li><a href="?page=appointments" class="<?= $page==='appointments'?'active':'' ?>"><i class="fas fa-calendar-check"></i> Appointments <span class="badge"><?= $stats['today_appointments'] ?></span></a></li>
-        <li><a href="?page=meetings" class="<?= $page==='meetings'?'active':'' ?>"><i class="fas fa-handshake"></i> Meetings</a></li>
-        <li><a href="?page=documents" class="<?= $page==='documents'?'active':'' ?>"><i class="fas fa-file-alt"></i> Documents</a></li>
-        <li><a href="?page=comms" class="<?= $page==='comms'?'active':'' ?>"><i class="fas fa-envelope"></i> Messages <span class="badge"><?= $stats['unread_messages'] ?></span></a></li>
-        <li><a href="?page=requests" class="<?= $page==='requests'?'active':'' ?>"><i class="fas fa-clipboard-list"></i> Requests</a></li>
-        <li><a href="?page=announcements" class="<?= $page==='announcements'?'active':'' ?>"><i class="fas fa-bullhorn"></i> Announcements</a></li>
-        <li><a href="?page=contacts" class="<?= $page==='contacts'?'active':'' ?>"><i class="fas fa-address-book"></i> Contacts</a></li>
-    </ul>
-    <div class="nav-section">Analytics</div>
-    <ul class="nav-menu">
-        <li><a href="?page=reports" class="<?= $page==='reports'?'active':'' ?>"><i class="fas fa-chart-pie"></i> Reports</a></li>
-    </ul>
-</aside>
-<div class="main-content">
-    <div class="topbar">
-        <div class="d-flex align-items-center gap-3">
-            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <span class="page-title"><?php
-                $titles = ['home'=>'Dashboard Overview','student_registration'=>'Register New Student','student_records'=>'Student Records','student_profile'=>'Student Profile','student_edit'=>'Edit Student','admissions'=>'Admissions Management','status_dashboard'=>'Status Dashboard','appointments'=>'Appointments','meetings'=>'Meetings','documents'=>'Documents','comms'=>'Messages','requests'=>'Internal Requests','announcements'=>'Announcements','contacts'=>'Contacts','reports'=>'Reports'];
-                echo $titles[$page] ?? 'Dashboard';
-            ?></span>
-        </div>
-        <div class="user-info">
-            <span class="badge bg-primary"><?= htmlspecialchars($user_name) ?></span>
-            <span class="text-muted" style="font-size:12px"><i class="fas fa-user-shield"></i> School Secretary</span>
-        </div>
-    </div>
-    <div class="content-area">
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; renderDashboardTopbar($pageTitle); ?>
+<div class="content-area">
 <?php if ($page === 'home'): ?>
 <div class="row g-3 mb-4">
     <div class="col-md-4 col-lg-2">
@@ -1426,7 +1383,6 @@ if ($edit_id) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const BASE = window.location.pathname.split('?')[0];
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');document.getElementById('sidebarOverlay').classList.toggle('show')}
 function showMsg(msg,type='success'){const d=document.createElement('div');d.className='alert alert-'+type+' alert-dismissible fade show mt-2';d.innerHTML=msg+'<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';document.querySelector('.content-area').prepend(d);setTimeout(()=>d.remove(),5000)}
 async function ajax(action,method='GET',data=null){const opts={method};if(method==='POST'&&data){if(data instanceof FormData){opts.body=data}else{opts.body=new URLSearchParams(data)}}const url=new URL(BASE,window.location.origin);url.searchParams.set('ajax',action);if(method==='GET'&&data){Object.entries(data).forEach(([k,v])=>{if(v!==undefined&&v!==null)url.searchParams.set(k,v)})}const r=await fetch(url,opts);return r.json()}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}

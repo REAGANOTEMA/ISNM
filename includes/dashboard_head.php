@@ -271,58 +271,41 @@ window.onerror = function(msg, url) {
 </script>
 
 <style>
-/* Responsive dashboard fixes */
+/* ── Dashboard Responsive Fixes (unified with dashboard-mobile.css) ── */
 @media (max-width: 768px) {
-  .sidebar { width: 100% !important; position: relative !important; }
-  .main-content { margin-left: 0 !important; padding: 10px !important; }
-  .dashboard-card { margin-bottom: 15px; }
-  .card-body { padding: 15px; }
-  .table-responsive { font-size: 13px; }
-  .btn { width: 100%; margin-bottom: 5px; }
-  .row-cards { padding: 0 5px; }
-  h1, h2, h3 { font-size: 1.2rem; }
-  .navbar-brand { font-size: 1rem; }
-  .container-fluid { padding-left: 10px; padding-right: 10px; }
-  .page-header { flex-direction: column; align-items: flex-start; }
+  .main-content, .dashboard-main { margin-left: 0 !important; padding: 14px !important; }
+  .dashboard-header { padding: 0 14px 0 64px !important; }
+  .dashboard-header h1 { font-size: 1rem !important; }
+  .dashboard-header p { display: none !important; }
+  .stat-card { padding: 14px !important; }
+  .stat-card .stat-value { font-size: 1.2rem !important; }
+  .stat-card .stat-label { font-size: 0.75rem !important; }
+  .page-header { flex-direction: column !important; align-items: flex-start !important; }
   .page-header .btn-group { margin-top: 10px; width: 100%; }
   .page-header .btn-group .btn { flex: 1; }
-  .stat-card { padding: 12px; }
-  .stat-card .stat-value { font-size: 1.5rem; }
-  .stat-card .stat-label { font-size: 0.75rem; }
-  input, select, textarea { font-size: 16px !important; }
-  .dataTables_wrapper .dataTables_filter input { width: 150px !important; }
-  .modal-dialog { margin: 10px; }
-  .card-title { font-size: 1rem; }
   .nav-tabs .nav-link { padding: 8px 10px; font-size: 0.85rem; }
+  .modal-dialog { margin: 10px; }
+  input, select, textarea { font-size: 16px !important; }
 }
 @media (max-width: 576px) {
-  .sidebar { display: none; }
-  .sidebar.mobile-show { display: block; position: fixed; z-index: 9999; width: 100%; height: 100%; top: 0; left: 0; overflow-y: auto; }
-  .mobile-menu-toggle { display: block !important; }
-  .main-content { padding: 5px !important; }
-  .card-body { padding: 10px; }
-  .row-cards .col-6 { padding: 0 3px; }
-  .stat-card .stat-value { font-size: 1.2rem; }
-  h1 { font-size: 1.3rem; }
-  h2 { font-size: 1.1rem; }
-  h3 { font-size: 1rem; }
-  .page-header h1 { font-size: 1.2rem; }
-  .breadcrumb { font-size: 0.8rem; }
+  .main-content, .dashboard-main { padding: 8px !important; }
+  .dashboard-header { padding: 0 10px 0 56px !important; }
+  .dashboard-header h1 { font-size: 0.9rem !important; }
+  h1 { font-size: 1.2rem !important; }
+  h2 { font-size: 1rem !important; }
+  h3 { font-size: 0.95rem !important; }
+  .stat-card .stat-value { font-size: 1.1rem !important; }
   table { font-size: 12px; }
   .table td, .table th { padding: 6px 4px; }
 }
 @media (min-width: 769px) {
-  .mobile-menu-toggle { display: none !important; }
+  .sidebar-toggle { display: none !important; }
 }
 /* Card hover effects */
 .dashboard-card { transition: transform 0.2s, box-shadow 0.2s; }
 .dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
 /* Professional spacing */
 .page-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #dee2e6; }
-.stat-card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
-.stat-card .stat-icon { font-size: 2rem; opacity: 0.8; }
-.stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: #2c3e50; }
-.stat-card .stat-label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
 /* Table improvements */
 .table th { background: #f8f9fa; border-top: none; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.3px; }
 .table td { vertical-align: middle; }
@@ -334,16 +317,26 @@ window.onerror = function(msg, url) {
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var toggle = document.querySelector('.mobile-menu-toggle') || (function() {
-        var btn = document.createElement('button');
-        btn.className = 'mobile-menu-toggle btn btn-sm btn-outline-secondary';
-        btn.innerHTML = '<i class="fas fa-bars"></i>';
-        btn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;display:none;border-radius:50%;width:40px;height:40px;';
-        document.body.appendChild(btn);
-        return btn;
-    })();
+    var sidebar = document.querySelector('.sidebar, .dashboard-sidebar, .isnm-sidebar, .ent-sidebar');
+    if (!sidebar) return;
+    var toggle = document.querySelector('.sidebar-toggle, .mobile-menu-toggle, .ent-hamburger');
+    if (!toggle) {
+        toggle = document.createElement('button');
+        toggle.className = 'sidebar-toggle';
+        toggle.innerHTML = '<i class="fas fa-bars"></i>';
+        document.body.appendChild(toggle);
+    }
     toggle.addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('mobile-show');
+        sidebar.classList.toggle('open');
+        var overlay = document.querySelector('.sidebar-overlay');
+        if (overlay) overlay.classList.toggle('open');
     });
+    var overlay = document.querySelector('.sidebar-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    }
 });
 </script>

@@ -278,6 +278,7 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
 <?php endif; ?>
 
 <?php if (!$useDynamicSidebar): ?>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <script>
 (function() {
     // ── Collapsible Groups ──
@@ -320,7 +321,10 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     var rightToggle = document.getElementById('sidebarRightToggle');
     if (rightToggle) {
         rightToggle.addEventListener('click', function() {
-            document.getElementById('isnmSidebar').classList.toggle('open');
+            var sidebar = document.getElementById('isnmSidebar');
+            sidebar.classList.toggle('open');
+            var overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.toggle('open');
         });
     }
 
@@ -329,6 +333,8 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
     if (mobileClose) {
         mobileClose.addEventListener('click', function() {
             document.getElementById('isnmSidebar').classList.remove('open');
+            var overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.remove('open');
         });
     }
 
@@ -351,6 +357,15 @@ $currentDir  = dirname($_SERVER['PHP_SELF']);
             sidebar.classList.remove('open');
         }
     });
+
+    // ── Overlay click closes sidebar ──
+    var overlay = document.getElementById('sidebarOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            var sidebar = document.getElementById('isnmSidebar');
+            if (sidebar) sidebar.classList.remove('open');
+        });
+    }
 
     // ── Mark active section on page load ──
     (function initPage() {

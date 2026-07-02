@@ -30,9 +30,9 @@ function auto_migrate($c) {
     foreach ($sqls as $sql) { @$c->query($sql); }
     $check = $c->query("SELECT COUNT(*) as cnt FROM admission_requirements");
     if ($check) { $row = $check->fetch_assoc(); if ((int)$row['cnt'] === 0) {
-        $reqs = [['Primary School Leaving Certificate','Document',1,1],['Birth Certificate','Document',2,1],['National ID Copy','Document',3,1],['Passport Photo','Document',4,1],['Medical Certificate','Document',5,1],['Recommendation Letter','Document',6,0],['O-Level Results','Document',7,1],['A-Level Results','Document',8,1],['Application Form','Form',9,1],['Admission Letter','Document',10,1],['Fee Payment Receipt','Document',11,1],['Guardian Consent Form','Form',12,1],['HIV Test Results','Document',13,1],['Dental Certificate','Document',14,0],['Immunization Record','Document',15,1],['Transfer Letter','Document',16,0],['Good Conduct Certificate','Document',17,0],['Sponsorship Letter','Document',18,0],['Marriage Certificate','Document',19,0],['Previous School ID','Document',20,0]];
-        $stmt = $c->prepare("INSERT INTO admission_requirements (requirement_name, type, display_order, is_mandatory) VALUES (?, ?, ?, ?)");
-        foreach ($reqs as $r) { $stmt->bind_param('ssi', $r[0], $r[1], $r[2]); $stmt->execute(); }
+        $reqs = [['Surgical Gloves',1,1],['Examination Gloves',2,1],['Photocopying Ream',3,1],['Ruled Paper Reams',4,1],['Omo',5,1],['Toilet Papers',6,1],['Compound Brooms',7,1],['Soft Brooms',8,1],['Rake',9,1],['Cobweb Brush',10,1],['Scrubbing Brush',11,1],['Squeezer',12,1],['Toilet Brush',13,1],['JIK',14,1],['Vim',15,1],['Mops',16,1],['Sanitizer',17,1],['Liquid Soap',18,1],['Face Masks',19,1],['Heavy Duty Gloves',20,1]];
+        $stmt = $c->prepare("INSERT INTO admission_requirements (requirement_name, type, display_order, is_mandatory) VALUES (?, 'Stationery', ?, ?)");
+        foreach ($reqs as $r) { $stmt->bind_param('sii', $r[0], $r[1], $r[2]); $stmt->execute(); }
         $stmt->close();
     }}
     $chk = $c->query("SELECT COUNT(*) as cnt FROM academic_programs");
@@ -310,28 +310,40 @@ if (isset($_REQUEST['ajax'])) {
         echo json_encode(['success'=>true,'message'=>'Registered','student_number'=>$sn]); exit;
     }
     if ($act === 'reports_data') {
-        $from = $_GET['from'] ?? date('Y-01-01'); $to = $_GET['to'] ?? date('Y-m-d');
+        $from = preg_replace('/[^0-9\-]/', '', $_GET['from'] ?? date('Y-01-01'));
+        $to = preg_replace('/[^0-9\-]/', '', $_GET['to'] ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = date('Y-01-01');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) $to = date('Y-m-d');
         $pid = (int)($_GET['program_id'] ?? 0);
-        $wp = "WHERE a.created_at BETWEEN '$from 00:00:00' AND '$to 23:59:59'";
-        if ($pid > 0) $wp .= " AND a.program_id=$pid";
-        $sum = []; $r1 = $conn->query("SELECT COUNT(*) as total,SUM(CASE WHEN status='New Applicant' THEN 1 ELSE 0 END) as new_app,SUM(CASE WHEN status='Under Review' THEN 1 ELSE 0 END) as review,SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved,SUM(CASE WHEN status='Registered' THEN 1 ELSE 0 END) as registered,SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected FROM applicants a $wp");
-        if ($r1) $sum = $r1->fetch_assoc();
-        $bp = []; $r2 = $conn->query("SELECT ap.program_name,COUNT(a.id) as count FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id $wp GROUP BY a.program_id,ap.program_name");
-        if ($r2) while ($rw = $r2->fetch_assoc()) $bp[] = $rw;
-        $bi = []; $r3 = $conn->query("SELECT a.intake,COUNT(a.id) as count FROM applicants a $wp GROUP BY a.intake");
-        if ($r3) while ($rw = $r3->fetch_assoc()) $bi[] = $rw;
-        $bs = []; $r4 = $conn->query("SELECT a.status,COUNT(a.id) as count FROM applicants a $wp GROUP BY a.status");
-        if ($r4) while ($rw = $r4->fetch_assoc()) $bs[] = $rw;
+        $wp = "WHERE a.created_at BETWEEN ? AND ?";
+        $params = ["$from 00:00:00", "$to 23:59:59"]; $types = 'ss';
+        if ($pid > 0) { $wp .= " AND a.program_id=?"; $params[] = $pid; $types .= 'i'; }
+        $sum = [];
+        $stmt = $conn->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN status='New Applicant' THEN 1 ELSE 0 END) as new_app,SUM(CASE WHEN status='Under Review' THEN 1 ELSE 0 END) as review,SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved,SUM(CASE WHEN status='Registered' THEN 1 ELSE 0 END) as registered,SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected FROM applicants a $wp");
+        if ($stmt) { $stmt->bind_param($types, ...$params); $stmt->execute(); $r1 = $stmt->get_result(); if ($r1) $sum = $r1->fetch_assoc(); $stmt->close(); }
+        $bp = [];
+        $stmt2 = $conn->prepare("SELECT ap.program_name,COUNT(a.id) as count FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id $wp GROUP BY a.program_id,ap.program_name");
+        if ($stmt2) { $stmt2->bind_param($types, ...$params); $stmt2->execute(); $r2 = $stmt2->get_result(); if ($r2) while ($rw = $r2->fetch_assoc()) $bp[] = $rw; $stmt2->close(); }
+        $bi = [];
+        $stmt3 = $conn->prepare("SELECT a.intake,COUNT(a.id) as count FROM applicants a $wp GROUP BY a.intake");
+        if ($stmt3) { $stmt3->bind_param($types, ...$params); $stmt3->execute(); $r3 = $stmt3->get_result(); if ($r3) while ($rw = $r3->fetch_assoc()) $bi[] = $rw; $stmt3->close(); }
+        $bs = [];
+        $stmt4 = $conn->prepare("SELECT a.status,COUNT(a.id) as count FROM applicants a $wp GROUP BY a.status");
+        if ($stmt4) { $stmt4->bind_param($types, ...$params); $stmt4->execute(); $r4 = $stmt4->get_result(); if ($r4) while ($rw = $r4->fetch_assoc()) $bs[] = $rw; $stmt4->close(); }
         echo json_encode(['success'=>true,'summary'=>$sum,'by_program'=>$bp,'by_intake'=>$bi,'by_status'=>$bs,'from'=>$from,'to'=>$to]); exit;
     }
     if ($act === 'export_csv') {
-        $type = $_GET['type'] ?? 'applicants'; $from = $_GET['from'] ?? date('Y-01-01'); $to = $_GET['to'] ?? date('Y-m-d');
+        $type = preg_replace('/[^a-z_]/', '', $_GET['type'] ?? 'applicants');
+        $from = preg_replace('/[^0-9\-]/', '', $_GET['from'] ?? date('Y-01-01'));
+        $to = preg_replace('/[^0-9\-]/', '', $_GET['to'] ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = date('Y-01-01');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) $to = date('Y-m-d');
         header('Content-Type: text/csv'); header('Content-Disposition: attachment; filename="'.$type.'_'.date('Y-m-d').'.csv"');
         $out = fopen('php://output','w');
         if ($type === 'applicants') {
             fputcsv($out,['ID','App Number','Full Name','Phone','Program','Intake','Status','Date']);
-            $res = $conn->query("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.created_at BETWEEN '$from' AND '$to 23:59:59' ORDER BY a.created_at DESC");
-            if ($res) while ($row = $res->fetch_assoc()) fputcsv($out,[$row['id'],$row['application_number'],$row['full_name'],$row['phone'],$row['program_name'],$row['intake'],$row['status'],$row['created_at']]);
+            $stmt = $conn->prepare("SELECT a.*,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id WHERE a.created_at BETWEEN ? AND ? ORDER BY a.created_at DESC");
+            if ($stmt) { $stmt->bind_param('ss', "$from 00:00:00", "$to 23:59:59"); $stmt->execute(); $res = $stmt->get_result(); if ($res) while ($row = $res->fetch_assoc()) fputcsv($out,[$row['id'],$row['application_number'],$row['full_name'],$row['phone'],$row['program_name'],$row['intake'],$row['status'],$row['created_at']]); $stmt->close(); }
         } elseif ($type === 'incomplete') {
             fputcsv($out,['ID','App Number','Full Name','Program','Completed','Total','Percentage']);
             $res = $conn->query("SELECT a.id,a.application_number,a.full_name,ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id=ap.id");
@@ -386,36 +398,167 @@ if (isset($_REQUEST['ajax'])) {
         $d = []; if ($res) while ($row = $res->fetch_assoc()) $d[] = $row;
         echo json_encode(['success'=>true,'data'=>$d]); exit;
     }
+    if ($act === 'get_submissions') {
+        $type = $_GET['type'] ?? 'contacts';
+        $lim = min((int)($_GET['limit'] ?? 50), 200);
+        $data = [];
+        if ($type === 'contacts') {
+            $res = $website_conn->query("SELECT full_name as name, email, subject, message, status, created_at FROM contact_submissions ORDER BY created_at DESC LIMIT $lim");
+            if ($res) while ($row = $res->fetch_assoc()) $data[] = $row;
+        } elseif ($type === 'applications') {
+            $res = $website_conn->query("SELECT CONCAT(first_name,' ',surname) as name, email, phone, program_applied, status, submitted_at as created_at FROM student_applications ORDER BY submitted_at DESC LIMIT $lim");
+            if ($res) while ($row = $res->fetch_assoc()) $data[] = $row;
+        } elseif ($type === 'donations') {
+            $res = $website_conn->query("SELECT donor_name as name, email, phone, amount, message, status, created_at FROM donations ORDER BY created_at DESC LIMIT $lim");
+            if ($res) while ($row = $res->fetch_assoc()) $data[] = $row;
+        } elseif ($type === 'volunteers') {
+            $res = $website_conn->query("SELECT CONCAT(first_name,' ',last_name) as name, email, phone, profession, message, status, created_at FROM volunteer_applications ORDER BY created_at DESC LIMIT $lim");
+            if ($res) while ($row = $res->fetch_assoc()) $data[] = $row;
+        } elseif ($type === 'messages') {
+            $res = $website_conn->query("SELECT sender_id as name, subject, message, is_read, created_at FROM portal_messages ORDER BY created_at DESC LIMIT $lim");
+            if ($res) while ($row = $res->fetch_assoc()) $data[] = $row;
+        }
+        echo json_encode(['success' => true, 'data' => $data]); exit;
+    }
+    if ($act === 'requirement_portal_data') {
+        $search = trim($_GET['search'] ?? '');
+        $status_filter = $_GET['req_status'] ?? '';
+        $lim = min((int)($_GET['limit'] ?? 200), 500);
+        $w = "WHERE 1=1"; $p = []; $t = '';
+        if (!empty($search)) { $w .= " AND (a.full_name LIKE ? OR a.application_number LIKE ? OR a.phone LIKE ?)"; $sv = "%$search%"; $p[] = $sv; $p[] = $sv; $p[] = $sv; $t .= 'sss'; }
+        $sql = "SELECT a.id, a.full_name, a.application_number, a.phone, a.program_id, a.intake, a.status, ap.program_name FROM applicants a LEFT JOIN academic_programs ap ON a.program_id = ap.id $w ORDER BY a.full_name ASC LIMIT $lim";
+        if (!empty($p)) { $st2 = $conn->prepare($sql); $st2->bind_param($t, ...$p); $st2->execute(); $res = $st2->get_result(); $st2->close(); }
+        else { $res = $conn->query($sql); }
+        $all_reqs = $conn->query("SELECT id, requirement_name, display_order FROM admission_requirements WHERE is_active=1 ORDER BY display_order");
+        $req_list = []; if ($all_reqs) while ($rr = $all_reqs->fetch_assoc()) $req_list[] = $rr;
+        $students = [];
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $ars = $conn->prepare("SELECT requirement_id, status FROM applicant_requirement_status WHERE applicant_id=?");
+                $ars->bind_param('i', $row['id']); $ars->execute(); $ars_r = $ars->get_result();
+                $statuses = []; $completed = 0; $total = count($req_list);
+                while ($ar = $ars_r->fetch_assoc()) { $statuses[$ar['requirement_id']] = $ar['status']; if (in_array($ar['status'], ['Submitted', 'Verified'])) $completed++; }
+                $ars->close();
+                $row['req_statuses'] = $statuses;
+                $row['req_completed'] = $completed;
+                $row['req_total'] = $total;
+                $row['req_percentage'] = $total > 0 ? round(($completed / $total) * 100) : 0;
+                if (!empty($status_filter)) {
+                    $show = false;
+                    foreach ($statuses as $s) { if ($s === $status_filter) { $show = true; break; } }
+                    if (!$show && $status_filter !== 'All') continue;
+                }
+                $students[] = $row;
+            }
+        }
+        echo json_encode(['success' => true, 'students' => $students, 'requirements' => $req_list]); exit;
+    }
+    if ($act === 'toggle_requirement') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit; }
+        $aid = (int)($_POST['applicant_id'] ?? 0); $rid = (int)($_POST['requirement_id'] ?? 0);
+        $new_status = $_POST['status'] ?? 'Submitted';
+        if ($aid <= 0 || $rid <= 0) { echo json_encode(['success' => false, 'error' => 'Invalid']); exit; }
+        $valid = ['Not Submitted', 'Submitted', 'Verified', 'Rejected', 'Missing'];
+        if (!in_array($new_status, $valid)) { echo json_encode(['success' => false, 'error' => 'Invalid status']); exit; }
+        $extra = '';
+        if ($new_status === 'Submitted') { $extra = ", submitted_by=$user_id, submitted_at=NOW()"; }
+        elseif ($new_status === 'Verified') { $extra = ", verified_by=$user_id, verified_at=NOW()"; }
+        elseif ($new_status === 'Rejected') { $extra = ", rejected_by=$user_id"; }
+        $sql = "INSERT INTO applicant_requirement_status (applicant_id, requirement_id, status) VALUES ($aid, $rid, '$new_status') ON DUPLICATE KEY UPDATE status='$new_status'$extra";
+        if ($conn->query($sql)) {
+            $stats = get_requirement_stats($conn, $aid);
+            $conn->query("UPDATE student_admission_tracking SET requirements_completed={$stats['completed']}, requirements_total={$stats['total']} WHERE student_number=(SELECT application_number FROM applicants WHERE id=$aid LIMIT 1)");
+            log_activity($conn, $user_id, 'Toggle Req', 'requirements', $aid, "App #$aid Req #$rid -> $new_status");
+            echo json_encode(['success' => true, 'message' => 'Updated', 'stats' => $stats]);
+        } else { echo json_encode(['success' => false, 'error' => 'Failed: ' . $conn->error]); }
+        exit;
+    }
+    if ($act === 'intake_planning_data') {
+        $intakes = [];
+        $r = $conn->query("SELECT YEAR(admission_date) AS intake_year, program, COUNT(*) AS student_count FROM student_admission_tracking GROUP BY YEAR(admission_date), program ORDER BY intake_year DESC, student_count DESC");
+        if ($r) while ($row = $r->fetch_assoc()) $intakes[] = $row;
+        $programs = [];
+        $r2 = $conn->query("SELECT id, program_name, program_code, duration_years FROM academic_programs WHERE status='Active' ORDER BY program_name");
+        if ($r2) while ($row = $r2->fetch_assoc()) $programs[] = $row;
+        echo json_encode(['success' => true, 'intakes' => $intakes, 'programs' => $programs]);
+        exit;
+    }
+    if ($act === 'website_applications') {
+        $search = trim($_GET['search'] ?? '');
+        $status_filter = trim($_GET['status'] ?? '');
+        $lim = min((int)($_GET['limit'] ?? 150), 300);
+        $where = "1=1"; $params = []; $types = '';
+        if ($search) { $where .= " AND (application_number LIKE ? OR first_name LIKE ? OR surname LIKE ? OR phone LIKE ? OR email LIKE ? OR program_applied LIKE ?)"; $s = "%$search%"; $params = array_merge($params, [$s, $s, $s, $s, $s, $s]); $types .= 'ssssss'; }
+        if ($status_filter) { $where .= " AND status = ?"; $params[] = $status_filter; $types .= 's'; }
+        $apps = [];
+        if (!empty($params)) {
+            $stmt = $website_conn->prepare("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT $lim");
+            $stmt->bind_param($types, ...$params); $stmt->execute(); $r = $stmt->get_result();
+            if ($r) while ($row = $r->fetch_assoc()) $apps[] = $row;
+            $stmt->close();
+        } else {
+            $r = $website_conn->query("SELECT * FROM student_applications WHERE $where ORDER BY submitted_at DESC LIMIT $lim");
+            if ($r) while ($row = $r->fetch_assoc()) $apps[] = $row;
+        }
+        $stats = [];
+        $r1 = $website_conn->query("SELECT status, COUNT(*) as cnt FROM student_applications GROUP BY status");
+        if ($r1) while ($row = $r1->fetch_assoc()) $stats[$row['status']] = (int)$row['cnt'];
+        echo json_encode(['success' => true, 'applications' => $apps, 'stats' => $stats]);
+        exit;
+    }
+    if ($act === 'website_app_detail') {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { echo json_encode(['success' => false, 'error' => 'Invalid']); exit; }
+        $stmt = $website_conn->prepare("SELECT * FROM student_applications WHERE id = ?");
+        $stmt->bind_param('i', $id); $stmt->execute(); $r = $stmt->get_result();
+        $app = $r ? $r->fetch_assoc() : null; $stmt->close();
+        echo $app ? json_encode(['success' => true, 'data' => $app]) : json_encode(['success' => false, 'error' => 'Not found']);
+        exit;
+    }
+    if ($act === 'update_website_app_status') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit; }
+        $id = (int)($_POST['id'] ?? 0); $status = $_POST['status'] ?? '';
+        if ($id <= 0 || !in_array($status, ['Pending', 'Shortlisted', 'Admitted', 'Rejected'])) { echo json_encode(['success' => false, 'error' => 'Invalid']); exit; }
+        $stmt = $website_conn->prepare("UPDATE student_applications SET status = ?, reviewed_at = NOW() WHERE id = ?");
+        $stmt->bind_param('si', $status, $id);
+        if ($stmt->execute()) { echo json_encode(['success' => true, 'message' => "Status updated to $status"]); }
+        else { echo json_encode(['success' => false, 'error' => 'Failed']); }
+        $stmt->close(); exit;
+    }
+    if ($act === 'bulk_toggle_requirements') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success' => false, 'error' => 'POST required']); exit; }
+        $aid = (int)($_POST['applicant_id'] ?? 0);
+        $rids = json_decode($_POST['requirement_ids'] ?? '[]', true);
+        $new_status = $_POST['status'] ?? 'Submitted';
+        if ($aid <= 0 || empty($rids)) { echo json_encode(['success' => false, 'error' => 'Invalid']); exit; }
+        $valid = ['Not Submitted', 'Submitted', 'Verified', 'Rejected', 'Missing'];
+        if (!in_array($new_status, $valid)) { echo json_encode(['success' => false, 'error' => 'Invalid status']); exit; }
+        $count = 0;
+        foreach ($rids as $rid) {
+            $rid = (int)$rid;
+            if ($rid <= 0) continue;
+            $extra = '';
+            if ($new_status === 'Submitted') { $extra = ", submitted_by=$user_id, submitted_at=NOW()"; }
+            elseif ($new_status === 'Verified') { $extra = ", verified_by=$user_id, verified_at=NOW()"; }
+            elseif ($new_status === 'Rejected') { $extra = ", rejected_by=$user_id"; }
+            $conn->query("INSERT INTO applicant_requirement_status (applicant_id, requirement_id, status) VALUES ($aid, $rid, '$new_status') ON DUPLICATE KEY UPDATE status='$new_status'$extra");
+            $count++;
+        }
+        $stats = get_requirement_stats($conn, $aid);
+        $conn->query("UPDATE student_admission_tracking SET requirements_completed={$stats['completed']}, requirements_total={$stats['total']} WHERE student_number=(SELECT application_number FROM applicants WHERE id=$aid LIMIT 1)");
+        log_activity($conn, $user_id, 'Bulk Toggle', 'requirements', $aid, "App #$aid: $count reqs -> $new_status");
+        echo json_encode(['success' => true, 'message' => "$count requirements updated", 'stats' => $stats]);
+        exit;
+    }
     echo json_encode(['success'=>false,'error'=>'Unknown action']); exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Director Admissions - Iganga School of Nursing and Midwifery</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<?php $pageTitle = 'Director Admissions'; include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--isnm-primary:#0a1628;--isnm-secondary:#1a3a5c;--isnm-accent:#2563eb;--isnm-accent-light:#3b82f6;--isnm-success:#10b981;--isnm-warning:#f59e0b;--isnm-danger:#ef4444;--isnm-info:#06b6d4;--isnm-bg:#f1f5f9;--isnm-card:#fff;--isnm-sidebar:#0a1628;--isnm-sidebar-hover:#1e3a5f;--isnm-text:#1e293b;--isnm-text-muted:#64748b;--isnm-border:#e2e8f0;--sidebar-width:260px;--topbar-height:64px}
-*{font-family:'Inter',sans-serif}
-body{background:var(--isnm-bg);color:var(--isnm-text);margin:0}
-.isnm-sidebar{position:fixed;top:0;left:0;width:var(--sidebar-width);height:100vh;background:var(--isnm-sidebar);z-index:1040;overflow-y:auto;transition:transform .3s}
-.sidebar-brand{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar-brand .brand-icon{width:42px;height:42px;background:var(--isnm-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
-.sidebar-brand .brand-text{color:#fff}
-.sidebar-brand .brand-text h6{margin:0;font-weight:700;font-size:14px}
-.sidebar-brand .brand-text small{color:rgba(255,255,255,.6);font-size:11px}
-.sidebar-menu{padding:12px 0}
-.sidebar-menu .menu-label{padding:8px 20px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.4)}
-.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:10px 20px;color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:500;transition:all .2s;border-left:3px solid transparent}
-.sidebar-menu a:hover{background:var(--isnm-sidebar-hover);color:#fff}
-.sidebar-menu a.active{background:var(--isnm-sidebar-hover);color:#fff;border-left-color:var(--isnm-accent)}
-.sidebar-menu a i{font-size:18px;width:22px;text-align:center}
-.isnm-topbar{position:fixed;top:0;left:var(--sidebar-width);right:0;height:var(--topbar-height);background:var(--isnm-card);border-bottom:1px solid var(--isnm-border);z-index:1039;display:flex;align-items:center;justify-content:space-between;padding:0 24px;transition:left .3s}
-.main-content{margin-left:var(--sidebar-width);margin-top:var(--topbar-height);padding:24px;min-height:calc(100vh - var(--topbar-height))}
 .page-header{margin-bottom:24px}
 .page-header h4{font-weight:700;color:var(--isnm-primary);margin:0}
 .page-header p{color:var(--isnm-text-muted);margin:4px 0 0;font-size:14px}
@@ -452,44 +595,14 @@ body{background:var(--isnm-bg);color:var(--isnm-text);margin:0}
 .chart-container{position:relative;height:280px}
 .loading-spinner{display:inline-block;width:20px;height:20px;border:2px solid #e2e8f0;border-top-color:var(--isnm-accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:991.98px){.isnm-sidebar{transform:translateX(-100%)}.isnm-sidebar.show{transform:translateX(0)}.isnm-topbar{left:0}.main-content{margin-left:0}}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1038}
-.sidebar-overlay.show{display:block}
 @media print{.isnm-sidebar,.isnm-topbar,.no-print,.filter-bar,.sidebar-overlay{display:none!important}.main-content{margin:0!important;padding:10px!important}}
 </style>
 </head>
 <body>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<aside class="isnm-sidebar" id="sidebar">
-<div class="sidebar-brand">
-<div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
-<div class="brand-text"><h6>ISNM</h6><small>Director Admissions</small></div>
-</div>
-<nav class="sidebar-menu">
-<div class="menu-label">Main</div>
-<a href="?page=overview" class="<?=$current_page==='overview'?'active':''?>"><i class="bi bi-grid-1x2-fill"></i> Dashboard Overview</a>
-<a href="?page=add_student" class="<?=$current_page==='add_student'?'active':''?>"><i class="bi bi-person-plus-fill"></i> Add New Student</a>
-<a href="?page=applicant_records" class="<?=$current_page==='applicant_records'?'active':''?>"><i class="bi bi-people-fill"></i> Applicant Records</a>
-<div class="menu-label">Management</div>
-<a href="?page=requirement_tracking" class="<?=$current_page==='requirement_tracking'?'active':''?>"><i class="bi bi-clipboard-check"></i> Requirement Tracking</a>
-<a href="?page=incomplete_requirements" class="<?=$current_page==='incomplete_requirements'?'active':''?>"><i class="bi bi-exclamation-triangle-fill"></i> Incomplete Requirements</a>
-<a href="?page=document_verification" class="<?=$current_page==='document_verification'?'active':''?>"><i class="bi bi-file-earmark-check"></i> Document Verification</a>
-<a href="?page=direct_registration" class="<?=$current_page==='direct_registration'?'active':''?>"><i class="bi bi-person-check-fill"></i> Direct Registration</a>
-<div class="menu-label">Reports</div>
-<a href="?page=reports" class="<?=$current_page==='reports'?'active':''?>"><i class="bi bi-bar-chart-line-fill"></i> Reports</a>
-<a href="?page=activity_log" class="<?=$current_page==='activity_log'?'active':''?>"><i class="bi bi-clock-history"></i> Activity Log</a>
-</nav>
-</aside>
-<header class="isnm-topbar" id="topbar">
-<div class="d-flex align-items-center gap-3">
-<button class="btn btn-sm btn-outline-secondary d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-<h6 style="margin:0;font-weight:600;font-size:15px;" id="pageTitle">Dashboard</h6>
-</div>
-<div class="d-flex align-items-center gap-3">
-<span class="text-muted" style="font-size:13px;"><i class="bi bi-person-circle me-1"></i><?=$user_name?></span>
-<span class="badge" style="background:var(--isnm-accent);color:#fff;font-size:11px;"><?=$user_role?></span>
-</div>
-</header>
+
+<?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
+<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
+
 <main class="main-content" id="mainContent">
 <?php if ($current_page === 'overview'): ?>
 <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
@@ -692,6 +805,103 @@ body{background:var(--isnm-bg);color:var(--isnm-text);margin:0}
 <tbody id="activityLogBody"><tr><td colspan="6" class="text-center py-4 text-muted"><div class="loading-spinner"></div> Loading...</td></tr></tbody>
 </table></div></div></div>
 <?php endif; ?>
+
+<?php if ($current_page === 'intake_planning'): ?>
+<div class="page-header"><h4><i class="bi bi-calendar-plus me-2"></i>Intake Planning</h4><p>Plan and manage student intakes across programs</p></div>
+<div class="row g-3">
+<div class="col-xl-8"><div class="data-card"><div class="card-header-custom"><h6><i class="bi bi-table me-2"></i>Intake History</h6></div><div class="card-body-custom p-0"><div class="table-responsive">
+<table class="table table-hover mb-0"><thead><tr><th>Year</th><th>Program</th><th>Students</th></tr></thead>
+<tbody id="intakeHistoryBody"><tr><td colspan="3" class="text-center py-4 text-muted"><div class="loading-spinner"></div></td></tr></tbody>
+</table></div></div></div></div>
+<div class="col-xl-4"><div class="data-card"><div class="card-header-custom"><h6><i class="bi bi-book me-2"></i>Active Programs</h6></div><div class="card-body-custom" id="activeProgramsBody"><div class="loading-spinner"></div></div></div></div>
+</div>
+<?php endif; ?>
+
+<?php if ($current_page === 'admission_letters'): ?>
+<div class="page-header"><h4><i class="bi bi-envelope-paper me-2"></i>Website Applications</h4><p>View and manage applications submitted through the website</p></div>
+<div class="filter-bar"><div class="row g-2 align-items-end">
+<div class="col-md-3"><label class="form-label fw-semibold" style="font-size:12px;">Search</label><input type="text" class="form-control form-control-sm" id="admSearch" placeholder="Name, phone, email..." oninput="loadWebsiteApps()"></div>
+<div class="col-md-2"><label class="form-label fw-semibold" style="font-size:12px;">Status</label>
+<select class="form-select form-select-sm" id="admStatus" onchange="loadWebsiteApps()"><option value="">All</option><option value="Pending">Pending</option><option value="Shortlisted">Shortlisted</option><option value="Admitted">Admitted</option><option value="Rejected">Rejected</option></select></div>
+<div class="col-md-2"><div id="admStats" class="d-flex gap-2" style="font-size:12px;"></div></div>
+</div></div>
+<div class="data-card"><div class="card-body-custom p-0"><div class="table-responsive">
+<table class="table table-hover mb-0"><thead><tr><th>#</th><th>App. No.</th><th>Name</th><th>Program</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody id="websiteAppsBody"><tr><td colspan="8" class="text-center py-4 text-muted"><div class="loading-spinner"></div></td></tr></tbody>
+</table></div></div></div>
+<div id="admDetailPanel"></div>
+<?php endif; ?>
+
+<?php if ($current_page === 'requirement_portal'): ?>
+<style>
+.req-portal-table th{font-size:11px;padding:8px 6px;text-align:center;white-space:nowrap;position:sticky;top:0;background:#fff;z-index:2;border-bottom:2px solid var(--isnm-border)}
+.req-portal-table td{padding:6px;text-align:center;vertical-align:middle;font-size:12px}
+.req-portal-table td:first-child,.req-portal-table td:nth-child(2),.req-portal-table td:nth-child(3),.req-portal-table td:nth-child(4),.req-portal-table td:nth-child(5){text-align:left}
+.req-check{width:22px;height:22px;border-radius:6px;border:2px solid #cbd5e1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.req-check:hover{border-color:var(--isnm-accent);transform:scale(1.1)}
+.req-check.checked{background:#10b981;border-color:#10b981;color:#fff}
+.req-check.partial{background:#f59e0b;border-color:#f59e0b;color:#fff}
+.req-check.rejected{background:#ef4444;border-color:#ef4444;color:#fff}
+.req-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:16px}
+.req-legend-item{display:flex;align-items:center;gap:6px}
+.req-legend-box{width:18px;height:18px;border-radius:4px;border:2px solid #cbd5e1;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+.req-student-row{cursor:pointer;transition:background .15s}
+.req-student-row:hover{background:#f0f9ff !important}
+.req-student-expanded{background:#f8fafc !important}
+.req-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;padding:12px;background:#fff;border:1px solid var(--isnm-border);border-radius:8px;margin:8px 0}
+.req-detail-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;transition:all .15s}
+.req-detail-item:hover{background:#f0f9ff;border-color:#93c5fd}
+.req-detail-item .req-name{font-weight:500;flex:1}
+.req-quick-actions{display:flex;gap:4px}
+.req-quick-actions .btn{padding:2px 8px;font-size:11px}
+.summary-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.summary-complete{background:#d1fae5;color:#047857}
+.summary-partial{background:#fef3c7;color:#b45309}
+.summary-none{background:#fee2e2;color:#dc2626}
+</style>
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+<div><h4><i class="bi bi-clipboard-check me-2"></i>Requirement Portal</h4><p>Track and manage all student requirements with one-click clearance</p></div>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-success btn-sm" onclick="bulkMarkAllVerified()"><i class="bi bi-check-all me-1"></i>Mark All Verified</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="loadRequirementPortal()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+</div>
+</div>
+<div class="filter-bar">
+<div class="row g-2 align-items-end">
+<div class="col-md-3"><label class="form-label fw-semibold" style="font-size:12px;"><i class="bi bi-search me-1"></i>Search</label><input type="text" class="form-control form-control-sm" id="rpSearch" placeholder="Name, admission number, phone..." oninput="loadRequirementPortal()"></div>
+<div class="col-md-2"><label class="form-label fw-semibold" style="font-size:12px;">Req. Status</label>
+<select class="form-select form-select-sm" id="rpReqStatus" onchange="loadRequirementPortal()"><option value="">All</option><option value="Not Submitted">Not Submitted</option><option value="Submitted">Submitted</option><option value="Verified">Verified</option><option value="Rejected">Rejected</option></select></div>
+<div class="col-md-2"><label class="form-label fw-semibold" style="font-size:12px;">Intake</label>
+<select class="form-select form-select-sm" id="rpIntake" onchange="loadRequirementPortal()"><option value="">All</option><option value="January">January</option><option value="May">May</option><option value="August">August</option></select></div>
+<div class="col-md-3"><div id="rpSummary" class="d-flex gap-2 align-items-center" style="font-size:12px;"></div></div>
+</div>
+</div>
+<div class="req-legend">
+<div class="req-legend-item"><span class="req-legend-box" style="background:#f1f5f9;border-color:#94a3b8;"><i class="bi bi-dash" style="color:#64748b;"></i></span>Not Submitted</div>
+<div class="req-legend-item"><span class="req-legend-box" style="background:#dbeafe;border-color:#3b82f6;"><i class="bi bi-clock" style="color:#2563eb;"></i></span>Submitted</div>
+<div class="req-legend-item"><span class="req-legend-box" style="background:#d1fae5;border-color:#10b981;"><i class="bi bi-check" style="color:#059669;"></i></span>Verified</div>
+<div class="req-legend-item"><span class="req-legend-box" style="background:#fee2e2;border-color:#ef4444;"><i class="bi bi-x" style="color:#dc2626;"></i></span>Rejected</div>
+</div>
+<div class="data-card"><div class="card-body-custom p-0"><div class="table-responsive" style="max-height:70vh;overflow-y:auto;">
+<table class="table table-hover req-portal-table mb-0" id="rpTable">
+<thead id="rpHead"></thead>
+<tbody id="rpBody"><tr><td colspan="100%" class="text-center py-5"><div class="loading-spinner" style="width:32px;height:32px;"></div><p class="mt-2 text-muted">Loading requirement data...</p></td></tr></tbody>
+</table></div></div></div>
+<div id="rpDetailPanel"></div>
+<?php endif; ?>
+
+<?php if ($current_page === 'website_submissions'): ?>
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+<div><h4><i class="fas fa-globe me-2"></i>Website Submissions</h4><p>All contacts, donations, volunteers, and applications submitted through the website</p></div>
+</div>
+<div class="filter-bar">
+<div class="row g-2 align-items-end">
+<div class="col-md-3"><label class="form-label fw-semibold" style="font-size:12px;">Type</label>
+<select class="form-select form-select-sm" id="wsType" onchange="loadWebsiteSubmissions()"><option value="all">All Types</option><option value="contacts">Contacts</option><option value="applications">Applications</option><option value="donations">Donations</option><option value="volunteers">Volunteers</option><option value="messages">Messages</option></select></div>
+</div>
+</div>
+<div class="row g-3" id="wsContainer"><div class="col-12"><div class="data-card"><div class="card-body-custom"><p class="text-center text-muted mb-0">Loading...</p></div></div></div></div>
+<?php endif; ?>
 </main>
 <div class="modal fade" id="editApplicantModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
 <div class="modal-header-custom"><h6 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Applicant</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -746,7 +956,7 @@ const BASE='director-admissions.php';
 const PROGRAMS_DATA=<?=json_encode($program_list)?>;
 let statusChart,intakeChart,programChart;
 
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');document.getElementById('sidebarOverlay').classList.toggle('show');}
+/* sidebar toggle handled by shared sidebar.php */
 
 function showToast(msg,type='success'){
 const icons={success:'check-circle-fill',error:'exclamation-circle-fill',info:'info-circle-fill',warning:'exclamation-triangle-fill'};
@@ -1212,7 +1422,248 @@ if(page.querySelector('#reqTrackingHead'))loadRequirementTracking();
 if(page.querySelector('#incompleteTableBody'))loadIncompleteRequirements();
 if(page.querySelector('#docVerificationBody'))loadDocVerification();
 if(page.querySelector('#activityLogBody'))loadActivityLog();
+if(page.querySelector('#rpTable'))loadRequirementPortal();
+if(page.querySelector('#wsContainer'))loadWebsiteSubmissions();
+if(page.querySelector('#intakeHistoryBody'))loadIntakePlanning();
+if(page.querySelector('#websiteAppsBody'))loadWebsiteApps();
 });
+
+async function loadIntakePlanning(){
+try{
+const res=await apiGet({action:'intake_planning_data'});
+if(!res.success)return;
+const tbody=document.getElementById('intakeHistoryBody');
+const progDiv=document.getElementById('activeProgramsBody');
+if(tbody&&res.intakes.length){
+tbody.innerHTML=res.intakes.map((r,i)=>`<tr><td><strong>${r.intake_year||'-'}</strong></td><td>${r.program||'-'}</td><td><span class="badge bg-primary">${r.student_count}</span></td></tr>`).join('');
+}else if(tbody)tbody.innerHTML='<tr><td colspan="3" class="text-center py-4 text-muted">No intake data</td></tr>';
+if(progDiv&&res.programs.length){
+progDiv.innerHTML=res.programs.map(p=>`<div class="d-flex align-items-center justify-content-between border-bottom py-2"><div><strong style="font-size:13px;">${p.program_name}</strong><br><small class="text-muted">${p.program_code} &middot; ${p.duration_years} yrs</small></div><span class="badge bg-info">${p.program_code}</span></div>`).join('');
+}else if(progDiv)progDiv.innerHTML='<p class="text-muted text-center">No programs</p>';
+}catch(e){console.error(e);}
+}
+
+async function loadWebsiteApps(){
+const tbody=document.getElementById('websiteAppsBody');
+const statsDiv=document.getElementById('admStats');
+if(!tbody)return;
+tbody.innerHTML='<tr><td colspan="8" class="text-center py-4"><div class="loading-spinner"></div></td></tr>';
+try{
+const search=document.getElementById('admSearch')?.value||'';
+const status=document.getElementById('admStatus')?.value||'';
+const res=await apiGet({action:'website_applications',search:search,status:status});
+if(!res.success){tbody.innerHTML='<tr><td colspan="8" class="text-center text-danger">Error</td></tr>';return;}
+if(statsDiv&&res.stats){
+statsDiv.innerHTML=Object.entries(res.stats).map(([k,v])=>`<span class="summary-badge ${k==='Admitted'?'summary-complete':k==='Pending'?'summary-partial':'summary-none'}">${k}: ${v}</span>`).join('');
+}
+if(res.applications.length){
+tbody.innerHTML=res.applications.map((a,i)=>{
+const name=(a.first_name||'')+' '+(a.surname||'');
+const stCls=a.status==='Admitted'?'badge-approved':a.status==='Rejected'?'badge-rejected':a.status==='Shortlisted'?'badge-submitted':'badge-new';
+return `<tr>
+<td>${i+1}</td><td><code style="font-size:11px;">${a.application_number||'-'}</code></td>
+<td><strong>${name}</strong><br><small class="text-muted">${a.email||''}</small></td>
+<td><small>${a.program_applied||'-'}</small></td><td><small>${a.phone||'-'}</small></td>
+<td><span class="badge-status ${stCls}">${a.status}</span></td>
+<td><small>${fmtDate(a.submitted_at)}</small></td>
+<td><div class="btn-group btn-group-sm">
+<button class="btn btn-outline-primary" onclick="viewWebsiteApp(${a.id})" title="View"><i class="bi bi-eye"></i></button>
+<select class="form-select form-select-sm" style="width:110px;font-size:11px;" onchange="updateWebsiteAppStatus(${a.id},this.value)">
+${['Pending','Shortlisted','Admitted','Rejected'].map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}
+</select>
+</div></td></tr>`;
+}).join('');
+}else tbody.innerHTML='<tr><td colspan="8" class="text-center py-4 text-muted">No applications found</td></tr>';
+}catch(e){tbody.innerHTML='<tr><td colspan="8" class="text-center text-danger">Error loading data</td></tr>';}
+}
+
+async function viewWebsiteApp(id){
+try{
+const res=await apiGet({action:'website_app_detail',id});
+if(!res.success){showToast(res.error||'Not found','error');return;}
+const d=res.data;
+const panel=document.getElementById('admDetailPanel');
+const name=(d.first_name||'')+' '+(d.surname||'');
+const html=`<div class="data-card mb-3 mt-3" style="border-left:4px solid var(--isnm-accent);">
+<div class="card-header-custom" style="background:#f8fafc;"><h6 class="mb-0"><i class="bi bi-person me-2"></i>${name} <small class="text-muted">(${d.application_number||'-'})</small></h6>
+<button class="btn btn-sm btn-outline-secondary" onclick="this.closest('.data-card').remove()"><i class="bi bi-x-lg"></i></button></div>
+<div class="card-body-custom"><div class="row g-3" style="font-size:13px;">
+<div class="col-md-4"><strong>Application No:</strong><br>${d.application_number||'-'}</div>
+<div class="col-md-4"><strong>Full Name:</strong><br>${name}</div>
+<div class="col-md-4"><strong>Gender:</strong><br>${d.gender||'-'}</div>
+<div class="col-md-4"><strong>Email:</strong><br>${d.email||'-'}</div>
+<div class="col-md-4"><strong>Phone:</strong><br>${d.phone||'-'}</div>
+<div class="col-md-4"><strong>Program:</strong><br>${d.program_applied||'-'}</div>
+<div class="col-md-4"><strong>Status:</strong><br>${fmtStatus(d.status)}</div>
+<div class="col-md-4"><strong>Submitted:</strong><br>${fmtDate(d.submitted_at)}</div>
+</div></div></div>`;
+panel.innerHTML=html;
+panel.scrollIntoView({behavior:'smooth'});
+}catch(e){showToast('Error loading details','error');}
+}
+
+async function updateWebsiteAppStatus(id,status){
+try{
+const fd=new FormData();fd.append('id',id);fd.append('status',status);
+const res=await apiPost('update_website_app_status',fd);
+if(res.success){showToast(res.message,'success');loadWebsiteApps();}else showToast(res.error||'Failed','error');
+}catch(e){showToast('Network error','error');}
+}
+
+async function loadRequirementPortal(){
+const head=document.getElementById('rpHead');
+const body=document.getElementById('rpBody');
+const summary=document.getElementById('rpSummary');
+if(!head||!body)return;
+head.innerHTML='<tr><th style="width:40px;">#</th><th style="width:120px;">Adm. No.</th><th>Student Name</th><th style="width:100px;">Program</th><th style="width:80px;">Intake</th><th style="width:80px;">Progress</th><th style="width:80px;">Status</th><th style="width:60px;">Actions</th></tr>';
+try{
+const search=document.getElementById('rpSearch')?.value||'';
+const reqStatus=document.getElementById('rpReqStatus')?.value||'';
+const intake=document.getElementById('rpIntake')?.value||'';
+const res=await apiGet({action:'requirement_portal_data',search:search,req_status:reqStatus,intake:intake,limit:200});
+if(!res.success){body.innerHTML='<tr><td colspan="8" class="text-center text-danger py-4">Error loading data</td></tr>';return;}
+const students=res.students||[];
+const reqs=res.requirements||[];
+if(students.length===0){body.innerHTML='<tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox d-block" style="font-size:32px;"></i>No students found</td></tr>';return;}
+let totalComplete=0,totalStudents=0;
+students.forEach(s=>{totalComplete+=s.req_completed;totalStudents++;});
+summary.innerHTML=`<span class="summary-badge summary-complete"><i class="bi bi-check-circle"></i>${totalComplete}/${totalStudents*reqs.length} cleared</span>`;
+head.innerHTML='<tr><th style="width:40px;">#</th><th style="width:120px;">Adm. No.</th><th>Student Name</th><th style="width:100px;">Program</th><th style="width:80px;">Intake</th><th style="width:200px;">Progress</th><th style="width:80px;">Status</th><th style="width:100px;">Quick Actions</th></tr>';
+body.innerHTML=students.map((s,i)=>{
+const pct=s.req_percentage;
+const barColor=pct===100?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+const statusBadge=pct===100?'<span class="summary-badge summary-complete">Complete</span>':pct>0?'<span class="summary-badge summary-partial">Partial</span>':'<span class="summary-badge summary-none">None</span>';
+const notSubCount=reqs.length-s.req_completed;
+return `<tr class="req-student-row" id="rpRow_${s.id}">
+<td>${i+1}</td>
+<td><code style="font-size:11px;">${s.application_number}</code></td>
+<td><a href="${BASE}?page=applicant_profile&id=${s.id}" class="text-decoration-none fw-semibold" style="font-size:13px;">${s.full_name}</a><br><small class="text-muted">${s.phone||''}</small></td>
+<td><small>${s.program_name||'-'}</small></td>
+<td><small>${s.intake}</small></td>
+<td><div class="d-flex align-items-center gap-2"><div class="progress-mini flex-grow-1" style="height:8px;"><div class="progress-bar" style="width:${pct}%;background:${barColor};"></div></div><small class="fw-semibold">${s.req_completed}/${s.req_total}</small><small class="text-muted">(${pct}%)</small></div></td>
+<td>${statusBadge}</td>
+<td><button class="btn btn-sm btn-outline-primary" onclick="expandReqDetail(${s.id})" title="View Details"><i class="bi bi-list-check"></i></button></td>
+</tr>`;
+}).join('');
+}catch(e){body.innerHTML='<tr><td colspan="8" class="text-center text-danger py-4">Error: '+e.message+'</td></tr>';}
+}
+
+async function expandReqDetail(studentId){
+const existing=document.getElementById('rpDetail_'+studentId);
+if(existing){existing.remove();return;}
+try{
+const res=await apiGet({action:'requirement_portal_data',limit:200});
+const student=res.students.find(s=>s.id===studentId);
+const reqs=res.requirements||[];
+if(!student){return;}
+const panel=document.getElementById('rpDetailPanel');
+const html=`<div id="rpDetail_${studentId}" class="data-card mb-3" style="border-left:4px solid var(--isnm-accent);">
+<div class="card-header-custom" style="background:#f8fafc;">
+<h6 class="mb-0"><i class="bi bi-person me-2"></i>${student.full_name} <small class="text-muted">(${student.application_number})</small></h6>
+<button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('rpDetail_${studentId}').remove()"><i class="bi bi-x-lg"></i></button>
+</div>
+<div class="card-body-custom">
+<div class="d-flex gap-2 mb-3 flex-wrap">
+<button class="btn btn-sm btn-success" onclick="bulkToggleReqs(${studentId},'Verified')"><i class="bi bi-check-all me-1"></i>Verify All</button>
+<button class="btn btn-sm btn-warning" onclick="bulkToggleReqs(${studentId},'Submitted')"><i class="bi bi-clock me-1"></i>Mark All Submitted</button>
+<button class="btn btn-sm btn-secondary" onclick="bulkToggleReqs(${studentId},'Not Submitted')"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset All</button>
+<a href="${BASE}?page=applicant_profile&id=${studentId}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Full Profile</a>
+</div>
+<div class="req-detail-grid" id="reqGrid_${studentId}">
+${reqs.map(r=>{
+const st=student.req_statuses[r.id]||'Not Submitted';
+const iconMap={'Not Submitted':'<i class="bi bi-dash-circle"></i>','Submitted':'<i class="bi bi-clock-fill"></i>','Verified':'<i class="bi bi-check-circle-fill"></i>','Rejected':'<i class="bi bi-x-circle-fill"></i>','Missing':'<i class="bi bi-exclamation-circle-fill"></i>'};
+const colorMap={'Not Submitted':'#94a3b8','Submitted':'#3b82f6','Verified':'#10b981','Rejected':'#ef4444','Missing':'#f59e0b'};
+return `<div class="req-detail-item" id="reqItem_${studentId}_${r.id}">
+<div class="req-name"><span style="color:${colorMap[st]||'#94a3b8'};margin-right:6px;">${iconMap[st]||iconMap['Not Submitted']}</span>${r.requirement_name}</div>
+<div class="req-quick-actions">
+<button class="btn btn-sm ${st==='Verified'?'btn-success':'btn-outline-success'}" onclick="toggleReq(${studentId},${r.id},'Verified')" title="Verified"><i class="bi bi-check"></i></button>
+<button class="btn btn-sm ${st==='Submitted'?'btn-primary':'btn-outline-primary'}" onclick="toggleReq(${studentId},${r.id},'Submitted')" title="Submitted"><i class="bi bi-clock"></i></button>
+<button class="btn btn-sm ${st==='Not Submitted'?'btn-secondary':'btn-outline-secondary'}" onclick="toggleReq(${studentId},${r.id},'Not Submitted')" title="Clear"><i class="bi bi-dash"></i></button>
+<button class="btn btn-sm ${st==='Rejected'?'btn-danger':'btn-outline-danger'}" onclick="toggleReq(${studentId},${r.id},'Rejected')" title="Rejected"><i class="bi bi-x"></i></button>
+</div></div>`;
+}).join('')}
+</div>
+</div></div>`;
+const prev=document.getElementById('rpDetail_'+studentId);
+if(prev)prev.remove();
+panel.insertAdjacentHTML('beforeend',html);
+document.getElementById('rpDetail_'+studentId).scrollIntoView({behavior:'smooth',block:'nearest'});
+}catch(e){showToast('Error loading details','error');}
+}
+
+async function toggleReq(aid,rid,status){
+try{
+const fd=new FormData();fd.append('applicant_id',aid);fd.append('requirement_id',rid);fd.append('status',status);
+const res=await apiPost('toggle_requirement',fd);
+if(res.success){
+showToast('Updated: '+status,'success');
+const iconMap={'Not Submitted':'<i class="bi bi-dash-circle"></i>','Submitted':'<i class="bi bi-clock-fill"></i>','Verified':'<i class="bi bi-check-circle-fill"></i>','Rejected':'<i class="bi bi-x-circle-fill"></i>'};
+const colorMap={'Not Submitted':'#94a3b8','Submitted':'#3b82f6','Verified':'#10b981','Rejected':'#ef4444'};
+const item=document.getElementById('reqItem_'+aid+'_'+rid);
+if(item){
+item.style.borderLeft=`3px solid ${colorMap[status]||'#94a3b8'}`;
+item.style.background=status==='Verified'?'#f0fdf4':status==='Submitted'?'#eff6ff':status==='Rejected'?'#fef2f2':'#fff';
+}
+loadRequirementPortal();
+}else showToast(res.error||'Failed','error');
+}catch(e){showToast('Network error','error');}
+}
+
+async function bulkToggleReqs(aid,status){
+if(!confirm('Set ALL requirements to "'+status+'" for this student?'))return;
+try{
+const res=await apiGet({action:'requirement_portal_data',limit:200});
+const reqs=res.requirements||[];
+const rids=reqs.map(r=>r.id);
+const fd=new FormData();fd.append('applicant_id',aid);fd.append('requirement_ids',JSON.stringify(rids));fd.append('status',status);
+const result=await apiPost('bulk_toggle_requirements',fd);
+if(result.success){showToast(result.message,'success');expandReqDetail(aid);loadRequirementPortal();}
+else showToast(result.error||'Failed','error');
+}catch(e){showToast('Network error','error');}
+}
+
+async function bulkMarkAllVerified(){
+if(!confirm('This will refresh the page. Use individual student detail panels for bulk actions.'))return;
+loadRequirementPortal();
+}
+
+async function loadWebsiteSubmissions(){
+const container=document.getElementById('wsContainer');
+const type=document.getElementById('wsType')?.value||'all';
+try{
+let html='';
+const types=type==='all'?['contacts','applications','donations','volunteers','messages']:[type];
+for(const t of types){
+const endpoint=t==='contacts'?'contacts':t==='applications'?'applications':t==='donations'?'donations':t==='volunteers'?'volunteers':'messages';
+try{
+const res=await fetch(`${window.location.pathname}?ajax=get_submissions&type=${endpoint}`).then(r=>r.json());
+if(res.success&&res.data&&res.data.length){
+const icons={'contacts':'bi-person-lines-fill','applications':'bi-file-earmark-person','donations':'bi-gift','volunteers':'bi-people','messages':'bi-envelope'};
+html+=`<div class="col-xl-6"><div class="data-card"><div class="card-header-custom"><h6><i class="fas ${icons[t]||'bi-folder'} me-2"></i>${t.charAt(0).toUpperCase()+t.slice(1)} (${res.data.length})</h6></div><div class="card-body-custom p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Message</th><th>Date</th></tr></thead><tbody>`;
+res.data.slice(0,10).forEach(item=>{
+html+=`<tr><td><strong>${esc(item.name||item.full_name||'-')}</strong></td><td><small>${esc(item.email||'-')}</small></td><td><small>${esc(item.phone||'-')}</small></td><td><small style="max-width:200px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc((item.message||item.comments||item.purpose||'-').substring(0,80))}</small></td><td><small>${fmtDate(item.created_at)}</small></td></tr>`;
+});
+html+=`</tbody></table></div></div></div></div>`;
+}
+}catch(e){}
+}
+if(!html)html='<div class="col-12"><div class="data-card"><div class="card-body-custom text-center py-5"><i class="fas fa-inbox d-block mb-2" style="font-size:32px;color:#94a3b8;"></i><p class="text-muted">No submissions found</p></div></div></div>';
+container.innerHTML=html;
+}catch(e){container.innerHTML='<div class="col-12 text-center text-danger py-4">Error loading submissions</div>';}
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
 </script>
+
+<?php
+// ── Profile Modal ──
+require_once __DIR__ . '/../includes/profile_settings.php';
+if (function_exists('renderProfileModal')) renderProfileModal();
+if (function_exists('renderProfileStyles')) renderProfileStyles();
+if (function_exists('renderProfileScripts')) renderProfileScripts();
+?>
 </body>
 </html>

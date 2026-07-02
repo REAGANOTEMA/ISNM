@@ -431,6 +431,104 @@ try {
             jsonResponse(true, '', $rows);
             break;
 
+        // ── Create Leave Request ──
+        case 'create_leave_request':
+            $staffIdReq = (int)($_POST['staff_id'] ?? 0);
+            $leaveTypeId = (int)($_POST['leave_type_id'] ?? 0);
+            $startDate = trim($_POST['start_date'] ?? '');
+            $endDate = trim($_POST['end_date'] ?? '');
+            $reason = trim($_POST['reason'] ?? '');
+            if ($staffIdReq && $leaveTypeId && $startDate && $endDate) {
+                $stmt = $payrollConn->prepare("INSERT INTO leave_requests (staff_id, leave_type_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+                if ($stmt) {
+                    $stmt->bind_param("iisss", $staffIdReq, $leaveTypeId, $startDate, $endDate, $reason);
+                    $stmt->execute();
+                    $stmt->close();
+                    $_SESSION['success'] = 'Leave request submitted.';
+                } else {
+                    $stmt2 = $payrollConn->prepare("INSERT INTO staff_leave (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, 'Leave', ?, ?, ?, 'pending')");
+                    if ($stmt2) {
+                        $stmt2->bind_param("isss", $staffIdReq, $startDate, $endDate, $reason);
+                        $stmt2->execute();
+                        $stmt2->close();
+                        $_SESSION['success'] = 'Leave request submitted.';
+                    } else {
+                        $_SESSION['error'] = 'Failed to submit leave request.';
+                    }
+                }
+            } else {
+                $_SESSION['error'] = 'Please fill all required fields.';
+            }
+            break;
+
+        // ── Approve Leave ──
+        case 'approve_leave':
+            $leaveId = (int)($_POST['leave_id'] ?? 0);
+            if ($leaveId) {
+                $stmt = $payrollConn->prepare("UPDATE leave_requests SET status='Approved', reviewed_by=? WHERE id=? AND status='Pending'");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $staffId, $leaveId);
+                    $stmt->execute();
+                    $stmt->close();
+                    $_SESSION['success'] = 'Leave request approved.';
+                } else {
+                    $stmt2 = $payrollConn->prepare("UPDATE staff_leave SET status='approved' WHERE id=? AND status='pending'");
+                    if ($stmt2) {
+                        $stmt2->bind_param("i", $leaveId);
+                        $stmt2->execute();
+                        $stmt2->close();
+                        $_SESSION['success'] = 'Leave request approved.';
+                    }
+                }
+            }
+            break;
+
+        // ── Reject Leave ──
+        case 'reject_leave':
+            $leaveId = (int)($_POST['leave_id'] ?? 0);
+            if ($leaveId) {
+                $stmt = $payrollConn->prepare("UPDATE leave_requests SET status='Rejected', reviewed_by=? WHERE id=? AND status='Pending'");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $staffId, $leaveId);
+                    $stmt->execute();
+                    $stmt->close();
+                    $_SESSION['success'] = 'Leave request rejected.';
+                } else {
+                    $stmt2 = $payrollConn->prepare("UPDATE staff_leave SET status='rejected' WHERE id=? AND status='pending'");
+                    if ($stmt2) {
+                        $stmt2->bind_param("i", $leaveId);
+                        $stmt2->execute();
+                        $stmt2->close();
+                        $_SESSION['success'] = 'Leave request rejected.';
+                    }
+                }
+            }
+            break;
+
+        // ── Add Leave Type ──
+        case 'add_leave_type':
+            $typeName = trim($_POST['type_name'] ?? '');
+            $daysPerYear = (int)($_POST['days_per_year'] ?? 30);
+            $description = trim($_POST['description'] ?? '');
+            if ($typeName) {
+                $stmt = $payrollConn->prepare("INSERT INTO leave_types (type_name, leave_type_name, days_per_year, description, is_active) VALUES (?, ?, ?, ?, 1)");
+                if ($stmt) {
+                    $stmt->bind_param("ssis", $typeName, $typeName, $daysPerYear, $description);
+                    $stmt->execute();
+                    $stmt->close();
+                    $_SESSION['success'] = 'Leave type added.';
+                } else {
+                    $stmt2 = $payrollConn->prepare("INSERT INTO leave_types (type_name, days_per_year, is_active) VALUES (?, ?, 1)");
+                    if ($stmt2) {
+                        $stmt2->bind_param("si", $typeName, $daysPerYear);
+                        $stmt2->execute();
+                        $stmt2->close();
+                        $_SESSION['success'] = 'Leave type added.';
+                    }
+                }
+            }
+            break;
+
         default:
             if ($isAjax) {
                 jsonResponse(false, "Unknown action: $action");

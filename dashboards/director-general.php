@@ -575,6 +575,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dg_action'])) {
         $subId = (int)($_POST['sub_id'] ?? 0);
         if ($subId) { $stmt = $conn->prepare("UPDATE transport_trips SET dg_approval_status='rejected', dg_approved_by=?, dg_approved_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('ii', $user_id, $subId); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Transport trip rejected.'; }
     }
+    if ($action === 'reject_submission' && $conn && ($_POST['sub_type'] ?? '') === 'store') {
+        $ref = $_POST['sub_ref'] ?? '';
+        if ($ref) { $stmt = $conn->prepare("UPDATE store_requests SET status='rejected',approved_by=?,approved_at=NOW() WHERE request_number=?"); if ($stmt) { $stmt->bind_param('is', $user_id, $ref); $stmt->execute(); $stmt->close(); } $ok = true; $msg = 'Store request rejected.'; }
+    }
 
     if ($action === 'resolve_alert') {
         $aid = (int)($_POST['alert_id'] ?? 0);
@@ -1380,6 +1384,12 @@ document.addEventListener('DOMContentLoaded', function() {
               <input type="hidden" name="sub_type" value="store">
               <input type="hidden" name="sub_ref" value="<?= htmlspecialchars($sr_['request_number']) ?>">
               <button class="btn btn-sm" style="color:#059669;border:none;background:none;padding:0 4px;" title="Approve"><i class="fas fa-check"></i></button>
+            </form>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Reject request <?= htmlspecialchars($sr_['request_number'],ENT_QUOTES) ?>?')">
+              <input type="hidden" name="dg_action" value="reject_submission">
+              <input type="hidden" name="sub_type" value="store">
+              <input type="hidden" name="sub_ref" value="<?= htmlspecialchars($sr_['request_number']) ?>">
+              <button class="btn btn-sm" style="color:#dc2626;border:none;background:none;padding:0 4px;" title="Reject"><i class="fas fa-times"></i></button>
             </form>
             <?php endif; ?>
             <span class="badge badge-soft bg-<?= $sr_['urgency']==='urgent'?'danger':($sr_['urgency']==='high'?'warning text-dark':'info') ?>"><?= $sr_['urgency'] ?></span>

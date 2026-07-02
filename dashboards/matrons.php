@@ -179,6 +179,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
             }
             header("Location: matrons.php?page=health");
             exit;
+
+        case 'create_store_requisition':
+            $department = trim($_POST['department'] ?? 'Dormitory');
+            $urgency = trim($_POST['urgency'] ?? 'medium');
+            $notes = trim($_POST['notes'] ?? '');
+            $reqItems = $_POST['req_items'] ?? [];
+            if (empty($reqItems)) {
+                $_SESSION['error'] = "Add at least one item to the request.";
+            } else {
+                $reqNum = 'MAT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+                $stmt = $conn->prepare("INSERT INTO store_requests (request_number, requested_by, requester_name, requester_role, department, items, urgency, status, notes, created_at) VALUES (?, ?, ?, 'matron', ?, ?, ?, 'pending', ?, NOW())");
+                if ($stmt) {
+                    $itemsList = '';
+                    foreach ($reqItems as $ri) {
+                        $itemName = trim($ri['item_name'] ?? '');
+                        if ($itemName) $itemsList .= ($itemsList ? ', ' : '') . $itemName;
+                    }
+                    $stmt->bind_param("sisssss", $reqNum, $user_id, $user_name, $department, $itemsList, $urgency, $notes);
+                    if ($stmt->execute()) {
+                        $reqId = $conn->insert_id;
+                        $ins = $conn->prepare("INSERT INTO store_request_items (request_id, item_id, quantity_requested, notes) VALUES (?, ?, ?, ?)");
+                        if ($ins) {
+                            foreach ($reqItems as $ri) {
+                                $itemId = (int)($ri['item_id'] ?? 0);
+                                $qty = (float)($ri['quantity'] ?? 0);
+                                $itemNotes = trim($ri['notes'] ?? '');
+                                if ($itemId > 0 && $qty > 0) {
+                                    $ins->bind_param("iids", $reqId, $itemId, $qty, $itemNotes);
+                                    $ins->execute();
+                                }
+                            }
+                            $ins->close();
+                        }
+                        $_SESSION['success'] = "Request <strong>$reqNum</strong> created and submitted for approval.";
+                    } else {
+                        $_SESSION['error'] = "Failed to create request.";
+                    }
+                    $stmt->close();
+                }
+            }
+            header("Location: matrons.php?page=store_requisition");
+            exit;
     }
 }
 
@@ -249,6 +291,16 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
+// Store data for requisitions
+$storeInventory = [];
+$myRequests = [];
+if ($conn) {
+    $r = $conn->query("SELECT si.id, si.item_name, si.item_code, si.unit, si.quantity, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
+    if ($r) while ($row = $r->fetch_assoc()) $storeInventory[] = $row;
+    $r2 = $conn->query("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=$user_id ORDER BY sr.created_at DESC LIMIT 20");
+    if ($r2) while ($row = $r2->fetch_assoc()) $myRequests[] = $row;
+}
+
 $pageToSection = [
     'home'           => 'overview',
     'overview'       => 'overview',
@@ -263,6 +315,7 @@ $pageToSection = [
     'meals'          => 'overview',
     'sickbay'        => 'health',
     'welfare'        => 'students',
+    'store_requisition' => 'store',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';
@@ -518,6 +571,82 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
                         </div>
                     </div>
                     <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- Store Requisition Section -->
+            <section id="store" class="content-section dashboard-section<?= $section === 'store' ? ' active' : '' ?>" data-section="store">
+                <h2><i class="fas fa-shopping-cart me-2"></i>Store Requisition</h2>
+                <p style="color:#6b7280;margin-bottom:20px">Request cleaning and hygiene items from the store</p>
+
+                <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+                    <button class="btn btn-success" onclick="document.getElementById('newReqModal').style.display='flex'">
+                        <i class="fas fa-plus"></i> New Requisition
+                    </button>
+                </div>
+
+                <?php if (empty($myRequests)): ?>
+                <div class="card"><div class="card-body"><div class="text-center py-4 text-muted"><i class="fas fa-clipboard-list fa-2x mb-2"></i><p>No requisitions yet</p></div></div></div>
+                <?php else: ?>
+                <?php foreach ($myRequests as $req):
+                    $urgBadge = $req['urgency'] === 'urgent' ? 'badge-danger' : ($req['urgency'] === 'high' ? 'badge-warning' : ($req['urgency'] === 'medium' ? 'badge-info' : 'badge-secondary'));
+                    $statusBadge = $req['status'] === 'pending' ? 'badge-warning' : ($req['status'] === 'approved' ? 'badge-success' : ($req['status'] === 'fulfilled' ? 'badge-success' : ($req['status'] === 'rejected' ? 'badge-danger' : 'badge-secondary')));
+                ?>
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong><?= htmlspecialchars($req['request_number']) ?></strong>
+                            <span class="badge <?= $urgBadge ?>" style="margin-left:8px"><?= $req['urgency'] ?></span>
+                            <span class="badge <?= $statusBadge ?>" style="margin-left:4px"><?= ucfirst($req['status']) ?></span>
+                        </div>
+                        <small class="text-muted"><?= date('d M Y H:i', strtotime($req['created_at'])) ?></small>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Department:</strong> <?= htmlspecialchars($req['department']) ?></p>
+                        <p class="mb-1"><strong>Items:</strong> <?= htmlspecialchars($req['items'] ?? '') ?></p>
+                        <?php if ($req['notes']): ?><p class="mb-0 text-muted"><small><?= htmlspecialchars($req['notes']) ?></small></p><?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+
+                <!-- New Request Modal -->
+                <div id="newReqModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+                    <div style="background:#fff;border-radius:12px;width:90%;max-width:700px;max-height:90vh;overflow-y:auto">
+                        <form method="POST">
+                        <div style="padding:18px 24px;background:#10b981;color:#fff;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">
+                            <h5 style="margin:0"><i class="fas fa-plus me-2"></i>New Store Requisition</h5>
+                            <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem" onclick="this.closest('#newReqModal').style.display='none'">&times;</button>
+                        </div>
+                        <div style="padding:24px">
+                            <input type="hidden" name="action" value="create_store_requisition">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px">Department</label><input type="text" name="department" class="form-control" value="Dormitory" required></div>
+                                <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:13px">Urgency</label><select name="urgency" class="form-select"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label fw-semibold" style="font-size:13px">Notes</label><textarea name="notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea></div>
+                            <label class="form-label fw-semibold" style="font-size:13px">Request Items</label>
+                            <div id="reqItemsContainer">
+                                <div class="d-flex gap-2 mb-2 req-item-row align-items-center">
+                                    <select name="req_items[0][item_id]" class="form-select" style="flex:2" required>
+                                        <option value="">-- Select Item --</option>
+                                        <?php foreach ($storeInventory as $item): ?>
+                                        <option value="<?= $item['id'] ?>"><?= htmlspecialchars($item['item_name']) ?> (<?= number_format($item['quantity']) ?> <?= htmlspecialchars($item['unit']) ?>)</option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <input type="number" name="req_items[0][quantity]" class="form-control" style="width:80px" placeholder="Qty" min="1" required>
+                                    <input type="text" name="req_items[0][item_name]" class="form-control" style="flex:1" placeholder="Item name">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.req-item-row').remove()"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addMatronReqItem()"><i class="fas fa-plus me-1"></i>Add Item</button>
+                        </div>
+                        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:10px">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('#newReqModal').style.display='none'">Cancel</button>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Submit Request</button>
+                        </div>
+                        </form>
+                    </div>
                 </div>
             </section>
         </div>
@@ -856,6 +985,21 @@ $section = $pageToSection[$requestedPage] ?? 'overview';
             const form = document.querySelector('#modalBody form');
             if (form) form.submit();
         });
+
+        let matronReqIdx = 1;
+        function addMatronReqItem() {
+            let options = '<option value="">-- Select Item --</option>';
+            <?php foreach ($storeInventory as $item): ?>
+            options += '<option value="<?= $item['id'] ?>"><?= addslashes(htmlspecialchars($item['item_name'])) ?> (<?= number_format($item['quantity']) ?> <?= htmlspecialchars($item['unit']) ?>)</option>';
+            <?php endforeach; ?>
+            let html = '<div class="d-flex gap-2 mb-2 req-item-row align-items-center">' +
+                '<select name="req_items[' + matronReqIdx + '][item_id]" class="form-select" style="flex:2" required onchange="this.closest(\'.req-item-row\').querySelector(\'input[name*=item_name]\').value=this.options[this.selectedIndex].text.split(\'(\')[0].trim()">' + options + '</select>' +
+                '<input type="number" name="req_items[' + matronReqIdx + '][quantity]" class="form-control" style="width:80px" placeholder="Qty" min="1" required>' +
+                '<input type="text" name="req_items[' + matronReqIdx + '][item_name]" class="form-control" style="flex:1" placeholder="Item name">' +
+                '<button type="button" class="btn btn-danger btn-sm" onclick="this.closest(\'.req-item-row\').remove()"><i class="fas fa-times"></i></button></div>';
+            document.getElementById('reqItemsContainer').insertAdjacentHTML('beforeend', html);
+            matronReqIdx++;
+        }
     </script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>

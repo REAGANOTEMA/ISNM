@@ -9,7 +9,6 @@ USE igangaschoolofl_staffs_db;
 
 -- ============================================================
 -- 1. ADMISSION REQUIREMENTS
--- Remove incorrect supplies data, insert proper requirements
 -- ============================================================
 
 DELETE FROM admission_requirements WHERE requirement_name IN (
@@ -217,13 +216,11 @@ INSERT IGNORE INTO applicants (id, full_name, other_names, date_of_birth, gender
 -- 10. SEED APPLICANT REQUIREMENT STATUS
 -- ============================================================
 
--- Registered students: all requirements verified
 INSERT IGNORE INTO applicant_requirement_status (applicant_id, requirement_id, status, submitted_by, submitted_at, verified_by, verified_at)
 SELECT a.id, r.id, 'Verified', 1, NOW(), 1, NOW()
 FROM applicants a CROSS JOIN admission_requirements r
 WHERE a.status = 'Registered' AND r.is_active = 1;
 
--- Approved students: first 8 verified, next 4 submitted
 INSERT IGNORE INTO applicant_requirement_status (applicant_id, requirement_id, status, submitted_by, submitted_at, verified_by, verified_at)
 SELECT a.id, r.id, 'Verified', 1, NOW(), 1, NOW()
 FROM applicants a CROSS JOIN admission_requirements r
@@ -234,7 +231,6 @@ SELECT a.id, r.id, 'Submitted', 1, NOW()
 FROM applicants a CROSS JOIN admission_requirements r
 WHERE a.status = 'Approved' AND r.is_active = 1 AND r.display_order > 8 AND r.display_order <= 12;
 
--- Under Review: first 6 submitted, rest not submitted
 INSERT IGNORE INTO applicant_requirement_status (applicant_id, requirement_id, status, submitted_by, submitted_at)
 SELECT a.id, r.id, 'Submitted', 1, NOW()
 FROM applicants a CROSS JOIN admission_requirements r
@@ -245,13 +241,11 @@ SELECT a.id, r.id, 'Not Submitted'
 FROM applicants a CROSS JOIN admission_requirements r
 WHERE a.status = 'Under Review' AND r.is_active = 1 AND r.display_order > 6;
 
--- New Applicants: all not submitted
 INSERT IGNORE INTO applicant_requirement_status (applicant_id, requirement_id, status)
 SELECT a.id, r.id, 'Not Submitted'
 FROM applicants a CROSS JOIN admission_requirements r
 WHERE a.status = 'New Applicant' AND r.is_active = 1;
 
--- Rejected: first 3 rejected, rest not submitted
 INSERT IGNORE INTO applicant_requirement_status (applicant_id, requirement_id, status, submitted_by, submitted_at, rejected_by, verified_at, remarks)
 SELECT a.id, r.id, 'Rejected', 1, NOW(), 1, NOW(), 'Document not clear'
 FROM applicants a CROSS JOIN admission_requirements r
@@ -331,7 +325,7 @@ INSERT IGNORE INTO student_audit_log (user_id, action, module, record_id, studen
 (1, 'Approve Applicant', 'Admissions', 6, 'APP-2024-006', 'Approved applicant Aisha Nansubuga', '192.168.1.100', '2024-05-10 09:00:00'),
 (2, 'Review Application', 'Admissions', 8, 'APP-2024-008', 'Started review for Betty Namukasa', '192.168.1.101', '2024-05-14 10:00:00'),
 (2, 'Reject Application', 'Admissions', 13, 'APP-2024-013', 'Rejected Isaac Tumwine - unverifiable documents', '192.168.1.101', '2024-08-20 15:30:00'),
-(1, 'Update Admission Requirements', 'Admissions', 0, '', 'Updated admission requirements list - removed supplies, added proper docs', '192.168.1.100', '2024-01-14 14:00:00'),
+(1, 'Update Admission Requirements', 'Admissions', 0, '', 'Updated admission requirements list', '192.168.1.100', '2024-01-14 14:00:00'),
 (2, 'Add Comment', 'Student Profile', 0, 'APP-2024-008', 'Added follow-up comment for medical report', '192.168.1.101', '2024-05-16 08:30:00'),
 (1, 'Export Report', 'Reports', 0, '', 'Exported applicant status report for January intake', '192.168.1.100', '2024-02-01 11:00:00'),
 (1, 'Login', 'Authentication', 0, '', 'Admin user logged in successfully', '192.168.1.100', '2024-05-01 08:00:00'),
@@ -365,14 +359,10 @@ INSERT IGNORE INTO student_status_history (student_number, old_status, new_statu
 ('APP-2024-008', 'New Applicant', 'Under Review', 3, 'Review Committee', 'Assigned for detailed review', '2024-05-14 10:00:00'),
 ('APP-2024-013', '', 'New Applicant', 1, 'System', 'Application submitted for August intake', '2024-07-25 08:00:00'),
 ('APP-2024-013', 'New Applicant', 'Under Review', 1, 'Admin User', 'Application assigned for review', '2024-08-01 09:00:00'),
-('APP-2024-013', 'Under Review', 'Rejected', 1, 'Admin User', 'A-Level certificate could not be verified with issuing institution', '2024-08-20 15:30:00'),
+('APP-2024-013', 'Under Review', 'Rejected', 1, 'Admin User', 'A-Level certificate could not be verified', '2024-08-20 15:30:00'),
 ('APP-2024-015', '', 'New Applicant', 1, 'System', 'Application submitted for May intake', '2024-04-25 08:00:00'),
 ('APP-2024-015', 'New Applicant', 'Under Review', 2, 'Admissions Officer', 'Assigned for review', '2024-05-05 09:00:00'),
 ('APP-2024-015', 'Under Review', 'Approved', 2, 'Admissions Officer', 'All documents verified and approved', '2024-05-18 10:00:00'),
 ('APP-2024-020', '', 'New Applicant', 1, 'System', 'Application submitted for May intake', '2024-04-28 08:00:00'),
 ('APP-2024-020', 'New Applicant', 'Under Review', 2, 'Admissions Officer', 'Application assigned for review', '2024-05-08 09:00:00'),
 ('APP-2024-020', 'Under Review', 'Approved', 2, 'Admissions Officer', 'All required documents submitted and verified', '2024-05-20 13:30:00');
-
--- ============================================================
--- DONE
--- ============================================================

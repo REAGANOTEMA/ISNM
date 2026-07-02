@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../includes/staff_dashboard_access.php';
-$ctx = bootstrapStaffDashboard(['admissions', 'director', 'secretary']);
-$conn = $ctx['staff'];
-$user = $ctx['user'];
+// Redirect to consolidated Director Admissions dashboard
+session_start();
+if (!isset($_SESSION['staff_id'])) { header('Location: ../staff-login.php'); exit; }
+header('Location: director-admissions.php?page=intake_planning');
+exit;
 
 $intakes = [];
 if ($conn) {

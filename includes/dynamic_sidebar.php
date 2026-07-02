@@ -49,6 +49,7 @@ function renderDynamicSidebar(): void {
         'compliance' => '#ef4444', 'clinical' => '#ef4444', 'system' => '#475569',
     ];
     ?>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <nav class="isnm-sidebar sidebar" id="isnmSidebar">
         <div class="sidebar-brand">
             <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Toggle sidebar">
@@ -191,6 +192,8 @@ function renderDynamicSidebar(): void {
                 if (window.innerWidth <= 768) {
                     var sidebar = document.getElementById('isnmSidebar');
                     if (sidebar) sidebar.classList.remove('open', 'mobile-show');
+                    var overlay = document.getElementById('sidebarOverlay');
+                    if (overlay) overlay.classList.remove('open');
                 }
             });
         });
@@ -201,8 +204,20 @@ function renderDynamicSidebar(): void {
             if (!sidebar || window.innerWidth > 768) return;
             if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
+                var overlay = document.getElementById('sidebarOverlay');
+                if (overlay) overlay.classList.remove('open');
             }
         });
+
+        // ── Overlay click closes sidebar ──
+        var overlay = document.getElementById('sidebarOverlay');
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                var sidebar = document.getElementById('isnmSidebar');
+                if (sidebar) sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            });
+        }
 
         // ── Recalculate max-height after images/fonts load ──
         window.addEventListener('load', function() {

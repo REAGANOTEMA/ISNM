@@ -1862,8 +1862,17 @@ document.addEventListener('click', function(e) {
         });
     });
 })();
+
+function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
 </script>
 
 </div>
+
+<?php
+require_once __DIR__ . '/../includes/profile_settings.php';
+if (function_exists('renderProfileModal')) renderProfileModal();
+if (function_exists('renderProfileStyles')) renderProfileStyles();
+if (function_exists('renderProfileScripts')) renderProfileScripts();
+?>
 </body>
 </html>

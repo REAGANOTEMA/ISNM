@@ -207,6 +207,18 @@ if ($ajax && $ajaxSid > 0) {
 // ── POST ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    
+    // Safe prepared statement helper
+    function safe_prepare_execute($conn, $sql, $types, $params) {
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) { $_SESSION['error'] = 'Database error: ' . $conn->error; return false; }
+        if ($types && $params) $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $ok = $conn->affected_rows >= 0;
+        if (!$ok) $_SESSION['error'] = $conn->error;
+        $stmt->close();
+        return $ok;
+    }
 
     if ($action === 'create_exam') {
         $cc=$_POST['course_code']??'';
@@ -217,21 +229,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sem=$_POST['semester']??'Semester 1';
         $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
         $en='EXM-'.date('Ymd').'-'.mt_rand(1000,9999);
-        $stmt = $conn->prepare("INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES (?,?,?,?,?,?,?,?,'Scheduled',?)");
-        $stmt->bind_param("ssssssssi", $en, $et, $cc, $pc, $sd, $rm, $sem, $ay, $user_id);
-        $stmt->execute();
-        if($conn->affected_rows>0)$_SESSION['success']="Exam $en created."; else $_SESSION['error']=$conn->error;
-        $stmt->close();
+        if(safe_prepare_execute($conn,"INSERT INTO examination_records (exam_number,exam_type,course_code,program_code,exam_date,exam_room,semester,academic_year,status,created_by) VALUES (?,?,?,?,?,?,?,?,'Scheduled',?)","ssssssssi",[$en,$et,$cc,$pc,$sd,$rm,$sem,$ay,$user_id]))
+            $_SESSION['success']="Exam $en created.";
         header("Location: director-academics.php?section=$section"); exit;
     }
 
     if ($action === 'publish_results') {
         $en=$_POST['exam_number']??'';
-        $stmt = $conn->prepare("UPDATE examination_records SET status='Published' WHERE exam_number=?");
-        $stmt->bind_param("s", $en);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success']="Results published for $en.";
+        if(safe_prepare_execute($conn,"UPDATE examination_records SET status='Published' WHERE exam_number=?","s",[$en]))
+            $_SESSION['success']="Results published for $en.";
         header("Location: director-academics.php?section=$section"); exit;
     }
 
@@ -244,11 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cn=$_POST['course_name']??'';
         $gp=floatval($_POST['gpa']??0);
         if($en && $sid){
-            $stmt = $conn->prepare("INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,gpa,graded_by) VALUES (?,?,?,'Exam',?,?,?,?)");
-            $stmt->bind_param("issdsdi", $sid, $cc, $cn, $mk, $gr, $gp, $user_id);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success']='Marks entered.';
+            if(safe_prepare_execute($conn,"INSERT INTO academic_records (student_id,course_code,course_name,assessment_type,marks,grade,gpa,graded_by) VALUES (?,?,?,'Exam',?,?,?,?)","issdsdi",[$sid,$cc,$cn,$mk,$gr,$gp,$user_id]))
+                $_SESSION['success']='Marks entered.';
         }
         else { $_SESSION['error']='Exam and student required.'; }
         header("Location: director-academics.php?section=$section"); exit;
@@ -259,11 +262,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dn=$_POST['document_title']??'Transcript';
         $dt=$_POST['document_type']??'Transcript';
         if($sid){
-            $stmt = $conn->prepare("INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES (?,?,?,?,'')");
-            $stmt->bind_param("sisi", $dt, $sid, $user_id, $dn);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success']='Document generated.';
+            if(safe_prepare_execute($conn,"INSERT INTO generated_documents (document_type,student_id,generated_by,document_title,file_path) VALUES (?,?,?,?,'')","sisi",[$dt,$sid,$user_id,$dn]))
+                $_SESSION['success']='Document generated.';
         }
         header("Location: director-academics.php?section=$section"); exit;
     }
@@ -272,11 +272,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $en=$_POST['exam_number']??'';
         $stat=$_POST['approval_status']??'Approved';
         $cmt=$_POST['comments']??'';
-        $stmt = $conn->prepare("INSERT INTO result_approvals (exam_number,status,comments,approved_by,approval_date) VALUES (?,?,?,?," . "NOW())");
-        $stmt->bind_param("sssi", $en, $stat, $cmt, $user_id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success']="Result $stat for $en.";
+        if(safe_prepare_execute($conn,"INSERT INTO result_approvals (exam_number,status,comments,approved_by,approval_date) VALUES (?,?,?,?," . "NOW())","sssi",[$en,$stat,$cmt,$user_id]))
+            $_SESSION['success']="Result $stat for $en.";
         header("Location: director-academics.php?section=$section"); exit;
     }
 
@@ -287,11 +284,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $finding=$_POST['findings']??'';
         $rec=$_POST['recommendations']??'';
         $stat=$_POST['status']??'Open';
-        $stmt = $conn->prepare("INSERT INTO quality_assurance (review_title,department,review_area,findings,recommendations,status,reviewed_by,review_date) VALUES (?,?,?,?,?,?,?,NOW())");
-        $stmt->bind_param("ssssssi", $title, $dept, $area, $finding, $rec, $stat, $user_id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success']='Quality review created.';
+        if(safe_prepare_execute($conn,"INSERT INTO quality_assurance (review_title,department,review_area,findings,recommendations,status,reviewed_by,review_date) VALUES (?,?,?,?,?,?,?,NOW())","ssssssi",[$title,$dept,$area,$finding,$rec,$stat,$user_id]))
+            $_SESSION['success']='Quality review created.';
         header("Location: director-academics.php?section=$section"); exit;
     }
 
@@ -301,11 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sem=$_POST['semester']??'Semester 1';
         $ay=$_POST['academic_year']??date('Y').'-'.(date('Y')+1);
         if($lid && $cc){
-            $stmt = $conn->prepare("INSERT INTO course_assignments (lecturer_id,course_code,semester,academic_year,assigned_by) VALUES (?,?,?,?,?)");
-            $stmt->bind_param("isssi", $lid, $cc, $sem, $ay, $user_id);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success']='Lecturer assigned.';
+            if(safe_prepare_execute($conn,"INSERT INTO course_assignments (lecturer_id,course_code,semester,academic_year,assigned_by) VALUES (?,?,?,?,?)","isssi",[$lid,$cc,$sem,$ay,$user_id]))
+                $_SESSION['success']='Lecturer assigned.';
         }
         header("Location: director-academics.php?section=$section"); exit;
     }
@@ -317,11 +308,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st=$_POST['start_time']??'';
         $et=$_POST['end_time']??'';
         $rm=$_POST['room']??'';
-        $stmt = $conn->prepare("INSERT INTO timetable (lecturer_id,course_code,day_of_week,start_time,end_time,room) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param("isssss", $lid, $cc, $dow, $st, $et, $rm);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['success']='Timetable entry added.';
+        if(safe_prepare_execute($conn,"INSERT INTO timetable (lecturer_id,course_code,day_of_week,start_time,end_time,room) VALUES (?,?,?,?,?,?)","isssss",[$lid,$cc,$dow,$st,$et,$rm]))
+            $_SESSION['success']='Timetable entry added.';
         header("Location: director-academics.php?section=$section"); exit;
     }
 
@@ -330,11 +318,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dt=$_POST['date']??date('Y-m-d');
         $st=$_POST['status']??'Present';
         if($sid && $students_conn){
-            $stmt = $students_conn->prepare("INSERT INTO student_attendance (student_id,date,status) VALUES (?,?,?)");
-            $stmt->bind_param("iss", $sid, $dt, $st);
-            $stmt->execute();
-            $stmt->close();
-            $_SESSION['success']='Attendance recorded.';
+            if(safe_prepare_execute($students_conn,"INSERT INTO student_attendance (student_id,date,status) VALUES (?,?,?)","iss",[$sid,$dt,$st]))
+                $_SESSION['success']='Attendance recorded.';
         }
         header("Location: director-academics.php?section=$section"); exit;
     }
@@ -346,11 +331,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sd=$_POST['exam_date']??'';
         $rm=$_POST['exam_room']??'';
         if($en){
-            $stmt = $conn->prepare("UPDATE examination_records SET exam_type=?,course_code=?,exam_date=?,exam_room=? WHERE exam_number=?");
-            $stmt->bind_param("sssss", $et, $cc, $sd, $rm, $en);
-            $stmt->execute();
-            if($conn->affected_rows>=0) $_SESSION['success']="Exam $en updated."; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"UPDATE examination_records SET exam_type=?,course_code=?,exam_date=?,exam_room=? WHERE exam_number=?","sssss",[$et,$cc,$sd,$rm,$en]))
+                $_SESSION['success']="Exam $en updated.";
         }
         header("Location: director-academics.php?section=exams"); exit;
     }
@@ -358,11 +340,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_exam') {
         $en=$_POST['exam_number']??'';
         if($en){
-            $stmt = $conn->prepare("DELETE FROM examination_records WHERE exam_number=?");
-            $stmt->bind_param("s", $en);
-            $stmt->execute();
-            if($conn->affected_rows>0) $_SESSION['success']="Exam $en deleted."; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"DELETE FROM examination_records WHERE exam_number=?","s",[$en]))
+                $_SESSION['success']="Exam $en deleted.";
         }
         header("Location: director-academics.php?section=exams"); exit;
     }
@@ -373,11 +352,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $gr=$_POST['grade']??'';
         $gp=floatval($_POST['gpa']??0);
         if($rid){
-            $stmt = $conn->prepare("UPDATE academic_records SET marks=?,grade=?,gpa=? WHERE id=?");
-            $stmt->bind_param("dsdi", $mk, $gr, $gp, $rid);
-            $stmt->execute();
-            if($conn->affected_rows>=0) $_SESSION['success']='Marks updated.'; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"UPDATE academic_records SET marks=?,grade=?,gpa=? WHERE id=?","dsdi",[$mk,$gr,$gp,$rid]))
+                $_SESSION['success']='Marks updated.';
         }
         header("Location: director-academics.php?section=results"); exit;
     }
@@ -385,11 +361,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_marks') {
         $rid=intval($_POST['record_id']??0);
         if($rid){
-            $stmt = $conn->prepare("DELETE FROM academic_records WHERE id=?");
-            $stmt->bind_param("i", $rid);
-            $stmt->execute();
-            if($conn->affected_rows>0) $_SESSION['success']='Record deleted.'; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"DELETE FROM academic_records WHERE id=?","i",[$rid]))
+                $_SESSION['success']='Record deleted.';
         }
         header("Location: director-academics.php?section=results"); exit;
     }
@@ -397,11 +370,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_course_assignment') {
         $aid=intval($_POST['assignment_id']??0);
         if($aid){
-            $stmt = $conn->prepare("DELETE FROM course_assignments WHERE id=?");
-            $stmt->bind_param("i", $aid);
-            $stmt->execute();
-            if($conn->affected_rows>0) $_SESSION['success']='Assignment removed.'; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"DELETE FROM course_assignments WHERE id=?","i",[$aid]))
+                $_SESSION['success']='Assignment removed.';
         }
         header("Location: director-academics.php?section=lecturers"); exit;
     }
@@ -409,11 +379,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_timetable') {
         $tid=intval($_POST['timetable_id']??0);
         if($tid){
-            $stmt = $conn->prepare("DELETE FROM timetable WHERE id=?");
-            $stmt->bind_param("i", $tid);
-            $stmt->execute();
-            if($conn->affected_rows>0) $_SESSION['success']='Timetable entry removed.'; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"DELETE FROM timetable WHERE id=?","i",[$tid]))
+                $_SESSION['success']='Timetable entry removed.';
         }
         header("Location: director-academics.php?section=timetable"); exit;
     }
@@ -421,11 +388,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_quality_review') {
         $qrid=intval($_POST['review_id']??0);
         if($qrid){
-            $stmt = $conn->prepare("DELETE FROM quality_assurance WHERE id=?");
-            $stmt->bind_param("i", $qrid);
-            $stmt->execute();
-            if($conn->affected_rows>0) $_SESSION['success']='Review deleted.'; else $_SESSION['error']=$conn->error;
-            $stmt->close();
+            if(safe_prepare_execute($conn,"DELETE FROM quality_assurance WHERE id=?","i",[$qrid]))
+                $_SESSION['success']='Review deleted.';
         }
         header("Location: director-academics.php?section=quality"); exit;
     }

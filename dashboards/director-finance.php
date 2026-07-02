@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/news_management_widget.php';
 require_once __DIR__ . '/../includes/website_submissions_widget.php';
+require_once __DIR__ . '/../includes/director_website_panel.php';
 $ctx = bootstrapStaffDashboard(['director finance', 'director general', 'ceo']);
 $staff = $ctx['staff']; $students = $ctx['students']; $website = $ctx['website'];
 $user = $ctx['user']; $uid = (int)($_SESSION['user_id'] ?? 0);

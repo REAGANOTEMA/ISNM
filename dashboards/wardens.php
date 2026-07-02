@@ -166,6 +166,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
         }
         $stmt->close();
     }
+
+    if ($action === 'create_warden_requisition') {
+        $department = trim($_POST['department'] ?? 'Hostel');
+        $urgency = trim($_POST['urgency'] ?? 'medium');
+        $notes = trim($_POST['notes'] ?? '');
+        $reqItems = $_POST['req_items'] ?? [];
+        if (empty($reqItems)) {
+            $flash = "Add at least one item to the request.";
+            $flashType = "danger";
+        } else {
+            $reqNum = 'WRD-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+            $itemsList = '';
+            foreach ($reqItems as $ri) {
+                $itemName = trim($ri['item_name'] ?? '');
+                if ($itemName) $itemsList .= ($itemsList ? ', ' : '') . $itemName;
+            }
+            $stmt = $conn->prepare("INSERT INTO store_requests (request_number, requested_by, requester_name, requester_role, department, items, urgency, status, notes, created_at) VALUES (?, ?, ?, 'warden', ?, ?, ?, 'pending', ?, NOW())");
+            if ($stmt) {
+                $stmt->bind_param("sisssss", $reqNum, $user_id, $user_name, $department, $itemsList, $urgency, $notes);
+                if ($stmt->execute()) {
+                    $reqId = $conn->insert_id;
+                    $ins = $conn->prepare("INSERT INTO store_request_items (request_id, item_id, quantity_requested, notes) VALUES (?, ?, ?, ?)");
+                    if ($ins) {
+                        foreach ($reqItems as $ri) {
+                            $itemId = (int)($ri['item_id'] ?? 0);
+                            $qty = (float)($ri['quantity'] ?? 0);
+                            $itemNotes = trim($ri['notes'] ?? '');
+                            if ($itemId > 0 && $qty > 0) {
+                                $ins->bind_param("iids", $reqId, $itemId, $qty, $itemNotes);
+                                $ins->execute();
+                            }
+                        }
+                        $ins->close();
+                    }
+                    $flash = "Request <strong>$reqNum</strong> created and submitted for approval.";
+                    $flashType = "success";
+                } else {
+                    $flash = "Failed to create request.";
+                    $flashType = "danger";
+                }
+                $stmt->close();
+            }
+        }
+    }
 }
 
 $students_db = $ctx['students'];
@@ -255,6 +299,16 @@ if ($conn) {
     } catch (Exception $e) {}
 }
 
+// Store data for requisitions
+$storeInventory = [];
+$myRequests = [];
+if ($conn) {
+    $r = $conn->query("SELECT si.id, si.item_name, si.item_code, si.unit, si.quantity, sc.category_name FROM store_inventory si LEFT JOIN store_categories sc ON si.category_id=sc.id WHERE si.status='active' ORDER BY sc.category_name, si.item_name");
+    if ($r) while ($row = $r->fetch_assoc()) $storeInventory[] = $row;
+    $r2 = $conn->query("SELECT sr.*, (SELECT COUNT(*) FROM store_request_items WHERE request_id=sr.id) as item_count FROM store_requests sr WHERE sr.requested_by=$user_id ORDER BY sr.created_at DESC LIMIT 20");
+    if ($r2) while ($row = $r2->fetch_assoc()) $myRequests[] = $row;
+}
+
 $pageToSection = [
     'home'          => 'overview',
     'overview'      => 'overview',
@@ -267,6 +321,7 @@ $pageToSection = [
     'security'      => 'security',
     'welfare'       => 'students',
     'reports'       => 'overview',
+    'warden_requisition' => 'store',
 ];
 $requestedPage = $_GET['page'] ?? 'home';
 $section = $pageToSection[$requestedPage] ?? 'overview';
@@ -768,6 +823,42 @@ if ($view_case_id && $conn) {
         </section>
     </div>
     <?php endif; ?>
+
+    <?php if ($section === 'store'): ?>
+    <div id="store" class="content-section dashboard-section active" data-section="store">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="fas fa-store me-2"></i>Store Requisitions</h4>
+            <button class="btn btn-primary" onclick="openModal('Requisition Form', document.getElementById('reqFormHTML').innerHTML, 'Submit')"><i class="fas fa-plus me-1"></i>New Request</button>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><div class="card h-100"><div class="card-body text-center"><h3 class="text-primary"><?= count($myRequests) ?></h3><small>My Requests</small></div></div></div>
+            <div class="col-md-4"><div class="card h-100"><div class="card-body text-center"><h3 class="text-warning"><?= count(array_filter($myRequests, fn($r) => $r['status'] === 'pending')) ?></h3><small>Pending</small></div></div></div>
+            <div class="col-md-4"><div class="card h-100"><div class="card-body text-center"><h3 class="text-success"><?= count(array_filter($myRequests, fn($r) => $r['status'] === 'fulfilled' || $r['status'] === 'approved')) ?></h3><small>Fulfilled</small></div></div></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0"><i class="fas fa-list me-2"></i>Requisition History</h6></div>
+            <div class="card-body table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Request #</th><th>Items</th><th>Urgency</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+                    <tbody>
+                    <?php if (empty($myRequests)): ?>
+                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>No requisitions yet</td></tr>
+                    <?php else: foreach ($myRequests as $req): ?>
+                    <tr>
+                        <td><strong><?= htmlspecialchars($req['request_number']) ?></strong></td>
+                        <td><?= htmlspecialchars($req['items']) ?></td>
+                        <td><span class="badge bg-<?= ($req['urgency'] ?? 'medium') === 'urgent' ? 'danger' : (($req['urgency'] ?? 'medium') === 'high' ? 'warning' : 'info') ?>"><?= ucfirst(htmlspecialchars($req['urgency'] ?? 'medium')) ?></span></td>
+                        <td><span class="badge bg-<?= $req['status'] === 'approved' || $req['status'] === 'fulfilled' ? 'success' : ($req['status'] === 'rejected' ? 'danger' : ($req['status'] === 'pending_approval' ? 'warning' : 'secondary')) ?>"><?= ucfirst(htmlspecialchars($req['status'])) ?></span></td>
+                        <td><small><?= date('M j, Y', strtotime($req['created_at'])) ?></small></td>
+                        <td><a href="?page=warden_requisition" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a></td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <div class="modal fade" id="actionModal" tabindex="-1">
@@ -791,6 +882,21 @@ document.getElementById('modalAction')?.addEventListener('click', function() {
     const form = document.querySelector('#modalBody form');
     if (form) form.submit();
 });
+
+let wardenReqIdx = 1;
+function addWardenReqItem() {
+    let options = '<option value="">-- Select Item --</option>';
+    <?php foreach ($storeInventory as $item): ?>
+    options += '<option value="<?= $item['id'] ?>"><?= addslashes(htmlspecialchars($item['item_name'])) ?> (<?= number_format($item['quantity']) ?> <?= htmlspecialchars($item['unit']) ?>)</option>';
+    <?php endforeach; ?>
+    let html = '<div class="d-flex gap-2 mb-2 req-item-row align-items-center">' +
+        '<select name="req_items[' + wardenReqIdx + '][item_id]" class="form-select" style="flex:2" required onchange="this.closest(\'.req-item-row\').querySelector(\'input[name*=item_name]\').value=this.options[this.selectedIndex].text.split(\'(\')[0].trim()">' + options + '</select>' +
+        '<input type="number" name="req_items[' + wardenReqIdx + '][quantity]" class="form-control" style="width:80px" placeholder="Qty" min="1" required>' +
+        '<input type="text" name="req_items[' + wardenReqIdx + '][item_name]" class="form-control" style="flex:1" placeholder="Item name">' +
+        '<button type="button" class="btn btn-danger btn-sm" onclick="this.closest(\'.req-item-row\').remove()"><i class="fas fa-times"></i></button></div>';
+    document.getElementById('reqItemsContainer').insertAdjacentHTML('beforeend', html);
+    wardenReqIdx++;
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -818,42 +924,37 @@ document.querySelectorAll('.dashboard-sidebar .nav-link').forEach(link => {
     });
 });
 
-function openModal(action) {
+function openModal(title, content, actionText) {
     const modal = new bootstrap.Modal(document.getElementById('actionModal'));
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
-    switch(action) {
-        case 'scheduleSession':
-            modalTitle.textContent = 'Schedule Counseling Session';
-            modalBody.innerHTML = `
-                <form action="../handlers/welfare_handler.php" method="POST">
-                    <input type="hidden" name="action" value="schedule_session">
-                    <div class="mb-3"><label class="form-label">Session Type</label>
-                        <select class="form-control" name="session_type" required>
-                            <option value="">Select Type</option>
-                            <option value="Individual">Individual Counseling</option>
-                            <option value="Group">Group Counseling</option>
-                            <option value="Family">Family Counseling</option>
-                            <option value="Crisis">Crisis Intervention</option>
-                        </select></div>
-                    <div class="mb-3"><label class="form-label">Student ID</label>
-                        <input type="number" class="form-control" name="student_id" placeholder="Enter student ID" required></div>
-                    <div class="row">
-                        <div class="col-md-6"><div class="mb-3"><label class="form-label">Date</label><input type="date" class="form-control" name="session_date" required></div></div>
-                        <div class="col-md-6"><div class="mb-3"><label class="form-label">Time</label><input type="time" class="form-control" name="session_time" required></div></div>
-                    </div>
-                    <div class="mb-3"><label class="form-label">Issues Discussed</label><textarea class="form-control" name="issues_discussed" rows="3" required></textarea></div>
-                    <button type="submit" class="btn btn-primary w-100">Schedule Session</button>
-                </form>`;
-            break;
-        case 'counselingRecord':
-            modalTitle.textContent = 'Counseling Record';
-            modalBody.innerHTML = '<p class="text-muted">Counseling record form coming soon.</p>';
-            break;
-    }
+    const modalAction = document.getElementById('modalAction');
+    modalTitle.textContent = title;
+    modalBody.innerHTML = content;
+    if (actionText) modalAction.textContent = actionText;
     modal.show();
 }
 </script>
+
+<div id="reqFormHTML" style="display:none">
+    <form action="?page=warden_requisition" method="POST">
+        <input type="hidden" name="action" value="create_warden_requisition">
+        <div class="row mb-3">
+            <div class="col-md-6"><label class="form-label">Department</label><input type="text" class="form-control" name="department" value="Hostel" required></div>
+            <div class="col-md-6"><label class="form-label">Urgency</label>
+                <select class="form-select" name="urgency" required>
+                    <option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
+                </select></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="2" placeholder="Optional notes"></textarea></div>
+        <div class="mb-3"><label class="form-label">Requested Items</label>
+            <div id="reqItemsContainer"></div>
+            <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="addWardenReqItem()"><i class="fas fa-plus me-1"></i>Add Item</button>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Submit Requisition</button>
+    </form>
+</div>
+
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>
