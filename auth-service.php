@@ -8,12 +8,14 @@ require_once __DIR__ . '/includes/functions.php';
 
 class AuthenticationService {
 
-    private $maxLoginAttempts = 5;
-    private $lockoutDuration  = 900;
+    private $maxLoginAttempts = 10;
+    private $lockoutDuration  = 300;
 
     private function isStudentAccountLocked($indexNumber) {
         $conn = getConnection();
         if (!$conn) return false;
+        // Auto-unlock expired locks
+        $conn->query("UPDATE students SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
         $stmt = $conn->prepare("SELECT locked_until FROM students WHERE index_number = ? AND status = 'Active' AND locked_until > NOW()");
         if (!$stmt) return false;
         $stmt->bind_param('s', $indexNumber);
@@ -26,6 +28,8 @@ class AuthenticationService {
     private function isStaffAccountLocked($email) {
         $conn = getStaffConnection();
         if (!$conn) return false;
+        // Auto-unlock expired locks
+        $conn->query("UPDATE staff SET locked_until = NULL, login_attempts = 0 WHERE locked_until IS NOT NULL AND locked_until <= NOW()");
         $stmt = $conn->prepare("SELECT locked_until FROM staff WHERE LOWER(email) = ? AND LOWER(status) = 'active' AND locked_until > NOW()");
         if (!$stmt) return false;
         $stmt->bind_param('s', $email);

@@ -13,6 +13,15 @@
  * - getSystemSetting($conn, $key, $default) : mixed
  * - setSystemSetting($conn, $key, $value) : bool
  */
+
+// Auth guard — redirect to staff-login.php if not authenticated
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || ($_SESSION['type'] ?? '') !== 'staff') {
+    $redirect = isset($_SERVER['REQUEST_URI']) ? urlencode($_SERVER['REQUEST_URI']) : '';
+    header('Location: ../staff-login.php' . ($redirect ? "?redirect=$redirect" : ''));
+    exit();
+}
+
 if (function_exists('checkEnterprisePermission')) return;
 
 /**

@@ -1016,7 +1016,7 @@ elseif ($page === 'library'):
 // 14. ANNOUNCEMENTS
 // ════════════════════════════════════════════════
 elseif ($page === 'notices'):
-    $notices = safeQuery($studentsDb, "SELECT * FROM announcements WHERE (end_date IS NULL OR end_date >= CURDATE()) ORDER BY FIELD(priority,'Urgent','High','Normal','Low'), created_at DESC LIMIT 20");
+    $notices = safeQuery($studentsDb, "SELECT * FROM announcements WHERE is_active=1 AND (expires_at IS NULL OR expires_at >= CURDATE()) ORDER BY FIELD(priority,'Urgent','High','Normal','Low'), created_at DESC LIMIT 20");
     if (empty($notices)) $notices = safeQueryPrepared($studentsDb, "SELECT * FROM student_notifications WHERE student_id=? ORDER BY created_at DESC LIMIT 20", "i", [$student_id]);
 ?>
 <div class="sp-card">

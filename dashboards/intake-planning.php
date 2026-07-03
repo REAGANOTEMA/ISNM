@@ -1,7 +1,7 @@
 <?php
 // Redirect to consolidated Director Admissions dashboard
 session_start();
-if (!isset($_SESSION['staff_id'])) { header('Location: ../staff-login.php'); exit; }
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) { header('Location: ../staff-login.php'); exit; }
 header('Location: director-admissions.php?page=intake_planning');
 exit;
 

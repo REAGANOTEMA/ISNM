@@ -52,6 +52,7 @@ if (!function_exists('isnm_load_env')) {
 }
 
 isnm_load_env(__DIR__ . '/../.env');
+isnm_load_env(__DIR__ . '/../.env.local');
 
 if (!defined('DB_HOST')) {
     define('DB_HOST', isnm_env('DB_HOST', isnm_env('STUDENTS_DB_HOST', 'localhost')));

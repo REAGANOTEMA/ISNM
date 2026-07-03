@@ -7,10 +7,106 @@ SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 
 -- ============================================================
--- 1. FIX STUDENT IDS (already applied — skip if re-run)
+-- CREATE MISSING TABLES (if not present in this database)
 -- ============================================================
--- Students table already has id PRIMARY KEY AUTO_INCREMENT
--- index_number, year, current_year, intake_year, password already set
+CREATE TABLE IF NOT EXISTS course_catalog (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  course_code VARCHAR(50) NOT NULL,
+  course_name VARCHAR(255) NOT NULL,
+  program VARCHAR(200) DEFAULT NULL,
+  level VARCHAR(50) DEFAULT NULL,
+  semester VARCHAR(50) DEFAULT NULL,
+  credit_hours INT DEFAULT 0,
+  is_compulsory TINYINT(1) DEFAULT 1,
+  status VARCHAR(20) DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS exams (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(50) DEFAULT NULL,
+  subject_id INT DEFAULT NULL,
+  class_id INT DEFAULT NULL,
+  date DATE DEFAULT NULL,
+  duration INT DEFAULT 0,
+  total_marks INT DEFAULT 100,
+  passing_marks INT DEFAULT 50,
+  term VARCHAR(20) DEFAULT NULL,
+  academic_year VARCHAR(20) DEFAULT NULL,
+  status VARCHAR(20) DEFAULT 'scheduled',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS exam_results (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  exam_id INT DEFAULT NULL,
+  student_id INT DEFAULT NULL,
+  marks_obtained DECIMAL(5,2) DEFAULT NULL,
+  grade VARCHAR(5) DEFAULT NULL,
+  remarks TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS fee_structure (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  program VARCHAR(200) DEFAULT NULL,
+  level VARCHAR(50) DEFAULT NULL,
+  academic_year VARCHAR(20) DEFAULT NULL,
+  semester VARCHAR(20) DEFAULT NULL,
+  fee_type VARCHAR(50) DEFAULT NULL,
+  amount DECIMAL(12,2) DEFAULT 0.00,
+  description TEXT DEFAULT NULL,
+  is_active TINYINT(1) DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS student_fee_tracking (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  student_id INT DEFAULT NULL,
+  fee_type VARCHAR(50) DEFAULT NULL,
+  amount DECIMAL(12,2) DEFAULT 0.00,
+  amount_paid DECIMAL(12,2) DEFAULT 0.00,
+  balance DECIMAL(12,2) DEFAULT 0.00,
+  academic_year VARCHAR(20) DEFAULT NULL,
+  semester VARCHAR(20) DEFAULT NULL,
+  due_date DATE DEFAULT NULL,
+  status VARCHAR(20) DEFAULT 'Pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- 1. STUDENTS (150 sample students across all 6 programs)
+-- ============================================================
+INSERT IGNORE INTO students (student_number, index_number, first_name, surname, full_name, email, password, phone, program, current_year, level, gender, status, is_first_login, nationality, address)
+WITH RECURSIVE seq (rn) AS (
+    SELECT 1 UNION ALL SELECT rn + 1 FROM seq WHERE rn < 150
+)
+SELECT
+    CONCAT('ISNM/', LPAD(s.rn, 4, '0'), '/',
+        CASE WHEN s.rn <= 40 THEN '25' WHEN s.rn <= 90 THEN '24' ELSE '23' END),
+    CONCAT('UACE/',
+        CASE WHEN s.rn <= 20 THEN 'CNM' WHEN s.rn <= 40 THEN 'CNN' WHEN s.rn <= 70 THEN 'DNM' WHEN s.rn <= 90 THEN 'DMM' WHEN s.rn <= 110 THEN 'DNE' ELSE 'BNM' END,
+        '/', LPAD(s.rn, 4, '0')),
+    ELT(1 + FLOOR(RAND() * 15), 'Sarah', 'Grace', 'Esther', 'Mary', 'Ruth', 'Jane', 'Alice', 'Joy', 'Faith', 'Peace', 'Moses', 'John', 'David', 'Samuel', 'Peter'),
+    ELT(1 + FLOOR(RAND() * 15), 'Nakamya', 'Nabirye', 'Namukwaya', 'Nanteza', 'Nakato', 'Mukasa', 'Sserwadda', 'Kizza', 'Wasswa', 'Okello', 'Ochieng', 'Muwonge', 'Lubega', 'Ssenyonjo', 'Kintu'),
+    CONCAT(ELT(1 + FLOOR(RAND() * 15), 'Sarah', 'Grace', 'Esther', 'Mary', 'Ruth', 'Jane', 'Alice', 'Joy', 'Faith', 'Peace', 'Moses', 'John', 'David', 'Samuel', 'Peter'),
+           ' ', ELT(1 + FLOOR(RAND() * 15), 'Nakamya', 'Nabirye', 'Namukwaya', 'Nanteza', 'Nakato', 'Mukasa', 'Sserwadda', 'Kizza', 'Wasswa', 'Okello', 'Ochieng', 'Muwonge', 'Lubega', 'Ssenyonjo', 'Kintu')),
+    CONCAT('student', s.rn, '@isnm.ac.ug'),
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    CONCAT('+256-7', ELT(1 + FLOOR(RAND() * 3), '0', '7', '8'), LPAD(FLOOR(RAND() * 10000000), 7, '0')),
+    CASE WHEN s.rn <= 20 THEN 'Certificate in Midwifery'
+         WHEN s.rn <= 40 THEN 'Certificate in Nursing'
+         WHEN s.rn <= 70 THEN 'Diploma in Nursing'
+         WHEN s.rn <= 90 THEN 'Diploma in Midwifery'
+         WHEN s.rn <= 110 THEN 'Diploma in Nursing Education'
+         ELSE 'Bachelor of Science in Nursing' END,
+    CASE WHEN s.rn <= 40 THEN 1 WHEN s.rn <= 90 THEN 2 ELSE 3 END,
+    CASE WHEN s.rn <= 40 THEN 'Certificate' WHEN s.rn <= 90 THEN 'Diploma' ELSE 'Degree' END,
+    CASE WHEN s.rn % 6 = 0 THEN 'Male' ELSE 'Female' END,
+    'Active', 1, 'Ugandan',
+    ELT(1 + FLOOR(RAND() * 5), 'Iganga', 'Jinja', 'Bugiri', 'Kamuli', 'Mayuge')
+FROM seq s;
 
 -- ============================================================
 -- 2. PROGRAMS (existing table — match exact schema)
@@ -177,10 +273,9 @@ UPDATE student_fee_tracking SET status = 'Pending' WHERE amount_paid = 0;
 -- ============================================================
 -- 9. INVOICES (match exact schema: balance is STORED GENERATED — do NOT insert)
 -- ============================================================
-INSERT IGNORE INTO student_invoices (invoice_number, student_id, fee_type, academic_year, semester, total_amount, amount_paid, due_date, issue_date, status)
+INSERT IGNORE INTO student_invoices (invoice_number, student_id, fee_type, total_amount, amount_paid, due_date, issue_date, status)
 SELECT CONCAT('INV', LPAD(s.id, 6, '0'), '-S1'), s.id,
     'Tuition',
-    '2024/2025', 'Semester 1',
     CASE
         WHEN s.program = 'Certificate in Nursing' THEN 1150000
         WHEN s.program = 'Certificate in Midwifery' THEN 1220000
@@ -196,9 +291,8 @@ FROM students s WHERE s.id <= 300;
 -- ============================================================
 -- 10. PAYMENTS (match exact schema)
 -- ============================================================
-INSERT IGNORE INTO payments (id, payment_reference, student_id, amount_received, payment_method, payment_date, transaction_ref, slip_number, status, received_by, notes)
-SELECT s.id,
-    CONCAT('PAY', LPAD(s.id, 6, '0'), '-01'),
+INSERT IGNORE INTO payments (payment_reference, student_id, amount_received, payment_method, payment_date, transaction_ref, slip_number, status, received_by, notes)
+SELECT CONCAT('PAY', LPAD(s.id, 6, '0'), '-01'),
     s.id,
     FLOOR(RAND() * 500000 + 100000),
     ELT(FLOOR(RAND()*4)+1, 'Cash', 'Mobile Money', 'Bank Transfer', 'Cheque'),
@@ -243,44 +337,44 @@ INSERT IGNORE INTO timetable (program, year_of_study, semester, day_of_week, tim
 ('Diploma in Nursing', 3, 'Semester 5', 'Thursday', '10:00-12:00', 'Nursing Management & Leadership', 'DNM303', 'Dr. Mubiru John', 'Lecture Hall C', '2024/2025');
 
 -- ============================================================
--- 12. ANNOUNCEMENTS (match exact schema)
+-- 12. ANNOUNCEMENTS (match exact schema: title, body, target_audience, priority, posted_by, is_active, expires_at)
 -- ============================================================
-INSERT IGNORE INTO announcements (title, content, type, priority, start_date, end_date, created_by) VALUES
-('Welcome to New Academic Year 2024/2025', 'We welcome all students and staff to the new academic year. Registration is now open for all programs. Please complete your registration before the deadline.', 'Academic', 'High', '2024-08-01', '2025-03-31', 5),
-('Semester 1 Examination Schedule Released', 'The examination timetable for Semester 1 has been released. All students should check their examination dates and venues. Examinations begin on 10th December 2024.', 'Examination', 'High', '2024-11-01', '2025-01-15', 7),
-('Clinical Placement Guidelines', 'All Diploma Year 2 and Year 3 students scheduled for clinical placements must attend the orientation session on Friday 15th November 2024. Bring your clinical gear.', 'Academic', 'Normal', '2024-11-01', '2025-01-31', 3),
-('Staff Training Workshop', 'All staff members are invited to a capacity building workshop on ICT Skills for Education on 20th November 2024. Attendance is mandatory.', 'General', 'Normal', '2024-11-05', '2025-01-15', 23),
-('Fee Payment Deadline Reminder', 'Students with outstanding fees are reminded that the deadline for Semester 1 fee payment is 30th September 2024. Defaulters will not be allowed to sit for examinations.', 'Fee', 'Urgent', '2024-09-01', '2024-10-31', 25),
-('Library Hours Extended During Exams', 'The library will extend its operating hours during the examination period. The library will now be open from 7:00 AM to 9:00 PM on weekdays.', 'General', 'Low', '2024-11-15', '2025-01-15', 10),
-('Health and Safety Protocols', 'All students and staff are reminded to follow the health and safety protocols at all times. Hand washing stations are available at all entry points.', 'General', 'Normal', '2024-08-01', '2025-06-30', 5),
-('Sports Week Activities', 'The annual sports week will be held from 18th to 22nd November 2024. All students are encouraged to participate. Registration at the Guild Office.', 'General', 'Low', '2024-11-10', '2025-01-31', 21),
-('Nursing Council Registration Update', 'Final year students are reminded to complete their Nursing and Midwifery Council registration. The deadline has been extended to 31st January 2025.', 'Academic', 'High', '2024-12-01', '2025-02-28', 7),
-('Holiday Notice - Christmas Break', 'The institution will close for Christmas break on 20th December 2024 and reopen on 6th January 2025. Merry Christmas and Happy New Year!', 'Holiday', 'Low', '2024-12-01', '2025-01-31', 5);
+INSERT IGNORE INTO announcements (title, body, target_audience, priority, posted_by, is_active, expires_at) VALUES
+('Welcome to New Academic Year 2024/2025', 'We welcome all students and staff to the new academic year. Registration is now open for all programs. Please complete your registration before the deadline.', 'All', 'High', 5, 1, '2025-03-31'),
+('Semester 1 Examination Schedule Released', 'The examination timetable for Semester 1 has been released. All students should check their examination dates and venues. Examinations begin on 10th December 2024.', 'All', 'High', 7, 1, '2025-01-15'),
+('Clinical Placement Guidelines', 'All Diploma Year 2 and Year 3 students scheduled for clinical placements must attend the orientation session on Friday 15th November 2024. Bring your clinical gear.', 'students', 'Normal', 3, 1, '2025-01-31'),
+('Staff Training Workshop', 'All staff members are invited to a capacity building workshop on ICT Skills for Education on 20th November 2024. Attendance is mandatory.', 'staff', 'Normal', 23, 1, '2025-01-15'),
+('Fee Payment Deadline Reminder', 'Students with outstanding fees are reminded that the deadline for Semester 1 fee payment is 30th September 2024. Defaulters will not be allowed to sit for examinations.', 'students', 'Urgent', 25, 1, '2024-10-31'),
+('Library Hours Extended During Exams', 'The library will extend its operating hours during the examination period. The library will now be open from 7:00 AM to 9:00 PM on weekdays.', 'All', 'Low', 10, 1, '2025-01-15'),
+('Health and Safety Protocols', 'All students and staff are reminded to follow the health and safety protocols at all times. Hand washing stations are available at all entry points.', 'All', 'Normal', 5, 1, '2025-06-30'),
+('Sports Week Activities', 'The annual sports week will be held from 18th to 22nd November 2024. All students are encouraged to participate. Registration at the Guild Office.', 'students', 'Low', 21, 1, '2025-01-31'),
+('Nursing Council Registration Update', 'Final year students are reminded to complete their Nursing and Midwifery Council registration. The deadline has been extended to 31st January 2025.', 'students', 'High', 7, 1, '2025-02-28'),
+('Holiday Notice - Christmas Break', 'The institution will close for Christmas break on 20th December 2024 and reopen on 6th January 2025. Merry Christmas and Happy New Year!', 'All', 'Low', 5, 1, '2025-01-31');
 
 -- ============================================================
 -- 13. LIBRARY BOOKS (match exact schema)
 -- ============================================================
-INSERT IGNORE INTO library_books (id, book_title, title, author, isbn, publisher, publication_year, category, total_copies, available_copies, status, shelf_location) VALUES
-(1, 'Myles Textbook for Midwives', 'Myles Textbook for Midwives', 'Jayne Marshall', '978-0702051876', 'Elsevier', 2021, 'Textbook', 6, 5, 'Available', 'Section A - Shelf 1'),
-(2, 'Fundamentals of Nursing', 'Fundamentals of Nursing', 'Carol Taylor', '978-1496384584', 'Wolters Kluwer', 2022, 'Textbook', 10, 8, 'Available', 'Section A - Shelf 2'),
-(3, 'Medical-Surgical Nursing', 'Medical-Surgical Nursing', 'Donna Ignatavicius', '978-0323596480', 'Elsevier', 2021, 'Textbook', 5, 4, 'Available', 'Section A - Shelf 3'),
-(4, 'Anatomy and Physiology for Nurses', 'Anatomy and Physiology for Nurses', 'Roger Watson', '978-1608318023', 'Saunders', 2020, 'Textbook', 7, 6, 'Available', 'Section A - Shelf 4'),
-(5, 'Pharmacology for Nurses', 'Pharmacology for Nurses', 'Michael Weatherley', '978-0702077111', 'Elsevier', 2022, 'Textbook', 4, 3, 'Available', 'Section A - Shelf 5'),
-(6, 'Psychiatric Mental Health Nursing', 'Psychiatric Mental Health Nursing', 'Mary Ann Boyd', '978-1496309112', 'Wolters Kluwer', 2021, 'Textbook', 5, 4, 'Available', 'Section B - Shelf 1'),
-(7, 'Community Health Nursing', 'Community Health Nursing', 'Mary Jo Clark', '978-1284165210', 'Jones & Bartlett', 2022, 'Textbook', 5, 5, 'Available', 'Section B - Shelf 2'),
-(8, 'Maternal Child Nursing Care', 'Maternal Child Nursing Care', 'Shannon Perry', '978-1496309112', 'Elsevier', 2022, 'Textbook', 6, 6, 'Available', 'Section B - Shelf 3'),
-(9, 'Pediatric Nursing', 'Pediatric Nursing', 'Mary Jo Brancaglioni', '978-1608317790', 'Saunders', 2021, 'Textbook', 4, 3, 'Available', 'Section B - Shelf 4'),
-(10, 'Clinical Skills for Nursing', 'Clinical Skills for Nursing', 'Elizabeth Boahene', '978-0702073144', 'Elsevier', 2023, 'Reference', 5, 5, 'Available', 'Section C - Shelf 1'),
-(11, 'Nursing Research Methods', 'Nursing Research Methods', 'Diane Polit', '978-1119538639', 'Wolters Kluwer', 2020, 'Reference', 4, 4, 'Available', 'Section C - Shelf 2'),
-(12, 'Nursing Ethics & Professional Responsibility', 'Nursing Ethics & Professional Responsibility', 'Janie Butts', '978-0323476638', 'Jones & Bartlett', 2022, 'Reference', 3, 3, 'Available', 'Section C - Shelf 3'),
-(13, 'Clinical Handbook of Fluids Electrolytes', 'Clinical Handbook of Fluids Electrolytes', 'Linda Honan', '978-1496384591', 'Wolters Kluwer', 2021, 'Handbook', 3, 2, 'Available', 'Section C - Shelf 4'),
-(14, 'Nursing Diagnosis Handbook', 'Nursing Diagnosis Handbook', 'Gail Ackley', '978-0135218334', 'Elsevier', 2022, 'Handbook', 7, 6, 'Available', 'Section D - Shelf 1'),
-(15, 'UGANDA Nursing and Midwifery Council Guidelines', 'UGANDA Nursing and Midwifery Council Guidelines', 'UNMC', '978-1719643436', 'UNMC Press', 2023, 'Regulation', 12, 10, 'Available', 'Section D - Shelf 2'),
-(16, 'Oxford Dictionary of Medical Terms', 'Oxford Dictionary of Medical Terms', 'Oxford University Press', '978-0198765432', 'Oxford', 2020, 'Dictionary', 3, 3, 'Available', 'Reference Desk'),
-(17, 'Holes Human Anatomy & Physiology', 'Holes Human Anatomy & Physiology', 'David Shier', '978-0143774617', 'McGraw Hill', 2021, 'Textbook', 5, 4, 'Available', 'Section A - Shelf 6'),
-(18, 'Lippincott Manual of Nursing Practice', 'Lippincott Manual of Nursing Practice', 'Sandra Nettina', '978-1605479767', 'Wolters Kluwer', 2022, 'Handbook', 5, 5, 'Available', 'Reference Desk'),
-(19, 'Brunner & Suddarths Textbook of Medical-Surgical Nursing', 'Brunner & Suddarths Textbook of Medical-Surgical Nursing', 'Janice Hinkle', '978-0323555968', 'Wolters Kluwer', 2022, 'Textbook', 8, 6, 'Available', 'Section A - Shelf 7'),
-(20, 'Foundations of Nursing', 'Foundations of Nursing', 'Cooper Gosnell', '978-0134444819', 'Elsevier', 2020, 'Textbook', 8, 7, 'Available', 'Section A - Shelf 8');
+INSERT IGNORE INTO library_books (id, book_title, author, isbn, publisher, publication_year, category, total_copies, available_copies, shelf_location) VALUES
+(1, 'Myles Textbook for Midwives', 'Jayne Marshall', '978-0702051876', 'Elsevier', 2021, 'Textbook', 6, 5, 'Section A - Shelf 1'),
+(2, 'Fundamentals of Nursing', 'Carol Taylor', '978-1496384584', 'Wolters Kluwer', 2022, 'Textbook', 10, 8, 'Section A - Shelf 2'),
+(3, 'Medical-Surgical Nursing', 'Donna Ignatavicius', '978-0323596480', 'Elsevier', 2021, 'Textbook', 5, 4, 'Section A - Shelf 3'),
+(4, 'Anatomy and Physiology for Nurses', 'Roger Watson', '978-1608318023', 'Saunders', 2020, 'Textbook', 7, 6, 'Section A - Shelf 4'),
+(5, 'Pharmacology for Nurses', 'Michael Weatherley', '978-0702077111', 'Elsevier', 2022, 'Textbook', 4, 3, 'Section A - Shelf 5'),
+(6, 'Psychiatric Mental Health Nursing', 'Mary Ann Boyd', '978-1496309112', 'Wolters Kluwer', 2021, 'Textbook', 5, 4, 'Section B - Shelf 1'),
+(7, 'Community Health Nursing', 'Mary Jo Clark', '978-1284165210', 'Jones & Bartlett', 2022, 'Textbook', 5, 5, 'Section B - Shelf 2'),
+(8, 'Maternal Child Nursing Care', 'Shannon Perry', '978-1496309112', 'Elsevier', 2022, 'Textbook', 6, 6, 'Section B - Shelf 3'),
+(9, 'Pediatric Nursing', 'Mary Jo Brancaglioni', '978-1608317790', 'Saunders', 2021, 'Textbook', 4, 3, 'Section B - Shelf 4'),
+(10, 'Clinical Skills for Nursing', 'Elizabeth Boahene', '978-0702073144', 'Elsevier', 2023, 'Reference', 5, 5, 'Section C - Shelf 1'),
+(11, 'Nursing Research Methods', 'Diane Polit', '978-1119538639', 'Wolters Kluwer', 2020, 'Reference', 4, 4, 'Section C - Shelf 2'),
+(12, 'Nursing Ethics & Professional Responsibility', 'Janie Butts', '978-0323476638', 'Jones & Bartlett', 2022, 'Reference', 3, 3, 'Section C - Shelf 3'),
+(13, 'Clinical Handbook of Fluids Electrolytes', 'Linda Honan', '978-1496384591', 'Wolters Kluwer', 2021, 'Handbook', 3, 2, 'Section C - Shelf 4'),
+(14, 'Nursing Diagnosis Handbook', 'Gail Ackley', '978-0135218334', 'Elsevier', 2022, 'Handbook', 7, 6, 'Section D - Shelf 1'),
+(15, 'UGANDA Nursing and Midwifery Council Guidelines', 'UNMC', '978-1719643436', 'UNMC Press', 2023, 'Regulation', 12, 10, 'Section D - Shelf 2'),
+(16, 'Oxford Dictionary of Medical Terms', 'Oxford University Press', '978-0198765432', 'Oxford', 2020, 'Dictionary', 3, 3, 'Reference Desk'),
+(17, 'Holes Human Anatomy & Physiology', 'David Shier', '978-0143774617', 'McGraw Hill', 2021, 'Textbook', 5, 4, 'Section A - Shelf 6'),
+(18, 'Lippincott Manual of Nursing Practice', 'Sandra Nettina', '978-1605479767', 'Wolters Kluwer', 2022, 'Handbook', 5, 5, 'Reference Desk'),
+(19, 'Brunner & Suddarths Textbook of Medical-Surgical Nursing', 'Janice Hinkle', '978-0323555968', 'Wolters Kluwer', 2022, 'Textbook', 8, 6, 'Section A - Shelf 7'),
+(20, 'Foundations of Nursing', 'Cooper Gosnell', '978-0134444819', 'Elsevier', 2020, 'Textbook', 8, 7, 'Section A - Shelf 8');
 
 -- ============================================================
 -- 14. LIBRARY BORROWING (match exact schema: student_id varchar)
@@ -298,6 +392,30 @@ FROM students s WHERE s.id <= 80;
 -- ============================================================
 -- 15. HOSTEL BLOCKS & ROOMS (match exact schema)
 -- ============================================================
+CREATE TABLE IF NOT EXISTS hostel_blocks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    block_name VARCHAR(100) NOT NULL,
+    total_rooms INT DEFAULT 0,
+    gender ENUM('Male','Female','Mixed') DEFAULT 'Mixed',
+    status ENUM('Active','Inactive','Maintenance') DEFAULT 'Active',
+    warden_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_block_name (block_name)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS hostel_rooms (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    room_number VARCHAR(20) NOT NULL,
+    hostel_name VARCHAR(100) NOT NULL,
+    capacity INT NOT NULL DEFAULT 4,
+    occupancy INT NOT NULL DEFAULT 0,
+    fee_per_semester DECIMAL(12,2) DEFAULT 0.00,
+    status ENUM('Available','Full','Maintenance') DEFAULT 'Available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY room_number (room_number),
+    KEY idx_hr_status (status)
+) ENGINE=InnoDB;
+
 INSERT IGNORE INTO hostel_blocks (block_name, total_rooms, gender, status) VALUES
 ('Block A - Queen Anne', 24, 'Female', 'Active'),
 ('Block B - Victoria', 24, 'Female', 'Active'),
@@ -432,7 +550,7 @@ FROM students s WHERE s.id = 3;
 -- ============================================================
 -- 21. STUDENT ATTENDANCE (match exact schema)
 -- ============================================================
-INSERT IGNORE INTO student_attendance (student_id, attendance_date, course_code, status)
+INSERT IGNORE INTO student_attendance (student_id, date, course_code, status)
 SELECT s.id, DATE_ADD('2024-09-02', INTERVAL d.day_num DAY), 'CNN101',
     IF(RAND() > 0.15, 'Present', IF(RAND() > 0.5, 'Absent', 'Late'))
 FROM students s
@@ -446,13 +564,33 @@ INSERT IGNORE INTO student_course_registrations (student_id, course_id, academic
 SELECT s.id, cc.id, '2024/2025', cc.semester, 'Registered'
 FROM students s
 CROSS JOIN course_catalog cc
-WHERE s.program = cc.program AND cc.semester = 'Semester 1' AND s.year = 1
+WHERE s.program COLLATE utf8mb4_unicode_ci = cc.program AND cc.semester = 'Semester 1' AND s.year = 1
 AND s.id <= 200
 LIMIT 800;
 
 -- ============================================================
 -- 23. STUDENT SEMESTER GPA (match exact schema)
 -- ============================================================
+CREATE TABLE IF NOT EXISTS student_semester_gpa (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    semester VARCHAR(20) NOT NULL,
+    total_credits INT DEFAULT 0,
+    earned_credits INT DEFAULT 0,
+    semester_gpa DECIMAL(4,2),
+    cumulative_gpa DECIMAL(4,2),
+    academic_standing ENUM('Good Standing','Probation','Dismissed','Suspended','Graduated') DEFAULT 'Good Standing',
+    credits_attempted INT DEFAULT 0,
+    credits_passed INT DEFAULT 0,
+    courses_completed INT DEFAULT 0,
+    courses_failed INT DEFAULT 0,
+    calculated_at DATETIME,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_student_semester (student_id, academic_year, semester),
+    KEY idx_gpa (semester_gpa)
+) ENGINE=InnoDB;
+
 INSERT IGNORE INTO student_semester_gpa (student_id, academic_year, semester, total_credits, earned_credits, semester_gpa, cumulative_gpa, academic_standing, credits_attempted, credits_passed, courses_completed, courses_failed)
 SELECT s.id, '2024/2025', 'Semester 1',
     18, FLOOR(RAND() * 18 + 5),
@@ -466,6 +604,20 @@ FROM students s WHERE s.id <= 200;
 -- ============================================================
 -- 24. COURSE ASSIGNMENTS (match exact schema: course_id, lecturer_id)
 -- ============================================================
+CREATE TABLE IF NOT EXISTS course_assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT UNSIGNED NOT NULL,
+    lecturer_id INT NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    semester VARCHAR(20) NOT NULL,
+    assigned_by INT,
+    status ENUM('Active','Inactive','Completed') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_course (course_id),
+    KEY idx_lecturer (lecturer_id),
+    KEY idx_year_sem (academic_year, semester)
+) ENGINE=InnoDB;
+
 INSERT IGNORE INTO course_assignments (course_id, lecturer_id, academic_year, semester, assigned_by, status)
 SELECT cc.id, 14, '2024/2025', cc.semester, 3, 'Active'
 FROM course_catalog cc

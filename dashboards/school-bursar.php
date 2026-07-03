@@ -26,6 +26,24 @@ $bursarMigrate = function($db) use ($staff_db, $students_db) {
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_notices (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), content TEXT, audience VARCHAR(50) DEFAULT 'all', published_by INT DEFAULT NULL, published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.financial_clearance (id INT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(50) NOT NULL, academic_year VARCHAR(20), semester VARCHAR(20) DEFAULT 'Annual', clearance_status VARCHAR(50) DEFAULT 'Pending Review', cleared_by INT DEFAULT NULL, cleared_at DATETIME DEFAULT NULL, remarks TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_student_clearance (student_id, academic_year, semester)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $db->query("CREATE TABLE IF NOT EXISTS {$students_db}.notifications (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, type VARCHAR(50), title VARCHAR(255), message TEXT, is_read TINYINT DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Bursar financial tables (use staff_db as primary, fallback to students_db)
+    $bd = $staff_db;
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.expenses (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), expense_title VARCHAR(255), amount DECIMAL(15,2) DEFAULT 0, category VARCHAR(100) DEFAULT 'General', requested_by VARCHAR(200) DEFAULT '', description TEXT, expense_date DATE, date DATE, status ENUM('pending','approved','rejected','paid') DEFAULT 'pending', created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.cost_centers (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(200) NOT NULL, code VARCHAR(50), department VARCHAR(200) DEFAULT '', budget DECIMAL(15,2) DEFAULT 0, allocated_amount DECIMAL(15,2) DEFAULT 0, status ENUM('active','inactive','closed') DEFAULT 'active', description TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.ura_reports (id INT AUTO_INCREMENT PRIMARY KEY, report_name VARCHAR(200), name VARCHAR(200), tax_period VARCHAR(50), period VARCHAR(50), amount DECIMAL(15,2) DEFAULT 0, tax_amount DECIMAL(15,2) DEFAULT 0, status ENUM('pending','filed','submitted') DEFAULT 'pending', filed_date DATE, report_date DATE, notes TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.donations (id INT AUTO_INCREMENT PRIMARY KEY, donor_name VARCHAR(255), name VARCHAR(255), full_name VARCHAR(255), amount DECIMAL(15,2) DEFAULT 0, payment_method VARCHAR(100) DEFAULT 'cash', method VARCHAR(100), purpose TEXT, notes TEXT, donation_date DATE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, status ENUM('pending','completed','cancelled') DEFAULT 'completed') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.assets (id INT AUTO_INCREMENT PRIMARY KEY, asset_name VARCHAR(255) NOT NULL, asset_code VARCHAR(100), asset_category_id INT, category VARCHAR(100), purchase_cost DECIMAL(15,2) DEFAULT 0, value DECIMAL(15,2) DEFAULT 0, purchase_date DATE, useful_life_years INT DEFAULT 5, salvage_value DECIMAL(15,2) DEFAULT 0, depreciation_method VARCHAR(50) DEFAULT 'Straight Line', depreciation_value DECIMAL(15,2) DEFAULT 0, status ENUM('new','available','in_use','under_maintenance','disposed') DEFAULT 'new', location VARCHAR(200), serial_number VARCHAR(100), notes TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.asset_categories (id INT AUTO_INCREMENT PRIMARY KEY, category_name VARCHAR(200) NOT NULL, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.general_ledger (id INT AUTO_INCREMENT PRIMARY KEY, transaction_date DATE, date DATE, account_name VARCHAR(200), account_code VARCHAR(50), description TEXT, debit_amount DECIMAL(15,2) DEFAULT 0, debit DECIMAL(15,2) DEFAULT 0, credit_amount DECIMAL(15,2) DEFAULT 0, credit DECIMAL(15,2) DEFAULT 0, reference VARCHAR(100), created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.bursar_general_ledger (id INT AUTO_INCREMENT PRIMARY KEY, transaction_date DATE, date DATE, account_name VARCHAR(200), account_code VARCHAR(50), description TEXT, debit_amount DECIMAL(15,2) DEFAULT 0, debit DECIMAL(15,2) DEFAULT 0, credit_amount DECIMAL(15,2) DEFAULT 0, credit DECIMAL(15,2) DEFAULT 0, reference VARCHAR(100), created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.cashbook (id INT AUTO_INCREMENT PRIMARY KEY, transaction_date DATE, date DATE, description TEXT, reference_number VARCHAR(100), debit_amount DECIMAL(15,2) DEFAULT 0, cash_in DECIMAL(15,2) DEFAULT 0, amount DECIMAL(15,2) DEFAULT 0, credit_amount DECIMAL(15,2) DEFAULT 0, cash_out DECIMAL(15,2) DEFAULT 0, running_balance DECIMAL(15,2) DEFAULT 0, balance DECIMAL(15,2) DEFAULT 0, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.bursar_cashbook (id INT AUTO_INCREMENT PRIMARY KEY, transaction_date DATE, date DATE, description TEXT, reference_number VARCHAR(100), debit_amount DECIMAL(15,2) DEFAULT 0, cash_in DECIMAL(15,2) DEFAULT 0, amount DECIMAL(15,2) DEFAULT 0, credit_amount DECIMAL(15,2) DEFAULT 0, cash_out DECIMAL(15,2) DEFAULT 0, running_balance DECIMAL(15,2) DEFAULT 0, balance DECIMAL(15,2) DEFAULT 0, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.chart_of_accounts (id INT AUTO_INCREMENT PRIMARY KEY, account_code VARCHAR(50) NOT NULL, account_name VARCHAR(200) NOT NULL, account_type ENUM('asset','liability','equity','income','expense') DEFAULT 'asset', balance DECIMAL(15,2) DEFAULT 0, status ENUM('active','inactive','closed') DEFAULT 'active', description TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.bursar_chart_of_accounts (id INT AUTO_INCREMENT PRIMARY KEY, account_code VARCHAR(50) NOT NULL, account_name VARCHAR(200) NOT NULL, account_type ENUM('asset','liability','equity','income','expense') DEFAULT 'asset', balance DECIMAL(15,2) DEFAULT 0, status ENUM('active','inactive','closed') DEFAULT 'active', description TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.bank_accounts (id INT AUTO_INCREMENT PRIMARY KEY, account_name VARCHAR(200), bank_name VARCHAR(200), account_number VARCHAR(100), current_balance DECIMAL(15,2) DEFAULT 0, balance DECIMAL(15,2) DEFAULT 0, status ENUM('active','inactive','closed') DEFAULT 'active', is_active TINYINT DEFAULT 1, description TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.payment_approvals (id INT AUTO_INCREMENT PRIMARY KEY, payment_id INT, payment_type VARCHAR(50) DEFAULT 'fee_payment', requested_by INT, approved_by INT, approval_status ENUM('pending','approved','rejected') DEFAULT 'pending', approval_remarks TEXT, approved_at DATETIME, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.late_payment_settings (id INT AUTO_INCREMENT PRIMARY KEY, setting_key VARCHAR(100) NOT NULL UNIQUE, setting_value TEXT, updated_by INT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->query("CREATE TABLE IF NOT EXISTS {$bd}.fee_adjustments (id INT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(50) NOT NULL, adjustment_type ENUM('discount','waiver','refund','penalty') DEFAULT 'discount', type VARCHAR(50) DEFAULT 'discount', amount DECIMAL(15,2) DEFAULT 0, reason TEXT, created_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 };
 $bursarMigrate($staff);
 // Also try to create via students_db connection
@@ -479,6 +497,157 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: school-bursar.php?section=budget');
         exit;
     }
+
+    // ── Add Expense ────────────────────────────────────────────────────
+    if ($action === 'add_expense' && $staff) {
+        $title = trim($_POST['title'] ?? '');
+        $amount = (float)($_POST['amount'] ?? 0);
+        $category = trim($_POST['category'] ?? 'General');
+        $expense_date = trim($_POST['expense_date'] ?? date('Y-m-d'));
+        $status = trim($_POST['status'] ?? 'pending');
+        if ($title && $amount > 0) {
+            $stmt = $staff->prepare("INSERT INTO expenses (title, expense_title, amount, category, expense_date, date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt) { $uid = (int)($user['id'] ?? 0); $stmt->bind_param("ssdssssi", $title, $title, $amount, $category, $expense_date, $expense_date, $status, $uid); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Expense added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Title and amount required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=expenditure";</script>'; exit;
+    }
+
+    // ── Add Cost Center ────────────────────────────────────────────────
+    if ($action === 'add_cost_center' && $staff) {
+        $name = trim($_POST['name'] ?? '');
+        $code = trim($_POST['code'] ?? '');
+        $dept = trim($_POST['department'] ?? '');
+        $budget = (float)($_POST['budget'] ?? 0);
+        if ($name) {
+            $stmt = $staff->prepare("INSERT INTO cost_centers (name, code, department, budget, status) VALUES (?, ?, ?, ?, 'active')");
+            if ($stmt) { $stmt->bind_param("sssd", $name, $code, $dept, $budget); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Cost center added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Name required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=cost_centers";</script>'; exit;
+    }
+
+    // ── Add Donation ───────────────────────────────────────────────────
+    if ($action === 'add_donation' && $staff) {
+        $donor = trim($_POST['donor_name'] ?? '');
+        $amount = (float)($_POST['amount'] ?? 0);
+        $method = trim($_POST['payment_method'] ?? 'cash');
+        $purpose = trim($_POST['purpose'] ?? '');
+        $date = trim($_POST['donation_date'] ?? date('Y-m-d'));
+        if ($donor && $amount > 0) {
+            $stmt = $staff->prepare("INSERT INTO donations (donor_name, name, amount, payment_method, purpose, donation_date, status) VALUES (?, ?, ?, ?, ?, ?, 'completed')");
+            if ($stmt) { $stmt->bind_param("ssdsss", $donor, $donor, $amount, $method, $purpose, $date); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Donation recorded.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Donor name and amount required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=donations";</script>'; exit;
+    }
+
+    // ── Add Asset ──────────────────────────────────────────────────────
+    if ($action === 'add_asset' && $staff) {
+        $name = trim($_POST['asset_name'] ?? '');
+        $code = trim($_POST['asset_code'] ?? '');
+        $cost = (float)($_POST['purchase_cost'] ?? 0);
+        $cat_id = (int)($_POST['asset_category_id'] ?? 0);
+        $pdate = trim($_POST['purchase_date'] ?? date('Y-m-d'));
+        $life = (int)($_POST['useful_life_years'] ?? 5);
+        $status = trim($_POST['asset_status'] ?? 'new');
+        if ($name && $cost > 0) {
+            $stmt = $staff->prepare("INSERT INTO assets (asset_name, asset_code, asset_category_id, purchase_cost, purchase_date, useful_life_years, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt) { $stmt->bind_param("ssidsis", $name, $code, $cat_id, $cost, $pdate, $life, $status); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Asset added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Asset name and cost required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=assets";</script>'; exit;
+    }
+
+    // ── Add Ledger Entry ──────────────────────────────────────────────
+    if ($action === 'add_ledger_entry' && $staff) {
+        $tdate = trim($_POST['transaction_date'] ?? date('Y-m-d'));
+        $acct = trim($_POST['account_name'] ?? '');
+        $desc = trim($_POST['description'] ?? '');
+        $debit = (float)($_POST['debit_amount'] ?? 0);
+        $credit = (float)($_POST['credit_amount'] ?? 0);
+        $ref = trim($_POST['reference'] ?? '');
+        if ($acct && ($debit > 0 || $credit > 0)) {
+            $stmt = $staff->prepare("INSERT INTO general_ledger (transaction_date, date, account_name, description, debit_amount, credit_amount, reference, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt) { $uid = (int)($user['id'] ?? 0); $stmt->bind_param("ssssddsi", $tdate, $tdate, $acct, $desc, $debit, $credit, $ref, $uid); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Ledger entry added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Account name and amount required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=ledger";</script>'; exit;
+    }
+
+    // ── Add Cashbook Entry ────────────────────────────────────────────
+    if ($action === 'add_cashbook_entry' && $staff) {
+        $tdate = trim($_POST['transaction_date'] ?? date('Y-m-d'));
+        $desc = trim($_POST['description'] ?? '');
+        $ref = trim($_POST['reference_number'] ?? '');
+        $debit = (float)($_POST['debit_amount'] ?? 0);
+        $credit = (float)($_POST['credit_amount'] ?? 0);
+        if ($desc && ($debit > 0 || $credit > 0)) {
+            $stmt = $staff->prepare("INSERT INTO cashbook (transaction_date, date, description, reference_number, debit_amount, cash_in, credit_amount, cash_out) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($stmt) { $amt = max($debit, $credit); $stmt->bind_param("ssssdddd", $tdate, $tdate, $desc, $ref, $debit, $amt, $credit, $amt); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Cashbook entry added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Description and amount required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=cashbook";</script>'; exit;
+    }
+
+    // ── Add Chart of Account ──────────────────────────────────────────
+    if ($action === 'add_chart_account' && $staff) {
+        $code = trim($_POST['account_code'] ?? '');
+        $name = trim($_POST['account_name'] ?? '');
+        $type = trim($_POST['account_type'] ?? 'asset');
+        $balance = (float)($_POST['balance'] ?? 0);
+        if ($code && $name) {
+            $stmt = $staff->prepare("INSERT INTO chart_of_accounts (account_code, account_name, account_type, balance, status) VALUES (?, ?, ?, ?, 'active')");
+            if ($stmt) { $stmt->bind_param("sssd", $code, $name, $type, $balance); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Account added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Code and name required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=chart_of_accounts";</script>'; exit;
+    }
+
+    // ── Add Bank Account (Reconciliation) ─────────────────────────────
+    if ($action === 'add_bank_account' && $staff) {
+        $bank = trim($_POST['bank_name'] ?? '');
+        $acct = trim($_POST['account_name'] ?? '');
+        $num = trim($_POST['account_number'] ?? '');
+        $bal = (float)($_POST['balance'] ?? 0);
+        if ($bank && $acct && $num) {
+            $stmt = $staff->prepare("INSERT INTO bank_accounts (bank_name, account_name, account_number, current_balance, balance, status, is_active) VALUES (?, ?, ?, ?, ?, 'active', 1)");
+            if ($stmt) { $stmt->bind_param("sssdd", $bank, $acct, $num, $bal, $bal); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Bank account added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'All fields required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=reconciliation";</script>'; exit;
+    }
+
+    // ── Add Tax Report ────────────────────────────────────────────────
+    if ($action === 'add_tax_report' && $staff) {
+        $rpt = trim($_POST['report_name'] ?? '');
+        $period = trim($_POST['tax_period'] ?? '');
+        $amount = (float)($_POST['amount'] ?? 0);
+        $tax = (float)($_POST['tax_amount'] ?? 0);
+        $status = trim($_POST['report_status'] ?? 'pending');
+        if ($rpt && $period) {
+            $stmt = $staff->prepare("INSERT INTO ura_reports (report_name, name, tax_period, period, amount, tax_amount, status, filed_date) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())");
+            if ($stmt) { $stmt->bind_param("ssssdds", $rpt, $rpt, $period, $period, $amount, $tax, $status); $stmt->execute(); $stmt->close(); $_SESSION['success'] = 'Tax report added.'; }
+            else { $_SESSION['error'] = 'Failed: ' . $staff->error; }
+        } else { $_SESSION['error'] = 'Report name and period required.'; }
+        echo '<script>window.location.href="school-bursar.php?section=tax_reports";</script>'; exit;
+    }
+
+    // ── Delete expense ────────────────────────────────────────────────
+    if ($action === 'delete_expense' && $staff) {
+        $id = (int)($_POST['expense_id'] ?? 0);
+        $stmt = $staff->prepare("DELETE FROM expenses WHERE id = ?");
+        if ($stmt) { $stmt->bind_param("i", $id); $stmt->execute(); $stmt->close(); }
+        echo '<script>window.location.href="school-bursar.php?section=expenditure";</script>'; exit;
+    }
+
+    // ── Delete cost center ────────────────────────────────────────────
+    if ($action === 'delete_cost_center' && $staff) {
+        $id = (int)($_POST['cc_id'] ?? 0);
+        $stmt = $staff->prepare("DELETE FROM cost_centers WHERE id = ?");
+        if ($stmt) { $stmt->bind_param("i", $id); $stmt->execute(); $stmt->close(); }
+        echo '<script>window.location.href="school-bursar.php?section=cost_centers";</script>'; exit;
+    }
 }
 
 // ── Requisition AJAX (approve/reject) ──────────────────────────────
@@ -633,8 +802,42 @@ data-section="overview">
 
 <style>
 .print-only{display:none}
+.ph{padding:20px 24px 0}
+.ph h1{font-size:22px;font-weight:700;margin:0}
+.ph p{font-size:13px;color:#64748b;margin:2px 0 0}
+.cc{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:0 0 20px;background:#fff}
+.cc .ch{background:#1a237e;color:#fff;padding:12px 20px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.cc .cb{padding:20px}
+.cb .fl{font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block}
+.cb .fc,.cb .fs{border-radius:8px;border:1px solid #d1d5db;padding:8px 12px;font-size:13px;width:100%}
+.cb .fc:focus,.cb .fs:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.15);outline:none}
+.bb{background:#1a237e;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500;cursor:pointer}
+.bb:hover{background:#283593}
+.bo{background:#fff;color:#1a237e;border:1px solid #1a237e;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block}
+.bo:hover{background:#f0f0ff}
+.tb{width:100%;border-collapse:collapse;font-size:13px}
+.tb th{background:#f8fafc;color:#374151;font-weight:600;padding:10px 14px;text-align:left;border-bottom:2px solid #e5e7eb;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+.tb td{padding:10px 14px;border-bottom:1px solid #e5e7eb}
+.tb tr:hover{background:#f8fafc}
+.sri{padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;cursor:pointer}
+.sri:hover{background:#f0f0ff;border-color:#1a237e}
+.stat-card{border:1px solid #e5e7eb;border-radius:10px;padding:20px;background:#fff;display:flex;align-items:center;gap:16px}
+.stat-card .sc-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.stat-card .sc-value{font-size:24px;font-weight:700;color:#1a237e}
+.stat-card .sc-label{font-size:12px;color:#64748b}
+.profile-section{padding:12px 0}
+.profile-section h6{font-size:13px;font-weight:600;color:#1a237e;margin-bottom:8px;border-bottom:1px solid #e5e7eb;padding-bottom:6px}
+.mf{border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;background:#f8fafc}
+.mf h6{font-size:13px;font-weight:600;color:#1a237e;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+.mf .row{margin-bottom:0}
+.mf label{font-size:12px;font-weight:500;color:#374151;margin-bottom:2px}
+.mf .fc,.mf .fs{border-radius:6px;border:1px solid #d1d5db;padding:6px 10px;font-size:12px;width:100%}
+.mf .fc:focus,.mf .fs:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.15);outline:none}
+.mf .bb{font-size:12px;padding:6px 14px}
+.printhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.printhdr h6{margin:0;font-size:14px;font-weight:600;color:#1a237e}
 @media print{.d-print-none{display:none!important}.print-only{display:block!important}.cc{border:1px solid #ddd!important;break-inside:avoid}.cc .ch{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.table th{background:#1a237e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-@media(max-width:768px){.main{margin-left:0!important;padding:12px!important}}
+@media(max-width:768px){.ma{padding:12px!important}.ph{padding:12px 12px 0!important}.ph h1{font-size:18px}.cc .ch{font-size:13px;padding:10px 14px}.cc .cb{padding:14px}.tb{font-size:12px}.tb th,.tb td{padding:8px 10px}}
 </style>
 
     <div class="ph">
@@ -750,43 +953,9 @@ data-section="overview">
     <!-- ======================== student_add ======================== -->
     <?php if ($view === 'student_add'): ?>
     <?php
-    // Handle add/update student
+    // Handle update student contact info only (adding students is for Admissions/Secretary only)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $act = $_POST['action'] ?? '';
-        if ($act === 'add_student_financial' && $students) {
-            $fn = trim($_POST['first_name'] ?? '');
-            $sn = trim($_POST['surname'] ?? '');
-            $ph = trim($_POST['phone'] ?? '');
-            $em = trim($_POST['email'] ?? '');
-            $pr = trim($_POST['program'] ?? '');
-            $yr = trim($_POST['year_of_study'] ?? '');
-            $gen = trim($_POST['gender'] ?? '');
-            $dob = trim($_POST['date_of_birth'] ?? '');
-            $dist = trim($_POST['district'] ?? '');
-            $nat = trim($_POST['nationality'] ?? 'Uganda');
-            if ($fn && $sn) {
-                $check = $students->prepare("SELECT id FROM students WHERE first_name=? AND last_name=? AND phone=? LIMIT 1");
-                if ($check) {
-                    $check->bind_param('sss', $fn, $sn, $ph);
-                    $check->execute();
-                    $checkResult = $check->get_result();
-                    if ($checkResult && $checkResult->num_rows > 0) {
-                        $msg = '<div class="alert alert-warning py-2 small">Duplicate student found. Use search to update.</div>';
-                    } else {
-                        $max = $students->query("SELECT MAX(CAST(SUBSTRING(student_number,6) AS UNSIGNED)) AS max_num FROM students WHERE student_number LIKE 'ISNM-%'");
-                        $next = $max ? ((int)$max->fetch_assoc()['max_num'] + 1) : (date('Y')*10000 + 1);
-                        $student_number = 'ISNM-' . $next;
-                        $stmt = $students->prepare("INSERT INTO students (student_number, first_name, last_name, phone, email, program, year_of_study, gender, date_of_birth, district, nationality, status, admission_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
-                        if ($stmt) {
-                            $stmt->bind_param("sssssssssss", $student_number, $fn, $sn, $ph, $em, $pr, $yr, $gen, $dob, $dist, $nat);
-                            $stmt->execute() ? $msg = '<div class="alert alert-success py-2 small">Student added successfully. Number: <strong>' . $student_number . '</strong></div>' : $msg = '<div class="alert alert-danger py-2 small">Failed: ' . $stmt->error . '</div>';
-                            $stmt->close();
-                        } else { $msg = '<div class="alert alert-danger py-2 small">Database error.</div>'; }
-                    }
-                    $check->close();
-                }
-            } else { $msg = '<div class="alert alert-danger py-2 small">First name and surname are required.</div>'; }
-        }
         if ($act === 'update_student_financial' && $students) {
             $sid = trim($_POST['student_id'] ?? '');
             $ph = trim($_POST['phone'] ?? '');
@@ -804,40 +973,10 @@ data-section="overview">
     }
     ?>
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="cc"><div class="ch"><i class="fas fa-user-plus me-2"></i>Register New Student (Financial)</div>
+        <div class="col-md-8 mx-auto">
+            <div class="cc"><div class="ch"><i class="fas fa-edit me-2"></i>Update Student Contact / Financial Info</div>
             <div class="cb">
-                <?= $msg ?? '' ?>
-                <p class="text-muted small">Add a new student record for fee tracking. Academic fields cannot be modified later by finance.</p>
-                <form method="POST">
-                    <input type="hidden" name="action" value="add_student_financial">
-                    <div class="row g-3">
-                        <div class="col-6"><label class="fl">Surname *</label><input type="text" name="surname" class="form-control fc" required></div>
-                        <div class="col-6"><label class="fl">First Name *</label><input type="text" name="first_name" class="form-control fc" required></div>
-                        <div class="col-6"><label class="fl">Phone</label><input type="text" name="phone" class="form-control fc"></div>
-                        <div class="col-6"><label class="fl">Email</label><input type="email" name="email" class="form-control fc"></div>
-                        <div class="col-6"><label class="fl">Program</label>
-                            <select name="program" class="form-select fs">
-                                <option value="">-- Select --</option>
-                                <option>Certificate Midwifery</option><option>Diploma Midwifery</option>
-                                <option>Diploma Nursing Extension</option><option>Certificate Nursing</option>
-                            </select>
-                        </div>
-                        <div class="col-3"><label class="fl">Year</label><select name="year_of_study" class="form-select fs"><option value="">-</option><option>Year 1</option><option>Year 2</option><option>Year 3</option></select></div>
-                        <div class="col-3"><label class="fl">Gender</label><select name="gender" class="form-select fs"><option value="">-</option><option>Male</option><option>Female</option></select></div>
-                        <div class="col-4"><label class="fl">Date of Birth</label><input type="date" name="date_of_birth" class="form-control fc"></div>
-                        <div class="col-4"><label class="fl">District</label><input type="text" name="district" class="form-control fc"></div>
-                        <div class="col-4"><label class="fl">Nationality</label><input type="text" name="nationality" class="form-control fc" value="Uganda"></div>
-                        <div class="col-12 text-end"><button type="submit" class="btn bb"><i class="fas fa-save me-1"></i>Register Student</button></div>
-                    </div>
-                </form>
-            </div></div>
-        </div>
-        <div class="col-md-6">
-            <div class="cc"><div class="ch"><i class="fas fa-edit me-2"></i>Update Contact / Financial Info</div>
-            <div class="cb">
-                <?= $msg2 ?? '' ?>
-                <p class="text-muted small">Search for a student and update contact details (phone, email, district only). Academic data is read-only.</p>
+                <p class="text-muted small">Search for a student and update contact details (phone, email, district only). Academic data is read-only. <strong>New student registration is handled by Director Admissions and Secretary.</strong></p>
                 <div class="mb-3">
                     <div class="input-group"><input type="text" id="editStudQ" class="form-control" placeholder="Search student name or ID..."><button class="btn bb" onclick="searchEditStudent()"><i class="fas fa-search"></i></button></div>
                     <div id="editStudResults" class="mt-2"></div>
@@ -1026,8 +1165,9 @@ try {
         <div class="col-md-7">
             <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Current Fee Structures</div>
             <div class="cb p-0">
+                <div class="printhdr no-print" style="padding:8px 14px"><h6>Fee Items</h6><button class="bo btn-sm" onclick="printTable('feeTbl','Fee Structures')"><i class="fas fa-print me-1"></i>Print</button></div>
                 <div class="table-responsive">
-                    <table class="table tb">
+                    <table class="table tb" id="feeTbl">
                         <thead><tr><th>Item</th><th>Amount</th><th>Program</th><th>Year</th><th></th></tr></thead>
                         <tbody>
 <?php
@@ -1060,11 +1200,28 @@ echo $feeRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No fee
         <div class="cb">
             <form id="stmtSearchForm" onsubmit="event.preventDefault(); searchStatementStudent()" class="row g-2 mb-4">
                 <div class="col-md-6"><div class="input-group"><input type="text" id="stmtQuery" class="form-control" placeholder="Search by name or index number..." value="<?= htmlspecialchars($q) ?>"><button class="btn bb" type="submit"><i class="fas fa-search"></i></button></div></div>
+                <div class="col-md-3"><button class="btn bo" onclick="printStatement()" type="button" id="stmtPrintBtn" style="display:none"><i class="fas fa-print me-1"></i>Print Statement</button></div>
             </form>
             <div id="stmtSearchResults" class="mb-3"></div>
             <div id="stmtOutput"></div>
         </div>
     </div>
+    <script>
+    function printStatement(){
+        var printContent = document.getElementById('stmtOutput');
+        if(!printContent || printContent.innerHTML.trim() === '') return;
+        var win = window.open('','','width=900,height=700');
+        win.document.write('<html><head><title>Student Statement - Iganga School of Nursing & Midwifery</title>');
+        win.document.write('<style>body{font-family:Arial,sans-serif;padding:40px;font-size:13px}h2{color:#1a237e;text-align:center;margin-bottom:5px}.school{text-align:center;color:#666;font-size:14px;margin-bottom:30px}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#1a237e;color:#fff;padding:10px;text-align:left;font-size:12px;text-transform:uppercase}td{padding:10px;border-bottom:1px solid #ddd}tr:nth-child(even){background:#f8fafc}.total{font-weight:700;font-size:15px;margin-top:20px}.footer{text-align:center;color:#999;font-size:11px;margin-top:40px;border-top:1px solid #ddd;padding-top:15px}@media print{body{padding:20px}}</style></head><body>');
+        win.document.write('<h2>Iganga School of Nursing & Midwifery</h2>');
+        win.document.write('<div class="school">Student Fee Statement</div>');
+        win.document.write(printContent.innerHTML);
+        win.document.write('<div class="footer">Generated on ' + new Date().toLocaleDateString() + ' &mdash; This is a computer-generated statement</div>');
+        win.document.write('</body></html>');
+        win.document.close();
+        setTimeout(function(){ win.print(); }, 500);
+    }
+    </script>
     <?php if ($studentParam !== ''): ?>
     <script>document.addEventListener('DOMContentLoaded',function(){ setTimeout(searchStatementStudent,300); });</script>
     <?php endif; ?>
@@ -1137,8 +1294,9 @@ echo $feeRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No fee
         <div class="col-md-7">
             <div class="cc"><div class="ch"><i class="fas fa-wallet me-2"></i>Budget vs Actual</div>
             <div class="cb p-0">
+                <div class="printhdr no-print" style="padding:8px 14px"><h6>Budgets</h6><button class="bo btn-sm" onclick="printTable('budgetTbl','Budget vs Actual')"><i class="fas fa-print me-1"></i>Print</button></div>
                 <div class="table-responsive">
-                    <table class="table tb">
+                    <table class="table tb" id="budgetTbl">
                         <thead><tr><th>Name</th><th>Fiscal Year</th><th>Dept</th><th>Budget</th><th>Spent</th><th>Remaining</th><th></th></tr></thead>
                         <tbody>
 <?php
@@ -1315,9 +1473,10 @@ echo $adjRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No adj
     <?php if ($view === 'scholarships'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-award me-2"></i>Scholarships & Sponsorships</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Scholarships & Sponsorships</h6><button class="bo btn-sm" onclick="printTable('schTbl','Scholarships & Sponsorships')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="schTbl">
                     <thead><tr><th>Student</th><th>Type</th><th>Sponsor</th><th>Amount</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1354,9 +1513,10 @@ echo $schRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No sch
     <?php if ($view === 'payment_verification'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-check-double me-2"></i>Payment Verification</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Pending Verifications</h6><button class="bo btn-sm" onclick="printTable('pvTbl','Payment Verification')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="pvTbl">
                     <thead><tr><th>Ref</th><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1386,9 +1546,10 @@ echo $pvRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No pend
     <?php if ($view === 'proof_of_payments'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-file-upload me-2"></i>Proof of Payments</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Submitted Proofs</h6><button class="bo btn-sm" onclick="printTable('popTbl','Proof of Payments')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="popTbl">
                     <thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Ref</th><th>Date</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1414,9 +1575,10 @@ echo $popRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No pro
     <?php if ($view === 'debtors_list'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-exclamation-triangle me-2"></i>Outstanding Debtors</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Debtors List</h6><button class="bo btn-sm" onclick="printTable('debtTbl','Outstanding Debtors')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="debtTbl">
                     <thead><tr><th>Student</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Due Date</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1447,10 +1609,25 @@ echo $debtRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">All a
     <?php if ($view === 'tax_reports'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-file-invoice-dollar me-2"></i>Tax / URA Reports</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Tax / URA Report</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_tax_report">
+                    <div class="row g-2">
+                        <div class="col-md-3"><label>Report Name *</label><input type="text" name="report_name" class="fc" required></div>
+                        <div class="col-md-2"><label>Period *</label><input type="text" name="tax_period" class="fc" required placeholder="e.g. 2025-01"></div>
+                        <div class="col-md-2"><label>Amount (UGX)</label><input type="number" name="amount" class="fc" min="0" value="0"></div>
+                        <div class="col-md-2"><label>Tax Amount</label><input type="number" name="tax_amount" class="fc" min="0" value="0"></div>
+                        <div class="col-md-2"><label>Status</label><select name="report_status" class="fs"><option value="pending">Pending</option><option value="filed">Filed</option><option value="submitted">Submitted</option></select></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Save</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Tax Reports</h6><button class="bo btn-sm" onclick="printTable('taxTbl','Tax / URA Reports')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
-                    <thead><tr><th>Report</th><th>Period</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                <table class="table tb" id="taxTbl">
+                    <thead><tr><th>Report</th><th>Period</th><th>Amount</th><th>Tax</th><th>Status</th><th>Date</th></tr></thead>
                     <tbody>
 <?php
 $taxRows = '';
@@ -1461,14 +1638,14 @@ try {
             $r = $staff->query("SELECT * FROM $tbl ORDER BY created_at DESC LIMIT 50");
             if ($r && $r->num_rows) {
                 while ($t = $r->fetch_assoc()) {
-                    $taxRows .= '<tr><td>' . htmlspecialchars($t['report_name'] ?? $t['name'] ?? '-') . '</td><td>' . htmlspecialchars($t['tax_period'] ?? $t['period'] ?? '-') . '</td><td>' . currency($t['amount'] ?? $t['tax_amount'] ?? 0) . '</td><td><span class="badge bg-' . (($t['status'] ?? '') === 'filed' ? 'success' : 'warning') . '">' . htmlspecialchars($t['status'] ?? 'pending') . '</span></td><td>' . htmlspecialchars($t['filed_date'] ?? $t['report_date'] ?? $t['created_at'] ?? '-') . '</td></tr>';
+                    $taxRows .= '<tr><td>' . htmlspecialchars($t['report_name'] ?? $t['name'] ?? '-') . '</td><td>' . htmlspecialchars($t['tax_period'] ?? $t['period'] ?? '-') . '</td><td>' . currency($t['amount'] ?? 0) . '</td><td>' . currency($t['tax_amount'] ?? 0) . '</td><td><span class="badge bg-' . (($t['status'] ?? '') === 'filed' ? 'success' : 'warning') . '">' . htmlspecialchars($t['status'] ?? 'pending') . '</span></td><td>' . htmlspecialchars($t['filed_date'] ?? $t['report_date'] ?? $t['created_at'] ?? '-') . '</td></tr>';
                 }
                 break;
             }
         }
     }
 } catch (Exception $e) {}
-echo $taxRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No tax reports found.</td></tr>';
+echo $taxRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No tax reports found.</td></tr>';
 ?>
                     </tbody>
                 </table>
@@ -1481,10 +1658,25 @@ echo $taxRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No tax
     <?php if ($view === 'expenditure'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-shopping-cart me-2"></i>Expenditure Tracking</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Expense</h6>
+                <form method="POST" onsubmit="return confirm('Add this expense?')">
+                    <input type="hidden" name="action" value="add_expense">
+                    <div class="row g-2">
+                        <div class="col-md-4"><label>Title *</label><input type="text" name="title" class="fc" required></div>
+                        <div class="col-md-2"><label>Amount *</label><input type="number" name="amount" class="fc" required min="1"></div>
+                        <div class="col-md-2"><label>Category</label><select name="category" class="fs"><option>General</option><option>Administrative</option><option>Utilities</option><option>Supplies</option><option>Transport</option><option>Maintenance</option></select></div>
+                        <div class="col-md-2"><label>Date</label><input type="date" name="expense_date" class="fc" value="<?= date('Y-m-d') ?>"></div>
+                        <div class="col-md-2"><label>Status</label><select name="status" class="fs"><option value="pending">Pending</option><option value="approved">Approved</option><option value="paid">Paid</option></select></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Save</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Expense Records</h6><button class="bo btn-sm" onclick="printTable('expTbl','Expenditure Report')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
-                    <thead><tr><th>Title</th><th>Amount</th><th>Category</th><th>Requested By</th><th>Date</th><th>Status</th></tr></thead>
+                <table class="table tb" id="expTbl">
+                    <thead><tr><th>Title</th><th>Amount</th><th>Category</th><th>Requested By</th><th>Date</th><th>Status</th><th></th></tr></thead>
                     <tbody>
 <?php
 $expRows = '';
@@ -1492,12 +1684,14 @@ try {
     if ($staff) {
         $r = $staff->query("SELECT * FROM expenses ORDER BY expense_date DESC LIMIT 50");
         if ($r) while ($e = $r->fetch_assoc()) {
-            $cls = strtolower($e['status'] ?? '') === 'approved' ? 'success' : (strtolower($e['status'] ?? '') === 'pending' ? 'warning' : 'danger');
-            $expRows .= '<tr><td>' . htmlspecialchars($e['expense_title'] ?? $e['title'] ?? '-') . '</td><td><strong>' . currency($e['amount'] ?? 0) . '</strong></td><td>' . htmlspecialchars($e['category'] ?? '-') . '</td><td>' . htmlspecialchars($e['requested_by'] ?? '-') . '</td><td>' . htmlspecialchars($e['expense_date'] ?? $e['date'] ?? '-') . '</td><td><span class="badge bg-' . $cls . '">' . htmlspecialchars($e['status'] ?? 'Pending') . '</span></td></tr>';
+            $cls = strtolower($e['status'] ?? '') === 'approved' ? 'success' : (strtolower($e['status'] ?? '') === 'paid' ? 'primary' : (strtolower($e['status'] ?? '') === 'pending' ? 'warning' : 'danger'));
+            $eid = (int)($e['id'] ?? 0);
+            $expRows .= '<tr><td>' . htmlspecialchars($e['expense_title'] ?? $e['title'] ?? '-') . '</td><td><strong>' . currency($e['amount'] ?? 0) . '</strong></td><td>' . htmlspecialchars($e['category'] ?? '-') . '</td><td>' . htmlspecialchars($e['requested_by'] ?? '-') . '</td><td>' . htmlspecialchars($e['expense_date'] ?? $e['date'] ?? '-') . '</td><td><span class="badge bg-' . $cls . '">' . htmlspecialchars($e['status'] ?? 'Pending') . '</span></td>
+            <td><form method="POST" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_expense"><input type="hidden" name="expense_id" value="' . $eid . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
         }
     }
 } catch (Exception $e) {}
-echo $expRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No expenses recorded.</td></tr>';
+echo $expRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No expenses recorded.</td></tr>';
 ?>
                     </tbody>
                 </table>
@@ -1510,10 +1704,24 @@ echo $expRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No exp
     <?php if ($view === 'cost_centers'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-building me-2"></i>Cost Centers</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Cost Center</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_cost_center">
+                    <div class="row g-2">
+                        <div class="col-md-4"><label>Name *</label><input type="text" name="name" class="fc" required></div>
+                        <div class="col-md-2"><label>Code</label><input type="text" name="code" class="fc" placeholder="e.g. CC-001"></div>
+                        <div class="col-md-3"><label>Department</label><input type="text" name="department" class="fc" placeholder="Academic"></div>
+                        <div class="col-md-2"><label>Budget (UGX)</label><input type="number" name="budget" class="fc" min="0" value="0"></div>
+                        <div class="col-md-1 d-flex align-items-end"><button class="bb w-100" type="submit"><i class="fas fa-plus"></i></button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Cost Centers</h6><button class="bo btn-sm" onclick="printTable('ccTbl','Cost Centers')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
-                    <thead><tr><th>Name</th><th>Code</th><th>Department</th><th>Budget</th><th>Status</th></tr></thead>
+                <table class="table tb" id="ccTbl">
+                    <thead><tr><th>Name</th><th>Code</th><th>Department</th><th>Budget</th><th>Status</th><th></th></tr></thead>
                     <tbody>
 <?php
 $ccRows = '';
@@ -1522,11 +1730,13 @@ try {
     if ($conn_cc) {
         $r = $conn_cc->query("SELECT * FROM cost_centers ORDER BY name");
         if ($r) while ($c = $r->fetch_assoc()) {
-            $ccRows .= '<tr><td>' . htmlspecialchars($c['name']) . '</td><td><code>' . htmlspecialchars($c['code'] ?? '-') . '</code></td><td>' . htmlspecialchars($c['department'] ?? '-') . '</td><td>' . currency($c['budget'] ?? $c['allocated_amount'] ?? 0) . '</td><td>' . bsBadge($c['status'] ?? 'active') . '</td></tr>';
+            $ccid = (int)($c['id'] ?? 0);
+            $ccRows .= '<tr><td>' . htmlspecialchars($c['name']) . '</td><td><code>' . htmlspecialchars($c['code'] ?? '-') . '</code></td><td>' . htmlspecialchars($c['department'] ?? '-') . '</td><td>' . currency($c['budget'] ?? $c['allocated_amount'] ?? 0) . '</td><td>' . bsBadge($c['status'] ?? 'active') . '</td>
+            <td><form method="POST" onsubmit="return confirm(\'Delete?\')" style="display:inline"><input type="hidden" name="action" value="delete_cost_center"><input type="hidden" name="cc_id" value="' . $ccid . '"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></form></td></tr>';
         }
     }
 } catch (Exception $e) {}
-echo $ccRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No cost centers defined.</td></tr>';
+echo $ccRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No cost centers defined.</td></tr>';
 ?>
                     </tbody>
                 </table>
@@ -1539,9 +1749,11 @@ echo $ccRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No cost
     <?php if ($view === 'payroll'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-money-check me-2"></i>Payroll Management</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <p class="text-muted small mb-2">Payroll is managed from the <a href="../payroll.php" target="_blank">Payroll System</a>. Below is a read-only summary.</p>
+            <div class="printhdr no-print"><h6>Payroll Records</h6><button class="bo btn-sm" onclick="printTable('payTbl','Payroll Management')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="payTbl">
                     <thead><tr><th>Staff</th><th>Department</th><th>Basic Salary</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Period</th></tr></thead>
                     <tbody>
 <?php
@@ -1576,9 +1788,11 @@ echo $prRows ?: '<tr><td colspan="7" class="text-center text-muted py-3">No payr
     <?php if ($view === 'payslips'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-file-invoice me-2"></i>Payslips</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <p class="text-muted small mb-2">Payslips are generated from the <a href="../payroll.php" target="_blank">Payroll System</a>.</p>
+            <div class="printhdr no-print"><h6>Generated Payslips</h6><button class="bo btn-sm" onclick="printTable('psTbl','Payslips')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="psTbl">
                     <thead><tr><th>Staff</th><th>Period</th><th>Gross</th><th>Net Pay</th><th>Generated</th></tr></thead>
                     <tbody>
 <?php
@@ -1604,9 +1818,23 @@ echo $psRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No pays
     <?php if ($view === 'chart_of_accounts'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-book me-2"></i>Chart of Accounts</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Account</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_chart_account">
+                    <div class="row g-2">
+                        <div class="col-md-2"><label>Code *</label><input type="text" name="account_code" class="fc" required placeholder="e.g. 6000"></div>
+                        <div class="col-md-4"><label>Account Name *</label><input type="text" name="account_name" class="fc" required></div>
+                        <div class="col-md-2"><label>Type</label><select name="account_type" class="fs"><option value="asset">Asset</option><option value="liability">Liability</option><option value="equity">Equity</option><option value="income">Income</option><option value="expense">Expense</option></select></div>
+                        <div class="col-md-2"><label>Balance</label><input type="number" name="balance" class="fc" value="0"></div>
+                        <div class="col-md-2 d-flex align-items-end"><button class="bb w-100" type="submit"><i class="fas fa-plus"></i> Add</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Accounts</h6><button class="bo btn-sm" onclick="printTable('coaTbl','Chart of Accounts')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="coaTbl">
                     <thead><tr><th>Code</th><th>Account Name</th><th>Type</th><th>Balance</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1637,9 +1865,25 @@ echo $coaRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No cha
     <?php if ($view === 'ledger'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-book-open me-2"></i>General Ledger</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Ledger Entry</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_ledger_entry">
+                    <div class="row g-2">
+                        <div class="col-md-3"><label>Date</label><input type="date" name="transaction_date" class="fc" value="<?= date('Y-m-d') ?>"></div>
+                        <div class="col-md-3"><label>Account Name *</label><input type="text" name="account_name" class="fc" required></div>
+                        <div class="col-md-4"><label>Description</label><input type="text" name="description" class="fc"></div>
+                        <div class="col-md-2"><label>Reference</label><input type="text" name="reference" class="fc"></div>
+                        <div class="col-md-2"><label>Debit</label><input type="number" name="debit_amount" class="fc" min="0" value="0"></div>
+                        <div class="col-md-2"><label>Credit</label><input type="number" name="credit_amount" class="fc" min="0" value="0"></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Save</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Ledger Entries</h6><button class="bo btn-sm" onclick="printTable('ledgerTbl','General Ledger')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="ledgerTbl">
                     <thead><tr><th>Date</th><th>Account</th><th>Description</th><th>Debit</th><th>Credit</th></tr></thead>
                     <tbody>
 <?php
@@ -1670,9 +1914,24 @@ echo $glRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No ledg
     <?php if ($view === 'cashbook'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-cash-register me-2"></i>Cashbook</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Cashbook Entry</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_cashbook_entry">
+                    <div class="row g-2">
+                        <div class="col-md-2"><label>Date</label><input type="date" name="transaction_date" class="fc" value="<?= date('Y-m-d') ?>"></div>
+                        <div class="col-md-4"><label>Description *</label><input type="text" name="description" class="fc" required></div>
+                        <div class="col-md-2"><label>Reference</label><input type="text" name="reference_number" class="fc"></div>
+                        <div class="col-md-2"><label>Cash In</label><input type="number" name="debit_amount" class="fc" min="0" value="0"></div>
+                        <div class="col-md-2"><label>Cash Out</label><input type="number" name="credit_amount" class="fc" min="0" value="0"></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Save</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Cashbook Entries</h6><button class="bo btn-sm" onclick="printTable('cashTbl','Cashbook')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="cashTbl">
                     <thead><tr><th>Date</th><th>Description</th><th>Ref</th><th>Cash In</th><th>Cash Out</th><th>Balance</th></tr></thead>
                     <tbody>
 <?php
@@ -1702,9 +1961,23 @@ echo $cbRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No cash
     <?php if ($view === 'reconciliation'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-university me-2"></i>Bank Reconciliation</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Bank Account</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_bank_account">
+                    <div class="row g-2">
+                        <div class="col-md-3"><label>Bank Name *</label><input type="text" name="bank_name" class="fc" required></div>
+                        <div class="col-md-3"><label>Account Name *</label><input type="text" name="account_name" class="fc" required></div>
+                        <div class="col-md-3"><label>Account Number *</label><input type="text" name="account_number" class="fc" required></div>
+                        <div class="col-md-2"><label>Balance (UGX)</label><input type="number" name="balance" class="fc" value="0"></div>
+                        <div class="col-md-1 d-flex align-items-end"><button class="bb w-100" type="submit"><i class="fas fa-plus"></i></button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Bank Accounts</h6><button class="bo btn-sm" onclick="printTable('bankTbl','Bank Reconciliation')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="bankTbl">
                     <thead><tr><th>Bank Account</th><th>Account No</th><th>Balance</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1730,9 +2003,29 @@ echo $bankRows ?: '<tr><td colspan="4" class="text-center text-muted py-3">No ba
     <?php if ($view === 'assets'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-boxes me-2"></i>Asset Register</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <?php
+            $catOpts = '';
+            try { if ($staff) { $catR = $staff->query("SELECT id, category_name FROM asset_categories ORDER BY category_name"); if ($catR) while ($cat = $catR->fetch_assoc()) $catOpts .= '<option value="'.$cat['id'].'">'.htmlspecialchars($cat['category_name']).'</option>'; } } catch (Exception $e) {}
+            ?>
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Add Asset</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_asset">
+                    <div class="row g-2">
+                        <div class="col-md-3"><label>Asset Name *</label><input type="text" name="asset_name" class="fc" required></div>
+                        <div class="col-md-2"><label>Asset Code</label><input type="text" name="asset_code" class="fc" placeholder="e.g. AST-001"></div>
+                        <div class="col-md-2"><label>Category</label><select name="asset_category_id" class="fs"><option value="0">Uncategorized</option><?= $catOpts ?></select></div>
+                        <div class="col-md-2"><label>Cost (UGX) *</label><input type="number" name="purchase_cost" class="fc" required min="1"></div>
+                        <div class="col-md-1"><label>Life (yrs)</label><input type="number" name="useful_life_years" class="fc" value="5" min="1"></div>
+                        <div class="col-md-2"><label>Date</label><input type="date" name="purchase_date" class="fc" value="<?= date('Y-m-d') ?>"></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Add</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Asset Register</h6><button class="bo btn-sm" onclick="printTable('assetTbl','Asset Register')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="assetTbl">
                     <thead><tr><th>Asset Name</th><th>Category</th><th>Serial No</th><th>Value</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -1884,9 +2177,10 @@ echo $assetRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No a
     <?php if ($view === 'audit_trail'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-history me-2"></i>Audit Trail</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Audit Records</h6><button class="bo btn-sm" onclick="printTable('auditTbl','Audit Trail')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="auditTbl">
                     <thead><tr><th>User</th><th>Action</th><th>Category</th><th>Description</th><th>Date</th></tr></thead>
                     <tbody>
 <?php
@@ -1912,9 +2206,10 @@ echo $auditRows ?: '<tr><td colspan="5" class="text-center text-muted py-3">No a
     <?php if ($view === 'procurement'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-truck me-2"></i>Procurement Oversight</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="printhdr no-print"><h6>Procurement Orders</h6><button class="bo btn-sm" onclick="printTable('procTbl','Procurement Orders')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="procTbl">
                     <thead><tr><th>Order #</th><th>Supplier</th><th>Amount</th><th>Requester</th><th>Status</th><th>Date</th></tr></thead>
                     <tbody>
 <?php
@@ -1940,9 +2235,24 @@ echo $procRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No pr
     <?php if ($view === 'donations'): ?>
     <div class="cc">
         <div class="ch"><i class="fas fa-donate me-2"></i>Donations & Fundraising</div>
-        <div class="cb p-0">
+        <div class="cb">
+            <div class="mf no-print">
+                <h6><i class="fas fa-plus-circle me-1"></i>Record Donation</h6>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_donation">
+                    <div class="row g-2">
+                        <div class="col-md-3"><label>Donor Name *</label><input type="text" name="donor_name" class="fc" required></div>
+                        <div class="col-md-2"><label>Amount *</label><input type="number" name="amount" class="fc" required min="1"></div>
+                        <div class="col-md-2"><label>Method</label><select name="payment_method" class="fs"><option value="cash">Cash</option><option value="bank">Bank</option><option value="mobile_money">Mobile Money</option><option value="cheque">Cheque</option></select></div>
+                        <div class="col-md-3"><label>Purpose</label><input type="text" name="purpose" class="fc"></div>
+                        <div class="col-md-2"><label>Date</label><input type="date" name="donation_date" class="fc" value="<?= date('Y-m-d') ?>"></div>
+                        <div class="col-12 text-end"><button class="bb" type="submit"><i class="fas fa-save me-1"></i>Record</button></div>
+                    </div>
+                </form>
+            </div>
+            <div class="printhdr no-print"><h6>Donation Records</h6><button class="bo btn-sm" onclick="printTable('donTbl','Donations & Fundraising')"><i class="fas fa-print me-1"></i>Print</button></div>
             <div class="table-responsive">
-                <table class="table tb">
+                <table class="table tb" id="donTbl">
                     <thead><tr><th>Donor</th><th>Amount</th><th>Method</th><th>Purpose</th><th>Date</th><th>Status</th></tr></thead>
                     <tbody>
 <?php
@@ -2009,11 +2319,11 @@ echo $donRows ?: '<tr><td colspan="6" class="text-center text-muted py-3">No don
 $clearRows = '';
 try {
     if ($staff) {
-        $cr = $staff->query("SELECT fc.*, s.full_name cleared_by_name FROM {$students_db}.financial_clearance fc LEFT JOIN staff s ON fc.cleared_by=s.id ORDER BY fc.updated_at DESC LIMIT 30");
+        $cr = $staff->query("SELECT fc.*, CONCAT(COALESCE(s2.first_name,''),' ',COALESCE(s2.surname,'')) AS student_full_name, s.full_name cleared_by_name FROM {$students_db}.financial_clearance fc LEFT JOIN staff s ON fc.cleared_by=s.id LEFT JOIN {$students_db}.students s2 ON fc.student_id = s2.student_id ORDER BY fc.updated_at DESC LIMIT 30");
         if ($cr && $cr->num_rows) {
             while ($c = $cr->fetch_assoc()) {
                 $cs = $c['clearance_status'] === 'Cleared' ? 'success' : ($c['clearance_status'] === 'Not Cleared' ? 'danger' : 'warning text-dark');
-                $clearRows .= '<tr><td>' . htmlspecialchars($c['student_id']) . '</td><td>-</td><td><span class="badge bg-' . $cs . '">' . htmlspecialchars($c['clearance_status']) . '</span></td><td>' . htmlspecialchars($c['cleared_by_name'] ?? 'System') . '</td><td>' . htmlspecialchars($c['updated_at'] ?? '-') . '</td><td class="small text-muted">' . htmlspecialchars(mb_substr($c['remarks'] ?? '-', 0, 50)) . '</td></tr>';
+                $clearRows .= '<tr><td>' . htmlspecialchars($c['student_id']) . '</td><td>' . htmlspecialchars($c['student_full_name'] ?? '-') . '</td><td><span class="badge bg-' . $cs . '">' . htmlspecialchars($c['clearance_status']) . '</span></td><td>' . htmlspecialchars($c['cleared_by_name'] ?? 'System') . '</td><td>' . htmlspecialchars($c['updated_at'] ?? '-') . '</td><td class="small text-muted">' . htmlspecialchars(mb_substr($c['remarks'] ?? '-', 0, 50)) . '</td></tr>';
             }
         }
     }
@@ -2706,6 +3016,18 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 });
 function esc(s){ if(!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function printTable(tblId, title){
+    var tbl = document.getElementById(tblId);
+    if(!tbl) return;
+    var html = '<html><head><meta charset="UTF-8"><title>'+esc(title)+' | ISNM</title><style>body{font-family:Arial,sans-serif;padding:30px}h2{color:#1a237e;text-align:center;margin-bottom:5px}.school{text-align:center;color:#666;font-size:14px;margin-bottom:25px}td,th{border:1px solid #ccc;padding:8px 12px;font-size:13px}th{background:#1a237e;color:#fff;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}table{width:100%;border-collapse:collapse}tr:nth-child(even){background:#f8fafc}.footer{text-align:center;color:#999;font-size:11px;margin-top:30px;border-top:1px solid #ddd;padding-top:15px}</style></head><body>';
+    html += '<h2>Iganga School of Nursing & Midwifery</h2><div class="school">'+esc(title)+'</div>';
+    html += tbl.outerHTML;
+    html += '<div class="footer">Generated on '+new Date().toLocaleDateString()+' &mdash; Computer-generated report</div></body></html>';
+    var win = window.open('','','width=900,height=700');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(function(){ win.print(); }, 500);
+}
 function exportStmtExcel(){
     var tbl = document.getElementById('stmtTable');
     if(!tbl) return;

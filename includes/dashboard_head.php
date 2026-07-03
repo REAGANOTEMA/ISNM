@@ -222,7 +222,7 @@ window.onerror = function(msg, url) {
   if (document.querySelector('meta[name="push-sw-registered"]')) return;
   var meta = document.createElement('meta'); meta.name = 'push-sw-registered'; meta.content = '1'; document.head.appendChild(meta);
 
-  navigator.serviceWorker.register('../js/service-worker.js', { scope: './' }).then(function(reg) {
+  navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(function(reg) {
     console.log('[SW] Registered:', reg.scope);
 
     function subscribeUser() {
