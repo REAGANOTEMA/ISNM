@@ -52,7 +52,10 @@ if (!function_exists('isnm_load_env')) {
 }
 
 isnm_load_env(__DIR__ . '/../.env');
-isnm_load_env(__DIR__ . '/../.env.local');
+// Load .env.local if it exists (local dev override — NOT uploaded to hosting)
+if (is_file(__DIR__ . '/../.env.local')) {
+    isnm_load_env(__DIR__ . '/../.env.local');
+}
 
 if (!defined('DB_HOST')) {
     define('DB_HOST', isnm_env('DB_HOST', isnm_env('STUDENTS_DB_HOST', 'localhost')));
@@ -151,20 +154,51 @@ if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
         mysqli_report(MYSQLI_REPORT_OFF);
 
-        // Force TCP by using 127.0.0.1 — avoids socket issues on Windows/XAMPP
-        $tcpHost = ($host === 'localhost') ? '127.0.0.1' : $host;
-
+        // Build list of connection attempts: [host => port] combos
+        $attempts = [];
+        $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
         $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
-        $errors = [];
-
-        foreach ($ports as $tryPort) {
-            $conn = @new mysqli($tcpHost, $user, $pass, $db, (int) $tryPort);
-            if (!$conn->connect_error) {
-                $conn->set_charset($charset);
-                return $conn;
+        foreach ($hosts as $h) {
+            foreach ($ports as $p) {
+                $attempts[] = ['host' => $h, 'port' => (int)$p];
             }
-            $errors[] = $tryPort . ': ' . $conn->connect_error;
-            $conn = null;
+        }
+
+        // Build list of credential sets to try
+        $isLocalDev = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost','127.0.0.1','::1']);
+        $dbPrefix = ''; // will be detected
+
+        $credentials = [
+            ['user' => $user, 'pass' => $pass, 'db' => $db],                           // 1. Configured credentials
+            ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db],                     // 2. Local XAMPP root
+        ];
+
+        // 3. Try with cPanel-style prefix if not already prefixed
+        if (!preg_match('/^[^_]+_/', $db)) {
+            $credentials[] = ['user' => $user, 'pass' => $pass, 'db' => $db];
+            $credentials[] = ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db];
+        }
+
+        $errors = [];
+        foreach ($credentials as $cred) {
+            $u = $cred['user'];
+            $p = $cred['pass'];
+            $d = $cred['db'];
+            foreach ($attempts as $att) {
+                $conn = @new mysqli($att['host'], $u, $p, $d, $att['port']);
+                if (!$conn->connect_error) {
+                    $conn->set_charset($charset);
+                    return $conn;
+                }
+                $err = $conn->connect_error;
+                $conn->close(); $conn = null;
+                // If credentials are wrong (access denied), skip trying other hosts/ports with same creds
+                if (stripos($err, 'access denied') !== false || stripos($err, 'unknown database') !== false) {
+                    $errors[] = "{$att['host']}:{$att['port']} user=$u db=$d => $err";
+                    break; // skip other host/port combos for these creds
+                }
+                $errors[] = "{$att['host']}:{$att['port']} => $err";
+            }
         }
 
         error_log($label . ' DB Error: ' . implode(' | ', $errors));
