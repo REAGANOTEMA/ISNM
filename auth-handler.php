@@ -299,6 +299,7 @@ switch ($action) {
                 'Director Finance'       => 'dashboards/director-finance.php',
                 'Director ICT'           => 'dashboards/director-ict.php',
                 'Director Admissions'    => 'dashboards/director-admissions.php',
+                'Director Admissions & Requirements' => 'dashboards/director-admissions.php',
                 'School Principal'       => 'dashboards/school-principal.php',
                 'Deputy Principal'       => 'dashboards/deputy-principal.php',
                 'Academic Registrar'     => 'dashboards/academic-registrar.php',

@@ -121,7 +121,7 @@ function generateAcademicCalendar($year) {
 }
 
 // Calculate GPA from grades
-function calculateGPA($grades) {
+if (!function_exists('calculateGPA')) { function calculateGPA($grades) {
     $grade_points = [
         'A' => 4.0,
         'B+' => 3.5,
@@ -143,7 +143,7 @@ function calculateGPA($grades) {
     }
     
     return $total_courses > 0 ? round($total_points / $total_courses, 2) : 0.0;
-}
+} }
 
 // Get class performance statistics
 function getClassPerformance($program, $year, $semester) {

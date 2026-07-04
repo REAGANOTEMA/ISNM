@@ -314,6 +314,17 @@ window.onerror = function(msg, url) {
 /* Empty state */
 .empty-state { padding: 40px 20px; text-align: center; }
 .empty-state i { font-size: 3rem; color: #dee2e6; margin-bottom: 15px; }
+/* ── Loading Progress Bar ── */
+.isnm-loading-bar { position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#ec4899);z-index:9999;transition:width 0.4s ease,opacity 0.3s;box-shadow:0 0 10px rgba(59,130,246,0.5); }
+/* ── Scroll-to-top ── */
+.isnm-scroll-top { position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:1050;box-shadow:0 4px 16px rgba(0,0,0,0.2);display:none;align-items:center;justify-content:center;transition:transform 0.2s,opacity 0.2s;opacity:0; }
+.isnm-scroll-top.show { display:flex;opacity:1; }
+.isnm-scroll-top:hover { transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+/* ── Keyboard shortcut toast ── */
+.isnm-shortcut-toast { position:fixed;bottom:80px;right:24px;background:#0f172a;color:#fff;border-radius:12px;padding:16px 20px;font-size:12px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:320px;display:none; }
+.isnm-shortcut-toast.show { display:block;animation:fadeIn 0.2s ease; }
+.isnm-shortcut-toast kbd { display:inline-block;background:rgba(255,255,255,0.1);padding:2px 7px;border-radius:4px;font-size:11px;margin:0 2px;font-family:inherit; }
+.isnm-shortcut-toast hr { border-color:rgba(255,255,255,0.1);margin:8px 0; }
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -339,4 +350,96 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+<script>
+/* ── Loading Progress Bar ── */
+(function(){
+    'use strict';
+    var bar = document.createElement('div');
+    bar.className = 'isnm-loading-bar';
+    document.body.appendChild(bar);
+    var timer;
+    function startLoad(instant) {
+        clearInterval(timer); bar.style.opacity = '1';
+        bar.style.width = instant ? '70%' : '30%';
+        if (instant) return;
+        timer = setInterval(function(){
+            var w = parseFloat(bar.style.width) || 0;
+            if (w < 90) bar.style.width = Math.min(90, w + (90 - w) * 0.04) + '%';
+        }, 200);
+    }
+    function finishLoad() {
+        clearInterval(timer);
+        bar.style.width = '100%';
+        setTimeout(function(){ bar.style.opacity = '0'; setTimeout(function(){ bar.style.width = '0%'; }, 300); }, 300);
+    }
+    window.ISNM_loadingBar = { start: startLoad, done: finishLoad };
+    // Auto-trigger for links and forms
+    document.addEventListener('click', function(e){
+        var link = e.target.closest('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"])');
+        if (link && link.href && link.href.indexOf(window.location.host) > -1) {
+            startLoad(false);
+        }
+    });
+    // Override form submissions
+    document.addEventListener('submit', function(){ startLoad(false); });
+    // Auto-finish on page load
+    if (document.readyState === 'complete') finishLoad();
+    else window.addEventListener('load', finishLoad);
+})();
+
+/* ── Scroll-to-top Button ── */
+(function(){
+    'use strict';
+    var btn = document.createElement('button');
+    btn.className = 'isnm-scroll-top';
+    btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+    btn.setAttribute('aria-label', 'Scroll to top');
+    document.body.appendChild(btn);
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+        if (!ticking) { requestAnimationFrame(function() {
+            btn.classList.toggle('show', window.scrollY > 400);
+            ticking = false;
+        }); ticking = true; }
+    });
+    btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+})();
+
+/* ── Keyboard Shortcuts ── */
+(function(){
+    'use strict';
+    var toast = document.createElement('div');
+    toast.className = 'isnm-shortcut-toast';
+    toast.innerHTML = '<strong>Keyboard Shortcuts</strong><hr>\
+<kbd>?</kbd> Show this help\
+<span style="float:right"><kbd>s</kbd> Search</span><br>\
+<kbd>h</kbd> Home\
+<span style="float:right"><kbd>q</kbd> Quick actions</span><br>\
+<kbd>n</kbd> Notifications\
+<span style="float:right"><kbd>Esc</kbd> Close</span>';
+    document.body.appendChild(toast);
+    var toastTimer;
+    function showHelp() {
+        clearTimeout(toastTimer);
+        toast.classList.add('show');
+        toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 4000);
+    }
+    document.addEventListener('keydown', function(e){
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        switch(e.key) {
+            case '?': e.preventDefault(); showHelp(); break;
+            case 's': case 'S': e.preventDefault();
+                var search = document.querySelector('.ent-search, .search-input, input[type="search"]');
+                if (search) { search.focus(); search.select(); } break;
+            case 'h': case 'H': e.preventDefault();
+                var home = document.querySelector('.sidebar-brand a, .brand-link, a[href$="director-general.php"]');
+                if (home && home.href) window.location.href = home.href; break;
+            case 'n': case 'N': e.preventDefault();
+                var notif = document.querySelector('.ent-header-btn[data-notif], .notification-btn, .notif-link');
+                if (notif) notif.click(); break;
+            case 'Escape': toast.classList.remove('show'); break;
+        }
+    });
+})();
 </script>

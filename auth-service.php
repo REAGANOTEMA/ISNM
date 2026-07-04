@@ -376,18 +376,18 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
-        $this->resetStaffFailedAttempts($staff['id']);
+        $this->resetStaffFailedAttempts($staff['id'] ?? 0);
         return [
             'success' => true,
             'user'    => [
-                'id'         => $staff['id'],
-                'email'      => $staff['email'],
-                'full_name'  => $staff['full_name'],
-                'phone'      => $staff['phone'],
+                'id'         => $staff['id'] ?? 0,
+                'email'      => $staff['email'] ?? '',
+                'full_name'  => $staff['full_name'] ?? '',
+                'phone'      => $staff['phone'] ?? '',
                 'role'       => $roleName,
                 'type'       => 'staff',
-                'position'   => $staff['position'],
-                'department' => $staff['department'],
+                'position'   => $staff['position'] ?? '',
+                'department' => $staff['department'] ?? '',
             ],
         ];
     }
