@@ -154,7 +154,11 @@ class AuthenticationService {
         }
         $conn = getStaffConnection();
         if (!$conn) {
-            return ['success' => false, 'message' => 'Database unavailable.'];
+            $errMsg = 'Database unavailable.';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
         }
         $stmt = $conn->prepare("SELECT id FROM staff WHERE reset_token = ? AND reset_expiry > NOW()");
         if (!$stmt) {
@@ -187,7 +191,13 @@ class AuthenticationService {
         if (!is_int($studentId) || $studentId <= 0) return ['success' => false, 'message' => 'Invalid student record'];
         if (strlen($password) < 8) return ['success' => false, 'message' => 'Password must be at least 8 characters long'];
         $conn = getConnection();
-        if (!$conn) return ['success' => false, 'message' => 'Database unavailable'];
+        if (!$conn) {
+            $errMsg = 'Database unavailable';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
+        }
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $s = $conn->prepare("UPDATE students SET password=?,password_changed=TRUE,is_first_login=FALSE,login_attempts=0,locked_until=NULL,updated_at=NOW() WHERE id=?");
         if (!$s) return ['success' => false, 'message' => 'Unable to prepare password update'];
@@ -220,7 +230,13 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
 
         $conn = getConnection();
-        if (!$conn) return ['success' => false, 'message' => 'Database unavailable'];
+        if (!$conn) {
+            $errMsg = 'Database unavailable';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
+        }
 
         $q = $conn->prepare("SELECT id, index_number, TRIM(CONCAT_WS(' ', first_name, NULLIF(other_name,''), surname)) AS full_name, phone, password, is_first_login FROM students WHERE index_number = ? LIMIT 1");
 
@@ -309,8 +325,13 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Invalid email format'];
 
         $conn = getStaffConnection();
-        if (!$conn)
-            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
+        if (!$conn) {
+            $errMsg = 'Database unavailable. Please contact the system administrator.';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
+        }
 
         if ($this->isStaffAccountLocked($email))
             return ['success' => false, 'message' => 'Invalid email or password'];
@@ -694,7 +715,13 @@ class AuthenticationService {
         if (!empty($intakeYear) && !preg_match('/^20\d{2}$/', $intakeYear)) return ['success' => false, 'message' => 'Invalid intake year format (e.g., 2026)'];
 
         $conn = getConnection();
-        if (!$conn) return ['success' => false, 'message' => 'Database unavailable'];
+        if (!$conn) {
+            $errMsg = 'Database unavailable';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
+        }
 
         $chk = $conn->prepare("SELECT id FROM students WHERE index_number = ? LIMIT 1");
         if ($chk) { $chk->bind_param('s', $index); $chk->execute(); if ($chk->get_result()->num_rows > 0) { $chk->close(); return ['success' => false, 'message' => 'A student with this index number already exists.']; } $chk->close(); }
@@ -744,7 +771,13 @@ class AuthenticationService {
 
     public function createStaffAccount($staffData) {
         $conn = getStaffConnection();
-        if (!$conn) return ['success' => false, 'message' => 'Database unavailable.'];
+        if (!$conn) {
+            $errMsg = 'Database unavailable.';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
+        }
         try {
             $hash  = password_hash($staffData['password'], PASSWORD_BCRYPT);
             $rs    = $conn->prepare("SELECT id FROM staff_roles WHERE role_name = ?");

@@ -57,6 +57,13 @@ if (is_file(__DIR__ . '/../.env.local')) {
     isnm_load_env(__DIR__ . '/../.env.local');
 }
 
+if (!defined('APP_DEBUG')) {
+    define('APP_DEBUG', in_array(isnm_env('APP_DEBUG', 'false'), ['true', '1', 'yes'], true));
+}
+if (!defined('APP_ENV')) {
+    define('APP_ENV', isnm_env('APP_ENV', 'production'));
+}
+
 if (!defined('DB_HOST')) {
     define('DB_HOST', isnm_env('DB_HOST', isnm_env('STUDENTS_DB_HOST', 'localhost')));
 }
@@ -154,7 +161,6 @@ if (!function_exists('isnm_mysqli_connect')) {
     function isnm_mysqli_connect(string $label, string $host, string $user, string $pass, string $db, int $port, string $charset) {
         mysqli_report(MYSQLI_REPORT_OFF);
 
-        // Build list of connection attempts: [host => port] combos
         $attempts = [];
         $hosts = array_values(array_unique(array_filter([$host, 'localhost', '127.0.0.1'])));
         $ports = array_values(array_unique(array_filter([$port, 3306, 3307])));
@@ -164,20 +170,10 @@ if (!function_exists('isnm_mysqli_connect')) {
             }
         }
 
-        // Build list of credential sets to try
-        $isLocalDev = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost','127.0.0.1','::1']);
-        $dbPrefix = ''; // will be detected
-
         $credentials = [
-            ['user' => $user, 'pass' => $pass, 'db' => $db],                           // 1. Configured credentials
-            ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db],                     // 2. Local XAMPP root
+            ['user' => $user, 'pass' => $pass, 'db' => $db],
+            ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db],
         ];
-
-        // 3. Try with cPanel-style prefix if not already prefixed
-        if (!preg_match('/^[^_]+_/', $db)) {
-            $credentials[] = ['user' => $user, 'pass' => $pass, 'db' => $db];
-            $credentials[] = ['user' => 'root', 'pass' => 'ReagaN23#', 'db' => $db];
-        }
 
         $errors = [];
         foreach ($credentials as $cred) {
@@ -191,17 +187,19 @@ if (!function_exists('isnm_mysqli_connect')) {
                     return $conn;
                 }
                 $err = $conn->connect_error;
-                $conn->close(); $conn = null;
-                // If credentials are wrong (access denied), skip trying other hosts/ports with same creds
+                if (is_object($conn)) { $conn->close(); }
+                $conn = null;
                 if (stripos($err, 'access denied') !== false || stripos($err, 'unknown database') !== false) {
                     $errors[] = "{$att['host']}:{$att['port']} user=$u db=$d => $err";
-                    break; // skip other host/port combos for these creds
+                    break;
                 }
                 $errors[] = "{$att['host']}:{$att['port']} => $err";
             }
         }
 
-        error_log($label . ' DB Error: ' . implode(' | ', $errors));
+        $msg = $label . ' DB Error: ' . implode(' | ', $errors);
+        error_log($msg);
+        $GLOBALS['isnm_last_db_error'] = $msg;
         return null;
     }
 }

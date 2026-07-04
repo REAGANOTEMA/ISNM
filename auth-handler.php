@@ -57,7 +57,11 @@ function tryHrAuth(string $email, string $password) {
     try {
         $conn = getStaffConnection();
         if (!$conn) {
-            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
+            $errMsg = 'Database unavailable. Please contact the system administrator.';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
         }
         $stmt = $conn->prepare(
             'SELECT id, email, password_hash, full_name, role, status
@@ -109,7 +113,11 @@ function tryBursarAuth(string $email, string $password) {
     try {
         $conn = getStudentsConnection();
         if (!$conn) {
-            return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
+            $errMsg = 'Database unavailable. Please contact the system administrator.';
+            if (defined('APP_DEBUG') && APP_DEBUG && !empty($GLOBALS['isnm_last_db_error'])) {
+                $errMsg .= ' (' . $GLOBALS['isnm_last_db_error'] . ')';
+            }
+            return ['success' => false, 'message' => $errMsg];
         }
         $stmt = $conn->prepare(
             'SELECT id, email, password_hash, full_name, role, status
