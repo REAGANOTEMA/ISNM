@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 
-$ctx = bootstrapStaffDashboard(['sickbay nurse']);
+$ctx = bootstrapStaffDashboard(['sickbay', 'sickbay nurse']);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];

@@ -20,10 +20,17 @@ function renderDynamicSidebar(): void {
         'School Secretary' => 10, 'School Librarian' => 11, 'Storekeeper' => 21,
         'Guild President' => 22, 'Computer Lab Manager' => 23, 'School Bursar' => 24,
         'Director Admissions & Requirements' => 26, 'Director Admissions' => 28,
-        'Head of Nursing' => 29, 'Head of Midwifery' => 30, 'Senior Lecturer' => 31,
-        'Lecturer' => 32, 'Security Officer' => 33, 'Driver' => 34,
-        'Matron' => 35, 'Warden' => 36, 'Sickbay Nurse' => 37,
+        'Head Nursing' => 29, 'Head of Nursing' => 29,
+        'Head Midwifery' => 30, 'Head of Midwifery' => 30,
+        'Senior Lecturers' => 31, 'Senior Lecturer' => 31,
+        'Lecturers' => 32, 'Lecturer' => 32,
+        'Security' => 33, 'Security Officer' => 33,
+        'Drivers' => 34, 'Driver' => 34,
+        'Matrons' => 35, 'Matron' => 35,
+        'Wardens' => 36, 'Warden' => 36,
+        'Sickbay' => 37, 'Sickbay Nurse' => 37,
         'Computer Lab' => 39, 'Skills Lab Technician' => 40, 'Skills Lab Manager' => 41,
+        'Bursar' => 27,
     ];
 
     $roleName = $_SESSION['role'] ?? '';

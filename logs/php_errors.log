@@ -148,3 +148,15 @@ Stack trace:
 [03-Jul-2026 07:43:52 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_students_db database
 [03-Jul-2026 07:43:52 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_website_db database
 [03-Jul-2026 07:43:52 Africa/Kampala] Warning: Failed to connect to igangaschoolofl_ict database
+[03-Jul-2026 09:13:53 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[03-Jul-2026 09:13:53 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[03-Jul-2026 09:13:53 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[03-Jul-2026 09:13:53 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[03-Jul-2026 09:14:54 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[03-Jul-2026 09:14:54 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[03-Jul-2026 09:14:54 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[03-Jul-2026 09:14:54 Africa/Kampala] Successfully connected to igangaschoolofl_ict database
+[03-Jul-2026 09:16:00 Africa/Kampala] Successfully connected to igangaschoolofl_staffs_db database
+[03-Jul-2026 09:16:00 Africa/Kampala] Successfully connected to igangaschoolofl_students_db database
+[03-Jul-2026 09:16:00 Africa/Kampala] Successfully connected to igangaschoolofl_website_db database
+[03-Jul-2026 09:16:00 Africa/Kampala] Successfully connected to igangaschoolofl_ict database

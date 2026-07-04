@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
 require_once __DIR__ . '/../includes/student_set_viewer.php';
 
-$ctx = bootstrapStaffDashboard(['head of nursing']);
+$ctx = bootstrapStaffDashboard(['head nursing', 'head of nursing']);
 $conn = $ctx['staff'];
 $students_conn = $ctx['students'];
 $user = $ctx['user'];
