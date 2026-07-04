@@ -507,6 +507,14 @@
       });
     }
   </script>
+
+<!-- WhatsApp Floating Button -->
+<div id="whatsappFloat" onclick="window.open('https://wa.me/256700451998','_blank')">
+  <i class="fab fa-whatsapp"></i>
+  <span>Chat with us</span>
+</div>
+<style>
+#whatsappFloat{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:50px;padding:14px 18px;cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,0.4);transition:all 0.3s ease;font-family:'Inter','Segoe UI',sans-serif}#whatsappFloat i{font-size:26px}#whatsappFloat span{font-size:14px;font-weight:600;max-width:0;overflow:hidden;white-space:nowrap;transition:max-width 0.3s ease,opacity 0.3s ease;opacity:0}#whatsappFloat:hover{padding:14px 24px;box-shadow:0 6px 28px rgba(37,211,102,0.55)}#whatsappFloat:hover span{max-width:130px;opacity:1;margin-left:4px}#whatsappFloat::before{content:'';position:absolute;inset:0;border-radius:50px;animation:whatsappPulse 2s infinite}@keyframes whatsappPulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,0.5)}70%{box-shadow:0 0 0 14px rgba(37,211,102,0)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0)}}@media(max-width:576px){#whatsappFloat{bottom:16px;right:16px;padding:12px 14px}#whatsappFloat i{font-size:22px}#whatsappFloat span{display:none}}</style>
 </body>
 
 </html>

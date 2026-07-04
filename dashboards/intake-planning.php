@@ -1,7 +1,7 @@
 <?php
 // Redirect to consolidated Director Admissions dashboard
-session_start();
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) { header('Location: ../staff-login.php'); exit; }
+require_once __DIR__ . '/../includes/staff_dashboard_access.php';
+bootstrapStaffDashboard(['admissions', 'director']);
 header('Location: director-admissions.php?page=intake_planning');
 exit;
 

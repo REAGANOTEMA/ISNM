@@ -313,17 +313,18 @@ class AuthenticationService {
             return ['success' => false, 'message' => 'Database unavailable. Please contact the system administrator.'];
 
         if ($this->isStaffAccountLocked($email))
-            return ['success' => false, 'message' => 'Account temporarily locked. Please try again later.'];
+            return ['success' => false, 'message' => 'Invalid email or password'];
 
         // Try with staff_roles JOIN first, fall back to staff-only query if table missing
         $roleName = '';
-        $stmt = @$conn->prepare(
+        $stmt = $conn->prepare(
             "SELECT s.*, sr.role_name FROM staff s
              LEFT JOIN staff_roles sr ON s.role_id = sr.id
              WHERE LOWER(s.email) = ?
              LIMIT 1"
         );
         if (!$stmt) {
+            error_log('authenticateStaff JOIN prepare failed (staff_roles may be missing): ' . $conn->error);
             // staff_roles table likely doesn't exist — query staff table directly
             $stmt = $conn->prepare(
                 "SELECT * FROM staff WHERE LOWER(email) = ? LIMIT 1"
@@ -351,7 +352,10 @@ class AuthenticationService {
         if (!empty($staff['role_name'])) {
             $roleName = $staff['role_name'];
         } else {
-            $roleCheck = @$conn->prepare("SELECT role_name FROM staff_roles WHERE id = ? LIMIT 1");
+            $roleCheck = $conn->prepare("SELECT role_name FROM staff_roles WHERE id = ? LIMIT 1");
+            if (!$roleCheck) {
+                error_log('authenticateStaff roleCheck prepare failed: ' . $conn->error);
+            }
             if ($roleCheck) {
                 $roleCheck->bind_param('i', $staff['role_id']);
                 $roleCheck->execute();
@@ -367,7 +371,7 @@ class AuthenticationService {
         // Check status
         if (strtolower($staff['status']) !== 'active') {
             $this->recordStaffFailedAttempt($email);
-            return ['success' => false, 'message' => 'Account is not active. Please contact the administrator.'];
+            return ['success' => false, 'message' => 'Invalid email or password'];
         }
 
         // Check password - hashed only

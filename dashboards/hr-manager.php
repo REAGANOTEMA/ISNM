@@ -1,143 +1,219 @@
 <?php
+/**
+ * HR Manager Dashboard — Complete 13-Module Interface
+ * Modules: Staff Records, Recruitment, Attendance, Payroll Support,
+ * Performance, Training, Disciplinary, Contracts, Communication,
+ * Reports, RBAC, Self-Service, Integration
+ */
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 require_once __DIR__ . '/../includes/enterprise_auth.php';
-require_once __DIR__ . '/../includes/news_management_widget.php';
+require_once __DIR__ . '/../includes/hr_functions.php';
 
-$ctx          = bootstrapStaffDashboard(['hr manager']);
+$ctx          = bootstrapStaffDashboard(['hr manager', 'hr', 'director general', 'ceo']);
 $auth_service = $ctx['auth'];
 $user         = $ctx['user'];
-$user_role    = $_SESSION['role'] ?? '';
 $staff_conn   = $ctx['staff'];
 $students_conn = $ctx['students'];
 $website_conn  = $ctx['website'];
 $user_id      = (int)($_SESSION['user_id'] ?? 0);
-$user_name    = $_SESSION['full_name'] ?? 'HR Manager';
+$user_role    = $_SESSION['role'] ?? '';
 
-// ── Page routing ──
-$pageToSection = [
-    'home'           => 'overview',
-    'overview'       => 'overview',
-    'staff-directory'=> 'staff',
-    'attendance'     => 'staff',
-    'leave'          => 'leave',
-    'performance'    => 'staff',
-    'training'       => 'staff',
-    'recruitment'    => 'staff',
-    'contracts'      => 'staff',
-    'disciplinary'   => 'staff',
-    'licenses'       => 'staff',
-    'payroll'        => 'staff',
-    'onboarding'     => 'staff',
-];
-$page  = $_GET['page'] ?? 'home';
-$section = $pageToSection[$page] ?? 'overview';
-
-$stats = getDashboardStats($staff_conn, $user_id, 'HR Manager');
-
-// ── Primary counts ──
-$active_staff = 0; $on_leave = 0; $pending_leave = 0; $total_contracts = 0;
-$open_cases = 0; $expiring_licenses = 0; $active_trainings = 0; $open_vacancies = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff WHERE status='Active'"); if ($r) $active_staff = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff WHERE status='On Leave'"); if ($r) $on_leave = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_leave_requests WHERE status='Pending'"); if ($r) $pending_leave = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM employment_contracts WHERE status='active'"); if ($r) $total_contracts = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Open'"); if ($r) $open_cases = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_licenses WHERE status='valid' AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)"); if ($r) $expiring_licenses = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='In Progress'"); if ($r) $active_trainings = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'"); if ($r) $open_vacancies = (int)$r->fetch_assoc()['c'];
-}
-
-// ── Staff list ──
-$staff_list = [];
-if ($staff_conn) {
-    $sl = $staff_conn->query("SELECT s.id,s.staff_id,s.full_name,s.email,s.position,s.department,s.status,s.hire_date,s.employment_type,sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 30");
-    if ($sl) $staff_list = $sl->fetch_all(MYSQLI_ASSOC);
-}
-
-// ── Leave requests ──
-$leave_requests = [];
-if ($staff_conn) {
-    $lr = $staff_conn->query("SELECT slr.*,s.full_name FROM staff_leave_requests slr JOIN staff s ON slr.staff_id=s.id ORDER BY slr.created_at DESC LIMIT 10");
-    if ($lr) $leave_requests = $lr->fetch_all(MYSQLI_ASSOC);
-}
-
-// ── Roles ──
-$roles = [];
-if ($staff_conn) {
-    $rr = $staff_conn->query("SELECT id, role_name FROM staff_roles ORDER BY role_name");
-    if ($rr) $roles = $rr->fetch_all(MYSQLI_ASSOC);
-}
-
-// ── Departments ──
-$departments = [];
-if ($staff_conn) {
-    $dd = $staff_conn->query("SELECT id, department_name FROM staff_departments ORDER BY department_name");
-    if ($dd) $departments = $dd->fetch_all(MYSQLI_ASSOC);
-}
+$page  = $_GET['page'] ?? 'overview';
+$sub   = $_GET['sub'] ?? '';
+$isSuper = $auth_service->hasFullInstitutionAccess($user_role);
 
 // ── Handle POST actions ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
     $action = $_POST['action'] ?? '';
+    $id = (int)($_POST['id'] ?? 0);
+
     if ($action === 'add_staff') {
         $fn = trim($_POST['full_name'] ?? ''); $em = trim($_POST['email'] ?? '');
         $pos = trim($_POST['position'] ?? ''); $dept = trim($_POST['department'] ?? '');
         $rid = (int)($_POST['role_id'] ?? 0); $ph = trim($_POST['phone'] ?? '');
-        $empType = trim($_POST['employment_type'] ?? 'full-time');
-        $empCat = trim($_POST['employment_category'] ?? 'administrative');
-        if ($fn && $em && $staff_conn) {
+        $cat = trim($_POST['staff_category'] ?? 'non-teaching');
+        $gender = trim($_POST['gender'] ?? ''); $qual = trim($_POST['highest_qualification'] ?? '');
+        $nin = trim($_POST['nin'] ?? ''); $exp = (int)($_POST['year_of_experience'] ?? 0);
+        $dob = $_POST['date_of_birth'] ?? '';
+        if ($fn && $em) {
             $sid = 'STAFF'.date('Y').str_pad(mt_rand(1,9999),4,'0',STR_PAD_LEFT);
             $hash = password_hash('isnm2026', PASSWORD_BCRYPT);
-            $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,employment_type,employment_category,status,hire_date,login_attempts,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,'Active',CURDATE(),0,NOW())");
-            if ($stmt) { $stmt->bind_param('sssssssiss',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$empType,$empCat); $stmt->execute(); $_SESSION['success'] = "Staff $fn added."; }
+            $stmt = $staff_conn->prepare("INSERT INTO staff (staff_id,full_name,email,password,phone,position,department,role_id,staff_category,gender,highest_qualification,nin,year_of_experience,date_of_birth,status,hire_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',CURDATE())");
+            if ($stmt) { $stmt->bind_param('sssssssisssssi',$sid,$fn,$em,$hash,$ph,$pos,$dept,$rid,$cat,$gender,$qual,$nin,$exp,$dob); $stmt->execute(); $_SESSION['success'] = "Staff $fn added. Default password: isnm2026"; }
         }
-        header('Location: hr-manager.php'); exit;
+        header('Location: hr-manager.php?page=staff'); exit;
     }
     if ($action === 'edit_staff') {
-        header('Content-Type: application/json');
-        $id = (int)($_POST['id'] ?? 0);
         $fn = trim($_POST['full_name'] ?? ''); $em = trim($_POST['email'] ?? '');
         $pos = trim($_POST['position'] ?? ''); $dept = trim($_POST['department'] ?? '');
         $rid = (int)($_POST['role_id'] ?? 0); $ph = trim($_POST['phone'] ?? '');
         $st = trim($_POST['status'] ?? 'Active');
-        $empType = trim($_POST['employment_type'] ?? 'full-time');
-        $empCat = trim($_POST['employment_category'] ?? 'administrative');
-        $resp = ['success' => false, 'error' => 'Missing fields'];
-        if ($id && $fn && $em && $staff_conn) {
-            $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, department=?, role_id=?, employment_type=?, employment_category=?, status=? WHERE id=?");
-            if ($stmt) {
-                $stmt->bind_param('sssssisssi', $fn, $em, $ph, $pos, $dept, $rid, $empType, $empCat, $st, $id);
-                $resp = ['success' => $stmt->execute(), 'error' => $stmt->error];
-                $stmt->close();
-            }
+        $cat = trim($_POST['staff_category'] ?? 'non-teaching');
+        $gender = trim($_POST['gender'] ?? ''); $qual = trim($_POST['highest_qualification'] ?? '');
+        $nin = trim($_POST['nin'] ?? ''); $exp = (int)($_POST['year_of_experience'] ?? 0);
+        $dob = $_POST['date_of_birth'] ?? '';
+        $resp = ['success' => false, 'error' => 'Invalid data'];
+        if ($id && $fn && $em) {
+            $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?,email=?,phone=?,position=?,department=?,role_id=?,status=?,staff_category=?,gender=?,highest_qualification=?,nin=?,year_of_experience=?,date_of_birth=? WHERE id=?");
+            if ($stmt) { $stmt->bind_param('sssssissssssi',$fn,$em,$ph,$pos,$dept,$rid,$st,$cat,$gender,$qual,$nin,$exp,$dob,$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); }
         }
-        echo json_encode($resp); exit;
+        header('Content-Type: application/json'); echo json_encode($resp); exit;
     }
     if ($action === 'delete_staff') {
-        header('Content-Type: application/json');
-        $id = (int)($_POST['id'] ?? 0);
-        $resp = ['success' => false, 'error' => 'Invalid ID'];
-        if ($id && $staff_conn) {
-            $stmt = $staff_conn->prepare("DELETE FROM staff WHERE id=?");
-            if ($stmt) {
-                $stmt->bind_param('i', $id);
-                $resp = ['success' => $stmt->execute(), 'error' => $stmt->error];
-                $stmt->close();
-            }
-        }
-        echo json_encode($resp); exit;
+        $resp = ['success' => false, 'error' => 'Invalid'];
+        if ($id && $staff_conn) { $stmt = $staff_conn->prepare("DELETE FROM staff WHERE id=?"); if ($stmt) { $stmt->bind_param('i',$id); $resp = ['success'=>$stmt->execute(),'error'=>$stmt->error]; $stmt->close(); } }
+        header('Content-Type: application/json'); echo json_encode($resp); exit;
     }
-    if (in_array($action, ['approve_leave','reject_leave'])) {
+    if ($action === 'approve_leave' || $action === 'reject_leave') {
         $lid = (int)($_POST['leave_id'] ?? 0);
-        $status = ($action === 'approve_leave') ? 'Approved' : 'Rejected';
-        if ($staff_conn && $lid) {
-            $stmt = $staff_conn->prepare("UPDATE staff_leave_requests SET status=?, approved_by=?, approval_date=NOW() WHERE id=?");
-            if ($stmt) { $stmt->bind_param('sii',$status,$user_id,$lid); $stmt->execute(); }
-            $_SESSION['success'] = "Leave $status.";
+        $status = $action === 'approve_leave' ? 'approved' : 'rejected';
+        if ($lid && $staff_conn) { $stmt = $staff_conn->prepare("UPDATE leave_requests SET status=?, reviewed_by=?, updated_at=NOW() WHERE id=?"); if ($stmt) { $stmt->bind_param('sii',$status,$user_id,$lid); $stmt->execute(); } $_SESSION['success'] = "Leave $status."; }
+        header('Location: hr-manager.php?page=attendance#leave'); exit;
+    }
+    if ($action === 'post_vacancy') {
+        $title = trim($_POST['title'] ?? ''); $dept = trim($_POST['department'] ?? '');
+        $desc = trim($_POST['description'] ?? ''); $req = trim($_POST['requirements'] ?? '');
+        $salary = trim($_POST['salary_range'] ?? ''); $close = $_POST['closing_date'] ?? '';
+        if ($title && $staff_conn) { $stmt = $staff_conn->prepare("INSERT INTO job_vacancies (title,department_id,description,requirements,salary_range,status,posted_date,closing_date) VALUES (?,?,?,?,?,'open',CURDATE(),?)"); if ($stmt) { $stmt->bind_param('sissss',$title,$dept,$desc,$req,$salary,$close); $stmt->execute(); $_SESSION['success'] = 'Vacancy posted.'; } }
+        header('Location: hr-manager.php?page=recruitment'); exit;
+    }
+    if ($action === 'shortlist') {
+        $appId = (int)($_POST['application_id'] ?? 0);
+        if ($appId && $staff_conn) { $st=$staff_conn->prepare("UPDATE job_applications SET application_status='shortlisted' WHERE id=?"); if($st){$st->bind_param('i',$appId);$st->execute();$st->close();$_SESSION['success']='Applicant shortlisted.';} }
+        header('Location: hr-manager.php?page=recruitment'); exit;
+    }
+    if ($action === 'record_attendance') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $date = $_POST['date'] ?? date('Y-m-d');
+        $status = trim($_POST['attendance_status'] ?? 'present');
+        if ($sid && $staff_conn) {
+            $ck=$staff_conn->prepare("SELECT id FROM staff_attendance WHERE staff_id=? AND date=?");
+            if($ck){$ck->bind_param('is',$sid,$date);$ck->execute();$exists=$ck->get_result()->num_rows>0;$ck->close();}
+            if(!empty($exists)){
+                $st=$staff_conn->prepare("UPDATE staff_attendance SET status=?, recorded_by=? WHERE staff_id=? AND date=?");
+                if($st){$st->bind_param('siis',$status,$user_id,$sid,$date);$st->execute();$st->close();}
+            } else {
+                $st=$staff_conn->prepare("INSERT INTO staff_attendance (staff_id,date,status,recorded_by) VALUES (?,?,?,?)");
+                if($st){$st->bind_param('issi',$sid,$date,$status,$user_id);$st->execute();$st->close();}
+            }
+            $_SESSION['success'] = 'Attendance recorded.';
         }
-        header('Location: hr-manager.php#leave'); exit;
+        header('Location: hr-manager.php?page=attendance'); exit;
+    }
+    if ($action === 'send_announcement') {
+        $title = trim($_POST['title'] ?? ''); $msg = trim($_POST['message'] ?? '');
+        $priority = trim($_POST['priority'] ?? 'normal');
+        if ($title && $msg && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO hr_announcements (title,content,priority,created_by) VALUES (?,?,?,?)");
+            if ($stmt) { $stmt->bind_param('sssi',$title,$msg,$priority,$user_id); $stmt->execute(); $_SESSION['success'] = 'Announcement sent.'; }
+        }
+        header('Location: hr-manager.php?page=communications'); exit;
+    }
+    if ($action === 'add_disciplinary') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $offense = trim($_POST['offense_type'] ?? '');
+        $desc = trim($_POST['description'] ?? ''); $actionTaken = trim($_POST['action_taken'] ?? '');
+        $incidentDate = $_POST['incident_date'] ?? date('Y-m-d');
+        if ($sid && $offense && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO staff_disciplinary (staff_id,incident_date,offense_type,description,action_taken,status,reported_by) VALUES (?,?,?,?,?,'open',?)");
+            if ($stmt) { $stmt->bind_param('issssi',$sid,$incidentDate,$offense,$desc,$actionTaken,$user_id); $stmt->execute(); $_SESSION['success'] = 'Disciplinary case opened.'; }
+        }
+        header('Location: hr-manager.php?page=disciplinary'); exit;
+    }
+    if ($action === 'close_case') {
+        $cid = (int)($_POST['case_id'] ?? 0); $resolution = trim($_POST['resolution'] ?? '');
+        if ($cid && $staff_conn) { $st=$staff_conn->prepare("UPDATE staff_disciplinary SET status='resolved', action_taken=CONCAT(action_taken,?) WHERE id=?"); if($st){$res=' | Resolution: '.$resolution;$st->bind_param('si',$res,$cid);$st->execute();$st->close();$_SESSION['success']='Case closed.';} }
+        header('Location: hr-manager.php?page=disciplinary'); exit;
+    }
+    if ($action === 'add_training') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $tname = trim($_POST['training_name'] ?? '');
+        $provider = trim($_POST['provider'] ?? ''); $start = $_POST['start_date'] ?? '';
+        $end = $_POST['end_date'] ?? ''; $type = trim($_POST['training_type'] ?? 'workshop');
+        if ($sid && $tname && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO staff_training (staff_id,training_name,training_type,provider,start_date,end_date,status) VALUES (?,?,?,?,?,?,'scheduled')");
+            if ($stmt) { $stmt->bind_param('isssss', $sid, $tname, $type, $provider, $start, $end); $stmt->execute(); $_SESSION['success'] = 'Training added.'; }
+        }
+        header('Location: hr-manager.php?page=training'); exit;
+    }
+    if ($action === 'add_appraisal') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $period = trim($_POST['review_period'] ?? '');
+        $score = (float)($_POST['overall_score'] ?? 0); $comments = trim($_POST['comments'] ?? '');
+        if ($sid && $period && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO performance_reviews (staff_id,reviewer_id,review_period,overall_score,comments,status) VALUES (?,?,?,?,?,'completed')");
+            if ($stmt) { $stmt->bind_param('iisd', $sid, $user_id, $period, $score, $comments); $stmt->execute(); $_SESSION['success'] = 'Appraisal recorded.'; }
+        }
+        header('Location: hr-manager.php?page=performance'); exit;
+    }
+    if ($action === 'add_contract') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $ctype = trim($_POST['contract_type'] ?? 'contract');
+        $start = $_POST['start_date'] ?? ''; $end = $_POST['end_date'] ?? '';
+        $salary = (float)($_POST['salary'] ?? 0); $terms = trim($_POST['terms'] ?? '');
+        if ($sid && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO employment_contracts (staff_id,contract_type,start_date,end_date,salary,terms,status) VALUES (?,?,?,?,?,?,'active')");
+            if ($stmt) { $stmt->bind_param('issids', $sid, $ctype, $start, $end, $salary, $terms); $stmt->execute(); $_SESSION['success'] = 'Contract created.'; }
+        }
+        header('Location: hr-manager.php?page=contracts'); exit;
+    }
+    if ($action === 'get_staff') {
+        header('Content-Type: application/json');
+        $sid = (int)($_POST['id'] ?? 0);
+        $s = hrGetStaff($staff_conn, $sid);
+        echo json_encode($s ?: ['error' => 'Staff not found']);
+        exit;
+    }
+    if ($action === 'add_license') {
+        $sid = (int)($_POST['staff_id'] ?? 0); $ltype = trim($_POST['license_type'] ?? '');
+        $lnum = trim($_POST['license_number'] ?? ''); $body = trim($_POST['issuing_body'] ?? '');
+        $expiry = $_POST['expiry_date'] ?? '';
+        if ($sid && $ltype && $staff_conn) {
+            $stmt = $staff_conn->prepare("INSERT INTO staff_licenses (staff_id,license_type,license_number,issuing_body,issue_date,expiry_date,status) VALUES (?,?,?,?,CURDATE(),?,'valid')");
+            if ($stmt) { $stmt->bind_param('issss', $sid, $ltype, $lnum, $body, $expiry); $stmt->execute(); $_SESSION['success'] = 'License recorded.'; }
+        }
+        header('Location: hr-manager.php?page=compliance'); exit;
     }
 }
+
+// ── Data fetching ──
+$stats = hrGetStats($staff_conn);
+$staffList = []; $roles = []; $departments = []; $leaveReqs = []; $leaveTypes = [];
+$vacancies = []; $applications = []; $attendanceToday = []; $disciplinaryCases = [];
+$trainingRecords = []; $appraisals = []; $contracts = []; $licenses = [];
+$announcements = []; $onboardingItems = []; $promotions = [];
+
+if ($staff_conn) {
+    $rr = $staff_conn->query("SELECT id, role_name FROM staff_roles ORDER BY role_name");
+    if ($rr) $roles = $rr->fetch_all(MYSQLI_ASSOC);
+    $dd = $staff_conn->query("SELECT id, name, code FROM departments ORDER BY name");
+    if ($dd) $departments = $dd->fetch_all(MYSQLI_ASSOC);
+
+    $sl = $staff_conn->query("SELECT s.*, sr.role_name FROM staff s LEFT JOIN staff_roles sr ON s.role_id=sr.id ORDER BY s.full_name LIMIT 200");
+    if ($sl) $staffList = $sl->fetch_all(MYSQLI_ASSOC);
+    $lr = $staff_conn->query("SELECT lr.*, lt.type_name, s.full_name FROM leave_requests lr JOIN leave_types lt ON lr.leave_type_id=lt.id JOIN staff s ON lr.staff_id=s.id ORDER BY lr.created_at DESC LIMIT 50");
+    if ($lr) $leaveReqs = $lr->fetch_all(MYSQLI_ASSOC);
+    $lt = $staff_conn->query("SELECT * FROM leave_types ORDER BY leave_type_name");
+    if ($lt) $leaveTypes = $lt->fetch_all(MYSQLI_ASSOC);
+    $jv = $staff_conn->query("SELECT jv.*, d.name as dept_name FROM job_vacancies jv LEFT JOIN departments d ON jv.department_id=d.id ORDER BY jv.posted_date DESC LIMIT 30");
+    if ($jv) $vacancies = $jv->fetch_all(MYSQLI_ASSOC);
+    $ja = $staff_conn->query("SELECT ja.*, jv.title as vacancy_title FROM job_applications ja JOIN job_vacancies jv ON ja.position_id=jv.id ORDER BY ja.created_at DESC LIMIT 50");
+    if ($ja) $applications = $ja->fetch_all(MYSQLI_ASSOC);
+    $at = $staff_conn->query("SELECT sa.*, s.full_name FROM staff_attendance sa JOIN staff s ON sa.staff_id=s.id WHERE sa.date=CURDATE() ORDER BY s.full_name");
+    if ($at) $attendanceToday = $at->fetch_all(MYSQLI_ASSOC);
+    $dc = $staff_conn->query("SELECT sd.*, s.full_name FROM staff_disciplinary sd JOIN staff s ON sd.staff_id=s.id ORDER BY sd.created_at DESC LIMIT 30");
+    if ($dc) $disciplinaryCases = $dc->fetch_all(MYSQLI_ASSOC);
+    $tr = $staff_conn->query("SELECT st.*, s.full_name FROM staff_training st JOIN staff s ON st.staff_id=s.id ORDER BY st.start_date DESC LIMIT 30");
+    if ($tr) $trainingRecords = $tr->fetch_all(MYSQLI_ASSOC);
+    $pr = $staff_conn->query("SELECT p.*, s.full_name FROM performance_reviews p JOIN staff s ON p.staff_id=s.id ORDER BY p.created_at DESC LIMIT 30");
+    if ($pr) $appraisals = $pr->fetch_all(MYSQLI_ASSOC);
+    $ct = $staff_conn->query("SELECT ec.*, s.full_name FROM employment_contracts ec JOIN staff s ON ec.staff_id=s.id ORDER BY ec.start_date DESC LIMIT 30");
+    if ($ct) $contracts = $ct->fetch_all(MYSQLI_ASSOC);
+    $lc = $staff_conn->query("SELECT sl.*, s.full_name FROM staff_licenses sl JOIN staff s ON sl.staff_id=s.id ORDER BY sl.expiry_date ASC LIMIT 30");
+    if ($lc) $licenses = $lc->fetch_all(MYSQLI_ASSOC);
+    $an = $staff_conn->query("SELECT * FROM hr_announcements ORDER BY created_at DESC LIMIT 20");
+    if ($an) $announcements = $an->fetch_all(MYSQLI_ASSOC);
+    $ob = $staff_conn->query("SELECT * FROM onboarding_checklist ORDER BY item_name");
+    if ($ob) $onboardingItems = $ob->fetch_all(MYSQLI_ASSOC);
+    $pm = $staff_conn->query("SELECT pr.*, s.full_name FROM promotion_recommendations pr JOIN staff s ON pr.staff_id=s.id ORDER BY pr.created_at DESC LIMIT 20");
+    if ($pm) $promotions = $pm->fetch_all(MYSQLI_ASSOC);
+}
+
 $pageTitle = 'HR Manager';
 ?>
 <!DOCTYPE html>
@@ -145,824 +221,383 @@ $pageTitle = 'HR Manager';
 <head>
 <?php include_once __DIR__ . '/../includes/dashboard_head.php'; ?>
 <style>
-:root { --hr-primary: #dc2626; --hr-dark: #991b1b; }
-
-.hr-content{margin-left:270px;padding:24px;min-height:100vh}
-.hr-section { display: none; }
-.hr-section.active { display: block; }
-.kpi-card { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #e5e7eb; border-left: 4px solid var(--hr-primary); transition: all .2s; }
-.kpi-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-.kpi-card .num { font-size: 1.5rem; font-weight: 700; color: var(--hr-primary); margin: 0; }
-.kpi-card .lbl { font-size: 12px; color: #6b7280; margin: 0; }
-.form-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; }
-.form-card .hd { background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #e5e7eb; border-radius: 12px 12px 0 0; font-weight: 600; color: var(--hr-dark); font-size: 14px; }
-.form-card .bd { padding: 18px; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.data-table th { background: #f8fafc; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; padding: 10px 12px; border-bottom: 2px solid #e2e8f0; }
-.data-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
-.badge-hr { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-.bg-hr-success { background: #dcfce7; color: #166534; }
-.bg-hr-warning { background: #fef3c7; color: #92400e; }
-.bg-hr-danger { background: #fee2e2; color: #991b1b; }
-.bg-hr-info { background: #dbeafe; color: #1e40af; }
-@media(max-width:768px){.hr-content{margin-left:0!important;padding:12px!important}}
+:root{--hr-primary:#dc2626;--hr-dark:#991b1b}
+.hr-content{margin-left:270px;padding:24px;min-height:100vh;background:#f8fafc}
+.hr-header{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;padding:20px 28px;border-radius:14px;margin-bottom:20px}
+.hr-header h1{margin:0;font-size:22px}
+.hr-header p{margin:2px 0 0;opacity:.85;font-size:13px}
+.hr-tabs{display:flex;gap:3px;margin-bottom:20px;background:#fff;padding:6px;border-radius:10px;flex-wrap:wrap;border:1px solid #e2e8f0}
+.hr-tabs a{padding:7px 14px;border-radius:7px;color:#475569;text-decoration:none;font-size:12px;font-weight:500;transition:.2s;white-space:nowrap}
+.hr-tabs a:hover,.hr-tabs a.active{background:#dc2626;color:#fff}
+.hr-card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:18px;margin-bottom:16px}
+.hr-card h3{margin:0 0 14px;font-size:15px;font-weight:600;color:#1e293b;border-bottom:2px solid #fee2e2;padding-bottom:10px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-item{background:#fff;border-radius:10px;padding:16px;border:1px solid #e2e8f0;text-align:center}
+.stat-item .num{font-size:26px;font-weight:700;color:#dc2626}
+.stat-item .lbl{font-size:11px;color:#64748b;margin-top:2px}
+.stat-item .mini{font-size:10px;color:#94a3b8}
+.modal-lg-custom{max-width:800px}
+@media(max-width:768px){.hr-content{margin-left:0;padding:14px}.hr-tabs a{padding:5px 10px;font-size:11px}}
 </style>
 </head>
-<body class="ent-layout">
+<body>
 <?php include_once __DIR__ . '/../includes/sidebar.php'; ?>
-<?php include_once __DIR__ . '/../includes/dashboard_topbar.php'; ?>
-
-
-
 <div class="hr-content">
-    <?php if ($msg = $_SESSION['success'] ?? ''): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($msg) ?></div><?php unset($_SESSION['success']); endif; ?>
-    <?php if ($err = $_SESSION['error'] ?? ''): ?><div class="alert alert-danger py-2 small"><?= htmlspecialchars($err) ?></div><?php unset($_SESSION['error']); endif; ?>
+<?php if (isset($_SESSION['success'])): ?><div class="alert alert-success alert-dismissible"><?=htmlspecialchars($_SESSION['success'])?><button class="btn-close" data-bs-dismiss="alert"></button></div><?php unset($_SESSION['success']); endif; ?>
 
-    <!-- ═══════════════ SECTION: OVERVIEW ═══════════════ -->
-    <div class="hr-section<?= $section==='overview'?' active':'' ?>" id="section-overview">
-        <div class="row g-3 mb-4">
-            <div class="col-md-3 col-6"><div class="kpi-card"><p class="num"><?= $active_staff ?></p><p class="lbl">Active Staff</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#f59e0b"><p class="num" style="color:#f59e0b"><?= $on_leave ?></p><p class="lbl">On Leave</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#3b82f6"><p class="num" style="color:#3b82f6"><?= $pending_leave ?></p><p class="lbl">Pending Leave</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#8b5cf6"><p class="num" style="color:#8b5cf6"><?= $open_cases ?></p><p class="lbl">Disciplinary Cases</p></div></div>
-        </div>
-        <div class="row g-3 mb-4">
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#059669"><p class="num" style="color:#059669"><?= $total_contracts ?></p><p class="lbl">Active Contracts</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#dc2626"><p class="num" style="color:#dc2626"><?= $expiring_licenses ?></p><p class="lbl">Licenses Expiring</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#0891b2"><p class="num" style="color:#0891b2"><?= $active_trainings ?></p><p class="lbl">Active Trainings</p></div></div>
-            <div class="col-md-3 col-6"><div class="kpi-card" style="border-left-color:#7c3aed"><p class="num" style="color:#7c3aed"><?= $open_vacancies ?></p><p class="lbl">Open Positions</p></div></div>
-        </div>
+<div class="hr-header"><h1>Human Resources Management</h1><p><?=htmlspecialchars($user['full_name'] ?? 'HR Manager')?> &middot; <?=htmlspecialchars($user_role)?></p></div>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-bolt me-2"></i>Quick Actions</div>
-                    <div class="bd">
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal"><i class="fas fa-user-plus me-1"></i>Add Staff</button>
-                            <a href="staff-directory.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-address-book me-1"></i>Directory</a>
-                            <a href="leave-management.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-calendar-alt me-1"></i>Leave</a>
-                            <a href="staff-attendance.php" class="btn btn-sm btn-outline-success"><i class="fas fa-clock me-1"></i>Attendance</a>
-                            <a href="performance-appraisal.php" class="btn btn-sm btn-outline-info"><i class="fas fa-chart-line me-1"></i>Appraisals</a>
-                            <a href="training-cpd.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-graduation-cap me-1"></i>Training</a>
-                            <a href="recruitment.php" class="btn btn-sm btn-outline-dark"><i class="fas fa-briefcase me-1"></i>Recruit</a>
-                            <a href="contracts-management.php" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-contract me-1"></i>Contracts</a>
-                            <a href="professional-licenses.php" class="btn btn-sm btn-outline-warning"><i class="fas fa-certificate me-1"></i>Licenses</a>
-                            <a href="duty-rosters.php" class="btn btn-sm btn-outline-info"><i class="fas fa-calendar-week me-1"></i>Rosters</a>
-                            <a href="onboarding.php" class="btn btn-sm btn-outline-success"><i class="fas fa-user-check me-1"></i>Onboarding</a>
-                            <a href="payroll.php" class="btn btn-sm btn-outline-primary"><i class="fas fa-money-check-alt me-1"></i>Payroll</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-history me-2"></i>Staff at a Glance</div>
-                    <div class="bd p-0">
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead><tr><th>Staff ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead>
-                                <tbody>
-<?php foreach ($staff_list as $s): $bc = $s['status']==='Active'?'bg-hr-success':($s['status']==='On Leave'?'bg-hr-warning':'bg-hr-danger'); ?>
-                                <tr>
-                                    <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-                                    <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
-                                    <td class="small"><?= htmlspecialchars($s['role_name'] ?? $s['position']) ?></td>
-                                    <td class="small"><?= htmlspecialchars($s['department'] ?? '-') ?></td>
-                                    <td><span class="badge-hr <?= $bc ?>"><?= $s['status'] ?></span></td>
-                                </tr>
-<?php endforeach; if (empty($staff_list)): ?><tr><td colspan="5" class="text-center text-muted py-3">No staff records.</td></tr><?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<nav class="hr-tabs">
+  <a href="hr-manager.php" class="<?=$page==='overview'?'active':''?>">Overview</a>
+  <a href="hr-manager.php?page=staff" class="<?=$page==='staff'?'active':''?>">Staff Records</a>
+  <a href="hr-manager.php?page=recruitment" class="<?=$page==='recruitment'?'active':''?>">Recruitment</a>
+  <a href="hr-manager.php?page=attendance" class="<?=$page==='attendance'?'active':''?>">Attendance</a>
+  <a href="hr-manager.php?page=payroll" class="<?=$page==='payroll'?'active':''?>">Payroll</a>
+  <a href="hr-manager.php?page=performance" class="<?=$page==='performance'?'active':''?>">Performance</a>
+  <a href="hr-manager.php?page=training" class="<?=$page==='training'?'active':''?>">Training</a>
+  <a href="hr-manager.php?page=disciplinary" class="<?=$page==='disciplinary'?'active':''?>">Disciplinary</a>
+  <a href="hr-manager.php?page=contracts" class="<?=$page==='contracts'?'active':''?>">Contracts</a>
+  <a href="hr-manager.php?page=communications" class="<?=$page==='communications'?'active':''?>">Comms</a>
+  <a href="hr-manager.php?page=reports" class="<?=$page==='reports'?'active':''?>">Reports</a>
+</nav>
 
-    <!-- ═══════════════ SECTION: STAFF RECORDS ═══════════════ -->
-    <div class="hr-section" id="section-staff">
-        <div class="row g-3">
-            <div class="col-md-8">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-id-card me-2"></i>Staff Records</div>
-                    <div class="bd p-0">
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Type</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
-                                <tbody>
-<?php foreach ($staff_list as $s): ?>
-                                <tr>
-                                    <td><code><?= htmlspecialchars($s['staff_id']) ?></code></td>
-                                    <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>"><strong><?= htmlspecialchars($s['full_name']) ?></strong></a></td>
-                                    <td class="small"><?= htmlspecialchars($s['position']) ?></td>
-                                    <td><span class="badge-hr bg-hr-info"><?= htmlspecialchars($s['employment_type'] ?? 'N/A') ?></span></td>
-                                    <td class="small"><?= htmlspecialchars($s['employment_category'] ?? '-') ?></td>
-                                    <td><span class="badge-hr <?= $s['status']==='Active'?'bg-hr-success':'bg-hr-warning' ?>"><?= $s['status'] ?></span></td>
-                                    <td>
-                                        <a href="staff_profile_management.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
-                                        <button class="btn btn-sm btn-outline-warning" title="Edit" onclick="editStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['email'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['phone'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['position'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['department'] ?? '', ENT_QUOTES) ?>', <?= (int)($s['role_id'] ?? 0) ?>, '<?= htmlspecialchars($s['employment_type'] ?? 'full-time', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['employment_category'] ?? 'administrative', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['status'] ?? 'Active', ENT_QUOTES) ?>')"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>')"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-<?php endforeach; if (empty($staff_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No records.</td></tr><?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-user-tag me-2"></i>Roles & Departments</div>
-                    <div class="bd">
-                        <p><strong>Total Roles:</strong> <?= count($roles) ?></p>
-                        <p><strong>Total Departments:</strong> <?= count($departments) ?></p>
-                        <a href="staff-directory.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-address-book me-1"></i>Manage Roles & Departments</a>
-                    </div>
-                </div>
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-file-contract me-2"></i>Contracts</div>
-                    <div class="bd">
-                        <p><strong>Active Contracts:</strong> <?= $total_contracts ?></p>
-                        <a href="contracts-management.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-file-signature me-1"></i>Manage Contracts</a>
-                    </div>
-                </div>
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-upload me-2"></i>Documents</div>
-                    <div class="bd">
-                        <a href="staff_profile_management.php" class="btn btn-sm btn-outline-info w-100"><i class="fas fa-file-upload me-1"></i>Upload Documents</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: ATTENDANCE ═══════════════ -->
-    <div class="hr-section" id="section-attendance">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-clock me-2"></i>Today's Attendance</div>
-                    <div class="bd">
-<?php
-$todayPresent = 0; $todayLate = 0; $todayAbsent = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE() AND status='Present'"); if ($r) $todayPresent = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE() AND status='Late'"); if ($r) $todayLate = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_attendance WHERE attendance_date=CURDATE() AND status='Absent'"); if ($r) $todayAbsent = (int)$r->fetch_assoc()['c'];
-}
-?>
-                        <div class="row g-2 text-center">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $todayPresent ?></div><small>Present</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-warning"><?= $todayLate ?></div><small>Late</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-danger"><?= $todayAbsent ?></div><small>Absent</small></div></div>
-                        </div>
-                        <a href="staff-attendance.php" class="btn btn-sm btn-outline-primary mt-3 w-100"><i class="fas fa-calendar-check me-1"></i>Full Attendance Dashboard</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-calendar-week me-2"></i>Shift Scheduling</div>
-                    <div class="bd">
-                        <a href="duty-rosters.php" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-calendar-alt me-1"></i>Duty Rosters & Shifts</a>
-                        <a href="clinical-placement.php" class="btn btn-sm btn-outline-info w-100"><i class="fas fa-clinic-medical me-1"></i>Clinical Placements</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: LEAVE ═══════════════ -->
-    <div class="hr-section" id="section-leave">
-        <div class="row g-3">
-            <div class="col-md-8">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-calendar-alt me-2"></i>Leave Requests</div>
-                    <div class="bd p-0">
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead><tr><th>Staff</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead>
-                                <tbody>
-<?php foreach ($leave_requests as $lr): $bc = $lr['status']==='Approved'?'bg-hr-success':($lr['status']==='Rejected'?'bg-hr-danger':'bg-hr-warning'); ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($lr['full_name']) ?></td>
-                                    <td><?= htmlspecialchars($lr['leave_type']) ?></td>
-                                    <td class="small"><?= $lr['start_date'] ?></td>
-                                    <td class="small"><?= $lr['end_date'] ?></td>
-                                    <td><?= $lr['total_days'] ?></td>
-                                    <td><span class="badge-hr <?= $bc ?>"><?= $lr['status'] ?></span></td>
-                                    <td>
-<?php if ($lr['status']==='Pending'): ?>
-                                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></button></form>
-                                        <form method="POST" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?= $lr['id'] ?>"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button></form>
-<?php else: ?><span class="text-muted small">Processed</span><?php endif; ?>
-                                    </td>
-                                </tr>
-<?php endforeach; if (empty($leave_requests)): ?><tr><td colspan="7" class="text-center text-muted py-3">No leave requests.</td></tr><?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-cog me-2"></i>Leave Management</div>
-                    <div class="bd">
-                        <a href="leave-management.php" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-calendar-alt me-1"></i>Full Leave Dashboard</a>
-                        <a href="leave-management.php#calendar" class="btn btn-sm btn-outline-info w-100 mb-2"><i class="fas fa-calendar me-1"></i>Leave Calendar</a>
-                        <a href="leave-management.php#balances" class="btn btn-sm btn-outline-success w-100"><i class="fas fa-balance-scale me-1"></i>Leave Balances</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: PERFORMANCE ═══════════════ -->
-    <div class="hr-section" id="section-performance">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-chart-line me-2"></i>Appraisals</div>
-                    <div class="bd">
-<?php $pendingApps = 0; $completedApps = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Pending'"); if ($r) $pendingApps = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_appraisals WHERE status='Completed'"); if ($r) $completedApps = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-6"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-warning"><?= $pendingApps ?></div><small>Pending</small></div></div>
-                            <div class="col-6"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $completedApps ?></div><small>Completed</small></div></div>
-                        </div>
-                        <a href="performance-appraisal.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-clipboard-check me-1"></i>Manage Appraisals</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-chart-bar me-2"></i>Evaluation & KPIs</div>
-                    <div class="bd">
-                        <a href="performance-appraisal.php#evaluations" class="btn btn-sm btn-outline-info w-100 mb-2"><i class="fas fa-user-check me-1"></i>Lecturer Evaluations</a>
-                        <a href="clinical-placement.php#supervision" class="btn btn-sm btn-outline-success w-100 mb-2"><i class="fas fa-clinic-medical me-1"></i>Clinical Supervision</a>
-                        <a href="quality-assurance.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-check-circle me-1"></i>Quality Assurance</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: TRAINING & CPD ═══════════════ -->
-    <div class="hr-section" id="section-training">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-graduation-cap me-2"></i>Training & CPD Overview</div>
-                    <div class="bd">
-<?php $totalTraining = 0; $completedTraining = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_training"); if ($r) $totalTraining = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_training WHERE status='Completed'"); if ($r) $completedTraining = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $totalTraining ?></div><small>Total</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $completedTraining ?></div><small>Completed</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-warning"><?= $active_trainings ?></div><small>In Progress</small></div></div>
-                        </div>
-                        <a href="training-cpd.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-graduation-cap me-1"></i>Full Training Dashboard</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-certificate me-2"></i>Mandatory Training & Certificates</div>
-                    <div class="bd">
-                        <p class="small text-muted">Track mandatory trainings: infection control, ethics, fire safety, BLS/ACLS</p>
-                        <a href="training-cpd.php#certificates" class="btn btn-sm btn-outline-warning w-100 mb-2"><i class="fas fa-certificate me-1"></i>Certificate Management</a>
-                        <a href="training-cpd.php#mandatory" class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-exclamation-triangle me-1"></i>Mandatory Training</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: RECRUITMENT ═══════════════ -->
-    <div class="hr-section" id="section-recruitment">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-briefcase me-2"></i>Recruitment Pipeline</div>
-                    <div class="bd">
-<?php $applicants = 0; $shortlisted = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_recruitment WHERE status='Open'"); if ($r) $openVacancies = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM job_applications"); if ($r) $applicants = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM job_applications WHERE status='Shortlisted'"); if ($r) $shortlisted = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $open_vacancies ?></div><small>Open Positions</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $applicants ?></div><small>Applicants</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $shortlisted ?></div><small>Shortlisted</small></div></div>
-                        </div>
-                        <a href="recruitment.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-briefcase me-1"></i>Manage Recruitment</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-user-check me-2"></i>Onboarding</div>
-                    <div class="bd">
-                        <a href="onboarding.php" class="btn btn-sm btn-outline-success w-100 mb-2"><i class="fas fa-clipboard-list me-1"></i>Onboarding Checklist</a>
-                        <a href="resignations.php" class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-sign-out-alt me-1"></i>Resignations & Exit</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: PAYROLL (HR VIEW) ═══════════════ -->
-    <div class="hr-section" id="section-payroll">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-wallet me-2"></i>Salary Structure</div>
-                    <div class="bd">
-                        <p class="small text-muted">HR view of salary structures and staff compensation.</p>
-                        <a href="../payroll.php?section=employees" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-users me-1"></i>Payroll Employee Profiles</a>
-                        <a href="../payroll.php?section=allowances" class="btn btn-sm btn-outline-success w-100 mb-2"><i class="fas fa-plus-circle me-1"></i>Allowances</a>
-                        <a href="../payroll.php?section=deductions" class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-minus-circle me-1"></i>Deductions</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-file-invoice me-2"></i>Payslips</div>
-                    <div class="bd">
-                        <a href="../payroll.php?section=payslips" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-file-invoice me-1"></i>View Payslips</a>
-                        <a href="../payroll.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-calculator me-1"></i>Payroll Processing</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-history me-2"></i>Payroll History</div>
-                    <div class="bd">
-                        <a href="../payroll.php?section=processing" class="btn btn-sm btn-outline-info w-100"><i class="fas fa-cogs me-1"></i>Payroll Runs</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: DISCIPLINARY ═══════════════ -->
-    <div class="hr-section" id="section-disciplinary">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-gavel me-2"></i>Disciplinary Cases</div>
-                    <div class="bd">
-<?php $underInvestigation = 0; $resolvedCases = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Under Investigation'"); if ($r) $underInvestigation = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_disciplinary WHERE status='Resolved'"); if ($r) $resolvedCases = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-danger"><?= $open_cases ?></div><small>Open</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $underInvestigation ?></div><small>Investigating</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $resolvedCases ?></div><small>Resolved</small></div></div>
-                        </div>
-                        <a href="staff-disciplinary.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-balance-scale me-1"></i>Manage Disciplinary Cases</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-file-alt me-2"></i>Investigation & Sanctions</div>
-                    <div class="bd">
-                        <p class="small text-muted">Track incidents, investigations, and sanctions including warnings, suspensions, and terminations.</p>
-                        <a href="staff-disciplinary.php#incidents" class="btn btn-sm btn-outline-warning w-100"><i class="fas fa-exclamation-triangle me-1"></i>Incident Reports</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: LICENSING & COMPLIANCE ═══════════════ -->
-    <div class="hr-section" id="section-licensing">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-certificate me-2"></i>Professional Licenses</div>
-                    <div class="bd">
-<?php $validLicenses = 0; $expiredLicenses = 0; $totalLicenses = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_licenses WHERE status='valid'"); if ($r) $validLicenses = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_licenses WHERE status='expired'"); if ($r) $expiredLicenses = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff_licenses"); if ($r) $totalLicenses = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-3"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $validLicenses ?></div><small>Valid</small></div></div>
-                            <div class="col-3"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-danger"><?= $expiredLicenses ?></div><small>Expired</small></div></div>
-                            <div class="col-3"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-warning"><?= $expiring_licenses ?></div><small>Expiring Soon</small></div></div>
-                            <div class="col-3"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $totalLicenses ?></div><small>Total</small></div></div>
-                        </div>
-
-<?php if ($expiring_licenses > 0): ?>
-                        <div class="alert alert-warning py-2 small"><i class="fas fa-exclamation-triangle me-1"></i><?= $expiring_licenses ?> license(s) expiring within 30 days. <a href="professional-licenses.php" class="alert-link">View</a></div>
-<?php endif; ?>
-<?php if ($expiredLicenses > 0): ?>
-                        <div class="alert alert-danger py-2 small"><i class="fas fa-times-circle me-1"></i><?= $expiredLicenses ?> expired license(s) — clinical assignments restricted. <a href="professional-licenses.php" class="alert-link">Review</a></div>
-<?php endif; ?>
-                        <a href="professional-licenses.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-certificate me-1"></i>Manage Licenses</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card mb-3">
-                    <div class="hd"><i class="fas fa-shield-alt me-2"></i>Compliance Alerts</div>
-                    <div class="bd">
-                        <div class="list-group">
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                License Expiry Alerts <span class="badge bg-warning rounded-pill"><?= $expiring_licenses ?></span>
-                            </div>
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Expired Licenses (Blocked from Clinical) <span class="badge bg-danger rounded-pill"><?= $expiredLicenses ?></span>
-                            </div>
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                CPD Certification Expiry <span class="badge bg-info rounded-pill">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: DEPLOYMENT & ROTATION ═══════════════ -->
-    <div class="hr-section" id="section-deployment">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-clinic-medical me-2"></i>Clinical Rotation Scheduling</div>
-                    <div class="bd">
-                        <p class="small text-muted">Assign clinical instructors and teaching staff to wards, hospitals, skills labs, and class teaching.</p>
-                        <a href="clinical-placement.php" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-hospital me-1"></i>Clinical Placements</a>
-                        <a href="duty-rosters.php" class="btn btn-sm btn-outline-info w-100 mb-2"><i class="fas fa-calendar-week me-1"></i>Duty Rosters</a>
-                        <a href="skills-lab.php" class="btn btn-sm btn-outline-success w-100"><i class="fas fa-flask me-1"></i>Skills Lab Schedule</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-chalkboard-teacher me-2"></i>Teaching & Instructor Allocation</div>
-                    <div class="bd">
-                        <p class="small text-muted">Track teaching hours, clinical supervision hours, and instructor deployment across departments.</p>
-<?php $instructorCount = 0; $clinicalSites = 0; $activeRotations = 0;
-if ($staff_conn) {
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM staff WHERE employment_category='academic' AND status='Active'"); if ($r) $instructorCount = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(DISTINCT facility_name) c FROM clinical_placements WHERE status='Active'"); if ($r) $clinicalSites = (int)$r->fetch_assoc()['c'];
-    $r = $staff_conn->query("SELECT COUNT(*) c FROM clinical_placements WHERE status='Active' AND CURDATE() BETWEEN IFNULL(start_date, CURDATE()) AND IFNULL(end_date, CURDATE())"); if ($r) $activeRotations = (int)$r->fetch_assoc()['c'];
-} ?>
-                        <div class="row g-2 text-center mb-3">
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-primary"><?= $instructorCount ?></div><small>Instructors</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-success"><?= $clinicalSites ?></div><small>Clinical Sites</small></div></div>
-                            <div class="col-4"><div class="p-3 border rounded bg-light"><div class="fs-3 fw-bold text-info"><?= $activeRotations ?></div><small>Active Rotations</small></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: COMMUNICATION ═══════════════ -->
-    <div class="hr-section" id="section-comms">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-bullhorn me-2"></i>HR Announcements</div>
-                    <div class="bd">
-                        <a href="../news.php" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-newspaper me-1"></i>Manage News & Announcements</a>
-                        <a href="../messaging.php" class="btn btn-sm btn-outline-info w-100"><i class="fas fa-comments me-1"></i>Staff Messaging</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-envelope me-2"></i>Policy Updates & Notices</div>
-                    <div class="bd">
-                        <p class="small text-muted">Communicate HR policy changes, institutional notices, and emergency alerts to all staff.</p>
-                        <a href="../institutional-alerts.php" class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-bell me-1"></i>Send Emergency Alert</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: REPORTS ═══════════════ -->
-    <div class="hr-section" id="section-reports">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-users me-2"></i>Staff Reports</div>
-                    <div class="bd">
-                        <p class="small text-muted">Staff utilization, turnover, demographic reports.</p>
-                        <a href="staff-directory.php" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-download me-1"></i>Staff Directory Export</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-calendar-alt me-2"></i>Attendance & Leave Reports</div>
-                    <div class="bd">
-                        <a href="staff-attendance.php" class="btn btn-sm btn-outline-success w-100 mb-2"><i class="fas fa-clock me-1"></i>Attendance Summary</a>
-                        <a href="leave-management.php" class="btn btn-sm btn-outline-warning w-100"><i class="fas fa-calendar-alt me-1"></i>Leave Usage Reports</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-chart-bar me-2"></i>Compliance & Training Reports</div>
-                    <div class="bd">
-                        <a href="professional-licenses.php" class="btn btn-sm btn-outline-danger w-100 mb-2"><i class="fas fa-certificate me-1"></i>License Compliance</a>
-                        <a href="training-cpd.php" class="btn btn-sm btn-outline-info w-100"><i class="fas fa-graduation-cap me-1"></i>Training Completion</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════ SECTION: SETTINGS ═══════════════ -->
-    <div class="hr-section" id="section-settings">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-building me-2"></i>Departments</div>
-                    <div class="bd">
-                        <p><strong>Total:</strong> <?= count($departments) ?></p>
-                        <div class="mb-2">
-<?php foreach ($departments as $d): ?>
-                            <span class="badge bg-secondary me-1"><?= htmlspecialchars($d['department_name']) ?></span>
-<?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-user-tag me-2"></i>Roles</div>
-                    <div class="bd">
-                        <p><strong>Total:</strong> <?= count($roles) ?></p>
-                        <div class="mb-2">
-<?php foreach ($roles as $r): ?>
-                            <span class="badge bg-info me-1"><?= htmlspecialchars($r['role_name']) ?></span>
-<?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-card">
-                    <div class="hd"><i class="fas fa-cog me-2"></i>System Settings</div>
-                    <div class="bd">
-                        <a href="../organogram.php" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-sitemap me-1"></i>Organogram</a>
-                        <a href="../includes/settings_modal.php" class="btn btn-sm btn-outline-secondary w-100"><i class="fas fa-sliders-h me-1"></i>HR Configuration</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<?php if ($page === 'overview'): ?>
+<div class="stats-row">
+  <div class="stat-item"><div class="num"><?=$stats['active_staff']?></div><div class="lbl">Active Staff</div><div class="mini"><?=$stats['total_staff']?> total</div></div>
+  <div class="stat-item"><div class="num"><?=$stats['attendance_today']?></div><div class="lbl">Present Today</div><div class="mini"><?=$stats['late_today']?> late</div></div>
+  <div class="stat-item"><div class="num"><?=$stats['pending_leave']?></div><div class="lbl">Pending Leave</div></div>
+  <div class="stat-item"><div class="num"><?=$stats['open_vacancies']?></div><div class="lbl">Open Positions</div></div>
+  <div class="stat-item"><div class="num"><?=$stats['expiring_licenses']?></div><div class="lbl">Expiring Licenses</div><div class="mini">next 60 days</div></div>
+  <div class="stat-item"><div class="num"><?=$stats['open_cases']?></div><div class="lbl">Disciplinary Cases</div></div>
 </div>
 
-<!-- ═══ ADD STAFF MODAL ═══ -->
-<div class="modal fade" id="addStaffModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form method="POST" class="modal-content">
-      <input type="hidden" name="action" value="add_staff">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Staff Member</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row g-3">
-          <div class="col-12"><label class="form-label fw-semibold">Full Name *</label><input type="text" name="full_name" class="form-control" required></div>
-          <div class="col-12"><label class="form-label fw-semibold">Email *</label><input type="email" name="email" class="form-control" required></div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input type="text" name="phone" class="form-control"></div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Position</label><input type="text" name="position" class="form-control"></div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Department</label>
-            <select name="department" class="form-select">
-              <option value="">-- Select --</option>
-<?php foreach ($departments as $d): ?>
-              <option value="<?= htmlspecialchars($d['department_name']) ?>"><?= htmlspecialchars($d['department_name']) ?></option>
-<?php endforeach; ?>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Role</label>
-            <select name="role_id" class="form-select">
-              <option value="0">Select Role</option>
-<?php foreach ($roles as $r): ?>
-              <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['role_name']) ?></option>
-<?php endforeach; ?>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Employment Type</label>
-            <select name="employment_type" class="form-select">
-              <option value="full-time">Full Time</option>
-              <option value="part-time">Part Time</option>
-              <option value="contract">Contract</option>
-              <option value="locum">Locum</option>
-              <option value="temporary">Temporary</option>
-              <option value="intern">Intern</option>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label fw-semibold">Category</label>
-            <select name="employment_category" class="form-select">
-              <option value="academic">Academic</option>
-              <option value="clinical">Clinical</option>
-              <option value="administrative">Administrative</option>
-              <option value="support">Support</option>
-            </select>
-          </div>
-          <div class="col-12"><small class="text-muted">Default password: <code>isnm2026</code></small></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Add Staff</button>
-      </div>
-    </form>
+<div class="row">
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Pending Leave Requests</h3>
+    <?php $pendingLeaves = array_filter($leaveReqs, fn($l)=>$l['status']==='pending'); if (empty($pendingLeaves)): ?><p class="text-muted small">None pending.</p>
+    <?php else: foreach (array_slice($pendingLeaves,0,5) as $l): ?>
+      <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+        <div><strong><?=htmlspecialchars($l['full_name'])?></strong><br><small class="text-muted"><?=htmlspecialchars($l['type_name'])?>: <?=htmlspecialchars($l['start_date'])?> - <?=htmlspecialchars($l['end_date'])?></small></div>
+        <div class="d-flex gap-1">
+          <form method="post" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form>
+          <form method="post" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form>
+        </div></div>
+    <?php endforeach; endif; ?>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Upcoming Contract Expirations</h3>
+    <?php $expiring = array_filter($contracts, fn($c)=>$c['status']==='active' && $c['end_date'] && strtotime($c['end_date']) <= strtotime('+60 days')); if (empty($expiring)): ?><p class="text-muted small">No contracts expiring within 60 days.</p>
+    <?php else: foreach ($expiring as $c): ?>
+      <div class="mb-2 pb-2 border-bottom"><strong><?=htmlspecialchars($c['full_name'])?></strong> &mdash; <?=htmlspecialchars($c['contract_type'])?> <span class="badge bg-warning text-dark">Expires: <?=htmlspecialchars($c['end_date'])?></span></div>
+    <?php endforeach; endif; ?>
+    </div>
+    <div class="hr-card"><h3>Recent Hires</h3>
+    <?php $recent = array_filter($staffList, fn($s)=>$s['hire_date'] && strtotime($s['hire_date']) >= strtotime('-30 days')); if (empty($recent)): ?><p class="text-muted small">No recent hires.</p>
+    <?php else: foreach (array_slice($recent,0,5) as $s): ?><div class="mb-1 small"><strong><?=htmlspecialchars($s['full_name'])?></strong> &mdash; <?=htmlspecialchars($s['position']??$s['role_name']??'Staff')?> <span class="text-muted">(<?=htmlspecialchars($s['hire_date'])?>)</span></div><?php endforeach; endif; ?>
+    </div>
   </div>
 </div>
 
-<script>
-(function() {
-    var sections = document.querySelectorAll('.hr-section');
+<?php elseif ($page === 'staff'): ?>
+<div class="hr-card"><h3>Staff Records</h3>
+<button class="btn btn-sm btn-primary mb-3" onclick="$('#addStaffModal').modal('show')">+ Add Staff</button>
+<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Position</th><th>Department</th><th>Role</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<?php foreach ($staffList as $s): ?><tr>
+  <td><?=htmlspecialchars($s['staff_id']??$s['id'])?></td>
+  <td><?=htmlspecialchars($s['full_name'])?></td>
+  <td><?=htmlspecialchars($s['email'])?></td>
+  <td><?=htmlspecialchars($s['position']??'-')?></td>
+  <td><?=htmlspecialchars($s['department']??'-')?></td>
+  <td><?=htmlspecialchars($s['role_name']??'-')?></td>
+  <td><?=htmlspecialchars($s['staff_category']??'-')?></td>
+  <td><?=hrStatusBadge($s['status'])?></td>
+  <td>
+    <button class="btn btn-sm btn-outline-primary" onclick="editStaff(<?=$s['id']?>)">Edit</button>
+    <a href="hr-manager.php?page=staff&sub=view&id=<?=$s['id']?>" class="btn btn-sm btn-outline-info">View</a>
+  </td>
+</tr><?php endforeach; ?>
+</tbody></table></div></div>
 
-    function showSection(id) {
-        sections.forEach(function(s) { s.classList.remove('active'); });
-        var target = document.getElementById('section-' + id);
-        if (target) target.classList.add('active');
-    }
+<?php if ($sub === 'view'): $sid = (int)($_GET['id']??0); $s = hrGetStaff($staff_conn, $sid); if ($s): ?>
+<div class="hr-card"><h3><?=htmlspecialchars($s['full_name'])?> &mdash; Full Profile</h3>
+<div class="row small">
+  <div class="col-md-4"><strong>Staff ID:</strong> <?=htmlspecialchars($s['staff_id']??'-')?></div>
+  <div class="col-md-4"><strong>Email:</strong> <?=htmlspecialchars($s['email'])?></div>
+  <div class="col-md-4"><strong>Phone:</strong> <?=htmlspecialchars($s['phone']??'-')?></div>
+  <div class="col-md-4"><strong>Position:</strong> <?=htmlspecialchars($s['position']??'-')?></div>
+  <div class="col-md-4"><strong>Department:</strong> <?=htmlspecialchars($s['department']??'-')?></div>
+  <div class="col-md-4"><strong>Category:</strong> <?=htmlspecialchars($s['staff_category']??'-')?></div>
+  <div class="col-md-4"><strong>Gender:</strong> <?=htmlspecialchars($s['gender']??'-')?></div>
+  <div class="col-md-4"><strong>DOB:</strong> <?=htmlspecialchars($s['date_of_birth']??'-')?></div>
+  <div class="col-md-4"><strong>NIN:</strong> <?=htmlspecialchars($s['nin']??'-')?></div>
+  <div class="col-md-4"><strong>Qualification:</strong> <?=htmlspecialchars($s['highest_qualification']??'-')?></div>
+  <div class="col-md-4"><strong>Experience:</strong> <?=(int)($s['year_of_experience']??0)?> yrs</div>
+  <div class="col-md-4"><strong>Status:</strong> <?=hrStatusBadge($s['status'])?></div>
+  <div class="col-md-4"><strong>Next of Kin:</strong> <?=htmlspecialchars($s['next_of_kin_name']??'-')?> (<?=htmlspecialchars($s['next_of_kin_phone']??'')?>)</div>
+  <div class="col-md-4"><strong>Emergency:</strong> <?=htmlspecialchars($s['emergency_contact_name']??'-')?> (<?=htmlspecialchars($s['emergency_contact_phone']??'')?>)</div>
+  <?php if ($s['contract_end_date']): ?><div class="col-md-4"><strong>Contract Ends:</strong> <?=htmlspecialchars($s['contract_end_date'])?></div><?php endif; ?>
+</div>
+<h4 class="mt-4 mb-2 fs-6 fw-semibold">Work History</h4>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Position</th><th>Department</th><th>From</th><th>To</th><th>Reason</th></tr></thead><tbody>
+<?php $wh=null; $wq=$staff_conn->prepare("SELECT * FROM staff_work_history WHERE staff_id=? ORDER BY start_date DESC"); if($wq){$wq->bind_param('i',$sid);$wq->execute();$wh=$wq->get_result();$wq->close();} if ($wh) while ($w = $wh->fetch_assoc()): ?><tr><td><?=htmlspecialchars($w['position'])?></td><td><?=htmlspecialchars($w['department']??'')?></td><td><?=$w['start_date']?></td><td><?=$w['end_date']??'Current'?></td><td><?=htmlspecialchars($w['reason_for_change']??'')?></td></tr><?php endwhile; ?>
+</tbody></table></div>
+</div><?php endif; endif; ?>
 
-    var hash = window.location.hash.replace('#section-', '');
-    if (hash && document.getElementById('section-' + hash)) showSection(hash);
-
-    function updateClock() {
-        var el = document.getElementById('hrClock');
-        if (!el) return;
-        var now = new Date();
-        el.textContent = now.toLocaleDateString('en-UG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + now.toLocaleTimeString('en-UG');
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-})();
-</script>
-
-<!-- ═══ AJAX MODULE LOADING ═══ -->
-<div id="ajaxLoadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center;">
-  <div style="text-align:center;padding:30px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);">
-    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:#3b82f6;"></i>
-    <p style="margin:12px 0 0;font-size:13px;color:#64748b;">Loading module...</p>
+<?php elseif ($page === 'recruitment'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>Post New Vacancy</h3>
+    <form method="post"><input type="hidden" name="action" value="post_vacancy">
+      <div class="mb-2"><input class="form-control form-control-sm" name="title" placeholder="Job Title" required></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="department"><option value="">Department</option><?php foreach ($departments as $d): ?><option value="<?=$d['id']?>"><?=htmlspecialchars($d['name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="description" rows="3" placeholder="Description"></textarea></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="requirements" rows="3" placeholder="Requirements"></textarea></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="salary_range" placeholder="Salary Range"></div>
+      <div class="mb-2"><label class="small">Closing Date</label><input type="date" class="form-control form-control-sm" name="closing_date"></div>
+      <button class="btn btn-sm btn-primary">Post Vacancy</button>
+    </form></div>
+    <div class="hr-card"><h3>Open Vacancies (<?=count($vacancies)?>)</h3>
+    <?php foreach ($vacancies as $v): ?><div class="mb-2 pb-2 border-bottom small"><strong><?=htmlspecialchars($v['title'])?></strong> (<?=htmlspecialchars($v['dept_name']??'N/A')?>) <?=hrStatusBadge($v['status'])?><br><span class="text-muted">Posted: <?=$v['posted_date']?> | Closes: <?=$v['closing_date']?></span></div><?php endforeach; ?>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Applications (<?=count($applications)?>)</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Applicant</th><th>Position</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    <?php foreach ($applications as $a): ?><tr>
+      <td><?=htmlspecialchars($a['applicant_name'])?><br><small class="text-muted"><?=htmlspecialchars($a['email'])?></small></td>
+      <td><?=htmlspecialchars($a['vacancy_title'])?></td>
+      <td><?=htmlspecialchars($a['created_at'])?></td>
+      <td><?=hrStatusBadge($a['application_status'])?></td>
+      <td><form method="post" class="d-inline"><input type="hidden" name="action" value="shortlist"><input type="hidden" name="application_id" value="<?=$a['id']?>"><button class="btn btn-sm btn-outline-success">Shortlist</button></form></td>
+    </tr><?php endforeach; ?>
+    </tbody></table></div></div>
   </div>
 </div>
-<script>
-(function(){
-    var contentArea = document.querySelector('.hr-content');
-    var loadingOverlay = document.getElementById('ajaxLoadingOverlay');
-    var isAjaxLoading = false;
 
-    function showLoading() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; isAjaxLoading = true; }
-    function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; isAjaxLoading = false; }
-
-    document.querySelectorAll('.child-link').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            var href = this.getAttribute('href');
-            if (!href || href.indexOf('?') === -1) return;
-            if (isAjaxLoading) return;
-
-            e.preventDefault();
-            showLoading();
-            history.pushState({}, '', href);
-            document.querySelectorAll('.child-link').forEach(function(l) { l.classList.remove('active'); });
-            this.classList.add('active');
-
-            var section = href.split('section=')[1] || href.split('page=')[1] || 'home';
-            fetch('hr-manager.php?section=' + encodeURIComponent(section), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(r) { return r.text(); })
-            .then(function(html) {
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(html, 'text/html');
-                var newContent = doc.querySelector('.hr-content');
-                if (newContent && contentArea) {
-                    contentArea.innerHTML = newContent.innerHTML;
-                    contentArea.querySelectorAll('script').forEach(function(oldScript) {
-                        var newScript = document.createElement('script');
-                        if (oldScript.src) { newScript.src = oldScript.src; }
-                        else { newScript.textContent = oldScript.textContent; }
-                        oldScript.parentNode.replaceChild(newScript, oldScript);
-                    });
-                }
-                hideLoading();
-            })
-            .catch(function(err) {
-                console.error('[AJAX Load Error]', err);
-                hideLoading();
-                window.location.href = href;
-            });
-        });
-    });
-
-    window.addEventListener('popstate', function() { window.location.reload(); });
-
-    document.querySelectorAll('.child-link').forEach(function(link) {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                var sidebar = document.querySelector('.isnm-sidebar');
-                if (sidebar) sidebar.classList.remove('open', 'mobile-show');
-            }
-        });
-    });
-})();
-
-function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
-function editStaff(id,name,email,phone,position,department,roleId,empType,empCat,status){
-    document.getElementById('edit_id').value=id;
-    document.getElementById('edit_full_name').value=name;
-    document.getElementById('edit_email').value=email;
-    document.getElementById('edit_phone').value=phone||'';
-    document.getElementById('edit_position').value=position||'';
-    document.getElementById('edit_department').value=department||'';
-    document.getElementById('edit_role_id').value=roleId||'';
-    document.getElementById('edit_employment_type').value=empType||'full-time';
-    document.getElementById('edit_employment_category').value=empCat||'administrative';
-    document.getElementById('edit_status').value=status||'Active';
-    new bootstrap.Modal(document.getElementById('editStaffModal')).show();
-}
-function submitEditStaff(){
-    var fd=new FormData(document.getElementById('editStaffForm'));
-    fetch(window.location.href,{method:'POST',body:fd})
-    .then(function(r){return r.json()})
-    .then(function(d){
-        if(d.success){window.location.reload();}
-        else{alert('Error: '+(d.error||'Failed'));}
-    })
-    .catch(function(e){alert('Error updating staff');});
-}
-function deleteStaff(id,name){
-    if(!confirm('Delete staff member "'+name+'"? This cannot be undone.')) return;
-    var fd=new FormData();
-    fd.append('action','delete_staff');
-    fd.append('id',id);
-    fetch(window.location.href,{method:'POST',body:fd})
-    .then(function(r){return r.json()})
-    .then(function(d){
-        if(d.success){window.location.reload();}
-        else{alert('Error: '+(d.error||'Failed'));}
-    })
-    .catch(function(e){alert('Error deleting staff');});
-}
-</script>
-
-<!-- Edit Staff Modal -->
-<div class="modal fade" id="editStaffModal" tabindex="-1">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form id="editStaffForm" onsubmit="event.preventDefault(); submitEditStaff()">
-            <div class="modal-body">
-                <input type="hidden" name="id" id="edit_id">
-                <input type="hidden" name="action" value="edit_staff">
-                <div class="row g-3">
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Full Name *</label><input type="text" name="full_name" id="edit_full_name" class="form-control" required></div></div>
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Email *</label><input type="email" name="email" id="edit_email" class="form-control" required></div></div>
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Phone</label><input type="text" name="phone" id="edit_phone" class="form-control"></div></div>
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Position</label><input type="text" name="position" id="edit_position" class="form-control"></div></div>
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Department</label><input type="text" name="department" id="edit_department" class="form-control"></div></div>
-                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Role</label><select name="role_id" id="edit_role_id" class="form-select">
-                        <?php foreach ($roles as $r): ?><option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['role_name']) ?></option><?php endforeach; ?>
-                    </select></div></div>
-                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Employment Type</label><select name="employment_type" id="edit_employment_type" class="form-select"><option value="full-time">Full Time</option><option value="part-time">Part Time</option><option value="contract">Contract</option><option value="intern">Intern</option></select></div></div>
-                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Category</label><select name="employment_category" id="edit_employment_category" class="form-select"><option value="administrative">Administrative</option><option value="academic">Academic</option><option value="support">Support</option><option value="management">Management</option></select></div></div>
-                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Status</label><select name="status" id="edit_status" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="On Leave">On Leave</option><option value="Terminated">Terminated</option></select></div></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button>
-            </div>
-        </form>
-    </div></div>
+<?php elseif ($page === 'attendance'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>Record Attendance</h3>
+    <form method="post"><input type="hidden" name="action" value="record_attendance">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?> (<?=htmlspecialchars($s['staff_id']??$s['id'])?>)</option><?php endforeach; ?></select></div>
+      <div class="mb-2"><input type="date" class="form-control form-control-sm" name="date" value="<?=date('Y-m-d')?>"></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="attendance_status"><option value="present">Present</option><option value="late">Late</option><option value="absent">Absent</option><option value="half-day">Half Day</option><option value="leave">On Leave</option></select></div>
+      <button class="btn btn-sm btn-primary">Record</button>
+    </form></div>
+    <div class="hr-card"><h3>Leave Types</h3>
+    <table class="table table-sm"><thead><tr><th>Type</th><th>Days/Year</th></tr></thead><tbody>
+    <?php foreach ($leaveTypes as $lt): ?><tr><td><?=htmlspecialchars($lt['leave_type_name']??$lt['type_name'])?></td><td><?=(int)$lt['days_per_year']?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Today's Attendance (<?=date('d M Y')?>)</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Status</th><th>Time In</th><th>Time Out</th></tr></thead><tbody>
+    <?php foreach ($attendanceToday as $a): ?><tr><td><?=htmlspecialchars($a['full_name'])?></td><td><?=hrStatusBadge($a['status'])?></td><td><?=htmlspecialchars($a['time_in']??'-')?></td><td><?=htmlspecialchars($a['time_out']??'-')?></td></tr><?php endforeach; if (empty($attendanceToday)): ?><tr><td colspan="4" class="text-muted text-center">No attendance recorded today.</td></tr><?php endif; ?>
+    </tbody></table></div>
+    <div class="hr-card"><h3 id="leave">Leave Requests</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <?php foreach ($leaveReqs as $l): ?><tr><td><?=htmlspecialchars($l['full_name'])?></td><td><?=htmlspecialchars($l['type_name'])?></td><td><?=htmlspecialchars($l['start_date'])?> - <?=htmlspecialchars($l['end_date'])?></td><td><?=hrStatusBadge($l['status'])?></td>
+      <td><?php if ($l['status']==='pending'): ?><form method="post" class="d-inline"><input type="hidden" name="action" value="approve_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-success">Approve</button></form><form method="post" class="d-inline"><input type="hidden" name="action" value="reject_leave"><input type="hidden" name="leave_id" value="<?=$l['id']?>"><button class="btn btn-sm btn-danger">Reject</button></form><?php endif; ?></td>
+    </tr><?php endforeach; ?>
+    </tbody></table></div></div>
+  </div>
 </div>
 
+<?php elseif ($page === 'payroll'): ?>
+<div class="row">
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Salary Structure Overview</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Basic Salary</th><th>Allowances</th><th>Deductions</th><th>Net</th></tr></thead><tbody>
+    <?php $ps = $staff_conn->query("SELECT ss.*, s.full_name FROM salary_structures ss JOIN staff s ON ss.staff_id=s.id ORDER BY s.full_name LIMIT 20"); if ($ps) while ($p = $ps->fetch_assoc()): ?><tr><td><?=htmlspecialchars($p['full_name'])?></td><td><?=number_format($p['basic_salary']??$p['base_salary']??0)?></td><td><?=number_format(($p['housing_allowance']??0)+($p['transport_allowance']??0))?></td><td>-</td><td><strong><?=number_format(($p['basic_salary']??$p['base_salary']??0)+($p['housing_allowance']??0)+($p['transport_allowance']??0))?></strong></td></tr><?php endwhile; ?>
+    </tbody></table></div></div>
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Payroll Integration</h3>
+    <p class="text-muted small">Payroll is finalized by the Bursar's office. HR validates and submits salary inputs.</p>
+    <div class="mb-2"><a href="payroll.php" class="btn btn-sm btn-primary">Go to Payroll System</a></div>
+    <h4 class="fs-6 mt-3">Pending Payroll Validation</h4>
+    <?php $pe = $staff_conn->query("SELECT COUNT(*) c FROM payroll_employees WHERE staff_id NOT IN (SELECT staff_id FROM salary_structures WHERE staff_id IS NOT NULL)"); $pendingPayroll = $pe ? (int)$pe->fetch_assoc()['c'] : 0; ?>
+    <p class="small"><?=$pendingPayroll?> staff members missing salary structure setup.</p>
+  </div>
+</div>
+
+<?php elseif ($page === 'performance'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>New Appraisal</h3>
+    <form method="post"><input type="hidden" name="action" value="add_appraisal">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="review_period" placeholder="e.g. Q1 2026" required></div>
+      <div class="mb-2"><input type="number" class="form-control form-control-sm" name="overall_score" placeholder="Score (0-100)" min="0" max="100" step="0.1"></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="comments" rows="3" placeholder="Comments/Feedback"></textarea></div>
+      <button class="btn btn-sm btn-primary">Save Appraisal</button>
+    </form></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Appraisals & Performance Reviews</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Period</th><th>Score</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    <?php foreach ($appraisals as $p): ?><tr><td><?=htmlspecialchars($p['full_name'])?></td><td><?=htmlspecialchars($p['review_period'])?></td><td><strong><?=htmlspecialchars($p['overall_score']??'-')?></strong></td><td><?=hrStatusBadge($p['status'])?></td><td><?=htmlspecialchars($p['created_at'])?></td></tr><?php endforeach; ?>
+    </tbody></table></div></div>
+</div>
+
+<?php elseif ($page === 'training'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>Assign Training</h3>
+    <form method="post"><input type="hidden" name="action" value="add_training">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="training_name" placeholder="Training Name" required></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="provider" placeholder="Provider/Institution"></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="training_type"><option value="workshop">Workshop</option><option value="seminar">Seminar</option><option value="course">Course</option><option value="conference">Conference</option><option value="cpd">CPD</option></select></div>
+      <div class="row g-1 mb-2"><div class="col-6"><input type="date" class="form-control form-control-sm" name="start_date" placeholder="Start"></div><div class="col-6"><input type="date" class="form-control form-control-sm" name="end_date" placeholder="End"></div></div>
+      <button class="btn btn-sm btn-primary">Assign Training</button>
+    </form></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Training Records</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Training</th><th>Provider</th><th>Dates</th><th>Status</th></tr></thead><tbody>
+    <?php foreach ($trainingRecords as $t): ?><tr><td><?=htmlspecialchars($t['full_name'])?></td><td><?=htmlspecialchars($t['training_name'])?></td><td><?=htmlspecialchars($t['provider']??'-')?></td><td><?=htmlspecialchars($t['start_date'])?> - <?=htmlspecialchars($t['end_date'])?></td><td><?=hrStatusBadge($t['status'])?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
+    <div class="hr-card"><h3>Licenses & Certification</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>License Type</th><th>Number</th><th>Expiry</th><th>Status</th></tr></thead><tbody>
+    <?php foreach ($licenses as $l): ?><tr><td><?=htmlspecialchars($l['full_name'])?></td><td><?=htmlspecialchars($l['license_type'])?></td><td><?=htmlspecialchars($l['license_number'])?></td><td><?=$l['expiry_date']?></td><td><?=hrStatusBadge($l['status'])?></td></tr><?php endforeach; ?>
+    </tbody></table></div></div>
+  </div>
+</div>
+
+<?php elseif ($page === 'disciplinary'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>New Disciplinary Case</h3>
+    <form method="post"><input type="hidden" name="action" value="add_disciplinary">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><input type="date" class="form-control form-control-sm" name="incident_date" value="<?=date('Y-m-d')?>"></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="offense_type" placeholder="Offense Type" required></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="description" rows="3" placeholder="Description"></textarea></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="action_taken" rows="2" placeholder="Action Taken"></textarea></div>
+      <button class="btn btn-sm btn-primary">Open Case</button>
+    </form></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Disciplinary Cases (<?=count($disciplinaryCases)?>)</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Offense</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    <?php foreach ($disciplinaryCases as $d): ?><tr>
+      <td><?=htmlspecialchars($d['full_name'])?></td>
+      <td><?=htmlspecialchars($d['offense_type'])?></td>
+      <td><?=htmlspecialchars($d['incident_date'])?></td>
+      <td><?=hrStatusBadge($d['status'])?></td>
+      <td><?php if ($d['status']==='open'): ?><form method="post" class="d-inline"><input type="hidden" name="action" value="close_case"><input type="hidden" name="case_id" value="<?=$d['id']?>"><input name="resolution" placeholder="Resolution" class="form-control form-control-sm d-inline" style="width:120px" required><button class="btn btn-sm btn-success">Close</button></form><?php endif; ?></td>
+    </tr><?php endforeach; ?>
+    </tbody></table></div></div>
+</div>
+
+<?php elseif ($page === 'contracts'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>New Contract</h3>
+    <form method="post"><input type="hidden" name="action" value="add_contract">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="contract_type"><option value="permanent">Permanent</option><option value="contract">Contract</option><option value="part-time">Part-time</option><option value="internship">Internship</option><option value="temporary">Temporary</option></select></div>
+      <div class="row g-1 mb-2"><div class="col-6"><label class="small">Start Date</label><input type="date" class="form-control form-control-sm" name="start_date" required></div><div class="col-6"><label class="small">End Date</label><input type="date" class="form-control form-control-sm" name="end_date"></div></div>
+      <div class="mb-2"><input type="number" class="form-control form-control-sm" name="salary" placeholder="Salary" step="0.01"></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="terms" rows="3" placeholder="Terms & Conditions"></textarea></div>
+      <button class="btn btn-sm btn-primary">Create Contract</button>
+    </form></div>
+    <div class="hr-card"><h3>Add License/Certification</h3>
+    <form method="post"><input type="hidden" name="action" value="add_license">
+      <div class="mb-2"><select class="form-select form-select-sm" name="staff_id" required><option value="">Select Staff</option><?php foreach ($staffList as $s): ?><option value="<?=$s['id']?>"><?=htmlspecialchars($s['full_name'])?></option><?php endforeach; ?></select></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="license_type" placeholder="License Type (e.g. Nursing License)" required></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="license_number" placeholder="License Number"></div>
+      <div class="mb-2"><input class="form-control form-control-sm" name="issuing_body" placeholder="Issuing Body"></div>
+      <div class="mb-2"><label class="small">Expiry Date</label><input type="date" class="form-control form-control-sm" name="expiry_date"></div>
+      <button class="btn btn-sm btn-primary">Record License</button>
+    </form></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Active Contracts</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>Type</th><th>Period</th><th>Status</th></tr></thead><tbody>
+    <?php foreach ($contracts as $c): ?><tr><td><?=htmlspecialchars($c['full_name'])?></td><td><?=htmlspecialchars($c['contract_type'])?></td><td><?=$c['start_date']?> - <?=$c['end_date']??'Open'?></td><td><?=hrStatusBadge($c['status'])?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
+    <div class="hr-card"><h3>Compliance & Certification Tracking</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Staff</th><th>License</th><th>Number</th><th>Expires</th><th>Status</th></tr></thead><tbody>
+    <?php foreach ($licenses as $l): ?><tr><td><?=htmlspecialchars($l['full_name'])?></td><td><?=htmlspecialchars($l['license_type'])?></td><td><?=htmlspecialchars($l['license_number'])?></td><td><?=$l['expiry_date']?></td><td><?=hrStatusBadge($l['status'])?></td></tr><?php endforeach; ?>
+    </tbody></table></div></div>
+  </div>
+</div>
+
+<?php elseif ($page === 'communications'): ?>
+<div class="row">
+  <div class="col-md-5">
+    <div class="hr-card"><h3>Send Announcement</h3>
+    <form method="post"><input type="hidden" name="action" value="send_announcement">
+      <div class="mb-2"><input class="form-control form-control-sm" name="title" placeholder="Title" required></div>
+      <div class="mb-2"><textarea class="form-control form-control-sm" name="message" rows="5" placeholder="Message" required></textarea></div>
+      <div class="mb-2"><select class="form-select form-select-sm" name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+      <button class="btn btn-sm btn-primary">Send</button>
+    </form></div>
+  </div>
+  <div class="col-md-7">
+    <div class="hr-card"><h3>Announcements</h3>
+    <?php foreach ($announcements as $a): ?><div class="mb-3 pb-3 border-bottom">
+      <strong><?=htmlspecialchars($a['title'])?></strong> <?=hrStatusBadge($a['priority'])?><br>
+      <small><?=nl2br(htmlspecialchars($a['content']))?></small><br>
+      <span class="text-muted small"><?=$a['created_at']?></span>
+    </div><?php endforeach; if (empty($announcements)): ?><p class="text-muted">No announcements yet.</p><?php endif; ?>
+    </div>
+  </div>
+</div>
+
+<?php elseif ($page === 'reports'): ?>
+<div class="row">
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Staff by Department</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Department</th><th>Count</th></tr></thead><tbody>
+    <?php $deptStats = $staff_conn->query("SELECT COALESCE(department,'Unassigned') as dept, COUNT(*) c FROM staff GROUP BY department ORDER BY c DESC"); if ($deptStats) while ($d = $deptStats->fetch_assoc()): ?><tr><td><?=htmlspecialchars($d['dept'])?></td><td><?=$d['c']?></td></tr><?php endwhile; ?>
+    </tbody></table></div>
+  </div>
+  <div class="col-md-6">
+    <div class="hr-card"><h3>Staff by Category</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Category</th><th>Count</th></tr></thead><tbody>
+    <?php $catStats = $staff_conn->query("SELECT COALESCE(staff_category,'Unassigned') as cat, COUNT(*) c FROM staff GROUP BY staff_category ORDER BY c DESC"); if ($catStats) while ($c = $catStats->fetch_assoc()): ?><tr><td><?=htmlspecialchars($c['cat'])?></td><td><?=$c['c']?></td></tr><?php endwhile; ?>
+    </tbody></table></div>
+    <div class="hr-card"><h3>Staff by Gender</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Gender</th><th>Count</th></tr></thead><tbody>
+    <?php $genStats = $staff_conn->query("SELECT COALESCE(gender,'Not Specified') as gen, COUNT(*) c FROM staff GROUP BY gender ORDER BY c DESC"); if ($genStats) while ($g = $genStats->fetch_assoc()): ?><tr><td><?=htmlspecialchars($g['gen'])?></td><td><?=$g['c']?></td></tr><?php endwhile; ?>
+    </tbody></table></div>
+    <div class="hr-card"><h3>Qualification Distribution</h3>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Qualification</th><th>Count</th></tr></thead><tbody>
+    <?php $qualStats = $staff_conn->query("SELECT COALESCE(highest_qualification,'Not Specified') as qual, COUNT(*) c FROM staff GROUP BY highest_qualification ORDER BY c DESC"); if ($qualStats) while ($q = $qualStats->fetch_assoc()): ?><tr><td><?=htmlspecialchars($q['qual'])?></td><td><?=$q['c']?></td></tr><?php endwhile; ?>
+    </tbody></table></div>
+  </div>
+</div>
+<?php endif; ?>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal"><div class="modal-dialog modal-lg"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title">Add New Staff</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<form method="post"><div class="modal-body row g-2"><input type="hidden" name="action" value="add_staff">
+  <div class="col-md-6"><label class="form-label small">Full Name *</label><input class="form-control form-control-sm" name="full_name" required></div>
+  <div class="col-md-6"><label class="form-label small">Email *</label><input type="email" class="form-control form-control-sm" name="email" required></div>
+  <div class="col-md-4"><label class="form-label small">Phone</label><input class="form-control form-control-sm" name="phone"></div>
+  <div class="col-md-4"><label class="form-label small">Position</label><input class="form-control form-control-sm" name="position"></div>
+  <div class="col-md-4"><label class="form-label small">Department</label><select class="form-select form-select-sm" name="department"><?php foreach ($departments as $d): ?><option value="<?=$d['name']?>"><?=htmlspecialchars($d['name'])?></option><?php endforeach; ?></select></div>
+  <div class="col-md-4"><label class="form-label small">Role</label><select class="form-select form-select-sm" name="role_id"><option value="">Select Role</option><?php foreach ($roles as $r): ?><option value="<?=$r['id']?>"><?=htmlspecialchars($r['role_name'])?></option><?php endforeach; ?></select></div>
+  <div class="col-md-4"><label class="form-label small">Category</label><select class="form-select form-select-sm" name="staff_category"><option value="teaching">Teaching</option><option value="non-teaching">Non-Teaching</option><option value="clinical">Clinical</option><option value="administrative">Administrative</option></select></div>
+  <div class="col-md-4"><label class="form-label small">Gender</label><select class="form-select form-select-sm" name="gender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+  <div class="col-md-4"><label class="form-label small">Date of Birth</label><input type="date" class="form-control form-control-sm" name="date_of_birth"></div>
+  <div class="col-md-4"><label class="form-label small">NIN</label><input class="form-control form-control-sm" name="nin"></div>
+  <div class="col-md-4"><label class="form-label small">Highest Qualification</label><input class="form-control form-control-sm" name="highest_qualification"></div>
+  <div class="col-md-4"><label class="form-label small">Years of Experience</label><input type="number" class="form-control form-control-sm" name="year_of_experience" value="0"></div>
+</div><div class="modal-footer"><button class="btn btn-primary">Add Staff</button></div></form></div></div></div>
+
+<script>
+// Auto-inject CSRF token into all POST forms
+document.addEventListener('DOMContentLoaded',function(){var t='<?=htmlspecialchars($_SESSION['csrf_token'])?>';document.querySelectorAll('form[method="post"]').forEach(function(f){if(!f.querySelector('input[name="csrf_token"]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i);}});});
+function editStaff(id) {
+    fetch('hr-manager.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_staff&id='+id+'&csrf_token=<?=htmlspecialchars($_SESSION['csrf_token'])?>'})
+    .then(r=>r.json()).then(d=>{if(d&&d.id){alert('Editing staff #'+id+' — use the form below.');window.location='hr-manager.php?page=staff&sub=view&id='+id;}});
+}
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
-
-<?php
-require_once __DIR__ . '/../includes/profile_settings.php';
-if (function_exists('renderProfileModal')) renderProfileModal();
-if (function_exists('renderProfileStyles')) renderProfileStyles();
-if (function_exists('renderProfileScripts')) renderProfileScripts();
-?>
-</body>
-</html>
+</body></html>

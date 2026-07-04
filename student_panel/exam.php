@@ -2,7 +2,15 @@
 
 <?php include("./verifyRoleRedirect.php");
 $id = $_SESSION['uid'];
-// error_reporting(1);
+
+// ── Fee clearance check — block results if balance outstanding ──
+$feeBlocked = false;
+$feeBalance = 0;
+if (isset($conn) && $id) {
+    $fc = $conn->prepare("SELECT COALESCE(SUM(balance),0) as bal FROM student_fees WHERE student_id=?");
+    if ($fc) { $fc->bind_param('s', $id); $fc->execute(); $fr = $fc->get_result()->fetch_assoc(); $feeBalance = (float)($fr['bal'] ?? 0); $fc->close(); }
+    if ($feeBalance > 0) $feeBlocked = true;
+}
 ?>
 
 <!DOCTYPE html>
@@ -162,9 +170,16 @@ $id = $_SESSION['uid'];
             <h2><?php echo "<a href='progress.php'>Progress Report</a>"; ?></h2>
 
 
+<?php if ($feeBlocked): ?>
+<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center;">
+<h3 style="color:#dc2626;margin:0 0 8px">Fee Clearance Required</h3>
+<p style="color:#991b1b;margin:0">Outstanding balance: <strong><?=number_format($feeBalance)?> UGX</strong>.<br>Please clear fees to access results. <a href="student-fees.php" style="color:#2563eb;font-weight:600">Pay Now</a></p>
+</div>
+<?php endif; ?>
+<?php if (!$feeBlocked): ?>
             <table class="allResultTable" id="allResultList">
                 <thead>
-                    <tr>
+                    <tr><?php endif; ?>
                         <th>Date</th>
                         <th>Subject</th>
                         <th>Title</th>

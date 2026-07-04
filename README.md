@@ -144,77 +144,69 @@ The ISNM system is a complete school management solution designed specifically f
 ## 🚀 Installation & Setup
 
 ### Prerequisites
-- **XAMPP** (or equivalent PHP + MySQL environment)
-- **PHP 8.1+**
-- **MySQL/MariaDB**
-- **Web Browser** (Chrome, Firefox, Safari, Edge)
+- **XAMPP** (or equivalent PHP + MySQL environment) or **cPanel hosting** (PHP 8.0+, MySQL 8.0+)
+- **PHP 8.0+** (tested on 8.2.12)
+- **MySQL 8.0+**
+- **mod_rewrite** enabled (Apache)
 
-### Step 1: Start XAMPP
-1. Open XAMPP Control Panel
-2. Start both **Apache** and **MySQL** services
+### Local Setup (XAMPP)
+1. Place the **ISNM** folder in `C:\xampp\htdocs\`
+2. Start **Apache** and **MySQL** from XAMPP Control Panel
+3. Copy `.env.example` to `.env` and `.env.local` — configure database credentials:
+   - `.env`: Production credentials (MySQL port **3306**)
+   - `.env.local`: Local overrides (root user, port 3306)
+4. Run `php sql/deploy_production.php` to create/migrate all tables
+5. Run `php sql/seed_production_credentials.php` to seed 30 staff accounts
+6. Navigate to **`http://localhost/ISNM`**
 
-### Step 2: Database Setup
-1. Open **phpMyAdmin** (click "Admin" button next to MySQL in XAMPP)
-2. Create a new database named **`isnm_school`**
-3. Import the database schema: `database/isnm_database.sql`
-4. Verify all tables are created successfully
-
-### Step 3: Project Placement
-1. Copy the **ISNM** folder to: `C:\xampp\htdocs\`
-2. Ensure the directory structure is: `C:\xampp\htdocs\ISNM\`
-3. Verify `index.php` exists in the main directory
-
-### Step 4: Access the System
-1. Open your web browser
-2. Navigate to: **`http://localhost/ISNM`**
-3. The school website homepage should load
+### Hosting Deployment
+1. Upload all files (exclude `.env.local`) to hosting via FTP/SSH
+2. Update `.env` with hosting MySQL credentials (port **3306**, not 3307)
+3. Run `php sql/deploy_production.php` via SSH or hosting terminal
+4. Run `php sql/seed_production_credentials.php`
+5. Verify `.htaccess` blocks `.env*` files (already configured)
 
 ## 🔐 Default Login Credentials
 
-The system includes comprehensive role-based access. Default credentials are:
+The system includes **30 staff accounts** seeded by `sql/seed_production_credentials.php`. Key accounts:
 
-| Role | Position | Email | Password |
-|------|----------|-------|----------|
-| Executive | Director General | director@isnm.ac.ug | admin123 |
-| Management | School Principal | principal@isnm.ac.ug | admin123 |
-| Finance | School Bursar | bursar@isnm.ac.ug | admin123 |
-| Academic | Director Academics | academics@isnm.ac.ug | admin123 |
-| Student | Student Portal | student@isnm.ac.ug | student123 |
+| Role | Email | Password |
+|------|-------|----------|
+| Director General | director@...ac.ug | ReagaN23# |
+| CEO | ceo@...ac.ug | ReagaN23# |
+| HR Manager | hr@...ac.ug | ReagaN23# |
+| School Bursar | bursar@...ac.ug | ReagaN23# |
+| Academic Registrar | registrar@...ac.ug | ReagaN23# |
+| School Principal | principal@...ac.ug | ReagaN23# |
 
-**Note**: Change default passwords after initial setup for security.
+All credentials match the official credentials document. Change passwords after initial setup.
 
 ## 📁 Project Structure
 
 ```
 ISNM/
 ├── index.php                    # Homepage
-├── about.php                    # About page
-├── programs.php                 # Academic programs
-├── application.php              # Application form
-├── contact.php                  # Contact information
-├── donation.php                 # Donation page
-├── volunteer.php                # Volunteer page
-├── organizational-structure.php  # Staff login portal
-├── staff-login.php              # Staff login page
-├── student-login.php            # Student login page
-├── process-application.php       # Application processing
-├── logout.php                   # Logout script
-├── css/
-│   └── isnm-style.css           # Custom styles
+├── .env / .env.local            # Database credentials (local overrides)
+├── .htaccess                    # Security rules (blocks .env, enables rewrite)
+├── auth-service.php             # Unified AuthenticationService class
+├── auth-handler.php             # POST login handler
+├── config/database.php          # DB connections, sanitizeInput(), validators
+├── includes/
+│   ├── staff_dashboard_access.php  # bootstrapStaffDashboard(), CSRF, session
+│   ├── hr_functions.php            # hrGetStaff(), hrGetStats(), hrStatusBadge()
+│   └── enterprise_auth.php         # Enterprise auth helpers
 ├── dashboards/
+│   ├── hr-manager.php           # 13-module HR dashboard (Staff, Recruitment, etc.)
+│   ├── school-bursar.php        # 11-module Bursar dashboard (Billing, Payroll, etc.)
 │   ├── director-general.php     # Director General dashboard
-│   ├── school-principal.php     # School Principal dashboard
-│   ├── director-academics.php   # Director Academics dashboard
-│   ├── school-bursar.php        # Bursar dashboard
-│   ├── student.php               # Student portal
-│   └── dashboard-style.css      # Dashboard styles
-├── database/
-│   └── isnm_database.sql        # Database schema
-├── shared/
-│   └── _header.php               # Shared header
-├── images/
-│   └── school-logo.png          # School logo
-└── README.md                    # This file
+│   └── ... (20+ role dashboards)
+├── staff-portal.php             # Staff self-service (payslips, leave, profile)
+├── sql/
+│   ├── hr_module_complete.sql   # HR schema migration (12 new tables, 15 columns)
+│   ├── deploy_production.php    # Deploy script: creates tables, indexes, FKs
+│   └── seed_production_credentials.php  # Seeds 30 staff accounts
+├── organogram.php               # Organizational chart → role-based login
+└── README.md
 ```
 
 ## 🎯 Key Functionalities
@@ -266,11 +258,16 @@ ISNM/
 
 ## 🛡️ Security Features
 
-- **Role-Based Access**: 20+ different user roles with specific permissions
-- **Session Management**: Secure login/logout functionality
-- **Input Validation**: Form validation and sanitization
+- **Role-Based Access**: 30 staff roles with `bootstrapStaffDashboard()` permission gating
+- **CSRF Protection**: All POST requests validated via `hash_equals()` token check
+- **SQL Injection Prevention**: All queries use prepared statements (`bind_param`)
+- **Session Management**: 20-min idle / 1-hr absolute timeout, `session_regenerate_id()` on login
+- **Password Security**: bcrypt hashing, 10-attempt lockout (5-min), unified error messages (no oracle)
+- **Input Validation**: `sanitizeInput()` (trim + strip tags), `validateEmail()`, `validatePhone()`
+- **Account Lockout**: Auto-unlock after 5 minutes; inactive accounts blocked at login
 - **File Upload Security**: Type checking and size limits
-- **Password Protection**: Hashed password storage
+- **Activity Logging**: All logins/logouts recorded in `staff_activity_log` table
+- **Error Handling**: Fatal error catcher in `staff_dashboard_access.php` shows friendly error page
 
 ## 📞 Support & Contact
 

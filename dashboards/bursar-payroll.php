@@ -8,6 +8,7 @@ $user = $ctx['user'];
 $user_id = (int)($user['id'] ?? 0);
 $staff_conn = $ctx['staff'];
 $students_conn = $ctx['students'];
+$studentsDb = defined('STUDENTS_DB_NAME') ? STUDENTS_DB_NAME : 'igangaschoolofl_students_db';
 if ($staff_conn) $staff_conn->set_charset("utf8mb4");
 
 $tab = $_GET['tab'] ?? 'overview';
@@ -153,7 +154,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $staff_conn) {
         header('Location: bursar-payroll.php?tab=payslips'); exit;
     }
 
-    // 10. Mark Paid
+    // 10. Update Leave Balance
+    if ($action === 'update_balance') {
+        $sid = (int)($_POST['staff_id'] ?? 0);
+        $lid = (int)($_POST['leave_type_id'] ?? 0);
+        $dt = (int)($_POST['days_taken'] ?? 0);
+        if ($sid && $lid) {
+            $stmt = $staff_conn->prepare("INSERT INTO leave_balances (staff_id, leave_type_id, days_taken) VALUES (?,?,?) ON DUPLICATE KEY UPDATE days_taken = days_taken + ?");
+            if ($stmt) { $stmt->bind_param('iiii', $sid, $lid, $dt, $dt); $stmt->execute(); $_SESSION['success']='Leave balance updated.'; }
+        }
+        header('Location: bursar-payroll.php?tab=leave'); exit;
+    }
+
+    // 11. Mark Paid
     if ($action === 'mark_paid') {
         $rid  = (int)($_POST['run_id'] ?? 0);
         $meth = $_POST['payment_method'] ?? 'bank_transfer';
@@ -247,6 +260,8 @@ if ($staff_conn) {
         <li class="nav-item"><a class="nav-link <?= $tab==='payslips'?'active':'' ?>" href="bursar-payroll.php?tab=payslips"><i class="fas fa-file-invoice me-1"></i>Payslips</a></li>
         <li class="nav-item"><a class="nav-link <?= $tab==='approvals'?'active':'' ?>" href="bursar-payroll.php?tab=approvals"><i class="fas fa-check-double me-1"></i>Approvals</a></li>
         <li class="nav-item"><a class="nav-link <?= $tab==='payment'?'active':'' ?>" href="bursar-payroll.php?tab=payment"><i class="fas fa-credit-card me-1"></i>Payment</a></li>
+        <li class="nav-item"><a class="nav-link <?= $tab==='leave'?'active':'' ?>" href="bursar-payroll.php?tab=leave"><i class="fas fa-calendar-alt me-1"></i>Leave</a></li>
+        <li class="nav-item"><a class="nav-link <?= $tab==='statements'?'active':'' ?>" href="bursar-payroll.php?tab=statements"><i class="fas fa-file-invoice-dollar me-1"></i>Student Statements</a></li>
         <li class="nav-item"><a class="nav-link <?= $tab==='reports'?'active':'' ?>" href="bursar-payroll.php?tab=reports"><i class="fas fa-file-alt me-1"></i>Reports</a></li>
     </ul>
 
@@ -679,6 +694,160 @@ if ($staff_conn) {
                     <?php endforeach; ?></tbody>
                 </table></div>
             </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- ── LEAVE MANAGEMENT ── -->
+    <?php if ($tab === 'leave'): ?>
+    <?php
+    $leaveTypes = [];
+    $r = $staff_conn->query("SELECT id, leave_type_name, days_entitled FROM leave_types WHERE is_active=1 ORDER BY leave_type_name");
+    if ($r) $leaveTypes = $r->fetch_all(MYSQLI_ASSOC);
+    $leaveBalances = [];
+    $r = $staff_conn->query("SELECT lb.*, s.full_name, lt.leave_type_name, lt.days_entitled FROM leave_balances lb JOIN staff s ON lb.staff_id=s.id JOIN leave_types lt ON lb.leave_type_id=lt.id ORDER BY s.full_name");
+    if ($r) $leaveBalances = $r->fetch_all(MYSQLI_ASSOC);
+    ?>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="cc"><div class="ch"><i class="fas fa-plus-circle me-2"></i>Leave Balances</div>
+                <div class="p-3">
+                    <form method="POST">
+                        <div class="mb-2"><label class="small fw-medium">Staff *</label>
+                            <select name="staff_id" class="form-control fc" required><option value="">-- Select --</option>
+                            <?php $r=$staff_conn->query("SELECT id, full_name FROM staff WHERE status='active' OR status='Active' ORDER BY full_name");
+                            if($r) while($s=$r->fetch_assoc()) echo '<option value="'.$s['id'].'">'.htmlspecialchars($s['full_name']).'</option>'; ?>
+                            </select>
+                        </div>
+                        <div class="mb-2"><label class="small fw-medium">Leave Type *</label>
+                            <select name="leave_type_id" class="form-control fc" required><option value="">-- Select --</option>
+                            <?php foreach($leaveTypes as $lt) echo '<option value="'.$lt['id'].'">'.htmlspecialchars($lt['leave_type_name']).' ('.$lt['days_entitled'].' days)</option>'; ?>
+                            </select>
+                        </div>
+                        <div class="mb-2"><label class="small fw-medium">Days Taken</label>
+                            <input type="number" name="days_taken" class="form-control fc" value="0" min="0">
+                        </div>
+                        <button type="submit" name="action" value="update_balance" class="btn bb w-100"><i class="fas fa-save me-1"></i>Update Balance</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Staff Leave Balances</div>
+                <div class="table-responsive"><table class="table tb mb-0">
+                    <thead><tr><th>Staff</th><th>Leave Type</th><th>Entitled</th><th>Used</th><th>Remaining</th></tr></thead>
+                    <tbody><?php foreach ($leaveBalances as $lb): ?>
+                        <tr>
+                            <td><small><?= htmlspecialchars($lb['full_name']) ?></small></td>
+                            <td><span class="badge bg-info"><?= htmlspecialchars($lb['leave_type_name']) ?></span></td>
+                            <td><?= (int)$lb['days_entitled'] ?></td>
+                            <td><?= (int)($lb['days_taken']??0) ?></td>
+                            <td><strong><?= max(0, (int)$lb['days_entitled'] - (int)($lb['days_taken']??0)) ?></strong></td>
+                        </tr>
+                    <?php endforeach; if(empty($leaveBalances)): ?><tr><td colspan="5" class="text-center text-muted py-3">No leave balances recorded.</td></tr><?php endif; ?></tbody>
+                </table></div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- ── STUDENT STATEMENTS ── -->
+    <?php if ($tab === 'statements'): ?>
+    <?php
+    $stmtQ = trim($_GET['stmt_q'] ?? '');
+    $stmtStudent = null;
+    $stmtFees = [];
+    $stmtPayments = [];
+    $stmtTotals = ['total_fees'=>0,'total_paid'=>0,'balance'=>0];
+    if ($stmtQ && $students_conn) {
+        $like = "%$stmtQ%";
+        $s = $students_conn->prepare("SELECT id,student_id,CONCAT(first_name,' ',surname) full_name,program,level,phone,email FROM {$studentsDb}.students WHERE first_name LIKE ? OR surname LIKE ? OR student_id LIKE ? OR phone LIKE ? LIMIT 1");
+        if ($s) { $s->bind_param('ssss',$like,$like,$like,$like); $s->execute(); $stmtStudent = $s->get_result()->fetch_assoc(); $s->close(); }
+        if ($stmtStudent) {
+            $sid = (int)$stmtStudent['id'];
+            // Fee assignments / tracking
+            $r = $students_conn->query("SELECT * FROM {$studentsDb}.student_fee_tracking WHERE student_id=$sid ORDER BY academic_year DESC, semester");
+            if ($r) $stmtFees = $r->fetch_all(MYSQLI_ASSOC);
+            if (empty($stmtFees)) {
+                $r = $students_conn->query("SELECT * FROM {$studentsDb}.student_fees WHERE student_id=$sid ORDER BY created_at DESC");
+                if ($r) $stmtFees = $r->fetch_all(MYSQLI_ASSOC);
+            }
+            // Payments
+            $r = $students_conn->query("SELECT * FROM {$studentsDb}.payments WHERE student_id=$sid AND status='Completed' ORDER BY payment_date DESC LIMIT 50");
+            if ($r) $stmtPayments = $r->fetch_all(MYSQLI_ASSOC);
+            // Totals
+            foreach ($stmtFees as $f) {
+                $stmtTotals['total_fees'] += (float)($f['amount']??0);
+                $stmtTotals['total_paid'] += (float)($f['amount_paid']??0);
+                $stmtTotals['balance'] += (float)($f['balance']??0);
+            }
+        }
+    }
+    ?>
+    <div class="row g-4 mb-4">
+        <div class="col-md-5">
+            <div class="cc"><div class="ch"><i class="fas fa-search me-2"></i>Search Student</div>
+                <div class="p-3">
+                    <form method="GET">
+                        <input type="hidden" name="tab" value="statements">
+                        <div class="mb-2"><input type="text" name="stmt_q" class="form-control fc" placeholder="Student name, ID, or phone..." value="<?= htmlspecialchars($stmtQ) ?>"></div>
+                        <button type="submit" class="btn bb w-100"><i class="fas fa-search me-1"></i>Find Student</button>
+                    </form>
+                </div>
+            </div>
+            <?php if ($stmtStudent): ?>
+            <div class="cc mt-3"><div class="ch"><i class="fas fa-user me-2"></i>Student Info</div>
+                <div class="p-3 small">
+                    <p class="mb-1"><strong>Name:</strong> <?= htmlspecialchars($stmtStudent['full_name']) ?></p>
+                    <p class="mb-1"><strong>ID:</strong> <?= htmlspecialchars($stmtStudent['student_id']) ?></p>
+                    <p class="mb-1"><strong>Program:</strong> <?= htmlspecialchars($stmtStudent['program']??'') ?> <?= htmlspecialchars($stmtStudent['level']??'') ?></p>
+                    <p class="mb-1"><strong>Phone:</strong> <?= htmlspecialchars($stmtStudent['phone']??'') ?></p>
+                    <p class="mb-0"><strong>Email:</strong> <?= htmlspecialchars($stmtStudent['email']??'') ?></p>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <div class="col-md-7">
+            <?php if ($stmtStudent): ?>
+            <div class="row g-2 mb-3">
+                <div class="col-4"><div class="cc p-3 text-center"><p class="num fs-5 fw-bold" style="color:#1a237e">UGX <?= number_format($stmtTotals['total_fees']) ?></p><p class="small text-muted mb-0">Total Fees</p></div></div>
+                <div class="col-4"><div class="cc p-3 text-center"><p class="num fs-5 fw-bold" style="color:#16a34a">UGX <?= number_format($stmtTotals['total_paid']) ?></p><p class="small text-muted mb-0">Total Paid</p></div></div>
+                <div class="col-4"><div class="cc p-3 text-center"><p class="num fs-5 fw-bold" style="color:#dc2626">UGX <?= number_format($stmtTotals['balance']) ?></p><p class="small text-muted mb-0">Balance</p></div></div>
+            </div>
+            <div class="cc"><div class="ch"><i class="fas fa-list me-2"></i>Fee Breakdown</div>
+                <div class="table-responsive"><table class="table tb mb-0">
+                    <thead><tr><th>Fee Type</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Period</th><th>Status</th></tr></thead>
+                    <tbody><?php foreach ($stmtFees as $f): ?>
+                        <tr>
+                            <td><small><?= htmlspecialchars($f['fee_type'] ?? $f['fee_name']??'') ?></small></td>
+                            <td>UGX <?= number_format($f['amount']??0) ?></td>
+                            <td>UGX <?= number_format($f['amount_paid']??0) ?></td>
+                            <td><strong class="text-<?= ($f['balance']??0)>0?'danger':'success' ?>">UGX <?= number_format($f['balance']??0) ?></strong></td>
+                            <td><small><?= htmlspecialchars(($f['academic_year']??'').' '.($f['semester']??'')) ?></small></td>
+                            <td><?= payStatusBadge($f['status']??'Pending') ?></td>
+                        </tr>
+                    <?php endforeach; if(empty($stmtFees)): ?><tr><td colspan="6" class="text-center text-muted py-3">No fee records found.</td></tr><?php endif; ?></tbody>
+                </table></div>
+            </div>
+            <div class="cc mt-3"><div class="ch"><i class="fas fa-credit-card me-2"></i>Payment History</div>
+                <div class="table-responsive"><table class="table tb mb-0">
+                    <thead><tr><th>Date</th><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+                    <tbody><?php foreach ($stmtPayments as $p): ?>
+                        <tr>
+                            <td><small><?= htmlspecialchars($p['payment_date']??'') ?></small></td>
+                            <td><code><?= htmlspecialchars($p['payment_reference']??$p['reference']??'') ?></code></td>
+                            <td>UGX <?= number_format($p['amount_received']??$p['amount_paid']??0) ?></td>
+                            <td><small><?= htmlspecialchars($p['payment_method']??'') ?></small></td>
+                            <td><?= payStatusBadge($p['status']??'Completed') ?></td>
+                        </tr>
+                    <?php endforeach; if(empty($stmtPayments)): ?><tr><td colspan="5" class="text-center text-muted py-3">No payments recorded.</td></tr><?php endif; ?></tbody>
+                </table></div>
+            </div>
+            <?php else: ?>
+            <div class="cc"><div class="ch"><i class="fas fa-info-circle me-2"></i>Student Statement</div>
+                <div class="p-4 text-center text-muted"><?= $stmtQ ? 'Student not found. Try a different search.' : 'Search for a student to view their financial statement.' ?></div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>

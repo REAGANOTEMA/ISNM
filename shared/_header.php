@@ -49,8 +49,7 @@ include_once __DIR__ . '/../includes/functions.php';
   
   <!-- Custom CSS (with cache-busting version) -->
   <link rel="stylesheet" href="shared/style.css?v=2" />
-  <link rel="stylesheet" href="css/isnm-style.css?v=2" />
-  <link rel="stylesheet" href="css/header.css?v=2" />
+  <link rel="stylesheet" href="css/isnm-style.css?v=3" /><!-- merged: header.css + isnm-style.css -->
   <link rel="stylesheet" href="css/responsive.css?v=2" />
   <link rel="stylesheet" href="css/animations.css?v=2" />
 </head>

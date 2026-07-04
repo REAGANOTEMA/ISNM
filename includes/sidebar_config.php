@@ -282,6 +282,7 @@ function getAllSidebarConfigs(): array {
                 'dashboard' => ['label' => 'Dashboard', 'icon' => 'fas fa-tachometer-alt', 'link' => 'dashboards/school-bursar.php'],
                 'billing' => ['label' => 'Billing', 'icon' => 'fas fa-file-invoice', 'link' => 'dashboards/bursar-billing.php'],
                 'payments' => ['label' => 'Payments', 'icon' => 'fas fa-money-bill', 'link' => 'dashboards/bursar-payments.php'],
+                'requirements' => ['label' => 'Requirements', 'icon' => 'fas fa-clipboard-check', 'link' => 'dashboards/bursar-requirements.php'],
                 'ledger' => ['label' => 'Ledger', 'icon' => 'fas fa-book', 'link' => 'dashboards/bursar-ledger.php'],
                 'payroll' => ['label' => 'Payroll', 'icon' => 'fas fa-wallet', 'link' => 'dashboards/bursar-payroll.php'],
                 'tax' => ['label' => 'Tax', 'icon' => 'fas fa-file-invoice-dollar', 'link' => 'dashboards/bursar-tax.php'],

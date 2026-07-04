@@ -287,13 +287,12 @@ if (!function_exists('validateIndexNumber')) {
 
 if (!function_exists('studentExistsByIndexNumber')) {
     function studentExistsByIndexNumber($indexNumber) {
-        $conn = getStaffConnection();
+        $conn = getStudentsConnection();
         if (!$conn) return false;
 
-        $stmt = $conn->prepare('SELECT id FROM users WHERE index_number = ? AND role = ?');
+        $stmt = $conn->prepare('SELECT id FROM students WHERE student_number = ? LIMIT 1');
         if (!$stmt) return false;
-        $role = 'student';
-        $stmt->bind_param('ss', $indexNumber, $role);
+        $stmt->bind_param('s', $indexNumber);
         $stmt->execute();
         $result = $stmt->get_result();
         $exists = $result && $result->num_rows > 0;
@@ -308,7 +307,7 @@ if (!function_exists('userExistsByEmail')) {
         $conn = getStaffConnection();
         if (!$conn) return false;
 
-        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt = $conn->prepare('SELECT id FROM staff WHERE email = ? LIMIT 1');
         if (!$stmt) return false;
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -322,10 +321,7 @@ if (!function_exists('userExistsByEmail')) {
 
 if (!function_exists('sanitizeInput')) {
     function sanitizeInput($input) {
-        $input = trim((string) $input);
-        $input = stripslashes($input);
-        $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
-        return $input;
+        return trim((string) $input);
     }
 }
 

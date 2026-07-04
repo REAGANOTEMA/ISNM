@@ -97,6 +97,7 @@ $user_role_id = 0; $ri = $conn->query("SELECT role_id FROM staff WHERE id = ".in
 function enrollmentStats($conn, $students_conn, $program_name) {
   if (!$students_conn) return 0;
   $stmt = $students_conn->prepare("SELECT COUNT(*)c FROM students WHERE program=? AND status='Active'");
+  if (!$stmt) return 0;
   $stmt->bind_param("s", $program_name);
   $stmt->execute();
   $r = $stmt->get_result();
@@ -139,6 +140,7 @@ if ($report) {
         $pc = $_GET['program_code']??'';
         echo '<h2>Courses for: '.htmlspecialchars($pc).'</h2>';
         $stmt = $conn->prepare("SELECT cc.*,p.program_name FROM academic_course_catalog cc LEFT JOIN academic_programs p ON cc.program_code=p.program_code WHERE cc.program_code=? ORDER BY cc.year_of_study,cc.semester,cc.course_code");
+        if (!$stmt) { echo '<div class="alert alert-warning">Query failed</div>'; } else {
         $stmt->bind_param("s", $pc);
         $stmt->execute();
         $r = $stmt->get_result();
@@ -146,22 +148,23 @@ if ($report) {
         if($r && $r->num_rows>0) while($row=$r->fetch_assoc()){ echo '<tr><td>'.htmlspecialchars($row['course_code']).'</td><td>'.htmlspecialchars($row['course_title']).'</td><td>'.$row['year_of_study'].'</td><td>'.$row['semester'].'</td><td>'.$row['credits'].'</td><td>'.htmlspecialchars($row['status']).'</td></tr>'; }
         else echo '<tr><td colspan="6" class="text-center text-muted">No courses found.</td></tr>';
         echo '</tbody></table>';
-        $stmt->close();
+        $stmt->close(); }
     } elseif ($report === 'program_enrollment') {
         $fp = $_GET['program'] ?? '';
         echo '<h2>Program Enrollment Report</h2>';
         if($fp){
             echo '<p><strong>Filtered:</strong> '.htmlspecialchars($fp).'</p>';
             $stmt = $students_conn->prepare("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students WHERE program=? GROUP BY program");
+            if (!$stmt) { echo '<div class="alert alert-warning">Query failed</div>'; $r = null; } else {
             $stmt->bind_param("s", $fp);
             $stmt->execute();
-            $r = $stmt->get_result();
+            $r = $stmt->get_result(); }
         }
         else { $r=$students_conn->query("SELECT program,COUNT(*)total,SUM(CASE WHEN status='Active' THEN 1 ELSE 0 END)active FROM students GROUP BY program"); }
         echo '<table><thead><tr><th>Program</th><th>Total</th><th>Active</th><th>Inactive</th></tr></thead><tbody>';
         if($r) while($row=$r->fetch_assoc()){ $in=$row['total']-$row['active']; echo '<tr><td>'.htmlspecialchars($row['program']).'</td><td>'.$row['total'].'</td><td>'.$row['active'].'</td><td>'.$in.'</td></tr>'; }
         echo '</tbody></table>';
-        if($fp) $stmt->close();
+        if($fp && isset($stmt) && is_object($stmt)) $stmt->close();
     } elseif ($report === 'lecturer_workload') {
         echo '<h2>Lecturer Workload</h2>';
         $r=$conn->query("SELECT s.full_name,s.position,s.department,COUNT(ca.id)courses_assigned FROM staff s LEFT JOIN course_assignments ca ON s.id=ca.lecturer_id WHERE s.position LIKE '%Lecturer%' OR s.position LIKE '%lecturer%' GROUP BY s.id ORDER BY courses_assigned DESC");
@@ -773,11 +776,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
                                             <?php
                                             $ccs=[];
                                             $ccStmt=$conn->prepare("SELECT * FROM academic_course_catalog WHERE program_code=? ORDER BY year_of_study,semester");
+                                            if($ccStmt){
                                             $ccStmt->bind_param("s",$p['program_code']);
                                             $ccStmt->execute();
                                             $ccRes=$ccStmt->get_result();
                                             if($ccRes) while($row=$ccRes->fetch_assoc()) $ccs[]=$row;
-                                            $ccStmt->close();
+                                            $ccStmt->close(); }
                                             if(!empty($ccs)): foreach($ccs as $cc): ?>
                                             <div class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom small">
                                                 <span><code><?= htmlspecialchars($cc['course_code']) ?></code> <?= htmlspecialchars($cc['course_title']) ?></span>

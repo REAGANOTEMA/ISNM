@@ -8,6 +8,26 @@ if (!defined('PAYROLL_LOADED')) {
     define('PAYROLL_LOADED', true);
 }
 
+if (!function_exists('payStatusBadge')) {
+    function payStatusBadge($status): string {
+        $map = [
+            'draft' => ['bg-secondary', 'Draft'],
+            'processing' => ['bg-info', 'Processing'],
+            'processed' => ['bg-primary', 'Processed'],
+            'approved' => ['bg-success', 'Approved'],
+            'paid' => ['bg-dark', 'Paid'],
+            'pending' => ['bg-warning text-dark', 'Pending'],
+            'generated' => ['bg-info', 'Generated'],
+            'completed' => ['bg-success', 'Completed'],
+            'cancelled' => ['bg-danger', 'Cancelled'],
+            'rejected' => ['bg-danger', 'Rejected'],
+        ];
+        $s = strtolower($status);
+        $m = $map[$s] ?? ['bg-secondary', ucfirst($status)];
+        return '<span class="badge badge-status ' . $m[0] . '">' . htmlspecialchars($m[1]) . '</span>';
+    }
+}
+
 if (!function_exists('jsonResponse')) {
     function jsonResponse(bool $success, string $message = '', $data = null, int $httpCode = 200): void {
         http_response_code($httpCode);

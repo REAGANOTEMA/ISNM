@@ -477,8 +477,8 @@ function openCommunicationModal() {
 /* ============================================================
    PADDING / LAYOUT NORMALIZATION
    Ensures consistent spacing across all dashboards/pages.
-   Overrides conflicting values from dashboard-style.css,
-   dashboard-professional.css, modern-ui.css, etc.
+    Overrides conflicting values from dashboard-style.css,
+    dashboard-professional.css, etc. (merged into enterprise-layout.css)
    ============================================================ */
 .main, .main-content, .dashboard-main,
 .main-wrap, .page-wrap {
@@ -495,7 +495,7 @@ function openCommunicationModal() {
 .card-body {
   padding: 20px !important;
 }
-/* Remove double padding from modern-ui.css conflict */
+/* Remove double padding from merged styles */
 .main-content {
   padding: 0 !important;
 }
