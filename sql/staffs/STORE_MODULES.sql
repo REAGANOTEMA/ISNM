@@ -1,6 +1,0 @@
-INSERT IGNORE INTO system_modules (id, name, label, department_id, icon, route, tables_json, description, sort_order, is_active, is_student_module, is_document_module) VALUES
-(114, 'store_requisition', 'Store Requisition', 6, 'shopping-cart', '../dashboards/matrons.php?page=store_requisition', '{"main":["store_requests","store_request_items"]}', 'Submit store requisitions for hostels and departments', 1, 1, 0, 0),
-(115, 'warden_requisition', 'Warden Requisition', 6, 'shopping-cart', '../dashboards/wardens.php?page=warden_requisition', '{"main":["store_requests","store_request_items"]}', 'Submit store requisitions from hostel wardens', 2, 1, 0, 0),
-(116, 'inventory_management', 'Inventory Management', 6, 'boxes', '../dashboards/storekeeper.php?page=inventory', '{"main":["store_inventory","store_categories","store_transactions"]}', 'Manage store inventory, categories and stock levels', 3, 1, 0, 0),
-(117, 'requisition_processing', 'Requisition Processing', 6, 'clipboard-list', '../dashboards/storekeeper.php?page=requests', '{"main":["store_requests","store_request_items"]}', 'Process and fulfill incoming requisitions', 4, 1, 0, 0),
-(118, 'store_approval', 'Store Approval', 1, 'check-circle', '../dashboards/director-general.php?page=store', '{"main":["store_requests","store_request_items"]}', 'DG approval for store requisitions', 5, 1, 0, 0);
