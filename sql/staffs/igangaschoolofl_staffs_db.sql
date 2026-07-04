@@ -232,7 +232,7 @@ CREATE TABLE `academic_programs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `program_code` (`program_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -241,7 +241,7 @@ CREATE TABLE `academic_programs` (
 
 LOCK TABLES `academic_programs` WRITE;
 /*!40000 ALTER TABLE `academic_programs` DISABLE KEYS */;
-INSERT INTO `academic_programs` VALUES (1,'CERT-NUR','Certificate in Nursing','Certificate',3.0,'Nursing','Active','2026-06-22 12:10:24'),(2,'CERT-MID','Certificate in Midwifery','Certificate',3.0,'Midwifery','Active','2026-06-22 12:10:24'),(3,'DIP-NUR','Diploma in Nursing','Diploma',3.0,'Nursing','Active','2026-06-22 12:10:24'),(4,'DIP-MID','Diploma in Midwifery','Diploma',3.0,'Midwifery','Active','2026-06-22 12:10:24');
+INSERT INTO `academic_programs` VALUES (1,'CERT-NUR','Certificate in Nursing','Certificate',3.0,'Nursing','Active','2026-06-22 12:10:24'),(2,'CERT-MID','Certificate in Midwifery','Certificate',3.0,'Midwifery','Active','2026-06-22 12:10:24'),(3,'DIP-NUR','Diploma in Nursing','Diploma',3.0,'Nursing','Active','2026-06-22 12:10:24'),(4,'DIP-MID','Diploma in Midwifery','Diploma',3.0,'Midwifery','Active','2026-06-22 12:10:24'),(5,'PGM-0','Diploma in Nursing Education','Diploma',3.0,NULL,'Active','2026-07-04 10:03:08');
 /*!40000 ALTER TABLE `academic_programs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -547,6 +547,109 @@ INSERT INTO `admission_activity_logs` VALUES (1,24,'Create Student','students',0
 UNLOCK TABLES;
 
 --
+-- Table structure for table `admission_communications`
+--
+
+DROP TABLE IF EXISTS `admission_communications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_communications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `sender_id` int(11) DEFAULT NULL,
+  `communication_type` enum('Email','SMS','Portal','WhatsApp','Internal Note') NOT NULL DEFAULT 'Portal',
+  `subject` varchar(255) DEFAULT NULL,
+  `message` text NOT NULL,
+  `status` enum('Sent','Delivered','Read','Failed') DEFAULT 'Sent',
+  `sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_com_applicant` (`applicant_id`),
+  KEY `idx_com_type` (`communication_type`),
+  KEY `idx_com_sent` (`sent_at`),
+  CONSTRAINT `fk_com_applicant` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_communications`
+--
+
+LOCK TABLES `admission_communications` WRITE;
+/*!40000 ALTER TABLE `admission_communications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_communications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_decisions`
+--
+
+DROP TABLE IF EXISTS `admission_decisions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_decisions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `decision` enum('Approved','Rejected','Deferred','Waitlisted') NOT NULL,
+  `decision_reason` text DEFAULT NULL,
+  `decided_by` int(11) DEFAULT NULL,
+  `decided_at` timestamp NULL DEFAULT NULL,
+  `notified_applicant` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_dec_applicant` (`applicant_id`),
+  KEY `idx_dec_decision` (`decision`),
+  CONSTRAINT `fk_dec_applicant` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_decisions`
+--
+
+LOCK TABLES `admission_decisions` WRITE;
+/*!40000 ALTER TABLE `admission_decisions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_decisions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_interviews`
+--
+
+DROP TABLE IF EXISTS `admission_interviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_interviews` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `applicant_id` int(11) NOT NULL,
+  `interviewer_id` int(11) DEFAULT NULL,
+  `interview_date` datetime NOT NULL,
+  `interview_mode` enum('In-Person','Online','Phone') NOT NULL DEFAULT 'In-Person',
+  `interview_link` varchar(500) DEFAULT NULL,
+  `interview_score` decimal(5,2) DEFAULT NULL,
+  `interview_outcome` enum('Pass','Fail','Pending','Reschedule') DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `recommendation` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_int_applicant` (`applicant_id`),
+  KEY `idx_int_date` (`interview_date`),
+  KEY `idx_int_outcome` (`interview_outcome`),
+  CONSTRAINT `fk_int_applicant` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_interviews`
+--
+
+LOCK TABLES `admission_interviews` WRITE;
+/*!40000 ALTER TABLE `admission_interviews` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_interviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `admission_notifications`
 --
 
@@ -575,6 +678,33 @@ CREATE TABLE `admission_notifications` (
 LOCK TABLES `admission_notifications` WRITE;
 /*!40000 ALTER TABLE `admission_notifications` DISABLE KEYS */;
 /*!40000 ALTER TABLE `admission_notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admission_reports_cache`
+--
+
+DROP TABLE IF EXISTS `admission_reports_cache`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admission_reports_cache` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `report_key` varchar(100) NOT NULL,
+  `report_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`report_data`)),
+  `generated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `report_key` (`report_key`),
+  KEY `idx_cache_key` (`report_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admission_reports_cache`
+--
+
+LOCK TABLES `admission_reports_cache` WRITE;
+/*!40000 ALTER TABLE `admission_reports_cache` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admission_reports_cache` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -971,6 +1101,43 @@ CREATE TABLE `applications` (
 LOCK TABLES `applications` WRITE;
 /*!40000 ALTER TABLE `applications` DISABLE KEYS */;
 /*!40000 ALTER TABLE `applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `appointment_letters`
+--
+
+DROP TABLE IF EXISTS `appointment_letters`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `appointment_letters` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `letter_type` enum('appointment','confirmation','promotion','transfer','suspension','termination','retirement') DEFAULT 'appointment',
+  `letter_number` varchar(50) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` longtext NOT NULL,
+  `issue_date` date NOT NULL,
+  `signed_by` int(11) DEFAULT NULL,
+  `pdf_path` varchar(500) DEFAULT NULL,
+  `status` enum('draft','issued','acknowledged') DEFAULT 'draft',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `letter_number` (`letter_number`),
+  KEY `idx_al_staff` (`staff_id`),
+  KEY `idx_al_type` (`letter_type`),
+  CONSTRAINT `appointment_letters_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `appointment_letters`
+--
+
+LOCK TABLES `appointment_letters` WRITE;
+/*!40000 ALTER TABLE `appointment_letters` DISABLE KEYS */;
+/*!40000 ALTER TABLE `appointment_letters` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -3271,6 +3438,37 @@ LOCK TABLES `compliance_tracking` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `contract_renewal_reminders`
+--
+
+DROP TABLE IF EXISTS `contract_renewal_reminders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_renewal_reminders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contract_id` int(11) NOT NULL,
+  `reminder_date` date NOT NULL,
+  `reminder_type` enum('30_days','14_days','7_days','expired') NOT NULL,
+  `sent_to` varchar(500) DEFAULT NULL,
+  `status` enum('sent','pending','acknowledged') DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_crr_contract` (`contract_id`),
+  CONSTRAINT `contract_renewal_reminders_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `employment_contracts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_renewal_reminders`
+--
+
+LOCK TABLES `contract_renewal_reminders` WRITE;
+/*!40000 ALTER TABLE `contract_renewal_reminders` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contract_renewal_reminders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `cost_centers`
 --
 
@@ -4376,7 +4574,9 @@ CREATE TABLE `employment_contracts` (
   `terms` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `idx_staff_id` (`staff_id`)
+  KEY `idx_staff_id` (`staff_id`),
+  KEY `idx_ec_dates` (`start_date`,`end_date`),
+  KEY `idx_ec_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -4614,6 +4814,40 @@ CREATE TABLE `exams` (
 LOCK TABLES `exams` WRITE;
 /*!40000 ALTER TABLE `exams` DISABLE KEYS */;
 /*!40000 ALTER TABLE `exams` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `exit_interviews`
+--
+
+DROP TABLE IF EXISTS `exit_interviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `exit_interviews` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `resignation_id` int(11) DEFAULT NULL,
+  `exit_date` date NOT NULL,
+  `reason_category` enum('career','relocation','family','health','retirement','conflict','other') DEFAULT NULL,
+  `reason_detail` text DEFAULT NULL,
+  `feedback` text DEFAULT NULL,
+  `assets_returned` tinyint(1) DEFAULT 0,
+  `clearance_status` enum('pending','in_progress','completed') DEFAULT 'pending',
+  `conducted_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_ei_staff` (`staff_id`),
+  CONSTRAINT `exit_interviews_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `exit_interviews`
+--
+
+LOCK TABLES `exit_interviews` WRITE;
+/*!40000 ALTER TABLE `exit_interviews` DISABLE KEYS */;
+/*!40000 ALTER TABLE `exit_interviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -5764,6 +5998,35 @@ LOCK TABLES `hr_announcements` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `hr_dashboard_cache`
+--
+
+DROP TABLE IF EXISTS `hr_dashboard_cache`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `hr_dashboard_cache` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cache_key` varchar(100) NOT NULL,
+  `cache_value` longtext DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `cache_key` (`cache_key`),
+  KEY `idx_cache_key` (`cache_key`),
+  KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hr_dashboard_cache`
+--
+
+LOCK TABLES `hr_dashboard_cache` WRITE;
+/*!40000 ALTER TABLE `hr_dashboard_cache` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hr_dashboard_cache` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `hr_reports`
 --
 
@@ -6173,13 +6436,17 @@ DROP TABLE IF EXISTS `intakes`;
 CREATE TABLE `intakes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `intake_name` varchar(200) NOT NULL,
+  `intake_month` varchar(20) NOT NULL,
+  `intake_year` year(4) NOT NULL DEFAULT 2026,
+  `application_start` date DEFAULT NULL,
+  `application_deadline` date DEFAULT NULL,
   `academic_year` varchar(20) NOT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `status` varchar(50) DEFAULT 'Open',
+  `status` enum('Open','Closed','Upcoming') NOT NULL DEFAULT 'Upcoming',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -6188,7 +6455,44 @@ CREATE TABLE `intakes` (
 
 LOCK TABLES `intakes` WRITE;
 /*!40000 ALTER TABLE `intakes` DISABLE KEYS */;
+INSERT INTO `intakes` VALUES (1,'January 2026','January',2026,'2025-09-01','2026-01-15','',NULL,NULL,'Open','2026-07-04 09:57:50'),(2,'May 2026','May',2026,'2026-01-01','2026-05-15','',NULL,NULL,'Upcoming','2026-07-04 09:57:50'),(3,'August 2026','August',2026,'2026-04-01','2026-08-15','',NULL,NULL,'Upcoming','2026-07-04 09:57:50'),(4,'January 2026','January',2026,'2025-09-01','2026-01-15','',NULL,NULL,'Open','2026-07-04 09:59:22'),(5,'May 2026','May',2026,'2026-01-01','2026-05-15','',NULL,NULL,'Upcoming','2026-07-04 09:59:22'),(6,'August 2026','August',2026,'2026-04-01','2026-08-15','',NULL,NULL,'Upcoming','2026-07-04 09:59:22'),(7,'January 2026','January',2026,'2025-09-01','2026-01-15','',NULL,NULL,'Open','2026-07-04 10:03:08'),(8,'May 2026','May',2026,'2026-01-01','2026-05-15','',NULL,NULL,'Upcoming','2026-07-04 10:03:08'),(9,'August 2026','August',2026,'2026-04-01','2026-08-15','',NULL,NULL,'Upcoming','2026-07-04 10:03:08');
 /*!40000 ALTER TABLE `intakes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_schedules`
+--
+
+DROP TABLE IF EXISTS `interview_schedules`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_schedules` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `vacancy_id` int(11) NOT NULL,
+  `candidate_id` int(11) NOT NULL,
+  `interview_date` datetime NOT NULL,
+  `interview_type` enum('in-person','virtual','phone') DEFAULT 'in-person',
+  `interview_location` varchar(255) DEFAULT NULL,
+  `interviewers` text DEFAULT NULL COMMENT 'Comma-separated staff IDs or names',
+  `interview_status` enum('scheduled','completed','cancelled','rescheduled') DEFAULT 'scheduled',
+  `score` decimal(5,2) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_is_vacancy` (`vacancy_id`),
+  KEY `idx_is_date` (`interview_date`),
+  CONSTRAINT `interview_schedules_ibfk_1` FOREIGN KEY (`vacancy_id`) REFERENCES `job_vacancies` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_schedules`
+--
+
+LOCK TABLES `interview_schedules` WRITE;
+/*!40000 ALTER TABLE `interview_schedules` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_schedules` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -6218,6 +6522,37 @@ CREATE TABLE `interview_scheduling` (
 LOCK TABLES `interview_scheduling` WRITE;
 /*!40000 ALTER TABLE `interview_scheduling` DISABLE KEYS */;
 /*!40000 ALTER TABLE `interview_scheduling` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_scores`
+--
+
+DROP TABLE IF EXISTS `interview_scores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_scores` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `interview_id` int(11) NOT NULL,
+  `criteria` varchar(200) NOT NULL,
+  `score` decimal(5,2) NOT NULL,
+  `max_score` decimal(5,2) DEFAULT 10.00,
+  `comments` text DEFAULT NULL,
+  `scored_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_isc_interview` (`interview_id`),
+  CONSTRAINT `interview_scores_ibfk_1` FOREIGN KEY (`interview_id`) REFERENCES `interview_schedules` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_scores`
+--
+
+LOCK TABLES `interview_scores` WRITE;
+/*!40000 ALTER TABLE `interview_scores` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_scores` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -7221,7 +7556,8 @@ CREATE TABLE `leave_requests` (
   `reviewed_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `idx_lreq_staff` (`staff_id`)
+  KEY `idx_lreq_staff` (`staff_id`),
+  KEY `idx_lr_dates` (`start_date`,`end_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -8529,6 +8865,38 @@ CREATE TABLE `onboarding_checklist` (
 LOCK TABLES `onboarding_checklist` WRITE;
 /*!40000 ALTER TABLE `onboarding_checklist` DISABLE KEYS */;
 /*!40000 ALTER TABLE `onboarding_checklist` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `onboarding_tasks`
+--
+
+DROP TABLE IF EXISTS `onboarding_tasks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `onboarding_tasks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `checklist_item` varchar(255) NOT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `status` enum('pending','in_progress','completed','waived') DEFAULT 'pending',
+  `completed_at` datetime DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_ot_staff` (`staff_id`),
+  CONSTRAINT `onboarding_tasks_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `onboarding_tasks`
+--
+
+LOCK TABLES `onboarding_tasks` WRITE;
+/*!40000 ALTER TABLE `onboarding_tasks` DISABLE KEYS */;
+/*!40000 ALTER TABLE `onboarding_tasks` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -9897,6 +10265,44 @@ CREATE TABLE `programs` (
 LOCK TABLES `programs` WRITE;
 /*!40000 ALTER TABLE `programs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `programs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `promotion_recommendations`
+--
+
+DROP TABLE IF EXISTS `promotion_recommendations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `promotion_recommendations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `current_position` varchar(200) NOT NULL,
+  `recommended_position` varchar(200) NOT NULL,
+  `current_salary` decimal(12,2) DEFAULT NULL,
+  `recommended_salary` decimal(12,2) DEFAULT NULL,
+  `reason` text NOT NULL,
+  `recommendation_date` date NOT NULL,
+  `recommended_by` int(11) DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `approval_status` enum('pending','approved','rejected','deferred') DEFAULT 'pending',
+  `approval_date` date DEFAULT NULL,
+  `effective_date` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_pr_staff` (`staff_id`),
+  KEY `idx_pr_status` (`approval_status`),
+  CONSTRAINT `promotion_recommendations_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `promotion_recommendations`
+--
+
+LOCK TABLES `promotion_recommendations` WRITE;
+/*!40000 ALTER TABLE `promotion_recommendations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `promotion_recommendations` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -11354,6 +11760,12 @@ CREATE TABLE `staff` (
   `full_name` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `marital_status` enum('Single','Married','Divorced','Widowed') DEFAULT 'Single',
+  `nationality` varchar(100) DEFAULT 'Ugandan',
+  `religion` varchar(100) DEFAULT NULL,
+  `nin` varchar(20) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `role_id` int(11) DEFAULT NULL,
   `position` varchar(150) DEFAULT NULL,
@@ -11367,6 +11779,18 @@ CREATE TABLE `staff` (
   `password_changed` tinyint(1) DEFAULT 0,
   `profile_photo` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
+  `next_of_kin_name` varchar(150) DEFAULT NULL,
+  `next_of_kin_phone` varchar(20) DEFAULT NULL,
+  `next_of_kin_relationship` varchar(50) DEFAULT NULL,
+  `next_of_kin_address` text DEFAULT NULL,
+  `emergency_contact_name` varchar(150) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
+  `highest_qualification` varchar(200) DEFAULT NULL,
+  `year_of_experience` int(11) DEFAULT 0,
+  `staff_category` enum('teaching','non-teaching','clinical','administrative') DEFAULT 'non-teaching',
+  `contract_end_date` date DEFAULT NULL,
+  `resignation_date` date DEFAULT NULL,
+  `resignation_reason` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -11374,7 +11798,12 @@ CREATE TABLE `staff` (
   KEY `role_id` (`role_id`),
   KEY `idx_staff_email` (`email`),
   KEY `idx_staff_status` (`status`),
-  KEY `idx_staff_role_status` (`role_id`,`status`)
+  KEY `idx_staff_role_status` (`role_id`,`status`),
+  KEY `idx_staff_nin` (`nin`),
+  KEY `idx_staff_gender` (`gender`),
+  KEY `idx_staff_category` (`staff_category`),
+  KEY `idx_staff_contract_end` (`contract_end_date`),
+  KEY `idx_staff_dob` (`date_of_birth`)
 ) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -11384,7 +11813,7 @@ CREATE TABLE `staff` (
 
 LOCK TABLES `staff` WRITE;
 /*!40000 ALTER TABLE `staff` DISABLE KEYS */;
-INSERT INTO `staff` VALUES (1,NULL,'Doris Joy Namugwanya','directorgeneral@igangaschoolofnursingandmidwifery.ac.ug','','$2y$10$5ZCEt690hGgitPo/i2hN9u47/msQyL/WGUjLqRrV5FxDkIJ1E8Z4G',1,'Director General','Executive Office','Active','2026-06-09','2026-07-02 18:59:12',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(2,NULL,'Doris Joy','ceo@igangaschoolofnursingandmidwifery.ac.ug','','$2y$10$9OCaF6L19fgSaGCxFIg4r.zqRGhOmJ9NH7O/drLcnZxJuc98fLmIm',2,'Chief Executive Officer','Executive Office','Active','2026-06-09','2026-06-28 10:30:19',0,NULL,0,1,NULL,'','2026-06-09 22:56:10','2026-07-03 05:14:47'),(3,NULL,'Stephen Bywaka','directoracademic@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$.ISH3kz4OBP2pm9zZdErAOa.gRlJ6jzXywDjl5KKzXBO4rWynaUX6',3,'Director Academics','Academic Affairs','Active','2026-06-09','2026-07-01 17:18:49',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(4,NULL,'Finance Director','finance@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$mdRzTcfvpjfW3bT3Sw90ZeI25KAVPfaDOZWfaWNqA2UYFcYiurqvK',4,'Director Finance','Finance Department','Active','2026-06-09','2026-06-29 11:25:43',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(5,NULL,'School Principal','principal@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$47TAy3ADQyAKVrB7HKPuw.f60KFLoKwRQOpspDDO0ZRzuodEZN9mu',6,'School Principal','Academic Affairs','Active','2026-06-09','2026-06-29 11:27:12',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:11','2026-07-03 05:14:47'),(6,NULL,'Deputy Principal','dep-principal@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$fX8gBipJ9jktOlqImT.dGethgebkpMQtISb4HPLKBWzP4W6Sfl8eG',7,'Deputy Principal','Academic Affairs','Active','2026-06-09','2026-06-29 11:28:25',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:11','2026-07-03 05:14:47'),(7,NULL,'Academic Registrar','academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','0772514889','$2y$10$PqCRfIJ85BuVxyK7ARsJMOKOX2gzssx9wKlgCMZ2c.ma8X1qYlbWi',8,'Academic Registrar','Academic Affairs','Active','2026-06-09','2026-07-01 17:58:34',0,NULL,0,1,NULL,'Lubas Road','2026-06-09 22:56:11','2026-07-03 05:14:47'),(8,NULL,'HR Manager','hr-manager@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$cmGaNRE4umHoIRfZlQ2zHuSUhCx9U3Ir6dgHlC6Vht5WjUSQnUXQ.',9,'HR Manager','Human Resources','Active','2026-06-09','2026-06-26 06:04:57',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:14','2026-07-03 05:14:47'),(9,NULL,'School Secretary','secretary@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$YJfwOcBemAZeSBPe5aaMhuDQ5xqsCDWCs.ikP5NeXL2AUqfGIajke',10,'School Secretary','Administrative Office','Active','2026-06-09','2026-07-01 17:41:33',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:23','2026-07-03 05:14:47'),(10,NULL,'School Librarian','library@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$FaZokKAdFdpBpRwcSM5dSObZG740ZACI8ahL9vE9Uf5SoWWQUZksC',11,'School Librarian','Library Services','Active','2026-06-09','2026-07-01 10:04:36',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:29','2026-07-03 05:14:47'),(11,NULL,'Head of Nursing','nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$vIoSrwFiG5x2a.Nzo0qWIecJ2AzDij65kmK4.1CNJBeyCqYYI411m',12,'Head Nursing','Nursing Department','Active','2026-06-09','2026-06-29 12:03:08',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:31','2026-07-03 05:14:47'),(12,NULL,'Head of Midwifery','midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$xX6uOjGTbVHnq77cTjKBheWwYY33OeWP/hAb/FfaFVFEoeesjEtc6',13,'Head Midwifery','Midwifery Department','Active','2026-06-09','2026-07-01 10:08:43',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:33','2026-07-03 05:14:47'),(13,NULL,'Senior Lecturers','senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$OEffzU3AOkx8wziH.nt4bu2raX/HyGv3IpdDQXMZqVwYj9MotSj.2',14,'Senior Lecturer','Academic Affairs','Active','2026-06-09','2026-06-29 12:08:55',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:33','2026-07-03 05:14:47'),(14,NULL,'Lecturers','lecturers@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$f5G4glNdiJ5HhWPrwakHD.FtGARFXBN5mDPbisPemvaSMF5VNAjhS',15,'Lecturer','Academic Affairs','Active','2026-06-09','2026-06-13 03:14:38',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(15,NULL,'Matron','matron@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$9Rh2T.Jwe9ykgITF0waOk.TmlCjLQ86NT1.2rNhZJe2kNLv.qq1eK',16,'Matrons','Student Affairs','Active','2026-06-09','2026-06-29 12:12:51',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(16,NULL,'Warden','warden@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$I1QssfbA4knhiBcpM6NlLOfaH3wclQ2th8xvQZcDP3kgaRLjIheQi',17,'Wardens','Student Affairs','Active','2026-06-09','2026-06-29 12:14:49',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(17,NULL,'Sickbay Officer','sickbay@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$pjQ6f52wnY9zYohpBewoTuQ5Z46kg5yHg6SCpDfRh1hhLR2jFK5f6',18,'Sickbay','Support','Active','2026-06-09','2026-06-29 12:20:14',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(18,NULL,'Driver','drivers@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$.YJEVKnLJMlGQcjCOxy1u.ZuahC98gmg04/RJQEV.6LNyN6MYLE7.',19,'Drivers','Transport','Active','2026-06-09','2026-07-02 18:58:20',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:35','2026-07-03 05:14:47'),(19,NULL,'Security Officer','security@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$65qSTfGLgwRrgRNiBuyfTOuqfMmpSuS2QANmmfG6VAw0FGR2aRQzG',20,'Security','Security Services','Active','2026-06-09','2026-06-13 03:14:39',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:35','2026-07-03 05:14:47'),(20,NULL,'Storekeeper','store@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$g5jTroKwPIL1SEbLYG4wqO1oPr7T6blGHXKj68gzwhY85SHiSnHBC',21,'Store Keeper','Facilities Management','Active','2026-06-09','2026-06-29 12:28:45',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(21,NULL,'Guild President','guildpresident@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$n9XgEm1ItVC9.K7RqadF7eQGZmALTFAS5RKWoCEkXXj0zxUhRIoo.',22,'Guild President','Student Affairs','Active','2026-06-09','2026-06-13 03:14:39',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(22,NULL,'Computer Lab Manager','computer-lab@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$zWybyrTprzkLr0B/0jwUB.iUeQJ.CVLUTZp9Z0dHfE.TEXPfI6Nza',23,'Director ICT','Information Communication Technology','Active','2026-06-09','2026-06-30 06:32:30',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(23,NULL,'Danny ICT Director','dannybict@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$SmT1Yk4QWDbwASz0sPLzv.ywxHcPF2ttF6c3deyN.6A/p4ND.kWC6',5,'Director ICT','Information Technology','Active','2026-06-09','2026-07-02 21:05:46',0,NULL,0,1,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(24,NULL,'Admissions Officer Derrick','admissions@igangaschoolofnursingandmidwifery.ac.ug','','$2y$10$cKEebG67aspdUj9BiDNrrO8Y76aIBYHbnlInrSKyvM5MpH97bR2qa',26,'Director Admissions & Requirements','Admissions','Active','2026-06-09','2026-07-02 16:36:15',0,NULL,1,1,NULL,NULL,'2026-06-09 22:56:37','2026-07-03 05:14:47'),(25,NULL,'School Bursar','bursar@igangaschoolofnursingandmidwifery.ac.ug',NULL,'$2y$10$LpzZa5tyhQAgS7ek5nPHB.6sACHFSR8Sy1FTGdAQC6uLBil8GX9xW',24,'School Bursar','Finance Department','Active','2026-06-10','2026-07-03 05:40:16',0,NULL,0,1,NULL,NULL,'2026-06-10 00:56:49','2026-07-03 05:14:47'),(51,'BURS002','Bursar','bursar.assistant@isnm.ac.ug',NULL,'$2y$10$U61BKsKqMuX1LajK/sSOme3yETx/qnoNw75CxEiBr7mX8pd.922v.',27,'Bursar','Finance Department','Active','2026-06-13',NULL,0,NULL,1,0,NULL,NULL,'2026-06-13 02:38:49','2026-06-13 02:38:49');
+INSERT INTO `staff` VALUES (1,NULL,'Doris Joy Namugwanya','directorgeneral@igangaschoolofnursingandmidwifery.ac.ug','',NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$5ZCEt690hGgitPo/i2hN9u47/msQyL/WGUjLqRrV5FxDkIJ1E8Z4G',1,'Director General','Executive Office','Active','2026-06-09','2026-07-02 18:59:12',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(2,NULL,'Doris Joy','ceo@igangaschoolofnursingandmidwifery.ac.ug','',NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$9OCaF6L19fgSaGCxFIg4r.zqRGhOmJ9NH7O/drLcnZxJuc98fLmIm',2,'Chief Executive Officer','Executive Office','Active','2026-06-09','2026-06-28 10:30:19',0,NULL,0,1,NULL,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(3,NULL,'Stephen Bywaka','directoracademic@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$.ISH3kz4OBP2pm9zZdErAOa.gRlJ6jzXywDjl5KKzXBO4rWynaUX6',3,'Director Academics','Academic Affairs','Active','2026-06-09','2026-07-01 17:18:49',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(4,NULL,'Finance Director','finance@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$mdRzTcfvpjfW3bT3Sw90ZeI25KAVPfaDOZWfaWNqA2UYFcYiurqvK',4,'Director Finance','Finance Department','Active','2026-06-09','2026-06-29 11:25:43',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:10','2026-07-03 05:14:47'),(5,NULL,'School Principal','principal@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$47TAy3ADQyAKVrB7HKPuw.f60KFLoKwRQOpspDDO0ZRzuodEZN9mu',6,'School Principal','Academic Affairs','Active','2026-06-09','2026-06-29 11:27:12',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:11','2026-07-03 05:14:47'),(6,NULL,'Deputy Principal','dep-principal@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$fX8gBipJ9jktOlqImT.dGethgebkpMQtISb4HPLKBWzP4W6Sfl8eG',7,'Deputy Principal','Academic Affairs','Active','2026-06-09','2026-06-29 11:28:25',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:11','2026-07-03 05:14:47'),(7,NULL,'Academic Registrar','academicregistrar@igangaschoolofnursingandmidwifery.ac.ug','0772514889',NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$PqCRfIJ85BuVxyK7ARsJMOKOX2gzssx9wKlgCMZ2c.ma8X1qYlbWi',8,'Academic Registrar','Academic Affairs','Active','2026-06-09','2026-07-01 17:58:34',0,NULL,0,1,NULL,'Lubas Road',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:11','2026-07-03 05:14:47'),(8,NULL,'HR Manager','hr-manager@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$cmGaNRE4umHoIRfZlQ2zHuSUhCx9U3Ir6dgHlC6Vht5WjUSQnUXQ.',9,'HR Manager','Human Resources','Active','2026-06-09','2026-06-26 06:04:57',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:14','2026-07-03 05:14:47'),(9,NULL,'School Secretary','secretary@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$YJfwOcBemAZeSBPe5aaMhuDQ5xqsCDWCs.ikP5NeXL2AUqfGIajke',10,'School Secretary','Administrative Office','Active','2026-06-09','2026-07-01 17:41:33',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:23','2026-07-03 05:14:47'),(10,NULL,'School Librarian','library@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$FaZokKAdFdpBpRwcSM5dSObZG740ZACI8ahL9vE9Uf5SoWWQUZksC',11,'School Librarian','Library Services','Active','2026-06-09','2026-07-01 10:04:36',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:29','2026-07-03 05:14:47'),(11,NULL,'Head of Nursing','nursing-dep@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$vIoSrwFiG5x2a.Nzo0qWIecJ2AzDij65kmK4.1CNJBeyCqYYI411m',12,'Head Nursing','Nursing Department','Active','2026-06-09','2026-06-29 12:03:08',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:31','2026-07-03 05:14:47'),(12,NULL,'Head of Midwifery','midwifery-dep@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$xX6uOjGTbVHnq77cTjKBheWwYY33OeWP/hAb/FfaFVFEoeesjEtc6',13,'Head Midwifery','Midwifery Department','Active','2026-06-09','2026-07-01 10:08:43',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:33','2026-07-03 05:14:47'),(13,NULL,'Senior Lecturers','senior-lecturers@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$OEffzU3AOkx8wziH.nt4bu2raX/HyGv3IpdDQXMZqVwYj9MotSj.2',14,'Senior Lecturer','Academic Affairs','Active','2026-06-09','2026-06-29 12:08:55',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:33','2026-07-03 05:14:47'),(14,NULL,'Lecturers','lecturers@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$f5G4glNdiJ5HhWPrwakHD.FtGARFXBN5mDPbisPemvaSMF5VNAjhS',15,'Lecturer','Academic Affairs','Active','2026-06-09','2026-06-13 03:14:38',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(15,NULL,'Matron','matron@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$9Rh2T.Jwe9ykgITF0waOk.TmlCjLQ86NT1.2rNhZJe2kNLv.qq1eK',16,'Matrons','Student Affairs','Active','2026-06-09','2026-06-29 12:12:51',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(16,NULL,'Warden','warden@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$I1QssfbA4knhiBcpM6NlLOfaH3wclQ2th8xvQZcDP3kgaRLjIheQi',17,'Wardens','Student Affairs','Active','2026-06-09','2026-06-29 12:14:49',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(17,NULL,'Sickbay Officer','sickbay@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$pjQ6f52wnY9zYohpBewoTuQ5Z46kg5yHg6SCpDfRh1hhLR2jFK5f6',18,'Sickbay','Support','Active','2026-06-09','2026-06-29 12:20:14',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:34','2026-07-03 05:14:47'),(18,NULL,'Driver','drivers@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$.YJEVKnLJMlGQcjCOxy1u.ZuahC98gmg04/RJQEV.6LNyN6MYLE7.',19,'Drivers','Transport','Active','2026-06-09','2026-07-02 18:58:20',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:35','2026-07-03 05:14:47'),(19,NULL,'Security Officer','security@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$65qSTfGLgwRrgRNiBuyfTOuqfMmpSuS2QANmmfG6VAw0FGR2aRQzG',20,'Security','Security Services','Active','2026-06-09','2026-06-13 03:14:39',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:35','2026-07-03 05:14:47'),(20,NULL,'Storekeeper','store@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$g5jTroKwPIL1SEbLYG4wqO1oPr7T6blGHXKj68gzwhY85SHiSnHBC',21,'Store Keeper','Facilities Management','Active','2026-06-09','2026-06-29 12:28:45',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(21,NULL,'Guild President','guildpresident@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$n9XgEm1ItVC9.K7RqadF7eQGZmALTFAS5RKWoCEkXXj0zxUhRIoo.',22,'Guild President','Student Affairs','Active','2026-06-09','2026-06-13 03:14:39',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(22,NULL,'Computer Lab Manager','computer-lab@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$zWybyrTprzkLr0B/0jwUB.iUeQJ.CVLUTZp9Z0dHfE.TEXPfI6Nza',23,'Director ICT','Information Communication Technology','Active','2026-06-09','2026-06-30 06:32:30',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(23,NULL,'Danny ICT Director','dannybict@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$SmT1Yk4QWDbwASz0sPLzv.ywxHcPF2ttF6c3deyN.6A/p4ND.kWC6',5,'Director ICT','Information Technology','Active','2026-06-09','2026-07-02 21:05:46',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:36','2026-07-03 05:14:47'),(24,NULL,'Admissions Officer Derrick','admissions@igangaschoolofnursingandmidwifery.ac.ug','',NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$cKEebG67aspdUj9BiDNrrO8Y76aIBYHbnlInrSKyvM5MpH97bR2qa',26,'Director Admissions & Requirements','Admissions','Active','2026-06-09','2026-07-02 16:36:15',0,NULL,1,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-09 22:56:37','2026-07-03 05:14:47'),(25,NULL,'School Bursar','bursar@igangaschoolofnursingandmidwifery.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$LpzZa5tyhQAgS7ek5nPHB.6sACHFSR8Sy1FTGdAQC6uLBil8GX9xW',24,'School Bursar','Finance Department','Active','2026-06-10','2026-07-03 05:40:16',0,NULL,0,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-10 00:56:49','2026-07-03 05:14:47'),(51,'BURS002','Bursar','bursar.assistant@isnm.ac.ug',NULL,NULL,NULL,'Single','Ugandan',NULL,NULL,'$2y$10$U61BKsKqMuX1LajK/sSOme3yETx/qnoNw75CxEiBr7mX8pd.922v.',27,'Bursar','Finance Department','Active','2026-06-13',NULL,0,NULL,1,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'non-teaching',NULL,NULL,NULL,'2026-06-13 02:38:49','2026-06-13 02:38:49');
 /*!40000 ALTER TABLE `staff` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -11612,6 +12041,43 @@ CREATE TABLE `staff_disciplinary` (
 LOCK TABLES `staff_disciplinary` WRITE;
 /*!40000 ALTER TABLE `staff_disciplinary` DISABLE KEYS */;
 /*!40000 ALTER TABLE `staff_disciplinary` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `staff_documents`
+--
+
+DROP TABLE IF EXISTS `staff_documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `staff_documents` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `document_type` varchar(50) NOT NULL COMMENT 'CV, Certificate, Appointment Letter, Academic Document, ID, Other',
+  `document_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT 0,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `uploaded_by` int(11) DEFAULT NULL,
+  `is_verified` tinyint(1) DEFAULT 0,
+  `verified_by` int(11) DEFAULT NULL,
+  `verified_at` datetime DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_doc_staff` (`staff_id`),
+  KEY `idx_doc_type` (`document_type`),
+  CONSTRAINT `staff_documents_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `staff_documents`
+--
+
+LOCK TABLES `staff_documents` WRITE;
+/*!40000 ALTER TABLE `staff_documents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `staff_documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -12084,6 +12550,39 @@ CREATE TABLE `staff_training` (
 LOCK TABLES `staff_training` WRITE;
 /*!40000 ALTER TABLE `staff_training` DISABLE KEYS */;
 /*!40000 ALTER TABLE `staff_training` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `staff_work_history`
+--
+
+DROP TABLE IF EXISTS `staff_work_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `staff_work_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `position` varchar(200) NOT NULL,
+  `department` varchar(200) DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `salary_grade` varchar(50) DEFAULT NULL,
+  `supervisor` varchar(200) DEFAULT NULL,
+  `reason_for_change` varchar(500) DEFAULT NULL COMMENT 'Promotion, transfer, demotion, new hire',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_wh_staff` (`staff_id`),
+  CONSTRAINT `staff_work_history_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `staff_work_history`
+--
+
+LOCK TABLES `staff_work_history` WRITE;
+/*!40000 ALTER TABLE `staff_work_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `staff_work_history` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -14085,6 +14584,38 @@ LOCK TABLES `timetables` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `training_needs_assessment`
+--
+
+DROP TABLE IF EXISTS `training_needs_assessment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `training_needs_assessment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `skill_gap` varchar(500) NOT NULL,
+  `priority` enum('high','medium','low') DEFAULT 'medium',
+  `suggested_training` varchar(500) DEFAULT NULL,
+  `department_priority` int(11) DEFAULT 0,
+  `status` enum('identified','approved','completed','cancelled') DEFAULT 'identified',
+  `reviewed_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_tna_staff` (`staff_id`),
+  CONSTRAINT `training_needs_assessment_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `training_needs_assessment`
+--
+
+LOCK TABLES `training_needs_assessment` WRITE;
+/*!40000 ALTER TABLE `training_needs_assessment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `training_needs_assessment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `trainings`
 --
 
@@ -14610,6 +15141,43 @@ LOCK TABLES `visitor_logs` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `warning_letters`
+--
+
+DROP TABLE IF EXISTS `warning_letters`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `warning_letters` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `staff_id` int(11) NOT NULL,
+  `warning_type` enum('verbal','written','final') NOT NULL,
+  `warning_date` date NOT NULL,
+  `issued_by` int(11) DEFAULT NULL,
+  `reason` text NOT NULL,
+  `description` text DEFAULT NULL,
+  `action_required` text DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `status` enum('issued','acknowledged','resolved','escalated') DEFAULT 'issued',
+  `resolution_date` date DEFAULT NULL,
+  `pdf_path` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_wl_staff` (`staff_id`),
+  KEY `idx_wl_type` (`warning_type`),
+  CONSTRAINT `warning_letters_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `warning_letters`
+--
+
+LOCK TABLES `warning_letters` WRITE;
+/*!40000 ALTER TABLE `warning_letters` DISABLE KEYS */;
+/*!40000 ALTER TABLE `warning_letters` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `website_submission_logs`
 --
 
@@ -14789,4 +15357,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-03  6:54:31
+-- Dump completed on 2026-07-04 11:26:40
