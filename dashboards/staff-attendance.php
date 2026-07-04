@@ -5,6 +5,66 @@ bootstrapStaffDashboard(['hr','manager','director','principal','admin']);
 require_once __DIR__ . '/../includes/config_enhanced.php';
 $conn = getStaffConnection();
 
+// Handle check-in/check-out actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $response = ['success' => false, 'error' => 'Unknown action'];
+    $action = $_POST['action'];
+    $today = date('Y-m-d');
+    $now = date('H:i:s');
+    if ($action === 'check_in' && $conn) {
+        $staff_id = (int)($_POST['staff_id'] ?? 0);
+        if ($staff_id) {
+            $status = 'Present';
+            $check = $conn->query("SELECT id FROM attendance WHERE staff_id=$staff_id AND date='$today'");
+            if ($check && $check->num_rows > 0) {
+                $response['error'] = 'Already checked in today';
+            } else {
+                $stmt = $conn->prepare("INSERT INTO attendance (staff_id, date, check_in, status) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param('isss', $staff_id, $today, $now, $status);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
+        } else {
+            $response['error'] = 'Staff ID required';
+        }
+    } elseif ($action === 'check_out' && $conn) {
+        $staff_id = (int)($_POST['staff_id'] ?? 0);
+        if ($staff_id) {
+            $stmt = $conn->prepare("UPDATE attendance SET check_out=? WHERE staff_id=? AND date=? AND check_out IS NULL");
+            $stmt->bind_param('sis', $now, $staff_id, $today);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                $response['success'] = true;
+            } else {
+                $response['error'] = 'No active check-in found for today';
+            }
+            $stmt->close();
+        } else {
+            $response['error'] = 'Staff ID required';
+        }
+    } elseif ($action === 'mark_absent' && $conn) {
+        $staff_id = (int)($_POST['staff_id'] ?? 0);
+        if ($staff_id) {
+            $check = $conn->query("SELECT id FROM attendance WHERE staff_id=$staff_id AND date='$today'");
+            if ($check && $check->num_rows > 0) {
+                $response['error'] = 'Attendance already recorded for today';
+            } else {
+                $stmt = $conn->prepare("INSERT INTO attendance (staff_id, date, status) VALUES (?, ?, 'Absent')");
+                $stmt->bind_param('is', $staff_id, $today);
+                $response['success'] = $stmt->execute();
+                $response['error'] = $stmt->error;
+                $stmt->close();
+            }
+        } else {
+            $response['error'] = 'Staff ID required';
+        }
+    }
+    echo json_encode($response);
+    exit;
+}
+
 $presentToday = 0; $absent = 0; $onLeave = 0; $late = 0;
 $attendance = [];
 
@@ -61,35 +121,108 @@ if ($conn) {
             </div>
         </div>
     </div>
-    <div class="content-section">
-        <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Today's Attendance (<?= date('d M Y') ?>)</h5>
-        <?php if (empty($attendance)): ?>
-        <div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No attendance records for today.</p></div>
-        <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-light">
-                    <tr><th>Staff Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($attendance as $at): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($at['staff_name'] ?? '-') ?></td>
-                        <td><?= htmlspecialchars($at['date']) ?></td>
-                        <td><?= htmlspecialchars($at['check_in'] ?? '-') ?></td>
-                        <td><?= htmlspecialchars($at['check_out'] ?? '-') ?></td>
-                        <td>
-                            <?php $sc = $at['status'] === 'Present' ? 'success' : ($at['status'] === 'Absent' ? 'danger' : ($at['status'] === 'Late' ? 'warning text-dark' : ($at['status'] === 'On Leave' ? 'info' : 'secondary'))); ?>
-                            <span class="badge bg-<?= $sc ?>"><?= htmlspecialchars($at['status']) ?></span>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="content-section">
+                <h5 class="fw-bold mb-3"><i class="fas fa-sign-in-alt me-2"></i>Quick Actions</h5>
+                <div class="mb-3">
+                    <label class="form-label">Select Staff</label>
+                    <select id="attendanceStaff" class="form-select">
+                        <option value="">Choose staff...</option>
+                        <?php
+                        $allStaff = [];
+                        if ($conn) {
+                            $as = $conn->query("SELECT id, full_name FROM staff WHERE status='Active' ORDER BY full_name");
+                            if ($as) while ($row = $as->fetch_assoc()) echo '<option value="'.$row['id'].'">'.htmlspecialchars($row['full_name']).'</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="doCheckIn()"><i class="fas fa-sign-in-alt me-1"></i>Check In</button>
+                    <button class="btn btn-warning" onclick="doCheckOut()"><i class="fas fa-sign-out-alt me-1"></i>Check Out</button>
+                    <button class="btn btn-secondary" onclick="doMarkAbsent()"><i class="fas fa-user-times me-1"></i>Mark Absent</button>
+                </div>
+                <div id="attendanceMsg" class="mt-2 small"></div>
+            </div>
         </div>
-        <?php endif; ?>
+        <div class="col-md-8">
+            <div class="content-section">
+                <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Today's Attendance (<?= date('d M Y') ?>)</h5>
+                <?php if (empty($attendance)): ?>
+                <div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No attendance records for today.</p></div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Staff Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($attendance as $at): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($at['staff_name'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($at['date']) ?></td>
+                                <td><?= htmlspecialchars($at['check_in'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($at['check_out'] ?? '-') ?></td>
+                                <td>
+                                    <?php $sc = $at['status'] === 'Present' ? 'success' : ($at['status'] === 'Absent' ? 'danger' : ($at['status'] === 'Late' ? 'warning text-dark' : ($at['status'] === 'On Leave' ? 'info' : 'secondary'))); ?>
+                                    <span class="badge bg-<?= $sc ?>"><?= htmlspecialchars($at['status']) ?></span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+function doCheckIn() {
+    var sid = document.getElementById('attendanceStaff').value;
+    if (!sid) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Select a staff member</div>'; return; }
+    var fd = new FormData();
+    fd.append('action', 'check_in');
+    fd.append('staff_id', sid);
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            document.getElementById('attendanceMsg').innerHTML = d.success ? '<div class="text-success">Checked in successfully!</div>' : '<div class="text-danger">' + (d.error || 'Failed') + '</div>';
+            if (d.success) setTimeout(function() { window.location.reload(); }, 800);
+        })
+        .catch(function(e) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Error</div>'; });
+}
+function doCheckOut() {
+    var sid = document.getElementById('attendanceStaff').value;
+    if (!sid) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Select a staff member</div>'; return; }
+    var fd = new FormData();
+    fd.append('action', 'check_out');
+    fd.append('staff_id', sid);
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            document.getElementById('attendanceMsg').innerHTML = d.success ? '<div class="text-success">Checked out successfully!</div>' : '<div class="text-danger">' + (d.error || 'Failed') + '</div>';
+            if (d.success) setTimeout(function() { window.location.reload(); }, 800);
+        })
+        .catch(function(e) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Error</div>'; });
+}
+function doMarkAbsent() {
+    var sid = document.getElementById('attendanceStaff').value;
+    if (!sid) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Select a staff member</div>'; return; }
+    if (!confirm('Mark this staff as absent?')) return;
+    var fd = new FormData();
+    fd.append('action', 'mark_absent');
+    fd.append('staff_id', sid);
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            document.getElementById('attendanceMsg').innerHTML = d.success ? '<div class="text-success">Marked as absent</div>' : '<div class="text-danger">' + (d.error || 'Failed') + '</div>';
+            if (d.success) setTimeout(function() { window.location.reload(); }, 800);
+        })
+        .catch(function(e) { document.getElementById('attendanceMsg').innerHTML = '<div class="text-danger">Error</div>'; });
+}
+</script>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 </body>
 </html>

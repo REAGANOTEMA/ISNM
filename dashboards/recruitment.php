@@ -3,6 +3,52 @@ $pageTitle = 'Recruitment';
 require_once __DIR__ . '/../includes/staff_dashboard_access.php';
 $ctx = bootstrapStaffDashboard(['hr','manager','director','principal']);
 $conn = $ctx['staff'];
+// Handle POST actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $response = ['success' => false, 'error' => 'Unknown action'];
+    $action = $_POST['action'];
+    if ($action === 'add_position' && $conn) {
+        $title = trim($_POST['position_title'] ?? '');
+        $dept = trim($_POST['department'] ?? '');
+        $desc = trim($_POST['description'] ?? '');
+        $req = trim($_POST['requirements'] ?? '');
+        $salary = trim($_POST['salary_range'] ?? '');
+        $closing = trim($_POST['closing_date'] ?? '');
+        if ($title) {
+            $stmt = $conn->prepare("INSERT INTO staff_recruitment (position_title, department, description, requirements, salary_range, posted_date, closing_date, status) VALUES (?, ?, ?, ?, ?, CURDATE(), ?, 'Open')");
+            $stmt->bind_param('ssssss', $title, $dept, $desc, $req, $salary, $closing);
+            $response['success'] = $stmt->execute();
+            $response['error'] = $stmt->error;
+            $stmt->close();
+        } else { $response['error'] = 'Position title required'; }
+    } elseif ($action === 'update_position' && $conn) {
+        $id = (int)($_POST['id'] ?? 0);
+        $title = trim($_POST['position_title'] ?? '');
+        $dept = trim($_POST['department'] ?? '');
+        $desc = trim($_POST['description'] ?? '');
+        $req = trim($_POST['requirements'] ?? '');
+        $salary = trim($_POST['salary_range'] ?? '');
+        $status = trim($_POST['status'] ?? 'Open');
+        if ($id && $title) {
+            $stmt = $conn->prepare("UPDATE staff_recruitment SET position_title=?, department=?, description=?, requirements=?, salary_range=?, status=? WHERE id=?");
+            $stmt->bind_param('ssssssi', $title, $dept, $desc, $req, $salary, $status, $id);
+            $response['success'] = $stmt->execute();
+            $response['error'] = $stmt->error;
+            $stmt->close();
+        } else { $response['error'] = 'ID and title required'; }
+    } elseif ($action === 'delete_position' && $conn) {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) {
+            $stmt = $conn->prepare("DELETE FROM staff_recruitment WHERE id=?");
+            $stmt->bind_param('i', $id);
+            $response['success'] = $stmt->execute();
+            $response['error'] = $stmt->error;
+            $stmt->close();
+        } else { $response['error'] = 'ID required'; }
+    }
+    echo json_encode($response); exit;
+}
 $user = $ctx['user'];
 
 $openPositions = 0; $totalApplicants = 0; $shortlisted = 0; $hiredThisMonth = 0;
@@ -61,23 +107,30 @@ if ($conn) {
         </div>
     </div>
     <div class="content-section">
-        <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Open Positions</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i>Open Positions</h5>
+            <button class="btn btn-primary btn-sm" onclick="showAddPosition()"><i class="fas fa-plus me-1"></i>Add Position</button>
+        </div>
         <?php if (empty($positions)): ?>
         <div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No recruitment positions found.</p></div>
         <?php else: ?>
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle">
                 <thead class="table-light">
-                    <tr><th>Position Title</th><th>Department</th><th>Applicants</th><th>Status</th><th>Posted Date</th></tr>
+                    <tr><th>Position Title</th><th>Department</th><th>Applicants</th><th>Status</th><th>Posted Date</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($positions as $pos): ?>
                     <tr>
-                        <td><strong><?= htmlspecialchars($pos['position_title'] ?? $pos['title'] ?? '-') ?></strong></td>
+                        <td><strong><?= htmlspecialchars($pos['position_title'] ?? '-') ?></strong></td>
                         <td><?= htmlspecialchars($pos['department'] ?? '-') ?></td>
                         <td><?= (int)($pos['applicants_count'] ?? 0) ?></td>
                         <td><span class="badge bg-<?= ($pos['status'] ?? 'Open') === 'Open' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($pos['status'] ?? 'Open') ?></span></td>
                         <td><?= !empty($pos['posted_date']) ? date('d M Y', strtotime($pos['posted_date'])) : '-' ?></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editPosition(<?= $pos['id'] ?>, '<?= htmlspecialchars($pos['position_title'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($pos['department'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($pos['description'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($pos['requirements'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($pos['salary_range'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($pos['status'] ?? 'Open', ENT_QUOTES) ?>')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePosition(<?= $pos['id'] ?>,'<?= htmlspecialchars($pos['position_title'] ?? '', ENT_QUOTES) ?>')"><i class="fas fa-trash"></i></button>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -87,5 +140,91 @@ if ($conn) {
     </div>
 </div>
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
+<!-- Add Position Modal -->
+<div class="modal fade" id="addPositionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-briefcase me-2"></i>Add Position</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form id="addPositionForm" onsubmit="event.preventDefault(); submitAddPosition()">
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Position Title *</label><input type="text" name="position_title" class="form-control" required></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Department</label><input type="text" name="department" class="form-control"></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Salary Range</label><input type="text" name="salary_range" class="form-control"></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Closing Date</label><input type="date" name="closing_date" class="form-control"></div></div>
+                    <div class="col-12"><div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3"></textarea></div></div>
+                    <div class="col-12"><div class="mb-3"><label class="form-label">Requirements</label><textarea name="requirements" class="form-control" rows="3"></textarea></div></div>
+                </div>
+                <input type="hidden" name="action" value="add_position">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Post Position</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<!-- Edit Position Modal -->
+<div class="modal fade" id="editPositionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Position</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form id="editPositionForm" onsubmit="event.preventDefault(); submitEditPosition()">
+            <div class="modal-body">
+                <input type="hidden" name="id" id="edit_pos_id">
+                <div class="row g-3">
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Position Title *</label><input type="text" name="position_title" id="edit_pos_title" class="form-control" required></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Department</label><input type="text" name="department" id="edit_pos_dept" class="form-control"></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Salary Range</label><input type="text" name="salary_range" id="edit_pos_salary" class="form-control"></div></div>
+                    <div class="col-6"><div class="mb-3"><label class="form-label">Status</label><select name="status" id="edit_pos_status" class="form-select"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Filled">Filled</option><option value="Cancelled">Cancelled</option></select></div></div>
+                    <div class="col-12"><div class="mb-3"><label class="form-label">Description</label><textarea name="description" id="edit_pos_desc" class="form-control" rows="3"></textarea></div></div>
+                    <div class="col-12"><div class="mb-3"><label class="form-label">Requirements</label><textarea name="requirements" id="edit_pos_req" class="form-control" rows="3"></textarea></div></div>
+                </div>
+                <input type="hidden" name="action" value="update_position">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+function showAddPosition() { new bootstrap.Modal(document.getElementById('addPositionModal')).show(); }
+function editPosition(id, title, dept, desc, req, salary, status) {
+    document.getElementById('edit_pos_id').value = id;
+    document.getElementById('edit_pos_title').value = title;
+    document.getElementById('edit_pos_dept').value = dept;
+    document.getElementById('edit_pos_desc').value = desc;
+    document.getElementById('edit_pos_req').value = req;
+    document.getElementById('edit_pos_salary').value = salary;
+    document.getElementById('edit_pos_status').value = status;
+    new bootstrap.Modal(document.getElementById('editPositionModal')).show();
+}
+function deletePosition(id, title) {
+    if (!confirm('Delete "' + title + '"? This cannot be undone.')) return;
+    var fd = new FormData();
+    fd.append('action', 'delete_position');
+    fd.append('id', id);
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
+        .catch(function(e) { alert('Error deleting position'); });
+}
+function submitAddPosition() {
+    var fd = new FormData(document.getElementById('addPositionForm'));
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
+        .catch(function(e) { alert('Error adding position'); });
+}
+function submitEditPosition() {
+    var fd = new FormData(document.getElementById('editPositionForm'));
+    fetch(window.location.href, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.success) { window.location.reload(); } else { alert('Error: ' + (d.error || 'Failed')); } })
+        .catch(function(e) { alert('Error updating position'); });
+}
+</script>
 </body>
 </html>

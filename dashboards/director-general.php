@@ -66,7 +66,7 @@ if ($dg_cached) {
     if ($conn) {
         $r = $conn->query("SELECT COALESCE(SUM(amount_received),0) v FROM igangaschoolofl_students_db.payments WHERE DATE(payment_date)=CURDATE() AND status IN('verified','approved')");
         if ($r) $today_collection = $r->fetch_assoc()['v'] ?? 0;
-        $r2 = $conn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')");
+        $r2 = $studentsConn ? $studentsConn->query("SELECT COALESCE(SUM(balance),0) v FROM student_invoices WHERE status IN('pending','partial','overdue')") : null;
         if ($r2) $outstanding = $r2->fetch_assoc()['v'] ?? 0;
     }
 

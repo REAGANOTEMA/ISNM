@@ -61,7 +61,7 @@ function checkEnterprisePermission($conn, int $roleId, string $permissionSlug): 
                 }
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
 
     // Fallback: check permissions table via role_permissions junction
     try {
@@ -77,7 +77,7 @@ function checkEnterprisePermission($conn, int $roleId, string $permissionSlug): 
             $stmt2->close();
             return $cnt > 0;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
 
     return false;
 }
@@ -101,7 +101,7 @@ function getRolePermissions($conn, int $roleId): array {
                 return is_array($perms) ? $perms : [];
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return [];
 }
 }
@@ -125,7 +125,7 @@ function getRoleName($conn, int $roleId): string {
             $cache[$roleId] = $name;
             return $name;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return '';
 }
 }
@@ -173,7 +173,7 @@ function getStaffById($conn, int $staffId): ?array {
             $stmt->close();
             return $row ?: null;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return null;
 }
 }
@@ -200,7 +200,7 @@ function getSystemSettingDirect($conn, string $key, $default = null) {
                 return $val;
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return $default;
 }
 }
@@ -225,7 +225,7 @@ function setSystemSettingDirect($conn, string $key, $value, string $type = 'stri
             $stmt->close();
             return $ok;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return false;
 }
 }
@@ -243,7 +243,7 @@ function getUnreadNotificationCount($conn, int $staffId): int {
              WHERE nr.id IS NULL"
         );
         if ($r) return (int)$r->fetch_assoc()['cnt'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return 0;
 }
 }
@@ -263,7 +263,7 @@ function getPendingTaskCount($conn, int $staffId): int {
             $stmt->close();
             return $cnt;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return 0;
 }
 }
@@ -277,7 +277,7 @@ function getPendingApprovalCount($conn): int {
     try {
         $r = $conn->query("SELECT COUNT(*) cnt FROM approval_requests WHERE status IN ('Active','pending','in_review')");
         if ($r) return (int)$r->fetch_assoc()['cnt'];
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return 0;
 }
 }
@@ -295,7 +295,7 @@ function getRecentActivities($conn, int $limit = 10): array {
              FROM staff_activity_log ORDER BY created_at DESC LIMIT " . (int)$limit
         );
         if ($r) while ($row = $r->fetch_assoc()) $activities[] = $row;
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return $activities;
 }
 }
@@ -309,14 +309,14 @@ function logActivity($conn, string $activityType, string $description, int $user
     $uid = $userId ?: (int)($_SESSION['user_id'] ?? 0);
     try {
         $stmt = $conn->prepare(
-            "INSERT INTO staff_activity_log (user_id, activity_type, activity_description, created_at) VALUES (?, ?, ?, NOW())"
+            "INSERT INTO staff_activity_log (staff_id, activity_type, activity_description, created_at) VALUES (?, ?, ?, NOW())"
         );
         if ($stmt) {
             $stmt->bind_param('iss', $uid, $activityType, $description);
             $stmt->execute();
             $stmt->close();
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
 }
 }
 
@@ -339,7 +339,7 @@ function logAuditTrail($conn, string $actionType, string $entityType, int $entit
             $stmt->execute();
             $stmt->close();
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
 }
 }
 
@@ -361,7 +361,7 @@ function sendNotification($conn, string $title, string $message, string $type = 
             $stmt->close();
             return $ok;
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) { error_log('enterprise_auth.php: ' . $e->getMessage()); }
     return false;
 }
 }

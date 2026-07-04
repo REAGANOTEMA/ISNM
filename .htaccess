@@ -90,6 +90,9 @@
     # Also block direct file access to these paths
     RedirectMatch 404 ^/(writing|site_integration|generate)(/|$)
 
+    # Route /api/* through api/index.php
+    RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+
     # Redirect /director and /director/ to overview
     RewriteRule ^director/?$ /director/overview [R=301,L]
     # Map /director/{page} → dashboards/director-general.php?page={page}

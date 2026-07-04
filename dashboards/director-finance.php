@@ -227,13 +227,13 @@ if ($ajax === 'create_expenditure' && $staff) {
 if ($ajax === 'approve_expenditure' && $staff) {
     header('Content-Type: application/json');
     $id=(int)($_POST['id']??0);
-    if($id){ if($staff->query("UPDATE expenses SET status='approved',approved_by=$uid,approval_date=NOW() WHERE id=$id AND status='pending'") && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Approve failed']); exit; }
+    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); $stmt->execute(); if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Approve failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'reject_expenditure' && $staff) {
     header('Content-Type: application/json');
     $id=(int)($_POST['id']??0);
-    if($id){ if($staff->query("UPDATE expenses SET status='rejected',approved_by=$uid,approval_date=NOW() WHERE id=$id AND status='pending'") && $staff->affected_rows>0){ echo json_encode(['success'=>true]); exit; } echo json_encode(['success'=>false,'error'=>'Reject failed']); exit; }
+    if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){ $stmt->bind_param('ii',$uid,$id); $stmt->execute(); if($stmt->affected_rows>0){ echo json_encode(['success'=>true]); exit; }} echo json_encode(['success'=>false,'error'=>'Reject failed']); exit; }
     echo json_encode(['success'=>false]); exit;
 }
 if ($ajax === 'approve_payroll' && $staff) {
@@ -404,12 +404,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ if($staff->query("UPDATE expenses SET status='approved',approved_by=$uid,approval_date=NOW() WHERE id=$id AND status='pending'") && $staff->affected_rows>0){ fin_success('Expense approved.'); }else{ fin_error('Approve failed.'); } }
+        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='approved',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'reject_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ if($staff->query("UPDATE expenses SET status='rejected',approved_by=$uid,approval_date=NOW() WHERE id=$id AND status='pending'") && $staff->affected_rows>0){ fin_success('Expense rejected.'); }else{ fin_error('Reject failed.'); } }
+        if($id){ $stmt=$staff->prepare("UPDATE expenses SET status='rejected',approved_by=?,approval_date=NOW() WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'create_budget' && $staff) {
@@ -427,7 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_budget' && $staff) {
         $bid=(int)($_POST['budget_id']??0);
-        if($bid){ if($staff->query("UPDATE {$students_db}.budget_records SET status='Approved',approved_by=$uid WHERE id=$bid") && $staff->affected_rows>0){ fin_success('Budget approved.'); }else{ fin_error('Approve failed.'); } }
+        if($bid){ $stmt=$staff->prepare("UPDATE {$students_db}.budget_records SET status='Approved',approved_by=? WHERE id=?"); if($stmt){$stmt->bind_param('ii',$uid,$bid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Budget approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
     if ($act === 'record_payment' && $staff) {
@@ -443,12 +443,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'approve_payment' && $staff) {
         $pid=(int)($_POST['payment_id']??0);
-        if($students&&$pid){ if($students->query("UPDATE {$students_db}.payments SET status='approved',verified_by=$uid WHERE id=$pid AND status='pending'") && $students->affected_rows>0){ fin_success('Payment approved.'); }else{ fin_error('Approve failed.'); } }
+        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='approved',verified_by=? WHERE id=? AND status='pending'"); if($stmt){$stmt->bind_param('ii',$uid,$pid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Payment approved.');}else{fin_error('Approve failed.');}$stmt->close();}else{fin_error('Approve failed.');} }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }
     if ($act === 'reject_payment' && $staff) {
         $pid=(int)($_POST['payment_id']??0);
-        if($students&&$pid){ if($students->query("UPDATE {$students_db}.payments SET status='rejected' WHERE id=$pid") && $students->affected_rows>0){ fin_success('Payment rejected.'); }else{ fin_error('Reject failed.'); } }
+        if($students&&$pid){ $stmt=$students->prepare("UPDATE {$students_db}.payments SET status='rejected' WHERE id=?"); if($stmt){$stmt->bind_param('i',$pid);$stmt->execute();if($stmt->affected_rows>0){fin_success('Payment rejected.');}else{fin_error('Reject failed.');}$stmt->close();}else{fin_error('Reject failed.');} }
         header('Location: director-finance.php?section=payment_verification'); exit;
     }
     if ($act === 'edit_expense' && $staff) {
@@ -465,7 +465,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'delete_expense' && $staff) {
         $id=(int)($_POST['expense_id']??0);
-        if($id){ if($staff->query("DELETE FROM expenses WHERE id=$id") && $staff->affected_rows>0){ fin_success('Expense deleted.'); }else{ fin_error('Delete failed.'); } }
+        if($id){ $stmt=$staff->prepare("DELETE FROM expenses WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Expense deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
         header('Location: director-finance.php?section=expenditure_monitoring'); exit;
     }
     if ($act === 'edit_budget' && $staff) {
@@ -481,7 +481,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     if ($act === 'delete_budget' && $staff) {
         $id=(int)($_POST['budget_id']??0);
-        if($id){ if($staff->query("DELETE FROM {$students_db}.budget_records WHERE id=$id") && $staff->affected_rows>0){ fin_success('Budget deleted.'); }else{ fin_error('Delete failed.'); } }
+        if($id){ $stmt=$staff->prepare("DELETE FROM {$students_db}.budget_records WHERE id=?"); if($stmt){$stmt->bind_param('i',$id);$stmt->execute();if($stmt->affected_rows>0){fin_success('Budget deleted.');}else{fin_error('Delete failed.');}$stmt->close();}else{fin_error('Delete failed.');} }
         header('Location: director-finance.php?section=budget_planning'); exit;
     }
     header('Location: director-finance.php'); exit;

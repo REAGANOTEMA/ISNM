@@ -93,6 +93,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         header('Location: hr-manager.php'); exit;
     }
+    if ($action === 'edit_staff') {
+        header('Content-Type: application/json');
+        $id = (int)($_POST['id'] ?? 0);
+        $fn = trim($_POST['full_name'] ?? ''); $em = trim($_POST['email'] ?? '');
+        $pos = trim($_POST['position'] ?? ''); $dept = trim($_POST['department'] ?? '');
+        $rid = (int)($_POST['role_id'] ?? 0); $ph = trim($_POST['phone'] ?? '');
+        $st = trim($_POST['status'] ?? 'Active');
+        $empType = trim($_POST['employment_type'] ?? 'full-time');
+        $empCat = trim($_POST['employment_category'] ?? 'administrative');
+        $resp = ['success' => false, 'error' => 'Missing fields'];
+        if ($id && $fn && $em && $staff_conn) {
+            $stmt = $staff_conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, department=?, role_id=?, employment_type=?, employment_category=?, status=? WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('sssssisssi', $fn, $em, $ph, $pos, $dept, $rid, $empType, $empCat, $st, $id);
+                $resp = ['success' => $stmt->execute(), 'error' => $stmt->error];
+                $stmt->close();
+            }
+        }
+        echo json_encode($resp); exit;
+    }
+    if ($action === 'delete_staff') {
+        header('Content-Type: application/json');
+        $id = (int)($_POST['id'] ?? 0);
+        $resp = ['success' => false, 'error' => 'Invalid ID'];
+        if ($id && $staff_conn) {
+            $stmt = $staff_conn->prepare("DELETE FROM staff WHERE id=?");
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $resp = ['success' => $stmt->execute(), 'error' => $stmt->error];
+                $stmt->close();
+            }
+        }
+        echo json_encode($resp); exit;
+    }
     if (in_array($action, ['approve_leave','reject_leave'])) {
         $lid = (int)($_POST['leave_id'] ?? 0);
         $status = ($action === 'approve_leave') ? 'Approved' : 'Rejected';
@@ -226,7 +260,11 @@ $pageTitle = 'HR Manager';
                                     <td><span class="badge-hr bg-hr-info"><?= htmlspecialchars($s['employment_type'] ?? 'N/A') ?></span></td>
                                     <td class="small"><?= htmlspecialchars($s['employment_category'] ?? '-') ?></td>
                                     <td><span class="badge-hr <?= $s['status']==='Active'?'bg-hr-success':'bg-hr-warning' ?>"><?= $s['status'] ?></span></td>
-                                    <td><a href="staff_profile_management.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
+                                    <td>
+                                        <a href="staff_profile_management.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                        <button class="btn btn-sm btn-outline-warning" title="Edit" onclick="editStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['email'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['phone'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['position'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['department'] ?? '', ENT_QUOTES) ?>', <?= (int)($s['role_id'] ?? 0) ?>, '<?= htmlspecialchars($s['employment_type'] ?? 'full-time', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['employment_category'] ?? 'administrative', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['status'] ?? 'Active', ENT_QUOTES) ?>')"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>')"><i class="fas fa-trash"></i></button>
+                                    </td>
                                 </tr>
 <?php endforeach; if (empty($staff_list)): ?><tr><td colspan="7" class="text-center text-muted py-3">No records.</td></tr><?php endif; ?>
                                 </tbody>
@@ -850,7 +888,73 @@ if ($staff_conn) {
 })();
 
 function openProfileModal(){var m=document.getElementById('profileModal');if(m){var bsModal=new bootstrap.Modal(m);bsModal.show();}}
+function editStaff(id,name,email,phone,position,department,roleId,empType,empCat,status){
+    document.getElementById('edit_id').value=id;
+    document.getElementById('edit_full_name').value=name;
+    document.getElementById('edit_email').value=email;
+    document.getElementById('edit_phone').value=phone||'';
+    document.getElementById('edit_position').value=position||'';
+    document.getElementById('edit_department').value=department||'';
+    document.getElementById('edit_role_id').value=roleId||'';
+    document.getElementById('edit_employment_type').value=empType||'full-time';
+    document.getElementById('edit_employment_category').value=empCat||'administrative';
+    document.getElementById('edit_status').value=status||'Active';
+    new bootstrap.Modal(document.getElementById('editStaffModal')).show();
+}
+function submitEditStaff(){
+    var fd=new FormData(document.getElementById('editStaffForm'));
+    fetch(window.location.href,{method:'POST',body:fd})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        if(d.success){window.location.reload();}
+        else{alert('Error: '+(d.error||'Failed'));}
+    })
+    .catch(function(e){alert('Error updating staff');});
+}
+function deleteStaff(id,name){
+    if(!confirm('Delete staff member "'+name+'"? This cannot be undone.')) return;
+    var fd=new FormData();
+    fd.append('action','delete_staff');
+    fd.append('id',id);
+    fetch(window.location.href,{method:'POST',body:fd})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        if(d.success){window.location.reload();}
+        else{alert('Error: '+(d.error||'Failed'));}
+    })
+    .catch(function(e){alert('Error deleting staff');});
+}
 </script>
+
+<!-- Edit Staff Modal -->
+<div class="modal fade" id="editStaffModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form id="editStaffForm" onsubmit="event.preventDefault(); submitEditStaff()">
+            <div class="modal-body">
+                <input type="hidden" name="id" id="edit_id">
+                <input type="hidden" name="action" value="edit_staff">
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Full Name *</label><input type="text" name="full_name" id="edit_full_name" class="form-control" required></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Email *</label><input type="email" name="email" id="edit_email" class="form-control" required></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Phone</label><input type="text" name="phone" id="edit_phone" class="form-control"></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Position</label><input type="text" name="position" id="edit_position" class="form-control"></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Department</label><input type="text" name="department" id="edit_department" class="form-control"></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="form-label">Role</label><select name="role_id" id="edit_role_id" class="form-select">
+                        <?php foreach ($roles as $r): ?><option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['role_name']) ?></option><?php endforeach; ?>
+                    </select></div></div>
+                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Employment Type</label><select name="employment_type" id="edit_employment_type" class="form-select"><option value="full-time">Full Time</option><option value="part-time">Part Time</option><option value="contract">Contract</option><option value="intern">Intern</option></select></div></div>
+                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Category</label><select name="employment_category" id="edit_employment_category" class="form-select"><option value="administrative">Administrative</option><option value="academic">Academic</option><option value="support">Support</option><option value="management">Management</option></select></div></div>
+                    <div class="col-md-4"><div class="mb-3"><label class="form-label">Status</label><select name="status" id="edit_status" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="On Leave">On Leave</option><option value="Terminated">Terminated</option></select></div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button>
+            </div>
+        </form>
+    </div></div>
+</div>
 
 <?php include_once __DIR__ . '/../includes/dashboard_footer.php'; ?>
 

@@ -77,12 +77,16 @@ if (!function_exists('bootstrapStaffDashboard')) {
 
         // ── Centralized CSRF validation for all POST requests ──
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-            if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
-                header('Content-Type: application/json');
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'Invalid or missing security token. Please refresh the page.']);
-                exit();
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+            $isAjax = (strpos($contentType, 'application/json') !== false) || (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest');
+            if (!$isAjax) {
+                $csrfToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+                    header('Content-Type: application/json');
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'message' => 'Invalid or missing security token. Please refresh the page.']);
+                    exit();
+                }
             }
         }
 

@@ -52,8 +52,8 @@ if ($view === 'principal_stats' && $ajax === '1') {
     $out = ['total_students'=>0,'total_staff'=>0,'attendance_rate'=>0,'pass_rate'=>0,'welfare_alerts'=>0,'pending_approvals'=>0,'upcoming_meetings'=>0,'recent_notices'=>0,'total_revenue'=>0,'total_expenses'=>0,'health_score'=>0];
     if ($students) {
         $r = $students->query("SELECT COUNT(*) c FROM students WHERE status='Active'"); if ($r) $out['total_students'] = (int)$r->fetch_assoc()['c'];
-        $r = $students->query("SELECT ROUND(AVG(IFNULL(attendance_percentage,0)),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $out['attendance_rate'] = (float)($r->fetch_assoc()['v']??0);
-        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM igangaschoolofl_staffs_db.examination_records WHERE grade IS NOT NULL) t FROM igangaschoolofl_staffs_db.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $out['pass_rate']=$t>0?round((int)$rw['p']/$t*100,1):0; }
+        $r = $students->query("SELECT ROUND(AVG(CASE WHEN status='Present' THEN 100 WHEN status='Late' THEN 75 ELSE 0 END),1) v FROM student_attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"); if ($r) $out['attendance_rate'] = (float)($r->fetch_assoc()['v']??0);
+        $r = $students->query("SELECT COUNT(*) p, (SELECT COUNT(*) FROM {$staff_db}.examination_records WHERE grade IS NOT NULL) t FROM {$staff_db}.examination_records WHERE grade IN('A','B','C','D')"); if ($r) { $rw=$r->fetch_assoc(); $t=(int)($rw['t']??0); $out['pass_rate']=$t>0?round((int)$rw['p']/$t*100,1):0; }
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.student_welfare_cases WHERE status='open'"); if ($r) $out['welfare_alerts'] = (int)$r->fetch_assoc()['c'];
         $r = $students->query("SELECT COUNT(*) c FROM {$students_db}.meetings WHERE meeting_date >= CURDATE() AND status='scheduled'"); if ($r) $out['upcoming_meetings'] = (int)$r->fetch_assoc()['c'];
     }
@@ -91,13 +91,13 @@ if ($view === 'program_performance_data' && $ajax === '1') {
 if ($view === 'exam_monitoring_data' && $ajax === '1') {
     header('Content-Type: application/json');
     $rows = [];
-    if ($students) {
+    if ($staff) {
         $prog = trim($_GET['program']??'');
         if ($prog) {
-            $stmt = $students->prepare("SELECT e.*, s.surname, s.first_name, s.program FROM examination_records e LEFT JOIN students s ON e.student_id=s.id WHERE s.program=? ORDER BY e.created_at DESC LIMIT 100");
+            $stmt = $staff->prepare("SELECT e.*, s.surname, s.first_name, s.program FROM {$staff_db}.examination_records e LEFT JOIN {$students_db}.students s ON e.student_id=s.id WHERE s.program=? ORDER BY e.created_at DESC LIMIT 100");
             if ($stmt) { $stmt->bind_param('s', $prog); $stmt->execute(); $r = $stmt->get_result(); $stmt->close(); } else $r = null;
         } else {
-            $r = $students->query("SELECT e.*, s.surname, s.first_name, s.program FROM examination_records e LEFT JOIN students s ON e.student_id=s.id ORDER BY e.created_at DESC LIMIT 100");
+            $r = $staff->query("SELECT e.*, s.surname, s.first_name, s.program FROM {$staff_db}.examination_records e LEFT JOIN {$students_db}.students s ON e.student_id=s.id ORDER BY e.created_at DESC LIMIT 100");
         }
         if ($r) while ($rw = $r->fetch_assoc()) $rows[] = $rw;
     }
@@ -1478,6 +1478,55 @@ try { if ($students) { $r = $students->query("SELECT * FROM announcements ORDER 
 ?>
 </div></div>
 <?php endif; ?>
+
+<?php if ($view === 'staff'): ?>
+<div class="row g-3">
+<div class="col-12">
+<div class="scard"><div class="sch"><i class="fas fa-users me-2"></i>Staff Oversight</div><div class="scb">
+<?php
+$ts = 0; $as = 0; $ol = 0; $pa = 0;
+$staffList = [];
+if ($staff) {
+    $r = $staff->query("SELECT COUNT(*) c FROM staff"); if ($r) $ts = (int)$r->fetch_assoc()['c'];
+    $r = $staff->query("SELECT COUNT(*) c FROM staff WHERE status='Active'"); if ($r) $as = (int)$r->fetch_assoc()['c'];
+    $r = $staff->query("SELECT COUNT(*) c FROM staff WHERE status='On Leave'"); if ($r) $ol = (int)$r->fetch_assoc()['c'];
+    $r = $staff->query("SELECT COUNT(*) c FROM {$staff_db}.staff_appraisals WHERE status='draft' OR status='submitted'"); if ($r) $pa = (int)$r->fetch_assoc()['c'];
+    $s = $staff->query("SELECT id, full_name, email, phone, department, position, status FROM staff ORDER BY full_name");
+    if ($s) $staffList = $s->fetch_all(MYSQLI_ASSOC);
+}
+?>
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="border rounded p-3 text-center"><h4 class="text-primary mb-1"><?= number_format($ts) ?></h4><small class="text-muted">Total Staff</small></div></div>
+    <div class="col-md-3"><div class="border rounded p-3 text-center"><h4 class="text-success mb-1"><?= number_format($as) ?></h4><small class="text-muted">Active</small></div></div>
+    <div class="col-md-3"><div class="border rounded p-3 text-center"><h4 class="text-info mb-1"><?= number_format($ol) ?></h4><small class="text-muted">On Leave</small></div></div>
+    <div class="col-md-3"><div class="border rounded p-3 text-center"><h4 class="text-warning mb-1"><?= number_format($pa) ?></h4><small class="text-muted">Pending Appraisals</small></div></div>
+</div>
+<?php if (empty($staffList)): ?>
+<div class="text-center py-4 text-muted"><i class="fas fa-database fa-2x mb-2"></i><p class="mb-0">No staff records found.</p></div>
+<?php else: ?>
+<div class="table-responsive">
+<table class="table tb">
+<thead><tr><th>Full Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Position</th><th>Status</th></tr></thead>
+<tbody>
+<?php foreach ($staffList as $s): ?>
+<tr>
+    <td><strong><?= htmlspecialchars($s['full_name']) ?></strong></td>
+    <td><?= htmlspecialchars($s['email'] ?? '-') ?></td>
+    <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
+    <td><?= htmlspecialchars($s['department'] ?? '-') ?></td>
+    <td><?= htmlspecialchars($s['position'] ?? '-') ?></td>
+    <td><span class="badge bg-<?= ($s['status'] ?? 'Active') === 'Active' ? 'success' : ($s['status'] === 'On Leave' ? 'info' : 'secondary') ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>
+<?php endif; ?>
+</div></div>
+</div>
+</div>
+<?php endif; ?>
+
 </div>
 
 <!-- ═══ AJAX MODULE LOADING ═══ -->

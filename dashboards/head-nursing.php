@@ -53,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if ($action === 'delete_student') {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
-            $conn->query("DELETE FROM nursing_students WHERE id=" . $id);
+            $stmt = $conn->prepare("DELETE FROM nursing_students WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Student deleted.';
         }
         header('Location: head-nursing.php?page=students');
@@ -99,7 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $conn) {
     if ($action === 'delete_placement') {
         $id = intval($_POST['id'] ?? 0);
         if ($id) {
-            $conn->query("DELETE FROM nursing_clinical_placements WHERE id=" . $id);
+            $stmt = $conn->prepare("DELETE FROM nursing_clinical_placements WHERE id=?");
+            if ($stmt) { $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close(); }
             $_SESSION['success'] = 'Placement deleted.';
         }
         header('Location: head-nursing.php?page=clinical');
@@ -463,30 +465,183 @@ unset($_SESSION['success'], $_SESSION['error']);
             <?php endif; ?>
         </section>
         <?php break;
-    case 'staff': ?>
+    case 'staff':
+        // Handle POST actions
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+            header('Content-Type: application/json');
+            $response = ['success' => false, 'error' => 'Unknown action'];
+            $action = $_POST['action'];
+            if ($action === 'add_staff' && $conn) {
+                $name = trim($_POST['full_name'] ?? '');
+                $email = trim($_POST['email'] ?? '');
+                $phone = trim($_POST['phone'] ?? '');
+                $position = trim($_POST['position'] ?? '');
+                if ($name && $email) {
+                    $dept = 'Nursing';
+                    $stmt = $conn->prepare("INSERT INTO staff (full_name, email, phone, department, position, status) VALUES (?, ?, ?, ?, ?, 'Active')");
+                    $stmt->bind_param('sssss', $name, $email, $phone, $dept, $position);
+                    $response['success'] = $stmt->execute();
+                    $response['error'] = $stmt->error;
+                    $stmt->close();
+                } else {
+                    $response['error'] = 'Name and email are required';
+                }
+            } elseif ($action === 'edit_staff' && $conn) {
+                $id = (int)($_POST['id'] ?? 0);
+                $name = trim($_POST['full_name'] ?? '');
+                $email = trim($_POST['email'] ?? '');
+                $phone = trim($_POST['phone'] ?? '');
+                $position = trim($_POST['position'] ?? '');
+                $status = trim($_POST['status'] ?? 'Active');
+                if ($id && $name && $email) {
+                    $stmt = $conn->prepare("UPDATE staff SET full_name=?, email=?, phone=?, position=?, status=? WHERE id=?");
+                    $stmt->bind_param('sssssi', $name, $email, $phone, $position, $status, $id);
+                    $response['success'] = $stmt->execute();
+                    $response['error'] = $stmt->error;
+                    $stmt->close();
+                } else {
+                    $response['error'] = 'ID, name, and email are required';
+                }
+            } elseif ($action === 'delete_staff' && $conn) {
+                $id = (int)($_POST['id'] ?? 0);
+                if ($id) {
+                    $stmt = $conn->prepare("DELETE FROM staff WHERE id=?");
+                    $stmt->bind_param('i', $id);
+                    $response['success'] = $stmt->execute();
+                    $response['error'] = $stmt->error;
+                    $stmt->close();
+                } else {
+                    $response['error'] = 'Staff ID is required';
+                }
+            }
+            echo json_encode($response);
+            exit;
+        }
+    ?>
         <section id="staff" class="content-section dashboard-section active" data-section="staff">
-            <h2><i class="fas fa-users me-2"></i>Department Staff</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2><i class="fas fa-users me-2"></i>Department Staff</h2>
+                <button class="btn btn-primary btn-sm" onclick="showAddStaff()"><i class="fas fa-plus me-1"></i>Add Staff</button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead><tr><th>Name</th><th>Position</th><th>Email</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Position</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php
                         $staff_list = [];
                         if ($conn) {
-                            $sr = $conn->query("SELECT full_name, position, email FROM staff WHERE department LIKE '%Nursing%' ORDER BY full_name");
+                            $sr = $conn->query("SELECT id, full_name, position, email, phone, status FROM staff WHERE department LIKE '%Nursing%' ORDER BY full_name");
                             if ($sr) $staff_list = $sr->fetch_all(MYSQLI_ASSOC);
                         }
                         if (empty($staff_list)): ?>
-                        <tr><td colspan="3" class="text-center text-muted">No nursing staff found</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted">No nursing staff found</td></tr>
                         <?php else: ?>
                         <?php foreach ($staff_list as $s): ?>
-                        <tr><td><?= htmlspecialchars($s['full_name']) ?></td><td><?= htmlspecialchars($s['position']) ?></td><td><?= htmlspecialchars($s['email']) ?></td></tr>
+                        <tr>
+                            <td><?= htmlspecialchars($s['full_name']) ?></td>
+                            <td><?= htmlspecialchars($s['position'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($s['email']) ?></td>
+                            <td><?= htmlspecialchars($s['phone'] ?? '-') ?></td>
+                            <td><span class="badge bg-<?= ($s['status'] ?? 'Active') === 'Active' ? 'success' : 'secondary' ?>"><?= htmlspecialchars($s['status'] ?? 'Active') ?></span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['email'], ENT_QUOTES) ?>', '<?= htmlspecialchars($s['phone'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['position'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($s['status'] ?? 'Active', ENT_QUOTES) ?>')"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['full_name'], ENT_QUOTES) ?>')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </section>
+
+        <!-- Add Staff Modal -->
+        <div class="modal fade" id="addStaffModal" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Nursing Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form id="addStaffForm" onsubmit="event.preventDefault(); submitAddStaff()">
+                    <div class="modal-body">
+                        <div class="mb-3"><label class="form-label">Full Name *</label><input type="text" name="full_name" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label">Email *</label><input type="email" name="email" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Position</label><input type="text" name="position" class="form-control"></div>
+                        <input type="hidden" name="action" value="add_staff">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+                    </div>
+                </form>
+            </div></div>
+        </div>
+
+        <!-- Edit Staff Modal -->
+        <div class="modal fade" id="editStaffModal" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form id="editStaffForm" onsubmit="event.preventDefault(); submitEditStaff()">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="edit_id">
+                        <div class="mb-3"><label class="form-label">Full Name *</label><input type="text" name="full_name" id="edit_full_name" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label">Email *</label><input type="email" name="email" id="edit_email" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label">Phone</label><input type="text" name="phone" id="edit_phone" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Position</label><input type="text" name="position" id="edit_position" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Status</label><select name="status" id="edit_status" class="form-select"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="On Leave">On Leave</option><option value="Terminated">Terminated</option></select></div>
+                        <input type="hidden" name="action" value="edit_staff">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update</button>
+                    </div>
+                </form>
+            </div></div>
+        </div>
+
+        <script>
+        function showAddStaff() { new bootstrap.Modal(document.getElementById('addStaffModal')).show(); }
+        function editStaff(id, name, email, phone, position, status) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_full_name').value = name;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_phone').value = phone;
+            document.getElementById('edit_position').value = position;
+            document.getElementById('edit_status').value = status;
+            new bootstrap.Modal(document.getElementById('editStaffModal')).show();
+        }
+        function deleteStaff(id, name) {
+            if (!confirm('Delete staff member "' + name + '"? This cannot be undone.')) return;
+            var fd = new FormData();
+            fd.append('action', 'delete_staff');
+            fd.append('id', id);
+            fetch(window.location.href, { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.success) { window.location.reload(); }
+                    else { alert('Error: ' + (d.error || 'Failed')); }
+                })
+                .catch(function(e) { alert('Error deleting staff'); });
+        }
+        function submitAddStaff() {
+            var fd = new FormData(document.getElementById('addStaffForm'));
+            fetch(window.location.href, { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.success) { window.location.reload(); }
+                    else { alert('Error: ' + (d.error || 'Failed')); }
+                })
+                .catch(function(e) { alert('Error adding staff'); });
+        }
+        function submitEditStaff() {
+            var fd = new FormData(document.getElementById('editStaffForm'));
+            fetch(window.location.href, { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.success) { window.location.reload(); }
+                    else { alert('Error: ' + (d.error || 'Failed')); }
+                })
+                .catch(function(e) { alert('Error updating staff'); });
+        }
+        </script>
         <?php break;
     default: ?>
         <section id="overview" class="content-section dashboard-section active" data-section="overview">

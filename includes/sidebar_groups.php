@@ -114,7 +114,7 @@ function getRoleOperations(string $role): array {
             ['label' => 'Student Affairs',      'icon'=>'fas fa-users',        'page'=>'student-affairs'],
             ['label' => 'Staff Oversight',      'icon'=>'fas fa-chalkboard-teacher','page'=>'staff'],
             ['label' => 'Institutional Ops',    'icon'=>'fas fa-building',     'page'=>'operations'],
-            ['label' => 'Meetings & Governance','icons'=>'fas fa-handshake',   'page'=>'meetings'],
+            ['label' => 'Meetings & Governance','icon'=>'fas fa-handshake',   'page'=>'meetings'],
         ],
         'deputy_principal' => [
             ['label' => 'Academic Monitoring',  'icon'=>'fas fa-book-open',    'page'=>'academic'],
